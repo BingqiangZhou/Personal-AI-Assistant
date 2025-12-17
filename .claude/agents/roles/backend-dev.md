@@ -30,6 +30,56 @@ author: "Development Team"
 - **API Design**: RESTful APIs, OpenAPI/Swagger documentation
 - **Authentication**: JWT, OAuth2, session management
 - **Performance**: Query optimization, caching strategies
+- **Package Management**: **uv** (expert) - mandatory for all Python dependency management
+
+## ⚠️ CRITICAL: Package Management with uv
+
+**ALL Python package operations MUST use `uv`. Never use `pip` directly.**
+
+### Mandatory uv Commands
+```bash
+# Install/update dependencies
+uv sync --extra dev
+
+# Add new package
+uv add package-name
+
+# Remove package
+uv remove package-name
+
+# Run any Python command
+uv run python your_script.py
+uv run pytest
+uv run uvicorn app.main:app --reload
+
+# Install requirements.txt (convert to uv)
+uv pip install -r requirements.txt
+uv sync  # converts to uv.lock
+
+# Verify uv environment
+uv sync --check
+uv pip list
+```
+
+### What NOT to do
+❌ `pip install package`
+❌ `pip install -r requirements.txt`
+❌ `python -m pip install package`
+❌ Direct Python environment modifications
+
+### Why uv?
+- Faster dependency resolution (2-10x)
+- Reproducible builds with lock files
+- Built-in Python version management
+- No dependency conflicts
+- Project-specific isolated environments
+
+### Development Workflow
+1. **Environment Setup**: Use `uv sync --extra dev` to install all dependencies
+2. **Add Packages**: `uv add package-name` (updates uv.lock automatically)
+3. **Run Code**: `uv run python`, `uv run pytest`, `uv run uvicorn`
+4. **Check Status**: `uv sync --check` to verify environment
+5. **Never**: Direct `pip install`, always use `uv`
 
 ## Work Style & Preferences
 - **Development Approach**: Test-Driven Development (TDD)
@@ -38,6 +88,7 @@ author: "Development Team"
 - **Error Handling**: Explicit error types with meaningful messages
 - **Performance**: Optimize early but avoid premature optimization
 - **Security**: Security by design, validate all inputs
+- **Environment**: uv-managed, reproducible
 
 ## Project-Specific Responsibilities
 

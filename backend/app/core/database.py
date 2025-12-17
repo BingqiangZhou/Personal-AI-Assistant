@@ -29,26 +29,26 @@ logger = logging.getLogger(__name__)
 # Create async engine with production-ready configuration
 engine = create_async_engine(
     settings.DATABASE_URL,
-    # Core pool settings
+    # Core pool settings - optimized for podcast workloads
     pool_size=settings.DATABASE_POOL_SIZE,
     max_overflow=settings.DATABASE_MAX_OVERFLOW,
 
     # Health check and connection validation (CRITICAL for long-running containers)
     pool_pre_ping=True,  # heartbeat connection before each borrow
-    pool_recycle=3600,   # recycle connections after 1 hour to avoid stale sockets
+    pool_recycle=settings.DATABASE_RECYCLE,  # recycle connections after configurable period
 
     # Performance optimizations
     echo=settings.ENVIRONMENT == "development",
     future=True,  # SQLAlchemy 2.0 style
     isolation_level="READ COMMITTED",  # Optimized for read-heavy workload
 
-    # Connection timeout settings
-    pool_timeout=30,      # Wait max 30s for connection
+    # Connection timeout settings - faster failure detection
+    pool_timeout=settings.DATABASE_POOL_TIMEOUT,
     connect_args={
         "server_settings": {
             "application_name": "personal-ai-assistant",
             "client_encoding": "utf8",
-            "connect_timeout": "10"  # Fast failure detection
+            "connect_timeout": str(settings.DATABASE_CONNECT_TIMEOUT)
         }
     }
 )

@@ -73,7 +73,7 @@ class SubscriptionItem(Base):
     source_url = Column(String(500), nullable=True)
     image_url = Column(String(500), nullable=True)
     tags = Column(JSON, nullable=True, default=[])
-    metadata = Column(JSON, nullable=True, default={})
+    metadata_json = Column("metadata", JSON, nullable=True, default={})  # Avoid reserved name
     published_at = Column(DateTime, nullable=True)
     read_at = Column(DateTime, nullable=True)
     bookmarked = Column(Boolean, default=False)

@@ -46,6 +46,7 @@ def create_application() -> FastAPI:
     from app.domains.knowledge.api.routes import router as knowledge_router
     from app.domains.assistant.api.routes import router as assistant_router
     from app.domains.multimedia.api.routes import router as multimedia_router
+    from app.domains.podcast.api.routes import router as podcast_router
 
     app.include_router(
         user_router,
@@ -57,6 +58,12 @@ def create_application() -> FastAPI:
         subscription_router,
         prefix=f"{settings.API_V1_STR}/subscriptions",
         tags=["subscriptions"]
+    )
+
+    app.include_router(
+        podcast_router,
+        prefix=f"{settings.API_V1_STR}/podcasts",
+        tags=["podcasts"]
     )
 
     app.include_router(

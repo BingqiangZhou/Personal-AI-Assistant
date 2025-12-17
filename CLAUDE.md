@@ -173,26 +173,49 @@ Personal AI Assistant - A scalable personal AI assistant tool supporting informa
 
 ## Development Commands
 
+### ⚠️ IMPORTANT: Package Management with uv
+
+**This project uses `uv` for Python package management** (not pip). All Python commands must be prefixed with `uv run` or executed within uv's managed environment.
+
 ### Backend (FastAPI)
 ```bash
-# Install dependencies
+# Install dependencies (with uv)
 cd backend
 uv sync --extra dev
+
+# Check sync status
+uv sync --check
 
 # Run database migrations
 uv run alembic upgrade head
 
 # Start development server
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 
 # Run tests
 uv run pytest
 
-# Code formatting and linting
+# Run specific test file
+uv run pytest app/domains/podcast/tests/test_services.py
+
+# Code quality checks
 uv run black .
 uv run isort .
 uv run flake8 .
 uv run mypy .
+
+# Add new dependency
+uv add package-name
+
+# Check what's installed
+uv pip list
+
+# Run Python interpreter
+uv run python
+uv run python -c "import sqlalchemy; print('OK')"
+
+# IMPORTANT: Never run 'pip install' directly
+# Always use 'uv add' or 'uv sync'
 ```
 
 ### Frontend (Flutter)

@@ -15,10 +15,16 @@ class Settings(BaseSettings):
     SECRET_KEY: str = secrets.token_urlsafe(32)
     ENVIRONMENT: str = "development"
 
-    # Database
+    # Database - Pool sizing adjusted for podcast-heavy workloads
+    # Base calculation: 5 domains × 6 concurrent/domain × 2 buffer = 60 connections
     DATABASE_URL: str
-    DATABASE_POOL_SIZE: int = 10
-    DATABASE_MAX_OVERFLOW: int = 20
+    DATABASE_POOL_SIZE: int = 20  # Increased from 10 - critical for RSS polling
+    DATABASE_MAX_OVERFLOW: int = 40  # Increased from 20 - total 60 connections available
+
+    # Database timeout settings
+    DATABASE_POOL_TIMEOUT: int = 30  # Max wait for connection (seconds)
+    DATABASE_RECYCLE: int = 3600  # Recycle connections after 1 hour
+    DATABASE_CONNECT_TIMEOUT: int = 5  # Fast fail for connection issues
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379"
@@ -31,9 +37,21 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     ALGORITHM: str = "HS256"
 
+    # Redis - Single DB for personal scale
+    REDIS_URL: str = "redis://localhost:6379"
+
     # Celery
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+
+    # Podcast Processing Limits
+    MAX_PODCAST_SUBSCRIPTIONS: int = 50  # Per user
+    MAX_PODCAST_EPISODE_DOWNLOAD_SIZE: int = 500 * 1024 * 1024  # 500MB
+    RSS_POLL_INTERVAL_MINUTES: int = 60  # Default polling interval
+
+    # Privacy & Security
+    LLM_CONTENT_SANITIZE_MODE: str = "standard"  # 'strict' | 'standard' | 'none'
+    ALLOWED_AUDIO_SCHEMES: list[str] = ["http", "https"]
 
     # External APIs
     OPENAI_API_KEY: Optional[str] = None

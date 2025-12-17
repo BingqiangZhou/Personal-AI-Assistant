@@ -26,7 +26,12 @@ dependencies = [
     "feedparser>=6.0.10",
     "python-dotenv>=1.0.0",
     "dependency-injector>=4.41.0",
-  ]
+    # Security & Privacy
+    "defusedxml>=0.7.1",
+    "phonenumbers>=8.13.27",
+    "email-validator>=2.1.0",
+    "beautifulsoup4>=4.12.2",
+]
 
 [project.optional-dependencies]
 dev = [
@@ -74,7 +79,7 @@ use_parentheses = true
 ensure_newline_before_comments = true
 line_length = 88
 
-[tool.mypy]
+[mypy]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true

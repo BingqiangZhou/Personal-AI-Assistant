@@ -66,7 +66,7 @@ class Message(Base):
     content = Column(Text, nullable=False)
     tokens = Column(Integer, nullable=True)
     model_name = Column(String(100), nullable=True)
-    metadata = Column(JSON, nullable=True, default={})
+    metadata_json = Column("metadata", JSON, nullable=True, default={})  # Avoid reserved name
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -117,7 +117,7 @@ class AssistantTask(Base):
     due_date = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)
     result = Column(Text, nullable=True)
-    metadata = Column(JSON, nullable=True, default={})
+    metadata_json = Column("metadata", JSON, nullable=True, default={})  # Avoid reserved name
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
