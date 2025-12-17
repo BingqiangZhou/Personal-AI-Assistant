@@ -1,0 +1,95 @@
+{
+  "version": "1.0.0",
+  "project": "personal-ai-assistant",
+  "agents": {
+    "architect": {
+      "path": ".claude/agents/roles/architect.md",
+      "active": true,
+      "description": "System architecture and design lead",
+      "default_workflow": "architecture-review"
+    },
+    "backend-dev": {
+      "path": ".claude/agents/roles/backend-dev.md",
+      "active": true,
+      "description": "FastAPI/Python backend development",
+      "default_workflow": "feature-development"
+    },
+    "frontend-dev": {
+      "path": ".claude/agents/roles/frontend-dev.md",
+      "active": true,
+      "description": "Flutter desktop and web development",
+      "default_workflow": "feature-development"
+    },
+    "mobile-dev": {
+      "path": ".claude/agents/roles/mobile-dev.md",
+      "active": true,
+      "description": "Flutter iOS/Android mobile development",
+      "default_workflow": "feature-development"
+    },
+    "requirements-analyst": {
+      "path": ".claude/agents/roles/requirements-analyst.md",
+      "active": true,
+      "description": "Requirements gathering and documentation",
+      "default_workflow": "feature-development"
+    },
+    "test-engineer": {
+      "path": ".claude/agents/roles/test-engineer.md",
+      "active": true,
+      "description": "Quality assurance and test automation",
+      "default_workflow": "bug-fix"
+    },
+    "devops-engineer": {
+      "path": ".claude/agents/roles/devops-engineer.md",
+      "active": true,
+      "description": "DevOps, deployment, and infrastructure",
+      "default_workflow": "feature-development"
+    }
+  },
+  "workflows": {
+    "feature-development": {
+      "path": ".claude/agents/workflows/feature-development.md",
+      "description": "End-to-end feature development workflow",
+      "participants": ["requirements-analyst", "architect", "backend-dev", "frontend-dev", "mobile-dev", "test-engineer", "devops-engineer"],
+      "estimated_duration": "2-3 weeks"
+    },
+    "bug-fix": {
+      "path": ".claude/agents/workflows/bug-fix.md",
+      "description": "Bug triage and resolution workflow",
+      "participants": ["test-engineer", "backend-dev", "frontend-dev", "mobile-dev", "devops-engineer"],
+      "estimated_duration": "1-5 days"
+    },
+    "architecture-review": {
+      "path": ".claude/agents/workflows/architecture-review.md",
+      "description": "Architecture design and review workflow",
+      "participants": ["architect", "backend-dev", "frontend-dev", "mobile-dev", "test-engineer", "devops-engineer"],
+      "estimated_duration": "2-4 hours"
+    }
+  },
+  "prompts": {
+    "base-prompt": {
+      "path": ".claude/agents/prompts/base-prompt.md",
+      "description": "Shared knowledge base and project context"
+    },
+    "domain-context": {
+      "path": ".claude/agents/prompts/domain-context.md",
+      "description": "Domain-specific context for all agents"
+    }
+  },
+  "coordination": {
+    "task-board": {
+      "path": ".claude/agents/coordination/task-board.md",
+      "description": "Task tracking and assignment system"
+    },
+    "communication": {
+      "path": ".claude/agents/coordination/communication.md",
+      "description": "Inter-agent communication protocols"
+    }
+  },
+  "settings": {
+    "default_timeout": 30,
+    "max_concurrent_agents": 7,
+    "auto_assign_tasks": true,
+    "track_metrics": true,
+    "enable_logging": true
+  }
+}
