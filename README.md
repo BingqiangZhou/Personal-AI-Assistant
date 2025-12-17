@@ -24,54 +24,48 @@
 
 ```
 personal-ai-assistant/
+├── docker/                     # Docker部署目录 ⭐
+│   ├── docker-compose.podcast.yml    # 主配置文件
+│   ├── README.md                      # 入口文档
+│   ├── INDEX.md                       # 文档导航
+│   ├── DEPLOY_DOCKER.md              # 问题排查
+│   ├── DOCKER_ANALYSIS.md            # 技术分析
+│   ├── QUICK_DEPLOY.txt             # 快速命令
+│   ├── README_DOCKER_DEPLOY.md      # 完整手册
+│   ├── 部署说明.txt                   # 中文快速指南
+│   └── scripts/
+│       └── start.bat                 # Windows一键启动
+│
 ├── backend/                    # FastAPI后端
 │   ├── app/
-│   │   ├── core/              # 核心基础设施
-│   │   │   ├── config/        # 配置管理
-│   │   │   ├── security/      # 认证安全
-│   │   │   ├── database/      # 数据库连接
-│   │   │   ├── exceptions/    # 异常处理
-│   │   │   └── dependencies/  # 依赖注入
-│   │   ├── shared/            # 共享组件
-│   │   │   ├── schemas/       # Pydantic模型
-│   │   │   ├── utils/         # 工具函数
-│   │   │   └── constants/     # 常量定义
-│   │   ├── domains/           # 业务域 (DDD)
-│   │   │   ├── user/          # 用户管理
-│   │   │   ├── subscription/  # 订阅管理
-│   │   │   ├── knowledge/     # 知识库
-│   │   │   ├── assistant/     # AI助手
-│   │   │   └── multimedia/    # 多媒体
-│   │   └── integration/       # 集成层
-│   │       ├── connectors/    # 外部服务连接器
-│   │       ├── workers/       # 后台任务
-│   │       └── events/        # 事件系统
+│   │   ├── core/              # 核心基础设施 (config, security, database)
+│   │   ├── shared/            # 共享组件 (schemas, utils, constants)
+│   │   ├── domains/           # 业务域 (user, subscription, podcast, knowledge...)
+│   │   └── integration/       # 集成层 (connectors, workers, events)
 │   ├── alembic/               # 数据库迁移
-│   ├── tests/                 # 测试文件
-│   └── requirements.txt       # Python依赖
+│   ├── tests/                 # 测试文件 (归类: core, podcast, ...)
+│   ├── run_all_tests.py       # 统一测试运行器
+│   ├── database_migration.py  # 快速迁移脚本
+│   ├── pyproject.toml         # uv依赖配置
+│   └── README.md              # 后端开发文档
+│
 ├── frontend/                   # Flutter前端
 │   ├── lib/
 │   │   ├── core/              # 核心功能
-│   │   │   ├── constants/     # 常量
-│   │   │   ├── errors/        # 错误处理
-│   │   │   ├── network/       # 网络请求
-│   │   │   ├── storage/       # 本地存储
-│   │   │   └── utils/         # 工具函数
 │   │   ├── shared/            # 共享组件
-│   │   │   ├── widgets/       # 通用UI组件
-│   │   │   ├── themes/        # 主题
-│   │   │   └── extensions/    # 扩展方法
 │   │   └── features/          # 功能模块
-│   │       ├── subscription/  # 订阅管理
-│   │       ├── knowledge/     # 知识库
-│   │       ├── assistant/     # AI助手
-│   │       └── multimedia/    # 多媒体
 │   ├── assets/                # 资源文件
 │   ├── test/                  # 测试文件
 │   └── pubspec.yaml           # Flutter依赖
+│
 ├── scripts/                    # 脚本文件
-├── docker-compose.yml          # Docker编排
-└── README.md                   # 项目说明
+├── docs/                       # 文档目录
+│   └── DEPLOYMENT.md          # 部署说明 (已更新)
+│
+├── docker-compose.yml          # (过时) 已迁移到 docker/docker-compose.podcast.yml
+├── .env.example               # 环境变量模板
+├── README.md                   # 项目说明 (本文件)
+└── AGENTS.md                   # 智能协作说明
 ```
 
 ## 设计模式应用
@@ -96,47 +90,44 @@ personal-ai-assistant/
 - Flutter 3.1.0+
 - PostgreSQL 15+
 - Redis 7+
-- Docker (可选)
+- Docker (可选，推荐)
 
-### 后端启动
+### 后端部署 (推荐2种方式)
 
-1. 克隆项目
+####  🐳 方式1: Docker Compose (5分钟，最简单)
 ```bash
-git clone <repository-url>
-cd personal-ai-assistant
+# 进入docker目录
+cd docker
+
+# 方式A: Windows用户，双击运行
+scripts\start.bat
+
+# 方式B: 命令行
+docker compose -f docker-compose.podcast.yml up -d --build
 ```
 
-2. 安装依赖
-```bash
-cd backend
-uv sync --extra dev
-```
+详细文档: [docker/README.md](docker/README.md)
 
-3. 配置环境变量
+####  ⚙️ 方式2: 手动运行 (适合开发者)
 ```bash
+# 1. 启动数据库和Redis (使用Docker建议)
+cd docker
+docker compose -f docker-compose.podcast.yml up -d postgres redis
+
+# 2. 配置环境
+cd ../backend
 cp .env.example .env
-# 编辑 .env 文件，配置数据库和其他服务
-```
+# 编辑 .env，连接字符串设为 localhost
 
-4. 运行数据库迁移
-```bash
-uv run alembic upgrade head
-```
+# 3. 安装依赖
+uv sync --extra dev
 
-5. 启动服务
-```bash
+# 4. 运行迁移和后端
+uv run python database_migration.py
 uvicorn app.main:app --reload
 ```
 
-### 使用Docker
-
-```bash
-# 启动所有服务
-docker-compose up -d
-
-# 查看日志
-docker-compose logs -f
-```
+详细文档: [README_DOCKER_DEPLOY.md](docker/README_DOCKER_DEPLOY.md)
 
 ### 前端启动
 
