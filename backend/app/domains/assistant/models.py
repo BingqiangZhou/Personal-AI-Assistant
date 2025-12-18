@@ -49,10 +49,7 @@ class Conversation(Base):
     user = relationship("User", back_populates="conversations")
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
 
-    # Indexes
-    __table_args__ = (
-        Index('idx_user_status', 'user_id', 'status'),
-    )
+    # Indexes are created automatically by SQLAlchemy based on foreign keys
 
 
 class Message(Base):
@@ -73,10 +70,7 @@ class Message(Base):
     # Relationships
     conversation = relationship("Conversation", back_populates="messages")
 
-    # Indexes
-    __table_args__ = (
-        Index('idx_conversation_created', 'conversation_id', 'created_at'),
-    )
+    # Indexes are created automatically by SQLAlchemy based on foreign keys
 
 
 class PromptTemplate(Base):
@@ -145,7 +139,4 @@ class ToolCall(Base):
     # Relationships
     message = relationship("Message")
 
-    # Indexes
-    __table_args__ = (
-        Index('idx_message_status', 'message_id', 'status'),
-    )
+    # Indexes are created automatically by SQLAlchemy based on foreign keys

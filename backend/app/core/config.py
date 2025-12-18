@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Personal AI Assistant"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str = secrets.token_urlsafe(32)
+    SECRET_KEY: Optional[str] = None  # Will be loaded dynamically
     ENVIRONMENT: str = "development"
 
     # Database - Pool sizing adjusted for podcast-heavy workloads
@@ -37,9 +37,6 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     ALGORITHM: str = "HS256"
 
-    # Redis - Single DB for personal scale
-    REDIS_URL: str = "redis://localhost:6379"
-
     # Celery
     CELERY_BROKER_URL: str = "redis://localhost:6379/0"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
@@ -55,6 +52,7 @@ class Settings(BaseSettings):
 
     # External APIs
     OPENAI_API_KEY: Optional[str] = None
+    OPENAI_API_BASE_URL: str = "https://api.openai.com/v1"
 
     # File storage
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
@@ -80,3 +78,8 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+# Ensure SECRET_KEY is loaded on import
+if settings.SECRET_KEY is None:
+    from app.core.security import get_or_generate_secret_key
+    settings.SECRET_KEY = get_or_generate_secret_key()

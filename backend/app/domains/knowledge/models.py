@@ -57,7 +57,7 @@ class Document(Base):
     file_size = Column(Integer, nullable=True)
     checksum = Column(String(64), nullable=True)  # SHA-256
     embeddings = Column(JSON, nullable=True)  # Vector embeddings
-    metadata = Column(JSON, nullable=True, default={})
+    doc_metadata = Column(JSON, nullable=True, default={})
     tags = Column(JSON, nullable=True, default=[])
     indexed_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -67,11 +67,7 @@ class Document(Base):
     knowledge_base = relationship("KnowledgeBase", back_populates="documents")
     chunks = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
 
-    # Indexes
-    __table_args__ = (
-        Index('idx_kb_content_type', 'knowledge_base_id', 'content_type'),
-        Index('idx_checksum', 'checksum'),
-    )
+    # Indexes are created automatically by SQLAlchemy
 
 
 class DocumentChunk(Base):
@@ -84,16 +80,13 @@ class DocumentChunk(Base):
     chunk_index = Column(Integer, nullable=False)
     content = Column(Text, nullable=False)
     embedding = Column(JSON, nullable=True)  # Vector embedding
-    metadata = Column(JSON, nullable=True, default={})
+    doc_metadata = Column(JSON, nullable=True, default={})
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
     document = relationship("Document", back_populates="chunks")
 
-    # Indexes
-    __table_args__ = (
-        Index('idx_document_chunk', 'document_id', 'chunk_index'),
-    )
+    # Indexes are created automatically by SQLAlchemy
 
 
 class DocumentTag(Base):
@@ -143,7 +136,4 @@ class SearchHistory(Base):
     user = relationship("User", back_populates="search_history")
     knowledge_base = relationship("KnowledgeBase")
 
-    # Indexes
-    __table_args__ = (
-        Index('idx_user_created', 'user_id', 'created_at'),
-    )
+    # Indexes are created automatically by SQLAlchemy

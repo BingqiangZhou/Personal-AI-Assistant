@@ -96,3 +96,25 @@ ios/Podfile.lock
 # Uploads
 uploads/
 media_files/
+
+# SECURITY - Secret keys and sensitive data
+backend/data/.secret_key
+**/.secret_key
+credentials.txt
+SECURITY_DEPLOYMENT.md
+QUICKSTART.md
+
+# Backup files (all variations)
+*.backup
+*.bak
+*.backup_*
+**/*.backup_*
+**/*.bak
+backend/.env.backup*
+backend/.env.bak
+docker/docker-compose.podcast.yml.backup*
+docker/docker-compose.podcast.yml.bak
+credentials.txt.backup*
+credentials.txt.bak
+temp_*
+*.tmp

@@ -409,13 +409,16 @@ class PodcastService:
             if any(keyword in s.lower() for keyword in ['key', 'main', 'conclusion', 'important', 'learn', 'feel'])
         ][:3]
 
+        bullet_points = '\n'.join(f"• {s}" for s in important_sentences) if important_sentences else '• ' + content[:150] + '...'
+        disclaimer = "*（此为快速总结，实际使用时建议绑定OpenAI API）*"
+
         return f"""## 播客总结
 
 **节目**: {title}
 
-{'\n'.join(f"• {s}" for s in important_sentences) if important_sentences else '• ' + content[:150] + '...'}
+{bullet_points}
 
-*（此为快速总结，实际使用时建议绑定OpenAI API）*"""
+{disclaimer}"""
 
     async def _get_episode_count(self, subscription_id: int) -> int:
         """获取订阅的单集数量"""

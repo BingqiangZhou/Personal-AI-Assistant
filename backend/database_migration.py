@@ -15,51 +15,48 @@ from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 async def create_tables():
     """创建播客相关表"""
     async with engine.begin() as conn:
-        # 使用显式提交
-        async with conn.begin():
-            # 创建播客单集表
-            await conn.run_sync(lambda sync_conn: PodcastEpisode.__table__.create(bind=sync_conn, checkfirst=True))
-            # 创建播放状态表
-            await conn.run_sync(lambda sync_conn: PodcastPlaybackState.__table__.create(bind=sync_conn, checkfirst=True))
+        # 创建播客单集表
+        await conn.run_sync(lambda sync_conn: PodcastEpisode.__table__.create(bind=sync_conn, checkfirst=True))
+        # 创建播放状态表
+        await conn.run_sync(lambda sync_conn: PodcastPlaybackState.__table__.create(bind=sync_conn, checkfirst=True))
 
         print("✅ 播客相关表已创建")
 
 async def add_indexes():
     """添加特定索引（如果需要）"""
     async with engine.begin() as conn:
-        async with conn.begin():
-            # 添加外键约束
-            try:
-                await conn.execute(text("""
-                    ALTER TABLE podcast_episodes
-                    ADD CONSTRAINT fk_podcast_subscription
-                    FOREIGN KEY (subscription_id) REFERENCES subscriptions(id)
-                    ON DELETE CASCADE
-                """))
-            except Exception as e:
-                print(f"外键约束可能已存在: {e}")
+        # 添加外键约束
+        try:
+            await conn.execute(text("""
+                ALTER TABLE podcast_episodes
+                ADD CONSTRAINT fk_podcast_subscription
+                FOREIGN KEY (subscription_id) REFERENCES subscriptions(id)
+                ON DELETE CASCADE
+            """))
+        except Exception as e:
+            print(f"外键约束可能已存在: {e}")
 
-            try:
-                await conn.execute(text("""
-                    ALTER TABLE podcast_playback_states
-                    ADD CONSTRAINT fk_playback_user
-                    FOREIGN KEY (user_id) REFERENCES users(id)
-                    ON DELETE CASCADE
-                """))
-            except Exception as e:
-                print(f"外键约束可能已存在: {e}")
+        try:
+            await conn.execute(text("""
+                ALTER TABLE podcast_playback_states
+                ADD CONSTRAINT fk_playback_user
+                FOREIGN KEY (user_id) REFERENCES users(id)
+                ON DELETE CASCADE
+            """))
+        except Exception as e:
+            print(f"外键约束可能已存在: {e}")
 
-            try:
-                await conn.execute(text("""
-                    ALTER TABLE podcast_playback_states
-                    ADD CONSTRAINT fk_playback_episode
-                    FOREIGN KEY (episode_id) REFERENCES podcast_episodes(id)
-                    ON DELETE CASCADE
-                """))
-            except Exception as e:
-                print(f"外键约束可能已存在: {e}")
+        try:
+            await conn.execute(text("""
+                ALTER TABLE podcast_playback_states
+                ADD CONSTRAINT fk_playback_episode
+                FOREIGN KEY (episode_id) REFERENCES podcast_episodes(id)
+                ON DELETE CASCADE
+            """))
+        except Exception as e:
+            print(f"外键约束可能已存在: {e}")
 
-        print("✅ 外键约束已添加")
+    print("✅ 外键约束已添加")
 
 async def verify_migration():
     """验证迁移结果"""
@@ -128,7 +125,31 @@ async def main():
         return
 
     print("开始播客数据库迁移...")
-    print(f"数据库URL: {str(settings.DATABASE_URL).replace(settings.DATABASE_URL.password or '', '***')}")
+    # 隐藏密码中的敏感信息
+    db_url = str(settings.DATABASE_URL)
+    if "@" in db_url:
+        # 隐藏密码部分
+        parts = db_url.split("@")
+        if len(parts) == 2:
+            auth_part = parts[0]
+            if ":" in auth_part and "//" in auth_part:
+                host_part = parts[1]
+                # 保留协议和用户名，隐藏密码
+                protocol_end = auth_part.find("//")
+                protocol = auth_part[:protocol_end + 2]
+                credentials = auth_part[protocol_end + 2:]
+                if ":" in credentials:
+                    username = credentials.split(":")[0]
+                    masked_db_url = f"{protocol}{username}:***@{host_part}"
+                else:
+                    masked_db_url = f"{protocol}{credentials}@{host_part}"
+            else:
+                masked_db_url = db_url
+        else:
+            masked_db_url = db_url
+    else:
+        masked_db_url = db_url
+    print(f"数据库URL: {masked_db_url}")
 
     try:
         await create_tables()

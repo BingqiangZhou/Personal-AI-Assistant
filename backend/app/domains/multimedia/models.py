@@ -44,7 +44,7 @@ class MediaFile(Base):
     width = Column(Integer, nullable=True)   # For image/video
     height = Column(Integer, nullable=True)  # For image/video
     checksum = Column(String(64), nullable=True)  # SHA-256
-    metadata = Column(JSON, nullable=True, default={})
+    media_metadata = Column(JSON, nullable=True, default={})
     processed = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -53,11 +53,7 @@ class MediaFile(Base):
     user = relationship("User", back_populates="media_files")
     processing_jobs = relationship("ProcessingJob", back_populates="media_file", cascade="all, delete-orphan")
 
-    # Indexes
-    __table_args__ = (
-        Index('idx_user_type', 'user_id', 'media_type'),
-        Index('idx_checksum', 'checksum'),
-    )
+    # Indexes are created automatically by SQLAlchemy
 
 
 class ProcessingJob(Base):
@@ -83,11 +79,7 @@ class ProcessingJob(Base):
     user = relationship("User", back_populates="processing_jobs")
     media_file = relationship("MediaFile", back_populates="processing_jobs")
 
-    # Indexes
-    __table_args__ = (
-        Index('idx_user_status', 'user_id', 'status'),
-        Index('idx_media_type', 'media_file_id', 'job_type'),
-    )
+    # Indexes are created automatically by SQLAlchemy
 
 
 class TranscriptionResult(Base):

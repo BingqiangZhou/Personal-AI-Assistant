@@ -47,9 +47,9 @@ engine = create_async_engine(
     connect_args={
         "server_settings": {
             "application_name": "personal-ai-assistant",
-            "client_encoding": "utf8",
-            "connect_timeout": str(settings.DATABASE_CONNECT_TIMEOUT)
-        }
+            "client_encoding": "utf8"
+        },
+        "timeout": settings.DATABASE_CONNECT_TIMEOUT
     }
 )
 
@@ -75,15 +75,17 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def init_db() -> None:
     """Initialize database tables."""
-    async with engine.begin() as conn:
-        # Import all models here to ensure they are registered with Base
-        from app.domains.subscription.models import Subscription, SubscriptionItem
-        from app.domains.knowledge.models import KnowledgeBase, Document
-        from app.domains.assistant.models import Conversation, Message
-        from app.domains.multimedia.models import MediaFile, ProcessingJob
+    # Import all models here to ensure they are registered with Base
+    from app.domains.user.models import User
+    from app.domains.subscription.models import Subscription, SubscriptionItem
+    from app.domains.knowledge.models import KnowledgeBase, Document
+    from app.domains.assistant.models import Conversation, Message
+    from app.domains.multimedia.models import MediaFile, ProcessingJob
+    from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 
-        # Create all tables
-        await conn.run_sync(Base.metadata.create_all)
+    # Create all tables with checkfirst=True
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all, checkfirst=True)
 
 
 async def close_db() -> None:
