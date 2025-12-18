@@ -2,7 +2,7 @@
 
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, ConfigDict, Field
+from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
 
 
 # Base schemas
@@ -18,14 +18,37 @@ class TimestampedSchema(BaseSchema):
 # User schemas
 class UserBase(BaseSchema):
     email: EmailStr
-    username: Optional[str] = None
-    full_name: Optional[str] = None
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
+    full_name: Optional[str] = Field(None, max_length=255)
     is_active: bool = True
     is_superuser: bool = False
 
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, v):
+        """Validate username format."""
+        if v is not None:
+            if not v.replace('_', '').replace('-', '').isalnum():
+                raise ValueError('Username must contain only alphanumeric characters, hyphens, and underscores')
+        return v
+
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=8)
+    password: str = Field(..., min_length=8, max_length=128)
+
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v):
+        """Validate password strength."""
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
+        if not any(c.isupper() for c in v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not any(c.islower() for c in v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain at least one digit')
+        return v
 
 
 class UserUpdate(BaseSchema):

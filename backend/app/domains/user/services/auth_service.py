@@ -1,0 +1,365 @@
+"""Authentication service for user management."""
+
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, and_, or_
+from sqlalchemy.exc import IntegrityError
+import secrets
+
+from app.core.security import (
+    get_password_hash,
+    verify_password,
+    create_access_token,
+    create_refresh_token,
+    verify_token
+)
+from app.core.config import settings
+from app.core.exceptions import (
+    BadRequestError,
+    UnauthorizedError,
+    ConflictError,
+    NotFoundError
+)
+from app.domains.user.models import User, UserSession
+
+
+class AuthenticationService:
+    """Service for handling authentication operations."""
+
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def register_user(
+        self,
+        email: str,
+        password: str,
+        username: Optional[str] = None,
+        full_name: Optional[str] = None
+    ) -> User:
+        """
+        Register a new user.
+
+        Args:
+            email: User's email address
+            password: Plain text password
+            username: Optional username
+            full_name: Optional full name
+
+        Returns:
+            Created user instance
+
+        Raises:
+            ConflictError: If user already exists
+            BadRequestError: If password is too weak
+        """
+        # Validate password strength
+        if len(password) < 8:
+            raise BadRequestError("Password must be at least 8 characters long")
+
+        # Check if user already exists
+        existing_user = await self._get_user_by_email_or_username(email, username)
+        if existing_user:
+            if existing_user.email == email:
+                raise ConflictError("Email already registered")
+            elif existing_user.username == username:
+                raise ConflictError("Username already taken")
+
+        # Create new user
+        hashed_password = get_password_hash(password)
+
+        user = User(
+            email=email,
+            username=username,
+            full_name=full_name,
+            hashed_password=hashed_password,
+            status="active",
+            is_verified=False,
+            is_superuser=False
+        )
+
+        try:
+            self.db.add(user)
+            await self.db.commit()
+            await self.db.refresh(user)
+            return user
+        except IntegrityError as e:
+            await self.db.rollback()
+            raise ConflictError("User registration failed")
+
+    async def authenticate_user(
+        self,
+        email_or_username: str,
+        password: str
+    ) -> Optional[User]:
+        """
+        Authenticate user with email/username and password.
+
+        Args:
+            email_or_username: User's email or username
+            password: Plain text password
+
+        Returns:
+            User instance if authentication successful, None otherwise
+        """
+        # Get user by email or username
+        user = await self._get_user_by_email_or_username(email_or_username, email_or_username)
+
+        if not user:
+            return None
+
+        # Check password
+        if not verify_password(password, user.hashed_password):
+            return None
+
+        # Check if user is active
+        if user.status != "active":
+            return None
+
+        # Update last login
+        user.last_login_at = datetime.utcnow()
+        await self.db.commit()
+
+        return user
+
+    async def create_user_session(
+        self,
+        user: User,
+        device_info: Optional[Dict[str, Any]] = None,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Create user session with tokens.
+
+        Args:
+            user: User instance
+            device_info: Optional device information
+            ip_address: Optional IP address
+            user_agent: Optional user agent string
+
+        Returns:
+            Dictionary containing access and refresh tokens
+        """
+        # Create tokens
+        access_token = create_access_token(
+            data={"sub": str(user.id), "email": user.email}
+        )
+
+        refresh_token = create_refresh_token(
+            data={"sub": str(user.id), "email": user.email}
+        )
+
+        # Calculate expiry times
+        access_expires_at = datetime.utcnow() + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+        refresh_expires_at = datetime.utcnow() + timedelta(
+            days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+        )
+
+        # Create session record
+        session = UserSession(
+            user_id=user.id,
+            session_token=access_token,
+            refresh_token=refresh_token,
+            device_info=device_info or {},
+            ip_address=ip_address,
+            user_agent=user_agent,
+            expires_at=access_expires_at,
+            last_activity_at=datetime.utcnow(),
+            is_active=True
+        )
+
+        try:
+            self.db.add(session)
+            await self.db.commit()
+            await self.db.refresh(session)
+        except IntegrityError:
+            await self.db.rollback()
+            raise BadRequestError("Failed to create user session")
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            "session_id": session.id
+        }
+
+    async def refresh_access_token(self, refresh_token: str) -> Dict[str, Any]:
+        """
+        Refresh access token using refresh token.
+
+        Args:
+            refresh_token: Valid refresh token
+
+        Returns:
+            Dictionary with new access token
+
+        Raises:
+            UnauthorizedError: If refresh token is invalid
+            NotFoundError: If session not found
+        """
+        # Verify refresh token
+        try:
+            payload = verify_token(refresh_token, token_type="refresh")
+            user_id = int(payload.get("sub"))
+        except Exception:
+            raise UnauthorizedError("Invalid refresh token")
+
+        # Find valid session
+        session = await self._get_valid_session_by_refresh_token(refresh_token)
+        if not session or session.user_id != user_id:
+            raise NotFoundError("Invalid session")
+
+        # Check if session is still active
+        if not session.is_active or session.expires_at < datetime.utcnow():
+            raise UnauthorizedError("Session expired")
+
+        # Get user
+        user = await self._get_user_by_id(user_id)
+        if not user or user.status != "active":
+            raise UnauthorizedError("User not found or inactive")
+
+        # Create new access token
+        new_access_token = create_access_token(
+            data={"sub": str(user.id), "email": user.email}
+        )
+
+        # Update session
+        session.session_token = new_access_token
+        session.last_activity_at = datetime.utcnow()
+        session.expires_at = datetime.utcnow() + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
+
+        await self.db.commit()
+
+        return {
+            "access_token": new_access_token,
+            "token_type": "bearer",
+            "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+        }
+
+    async def logout_user(self, refresh_token: str) -> bool:
+        """
+        Logout user by invalidating session.
+
+        Args:
+            refresh_token: Refresh token to invalidate
+
+        Returns:
+            True if logout successful
+
+        Raises:
+            NotFoundError: If session not found
+        """
+        session = await self._get_valid_session_by_refresh_token(refresh_token)
+        if not session:
+            raise NotFoundError("Session not found")
+
+        # Mark session as inactive
+        session.is_active = False
+        session.last_activity_at = datetime.utcnow()
+        await self.db.commit()
+
+        return True
+
+    async def logout_all_sessions(self, user_id: int) -> bool:
+        """
+        Logout user from all devices.
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            True if logout successful
+        """
+        result = await self.db.execute(
+            select(UserSession).where(
+                and_(
+                    UserSession.user_id == user_id,
+                    UserSession.is_active == True
+                )
+            )
+        )
+        sessions = result.scalars().all()
+
+        for session in sessions:
+            session.is_active = False
+            session.last_activity_at = datetime.utcnow()
+
+        await self.db.commit()
+        return True
+
+    async def cleanup_expired_sessions(self) -> int:
+        """
+        Clean up expired sessions.
+
+        Returns:
+            Number of sessions cleaned up
+        """
+        result = await self.db.execute(
+            select(UserSession).where(
+                or_(
+                    UserSession.expires_at < datetime.utcnow(),
+                    and_(
+                        UserSession.last_activity_at < datetime.utcnow() - timedelta(days=30),
+                        UserSession.is_active == False
+                    )
+                )
+            )
+        )
+        sessions = result.scalars().all()
+
+        count = 0
+        for session in sessions:
+            await self.db.delete(session)
+            count += 1
+
+        await self.db.commit()
+        return count
+
+    async def _get_user_by_email_or_username(
+        self,
+        email: Optional[str] = None,
+        username: Optional[str] = None
+    ) -> Optional[User]:
+        """Get user by email or username."""
+        conditions = []
+        if email:
+            conditions.append(User.email == email)
+        if username:
+            conditions.append(User.username == username)
+
+        if not conditions:
+            return None
+
+        result = await self.db.execute(
+            select(User).where(or_(*conditions))
+        )
+        return result.scalar_one_or_none()
+
+    async def _get_user_by_id(self, user_id: int) -> Optional[User]:
+        """Get user by ID."""
+        result = await self.db.execute(
+            select(User).where(User.id == user_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def _get_valid_session_by_refresh_token(
+        self,
+        refresh_token: str
+    ) -> Optional[UserSession]:
+        """Get valid session by refresh token."""
+        result = await self.db.execute(
+            select(UserSession).where(
+                and_(
+                    UserSession.refresh_token == refresh_token,
+                    UserSession.is_active == True,
+                    UserSession.expires_at > datetime.utcnow()
+                )
+            )
+        )
+        return result.scalar_one_or_none()

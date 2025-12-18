@@ -26,13 +26,7 @@
 personal-ai-assistant/
 ├── docker/                     # Docker部署目录 ⭐
 │   ├── docker-compose.podcast.yml    # 主配置文件
-│   ├── README.md                      # 入口文档
-│   ├── INDEX.md                       # 文档导航
-│   ├── DEPLOY_DOCKER.md              # 问题排查
-│   ├── DOCKER_ANALYSIS.md            # 技术分析
-│   ├── QUICK_DEPLOY.txt             # 快速命令
-│   ├── README_DOCKER_DEPLOY.md      # 完整手册
-│   ├── 部署说明.txt                   # 中文快速指南
+│   ├── README.md                      # 说明文档
 │   └── scripts/
 │       └── start.bat                 # Windows一键启动
 │
@@ -44,8 +38,6 @@ personal-ai-assistant/
 │   │   └── integration/       # 集成层 (connectors, workers, events)
 │   ├── alembic/               # 数据库迁移
 │   ├── tests/                 # 测试文件 (归类: core, podcast, ...)
-│   ├── run_all_tests.py       # 统一测试运行器
-│   ├── database_migration.py  # 快速迁移脚本
 │   ├── pyproject.toml         # uv依赖配置
 │   └── README.md              # 后端开发文档
 │
@@ -59,13 +51,22 @@ personal-ai-assistant/
 │   └── pubspec.yaml           # Flutter依赖
 │
 ├── scripts/                    # 脚本文件
-├── docs/                       # 文档目录
-│   └── DEPLOYMENT.md          # 部署说明 (已更新)
+│   └── init.sql               # 数据库初始化
 │
-├── docker-compose.yml          # (过时) 已迁移到 docker/docker-compose.podcast.yml
+├── docs/                       # 文档目录
+│   ├── architecture-evolution.md # 架构演进
+│   └── DEPLOYMENT.md          # 部署说明
+│
+├── .claude/                    # Claude Code配置 ✨
+│   ├── agents/                 # 智能代理定义
+│   ├── agents.json             # 代理配置
+│   └── commands/               # 自定义命令
+│
+├── docker-compose.yml          # 根目录Docker配置
 ├── .env.example               # 环境变量模板
 ├── README.md                   # 项目说明 (本文件)
-└── AGENTS.md                   # 智能协作说明
+├── CLAUDE.md                   # 项目开发指南
+└── CLEANUP_SUMMARY.md          # 清理总结文档
 ```
 
 ## 设计模式应用
@@ -106,7 +107,7 @@ scripts\start.bat
 docker compose -f docker-compose.podcast.yml up -d --build
 ```
 
-详细文档: [docker/README.md](docker/README.md)
+详细文档: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ####  ⚙️ 方式2: 手动运行 (适合开发者)
 ```bash
@@ -127,7 +128,7 @@ uv run python database_migration.py
 uvicorn app.main:app --reload
 ```
 
-详细文档: [README_DOCKER_DEPLOY.md](docker/README_DOCKER_DEPLOY.md)
+详细文档: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ### 前端启动
 

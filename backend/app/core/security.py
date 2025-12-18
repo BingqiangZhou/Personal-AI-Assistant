@@ -27,7 +27,16 @@ from app.core.config import settings
 from app.core.database import get_db_session
 
 # Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Note: Use bcrypt without prefix to avoid base64 encoding issues
+try:
+    import bcrypt
+    # Test if bcrypt has the expected API
+    _test = bcrypt.hashpw(b"test", bcrypt.gensalt())
+    _HAS_BCRYPT = True
+except ImportError:
+    _HAS_BCRYPT = False
+    from passlib.context import CryptContext
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # SECRET_KEY Management
 class SecretKeyManager:
@@ -240,12 +249,30 @@ def enable_ec256_optimized() -> Dict[str, str]:
 
 def get_password_hash(password: str) -> str:
     """Hash password using bcrypt."""
-    return pwd_context.hash(password)
+    if _HAS_BCRYPT:
+        # Use raw bcrypt to avoid passlib issues
+        if isinstance(password, str):
+            password = password.encode('utf-8')
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password, salt).decode('utf-8')
+    else:
+        return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify plain password against hashed password."""
-    return pwd_context.verify(plain_password, hashed_password)
+    if _HAS_BCRYPT:
+        # Use raw bcrypt to avoid passlib issues
+        if isinstance(plain_password, str):
+            plain_password = plain_password.encode('utf-8')
+        if isinstance(hashed_password, str):
+            hashed_password = hashed_password.encode('utf-8')
+        try:
+            return bcrypt.checkpw(plain_password, hashed_password)
+        except Exception:
+            return False
+    else:
+        return pwd_context.verify(plain_password, hashed_password)
 
 
 def generate_password_reset_token(email: str) -> str:
@@ -297,7 +324,7 @@ async def get_current_user(
     )
 
     try:
-        payload = verify_token(token)
+        payload = verify_token(token, token_type="access")
         user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception
@@ -313,4 +340,35 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
 
+    # Check if user is active
+    if user.status != "active":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User account is inactive"
+        )
+
     return user
+
+
+async def get_current_active_user(
+    current_user: Any = Depends(get_current_user)
+) -> Any:
+    """Get current active user."""
+    if current_user.status != "active":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user"
+        )
+    return current_user
+
+
+async def get_current_superuser(
+    current_user: Any = Depends(get_current_user)
+) -> Any:
+    """Get current superuser."""
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+    return current_user

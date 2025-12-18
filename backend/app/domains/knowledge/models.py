@@ -100,13 +100,9 @@ class DocumentTag(Base):
     color = Column(String(7), nullable=True)  # Hex color code
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
+    # Relationships (read-only for now to avoid back_populates issues)
     user = relationship("User", back_populates="document_tags")
-    documents = relationship(
-        "Document",
-        secondary="document_tag_mappings",
-        back_populates="tags"
-    )
+    # documents is accessed through DocumentTagMapping only
 
 
 class DocumentTagMapping(Base):

@@ -50,6 +50,11 @@ class Subscription(Base):
     # Relationships
     user = relationship("User", back_populates="subscriptions")
     items = relationship("SubscriptionItem", back_populates="subscription", cascade="all, delete-orphan")
+    categories = relationship(
+        "SubscriptionCategory",
+        secondary="subscription_category_mappings",
+        back_populates="subscriptions"
+    )
 
     # Indexes
     __table_args__ = (

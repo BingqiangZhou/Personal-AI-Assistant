@@ -23,12 +23,21 @@ class ServerException extends AppException {
   });
 
   factory ServerException.fromDioError(DioException error) {
-    final message = error.response?.data?['detail'] ??
-        error.response?.data?['message'] ??
-        error.message ??
-        'Unknown error occurred';
+    final data = error.response?.data;
 
-    final code = error.response?.data?['code'];
+    // Handle case where data might be a string or list instead of a map
+    String message = 'Unknown error occurred';
+    if (data is Map) {
+      message = data['detail'] ?? data['message'] ?? error.message ?? 'Unknown error occurred';
+    } else if (data is String) {
+      message = data;
+    } else if (data is List) {
+      message = data.join(', ');
+    } else {
+      message = error.message ?? 'Unknown error occurred';
+    }
+
+    final code = data is Map ? data['code'] : null;
     final statusCode = error.response?.statusCode;
 
     return ServerException(
@@ -89,11 +98,25 @@ class ValidationException extends AppException {
   factory ValidationException.fromDioError(DioException error) {
     final data = error.response?.data;
 
+    // Handle different error response structures
+    Map<String, List<String>>? fieldErrors;
+    if (data?['errors'] != null) {
+      if (data['errors'] is Map) {
+        try {
+          fieldErrors = Map<String, List<String>>.from(data['errors']);
+        } catch (e) {
+          // Could not convert, skip field errors
+        }
+      } else if (data['errors'] is List) {
+        // Convert list to map format: {'general': ['error1', 'error2']}
+        final errorsList = data['errors'] as List;
+        fieldErrors = {'general': errorsList.map((e) => e.toString()).toList()};
+      }
+    }
+
     return ValidationException(
       data?['detail'] ?? data?['message'] ?? 'Validation error',
-      fieldErrors: data?['errors'] != null
-          ? Map<String, List<String>>.from(data['errors'])
-          : null,
+      fieldErrors: fieldErrors,
       code: data?['code'],
     );
   }

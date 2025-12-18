@@ -14,6 +14,10 @@ class DioClient {
   late final Dio _dio;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
+  // Token refresh state
+  bool _isRefreshing = false;
+  final List<Function()> _queuedRequests = [];
+
   DioClient() {
     _dio = Dio(BaseOptions(
       baseUrl: AppConstants.baseUrl,
@@ -58,7 +62,7 @@ class DioClient {
   void _onError(
     DioException error,
     ErrorInterceptorHandler handler,
-  ) {
+  ) async {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
@@ -74,53 +78,65 @@ class DioClient {
       case DioExceptionType.badResponse:
         final statusCode = error.response?.statusCode;
         if (statusCode != null) {
-          if (statusCode >= 400 && statusCode < 500) {
-            if (statusCode == 401) {
-              handler.reject(
-                DioException(
-                  requestOptions: error.requestOptions,
-                  response: error.response,
-                  type: DioExceptionType.badResponse,
-                  error: AuthenticationException.fromDioError(error),
-                ),
-              );
-            } else if (statusCode == 403) {
-              handler.reject(
-                DioException(
-                  requestOptions: error.requestOptions,
-                  response: error.response,
-                  type: DioExceptionType.badResponse,
-                  error: AuthorizationException.fromDioError(error),
-                ),
-              );
-            } else if (statusCode == 404) {
-              handler.reject(
-                DioException(
-                  requestOptions: error.requestOptions,
-                  response: error.response,
-                  type: DioExceptionType.badResponse,
-                  error: NotFoundException.fromDioError(error),
-                ),
-              );
-            } else if (statusCode == 422) {
-              handler.reject(
-                DioException(
-                  requestOptions: error.requestOptions,
-                  response: error.response,
-                  type: DioExceptionType.badResponse,
-                  error: ValidationException.fromDioError(error),
-                ),
-              );
-            } else {
-              handler.reject(
-                DioException(
-                  requestOptions: error.requestOptions,
-                  response: error.response,
-                  type: DioExceptionType.badResponse,
-                  error: ServerException.fromDioError(error),
-                ),
-              );
+          if (statusCode == 401) {
+            // Check if this is a refresh token request to avoid infinite loop
+            final isRefreshRequest = error.requestOptions.path.contains('/auth/refresh');
+
+            if (!isRefreshRequest) {
+              // Try to refresh the token
+              final success = await _refreshToken();
+
+              if (success) {
+                // Retry the original request with new token
+                try {
+                  final response = await _retryRequest(error.requestOptions);
+                  handler.resolve(response);
+                  return;
+                } catch (e) {
+                  // If retry fails, reject with authentication error
+                  await _clearTokens();
+                }
+              } else {
+                // Refresh failed, clear tokens and reject
+                await _clearTokens();
+              }
             }
+
+            handler.reject(
+              DioException(
+                requestOptions: error.requestOptions,
+                response: error.response,
+                type: DioExceptionType.badResponse,
+                error: AuthenticationException.fromDioError(error),
+              ),
+            );
+          } else if (statusCode == 403) {
+            handler.reject(
+              DioException(
+                requestOptions: error.requestOptions,
+                response: error.response,
+                type: DioExceptionType.badResponse,
+                error: AuthorizationException.fromDioError(error),
+              ),
+            );
+          } else if (statusCode == 404) {
+            handler.reject(
+              DioException(
+                requestOptions: error.requestOptions,
+                response: error.response,
+                type: DioExceptionType.badResponse,
+                error: NotFoundException.fromDioError(error),
+              ),
+            );
+          } else if (statusCode == 422) {
+            handler.reject(
+              DioException(
+                requestOptions: error.requestOptions,
+                response: error.response,
+                type: DioExceptionType.badResponse,
+                error: ValidationException.fromDioError(error),
+              ),
+            );
           } else {
             handler.reject(
               DioException(
@@ -150,6 +166,86 @@ class DioClient {
           ),
         );
     }
+  }
+
+  // Token refresh methods
+  Future<bool> _refreshToken() async {
+    if (_isRefreshing) {
+      // If already refreshing, wait for it to complete
+      return await _waitForRefresh();
+    }
+
+    _isRefreshing = true;
+
+    try {
+      final refreshToken = await _secureStorage.read(key: AppConstants.refreshTokenKey);
+      if (refreshToken == null) {
+        return false;
+      }
+
+      final response = await _dio.post(
+        '/auth/refresh',
+        data: {'refresh_token': refreshToken},
+        options: Options(
+          headers: {'Content-Type': 'application/json'},
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final newAccessToken = response.data['access_token'];
+        final newRefreshToken = response.data['refresh_token'];
+
+        await _secureStorage.write(key: AppConstants.accessTokenKey, value: newAccessToken);
+        if (newRefreshToken != null) {
+          await _secureStorage.write(key: AppConstants.refreshTokenKey, value: newRefreshToken);
+        }
+
+        // Retry queued requests
+        _retryQueuedRequests();
+
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Token refresh failed: $e');
+      return false;
+    } finally {
+      _isRefreshing = false;
+    }
+  }
+
+  Future<bool> _waitForRefresh() async {
+    int attempts = 0;
+    const maxAttempts = 50; // 5 seconds max wait
+
+    while (_isRefreshing && attempts < maxAttempts) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      attempts++;
+    }
+
+    return !_isRefreshing; // Return true if refresh completed (not failed)
+  }
+
+  void _retryQueuedRequests() {
+    for (final request in _queuedRequests) {
+      request();
+    }
+    _queuedRequests.clear();
+  }
+
+  Future<Response> _retryRequest(RequestOptions options) async {
+    final token = await _secureStorage.read(key: AppConstants.accessTokenKey);
+    if (token != null) {
+      options.headers['Authorization'] = 'Bearer $token';
+    }
+
+    return _dio.fetch(options);
+  }
+
+  Future<void> _clearTokens() async {
+    await _secureStorage.delete(key: AppConstants.accessTokenKey);
+    await _secureStorage.delete(key: AppConstants.refreshTokenKey);
+    await _secureStorage.delete(key: AppConstants.userProfileKey);
   }
 
   // HTTP methods
