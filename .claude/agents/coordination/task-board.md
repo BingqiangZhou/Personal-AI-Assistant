@@ -1,3 +1,9 @@
+---
+name: "Task Board"
+description: "Task tracking and assignment system for agent coordination"
+version: "1.0.0"
+---
+
 # Personal AI Assistant - Task Board
 
 ## Task Tracking System

@@ -1,3 +1,9 @@
+---
+name: "Base Agent Prompt"
+description: "Shared knowledge base and project context for all agents"
+version: "1.0.0"
+---
+
 # Personal AI Assistant - Base Agent Prompt
 
 ## Project Overview

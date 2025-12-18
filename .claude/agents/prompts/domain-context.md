@@ -1,3 +1,9 @@
+---
+name: "Domain Context"
+description: "Domain-specific context for all agents in the Personal AI Assistant project"
+version: "1.0.0"
+---
+
 # Personal AI Assistant - Domain Context
 
 ## Domain Overview

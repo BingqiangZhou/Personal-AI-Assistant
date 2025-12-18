@@ -1,3 +1,9 @@
+---
+name: "Communication Protocol"
+description: "Inter-agent communication protocols and collaboration guidelines"
+version: "1.0.0"
+---
+
 # 代理间通信协议
 
 ## Overview

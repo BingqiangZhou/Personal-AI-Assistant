@@ -1,3 +1,9 @@
+---
+name: "Claude Code Subagent System"
+description: "Personal AI Assistant - Multi-agent collaboration system"
+version: "1.0.0"
+---
+
 # Personal AI Assistant - Claude Code Subagent System
 
 ## 系统概述
