@@ -1,8 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:get_it/get_it.dart';
 
-import '../constants/app_constants.dart';
-import '../errors/exceptions.dart';
+import '../app/config/app_config.dart';
+import '../storage/secure_storage_service.dart';
+import '../utils/logger.dart';
+
+final sl = GetIt.instance;
 
 class DioClient {
   late final Dio _dio;
@@ -18,7 +23,7 @@ class DioClient {
     ));
 
     // Add interceptors
-    _dio.interors.add(
+    _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: _onRequest,
         onResponse: _onResponse,
