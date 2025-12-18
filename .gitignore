@@ -4,13 +4,11 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -19,6 +17,25 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# Python build dir (but exclude frontend Flutter build)
+# This ensures backend/lib/ is ignored but frontend/lib/ is tracked
+backend/lib/
+backend/build/
+
+# Flutter
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.packages
+frontend/pub-cache/
+frontend/.pub-cache/
+frontend/build/
+frontend/.fvm/
+
+# Flutter generated files (but keep them version controlled for now)
+# frontend/lib/**/*.g.dart
+# frontend/lib/**/*.freezed.dart
 
 # Virtual Environment
 venv/

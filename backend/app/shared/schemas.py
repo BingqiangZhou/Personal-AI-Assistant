@@ -19,7 +19,6 @@ class TimestampedSchema(BaseSchema):
 class UserBase(BaseSchema):
     email: EmailStr
     username: Optional[str] = Field(None, min_length=3, max_length=50)
-    full_name: Optional[str] = Field(None, max_length=255)
     is_active: bool = True
     is_superuser: bool = False
 
@@ -40,14 +39,21 @@ class UserCreate(UserBase):
     @classmethod
     def validate_password(cls, v):
         """Validate password strength."""
+        errors = []
+
         if len(v) < 8:
-            raise ValueError('Password must be at least 8 characters long')
+            errors.append('Password must be at least 8 characters long')
         if not any(c.isupper() for c in v):
-            raise ValueError('Password must contain at least one uppercase letter')
+            errors.append('Password must contain at least one uppercase letter (A-Z)')
         if not any(c.islower() for c in v):
-            raise ValueError('Password must contain at least one lowercase letter')
+            errors.append('Password must contain at least one lowercase letter (a-z)')
         if not any(c.isdigit() for c in v):
-            raise ValueError('Password must contain at least one digit')
+            errors.append('Password must contain at least one number (0-9)')
+
+        if errors:
+            # Join all errors with a separator for better readability
+            raise ValueError(' | '.join(errors))
+
         return v
 
 

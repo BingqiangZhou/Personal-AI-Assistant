@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
 import '../app/config/app_config.dart';
-import '../errors/exceptions.dart';
+import 'exceptions/network_exceptions.dart';
 import '../storage/secure_storage_service.dart';
 import '../utils/logger.dart';
 
@@ -128,13 +128,37 @@ class DioClient {
                 error: NotFoundException.fromDioError(error),
               ),
             );
-          } else if (statusCode == 422) {
+          } else if (statusCode == 409) {
+            // Debug 409 errors
+            debugPrint('=== Dio Client 409 Error ===');
+            debugPrint('Response data: ${error.response?.data}');
+            final conflictError = ConflictException.fromDioError(error);
+            debugPrint('ConflictException message: ${conflictError.message}');
+            debugPrint('============================');
+
             handler.reject(
               DioException(
                 requestOptions: error.requestOptions,
                 response: error.response,
                 type: DioExceptionType.badResponse,
-                error: ValidationException.fromDioError(error),
+                error: conflictError,
+              ),
+            );
+          } else if (statusCode == 422) {
+            // Debug 422 errors
+            debugPrint('=== Dio Client 422 Error ===');
+            debugPrint('Response data: ${error.response?.data}');
+            final validationError = ValidationException.fromDioError(error);
+            debugPrint('ValidationException message: ${validationError.message}');
+            debugPrint('ValidationException fieldErrors: ${validationError.fieldErrors}');
+            debugPrint('============================');
+
+            handler.reject(
+              DioException(
+                requestOptions: error.requestOptions,
+                response: error.response,
+                type: DioExceptionType.badResponse,
+                error: validationError,
               ),
             );
           } else {

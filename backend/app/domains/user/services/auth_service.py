@@ -34,8 +34,7 @@ class AuthenticationService:
         self,
         email: str,
         password: str,
-        username: Optional[str] = None,
-        full_name: Optional[str] = None
+        username: Optional[str] = None
     ) -> User:
         """
         Register a new user.
@@ -44,7 +43,6 @@ class AuthenticationService:
             email: User's email address
             password: Plain text password
             username: Optional username
-            full_name: Optional full name
 
         Returns:
             Created user instance
@@ -56,6 +54,17 @@ class AuthenticationService:
         # Validate password strength
         if len(password) < 8:
             raise BadRequestError("Password must be at least 8 characters long")
+
+        # Generate username from email if not provided
+        if not username:
+            # Extract username from email (part before @)
+            username = email.split('@')[0]
+            # Ensure uniqueness by adding number if needed
+            base_username = username
+            counter = 1
+            while await self._get_user_by_username(username):
+                username = f"{base_username}{counter}"
+                counter += 1
 
         # Check if user already exists
         existing_user = await self._get_user_by_email_or_username(email, username)
@@ -71,7 +80,6 @@ class AuthenticationService:
         user = User(
             email=email,
             username=username,
-            full_name=full_name,
             hashed_password=hashed_password,
             status="active",
             is_verified=False,
@@ -320,6 +328,13 @@ class AuthenticationService:
 
         await self.db.commit()
         return count
+
+    async def _get_user_by_username(self, username: str) -> Optional[User]:
+        """Get user by username."""
+        result = await self.db.execute(
+            select(User).where(User.username == username)
+        )
+        return result.scalar_one_or_none()
 
     async def _get_user_by_email_or_username(
         self,

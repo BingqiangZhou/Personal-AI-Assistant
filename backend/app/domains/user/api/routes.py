@@ -38,13 +38,13 @@ class LogoutRequest(BaseModel):
     refresh_token: Optional[str] = None
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(
     user_data: UserCreate,
     request: Request,
     db: AsyncSession = Depends(get_db_session)
 ) -> Any:
-    """Register a new user."""
+    """Register a new user - returns tokens on success."""
     try:
         auth_service = AuthenticationService(db)
 
@@ -58,20 +58,22 @@ async def register(
         user = await auth_service.register_user(
             email=user_data.email,
             password=user_data.password,
-            username=user_data.username,
-            full_name=user_data.full_name
+            username=user_data.username
         )
 
-        return UserResponse(
-            id=user.id,
-            email=user.email,
-            username=user.username,
-            full_name=user.full_name,
-            is_active=user.status == "active",
-            is_superuser=user.is_superuser,
-            is_verified=user.is_verified,
-            avatar_url=user.avatar_url,
-            created_at=user.created_at
+        # Create session with tokens (like login)
+        token_data = await auth_service.create_user_session(
+            user=user,
+            device_info=device_info,
+            ip_address=request.client.host,
+            user_agent=request.headers.get("user-agent")
+        )
+
+        return Token(
+            access_token=token_data["access_token"],
+            refresh_token=token_data["refresh_token"],
+            token_type=token_data["token_type"],
+            expires_in=token_data["expires_in"]
         )
 
     except BaseCustomException:
@@ -199,7 +201,6 @@ async def get_current_user_info(
         id=current_user.id,
         email=current_user.email,
         username=current_user.username,
-        full_name=current_user.full_name,
         is_active=current_user.status == "active",
         is_superuser=current_user.is_superuser,
         is_verified=current_user.is_verified,

@@ -1,0 +1,325 @@
+import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+/// Authentication Verification Page - Direct API Testing
+/// This page bypasses complex build issues and tests backend connectivity directly
+class AuthVerifyPage extends StatefulWidget {
+  const AuthVerifyPage({super.key});
+
+  @override
+  State<AuthVerifyPage> createState() => _AuthVerifyPageState();
+}
+
+class _AuthVerifyPageState extends State<AuthVerifyPage> {
+  String _status = 'Ready to test...';
+  Color _statusColor = Colors.grey;
+  final String baseUrl = 'http://localhost:8000/api/v1/auth';
+
+  Future<void> _testBackendHealth() async {
+    setState(() {
+      _status = 'Testing backend connectivity...';
+      _statusColor = Colors.blue;
+    });
+
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/health'))
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _status = '✅ Backend is reachable and healthy!';
+          _statusColor = Colors.green;
+        });
+      } else {
+        setState(() {
+          _status = '❌ Backend responded with status: ${response.statusCode}';
+          _statusColor = Colors.orange;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _status = '❌ Failed to connect: $e\n\nMake sure backend Docker is running on port 8000';
+        _statusColor = Colors.red;
+      });
+    }
+  }
+
+  Future<void> _testRegister() async {
+    setState(() {
+      _status = 'Testing registration...';
+      _statusColor = Colors.blue;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': 'flutter_verify@example.com',
+          'password': 'Verify1234',
+          'username': 'flutter_verify',
+          'full_name': 'Flutter Verify User'
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _status = '✅ Registration SUCCESS!\n\nUser: ${data['email']}\nID: ${data['id']}\n\nNow try login to get tokens.';
+          _statusColor = Colors.green;
+        });
+      } else if (response.statusCode == 409) {
+        setState(() {
+          _status = 'ℹ️ Email already exists (this is OK for repeat tests)';
+          _statusColor = Colors.orange;
+        });
+      } else {
+        setState(() {
+          _status = '❌ Registration failed: ${data['detail'] ?? response.body}';
+          _statusColor = Colors.red;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _status = '❌ Error: $e';
+        _statusColor = Colors.red;
+      });
+    }
+  }
+
+  Future<void> _testLogin() async {
+    setState(() {
+      _status = 'Testing login...';
+      _statusColor = Colors.blue;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email_or_username': 'flutter_verify@example.com',
+          'password': 'Verify1234'
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        final accessToken = data['access_token'] as String;
+        final refreshToken = data['refresh_token'] as String;
+
+        setState(() {
+          _status = '✅ Login SUCCESS!\n\nAccess Token: ${accessToken.substring(0, 30)}...\nRefresh Token: ${refreshToken.substring(0, 30)}...\n\nTry "Get User Info" to verify token works!';
+          _statusColor = Colors.green;
+        });
+      } else {
+        final data = tryJsonDecode(response.body);
+        setState(() {
+          _status = '❌ Login failed: $data';
+          _statusColor = Colors.red;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _status = '❌ Error: $e';
+        _statusColor = Colors.red;
+      });
+    }
+  }
+
+  Future<void> _testGetUser() async {
+    setState(() {
+      _status = 'Getting user info (needs login first)...';
+      _statusColor = Colors.blue;
+    });
+
+    // First get a token
+    try {
+      final loginResp = await http.post(
+        Uri.parse('$baseUrl/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email_or_username': 'flutter_verify@example.com',
+          'password': 'Verify1234'
+        }),
+      ).timeout(const Duration(seconds: 10));
+
+      if (loginResp.statusCode != 200) {
+        setState(() {
+          _status = '❌ Need to login first. Login failed.';
+          _statusColor = Colors.red;
+        });
+        return;
+      }
+
+      final loginData = jsonDecode(utf8.decode(loginResp.bodyBytes));
+      final accessToken = loginData['access_token'];
+
+      // Now get user info
+      final userResp = await http.get(
+        Uri.parse('$baseUrl/me'),
+        headers: {'Authorization': 'Bearer $accessToken'},
+      ).timeout(const Duration(seconds: 10));
+
+      if (userResp.statusCode == 200) {
+        final userData = jsonDecode(utf8.decode(userResp.bodyBytes));
+        setState(() {
+          _status = '✅ User Info Retrieval SUCCESS!\n\n'
+              'Email: ${userData['email']}\n'
+              'Username: ${userData['username']}\n'
+              'Full Name: ${userData['full_name']}\n'
+              'User ID: ${userData['id']}';
+          _statusColor = Colors.green;
+        });
+      } else {
+        setState(() {
+          _status = '❌ Get user failed: ${userResp.statusCode}';
+          _statusColor = Colors.red;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _status = '❌ Error: $e';
+        _statusColor = Colors.red;
+      });
+    }
+  }
+
+  String tryJsonDecode(String body) {
+    try {
+      return jsonDecode(body).toString();
+    } catch (e) {
+      return body;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Auth Verification'),
+        backgroundColor: Colors.deepPurple,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Status Display
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _statusColor.withOpacity(0.1),
+                border: Border.all(color: _statusColor),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _status,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: _statusColor,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Test Buttons
+            _TestButton(
+              text: '🔧 1. Check Backend Health',
+              color: Colors.blue,
+              onPressed: _testBackendHealth,
+            ),
+            const SizedBox(height: 8),
+
+            _TestButton(
+              text: '📝 2. Register New User',
+              color: Colors.green,
+              onPressed: _testRegister,
+            ),
+            const SizedBox(height: 8),
+
+            _TestButton(
+              text: '🔓 3. Login (Get Tokens)',
+              color: Colors.orange,
+              onPressed: _testLogin,
+            ),
+            const SizedBox(height: 8),
+
+            _TestButton(
+              text: '👤 4. Get User Info (with Token)',
+              color: Colors.purple,
+              onPressed: _testGetUser,
+            ),
+            const SizedBox(height: 20),
+
+            // Instructions
+            _buildInstructions(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInstructions() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('📋 Test Flow:',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          const SizedBox(height: 6),
+          Text('1. Must run Backend Docker first (port 8000)'),
+          Text('2. Click "Check Health" to verify connection'),
+          Text('3. Click "Register" to create test user'),
+          Text('4. Click "Login" to get access/refresh tokens'),
+          Text('5. Click "Get User Info" to verify tokens work'),
+          Text('6. If all pass → Backend ✅ Ready!'),
+        ],
+      ),
+    );
+  }
+}
+
+class _TestButton extends StatelessWidget {
+  final String text;
+  final Color color;
+  final VoidCallback onPressed;
+
+  const _TestButton({
+    required this.text,
+    required this.color,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          fontFamily: 'monospace',
+        ),
+      ),
+    );
+  }
+}
