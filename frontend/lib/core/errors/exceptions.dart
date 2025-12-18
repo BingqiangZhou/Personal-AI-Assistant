@@ -52,7 +52,12 @@ class NetworkException extends AppException {
       case DioExceptionType.receiveTimeout:
         return const NetworkException('Connection timeout');
       case DioExceptionType.badResponse:
-        return ServerException.fromDioError(error);
+        // Convert ServerException to NetworkException for compatibility
+        final serverException = ServerException.fromDioError(error);
+        return NetworkException(
+          serverException.message,
+          code: serverException.code,
+        );
       case DioExceptionType.cancel:
         return const NetworkException('Request cancelled');
       case DioExceptionType.unknown:

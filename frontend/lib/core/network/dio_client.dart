@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 
 import '../app/config/app_config.dart';
+import '../errors/exceptions.dart';
 import '../storage/secure_storage_service.dart';
 import '../utils/logger.dart';
 
@@ -17,9 +18,9 @@ class DioClient {
     _dio = Dio(BaseOptions(
       baseUrl: AppConstants.baseUrl,
       headers: ApiConstants.headers,
-      connectTimeout: ApiConstants.connectTimeout,
-      receiveTimeout: ApiConstants.receiveTimeout,
-      sendTimeout: ApiConstants.sendTimeout,
+      connectTimeout: Duration(milliseconds: AppConstants.connectTimeout),
+      receiveTimeout: Duration(milliseconds: AppConstants.receiveTimeout),
+      sendTimeout: Duration(milliseconds: AppConstants.sendTimeout),
     ));
 
     // Add interceptors
@@ -39,7 +40,7 @@ class DioClient {
     RequestInterceptorHandler handler,
   ) async {
     // Add authentication token if available
-    final token = await _secureStorage.read(key: AppConstants.tokenKey);
+    final token = await _secureStorage.read(key: AppConstants.accessTokenKey);
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -149,5 +150,27 @@ class DioClient {
           ),
         );
     }
+  }
+
+  // HTTP methods
+  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
+    return _dio.get(path, queryParameters: queryParameters);
+  }
+
+  Future<Response> post(String path, {dynamic data}) async {
+    return _dio.post(path, data: data);
+  }
+
+  Future<Response> put(String path, {dynamic data}) async {
+    return _dio.put(path, data: data);
+  }
+
+  Future<Response> delete(String path) async {
+    return _dio.delete(path);
+  }
+
+  // Static factory method for ServiceLocator
+  static Dio createDio() {
+    return DioClient()._dio;
   }
 }
