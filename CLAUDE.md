@@ -230,6 +230,15 @@ flutter run
 # Run tests
 flutter test
 
+# Run widget tests specifically (mandatory for page functionality)
+flutter test test/widget/
+
+# Run unit tests only
+flutter test test/unit/
+
+# Run tests with coverage
+flutter test --coverage
+
 # Generate code (for JSON serialization, Retrofit, etc.)
 flutter packages pub run build_runner build --delete-conflicting-outputs
 ```
@@ -299,6 +308,57 @@ Uses PostgreSQL with the following key entities:
 - Backend: pytest with async support, comprehensive test coverage
 - Frontend: flutter_test with widget and integration tests
 - Both layers follow testing best practices with unit and integration tests
+
+### 🧪 Flutter Widget Testing Rules (MANDATORY)
+
+**IMPORTANT**: When testing Flutter page functionality, Widget Tests are **mandatory**. All Test Engineer agents must follow these rules:
+
+1. **Widget Tests are Required for Page Testing**
+   - Always use widget tests (`testWidgets`) for testing page functionality
+   - Unit tests are only for pure logic functions (no UI)
+   - Integration tests are only for complete user workflows
+
+2. **Widget Test Structure**
+   ```
+   test/features/[feature]/widget/
+   ├── pages/
+   │   ├── [page_name]_page_test.dart
+   │   └── ...
+   └── components/
+       ├── [component_name]_widget_test.dart
+       └── ...
+   ```
+
+3. **Required Test Scenarios for Every Page**
+   - Renders all required UI components
+   - Displays loading state initially
+   - Shows data when loaded successfully
+   - Handles error states appropriately
+   - Navigation works correctly
+   - Empty state displays correctly
+   - Pull to refresh (if applicable)
+   - Search/filter functionality (if applicable)
+
+4. **Widget Testing Best Practices**
+   - Use ProviderContainer for state management testing
+   - Mock providers using `.overrideWith()`
+   - Use meaningful keys for widgets
+   - Test user interactions (taps, scrolls, input)
+   - Verify accessibility with semantic labels
+   - Group related tests with `group()`
+   - Use descriptive test names: `'[widget] [condition] [expected outcome]'`
+
+5. **Test Commands**
+   ```bash
+   # Run all widget tests (mandatory for page functionality)
+   flutter test test/widget/
+
+   # Run widget tests for specific feature
+   flutter test test/widget/pages/[page_name]_page_test.dart
+
+   # Run tests with coverage
+   flutter test --coverage
+   ```
 
 ### Code Quality Tools
 - Backend: black (formatting), isort (imports), flake8 (linting), mypy (type checking)

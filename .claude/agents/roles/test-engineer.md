@@ -64,70 +64,386 @@ async def test_get_subscriptions():
 ```
 
 ### 3. Flutter Widget Testing
+**🔥 IMPORTANT: Always use Widget Tests for Flutter Page Functionality Testing**
+
+When testing Flutter page functionality, Widget Tests are **mandatory**. Widget tests provide the best balance of speed, reliability, and test coverage for UI components and page interactions.
+
+#### Widget Test Structure for Pages
 ```dart
-// Flutter widget testing example
+// test/features/[feature]/widget/pages/[page_name]_page_test.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_app/features/[feature]/presentation/pages/[page_name]_page.dart';
+import 'package:my_app/features/[feature]/presentation/providers/[feature]_provider.dart';
+
 void main() {
-  group('Subscription List Widget Tests', () {
-    testWidgets('displays loading state correctly', (tester) async {
+  group('[PageName] Page Widget Tests', () {
+    late ProviderContainer container;
+
+    setUp(() {
+      container = ProviderContainer();
+    });
+
+    tearDown(() {
+      container.dispose();
+    });
+
+    testWidgets('renders all required UI components', (tester) async {
+      // Arrange
       await tester.pumpWidget(
-        ProviderScope(
+        UncontrolledProviderScope(
+          container: container,
           child: MaterialApp(
-            home: SubscriptionListPage(),
+            home: [PageName]Page(),
           ),
         ),
       );
 
-      // Verify loading indicator is shown
+      // Assert - Check for key UI elements
+      expect(find.byType(AppBar), findsOneWidget);
+      expect(find.text('[Expected Page Title]'), findsOneWidget);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+    });
+
+    testWidgets('displays loading state initially', (tester) async {
+      // Arrange
+      container = ProviderContainer(
+        overrides: [
+          [feature]ListProvider.overrideWith((ref) => const AsyncValue.loading()),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: [PageName]Page(),
+          ),
+        ),
+      );
+
+      // Assert - Loading indicator should be present
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(ListView), findsNothing);
     });
 
-    testWidgets('displays subscriptions after loading', (tester) async {
-      // Mock the subscription provider
+    testWidgets('displays data when loaded successfully', (tester) async {
+      // Arrange
+      final mockData = [
+        const [Model](
+          id: 1,
+          name: 'Test Item 1',
+          // ... other fields
+        ),
+        const [Model](
+          id: 2,
+          name: 'Test Item 2',
+          // ... other fields
+        ),
+      ];
+
+      container = ProviderContainer(
+        overrides: [
+          [feature]ListProvider.overrideWith((ref) => AsyncValue.data(mockData)),
+        ],
+      );
+
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            subscriptionListProvider.overrideWith((ref) => AsyncValue.data([
-              const Subscription(
-                id: 1,
-                name: 'Test Feed',
-                sourceType: 'rss',
-                sourceUrl: 'https://example.com/feed.xml',
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: [PageName]Page(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Assert - Data should be displayed
+      expect(find.text('Test Item 1'), findsOneWidget);
+      expect(find.text('Test Item 2'), findsOneWidget);
+      expect(find.byType(ListView), findsOneWidget);
+    });
+
+    testWidgets('handles error state appropriately', (tester) async {
+      // Arrange
+      container = ProviderContainer(
+        overrides: [
+          [feature]ListProvider.overrideWith((ref) =>
+            AsyncValue.error('Failed to load data', StackTrace.current)),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: [PageName]Page(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Assert - Error should be displayed
+      expect(find.text('Failed to load data'), findsOneWidget);
+      expect(find.byKey(const Key('error_retry_button')), findsOneWidget);
+    });
+
+    testWidgets('navigates to add page when FAB is tapped', (tester) async {
+      // Arrange
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: [PageName]Page(),
+            routes: {
+              '/add': (context) => Scaffold(
+                appBar: AppBar(title: const Text('Add Page')),
               ),
-            ])),
-          ],
-          child: MaterialApp(
-            home: SubscriptionListPage(),
+            },
           ),
         ),
       );
 
+      // Act
+      await tester.tap(find.byType(FloatingActionButton));
       await tester.pumpAndSettle();
 
-      // Verify subscription is displayed
-      expect(find.text('Test Feed'), findsOneWidget);
-      expect(find.text('https://example.com/feed.xml'), findsOneWidget);
+      // Assert - Should navigate to add page
+      expect(find.text('Add Page'), findsOneWidget);
+      expect(find.byType([PageName]Page), findsNothing);
     });
 
-    testWidgets('handles error state gracefully', (tester) async {
+    testWidgets('pull to refresh triggers data reload', (tester) async {
+      // Arrange
+      var refreshCalled = false;
+      container = ProviderContainer(
+        overrides: [
+          [feature]ListProvider.overrideWith((ref) {
+            ref.onDispose(() {
+              refreshCalled = true;
+            });
+            return const AsyncValue.data([]);
+          }),
+        ],
+      );
+
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            subscriptionListProvider.overrideWith((ref) =>
-              AsyncValue.error('Failed to load', StackTrace.current)),
-          ],
+        UncontrolledProviderScope(
+          container: container,
           child: MaterialApp(
-            home: SubscriptionListPage(),
+            home: [PageName]Page(),
+          ),
+        ),
+      );
+
+      // Act - Pull to refresh
+      await tester.fling(
+        find.byType(RefreshIndicator),
+        const Offset(0, 300),
+        1000,
+      );
+      await tester.pumpAndSettle();
+
+      // Assert - Refresh should be triggered
+      expect(refreshCalled, isTrue);
+    });
+
+    testWidgets('search functionality works correctly', (tester) async {
+      // Arrange
+      final mockData = [
+        const [Model](id: 1, name: 'Apple'),
+        const [Model](id: 2, name: 'Banana'),
+        const [Model](id: 3, name: 'Orange'),
+      ];
+
+      container = ProviderContainer(
+        overrides: [
+          [feature]ListProvider.overrideWith((ref) => AsyncValue.data(mockData)),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: [PageName]Page(),
           ),
         ),
       );
 
       await tester.pumpAndSettle();
 
-      // Verify error message is shown
-      expect(find.text('Failed to load subscriptions'), findsOneWidget);
-      expect(find.byType(ElevatedButton), findsOneWidget); // Retry button
+      // Act - Enter search term
+      await tester.enterText(find.byType(TextField), 'Apple');
+      await tester.pump();
+
+      // Assert - Filtered results should be shown
+      expect(find.text('Apple'), findsOneWidget);
+      expect(find.text('Banana'), findsNothing);
+      expect(find.text('Orange'), findsNothing);
+    });
+
+    testWidgets('empty state displays correctly', (tester) async {
+      // Arrange
+      container = ProviderContainer(
+        overrides: [
+          [feature]ListProvider.overrideWith((ref) => const AsyncValue.data([])),
+        ],
+      );
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            home: [PageName]Page(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Assert - Empty state should be shown
+      expect(find.byKey(const Key('empty_state_icon')), findsOneWidget);
+      expect(find.text('No items found'), findsOneWidget);
+      expect(find.text('Tap + to add your first item'), findsOneWidget);
     });
   });
+}
+```
+
+#### Widget Testing Best Practices
+```dart
+// 1. Use descriptive test names that follow the pattern:
+// '[widget] [condition] [expected outcome]'
+testWidgets('submit button is disabled when form is invalid', (tester) async { });
+
+// 2. Group related tests
+group('Form Validation', () {
+  testWidgets('validates required fields', (tester) async { });
+  testWidgets('shows error messages for invalid input', (tester) async { });
+});
+
+// 3. Use test helpers for common operations
+Future<void> fillAndSubmitForm(WidgetTester tester, {
+  required String title,
+  required String description,
+}) async {
+  await tester.enterText(find.byKey(const Key('title_field')), title);
+  await tester.enterText(find.byKey(const Key('description_field')), description);
+  await tester.tap(find.byKey(const Key('submit_button')));
+  await tester.pump();
+}
+
+// 4. Use meaningful keys for widgets
+TextField(
+  key: const Key('email_field'),
+  // ...
+)
+
+ElevatedButton(
+  key: const Key('login_button'),
+  // ...
+)
+
+// 5. Test user interactions thoroughly
+testWidgets('handles multiple rapid taps', (tester) async {
+  // Act
+  for (int i = 0; i < 5; i++) {
+    await tester.tap(find.byType(FloatingActionButton));
+    await tester.pump(Duration(milliseconds: 50));
+  }
+
+  // Assert - Should only navigate once
+  expect(find.byType(AddItemPage), findsOneWidget);
+});
+
+// 6. Test accessibility
+testWidgets('supports semantic labels', (tester) async {
+  await tester.pumpWidget(MaterialApp(home: MyPage()));
+
+  // Verify semantic labels exist for screen readers
+  expect(
+    tester.semantics.findByLabel('Add new item'),
+    findsOneWidget,
+  );
+});
+
+// 7. Test scroll behavior
+testWidgets('handles long lists correctly', (tester) async {
+  await tester.pumpWidget(MaterialApp(home: MyListPage()));
+
+  // Scroll to bottom
+  await tester.fling(
+    find.byType(ListView),
+    const Offset(0, -1000),
+    10000,
+  );
+  await tester.pumpAndSettle();
+
+  // Verify last item is visible
+  expect(find.text('Last Item'), findsOneWidget);
+});
+
+// 8. Test theme changes
+testWidgets('adapts to dark theme', (tester) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.dark,
+      home: MyPage(),
+    ),
+  );
+
+  // Verify dark theme is applied
+  final theme = ThemeData.dark();
+  final container = tester.widget<Container>(find.byType(Container));
+  expect(container.color, theme.colorScheme.surface);
+});
+```
+
+#### Widget Test Utilities
+```dart
+// test/helpers/widget_test_helpers.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Wraps a widget in MaterialApp and ProviderScope for testing
+Widget createTestWidget({
+  required Widget child,
+  ProviderContainer? container,
+  ThemeData? theme,
+  Map<String, Widget Function(BuildContext)> routes = const {},
+}) {
+  return UncontrolledProviderScope(
+    container: container ?? ProviderContainer(),
+    child: MaterialApp(
+      theme: theme,
+      home: child,
+      routes: routes,
+    ),
+  );
+}
+
+/// Helper to wait for async operations to complete
+Future<void> waitForAsync(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 100));
+  await tester.pumpAndSettle();
+}
+
+/// Helper to verify a toast/snackbar is shown
+void expectToast(String message) {
+  expect(find.byKey(Key('toast_$message')), findsOneWidget);
+}
+
+/// Helper to create mock data for testing
+List<T> createMockData<T>(T Function(int) creator, int count) {
+  return List.generate(count, (i) => creator(i));
 }
 ```
 
