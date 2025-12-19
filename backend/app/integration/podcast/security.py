@@ -34,7 +34,7 @@ class PodcastSecurityValidator:
     """
 
     # Maximum safe limits
-    MAX_RSS_SIZE = 1024 * 1024  # 1MB max RSS size
+    MAX_RSS_SIZE = 20 * 1024 * 1024  # 20MB max RSS size (increased for large podcast feeds)
     MAX_AUDIO_SIZE = settings.MAX_PODCAST_EPISODE_DOWNLOAD_SIZE  # 500MB
     MAX_TRANSCRIPT_SIZE = 5 * 1024 * 1024  # 5MB for transcripts
 

@@ -31,6 +31,7 @@ class PodcastSubscriptionModel extends Equatable {
   @JsonKey(name: 'image_url')
   final String? imageUrl;
   final String? author;
+  final String? platform;
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @JsonKey(name: 'updated_at')
@@ -52,6 +53,7 @@ class PodcastSubscriptionModel extends Equatable {
     this.categories,
     this.imageUrl,
     this.author,
+    this.platform,
     required this.createdAt,
     this.updatedAt,
   });
@@ -77,6 +79,7 @@ class PodcastSubscriptionModel extends Equatable {
     List<Category>? categories,
     String? imageUrl,
     String? author,
+    String? platform,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -96,6 +99,7 @@ class PodcastSubscriptionModel extends Equatable {
       categories: categories ?? this.categories,
       imageUrl: imageUrl ?? this.imageUrl,
       author: author ?? this.author,
+      platform: platform ?? this.platform,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -118,6 +122,7 @@ class PodcastSubscriptionModel extends Equatable {
         categories,
         imageUrl,
         author,
+        platform,
         createdAt,
         updatedAt,
       ];

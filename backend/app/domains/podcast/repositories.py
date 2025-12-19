@@ -480,14 +480,18 @@ class PodcastRepository:
         # 这需要创建PodcastCategory模型和相关映射表
         pass
 
-    async def update_subscription_fetch_time(self, subscription_id: int):
+    async def update_subscription_fetch_time(self, subscription_id: int, fetch_time: Optional[datetime] = None):
         """更新订阅的最后抓取时间"""
         stmt = select(Subscription).where(Subscription.id == subscription_id)
         result = await self.db.execute(stmt)
         subscription = result.scalar_one_or_none()
 
         if subscription:
-            subscription.last_fetched_at = datetime.utcnow()
+            # 移除时区信息以匹配数据库的TIMESTAMP WITHOUT TIME ZONE
+            time_to_set = fetch_time or datetime.utcnow()
+            if time_to_set.tzinfo is not None:
+                time_to_set = time_to_set.replace(tzinfo=None)
+            subscription.last_fetched_at = time_to_set
             await self.db.commit()
 
     async def update_subscription_metadata(self, subscription_id: int, metadata: dict):

@@ -73,7 +73,8 @@ class PodcastService:
             "image_url": feed.image_url,
             "podcast_type": feed.podcast_type,
             "link": feed.link,
-            "total_episodes": len(feed.episodes)
+            "total_episodes": len(feed.episodes),
+            "platform": feed.platform
         }
 
         subscription = await self.repo.create_or_update_subscription(
@@ -137,6 +138,7 @@ class PodcastService:
             config = sub.config or {}
             image_url = config.get("image_url")
             author = config.get("author")
+            platform = config.get("platform")
             # 处理categories格式 - 统一转换为字典列表
             raw_categories = config.get("categories", [])
             categories = []
@@ -185,6 +187,7 @@ class PodcastService:
                 "categories": categories,
                 "image_url": image_url,
                 "author": author,
+                "platform": platform,
                 "podcast_type": podcast_type,
                 "language": language,
                 "explicit": explicit,
@@ -350,8 +353,8 @@ class PodcastService:
                 # 异步触发AI总结
                 asyncio.create_task(self._generate_summary_task(saved_episode))
 
-        # 更新订阅的最后抓取时间
-        await self.repo.update_subscription_fetch_time(subscription_id)
+        # 更新订阅的最后抓取时间（使用最新分集的发布时间）
+        await self.repo.update_subscription_fetch_time(subscription_id, feed.last_fetched)
 
         logger.info(f"用户{self.user_id} 刷新订阅: {sub.title}, {len(new_episodes)}期新节目")
         return new_episodes
@@ -436,11 +439,12 @@ class PodcastService:
             "podcast_type": feed.podcast_type,
             "link": feed.link,
             "total_episodes": len(feed.episodes),
+            "platform": feed.platform,
             "reparsed_at": datetime.utcnow().isoformat()
         }
 
         await self.repo.update_subscription_metadata(subscription_id, metadata)
-        await self.repo.update_subscription_fetch_time(subscription_id)
+        await self.repo.update_subscription_fetch_time(subscription_id, feed.last_fetched)
 
         result = {
             "subscription_id": subscription_id,

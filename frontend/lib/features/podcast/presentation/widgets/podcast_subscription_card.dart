@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/models/podcast_subscription_model.dart';
+import 'platform_badge.dart';
 
 class PodcastSubscriptionCard extends ConsumerWidget {
   final PodcastSubscriptionModel subscription;
@@ -133,6 +134,11 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                           children: [
                             _buildStatusChip(context, subscription.status),
                             const SizedBox(width: 8),
+                            PlatformBadge(platform: subscription.platform),
+                            if (subscription.platform != null &&
+                                subscription.platform!.isNotEmpty &&
+                                subscription.platform != 'generic')
+                              const SizedBox(width: 8),
                             // Categories
                             if (subscription.categories?.isNotEmpty == true) ...[
                               ...subscription.categories!.take(2).map((category) {

@@ -28,6 +28,7 @@ PodcastSubscriptionModel _$PodcastSubscriptionModelFromJson(
       .toList(),
   imageUrl: json['image_url'] as String?,
   author: json['author'] as String?,
+  platform: json['platform'] as String?,
   createdAt: DateTime.parse(json['created_at'] as String),
   updatedAt: json['updated_at'] == null
       ? null
@@ -52,6 +53,7 @@ Map<String, dynamic> _$PodcastSubscriptionModelToJson(
   'categories': instance.categories,
   'image_url': instance.imageUrl,
   'author': instance.author,
+  'platform': instance.platform,
   'created_at': instance.createdAt.toIso8601String(),
   'updated_at': instance.updatedAt?.toIso8601String(),
 };

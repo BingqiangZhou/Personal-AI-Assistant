@@ -18,6 +18,7 @@ from defusedxml.ElementTree import fromstring
 from app.core.config import settings
 from app.core.llm_privacy import ContentSanitizer
 from app.integration.podcast.security import PodcastSecurityValidator, PodcastContentValidator
+from app.integration.podcast.platform_detector import PlatformDetector
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ class PodcastFeed:
     explicit: Optional[bool] = None
     image_url: Optional[str] = None
     podcast_type: Optional[str] = None
+    platform: Optional[str] = None
 
 
 class SecureRSSParser:
@@ -69,6 +71,10 @@ class SecureRSSParser:
         """
         logger.info(f"User {self.user_id}: Fetching RSS from {feed_url}")
 
+        # Step 0: Detect platform
+        platform = PlatformDetector.detect_platform(feed_url)
+        logger.info(f"Detected platform: {platform}")
+
         # Step 1: Validate URL
         valid_url, url_error = self.security.validate_audio_url(feed_url)
         if not valid_url:
@@ -89,8 +95,8 @@ class SecureRSSParser:
 
         # Step 4: Parse safely
         try:
-            feed = await self._parse_feed_securely(feed_url, xml_content)
-            logger.info(f"Successfully parsed feed: {feed.title} with {len(feed.episodes)} episodes")
+            feed = await self._parse_feed_securely(feed_url, xml_content, platform)
+            logger.info(f"Successfully parsed feed: {feed.title} with {len(feed.episodes)} episodes from {platform}")
             return True, feed, None
         except Exception as e:
             logger.error(f"Parsing error: {e}")
@@ -132,7 +138,7 @@ class SecureRSSParser:
             logger.error(f"Fetch error: {e}")
             return None, f"Could not fetch feed: {e}"
 
-    async def _parse_feed_securely(self, feed_url: str, xml_content: str) -> PodcastFeed:
+    async def _parse_feed_securely(self, feed_url: str, xml_content: str, platform: str) -> PodcastFeed:
         """Parse RSS with defusedxml"""
         root = fromstring(xml_content)
 
@@ -179,18 +185,22 @@ class SecureRSSParser:
             if episode:
                 episodes.append(episode)
 
+        # Use latest episode's published time as last_fetched, fallback to current time
+        last_fetched = episodes[0].published_at if episodes else datetime.utcnow()
+
         return PodcastFeed(
             title=title,
             link=link,
             description=description,
             episodes=episodes,
-            last_fetched=datetime.utcnow(),
+            last_fetched=last_fetched,
             author=author or None,
             language=language or None,
             categories=categories or None,
             explicit=explicit,
             image_url=image_url,
-            podcast_type=podcast_type or None
+            podcast_type=podcast_type or None,
+            platform=platform
         )
 
     def _parse_episode(self, item) -> Optional[PodcastEpisode]:
