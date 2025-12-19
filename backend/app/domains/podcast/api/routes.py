@@ -40,7 +40,7 @@ from app.domains.podcast.schemas import (
     PodcastStatsResponse
 )
 
-router = APIRouter(prefix="/podcasts", tags=["播客"])
+router = APIRouter(prefix="")
 
 
 # === 订阅管理 ===

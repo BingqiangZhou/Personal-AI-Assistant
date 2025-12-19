@@ -22,7 +22,7 @@ from app.shared.schemas import (
 )
 from app.domains.user.services import AuthenticationService
 
-router = APIRouter(tags=["authentication"])
+router = APIRouter()
 
 
 class LoginRequest(BaseModel):
