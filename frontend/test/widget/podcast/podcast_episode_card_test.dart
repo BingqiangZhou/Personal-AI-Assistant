@@ -44,7 +44,7 @@ void main() {
         UncontrolledProviderScope(
           container: ProviderContainer(
             overrides: [
-              audioPlayerNotifierProvider.overrideWith((ref) => mockAudioPlayerNotifier),
+              audioPlayerProvider.overrideWith((ref) => mockAudioPlayerNotifier),
             ],
           ),
           child: MaterialApp(
@@ -86,7 +86,7 @@ void main() {
         UncontrolledProviderScope(
           container: ProviderContainer(
             overrides: [
-              audioPlayerNotifierProvider.overrideWith((ref) => mockAudioPlayerNotifier),
+              audioPlayerProvider.overrideWith((ref) => mockAudioPlayerNotifier),
             ],
           ),
           child: MaterialApp(
@@ -117,7 +117,7 @@ void main() {
         UncontrolledProviderScope(
           container: ProviderContainer(
             overrides: [
-              audioPlayerNotifierProvider.overrideWith((ref) => mockAudioPlayerNotifier),
+              audioPlayerProvider.overrideWith((ref) => mockAudioPlayerNotifier),
             ],
           ),
           child: MaterialApp(
@@ -148,7 +148,7 @@ void main() {
         UncontrolledProviderScope(
           container: ProviderContainer(
             overrides: [
-              audioPlayerNotifierProvider.overrideWith((ref) => mockAudioPlayerNotifier),
+              audioPlayerProvider.overrideWith((ref) => mockAudioPlayerNotifier),
             ],
           ),
           child: MaterialApp(
@@ -176,7 +176,7 @@ void main() {
         UncontrolledProviderScope(
           container: ProviderContainer(
             overrides: [
-              audioPlayerNotifierProvider.overrideWith((ref) => mockAudioPlayerNotifier),
+              audioPlayerProvider.overrideWith((ref) => mockAudioPlayerNotifier),
             ],
           ),
           child: MaterialApp(
@@ -208,7 +208,7 @@ void main() {
         UncontrolledProviderScope(
           container: ProviderContainer(
             overrides: [
-              audioPlayerNotifierProvider.overrideWith((ref) => mockAudioPlayerNotifier),
+              audioPlayerProvider.overrideWith((ref) => mockAudioPlayerNotifier),
             ],
           ),
           child: MaterialApp(
@@ -236,7 +236,7 @@ void main() {
         UncontrolledProviderScope(
           container: ProviderContainer(
             overrides: [
-              audioPlayerNotifierProvider.overrideWith((ref) => mockAudioPlayerNotifier),
+              audioPlayerProvider.overrideWith((ref) => mockAudioPlayerNotifier),
             ],
           ),
           child: MaterialApp(
@@ -264,7 +264,7 @@ void main() {
         UncontrolledProviderScope(
           container: ProviderContainer(
             overrides: [
-              audioPlayerNotifierProvider.overrideWith((ref) => mockAudioPlayerNotifier),
+              audioPlayerProvider.overrideWith((ref) => mockAudioPlayerNotifier),
             ],
           ),
           child: MaterialApp(
@@ -291,7 +291,7 @@ void main() {
         UncontrolledProviderScope(
           container: ProviderContainer(
             overrides: [
-              audioPlayerNotifierProvider.overrideWith((ref) => mockAudioPlayerNotifier),
+              audioPlayerProvider.overrideWith((ref) => mockAudioPlayerNotifier),
             ],
           ),
           child: MaterialApp(
@@ -366,7 +366,7 @@ void main() {
         UncontrolledProviderScope(
           container: ProviderContainer(
             overrides: [
-              audioPlayerNotifierProvider.overrideWith((ref) => mockAudioPlayerNotifier),
+              audioPlayerProvider.overrideWith((ref) => mockAudioPlayerNotifier),
             ],
           ),
           child: MaterialApp(
@@ -395,7 +395,7 @@ void main() {
         UncontrolledProviderScope(
           container: ProviderContainer(
             overrides: [
-              audioPlayerNotifierProvider.overrideWith((ref) => mockAudioPlayerNotifier),
+              audioPlayerProvider.overrideWith((ref) => mockAudioPlayerNotifier),
             ],
           ),
           child: MaterialApp(

@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import 'category_model.dart';
+
 part 'podcast_subscription_model.g.dart';
 
 @JsonSerializable()
@@ -105,50 +107,6 @@ class PodcastSubscriptionModel extends Equatable {
         unplayedCount,
         latestEpisode,
         categories,
-        createdAt,
-        updatedAt,
-      ];
-}
-
-@JsonSerializable()
-class Category extends Equatable {
-  final int id;
-  @JsonKey(name: 'user_id')
-  final int userId;
-  final String name;
-  final String? description;
-  final String? color;
-  @JsonKey(name: 'subscription_count')
-  final int subscriptionCount;
-  @JsonKey(name: 'created_at')
-  final DateTime createdAt;
-  @JsonKey(name: 'updated_at')
-  final DateTime? updatedAt;
-
-  const Category({
-    required this.id,
-    required this.userId,
-    required this.name,
-    this.description,
-    this.color,
-    this.subscriptionCount = 0,
-    required this.createdAt,
-    this.updatedAt,
-  });
-
-  factory Category.fromJson(Map<String, dynamic> json) =>
-      _$CategoryFromJson(json);
-
-  Map<String, dynamic> toJson() => _$CategoryToJson(this);
-
-  @override
-  List<Object?> get props => [
-        id,
-        userId,
-        name,
-        description,
-        color,
-        subscriptionCount,
         createdAt,
         updatedAt,
       ];

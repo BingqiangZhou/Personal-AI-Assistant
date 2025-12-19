@@ -33,12 +33,12 @@ abstract class PodcastApiService {
   );
 
   @DELETE('/podcasts/subscriptions/{subscriptionId}')
-  Future<Map<String, dynamic>> deleteSubscription(
+  Future<void> deleteSubscription(
     @Path('subscriptionId') int subscriptionId,
   );
 
   @POST('/podcasts/subscriptions/{subscriptionId}/refresh')
-  Future<Map<String, dynamic>> refreshSubscription(
+  Future<void> refreshSubscription(
     @Path('subscriptionId') int subscriptionId,
   );
 
@@ -80,7 +80,7 @@ abstract class PodcastApiService {
   );
 
   @GET('/podcasts/summaries/pending')
-  Future<Map<String, dynamic>> getPendingSummaries();
+  Future<void> getPendingSummaries();
 
   // === Search ===
 
@@ -100,7 +100,7 @@ abstract class PodcastApiService {
   // === Recommendations ===
 
   @GET('/podcasts/recommendations')
-  Future<List<Map<String, dynamic>>> getRecommendations(
+  Future<void> getRecommendations(
     @Query('limit') int limit,
   );
 }

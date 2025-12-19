@@ -21,7 +21,7 @@ class PodcastEpisodeCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final audioPlayerState = ref.watch(audioPlayerNotifierProvider);
+    final audioPlayerState = ref.watch(audioPlayerProvider);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -166,11 +166,11 @@ class PodcastEpisodeCard extends ConsumerWidget {
                         // Toggle play/pause for current episode
                         if (audioPlayerState.isPlaying) {
                           await ref
-                              .read(audioPlayerNotifierProvider.notifier)
+                              .read(audioPlayerProvider.notifier)
                               .pause();
                         } else {
                           await ref
-                              .read(audioPlayerNotifierProvider.notifier)
+                              .read(audioPlayerProvider.notifier)
                               .resume();
                         }
                       } else {
@@ -259,7 +259,7 @@ class PodcastEpisodeCard extends ConsumerWidget {
                       const SizedBox(width: 16),
                       _buildMetadataItem(
                         context,
-                        Icons.transcript,
+                        Icons.description,
                         'Transcript',
                       ),
                     ],

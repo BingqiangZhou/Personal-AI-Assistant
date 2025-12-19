@@ -3,18 +3,40 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/models/podcast_episode_model.dart';
+import '../../data/models/podcast_subscription_model.dart';
+import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../widgets/podcast_episode_card.dart';
 
 class PodcastEpisodesPage extends ConsumerStatefulWidget {
   final int subscriptionId;
   final String? podcastTitle;
+  final PodcastSubscriptionModel? subscription;
 
   const PodcastEpisodesPage({
     super.key,
     required this.subscriptionId,
     this.podcastTitle,
+    this.subscription,
   });
+
+  /// Factory for navigation from args
+  factory PodcastEpisodesPage.fromArgs(PodcastEpisodesPageArgs args) {
+    return PodcastEpisodesPage(
+      subscriptionId: args.subscriptionId,
+      podcastTitle: args.podcastTitle,
+      subscription: args.subscription,
+    );
+  }
+
+  /// Factory for direct navigation with subscription object
+  factory PodcastEpisodesPage.withSubscription(PodcastSubscriptionModel subscription) {
+    return PodcastEpisodesPage(
+      subscriptionId: subscription.id,
+      podcastTitle: subscription.title,
+      subscription: subscription,
+    );
+  }
 
   @override
   ConsumerState<PodcastEpisodesPage> createState() => _PodcastEpisodesPageState();
@@ -30,7 +52,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     super.initState();
     // Load initial episodes
     Future.microtask(() {
-      ref.read(podcastEpisodeNotifierProvider.notifier).loadEpisodes(
+      ref.read(podcastEpisodeProvider.notifier).loadEpisodes(
             subscriptionId: widget.subscriptionId,
           );
     });
@@ -39,7 +61,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-        ref.read(podcastEpisodeNotifierProvider.notifier).loadMoreEpisodes();
+        ref.read(podcastEpisodeProvider.notifier).loadMoreEpisodes();
       }
     });
   }
@@ -51,7 +73,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   }
 
   Future<void> _refreshEpisodes() async {
-    await ref.read(podcastEpisodeNotifierProvider.notifier).loadEpisodes(
+    await ref.read(podcastEpisodeProvider.notifier).loadEpisodes(
           subscriptionId: widget.subscriptionId,
           hasSummary: _showOnlyWithSummary ? true : null,
           isPlayed: _selectedFilter == 'played' ? true : _selectedFilter == 'unplayed' ? false : null,
@@ -60,8 +82,8 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final episodesAsync = ref.watch(podcastEpisodeNotifierProvider);
-    final audioPlayerState = ref.watch(audioPlayerNotifierProvider);
+    final episodesAsync = ref.watch(podcastEpisodeProvider);
+    final audioPlayerState = ref.watch(audioPlayerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -131,7 +153,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                         episode: episode,
                         onPlay: () async {
                           await ref
-                              .read(audioPlayerNotifierProvider.notifier)
+                              .read(audioPlayerProvider.notifier)
                               .playEpisode(episode);
                         },
                       );

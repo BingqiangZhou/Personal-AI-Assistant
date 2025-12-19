@@ -64,9 +64,9 @@ class PodcastRepository {
     }
   }
 
-  Future<Map<String, dynamic>> refreshSubscription(int subscriptionId) async {
+  Future<void> refreshSubscription(int subscriptionId) async {
     try {
-      return await _apiService.refreshSubscription(subscriptionId);
+      await _apiService.refreshSubscription(subscriptionId);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
@@ -148,9 +148,9 @@ class PodcastRepository {
     }
   }
 
-  Future<Map<String, dynamic>> getPendingSummaries() async {
+  Future<void> getPendingSummaries() async {
     try {
-      return await _apiService.getPendingSummaries();
+      await _apiService.getPendingSummaries();
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
@@ -188,9 +188,9 @@ class PodcastRepository {
 
   // === Recommendations ===
 
-  Future<List<Map<String, dynamic>>> getRecommendations({int limit = 10}) async {
+  Future<void> getRecommendations({int limit = 10}) async {
     try {
-      return await _apiService.getRecommendations(limit);
+      await _apiService.getRecommendations(limit);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }

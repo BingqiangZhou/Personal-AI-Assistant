@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/category_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_subscription_card.dart';
 
 void main() {
@@ -180,19 +181,17 @@ void main() {
         categories: [
           Category(
             id: 1,
-            userId: 1,
             name: 'Technology',
             color: '#FF5722',
-            subscriptionCount: 5,
             createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
           ),
           Category(
             id: 2,
-            userId: 1,
             name: 'News',
             color: '#2196F3',
-            subscriptionCount: 10,
             createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
           ),
         ],
       );

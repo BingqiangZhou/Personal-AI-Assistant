@@ -64,7 +64,7 @@ abstract class ApiServices {
   );
 
   @POST('/assistant/chat/stream')
-  Future<Map<String, dynamic>> streamChat(@Body() Map<String, dynamic> request);
+  Future<void> streamChat(@Body() Map<String, dynamic> request);
 
   // Knowledge Base endpoints
   @GET('/knowledge/items')
@@ -97,7 +97,7 @@ abstract class ApiServices {
   );
 
   @GET('/knowledge/categories')
-  Future<List<Map<String, dynamic>>> getKnowledgeCategories();
+  Future<void> getKnowledgeCategories();
 
   @POST('/knowledge/search')
   Future<SearchResponse<KnowledgeItemModel>> searchKnowledge(
@@ -132,20 +132,20 @@ abstract class ApiServices {
   Future<SubscriptionModel> refreshSubscription(@Path() String subscriptionId);
 
   @GET('/subscriptions/types')
-  Future<List<Map<String, dynamic>>> getSubscriptionTypes();
+  Future<void> getSubscriptionTypes();
 
   // Multimedia endpoints
   @POST('/multimedia/upload')
-  Future<Map<String, dynamic>> uploadMediaFile(@Part(name: 'file') Map<String, dynamic> file);
+  Future<void> uploadMediaFile(@Part(name: 'file') Map<String, dynamic> file);
 
   @GET('/multimedia/files/{fileId}')
-  Future<Map<String, dynamic>> getFile(@Path() String fileId);
+  Future<void> getFile(@Path() String fileId);
 
   @DELETE('/multimedia/files/{fileId}')
   Future<void> deleteFile(@Path() String fileId);
 
   @POST('/multimedia/process')
-  Future<Map<String, dynamic>> processFile(@Body() Map<String, dynamic> request);
+  Future<void> processFile(@Body() Map<String, dynamic> request);
 }
 
 // Generic response models
