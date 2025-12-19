@@ -1,0 +1,150 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'podcast_playback_model.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+PodcastPlaybackStateResponse _$PodcastPlaybackStateResponseFromJson(
+  Map<String, dynamic> json,
+) => PodcastPlaybackStateResponse(
+  episodeId: (json['episode_id'] as num).toInt(),
+  currentPosition: (json['current_position'] as num).toInt(),
+  isPlaying: json['is_playing'] as bool,
+  playbackRate: (json['playback_rate'] as num).toDouble(),
+  playCount: (json['play_count'] as num).toInt(),
+  lastUpdatedAt: DateTime.parse(json['last_updated_at'] as String),
+  progressPercentage: (json['progress_percentage'] as num).toDouble(),
+  remainingTime: (json['remaining_time'] as num).toInt(),
+);
+
+Map<String, dynamic> _$PodcastPlaybackStateResponseToJson(
+  PodcastPlaybackStateResponse instance,
+) => <String, dynamic>{
+  'episode_id': instance.episodeId,
+  'current_position': instance.currentPosition,
+  'is_playing': instance.isPlaying,
+  'playback_rate': instance.playbackRate,
+  'play_count': instance.playCount,
+  'last_updated_at': instance.lastUpdatedAt.toIso8601String(),
+  'progress_percentage': instance.progressPercentage,
+  'remaining_time': instance.remainingTime,
+};
+
+PodcastPlaybackUpdateRequest _$PodcastPlaybackUpdateRequestFromJson(
+  Map<String, dynamic> json,
+) => PodcastPlaybackUpdateRequest(
+  position: (json['position'] as num).toInt(),
+  isPlaying: json['is_playing'] as bool,
+  playbackRate: (json['playback_rate'] as num?)?.toDouble() ?? 1.0,
+);
+
+Map<String, dynamic> _$PodcastPlaybackUpdateRequestToJson(
+  PodcastPlaybackUpdateRequest instance,
+) => <String, dynamic>{
+  'position': instance.position,
+  'is_playing': instance.isPlaying,
+  'playback_rate': instance.playbackRate,
+};
+
+PodcastSummaryResponse _$PodcastSummaryResponseFromJson(
+  Map<String, dynamic> json,
+) => PodcastSummaryResponse(
+  episodeId: (json['episode_id'] as num).toInt(),
+  summary: json['summary'] as String,
+  version: json['version'] as String,
+  confidenceScore: (json['confidence_score'] as num?)?.toDouble(),
+  transcriptUsed: json['transcript_used'] as bool,
+  generatedAt: DateTime.parse(json['generated_at'] as String),
+  wordCount: (json['word_count'] as num).toInt(),
+);
+
+Map<String, dynamic> _$PodcastSummaryResponseToJson(
+  PodcastSummaryResponse instance,
+) => <String, dynamic>{
+  'episode_id': instance.episodeId,
+  'summary': instance.summary,
+  'version': instance.version,
+  'confidence_score': instance.confidenceScore,
+  'transcript_used': instance.transcriptUsed,
+  'generated_at': instance.generatedAt.toIso8601String(),
+  'word_count': instance.wordCount,
+};
+
+PodcastSummaryRequest _$PodcastSummaryRequestFromJson(
+  Map<String, dynamic> json,
+) => PodcastSummaryRequest(
+  forceRegenerate: json['force_regenerate'] as bool? ?? false,
+  useTranscript: json['use_transcript'] as bool?,
+);
+
+Map<String, dynamic> _$PodcastSummaryRequestToJson(
+  PodcastSummaryRequest instance,
+) => <String, dynamic>{
+  'force_regenerate': instance.forceRegenerate,
+  'use_transcript': instance.useTranscript,
+};
+
+PodcastStatsResponse _$PodcastStatsResponseFromJson(
+  Map<String, dynamic> json,
+) => PodcastStatsResponse(
+  totalSubscriptions: (json['total_subscriptions'] as num).toInt(),
+  totalEpisodes: (json['total_episodes'] as num).toInt(),
+  totalPlaytime: (json['total_playtime'] as num).toInt(),
+  summariesGenerated: (json['summaries_generated'] as num).toInt(),
+  pendingSummaries: (json['pending_summaries'] as num).toInt(),
+  recentlyPlayed: (json['recently_played'] as List<dynamic>)
+      .map((e) => e as Map<String, dynamic>)
+      .toList(),
+  topCategories: (json['top_categories'] as List<dynamic>)
+      .map((e) => e as Map<String, dynamic>)
+      .toList(),
+  listeningStreak: (json['listening_streak'] as num).toInt(),
+);
+
+Map<String, dynamic> _$PodcastStatsResponseToJson(
+  PodcastStatsResponse instance,
+) => <String, dynamic>{
+  'total_subscriptions': instance.totalSubscriptions,
+  'total_episodes': instance.totalEpisodes,
+  'total_playtime': instance.totalPlaytime,
+  'summaries_generated': instance.summariesGenerated,
+  'pending_summaries': instance.pendingSummaries,
+  'recently_played': instance.recentlyPlayed,
+  'top_categories': instance.topCategories,
+  'listening_streak': instance.listeningStreak,
+};
+
+PodcastSearchFilter _$PodcastSearchFilterFromJson(Map<String, dynamic> json) =>
+    PodcastSearchFilter(
+      query: json['query'] as String?,
+      categoryId: (json['category_id'] as num?)?.toInt(),
+      status: json['status'] as String?,
+      hasSummary: json['has_summary'] as bool?,
+      dateFrom: json['date_from'] == null
+          ? null
+          : DateTime.parse(json['date_from'] as String),
+      dateTo: json['date_to'] == null
+          ? null
+          : DateTime.parse(json['date_to'] as String),
+      subscriptionId: (json['subscription_id'] as num?)?.toInt(),
+      isPlayed: json['is_played'] as bool?,
+      durationMin: (json['duration_min'] as num?)?.toInt(),
+      durationMax: (json['duration_max'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PodcastSearchFilterToJson(
+  PodcastSearchFilter instance,
+) => <String, dynamic>{
+  'query': instance.query,
+  'category_id': instance.categoryId,
+  'status': instance.status,
+  'has_summary': instance.hasSummary,
+  'date_from': instance.dateFrom?.toIso8601String(),
+  'date_to': instance.dateTo?.toIso8601String(),
+  'subscription_id': instance.subscriptionId,
+  'is_played': instance.isPlayed,
+  'duration_min': instance.durationMin,
+  'duration_max': instance.durationMax,
+};

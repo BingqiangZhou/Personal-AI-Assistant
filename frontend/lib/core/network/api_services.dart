@@ -64,7 +64,7 @@ abstract class ApiServices {
   );
 
   @POST('/assistant/chat/stream')
-  Future<Stream<String>> streamChat(@Body() Map<String, dynamic> request);
+  Future<Map<String, dynamic>> streamChat(@Body() Map<String, dynamic> request);
 
   // Knowledge Base endpoints
   @GET('/knowledge/items')

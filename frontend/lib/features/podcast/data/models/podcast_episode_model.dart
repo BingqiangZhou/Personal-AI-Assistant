@@ -1,0 +1,268 @@
+import 'package:equatable/equatable.dart';
+import 'package:json_annotation/json_annotation.dart';
+
+part 'podcast_episode_model.g.dart';
+
+@JsonSerializable()
+class PodcastEpisodeModel extends Equatable {
+  final int id;
+  @JsonKey(name: 'subscription_id')
+  final int subscriptionId;
+  final String title;
+  final String? description;
+  @JsonKey(name: 'audio_url')
+  final String audioUrl;
+  @JsonKey(name: 'audio_duration')
+  final int? audioDuration;
+  @JsonKey(name: 'audio_file_size')
+  final int? audioFileSize;
+  @JsonKey(name: 'published_at')
+  final DateTime publishedAt;
+  @JsonKey(name: 'transcript_url')
+  final String? transcriptUrl;
+  @JsonKey(name: 'transcript_content')
+  final String? transcriptContent;
+  @JsonKey(name: 'ai_summary')
+  final String? aiSummary;
+  @JsonKey(name: 'summary_version')
+  final String? summaryVersion;
+  @JsonKey(name: 'ai_confidence_score')
+  final double? aiConfidenceScore;
+  @JsonKey(name: 'play_count')
+  final int playCount;
+  @JsonKey(name: 'last_played_at')
+  final DateTime? lastPlayedAt;
+  final int? season;
+  @JsonKey(name: 'episode_number')
+  final int? episodeNumber;
+  final bool explicit;
+  final String status;
+  final Map<String, dynamic>? metadata;
+
+  // Playback state
+  @JsonKey(name: 'playback_position')
+  final int? playbackPosition;
+  @JsonKey(name: 'is_playing')
+  final bool isPlaying;
+  @JsonKey(name: 'playback_rate')
+  final double playbackRate;
+  @JsonKey(name: 'is_played')
+  final bool isPlayed;
+
+  @JsonKey(name: 'created_at')
+  final DateTime createdAt;
+  @JsonKey(name: 'updated_at')
+  final DateTime? updatedAt;
+
+  const PodcastEpisodeModel({
+    required this.id,
+    required this.subscriptionId,
+    required this.title,
+    this.description,
+    required this.audioUrl,
+    this.audioDuration,
+    this.audioFileSize,
+    required this.publishedAt,
+    this.transcriptUrl,
+    this.transcriptContent,
+    this.aiSummary,
+    this.summaryVersion,
+    this.aiConfidenceScore,
+    this.playCount = 0,
+    this.lastPlayedAt,
+    this.season,
+    this.episodeNumber,
+    this.explicit = false,
+    this.status = 'published',
+    this.metadata,
+    this.playbackPosition,
+    this.isPlaying = false,
+    this.playbackRate = 1.0,
+    this.isPlayed = false,
+    required this.createdAt,
+    this.updatedAt,
+  });
+
+  factory PodcastEpisodeModel.fromJson(Map<String, dynamic> json) =>
+      _$PodcastEpisodeModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PodcastEpisodeModelToJson(this);
+
+  PodcastEpisodeModel copyWith({
+    int? id,
+    int? subscriptionId,
+    String? title,
+    String? description,
+    String? audioUrl,
+    int? audioDuration,
+    int? audioFileSize,
+    DateTime? publishedAt,
+    String? transcriptUrl,
+    String? transcriptContent,
+    String? aiSummary,
+    String? summaryVersion,
+    double? aiConfidenceScore,
+    int? playCount,
+    DateTime? lastPlayedAt,
+    int? season,
+    int? episodeNumber,
+    bool? explicit,
+    String? status,
+    Map<String, dynamic>? metadata,
+    int? playbackPosition,
+    bool? isPlaying,
+    double? playbackRate,
+    bool? isPlayed,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return PodcastEpisodeModel(
+      id: id ?? this.id,
+      subscriptionId: subscriptionId ?? this.subscriptionId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      audioUrl: audioUrl ?? this.audioUrl,
+      audioDuration: audioDuration ?? this.audioDuration,
+      audioFileSize: audioFileSize ?? this.audioFileSize,
+      publishedAt: publishedAt ?? this.publishedAt,
+      transcriptUrl: transcriptUrl ?? this.transcriptUrl,
+      transcriptContent: transcriptContent ?? this.transcriptContent,
+      aiSummary: aiSummary ?? this.aiSummary,
+      summaryVersion: summaryVersion ?? this.summaryVersion,
+      aiConfidenceScore: aiConfidenceScore ?? this.aiConfidenceScore,
+      playCount: playCount ?? this.playCount,
+      lastPlayedAt: lastPlayedAt ?? this.lastPlayedAt,
+      season: season ?? this.season,
+      episodeNumber: episodeNumber ?? this.episodeNumber,
+      explicit: explicit ?? this.explicit,
+      status: status ?? this.status,
+      metadata: metadata ?? this.metadata,
+      playbackPosition: playbackPosition ?? this.playbackPosition,
+      isPlaying: isPlaying ?? this.isPlaying,
+      playbackRate: playbackRate ?? this.playbackRate,
+      isPlayed: isPlayed ?? this.isPlayed,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  // Helper getters
+  String get formattedDuration {
+    if (audioDuration == null) return '--:--';
+    final duration = Duration(seconds: audioDuration!);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  String get formattedPlaybackPosition {
+    if (playbackPosition == null) return '00:00';
+    final duration = Duration(seconds: playbackPosition!);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  double get progressPercentage {
+    if (audioDuration == null || playbackPosition == null) return 0.0;
+    return (playbackPosition! / audioDuration!).clamp(0.0, 1.0);
+  }
+
+  String get episodeIdentifier {
+    if (season != null && episodeNumber != null) {
+      return 'S${season!.toString().padLeft(2, '0')}E${episodeNumber!.toString().padLeft(2, '0')}';
+    } else if (episodeNumber != null) {
+      return 'Episode $episodeNumber';
+    }
+    return '';
+  }
+
+  @override
+  List<Object?> get props => [
+        id,
+        subscriptionId,
+        title,
+        description,
+        audioUrl,
+        audioDuration,
+        audioFileSize,
+        publishedAt,
+        transcriptUrl,
+        transcriptContent,
+        aiSummary,
+        summaryVersion,
+        aiConfidenceScore,
+        playCount,
+        lastPlayedAt,
+        season,
+        episodeNumber,
+        explicit,
+        status,
+        metadata,
+        playbackPosition,
+        isPlaying,
+        playbackRate,
+        isPlayed,
+        createdAt,
+        updatedAt,
+      ];
+}
+
+@JsonSerializable()
+class PodcastEpisodeListResponse extends Equatable {
+  final List<PodcastEpisodeModel> episodes;
+  final int total;
+  final int page;
+  final int size;
+  final int pages;
+  @JsonKey(name: 'subscription_id')
+  final int subscriptionId;
+
+  const PodcastEpisodeListResponse({
+    required this.episodes,
+    required this.total,
+    required this.page,
+    required this.size,
+    required this.pages,
+    required this.subscriptionId,
+  });
+
+  factory PodcastEpisodeListResponse.fromJson(Map<String, dynamic> json) =>
+      _$PodcastEpisodeListResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PodcastEpisodeListResponseToJson(this);
+
+  @override
+  List<Object?> get props => [episodes, total, page, size, pages, subscriptionId];
+}
+
+@JsonSerializable()
+class PodcastEpisodeDetailResponse extends Equatable {
+  final PodcastEpisodeModel episode;
+  final Map<String, dynamic>? subscription;
+  final List<Map<String, dynamic>>? relatedEpisodes;
+
+  const PodcastEpisodeDetailResponse({
+    required this.episode,
+    this.subscription,
+    this.relatedEpisodes,
+  });
+
+  factory PodcastEpisodeDetailResponse.fromJson(Map<String, dynamic> json) =>
+      _$PodcastEpisodeDetailResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PodcastEpisodeDetailResponseToJson(this);
+
+  @override
+  List<Object?> get props => [episode, subscription, relatedEpisodes];
+}

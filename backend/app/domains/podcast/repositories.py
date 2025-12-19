@@ -2,10 +2,10 @@
 播客数据访问层 - Podcast Repository
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any, Set
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, desc, func
-from datetime import datetime
+from sqlalchemy import select, and_, desc, func, or_, text
+from datetime import datetime, date, timedelta
 
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 from app.domains.subscription.models import Subscription, SubscriptionItem
@@ -313,26 +313,249 @@ class PodcastRepository:
 
         await self.redis.set_episode_metadata(episode.id, metadata)
 
-    async def get_user_stats(self, user_id: int) -> dict:
-        """获取用户播客统计"""
-        # 未完成的总结
-        incomplete_stmt = select(PodcastEpisode).where(
-            and_(
-                PodcastEpisode.ai_summary.is_(None),
-                PodcastEpisode.status == "pending_summary"
-            )
-        ).join(Subscription).where(Subscription.user_id == user_id)
+    # === 新增方法支持分页、搜索、统计等 ===
 
-        # 播放数量
-        played_stmt = select(PodcastPlaybackState).where(
-            PodcastPlaybackState.user_id == user_id
+    async def get_user_subscriptions_paginated(
+        self,
+        user_id: int,
+        page: int = 1,
+        size: int = 20,
+        filters: Optional[dict] = None
+    ) -> Tuple[List[Subscription], int]:
+        """分页获取用户订阅"""
+        query = select(Subscription).where(
+            and_(
+                Subscription.user_id == user_id,
+                Subscription.source_type == "podcast-rss"
+            )
         )
 
-        result1 = await self.db.execute(incomplete_stmt)
-        subscriptions = await self.get_user_subscriptions(user_id)
+        # 应用过滤器
+        if filters:
+            if filters.get("category_id"):
+                # TODO: 实现分类过滤
+                pass
+            if filters.get("status"):
+                query = query.where(Subscription.status == filters["status"])
 
-        return {
-            "subscriptions_count": len(subscriptions),
-            "pending_summaries": len(list(result1.scalars().all())),
-            "has_active_plus": any(s.status == "active" for s in subscriptions)
-        }
+        # 计算总数
+        count_query = select(func.count()).select_from(
+            query.subquery()
+        )
+        total_result = await self.db.execute(count_query)
+        total = total_result.scalar()
+
+        # 应用排序和分页
+        query = query.order_by(Subscription.created_at.desc())
+        query = query.offset((page - 1) * size).limit(size)
+
+        result = await self.db.execute(query)
+        subscriptions = list(result.scalars().all())
+
+        return subscriptions, total
+
+    async def get_episodes_paginated(
+        self,
+        user_id: int,
+        page: int = 1,
+        size: int = 20,
+        filters: Optional[dict] = None
+    ) -> Tuple[List[PodcastEpisode], int]:
+        """分页获取用户播客单集"""
+        query = select(PodcastEpisode).join(Subscription).where(
+            Subscription.user_id == user_id
+        )
+
+        # 应用过滤器
+        if filters:
+            if filters.get("subscription_id"):
+                query = query.where(PodcastEpisode.subscription_id == filters["subscription_id"])
+            if filters.get("has_summary") is not None:
+                if filters["has_summary"]:
+                    query = query.where(PodcastEpisode.ai_summary.isnot(None))
+                else:
+                    query = query.where(PodcastEpisode.ai_summary.is_(None))
+            if filters.get("is_played") is not None:
+                # 播放状态需要JOIN播放记录表
+                if filters["is_played"]:
+                    # 已播放：播放进度超过90%
+                    query = query.join(PodcastPlaybackState).where(
+                        PodcastPlaybackState.current_position >= PodcastEpisode.audio_duration * 0.9
+                    )
+                else:
+                    # 未播放或未听完
+                    query = query.outerjoin(PodcastPlaybackState).where(
+                        or_(
+                            PodcastPlaybackState.id.is_(None),
+                            PodcastPlaybackState.current_position < PodcastEpisode.audio_duration * 0.9
+                        )
+                    )
+
+        # 计算总数
+        count_query = select(func.count()).select_from(
+            query.subquery()
+        )
+        total_result = await self.db.execute(count_query)
+        total = total_result.scalar()
+
+        # 应用排序和分页
+        query = query.order_by(PodcastEpisode.published_at.desc())
+        query = query.offset((page - 1) * size).limit(size)
+
+        result = await self.db.execute(query)
+        episodes = list(result.scalars().all())
+
+        return episodes, total
+
+    async def search_episodes(
+        self,
+        user_id: int,
+        query: str,
+        search_in: str = "all",
+        page: int = 1,
+        size: int = 20
+    ) -> Tuple[List[PodcastEpisode], int]:
+        """搜索播客单集"""
+        # 构建搜索条件
+        search_conditions = []
+
+        if search_in in ["title", "all"]:
+            search_conditions.append(PodcastEpisode.title.ilike(f"%{query}%"))
+        if search_in in ["description", "all"]:
+            search_conditions.append(PodcastEpisode.description.ilike(f"%{query}%"))
+        if search_in in ["summary", "all"]:
+            search_conditions.append(PodcastEpisode.ai_summary.ilike(f"%{query}%"))
+
+        base_query = select(PodcastEpisode).join(Subscription).where(
+            and_(
+                Subscription.user_id == user_id,
+                or_(*search_conditions)
+            )
+        )
+
+        # 使用全文搜索（如果PostgreSQL支持）
+        # 这里简化为使用ILIKE，实际可以优化为使用PostgreSQL的全文搜索
+
+        # 计算总数
+        count_query = select(func.count()).select_from(
+            base_query.subquery()
+        )
+        total_result = await self.db.execute(count_query)
+        total = total_result.scalar()
+
+        # 应用排序（按相关度和发布时间）
+        # 简化实现：只按发布时间排序
+        query = base_query.order_by(PodcastEpisode.published_at.desc())
+        query = query.offset((page - 1) * size).limit(size)
+
+        result = await self.db.execute(query)
+        episodes = list(result.scalars().all())
+
+        return episodes, total
+
+    async def update_subscription_categories(
+        self,
+        subscription_id: int,
+        category_ids: List[int]
+    ):
+        """更新订阅的分类关联"""
+        # TODO: 实现订阅与分类的多对多关系更新
+        # 这需要创建PodcastCategory模型和相关映射表
+        pass
+
+    async def update_subscription_fetch_time(self, subscription_id: int):
+        """更新订阅的最后抓取时间"""
+        stmt = select(Subscription).where(Subscription.id == subscription_id)
+        result = await self.db.execute(stmt)
+        subscription = result.scalar_one_or_none()
+
+        if subscription:
+            subscription.last_fetched_at = datetime.utcnow()
+            await self.db.commit()
+
+    async def get_recently_played(
+        self,
+        user_id: int,
+        limit: int = 5
+    ) -> List[Dict[str, Any]]:
+        """获取最近播放的单集"""
+        stmt = select(
+            PodcastEpisode,
+            PodcastPlaybackState.current_position,
+            PodcastPlaybackState.last_updated_at
+        ).join(PodcastPlaybackState).join(Subscription).where(
+            and_(
+                Subscription.user_id == user_id,
+                PodcastPlaybackState.last_updated_at >= datetime.utcnow() - timedelta(days=7)
+            )
+        ).order_by(PodcastPlaybackState.last_updated_at.desc()).limit(limit)
+
+        result = await self.db.execute(stmt)
+        rows = result.all()
+
+        recently_played = []
+        for episode, position, last_played in rows:
+            recently_played.append({
+                "episode_id": episode.id,
+                "title": episode.title,
+                "subscription_title": episode.subscription.title,
+                "position": position,
+                "last_played": last_played,
+                "duration": episode.audio_duration
+            })
+
+        return recently_played
+
+    async def get_liked_episodes(
+        self,
+        user_id: int,
+        limit: int = 20
+    ) -> List[PodcastEpisode]:
+        """获取用户喜欢的单集（播放完成率高的）"""
+        # 播放完成率 > 80% 的单集
+        stmt = select(PodcastEpisode).join(PodcastPlaybackState).join(Subscription).where(
+            and_(
+                Subscription.user_id == user_id,
+                PodcastEpisode.audio_duration > 0,
+                PodcastPlaybackState.current_position >= PodcastEpisode.audio_duration * 0.8
+            )
+        ).order_by(PodcastPlaybackState.play_count.desc()).limit(limit)
+
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_recent_play_dates(
+        self,
+        user_id: int,
+        days: int = 30
+    ) -> Set[date]:
+        """获取最近播放的日期集合"""
+        stmt = select(PodcastPlaybackState.last_updated_at).where(
+            and_(
+                PodcastPlaybackState.user_id == user_id,
+                PodcastPlaybackState.last_updated_at >= datetime.utcnow() - timedelta(days=days)
+            )
+        ).distinct()
+
+        result = await self.db.execute(stmt)
+        dates = set()
+        for (last_updated,) in result:
+            dates.add(last_updated.date())
+
+        return dates
+
+    async def get_subscription_episodes(
+        self,
+        subscription_id: int,
+        limit: Optional[int] = 20
+    ) -> List[PodcastEpisode]:
+        """获取订阅的单集列表"""
+        query = select(PodcastEpisode).where(
+            PodcastEpisode.subscription_id == subscription_id
+        ).order_by(PodcastEpisode.published_at.desc())
+
+        if limit:
+            query = query.limit(limit)
+
+        result = await self.db.execute(query)
+        return list(result.scalars().all())

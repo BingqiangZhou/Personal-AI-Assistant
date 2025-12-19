@@ -46,7 +46,8 @@ class PodcastService:
     async def add_subscription(
         self,
         feed_url: str,
-        custom_name: Optional[str] = None
+        custom_name: Optional[str] = None,
+        category_ids: Optional[List[int]] = None
     ) -> Tuple[Subscription, List[PodcastEpisode]]:
         """
         添加播客订阅
@@ -71,7 +72,11 @@ class PodcastService:
             custom_name
         )
 
-        # 4. 保存并总结新单集
+        # 4. 处理分类关联
+        if category_ids:
+            await self.repo.update_subscription_categories(subscription.id, category_ids)
+
+        # 5. 保存并总结新单集
         new_episodes = []
         for episode in feed.episodes[:10]:  # 前10个
             saved_episode, is_new = await self.repo.create_or_update_episode(
@@ -91,35 +96,270 @@ class PodcastService:
                 # 异步触发AI总结
                 asyncio.create_task(self._generate_summary_task(saved_episode))
 
-        logger.info(f"用户{self.user_id} 添加播客: {feed.title}, {len(new_episodes)}新模式")
+        logger.info(f"用户{self.user_id} 添加播客: {feed.title}, {len(new_episodes)}期新节目")
         return subscription, new_episodes
 
-    async def list_subscriptions(self) -> List[dict]:
-        """列出用户的所有播客订阅"""
-        subscriptions = await self.repo.get_user_subscriptions(self.user_id)
+    async def list_subscriptions(
+        self,
+        filters: Optional[dict] = None,
+        page: int = 1,
+        size: int = 20
+    ) -> Tuple[List[dict], int]:
+        """列出用户的所有播客订阅（支持分页和过滤）"""
+        subscriptions, total = await self.repo.get_user_subscriptions_paginated(
+            self.user_id,
+            page=page,
+            size=size,
+            filters=filters
+        )
 
         results = []
         for sub in subscriptions:
             # 获取最新3个单集
             episodes = await self.repo.get_subscription_episodes(sub.id, limit=3)
+            episode_count = await self._get_episode_count(sub.id)
+            unplayed_count = await self._get_unplayed_count(sub.id)
 
             results.append({
                 "id": sub.id,
+                "user_id": sub.user_id,
                 "title": sub.title,
                 "description": sub.description,
-                "feed_url": sub.source_url,
-                "episode_count": await self._get_episode_count(sub.id),
-                "latest_episodes": [{
-                    "id": ep.id,
-                    "title": ep.title,
-                    "published_at": ep.published_at,
-                    "has_summary": ep.ai_summary is not None
-                } for ep in episodes],
+                "source_url": sub.source_url,
                 "status": sub.status,
-                "created_at": sub.created_at
+                "last_fetched_at": sub.last_fetched_at,
+                "error_message": sub.error_message,
+                "fetch_interval": sub.fetch_interval,
+                "episode_count": episode_count,
+                "unplayed_count": unplayed_count,
+                "latest_episode": episodes[0] if episodes else None,
+                "categories": [],  # TODO: 获取分类信息
+                "created_at": sub.created_at,
+                "updated_at": sub.updated_at
             })
 
-        return results
+        return results, total
+
+    async def list_episodes(
+        self,
+        filters: Optional[dict] = None,
+        page: int = 1,
+        size: int = 20
+    ) -> Tuple[List[dict], int]:
+        """获取播客单集列表（支持分页和过滤）"""
+        episodes, total = await self.repo.get_episodes_paginated(
+            self.user_id,
+            page=page,
+            size=size,
+            filters=filters
+        )
+
+        results = []
+        for ep in episodes:
+            # 获取用户播放状态
+            playback = await self.repo.get_playback_state(self.user_id, ep.id)
+
+            results.append({
+                "id": ep.id,
+                "subscription_id": ep.subscription_id,
+                "title": ep.title,
+                "description": ep.description,
+                "audio_url": ep.audio_url,
+                "audio_duration": ep.audio_duration,
+                "audio_file_size": ep.audio_file_size,
+                "published_at": ep.published_at,
+                "transcript_url": ep.transcript_url,
+                "ai_summary": ep.ai_summary,
+                "summary_version": ep.summary_version,
+                "ai_confidence_score": ep.ai_confidence_score,
+                "play_count": ep.play_count,
+                "last_played_at": ep.last_played_at,
+                "season": ep.season,
+                "episode_number": ep.episode_number,
+                "explicit": ep.explicit,
+                "status": ep.status,
+                "metadata": ep.metadata_json,
+                # 播放状态
+                "playback_position": playback.current_position if playback else None,
+                "is_playing": playback.is_playing if playback else False,
+                "playback_rate": playback.playback_rate if playback else 1.0,
+                "is_played": (playback and playback.current_position and
+                             ep.audio_duration and
+                             playback.current_position >= ep.audio_duration * 0.9),
+                "created_at": ep.created_at,
+                "updated_at": ep.updated_at
+            })
+
+        return results, total
+
+    async def search_podcasts(
+        self,
+        query: str,
+        search_in: str = "all",
+        page: int = 1,
+        size: int = 20
+    ) -> Tuple[List[dict], int]:
+        """搜索播客内容"""
+        episodes, total = await self.repo.search_episodes(
+            self.user_id,
+            query=query,
+            search_in=search_in,
+            page=page,
+            size=size
+        )
+
+        results = []
+        for ep in episodes:
+            results.append({
+                "id": ep.id,
+                "title": ep.title,
+                "description": ep.description[:200] + "..." if ep.description and len(ep.description) > 200 else ep.description,
+                "subscription_title": ep.subscription.title if hasattr(ep, 'subscription') else "Unknown",
+                "audio_url": ep.audio_url,
+                "audio_duration": ep.audio_duration,
+                "published_at": ep.published_at,
+                "ai_summary": ep.ai_summary[:150] + "..." if ep.ai_summary and len(ep.ai_summary) > 150 else ep.ai_summary,
+                "relevance_score": getattr(ep, 'relevance_score', 1.0)
+            })
+
+        return results, total
+
+    async def refresh_subscription(self, subscription_id: int) -> List[PodcastEpisode]:
+        """刷新播客订阅，获取最新单集"""
+        # 获取订阅信息
+        sub = await self.repo.get_subscription_by_id(self.user_id, subscription_id)
+        if not sub:
+            raise ValueError("订阅不存在")
+
+        # 解析RSS
+        success, feed, error = await self.parser.fetch_and_parse_feed(sub.source_url)
+        if not success:
+            raise ValueError(f"刷新失败: {error}")
+
+        # 保存新单集
+        new_episodes = []
+        for episode in feed.episodes:
+            saved_episode, is_new = await self.repo.create_or_update_episode(
+                subscription_id=subscription_id,
+                guid=episode.guid or f"{sub.source_url}-{episode.title}",
+                title=episode.title,
+                description=episode.description,
+                audio_url=episode.audio_url,
+                published_at=episode.published_at,
+                audio_duration=episode.duration,
+                transcript_url=episode.transcript_url,
+                metadata={"feed_title": feed.title, "refreshed_at": datetime.utcnow().isoformat()}
+            )
+
+            if is_new:
+                new_episodes.append(saved_episode)
+                # 异步触发AI总结
+                asyncio.create_task(self._generate_summary_task(saved_episode))
+
+        # 更新订阅的最后抓取时间
+        await self.repo.update_subscription_fetch_time(subscription_id)
+
+        logger.info(f"用户{self.user_id} 刷新订阅: {sub.title}, {len(new_episodes)}期新节目")
+        return new_episodes
+
+    async def get_playback_state(self, episode_id: int) -> Optional[dict]:
+        """获取播放状态"""
+        playback = await self.repo.get_playback_state(self.user_id, episode_id)
+        if not playback:
+            return None
+
+        episode = await self.repo.get_episode_by_id(episode_id)
+        if not episode:
+            return None
+
+        progress_percentage = 0
+        remaining_time = 0
+        if episode.audio_duration and episode.audio_duration > 0:
+            progress_percentage = (playback.current_position / episode.audio_duration) * 100
+            remaining_time = max(0, episode.audio_duration - playback.current_position)
+
+        return {
+            "episode_id": episode_id,
+            "current_position": playback.current_position,
+            "is_playing": playback.is_playing,
+            "playback_rate": playback.playback_rate,
+            "play_count": playback.play_count,
+            "last_updated_at": playback.last_updated_at,
+            "progress_percentage": round(progress_percentage, 2),
+            "remaining_time": remaining_time
+        }
+
+    async def get_user_stats(self) -> dict:
+        """获取用户播客统计"""
+        # 基础统计
+        subscriptions = await self.repo.get_user_subscriptions(self.user_id)
+
+        # 收听统计
+        total_episodes = 0
+        total_playtime = 0
+        summaries_generated = 0
+        pending_summaries = 0
+
+        for sub in subscriptions:
+            episodes = await self.repo.get_subscription_episodes(sub.id, limit=None)
+            total_episodes += len(episodes)
+
+            for ep in episodes:
+                if ep.ai_summary:
+                    summaries_generated += 1
+                else:
+                    pending_summaries += 1
+
+                # 统计播放时间
+                playback = await self.repo.get_playback_state(self.user_id, ep.id)
+                if playback:
+                    total_playtime += playback.current_position
+
+        # 最近播放
+        recently_played = await self.repo.get_recently_played(self.user_id, limit=5)
+
+        # 连续收听天数
+        listening_streak = await self._calculate_listening_streak()
+
+        # 热门分类（TODO: 实现分类统计）
+        top_categories = []
+
+        return {
+            "total_subscriptions": len(subscriptions),
+            "total_episodes": total_episodes,
+            "total_playtime": total_playtime,
+            "summaries_generated": summaries_generated,
+            "pending_summaries": pending_summaries,
+            "recently_played": recently_played,
+            "top_categories": top_categories,
+            "listening_streak": listening_streak,
+            "has_active_plus": any(s.status == "active" for s in subscriptions)
+        }
+
+    async def get_recommendations(self, limit: int = 10) -> List[dict]:
+        """获取播客推荐"""
+        # 基于用户收听历史推荐
+        # 这里实现简单的推荐逻辑，实际应用中可以使用更复杂的算法
+
+        # 1. 获取用户喜欢的播客（播放完成率高的）
+        liked_episodes = await self.repo.get_liked_episodes(self.user_id, limit=20)
+
+        # 2. 基于主题相似性推荐
+        # TODO: 实现基于内容的推荐算法
+
+        # 3. 返回推荐结果
+        recommendations = []
+        for ep in liked_episodes[:limit]:
+            recommendations.append({
+                "episode_id": ep.id,
+                "title": ep.title,
+                "description": ep.description[:150] + "...",
+                "subscription_title": ep.subscription.title,
+                "recommendation_reason": "基于您收听历史推荐",
+                "match_score": 0.85
+            })
+
+        return recommendations
 
     async def get_subscription_details(self, subscription_id: int) -> Optional[dict]:
         """获取订阅详情及单集列表"""
@@ -425,3 +665,38 @@ class PodcastService:
         # 简化实现，实际可缓存
         episodes = await self.repo.get_subscription_episodes(subscription_id, limit=9999)
         return len(episodes)
+
+    async def _get_unplayed_count(self, subscription_id: int) -> int:
+        """获取未播放的单集数量"""
+        episodes = await self.repo.get_subscription_episodes(subscription_id, limit=None)
+        unplayed = 0
+
+        for ep in episodes:
+            playback = await self.repo.get_playback_state(self.user_id, ep.id)
+            if not playback or not playback.current_position or \
+               (ep.audio_duration and playback.current_position < ep.audio_duration * 0.9):
+                unplayed += 1
+
+        return unplayed
+
+    async def _calculate_listening_streak(self) -> int:
+        """计算连续收听天数"""
+        # 获取最近30天的播放记录
+        recent_plays = await self.repo.get_recent_play_dates(self.user_id, days=30)
+
+        if not recent_plays:
+            return 0
+
+        # 计算连续天数
+        streak = 1  # 今天
+        from datetime import date, timedelta
+        today = date.today()
+
+        for i in range(1, 30):
+            check_date = today - timedelta(days=i)
+            if check_date in recent_plays:
+                streak += 1
+            else:
+                break
+
+        return streak
