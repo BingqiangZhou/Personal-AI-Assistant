@@ -5,6 +5,7 @@
 from typing import List, Optional, Tuple, Dict, Any, Set
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, desc, func, or_, text
+from sqlalchemy.orm import joinedload
 from datetime import datetime, date, timedelta
 
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
@@ -58,7 +59,7 @@ class PodcastRepository:
                 title=custom_name or title,
                 description=description,
                 status="active",
-                refresh_interval_minutes=60  # 默认1小时
+                fetch_interval=3600  # 默认1小时（秒）
             )
             self.db.add(subscription)
 
@@ -122,7 +123,7 @@ class PodcastRepository:
             episode.title = title
             episode.description = description
             episode.audio_url = audio_url
-            episode.published_at = published_at
+            episode.published_at = published_at.replace(tzinfo=None) if published_at.tzinfo else published_at
             episode.audio_duration = audio_duration
             episode.transcript_url = transcript_url
             episode.updated_at = datetime.utcnow()
@@ -136,7 +137,7 @@ class PodcastRepository:
                 title=title,
                 description=description,
                 audio_url=audio_url,
-                published_at=published_at,
+                published_at=published_at.replace(tzinfo=None) if published_at.tzinfo else published_at,
                 audio_duration=audio_duration,
                 transcript_url=transcript_url,
                 status="pending_summary",  # 等待AI总结
@@ -332,11 +333,11 @@ class PodcastRepository:
 
         # 应用过滤器
         if filters:
-            if filters.get("category_id"):
+            if filters.category_id:
                 # TODO: 实现分类过滤
                 pass
-            if filters.get("status"):
-                query = query.where(Subscription.status == filters["status"])
+            if filters.status:
+                query = query.where(Subscription.status == filters.status)
 
         # 计算总数
         count_query = select(func.count()).select_from(
@@ -368,16 +369,16 @@ class PodcastRepository:
 
         # 应用过滤器
         if filters:
-            if filters.get("subscription_id"):
-                query = query.where(PodcastEpisode.subscription_id == filters["subscription_id"])
-            if filters.get("has_summary") is not None:
-                if filters["has_summary"]:
+            if filters.subscription_id:
+                query = query.where(PodcastEpisode.subscription_id == filters.subscription_id)
+            if filters.has_summary is not None:
+                if filters.has_summary:
                     query = query.where(PodcastEpisode.ai_summary.isnot(None))
                 else:
                     query = query.where(PodcastEpisode.ai_summary.is_(None))
-            if filters.get("is_played") is not None:
+            if filters.is_played is not None:
                 # 播放状态需要JOIN播放记录表
-                if filters["is_played"]:
+                if filters.is_played:
                     # 已播放：播放进度超过90%
                     query = query.join(PodcastPlaybackState).where(
                         PodcastPlaybackState.current_position >= PodcastEpisode.audio_duration * 0.9
@@ -426,7 +427,9 @@ class PodcastRepository:
         if search_in in ["summary", "all"]:
             search_conditions.append(PodcastEpisode.ai_summary.ilike(f"%{query}%"))
 
-        base_query = select(PodcastEpisode).join(Subscription).where(
+        base_query = select(PodcastEpisode).join(Subscription).options(
+            joinedload(PodcastEpisode.subscription)
+        ).where(
             and_(
                 Subscription.user_id == user_id,
                 or_(*search_conditions)

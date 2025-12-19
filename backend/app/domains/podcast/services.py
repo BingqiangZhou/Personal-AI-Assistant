@@ -120,6 +120,20 @@ class PodcastService:
             episode_count = await self._get_episode_count(sub.id)
             unplayed_count = await self._get_unplayed_count(sub.id)
 
+            # 将最新单集转换为字典
+            latest_episode_dict = None
+            if episodes:
+                latest = episodes[0]
+                latest_episode_dict = {
+                    "id": latest.id,
+                    "title": latest.title,
+                    "audio_url": latest.audio_url,
+                    "duration": latest.audio_duration,
+                    "published_at": latest.published_at,
+                    "ai_summary": latest.ai_summary,
+                    "status": latest.status
+                }
+
             results.append({
                 "id": sub.id,
                 "user_id": sub.user_id,
@@ -132,7 +146,7 @@ class PodcastService:
                 "fetch_interval": sub.fetch_interval,
                 "episode_count": episode_count,
                 "unplayed_count": unplayed_count,
-                "latest_episode": episodes[0] if episodes else None,
+                "latest_episode": latest_episode_dict,
                 "categories": [],  # TODO: 获取分类信息
                 "created_at": sub.created_at,
                 "updated_at": sub.updated_at
@@ -183,7 +197,7 @@ class PodcastService:
                 "playback_position": playback.current_position if playback else None,
                 "is_playing": playback.is_playing if playback else False,
                 "playback_rate": playback.playback_rate if playback else 1.0,
-                "is_played": (playback and playback.current_position and
+                "is_played": bool(playback and playback.current_position and
                              ep.audio_duration and
                              playback.current_position >= ep.audio_duration * 0.9),
                 "created_at": ep.created_at,
@@ -210,15 +224,39 @@ class PodcastService:
 
         results = []
         for ep in episodes:
+            # 获取用户播放状态
+            playback = await self.repo.get_playback_state(self.user_id, ep.id)
+
             results.append({
                 "id": ep.id,
+                "subscription_id": ep.subscription_id,
                 "title": ep.title,
-                "description": ep.description[:200] + "..." if ep.description and len(ep.description) > 200 else ep.description,
-                "subscription_title": ep.subscription.title if hasattr(ep, 'subscription') else "Unknown",
+                "description": ep.description,
                 "audio_url": ep.audio_url,
                 "audio_duration": ep.audio_duration,
+                "audio_file_size": ep.audio_file_size,
                 "published_at": ep.published_at,
-                "ai_summary": ep.ai_summary[:150] + "..." if ep.ai_summary and len(ep.ai_summary) > 150 else ep.ai_summary,
+                "transcript_url": ep.transcript_url,
+                "ai_summary": ep.ai_summary,
+                "summary_version": ep.summary_version,
+                "ai_confidence_score": ep.ai_confidence_score,
+                "play_count": ep.play_count,
+                "last_played_at": ep.last_played_at,
+                "season": ep.season,
+                "episode_number": ep.episode_number,
+                "explicit": ep.explicit,
+                "status": ep.status,
+                "metadata": ep.metadata_json,
+                # 播放状态
+                "playback_position": playback.current_position if playback else None,
+                "is_playing": playback.is_playing if playback else False,
+                "playback_rate": playback.playback_rate if playback else 1.0,
+                "is_played": bool(playback and playback.current_position and
+                             ep.audio_duration and
+                             playback.current_position >= ep.audio_duration * 0.9),
+                "created_at": ep.created_at,
+                "updated_at": ep.updated_at,
+                # 搜索相关性分数（如果存在）
                 "relevance_score": getattr(ep, 'relevance_score', 1.0)
             })
 

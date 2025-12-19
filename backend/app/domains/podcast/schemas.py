@@ -103,7 +103,7 @@ class PodcastEpisodeResponse(PodcastTimestampedSchema):
     playback_position: Optional[int] = None
     is_playing: bool = False
     playback_rate: float = 1.0
-    is_played: bool = False
+    is_played: Optional[bool] = None
 
 
 class PodcastEpisodeListResponse(PodcastBaseSchema):

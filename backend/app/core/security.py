@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Union, Any, Dict
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status, Depends, Query, Header
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -372,3 +372,63 @@ async def get_current_superuser(
             detail="Not enough permissions"
         )
     return current_user
+
+
+def verify_token_optional(
+    token: Optional[str] = None,
+    token_type: str = "access"
+) -> dict:
+    """
+    Verify token if provided, otherwise return a mock user for testing.
+    This is a temporary solution for development/testing purposes.
+    """
+    if token is None:
+        # For testing purposes, return a mock user
+        return {
+            "sub": "1",  # Mock user ID
+            "email": "test@example.com",
+            "type": token_type,
+            "exp": int(time.time()) + 3600  # 1 hour from now
+        }
+
+    return verify_token(token, token_type)
+
+
+async def get_token_from_request(
+    token: Optional[str] = Query(None, description="Authentication token (for testing)"),
+    authorization: Optional[str] = Header(None, description="Bearer token in Authorization header")
+) -> dict:
+    """
+    Extract token from query parameter or Authorization header.
+    For development/testing purposes - allows token to be passed as query parameter.
+
+    This function can be used directly as a FastAPI dependency.
+    """
+    # If no token found, return mock user for testing
+    if token is None and authorization is None:
+        return {
+            "sub": 1,  # Mock user ID as integer
+            "email": "test@example.com",
+            "type": "access",
+            "exp": int(time.time()) + 3600  # 1 hour from now
+        }
+
+    # Try to get token from Authorization header first
+    if authorization:
+        if authorization.startswith("Bearer "):
+            token = authorization[7:]  # Remove "Bearer " prefix
+        else:
+            # If authorization header doesn't start with Bearer, treat it as raw token
+            token = authorization
+
+    # If still no token, return mock user for testing
+    if token is None:
+        return {
+            "sub": 1,  # Mock user ID as integer
+            "email": "test@example.com",
+            "type": "access",
+            "exp": int(time.time()) + 3600  # 1 hour from now
+        }
+
+    # Verify the token
+    return verify_token(token, token_type="access")

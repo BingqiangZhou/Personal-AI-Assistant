@@ -42,6 +42,12 @@ class PodcastFeed:
     description: str
     episodes: List[PodcastEpisode]
     last_fetched: datetime
+    author: Optional[str] = None
+    language: Optional[str] = None
+    categories: List[str] = None
+    explicit: Optional[bool] = None
+    image_url: Optional[str] = None
+    podcast_type: Optional[str] = None
 
 
 class SecureRSSParser:
@@ -106,11 +112,21 @@ class SecureRSSParser:
                     if size > self.security.MAX_RSS_SIZE:
                         return None, f"Feed too large: {size} bytes"
 
-                    content = await resp.read(charset='utf-8')
+                    content = await resp.read()
                     if len(content) > self.security.MAX_RSS_SIZE:
                         return None, "Content exceeds size limit"
 
-                    return content, None
+                    # Decode content as text
+                    try:
+                        text_content = content.decode('utf-8')
+                    except UnicodeDecodeError:
+                        # Try other common encodings
+                        try:
+                            text_content = content.decode('latin-1')
+                        except UnicodeDecodeError:
+                            text_content = content.decode('utf-8', errors='ignore')
+
+                    return text_content, None
 
         except aiohttp.ClientError as e:
             logger.error(f"Fetch error: {e}")
@@ -128,6 +144,32 @@ class SecureRSSParser:
         title = self._safe_text(channel.findtext('title', 'Unknown'))
         link = self._safe_text(channel.findtext('link', ''))
         description = self._sanitize_description(channel.findtext('description', ''))
+
+        # Extract iTunes namespace information
+        itunes_ns = {'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd'}
+
+        # Author
+        author = self._safe_text(channel.findtext('itunes:author', '', namespaces=itunes_ns))
+
+        # Language
+        language = self._safe_text(channel.findtext('language', ''))
+
+        # Categories
+        categories = []
+        for category in channel.findall('itunes:category', namespaces=itunes_ns):
+            if category.get('text'):
+                categories.append(category.get('text'))
+
+        # Explicit content
+        explicit_text = self._safe_text(channel.findtext('itunes:explicit', '', namespaces=itunes_ns))
+        explicit = explicit_text.lower() == 'true' if explicit_text else None
+
+        # Podcast image
+        image_element = channel.find('itunes:image', namespaces=itunes_ns)
+        image_url = image_element.get('href') if image_element is not None else None
+
+        # Podcast type
+        podcast_type = self._safe_text(channel.findtext('itunes:type', '', namespaces=itunes_ns))
 
         # Parse episodes
         episodes = []
@@ -147,17 +189,27 @@ class SecureRSSParser:
             link=link,
             description=description,
             episodes=episodes,
-            last_fetched=datetime.utcnow()
+            last_fetched=datetime.utcnow(),
+            author=author or None,
+            language=language or None,
+            categories=categories or None,
+            explicit=explicit,
+            image_url=image_url,
+            podcast_type=podcast_type or None
         )
 
     def _parse_episode(self, item) -> Optional[PodcastEpisode]:
         """Parse a single episode item"""
         try:
+            # Namespaces for iTunes and other extensions
+            itunes_ns = {'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd'}
+
             # Title (safe)
             title = self._safe_text(item.findtext('title', 'Untitled'))
 
-            # Description (sanitize)
-            raw_desc = item.findtext('description', '')
+            # Description (sanitize) - prefer content:encoded over description
+            content_encoded = item.findtext('content:encoded', '', namespaces={'content': 'http://purl.org/rss/1.0/modules/content/'})
+            raw_desc = content_encoded or item.findtext('description', '')
             description = self._sanitize_description(raw_desc)
 
             # Published date
@@ -173,24 +225,40 @@ class SecureRSSParser:
             if not audio_url:
                 return None
 
+            # Get audio file size from enclosure
+            audio_file_size = enclosure.get('length')
+            audio_size = int(audio_file_size) if audio_file_size and audio_file_size.isdigit() else None
+
             # Validate audio URL
             valid, error = self.security.validate_audio_url(audio_url)
             if not valid:
                 logger.warning(f"Invalid audio URL in episode {title}: {error}")
                 return None
 
-            # Optional: duration
-            duration_text = item.findtext('itunes:duration', None, namespaces={'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd'})
+            # Duration
+            duration_text = item.findtext('itunes:duration', None, namespaces=itunes_ns)
             duration = self._parse_duration(duration_text)
 
-            # Optional: transcript
+            # Episode image
+            episode_image = item.find('itunes:image', namespaces=itunes_ns)
+            episode_image_url = episode_image.get('href') if episode_image is not None else None
+
+            # Transcript URL (if available)
             transcript_url = None
-            transcript_ref = item.find('podcast:transcript', namespaces={'podcast': 'https://podcastindex.org/namespace/1.0'})
-            if transcript_ref is not None:
-                transcript_url = transcript_ref.get('url')
+            # Check for podcast namespace transcript
+            transcript_element = item.find('podcast:transcript', namespaces={'podcast': 'https://podcastindex.org/namespace/1.0'})
+            if transcript_element is not None:
+                transcript_url = transcript_element.get('url')
+            # Also check for simple transcript URL in custom element
+            if not transcript_url:
+                transcript_text = item.findtext('transcript_url')
+                if transcript_text:
+                    transcript_url = transcript_text
 
             # GUID
-            guid = item.findtext('guid', None)
+            guid_element = item.find('guid')
+            guid = guid_element.text if guid_element is not None else f"{title}-{published_at.isoformat()}"
+            guid_is_permalink = guid_element.get('isPermaLink', 'true') if guid_element is not None else 'true'
 
             return PodcastEpisode(
                 title=title,

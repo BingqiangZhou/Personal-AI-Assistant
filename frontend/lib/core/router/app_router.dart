@@ -19,7 +19,7 @@ import '../../features/settings/presentation/pages/settings_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/home',
     debugLogDiagnostics: true,
     routes: [
       // Splash

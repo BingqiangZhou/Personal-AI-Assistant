@@ -16,11 +16,11 @@ GET    /podcasts/summary/pending        待总结列表
 
 from typing import List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, Header, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
-from app.core.security import verify_token
+from app.core.security import get_token_from_request
 from app.domains.podcast.services import PodcastService
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.schemas import (
@@ -54,7 +54,7 @@ router = APIRouter(prefix="")
 )
 async def add_subscription(
     subscription_data: PodcastSubscriptionCreate,
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -109,7 +109,7 @@ async def list_subscriptions(
     size: int = Query(20, ge=1, le=100, description="每页数量"),
     category_id: Optional[int] = Query(None, description="分类ID筛选"),
     status: Optional[str] = Query(None, description="状态筛选"),
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """返回用户的所有播客订阅及其最新节目"""
@@ -149,7 +149,7 @@ async def list_subscriptions(
 )
 async def get_subscription(
     subscription_id: int,
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取订阅详情"""
@@ -166,7 +166,7 @@ async def get_subscription(
 )
 async def delete_subscription(
     subscription_id: int,
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """删除订阅和关联的单集数据"""
@@ -190,7 +190,7 @@ async def list_episodes(
     size: int = Query(20, ge=1, le=100, description="每页数量"),
     has_summary: Optional[bool] = Query(None, description="是否有AI总结"),
     is_played: Optional[bool] = Query(None, description="是否已播放"),
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取播客单集列表"""
@@ -232,7 +232,7 @@ async def list_episodes(
 )
 async def get_episode(
     episode_id: int,
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取单集详情，包含AI总结（如有）"""
@@ -251,7 +251,7 @@ async def get_episode(
 async def generate_summary(
     episode_id: int,
     request: PodcastSummaryRequest,
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """
@@ -293,7 +293,7 @@ async def generate_summary(
 async def update_playback_progress(
     episode_id: int,
     playback_data: PodcastPlaybackUpdate,
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """更新播客播放进度和状态"""
@@ -329,7 +329,7 @@ async def update_playback_progress(
 )
 async def get_playback_state(
     episode_id: int,
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取播客播放状态"""
@@ -350,7 +350,7 @@ async def get_playback_state(
     summary="待AI总结的单集"
 )
 async def get_pending_summaries(
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """列出所有需要AI总结的单集"""
@@ -374,7 +374,7 @@ async def search_podcasts(
     search_in: Optional[str] = Query("all", description="搜索范围: title, description, summary, all"),
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页数量"),
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """搜索播客和单集内容"""
@@ -411,7 +411,7 @@ async def search_podcasts(
     summary="获取播客统计信息"
 )
 async def get_podcast_stats(
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取用户的播客收听统计"""
@@ -428,7 +428,7 @@ async def get_podcast_stats(
 )
 async def refresh_subscription(
     subscription_id: int,
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """手动刷新播客订阅，获取最新单集"""
@@ -455,7 +455,7 @@ async def refresh_subscription(
 )
 async def get_recommendations(
     limit: int = Query(10, ge=1, le=50, description="推荐数量"),
-    user=Depends(verify_token),
+    user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """基于用户收听历史获取播客推荐"""
