@@ -9,7 +9,7 @@ class AudioPlayerWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final audioPlayerState = ref.watch(audioPlayerNotifierProvider);
+    final audioPlayerState = ref.watch(audioPlayerProvider);
     final theme = Theme.of(context);
 
     if (audioPlayerState.currentEpisode == null) {
@@ -68,7 +68,7 @@ class AudioPlayerWidget extends ConsumerWidget {
               children: [
                 Text(
                   state.currentEpisode!.title,
-                  style: theme.text.titleSmall?.copyWith(
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                   maxLines: 1,
@@ -77,45 +77,70 @@ class AudioPlayerWidget extends ConsumerWidget {
                 const SizedBox(height: 2),
                 Text(
                   state.formattedPosition,
-                  style: theme.text.bodySmall?.copyWith(
-                    color: theme.text.bodySmall?.color?.withOpacity(0.7),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
                   ),
                 ),
               ],
             ),
           ),
           // Play/pause button
-          IconButton(
-            onPressed: state.isLoading
-                ? null
-                : () async {
-                    if (state.isPlaying) {
-                      await ref.read(audioPlayerNotifierProvider.notifier).pause();
-                    } else {
-                      await ref.read(audioPlayerNotifierProvider.notifier).resume();
-                    }
-                  },
-            icon: state.isLoading
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        theme.colorScheme.primary,
+          Container(
+            decoration: BoxDecoration(
+              color: theme.primaryColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: theme.primaryColor.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              onPressed: state.isLoading
+                  ? null
+                  : () async {
+                      if (state.isPlaying) {
+                        await ref.read(audioPlayerProvider.notifier).pause();
+                      } else {
+                        await ref.read(audioPlayerProvider.notifier).resume();
+                      }
+                    },
+              icon: state.isLoading
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.primaryColor,
+                        ),
                       ),
+                    )
+                  : Icon(
+                      state.isPlaying ? Icons.pause : Icons.play_arrow,
+                      color: theme.primaryColor.withOpacity(0.8),
                     ),
-                  )
-                : Icon(
-                    state.isPlaying ? Icons.pause : Icons.play_arrow,
-                  ),
+            ),
           ),
+          const SizedBox(width: 8),
           // Expand button
-          IconButton(
-            onPressed: () {
-              ref.read(audioPlayerNotifierProvider.notifier).setExpanded(true);
-            },
-            icon: const Icon(Icons.keyboard_arrow_up),
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: theme.dividerColor.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: IconButton(
+              onPressed: () {
+                ref.read(audioPlayerProvider.notifier).setExpanded(true);
+              },
+              icon: Icon(
+                Icons.keyboard_arrow_up,
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+              ),
+            ),
           ),
         ],
       ),
@@ -143,7 +168,7 @@ class AudioPlayerWidget extends ConsumerWidget {
               ),
               IconButton(
                 onPressed: () {
-                  ref.read(audioPlayerNotifierProvider.notifier).setExpanded(false);
+                  ref.read(audioPlayerProvider.notifier).setExpanded(false);
                 },
                 icon: const Icon(Icons.keyboard_arrow_down),
               ),
@@ -177,7 +202,7 @@ class AudioPlayerWidget extends ConsumerWidget {
             children: [
               Text(
                 state.currentEpisode!.title,
-                style: theme.text.headlineSmall?.copyWith(
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.center,
@@ -188,8 +213,8 @@ class AudioPlayerWidget extends ConsumerWidget {
               if (state.currentEpisode!.description != null)
                 Text(
                   state.currentEpisode!.description!,
-                  style: theme.text.bodyMedium?.copyWith(
-                    color: theme.text.bodyMedium?.color?.withOpacity(0.7),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
@@ -217,7 +242,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                   value: state.position.toDouble().clamp(0.0, state.duration.toDouble()),
                   onChanged: (value) async {
                     await ref
-                        .read(audioPlayerNotifierProvider.notifier)
+                        .read(audioPlayerProvider.notifier)
                         .seekTo(value.round());
                   },
                 ),
@@ -240,38 +265,71 @@ class AudioPlayerWidget extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               // Previous button (placeholder)
-              IconButton(
-                onPressed: () {
-                  // TODO: Implement previous episode
-                },
-                icon: const Icon(Icons.skip_previous),
-                iconSize: 40,
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: theme.dividerColor.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    // TODO: Implement previous episode
+                  },
+                  icon: Icon(
+                    Icons.skip_previous,
+                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                  ),
+                  iconSize: 36,
+                ),
               ),
               // Rewind 15 seconds
-              IconButton(
-                onPressed: () async {
-                  final newPosition = (state.position - 15000).clamp(0, state.duration);
-                  await ref
-                      .read(audioPlayerNotifierProvider.notifier)
-                      .seekTo(newPosition);
-                },
-                icon: const Icon(Icons.replay_15),
-                iconSize: 40,
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: theme.dividerColor.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: IconButton(
+                  onPressed: () async {
+                    final newPosition = (state.position - 15000).clamp(0, state.duration);
+                    await ref
+                        .read(audioPlayerProvider.notifier)
+                        .seekTo(newPosition);
+                  },
+                  icon: Icon(
+                    Icons.fast_rewind,
+                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                  ),
+                  iconSize: 36,
+                ),
               ),
               // Play/pause button
               Container(
                 decoration: BoxDecoration(
                   color: theme.primaryColor,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.primaryColor.withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: IconButton(
                   onPressed: state.isLoading
                       ? null
                       : () async {
                           if (state.isPlaying) {
-                            await ref.read(audioPlayerNotifierProvider.notifier).pause();
+                            await ref.read(audioPlayerProvider.notifier).pause();
                           } else {
-                            await ref.read(audioPlayerNotifierProvider.notifier).resume();
+                            await ref.read(audioPlayerProvider.notifier).resume();
                           }
                         },
                   icon: state.isLoading
@@ -293,23 +351,49 @@ class AudioPlayerWidget extends ConsumerWidget {
                 ),
               ),
               // Forward 15 seconds
-              IconButton(
-                onPressed: () async {
-                  final newPosition = (state.position + 15000).clamp(0, state.duration);
-                  await ref
-                      .read(audioPlayerNotifierProvider.notifier)
-                      .seekTo(newPosition);
-                },
-                icon: const Icon(Icons.forward_15),
-                iconSize: 40,
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: theme.dividerColor.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: IconButton(
+                  onPressed: () async {
+                    final newPosition = (state.position + 15000).clamp(0, state.duration);
+                    await ref
+                        .read(audioPlayerProvider.notifier)
+                        .seekTo(newPosition);
+                  },
+                  icon: Icon(
+                    Icons.fast_forward,
+                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                  ),
+                  iconSize: 36,
+                ),
               ),
               // Next button (placeholder)
-              IconButton(
-                onPressed: () {
-                  // TODO: Implement next episode
-                },
-                icon: const Icon(Icons.skip_next),
-                iconSize: 40,
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: theme.dividerColor.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: IconButton(
+                  onPressed: () {
+                    // TODO: Implement next episode
+                  },
+                  icon: Icon(
+                    Icons.skip_next,
+                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                  ),
+                  iconSize: 36,
+                ),
               ),
             ],
           ),
@@ -319,48 +403,88 @@ class AudioPlayerWidget extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Playback speed
-              PopupMenuButton<double>(
-                icon: Text('${state.playbackRate}x'),
-                onSelected: (speed) async {
-                  await ref
-                      .read(audioPlayerNotifierProvider.notifier)
-                      .setPlaybackRate(speed);
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 0.5,
-                    child: Text('0.5x'),
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: theme.dividerColor.withOpacity(0.3),
+                    width: 1,
                   ),
-                  const PopupMenuItem(
-                    value: 0.75,
-                    child: Text('0.75x'),
+                ),
+                child: PopupMenuButton<double>(
+                  icon: Text(
+                    '${state.playbackRate}x',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  const PopupMenuItem(
-                    value: 1.0,
-                    child: Text('1x'),
-                  ),
-                  const PopupMenuItem(
-                    value: 1.25,
-                    child: Text('1.25x'),
-                  ),
-                  const PopupMenuItem(
-                    value: 1.5,
-                    child: Text('1.5x'),
-                  ),
-                  const PopupMenuItem(
-                    value: 2.0,
-                    child: Text('2x'),
-                  ),
-                ],
+                  onSelected: (speed) async {
+                    await ref
+                        .read(audioPlayerProvider.notifier)
+                        .setPlaybackRate(speed);
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 0.5,
+                      child: Text('0.5x'),
+                    ),
+                    const PopupMenuItem(
+                      value: 0.75,
+                      child: Text('0.75x'),
+                    ),
+                    const PopupMenuItem(
+                      value: 1.0,
+                      child: Text('1x'),
+                    ),
+                    const PopupMenuItem(
+                      value: 1.25,
+                      child: Text('1.25x'),
+                    ),
+                    const PopupMenuItem(
+                      value: 1.5,
+                      child: Text('1.5x'),
+                    ),
+                    const PopupMenuItem(
+                      value: 2.0,
+                      child: Text('2x'),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 32),
               // View episode details
-              TextButton.icon(
-                onPressed: () {
-                  context.go('/podcasts/episodes/${state.currentEpisode!.id}');
-                },
-                icon: const Icon(Icons.info_outline),
-                label: const Text('Episode Details'),
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.primaryColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: theme.primaryColor.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: TextButton.icon(
+                  onPressed: () {
+                    // Navigate to episode detail - need subscriptionId too
+                    if (state.currentEpisode?.subscriptionId != null) {
+                      context.go('/podcast/episodes/${state.currentEpisode!.subscriptionId}/${state.currentEpisode!.id}');
+                    }
+                  },
+                  icon: Icon(
+                    Icons.info_outline,
+                    color: theme.primaryColor.withOpacity(0.8),
+                  ),
+                  label: Text(
+                    'Episode Details',
+                    style: TextStyle(
+                      color: theme.primaryColor.withOpacity(0.8),
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
               ),
             ],
           ),

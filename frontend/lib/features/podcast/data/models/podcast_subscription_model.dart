@@ -28,6 +28,9 @@ class PodcastSubscriptionModel extends Equatable {
   @JsonKey(name: 'latest_episode')
   final Map<String, dynamic>? latestEpisode;
   final List<Category>? categories;
+  @JsonKey(name: 'image_url')
+  final String? imageUrl;
+  final String? author;
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @JsonKey(name: 'updated_at')
@@ -47,6 +50,8 @@ class PodcastSubscriptionModel extends Equatable {
     this.unplayedCount = 0,
     this.latestEpisode,
     this.categories,
+    this.imageUrl,
+    this.author,
     required this.createdAt,
     this.updatedAt,
   });
@@ -70,6 +75,8 @@ class PodcastSubscriptionModel extends Equatable {
     int? unplayedCount,
     Map<String, dynamic>? latestEpisode,
     List<Category>? categories,
+    String? imageUrl,
+    String? author,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -87,6 +94,8 @@ class PodcastSubscriptionModel extends Equatable {
       unplayedCount: unplayedCount ?? this.unplayedCount,
       latestEpisode: latestEpisode ?? this.latestEpisode,
       categories: categories ?? this.categories,
+      imageUrl: imageUrl ?? this.imageUrl,
+      author: author ?? this.author,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -107,6 +116,8 @@ class PodcastSubscriptionModel extends Equatable {
         unplayedCount,
         latestEpisode,
         categories,
+        imageUrl,
+        author,
         createdAt,
         updatedAt,
       ];
@@ -156,4 +167,40 @@ class PodcastSubscriptionCreateRequest extends Equatable {
 
   @override
   List<Object?> get props => [feedUrl, customName, categoryIds];
+}
+
+@JsonSerializable()
+class ReparseResponse extends Equatable {
+  final bool success;
+  final Map<String, dynamic> result;
+
+  const ReparseResponse({
+    required this.success,
+    required this.result,
+  });
+
+  factory ReparseResponse.fromJson(Map<String, dynamic> json) =>
+      _$ReparseResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ReparseResponseToJson(this);
+
+  @override
+  List<Object?> get props => [success, result];
+}
+
+@JsonSerializable()
+class SimpleResponse extends Equatable {
+  final Map<String, dynamic> data;
+
+  const SimpleResponse({
+    required this.data,
+  });
+
+  factory SimpleResponse.fromJson(Map<String, dynamic> json) =>
+      _$SimpleResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SimpleResponseToJson(this);
+
+  @override
+  List<Object?> get props => [data];
 }

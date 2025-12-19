@@ -48,10 +48,10 @@ class DesktopSideNavigation extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4),
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.2),
+            color: Theme.of(context).dividerColor.withOpacity(0.3),
             width: 1,
           ),
         ),
@@ -64,6 +64,13 @@ class DesktopSideNavigation extends ConsumerWidget {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.primary,
               borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Icon(
               Icons.smart_toy,
@@ -80,14 +87,15 @@ class DesktopSideNavigation extends ConsumerWidget {
                   AppConstants.appName,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.9),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   'Desktop Version',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.7),
+                    color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.8),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -239,9 +247,15 @@ class NavigationTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
         color: isSelected
-            ? Theme.of(context).colorScheme.primaryContainer
-            : Colors.transparent,
+            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8)
+            : Theme.of(context).colorScheme.surface.withOpacity(0.5),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+              : Theme.of(context).dividerColor.withOpacity(0.2),
+          width: 0.5,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -259,8 +273,8 @@ class NavigationTile extends StatelessWidget {
                 Icon(
                   isSelected ? selectedIcon : icon,
                   color: isSelected
-                      ? Theme.of(context).colorScheme.onPrimaryContainer
-                      : Theme.of(context).colorScheme.onSurface,
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                   size: 24,
                 ),
                 const SizedBox(width: 16),
@@ -269,16 +283,19 @@ class NavigationTile extends StatelessWidget {
                     label,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: isSelected
-                          ? Theme.of(context).colorScheme.onPrimaryContainer
-                          : Theme.of(context).colorScheme.onSurface,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurface.withOpacity(0.9),
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                     ),
                   ),
                 ),
                 Text(
                   shortcut,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],

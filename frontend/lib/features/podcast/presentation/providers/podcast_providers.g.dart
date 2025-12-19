@@ -51,7 +51,7 @@ final class PodcastSubscriptionNotifierProvider
 }
 
 String _$podcastSubscriptionNotifierHash() =>
-    r'c55897943036cc99f93e48d63d59ef61caeac425';
+    r'1ff56bed2f427fccd3658fd1720ca121308c71b9';
 
 abstract class _$PodcastSubscriptionNotifier
     extends $Notifier<AsyncValue<PodcastSubscriptionListResponse>> {

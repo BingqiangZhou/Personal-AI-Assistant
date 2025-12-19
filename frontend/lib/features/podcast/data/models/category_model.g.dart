@@ -7,17 +7,21 @@ part of 'category_model.dart';
 // **************************************************************************
 
 Category _$CategoryFromJson(Map<String, dynamic> json) => Category(
-  id: (json['id'] as num).toInt(),
+  id: (json['id'] as num?)?.toInt(),
   name: json['name'] as String,
-  color: json['color'] as String,
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  updatedAt: DateTime.parse(json['updatedAt'] as String),
+  color: json['color'] as String?,
+  createdAt: json['createdAt'] == null
+      ? null
+      : DateTime.parse(json['createdAt'] as String),
+  updatedAt: json['updatedAt'] == null
+      ? null
+      : DateTime.parse(json['updatedAt'] as String),
 );
 
 Map<String, dynamic> _$CategoryToJson(Category instance) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
   'color': instance.color,
-  'createdAt': instance.createdAt.toIso8601String(),
-  'updatedAt': instance.updatedAt.toIso8601String(),
+  'createdAt': instance.createdAt?.toIso8601String(),
+  'updatedAt': instance.updatedAt?.toIso8601String(),
 };

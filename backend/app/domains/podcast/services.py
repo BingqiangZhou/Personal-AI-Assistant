@@ -64,12 +64,25 @@ class PodcastService:
             raise ValueError(f"已达到最大订阅数量: {settings.MAX_PODCAST_SUBSCRIPTIONS}")
 
         # 3. 创建或更新订阅
+        # 准备元数据
+        metadata = {
+            "author": feed.author,
+            "language": feed.language,
+            "categories": feed.categories,
+            "explicit": feed.explicit,
+            "image_url": feed.image_url,
+            "podcast_type": feed.podcast_type,
+            "link": feed.link,
+            "total_episodes": len(feed.episodes)
+        }
+
         subscription = await self.repo.create_or_update_subscription(
             self.user_id,
             feed_url,
             feed.title,
             feed.description,
-            custom_name
+            custom_name,
+            metadata=metadata
         )
 
         # 4. 处理分类关联
@@ -78,7 +91,7 @@ class PodcastService:
 
         # 5. 保存并总结新单集
         new_episodes = []
-        for episode in feed.episodes[:10]:  # 前10个
+        for episode in feed.episodes:  # 所有单集
             saved_episode, is_new = await self.repo.create_or_update_episode(
                 subscription_id=subscription.id,
                 guid=episode.guid or f"{feed_url}-{episode.title}",
@@ -93,8 +106,8 @@ class PodcastService:
 
             if is_new:
                 new_episodes.append(saved_episode)
-                # 异步触发AI总结
-                asyncio.create_task(self._generate_summary_task(saved_episode))
+                # 不在添加订阅时触发AI总结，避免会话冲突
+                # 用户可以后续手动触发总结
 
         logger.info(f"用户{self.user_id} 添加播客: {feed.title}, {len(new_episodes)}期新节目")
         return subscription, new_episodes
@@ -119,6 +132,28 @@ class PodcastService:
             episodes = await self.repo.get_subscription_episodes(sub.id, limit=3)
             episode_count = await self._get_episode_count(sub.id)
             unplayed_count = await self._get_unplayed_count(sub.id)
+
+            # 从订阅配置中提取图片URL和其他元数据
+            config = sub.config or {}
+            image_url = config.get("image_url")
+            author = config.get("author")
+            # 处理categories格式 - 统一转换为字典列表
+            raw_categories = config.get("categories", [])
+            categories = []
+            for cat in raw_categories:
+                if isinstance(cat, str):
+                    categories.append({"name": cat})
+                elif isinstance(cat, dict):
+                    categories.append(cat)
+                else:
+                    categories.append({"name": str(cat)})
+            podcast_type = config.get("podcast_type")
+            language = config.get("language")
+            explicit = config.get("explicit", False)
+            link = config.get("link")
+
+            # 获取配置中的总集数（如果存在）
+            total_episodes_from_config = config.get("total_episodes")
 
             # 将最新单集转换为字典
             latest_episode_dict = None
@@ -147,7 +182,14 @@ class PodcastService:
                 "episode_count": episode_count,
                 "unplayed_count": unplayed_count,
                 "latest_episode": latest_episode_dict,
-                "categories": [],  # TODO: 获取分类信息
+                "categories": categories,
+                "image_url": image_url,
+                "author": author,
+                "podcast_type": podcast_type,
+                "language": language,
+                "explicit": explicit,
+                "link": link,
+                "total_episodes_from_config": total_episodes_from_config,
                 "created_at": sub.created_at,
                 "updated_at": sub.updated_at
             })
@@ -173,9 +215,16 @@ class PodcastService:
             # 获取用户播放状态
             playback = await self.repo.get_playback_state(self.user_id, ep.id)
 
+            # 从订阅配置中提取图片URL
+            subscription_image_url = None
+            if ep.subscription and ep.subscription.config:
+                subscription_image_url = ep.subscription.config.get("image_url")
+
             results.append({
                 "id": ep.id,
                 "subscription_id": ep.subscription_id,
+                "subscription_title": ep.subscription.title if ep.subscription else None,
+                "subscription_image_url": subscription_image_url,
                 "title": ep.title,
                 "description": ep.description,
                 "audio_url": ep.audio_url,
@@ -227,9 +276,16 @@ class PodcastService:
             # 获取用户播放状态
             playback = await self.repo.get_playback_state(self.user_id, ep.id)
 
+            # 从订阅配置中提取图片URL
+            subscription_image_url = None
+            if ep.subscription and ep.subscription.config:
+                subscription_image_url = ep.subscription.config.get("image_url")
+
             results.append({
                 "id": ep.id,
                 "subscription_id": ep.subscription_id,
+                "subscription_title": ep.subscription.title if ep.subscription else None,
+                "subscription_image_url": subscription_image_url,
                 "title": ep.title,
                 "description": ep.description,
                 "audio_url": ep.audio_url,
@@ -299,6 +355,106 @@ class PodcastService:
 
         logger.info(f"用户{self.user_id} 刷新订阅: {sub.title}, {len(new_episodes)}期新节目")
         return new_episodes
+
+    async def reparse_subscription(self, subscription_id: int, force_all: bool = False) -> dict:
+        """
+        重新解析订阅的所有单集（用于修复解析不全的问题）
+
+        Args:
+            subscription_id: 订阅ID
+            force_all: 是否强制重新解析所有单集，默认只解析缺失的单集
+
+        Returns:
+            dict: 包含解析统计信息
+        """
+        # 获取订阅信息
+        sub = await self.repo.get_subscription_by_id(self.user_id, subscription_id)
+        if not sub:
+            raise ValueError("订阅不存在")
+
+        logger.info(f"用户{self.user_id} 开始重新解析订阅: {sub.title}")
+
+        # 解析RSS
+        success, feed, error = await self.parser.fetch_and_parse_feed(sub.source_url)
+        if not success:
+            raise ValueError(f"重新解析失败: {error}")
+
+        # 获取当前已存在的单集GUID
+        existing_guids = set()
+        if not force_all:
+            existing_episodes = await self.repo.get_subscription_episodes(subscription_id, limit=None)
+            existing_guids = {ep.metadata_json.get('guid') if ep.metadata_json else None for ep in existing_episodes}
+            existing_guids.discard(None)
+
+        # 保存单集
+        processed = 0
+        new_episodes = 0
+        updated_episodes = 0
+        failed = 0
+
+        for episode in feed.episodes:
+            # 如果不是强制全部重新解析，跳过已存在的
+            if not force_all and episode.guid in existing_guids:
+                continue
+
+            try:
+                saved_episode, is_new = await self.repo.create_or_update_episode(
+                    subscription_id=subscription_id,
+                    guid=episode.guid or f"{sub.source_url}-{episode.title}",
+                    title=episode.title,
+                    description=episode.description,
+                    audio_url=episode.audio_url,
+                    published_at=episode.published_at,
+                    audio_duration=episode.duration,
+                    transcript_url=episode.transcript_url,
+                    metadata={
+                        "feed_title": feed.title,
+                        "reparsed_at": datetime.utcnow().isoformat(),
+                        "guid": episode.guid
+                    }
+                )
+
+                processed += 1
+                if is_new:
+                    new_episodes += 1
+                    # 不在reparse中触发AI总结，避免会话冲突
+                    # 用户可以后续手动触发总结
+                else:
+                    updated_episodes += 1
+
+            except Exception as e:
+                logger.error(f"重新解析单集失败: {episode.title}, 错误: {e}")
+                failed += 1
+
+        # 更新订阅配置和最后抓取时间
+        metadata = {
+            "author": feed.author,
+            "language": feed.language,
+            "categories": feed.categories,
+            "explicit": feed.explicit,
+            "image_url": feed.image_url,
+            "podcast_type": feed.podcast_type,
+            "link": feed.link,
+            "total_episodes": len(feed.episodes),
+            "reparsed_at": datetime.utcnow().isoformat()
+        }
+
+        await self.repo.update_subscription_metadata(subscription_id, metadata)
+        await self.repo.update_subscription_fetch_time(subscription_id)
+
+        result = {
+            "subscription_id": subscription_id,
+            "subscription_title": sub.title,
+            "total_episodes_in_feed": len(feed.episodes),
+            "processed": processed,
+            "new_episodes": new_episodes,
+            "updated_episodes": updated_episodes,
+            "failed": failed,
+            "message": f"重新解析完成: 处理{processed}个，新增{new_episodes}个，更新{updated_episodes}个，失败{failed}个"
+        }
+
+        logger.info(f"用户{self.user_id} 重新解析订阅完成: {result}")
+        return result
 
     async def get_playback_state(self, episode_id: int) -> Optional[dict]:
         """获取播放状态"""
@@ -408,10 +564,28 @@ class PodcastService:
         episodes = await self.repo.get_subscription_episodes(subscription_id, limit=50)
         pending_count = len([e for e in episodes if not e.ai_summary])
 
+        # 从订阅配置中提取图片URL和其他元数据
+        config = sub.config or {}
+        image_url = config.get("image_url")
+        author = config.get("author")
+        categories = config.get("categories", [])
+        podcast_type = config.get("podcast_type")
+        language = config.get("language")
+        explicit = config.get("explicit", False)
+        link = config.get("link")
+
         return {
             "id": sub.id,
             "title": sub.title,
             "description": sub.description,
+            "source_url": sub.source_url,
+            "image_url": image_url,
+            "author": author,
+            "categories": categories,
+            "podcast_type": podcast_type,
+            "language": language,
+            "explicit": explicit,
+            "link": link,
             "episode_count": len(episodes),
             "pending_summaries": pending_count,
             "episodes": [{
@@ -454,8 +628,23 @@ class PodcastService:
 
         playback = await self.repo.get_playback_state(self.user_id, episode_id)
 
+        # 从订阅配置中提取图片URL和其他元数据
+        subscription_image_url = None
+        subscription_author = None
+        subscription_categories = []
+        if episode.subscription and episode.subscription.config:
+            config = episode.subscription.config
+            subscription_image_url = config.get("image_url")
+            subscription_author = config.get("author")
+            subscription_categories = config.get("categories", [])
+
         return {
             "id": episode.id,
+            "subscription_id": episode.subscription_id,
+            "subscription_title": episode.subscription.title if episode.subscription else None,
+            "subscription_image_url": subscription_image_url,
+            "subscription_author": subscription_author,
+            "subscription_categories": subscription_categories,
             "title": episode.title,
             "description": episode.description,
             "audio_url": episode.audio_url,

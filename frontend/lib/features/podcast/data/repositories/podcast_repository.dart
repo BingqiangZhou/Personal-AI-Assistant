@@ -72,6 +72,14 @@ class PodcastRepository {
     }
   }
 
+  Future<ReparseResponse> reparseSubscription(int subscriptionId, bool forceAll) async {
+    try {
+      return await _apiService.reparseSubscription(subscriptionId, forceAll);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   // === Episode Management ===
 
   Future<PodcastEpisodeListResponse> listEpisodes({

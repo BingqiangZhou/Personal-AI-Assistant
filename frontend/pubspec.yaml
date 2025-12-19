@@ -51,6 +51,9 @@ dependencies:
   just_audio: ^0.10.5
   audio_service: ^0.18.12
 
+  # HTML Rendering
+  flutter_html: ^3.0.0
+
   # File Handling
   file_selector: ^1.0.3
 

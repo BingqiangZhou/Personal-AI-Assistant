@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
@@ -21,7 +20,6 @@ class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
 class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  bool _isGeneratingSummary = false;
 
   @override
   void initState() {
@@ -38,15 +36,20 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
   @override
   Widget build(BuildContext context) {
     final episodeDetailAsync = ref.watch(episodeDetailProvider(widget.episodeId));
-    final summaryAsync = ref.watch(podcastSummaryNotifierProvider(widget.episodeId));
-    final audioPlayerState = ref.watch(audioPlayerNotifierProvider);
+    final audioPlayerState = ref.watch(audioPlayerProvider);
 
     return Scaffold(
       body: episodeDetailAsync.when(
-        data: (episodeDetail) => _buildContent(context, ref, episodeDetail!, audioPlayerState, summaryAsync),
+        data: (episodeDetail) {
+          if (episodeDetail == null) {
+            return _buildErrorState(context, 'Episode not found');
+          }
+          return _buildContent(context, ref, episodeDetail, audioPlayerState);
+        },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _buildErrorState(context, error),
       ),
+      bottomNavigationBar: _buildBottomBar(context, ref, audioPlayerState),
     );
   }
 
@@ -55,17 +58,19 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
     WidgetRef ref,
     dynamic episodeDetail,
     dynamic audioPlayerState,
-    AsyncValue summaryAsync,
   ) {
-    final episode = episodeDetail.episode;
+    final episode = episodeDetail;
     final isCurrentlyPlaying = audioPlayerState.currentEpisode?.id == episode.id;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return NestedScrollView(
       headerSliverBuilder: (context, innerBoxIsScrolled) {
         return [
           SliverAppBar(
-            expandedHeight: 300,
+            expandedHeight: 250,
             pinned: true,
+            backgroundColor: isDark ? theme.colorScheme.surface : Colors.white,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
@@ -73,8 +78,9 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      Theme.of(context).primaryColor.withOpacity(0.8),
-                      Theme.of(context).primaryColor.withOpacity(0.4),
+                      theme.primaryColor.withOpacity(0.9),
+                      theme.primaryColor.withOpacity(0.6),
+                      theme.primaryColor.withOpacity(0.3),
                     ],
                   ),
                 ),
@@ -82,13 +88,23 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Episode artwork
                       Container(
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withOpacity(0.25),
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 20,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
                         child: Icon(
                           Icons.headphones,
@@ -97,7 +113,6 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                         ),
                       ),
                       const SizedBox(height: 16),
-                      // Episode title
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 32),
                         child: Text(
@@ -106,6 +121,13 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                             color: Colors.white,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0, 2),
+                                blurRadius: 4,
+                                color: Colors.black26,
+                              ),
+                            ],
                           ),
                           textAlign: TextAlign.center,
                           maxLines: 2,
@@ -113,22 +135,19 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                         ),
                       ),
                       const SizedBox(height: 8),
-                      // Episode identifier
-                      if (episode.episodeIdentifier.isNotEmpty)
-                        Text(
-                          episode.episodeIdentifier,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 14,
-                          ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      const SizedBox(height: 8),
-                      // Published date
-                      Text(
-                        DateFormat('MMMM d, yyyy').format(episode.publishedAt),
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
+                        child: Text(
+                          DateFormat('yyyy-MM-dd').format(episode.publishedAt),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
                     ],
@@ -137,424 +156,508 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
               ),
             ),
             actions: [
-              IconButton(
-                onPressed: () {
-                  // TODO: Add to favorites
-                },
-                icon: const Icon(Icons.favorite_border),
-              ),
-              PopupMenuButton<String>(
-                onSelected: (value) {
-                  switch (value) {
-                    case 'share':
-                      // TODO: Implement share
-                      break;
-                    case 'download':
-                      // TODO: Implement download
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'share',
-                    child: Row(
-                      children: [
-                        Icon(Icons.share),
-                        SizedBox(width: 8),
-                        Text('Share Episode'),
-                      ],
-                    ),
+              Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
                   ),
-                  const PopupMenuItem(
-                    value: 'download',
-                    child: Row(
-                      children: [
-                        Icon(Icons.download),
-                        SizedBox(width: 8),
-                        Text('Download'),
-                      ],
-                    ),
-                  ),
-                ],
+                ),
+                child: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.favorite_border, color: Colors.white),
+                ),
               ),
             ],
             bottom: TabBar(
               controller: _tabController,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              indicator: UnderlineTabIndicator(
+                borderSide: BorderSide(
+                  color: Colors.white,
+                  width: 3,
+                ),
+              ),
+              labelColor: Colors.white70,
+              unselectedLabelColor: Colors.white30,
               tabs: const [
                 Tab(text: 'Description'),
-                Tab(text: 'AI Summary'),
+                Tab(text: 'Summary'),
                 Tab(text: 'Transcript'),
               ],
             ),
           ),
         ];
       },
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildDescriptionTab(episode),
-          _buildSummaryTab(ref, episode, summaryAsync),
-          _buildTranscriptTab(episode),
-        ],
+      body: Container(
+        color: isDark ? theme.colorScheme.surface : Colors.grey[50],
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildDescriptionTab(episode),
+            _buildSummaryTab(episode),
+            _buildTranscriptTab(episode),
+          ],
+        ),
       ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(16),
+    );
+  }
+
+  Widget _buildBottomBar(
+    BuildContext context,
+    WidgetRef ref,
+    dynamic audioPlayerState,
+  ) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? theme.colorScheme.surface.withOpacity(0.95)
+            : theme.colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
+        border: Border(
+          top: BorderSide(
+            color: isDark
+                ? theme.dividerColor.withOpacity(0.3)
+                : theme.dividerColor,
+            width: 1,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: Row(
+          children: [
+            // Previous button
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.skip_previous,
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
+                  size: 28,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Rewind button
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.fast_rewind,
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
+                  size: 28,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Play/Pause button
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: theme.primaryColor,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.primaryColor.withOpacity(0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(
+                  color: theme.primaryColor.withOpacity(0.5),
+                  width: 2,
+                ),
+              ),
+              child: IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.play_arrow,
+                  color: theme.colorScheme.onPrimary,
+                  size: 32,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Forward button
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.fast_forward,
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
+                  size: 28,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Next button
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withOpacity(0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: IconButton(
+                onPressed: () {},
+                icon: Icon(
+                  Icons.skip_next,
+                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
+                  size: 28,
+                ),
+              ),
+            ),
+            const SizedBox(width: 24),
+            // Speed control
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondaryContainer.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.secondary.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                '1.0x',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSecondaryContainer.withOpacity(0.9),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDescriptionTab(dynamic episode) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: isDark
+              ? theme.colorScheme.surface.withOpacity(0.7)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
               blurRadius: 8,
-              offset: const Offset(0, -2),
+              offset: const Offset(0, 2),
             ),
           ],
-        ),
-        child: SafeArea(
-          child: Row(
-            children: [
-              // Play/pause button
-              Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  onPressed: () async {
-                    if (isCurrentlyPlaying) {
-                      if (audioPlayerState.isPlaying) {
-                        await ref.read(audioPlayerNotifierProvider.notifier).pause();
-                      } else {
-                        await ref.read(audioPlayerNotifierProvider.notifier).resume();
-                      }
-                    } else {
-                      await ref.read(audioPlayerNotifierProvider.notifier).playEpisode(episode);
-                    }
-                  },
-                  icon: Icon(
-                    isCurrentlyPlaying
-                        ? (audioPlayerState.isPlaying ? Icons.pause : Icons.play_arrow)
-                        : Icons.play_arrow,
-                    color: Colors.white,
-                    size: 32,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Episode info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      episode.title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      episode.formattedDuration,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Forward 30 seconds
-              IconButton(
-                onPressed: () async {
-                  final newPosition = (audioPlayerState.position + 30000)
-                      .clamp(0, audioPlayerState.duration);
-                  await ref.read(audioPlayerNotifierProvider.notifier).seekTo(newPosition);
-                },
-                icon: const Icon(Icons.forward_30),
-              ),
-            ],
+          border: Border.all(
+            color: isDark
+                ? theme.dividerColor.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.3),
+            width: 1,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDescriptionTab(episode) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Episode metadata
-          _buildMetadataRow('Published', DateFormat('MMMM d, yyyy').format(episode.publishedAt)),
-          if (episode.audioDuration != null)
-            _buildMetadataRow('Duration', episode.formattedDuration),
-          if (episode.playCount > 0)
-            _buildMetadataRow('Played', '${episode.playCount} time${episode.playCount > 1 ? 's' : ''}'),
-          const SizedBox(height: 24),
-          // Description
-          if (episode.description != null && episode.description!.isNotEmpty) ...[
-            Text(
-              'Description',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Html(
-              data: episode.description!,
-              style: {
-                'body': Style(
-                  margin: Margins.zero,
-                  padding: HtmlPaddings.zero,
-                  fontSize: FontSize(16),
-                  lineHeight: const LineHeight(1.5),
-                ),
-                'p': Style(
-                  margin: Margins.only(bottom: 12),
-                ),
-              },
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryTab(WidgetRef ref, episode, AsyncValue summaryAsync) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Generate summary button
-          if (episode.aiSummary == null) ...[
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _isGeneratingSummary
-                    ? null
-                    : () async {
-                        setState(() {
-                          _isGeneratingSummary = true;
-                        });
-                        try {
-                          await ref
-                              .read(podcastSummaryNotifierProvider(widget.episodeId).notifier)
-                              .generateSummary();
-                        } finally {
-                          setState(() {
-                            _isGeneratingSummary = false;
-                          });
-                        }
-                      },
-                icon: _isGeneratingSummary
-                    ? SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Theme.of(context).colorScheme.onPrimary,
-                          ),
-                        ),
-                      )
-                    : const Icon(Icons.auto_awesome),
-                label: Text(_isGeneratingSummary ? 'Generating...' : 'Generate AI Summary'),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-          // Summary content
-          if (episode.aiSummary != null) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'AI Summary',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: _isGeneratingSummary
-                      ? null
-                      : () async {
-                          setState(() {
-                            _isGeneratingSummary = true;
-                          });
-                          try {
-                            await ref
-                                .read(podcastSummaryNotifierProvider(widget.episodeId).notifier)
-                                .generateSummary(forceRegenerate: true);
-                          } finally {
-                            setState(() {
-                              _isGeneratingSummary = false;
-                            });
-                          }
-                        },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Regenerate'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: theme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).primaryColor.withOpacity(0.2),
+                  color: theme.primaryColor.withOpacity(0.3),
+                  width: 1,
                 ),
               ),
               child: Text(
-                episode.aiSummary!,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  height: 1.6,
-                ),
+                'Description',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.primaryColor.withOpacity(0.9),
+                    ),
               ),
             ),
-            if (episode.summaryVersion != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Version: ${episode.summaryVersion}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ],
-          // Loading state
-          if (summaryAsync.isLoading) ...[
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32),
-                child: Column(
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Generating AI summary...'),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTranscriptTab(episode) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (episode.transcriptContent != null) ...[
+            const SizedBox(height: 16),
             Text(
-              'Transcript',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              episode.transcriptContent!,
+              episode.description ?? 'No description available',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                height: 1.6,
-              ),
-            ),
-          ] else ...[
-            Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.transcribe,
-                    size: 80,
-                    color: Colors.grey[400],
+                    height: 1.6,
+                    color: isDark
+                        ? theme.colorScheme.onSurface.withOpacity(0.9)
+                        : Colors.black87,
+                    fontSize: 16,
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No Transcript Available',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Transcripts are generated for episodes with audio processing',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[500],
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildMetadataRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
+  Widget _buildSummaryTab(dynamic episode) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark
+              ? theme.colorScheme.surface.withOpacity(0.7)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          border: Border.all(
+            color: isDark
+                ? theme.dividerColor.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.tertiary.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: theme.colorScheme.tertiary.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'AI Summary',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onTertiary.withOpacity(0.9),
+                    ),
               ),
             ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            if (episode.aiSummary != null)
+              Text(
+                episode.aiSummary,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      height: 1.6,
+                      color: isDark
+                          ? theme.colorScheme.onSurface.withOpacity(0.9)
+                          : Colors.black87,
+                      fontSize: 16,
+                    ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.orange.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  'No summary available yet',
+                  style: TextStyle(
+                    color: Colors.orange.shade700,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildErrorState(BuildContext context, Object error) {
+  Widget _buildTranscriptTab(dynamic episode) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark
+              ? theme.colorScheme.surface.withOpacity(0.7)
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+          border: Border.all(
+            color: isDark
+                ? theme.dividerColor.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.secondary.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: theme.colorScheme.secondary.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'Transcript',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSecondary.withOpacity(0.9),
+                    ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (episode.transcript != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  episode.transcript,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontFamily: 'monospace',
+                        height: 1.5,
+                        color: isDark
+                            ? theme.colorScheme.onSurface.withOpacity(0.9)
+                            : Colors.black87,
+                      ),
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                  border: Border.all(
+                    color: Colors.blue.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  'No transcript available',
+                  style: TextStyle(
+                    color: Colors.blue.shade700,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(BuildContext context, dynamic error) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.error_outline,
-            size: 80,
-            color: Colors.red[400],
+            size: 64,
+            color: Colors.red,
           ),
           const SizedBox(height: 16),
           Text(
-            'Failed to Load Episode',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.red[600],
-            ),
+            'Error loading episode',
+            style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
-          Text(
-            error.toString(),
-            style: Theme.of(context).textTheme.bodyMedium,
-            textAlign: TextAlign.center,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              error.toString(),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+            ),
           ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('Go Back'),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () {
+              context.pop();
+            },
+            child: const Text('Go Back'),
           ),
         ],
       ),

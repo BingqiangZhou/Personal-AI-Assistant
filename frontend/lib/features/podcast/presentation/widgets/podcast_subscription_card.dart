@@ -10,6 +10,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
   final VoidCallback? onRefresh;
+  final VoidCallback? onReparse;
 
   const PodcastSubscriptionCard({
     super.key,
@@ -17,7 +18,27 @@ class PodcastSubscriptionCard extends ConsumerWidget {
     this.onTap,
     this.onDelete,
     this.onRefresh,
+    this.onReparse,
   });
+
+  /// Helper method to safely get shade colors from MaterialColor or regular Color
+  Color? _getShadeColor(Color color, int shade) {
+    if (color is MaterialColor) {
+      switch (shade) {
+        case 600:
+          return color.shade600;
+        case 700:
+          return color.shade700;
+        case 800:
+          return color.shade800;
+        case 50:
+          return color.shade50;
+        default:
+          return null;
+      }
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,7 +49,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
         onTap: onTap ?? () {
-          context.go('/podcasts/episodes/${subscription.id}');
+          context.go('/podcast/episodes/${subscription.id}');
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -37,22 +58,53 @@ class PodcastSubscriptionCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Podcast icon or thumbnail
+                  // Podcast image
                   Container(
-                    width: 60,
-                    height: 60,
+                    width: 80,
+                    height: 80,
                     decoration: BoxDecoration(
-                      color: theme.primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    child: Icon(
-                      Icons.podcasts,
-                      size: 30,
-                      color: theme.primaryColor,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: subscription.imageUrl != null
+                          ? Image.network(
+                              subscription.imageUrl!,
+                              width: 80,
+                              height: 80,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: theme.primaryColor.withOpacity(0.1),
+                                  child: Icon(
+                                    Icons.podcasts,
+                                    size: 40,
+                                    color: theme.primaryColor,
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              color: theme.primaryColor.withOpacity(0.1),
+                              child: Icon(
+                                Icons.podcasts,
+                                size: 40,
+                                color: theme.primaryColor,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(width: 16),
+                  // Title and description - expanded to take remaining space
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,84 +120,146 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                         if (subscription.description != null) ...[
                           const SizedBox(height: 4),
                           Text(
-                            subscription.description!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                              subscription.description!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
                         ],
                         const SizedBox(height: 8),
                         Row(
                           children: [
                             _buildStatusChip(context, subscription.status),
                             const SizedBox(width: 8),
+                            // Categories
+                            if (subscription.categories?.isNotEmpty == true) ...[
+                              ...subscription.categories!.take(2).map((category) {
+                                return Text(
+                                  category.name,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: const Color(0xFF7E57C2),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                );
+                              }),
+                              if (subscription.categories!.length > 2) ...[
+                                Text(
+                                  '+${subscription.categories!.length - 2}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: const Color(0xFF7E57C2),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                              const SizedBox(width: 8),
+                            ],
+                            // Author info
+                            if (subscription.author != null) ...[
+                              Text(
+                                subscription.author!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: const Color(0xFFFF8A65),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            // Episodes count
+                            _buildInlineStatItem(
+                              context,
+                              Icons.library_music,
+                              '${subscription.episodeCount}',
+                            ),
+                            const SizedBox(width: 12),
+                            // Unplayed count
+                            _buildInlineStatItem(
+                              context,
+                              Icons.play_circle_outline,
+                              '${subscription.unplayedCount}',
+                            ),
+                            const SizedBox(width: 12),
                             if (lastFetched != null)
                               Text(
                                 'Updated ${DateFormat('MMM d').format(lastFetched)}',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
+                            const Spacer(),
+                            Container(
+                              margin: EdgeInsets.zero,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: theme.dividerColor.withOpacity(0.4),
+                                  width: 1,
+                                ),
+                              ),
+                              child: PopupMenuButton<String>(
+                                icon: Icon(
+                                  Icons.more_vert,
+                                  size: 20,
+                                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                                ),
+                                onSelected: (value) {
+                                  switch (value) {
+                                    case 'refresh':
+                                      onRefresh?.call();
+                                      break;
+                                    case 'reparse':
+                                      onReparse?.call();
+                                      break;
+                                    case 'delete':
+                                      _showDeleteConfirmation(context);
+                                      break;
+                                  }
+                                },
+                                itemBuilder: (context) => [
+                                  const PopupMenuItem(
+                                    value: 'refresh',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.refresh),
+                                        SizedBox(width: 8),
+                                        Text('Refresh'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'reparse',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.sync_problem),
+                                        SizedBox(width: 8),
+                                        Text('Reparse All'),
+                                      ],
+                                    ),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete, color: Colors.red),
+                                        SizedBox(width: 8),
+                                        Text('Delete', style: TextStyle(color: Colors.red)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      switch (value) {
-                        case 'refresh':
-                          onRefresh?.call();
-                          break;
-                        case 'delete':
-                          _showDeleteConfirmation(context);
-                          break;
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'refresh',
-                        child: Row(
-                          children: [
-                            Icon(Icons.refresh),
-                            SizedBox(width: 8),
-                            Text('Refresh'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Stats row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildStatItem(
-                    context,
-                    Icons.library_music,
-                    '${subscription.episodeCount} Episodes',
-                  ),
-                  _buildStatItem(
-                    context,
-                    Icons.play_circle_outline,
-                    '${subscription.unplayedCount} Unplayed',
-                  ),
-                  if (subscription.categories?.isNotEmpty == true)
-                    _buildCategories(context, subscription.categories!),
                 ],
               ),
             ],
@@ -156,49 +270,49 @@ class PodcastSubscriptionCard extends ConsumerWidget {
   }
 
   Widget _buildStatusChip(BuildContext context, String status) {
-    Color color;
     String text;
     IconData icon;
+    Color color;
 
     switch (status) {
       case 'active':
-        color = Colors.green;
+        color = const Color(0xFF4CAF50);
         text = 'Active';
         icon = Icons.check_circle;
         break;
       case 'error':
-        color = Colors.red;
+        color = const Color(0xFFE57373);
         text = 'Error';
         icon = Icons.error;
         break;
       case 'pending':
-        color = Colors.orange;
+        color = const Color(0xFFFFB74D);
         text = 'Pending';
         icon = Icons.pending;
         break;
       default:
-        color = Colors.grey;
+        color = const Color(0xFF90A4AE);
         text = status;
         icon = Icons.help;
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(
+            icon,
+            size: 12,
+            color: color,
+          ),
           const SizedBox(width: 4),
           Text(
             text,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               color: color,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -206,55 +320,26 @@ class PodcastSubscriptionCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatItem(BuildContext context, IconData icon, String text) {
+  Widget _buildInlineStatItem(BuildContext context, IconData icon, String value) {
     final theme = Theme.of(context);
+
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           icon,
-          size: 16,
-          color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+          size: 14,
+          color: const Color(0xFF64B5F6),
         ),
         const SizedBox(width: 4),
         Text(
-          text,
+          value,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF64B5F6),
+            fontSize: 12,
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildCategories(BuildContext context, List categories) {
-    final theme = Theme.of(context);
-    return Row(
-      children: [
-        ...categories.take(2).map((category) {
-          return Container(
-            margin: const EdgeInsets.only(right: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              category['name'] as String,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.primaryColor,
-                fontSize: 10,
-              ),
-            ),
-          );
-        }),
-        if (categories.length > 2)
-          Text(
-            '+${categories.length - 2}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
-              fontSize: 10,
-            ),
-          ),
       ],
     );
   }

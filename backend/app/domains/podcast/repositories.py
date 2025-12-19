@@ -30,7 +30,8 @@ class PodcastRepository:
         feed_url: str,
         title: str,
         description: str = "",
-        custom_name: Optional[str] = None
+        custom_name: Optional[str] = None,
+        metadata: Optional[dict] = None
     ) -> Subscription:
         """
         创建或更新播客订阅
@@ -50,6 +51,12 @@ class PodcastRepository:
             subscription.title = custom_name or title
             subscription.description = description
             subscription.updated_at = datetime.utcnow()
+            # 更新元数据
+            if metadata:
+                existing_config = subscription.config or {}
+                # 合并新旧元数据，保留原有的其他配置
+                existing_config.update(metadata)
+                subscription.config = existing_config
         else:
             # 创建新订阅
             subscription = Subscription(
@@ -59,7 +66,8 @@ class PodcastRepository:
                 title=custom_name or title,
                 description=description,
                 status="active",
-                fetch_interval=3600  # 默认1小时（秒）
+                fetch_interval=3600,  # 默认1小时（秒）
+                config=metadata or {}
             )
             self.db.add(subscription)
 
@@ -172,7 +180,9 @@ class PodcastRepository:
 
     async def get_subscription_episodes(self, subscription_id: int, limit: int = 20) -> List[PodcastEpisode]:
         """获取订阅的所有单集"""
-        stmt = select(PodcastEpisode).where(
+        stmt = select(PodcastEpisode).options(
+            joinedload(PodcastEpisode.subscription)
+        ).where(
             PodcastEpisode.subscription_id == subscription_id
         ).order_by(desc(PodcastEpisode.published_at)).limit(limit)
 
@@ -181,7 +191,9 @@ class PodcastRepository:
 
     async def get_episode_by_id(self, episode_id: int, user_id: Optional[int] = None) -> Optional[PodcastEpisode]:
         """获取单集详情"""
-        stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
+        stmt = select(PodcastEpisode).options(
+            joinedload(PodcastEpisode.subscription)
+        ).where(PodcastEpisode.id == episode_id)
         if user_id:
             # 确保是该用户的订阅
             from app.domains.subscription.models import Subscription
@@ -363,7 +375,9 @@ class PodcastRepository:
         filters: Optional[dict] = None
     ) -> Tuple[List[PodcastEpisode], int]:
         """分页获取用户播客单集"""
-        query = select(PodcastEpisode).join(Subscription).where(
+        query = select(PodcastEpisode).join(Subscription).options(
+            joinedload(PodcastEpisode.subscription)
+        ).where(
             Subscription.user_id == user_id
         )
 
@@ -476,6 +490,20 @@ class PodcastRepository:
             subscription.last_fetched_at = datetime.utcnow()
             await self.db.commit()
 
+    async def update_subscription_metadata(self, subscription_id: int, metadata: dict):
+        """更新订阅的元数据配置"""
+        stmt = select(Subscription).where(Subscription.id == subscription_id)
+        result = await self.db.execute(stmt)
+        subscription = result.scalar_one_or_none()
+
+        if subscription:
+            # 合并现有配置和新元数据
+            current_config = subscription.config or {}
+            current_config.update(metadata)
+            subscription.config = current_config
+            subscription.updated_at = datetime.utcnow()
+            await self.db.commit()
+
     async def get_recently_played(
         self,
         user_id: int,
@@ -546,19 +574,3 @@ class PodcastRepository:
             dates.add(last_updated.date())
 
         return dates
-
-    async def get_subscription_episodes(
-        self,
-        subscription_id: int,
-        limit: Optional[int] = 20
-    ) -> List[PodcastEpisode]:
-        """获取订阅的单集列表"""
-        query = select(PodcastEpisode).where(
-            PodcastEpisode.subscription_id == subscription_id
-        ).order_by(PodcastEpisode.published_at.desc())
-
-        if limit:
-            query = query.limit(limit)
-
-        result = await self.db.execute(query)
-        return list(result.scalars().all())

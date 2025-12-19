@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../../core/network/dio_client.dart';
 import '../../../../core/providers/core_providers.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_playback_model.dart';
@@ -96,6 +95,19 @@ class PodcastSubscriptionNotifier extends _$PodcastSubscriptionNotifier {
 
       // Refresh the list
       await loadSubscriptions();
+    } catch (error) {
+      rethrow;
+    }
+  }
+
+  Future<ReparseResponse> reparseSubscription(int subscriptionId, bool forceAll) async {
+    try {
+      final result = await _repository.reparseSubscription(subscriptionId, forceAll);
+
+      // Refresh the list after re-parsing
+      await loadSubscriptions();
+
+      return result;
     } catch (error) {
       rethrow;
     }

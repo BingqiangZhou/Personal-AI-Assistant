@@ -27,7 +27,7 @@ class PodcastEpisodeCard extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
         onTap: onTap ?? () {
-          context.go('/podcasts/episodes/${episode.id}');
+          context.go('/podcast/episodes/${episode.subscriptionId}/${episode.id}');
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -38,32 +38,54 @@ class PodcastEpisodeCard extends ConsumerWidget {
               // Header with title and play button
               Row(
                 children: [
-                  // Episode thumbnail placeholder
+                  // Episode thumbnail placeholder with enhanced contrast
                   Container(
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: theme.primaryColor.withOpacity(0.1),
+                      color: theme.primaryColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: theme.primaryColor.withOpacity(0.3),
+                        width: 1,
+                      ),
                     ),
                     child: Stack(
                       children: [
                         Center(
-                          child: Icon(
-                            Icons.headphones,
-                            size: 30,
-                            color: theme.primaryColor,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.primaryColor.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.headphones,
+                              size: 24,
+                              color: theme.primaryColor.withOpacity(0.9),
+                            ),
                           ),
                         ),
                         // Show play/pause icon if currently playing
                         if (audioPlayerState.currentEpisode?.id == episode.id)
                           Center(
-                            child: Icon(
-                              audioPlayerState.isPlaying
-                                  ? Icons.pause
-                                  : Icons.play_arrow,
-                              size: 30,
-                              color: theme.primaryColor,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: theme.primaryColor.withOpacity(0.3),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: theme.primaryColor.withOpacity(0.5),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Icon(
+                                audioPlayerState.isPlaying
+                                    ? Icons.pause
+                                    : Icons.play_arrow,
+                                size: 24,
+                                color: theme.primaryColor,
+                              ),
                             ),
                           ),
                       ],
@@ -75,24 +97,29 @@ class PodcastEpisodeCard extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Episode identifier and status
+                        // Episode identifier and status with enhanced contrast
                         Row(
                           children: [
                             if (episode.episodeIdentifier.isNotEmpty) ...[
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
+                                  horizontal: 10,
+                                  vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: theme.primaryColor.withOpacity(0.1),
+                                  color: theme.primaryColor.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: theme.primaryColor.withOpacity(0.4),
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Text(
                                   episode.episodeIdentifier,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.primaryColor,
-                                    fontWeight: FontWeight.w500,
+                                    color: theme.primaryColor.withOpacity(0.9),
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 11,
                                   ),
                                 ),
                               ),
@@ -101,18 +128,23 @@ class PodcastEpisodeCard extends ConsumerWidget {
                             if (episode.isPlayed)
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
+                                  horizontal: 10,
+                                  vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.withOpacity(0.2),
+                                  color: Colors.grey.withOpacity(0.3),
                                   borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.grey.withOpacity(0.5),
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Text(
                                   'Played',
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey[700] ?? Colors.grey.shade700,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 11,
                                   ),
                                 ),
                               ),
@@ -120,18 +152,23 @@ class PodcastEpisodeCard extends ConsumerWidget {
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
+                                  horizontal: 10,
+                                  vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
+                                  color: Colors.red.withOpacity(0.2),
                                   borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.red.withOpacity(0.4),
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Text(
                                   'E',
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red.shade700 ?? Colors.red[700],
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 11,
                                   ),
                                 ),
                               ),
@@ -159,31 +196,50 @@ class PodcastEpisodeCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  // Play button
-                  IconButton.filled(
-                    onPressed: () async {
-                      if (audioPlayerState.currentEpisode?.id == episode.id) {
-                        // Toggle play/pause for current episode
-                        if (audioPlayerState.isPlaying) {
-                          await ref
-                              .read(audioPlayerProvider.notifier)
-                              .pause();
+                  // Enhanced play button with better contrast
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.primaryColor.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: theme.primaryColor.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: IconButton(
+                      onPressed: () async {
+                        if (audioPlayerState.currentEpisode?.id == episode.id) {
+                          // Toggle play/pause for current episode
+                          if (audioPlayerState.isPlaying) {
+                            await ref
+                                .read(audioPlayerProvider.notifier)
+                                .pause();
+                          } else {
+                            await ref
+                                .read(audioPlayerProvider.notifier)
+                                .resume();
+                          }
                         } else {
-                          await ref
-                              .read(audioPlayerProvider.notifier)
-                              .resume();
+                          // Play this episode
+                          onPlay?.call();
                         }
-                      } else {
-                        // Play this episode
-                        onPlay?.call();
-                      }
-                    },
-                    icon: Icon(
-                      audioPlayerState.currentEpisode?.id == episode.id
-                          ? (audioPlayerState.isPlaying
-                              ? Icons.pause
-                              : Icons.play_arrow)
-                          : Icons.play_arrow,
+                      },
+                      icon: Icon(
+                        audioPlayerState.currentEpisode?.id == episode.id
+                            ? (audioPlayerState.isPlaying
+                                ? Icons.pause
+                                : Icons.play_arrow)
+                            : Icons.play_arrow,
+                        color: theme.colorScheme.onPrimary,
+                        size: 28,
+                      ),
                     ),
                   ),
                 ],
@@ -288,22 +344,37 @@ class PodcastEpisodeCard extends ConsumerWidget {
     Color? color,
   }) {
     final theme = Theme.of(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          size: 16,
-          color: color ?? theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+    final defaultColor = color ?? theme.colorScheme.primary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: defaultColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: defaultColor.withOpacity(0.3),
+          width: 1,
         ),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: color ?? theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14,
+            color: defaultColor.withOpacity(0.9),
           ),
-        ),
-      ],
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: defaultColor.withOpacity(0.9),
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

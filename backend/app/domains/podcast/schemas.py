@@ -4,7 +4,7 @@
 
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 
 
 # === Base Schemas ===
@@ -63,6 +63,59 @@ class PodcastSubscriptionResponse(PodcastTimestampedSchema):
     unplayed_count: Optional[int] = 0
     latest_episode: Optional[Dict[str, Any]] = None
     categories: Optional[List[Dict[str, Any]]] = []
+    image_url: Optional[str] = None
+    author: Optional[str] = None
+
+    @field_validator('categories', mode='before')
+    @classmethod
+    def validate_categories(cls, v):
+        """处理categories字段，支持字符串列表和字典列表"""
+        if not v:
+            return []
+
+        # 确保v是列表
+        if isinstance(v, str):
+            # 如果是单个字符串，转换为列表
+            v = [v]
+        elif not isinstance(v, list):
+            # 如果不是列表，尝试转换
+            v = [str(v)]
+
+        result = []
+        for item in v:
+            if isinstance(item, str):
+                result.append({"name": item})
+            elif isinstance(item, dict):
+                result.append(item)
+            else:
+                result.append({"name": str(item)})
+        return result
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_all_fields(cls, data):
+        """对所有字段进行预验证"""
+        if isinstance(data, dict):
+            # 特别处理categories字段
+            if 'categories' in data:
+                categories = data['categories']
+                if categories:
+                    # 确保categories是字典列表格式
+                    processed_categories = []
+                    if isinstance(categories, list):
+                        for cat in categories:
+                            if isinstance(cat, str):
+                                processed_categories.append({"name": cat})
+                            elif isinstance(cat, dict):
+                                processed_categories.append(cat)
+                            else:
+                                processed_categories.append({"name": str(cat)})
+                        data['categories'] = processed_categories
+                    elif isinstance(categories, str):
+                        data['categories'] = [{"name": categories}]
+                    else:
+                        data['categories'] = [{"name": str(categories)}]
+        return data
 
 
 class PodcastSubscriptionListResponse(PodcastBaseSchema):

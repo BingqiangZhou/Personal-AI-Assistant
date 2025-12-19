@@ -1,19 +1,41 @@
 import 'package:flutter/material.dart';
+import '../navigation/podcast_navigation.dart';
 
 class PodcastPlayerPage extends StatelessWidget {
-  final String? episodeId;
+  final PodcastPlayerPageArgs? args;
 
   const PodcastPlayerPage({
     super.key,
-    this.episodeId,
+    this.args,
   });
 
   @override
   Widget build(BuildContext context) {
+    final episodeTitle = args?.episodeTitle ?? '未知单集';
+    final audioUrl = args?.audioUrl ?? '无音频链接';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Podcast Player'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Text(
+            episodeTitle,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 2,
       ),
       body: Center(
         child: Column(
@@ -34,16 +56,18 @@ class PodcastPlayerPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Podcast Episode Title',
+              episodeTitle,
               style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              'Podcast Show Name',
+              audioUrl,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.grey.shade600,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 32),
             Row(

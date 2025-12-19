@@ -13,6 +13,9 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/assistant/presentation/pages/assistant_chat_page.dart';
 import '../../features/podcast/presentation/pages/podcast_list_page.dart';
 import '../../features/podcast/presentation/pages/podcast_player_page.dart';
+import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
+import '../../features/podcast/presentation/pages/podcast_episode_detail_page.dart';
+import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
 import '../../features/knowledge/presentation/pages/knowledge_base_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
@@ -90,12 +93,50 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: 'podcast',
             builder: (context, state) => const PodcastListPage(),
             routes: [
+              // 1. 订阅的单集列表: /podcast/episodes/1
+              GoRoute(
+                path: 'episodes/:subscriptionId',
+                name: 'podcastEpisodes',
+                builder: (context, state) {
+                  final args = PodcastEpisodesPageArgs.extractFromState(state);
+                  if (args == null) {
+                    return const Scaffold(
+                      body: Center(child: Text('Invalid navigation arguments')),
+                    );
+                  }
+                  return PodcastEpisodesPage(
+                    subscriptionId: args.subscriptionId,
+                    podcastTitle: args.podcastTitle,
+                    subscription: args.subscription,
+                  );
+                },
+              ),
+              // 2. 单集详情: /podcast/episodes/1/2
+              GoRoute(
+                path: 'episodes/:subscriptionId/:episodeId',
+                name: 'episodeDetail',
+                builder: (context, state) {
+                  final args = PodcastEpisodeDetailPageArgs.extractFromState(state);
+                  if (args == null) {
+                    return const Scaffold(
+                      body: Center(child: Text('Invalid navigation arguments')),
+                    );
+                  }
+                  return PodcastEpisodeDetailPage(episodeId: args.episodeId);
+                },
+              ),
+              // 3. 播放器: /podcast/player/1?subscriptionId=1
               GoRoute(
                 path: 'player/:episodeId',
-                name: 'podcast-player',
+                name: 'episodePlayer',
                 builder: (context, state) {
-                  final episodeId = state.pathParameters['episodeId'];
-                  return PodcastPlayerPage(episodeId: episodeId);
+                  final args = PodcastPlayerPageArgs.extractFromState(state);
+                  if (args == null) {
+                    return const Scaffold(
+                      body: Center(child: Text('Invalid navigation arguments')),
+                    );
+                  }
+                  return PodcastPlayerPage(args: args);
                 },
               ),
             ],

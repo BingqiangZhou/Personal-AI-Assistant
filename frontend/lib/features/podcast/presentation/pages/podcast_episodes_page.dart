@@ -87,46 +87,94 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.podcastTitle ?? 'Podcast Episodes'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: _showFilterDialog,
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              width: 1,
+            ),
           ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'mark_all_played':
-                  // TODO: Implement mark all as played
-                  break;
-                case 'mark_all_unplayed':
-                  // TODO: Implement mark all as unplayed
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'mark_all_played',
-                child: Row(
-                  children: [
-                    Icon(Icons.check_circle),
-                    SizedBox(width: 8),
-                    Text('Mark All as Played'),
-                  ],
-                ),
+          child: Text(
+            widget.podcastTitle ?? 'Podcast Episodes',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        elevation: 2,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                width: 1,
               ),
-              const PopupMenuItem(
-                value: 'mark_all_unplayed',
-                child: Row(
-                  children: [
-                    Icon(Icons.radio_button_unchecked),
-                    SizedBox(width: 8),
-                    Text('Mark All as Unplayed'),
-                  ],
-                ),
+            ),
+            child: IconButton(
+              icon: Icon(
+                Icons.filter_list,
+                color: Theme.of(context).colorScheme.primary,
               ),
-            ],
+              onPressed: _showFilterDialog,
+              tooltip: 'Filter',
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: PopupMenuButton<String>(
+              icon: Icon(
+                Icons.more_vert,
+                color: Theme.of(context).colorScheme.secondary,
+              ),
+              onSelected: (value) {
+                switch (value) {
+                  case 'mark_all_played':
+                    // TODO: Implement mark all as played
+                    break;
+                  case 'mark_all_unplayed':
+                    // TODO: Implement mark all as unplayed
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'mark_all_played',
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle),
+                      SizedBox(width: 8),
+                      Text('Mark All as Played'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'mark_all_unplayed',
+                  child: Row(
+                    children: [
+                      Icon(Icons.radio_button_unchecked),
+                      SizedBox(width: 8),
+                      Text('Mark All as Unplayed'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

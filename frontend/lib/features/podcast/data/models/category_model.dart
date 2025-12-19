@@ -5,18 +5,18 @@ part 'category_model.g.dart';
 
 @JsonSerializable()
 class Category extends Equatable {
-  final int id;
+  final int? id;
   final String name;
-  final String color;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final String? color;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const Category({
-    required this.id,
+    this.id,
     required this.name,
-    required this.color,
-    required this.createdAt,
-    required this.updatedAt,
+    this.color,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory Category.fromJson(Map<String, dynamic> json) =>

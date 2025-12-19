@@ -122,10 +122,11 @@ class PodcastNavigation {
     required int subscriptionId,
     String? podcastTitle,
   }) {
+    final query = podcastTitle != null ? {'title': podcastTitle} : <String, dynamic>{};
     context.pushNamed(
       'podcastEpisodes',
       pathParameters: {'subscriptionId': subscriptionId.toString()},
-      queryParameters: podcastTitle != null ? {'title': podcastTitle} : null,
+      queryParameters: query,
     );
   }
 
@@ -148,13 +149,14 @@ class PodcastNavigation {
     required int subscriptionId,
     String? episodeTitle,
   }) {
+    final query = episodeTitle != null ? {'title': episodeTitle} : <String, dynamic>{};
     context.pushNamed(
       'episodeDetail',
       pathParameters: {
         'subscriptionId': subscriptionId.toString(),
         'episodeId': episodeId.toString(),
       },
-      queryParameters: episodeTitle != null ? {'title': episodeTitle} : null,
+      queryParameters: query,
     );
   }
 
@@ -183,6 +185,6 @@ class PodcastNavigation {
 
   /// Pop to podcast list
   static void popToList(BuildContext context) {
-    context.popUntil((route) => route.settings.name == 'podcastList');
+    Navigator.of(context).popUntil((route) => route.settings.name == 'podcast');
   }
 }

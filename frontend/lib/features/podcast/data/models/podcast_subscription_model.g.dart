@@ -26,6 +26,8 @@ PodcastSubscriptionModel _$PodcastSubscriptionModelFromJson(
   categories: (json['categories'] as List<dynamic>?)
       ?.map((e) => Category.fromJson(e as Map<String, dynamic>))
       .toList(),
+  imageUrl: json['image_url'] as String?,
+  author: json['author'] as String?,
   createdAt: DateTime.parse(json['created_at'] as String),
   updatedAt: json['updated_at'] == null
       ? null
@@ -48,6 +50,8 @@ Map<String, dynamic> _$PodcastSubscriptionModelToJson(
   'unplayed_count': instance.unplayedCount,
   'latest_episode': instance.latestEpisode,
   'categories': instance.categories,
+  'image_url': instance.imageUrl,
+  'author': instance.author,
   'created_at': instance.createdAt.toIso8601String(),
   'updated_at': instance.updatedAt?.toIso8601String(),
 };
@@ -91,3 +95,18 @@ Map<String, dynamic> _$PodcastSubscriptionCreateRequestToJson(
   'custom_name': instance.customName,
   'category_ids': instance.categoryIds,
 };
+
+ReparseResponse _$ReparseResponseFromJson(Map<String, dynamic> json) =>
+    ReparseResponse(
+      success: json['success'] as bool,
+      result: json['result'] as Map<String, dynamic>,
+    );
+
+Map<String, dynamic> _$ReparseResponseToJson(ReparseResponse instance) =>
+    <String, dynamic>{'success': instance.success, 'result': instance.result};
+
+SimpleResponse _$SimpleResponseFromJson(Map<String, dynamic> json) =>
+    SimpleResponse(data: json['data'] as Map<String, dynamic>);
+
+Map<String, dynamic> _$SimpleResponseToJson(SimpleResponse instance) =>
+    <String, dynamic>{'data': instance.data};

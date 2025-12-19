@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
-import '../../../../core/network/dio_client.dart';
 import '../models/podcast_episode_model.dart';
 import '../models/podcast_playback_model.dart';
 import '../models/podcast_subscription_model.dart';
@@ -42,6 +41,12 @@ abstract class PodcastApiService {
     @Path('subscriptionId') int subscriptionId,
   );
 
+  @POST('/podcasts/subscriptions/{subscriptionId}/reparse')
+  Future<ReparseResponse> reparseSubscription(
+    @Path('subscriptionId') int subscriptionId,
+    @Query('force_all') bool forceAll,
+  );
+
   // === Episode Management ===
 
   @GET('/podcasts/episodes')
@@ -80,7 +85,7 @@ abstract class PodcastApiService {
   );
 
   @GET('/podcasts/summaries/pending')
-  Future<void> getPendingSummaries();
+  Future<SimpleResponse> getPendingSummaries();
 
   // === Search ===
 
@@ -100,7 +105,7 @@ abstract class PodcastApiService {
   // === Recommendations ===
 
   @GET('/podcasts/recommendations')
-  Future<void> getRecommendations(
+  Future<SimpleResponse> getRecommendations(
     @Query('limit') int limit,
   );
 }

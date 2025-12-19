@@ -28,26 +28,56 @@ class DesktopMenuBar extends ConsumerWidget implements PreferredSizeWidget {
         children: [
           // Menu button for smaller screens
           if (MediaQuery.of(context).size.width <= 1200)
-            IconButton(
-              onPressed: onMenuPressed,
-              icon: const Icon(Icons.menu),
-              tooltip: 'Menu',
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  width: 0.5,
+                ),
+              ),
+              child: IconButton(
+                onPressed: onMenuPressed,
+                icon: Icon(
+                  Icons.menu,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                ),
+                tooltip: 'Menu',
+              ),
             ),
 
           if (title != null) ...[
             if (MediaQuery.of(context).size.width <= 1200)
               const SizedBox(width: 16),
-            Text(
-              title!,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                  width: 0.5,
+                ),
+              ),
+              child: Text(
+                title!,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                ),
               ),
             ),
           ],
         ],
       ),
       centerTitle: false,
-      elevation: 1,
+      elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.1),
       backgroundColor: Theme.of(context).colorScheme.surface,
       surfaceTintColor: Theme.of(context).colorScheme.primary,
       actions: [
@@ -63,35 +93,69 @@ class DesktopMenuBar extends ConsumerWidget implements PreferredSizeWidget {
   }
 
   Widget _buildSearchButton(BuildContext context) {
-    return IconButton(
-      onPressed: () {
-        _showSearchDialog(context);
-      },
-      icon: const Icon(Icons.search_outlined),
-      tooltip: 'Search (Ctrl+K)',
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          width: 0.5,
+        ),
+      ),
+      child: IconButton(
+        onPressed: () {
+          _showSearchDialog(context);
+        },
+        icon: Icon(
+          Icons.search_outlined,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.primary.withOpacity(0.8),
+        ),
+        tooltip: 'Search (Ctrl+K)',
+      ),
     );
   }
 
   Widget _buildNotificationButton(BuildContext context) {
     return Stack(
       children: [
-        IconButton(
-          onPressed: () {
-            _showNotifications(context);
-          },
-          icon: const Icon(Icons.notifications_outlined),
-          tooltip: 'Notifications',
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+              width: 0.5,
+            ),
+          ),
+          child: IconButton(
+            onPressed: () {
+              _showNotifications(context);
+            },
+            icon: Icon(
+              Icons.notifications_outlined,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Theme.of(context).colorScheme.secondary
+                  : Theme.of(context).colorScheme.secondary.withOpacity(0.8),
+            ),
+            tooltip: 'Notifications',
+          ),
         ),
         // Notification badge
         Positioned(
           right: 8,
           top: 8,
           child: Container(
-            width: 8,
-            height: 8,
+            width: 10,
+            height: 10,
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.error,
               shape: BoxShape.circle,
+              border: Border.all(
+                color: Theme.of(context).colorScheme.surface,
+                width: 2,
+              ),
             ),
           ),
         ),

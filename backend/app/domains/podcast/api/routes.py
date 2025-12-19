@@ -446,6 +446,35 @@ async def refresh_subscription(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post(
+    "/subscriptions/{subscription_id}/reparse",
+    summary="重新解析订阅（修复解析不全问题）"
+)
+async def reparse_subscription(
+    subscription_id: int,
+    force_all: bool = False,
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    重新解析订阅的所有单集，用于修复解析不全的问题
+
+    - 默认只解析缺失的单集
+    - force_all=true 时强制重新解析所有单集
+    """
+    service = PodcastService(db, user["sub"])
+    try:
+        result = await service.reparse_subscription(subscription_id, force_all=force_all)
+        return {
+            "success": True,
+            "result": result
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # === 推荐功能 ===
 
 @router.get(

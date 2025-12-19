@@ -171,18 +171,13 @@ class SecureRSSParser:
         # Podcast type
         podcast_type = self._safe_text(channel.findtext('itunes:type', '', namespaces=itunes_ns))
 
-        # Parse episodes
+        # Parse episodes - parse all available episodes
         episodes = []
-        item_count = 0
 
         for item in channel.findall('item'):
-            if item_count >= 20:  # Limit initial fetch
-                break
-
             episode = self._parse_episode(item)
             if episode:
                 episodes.append(episode)
-                item_count += 1
 
         return PodcastFeed(
             title=title,
