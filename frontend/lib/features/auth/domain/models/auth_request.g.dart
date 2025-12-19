@@ -50,16 +50,12 @@ ResetPasswordRequest _$ResetPasswordRequestFromJson(
   Map<String, dynamic> json,
 ) => ResetPasswordRequest(
   token: json['token'] as String,
-  email: json['email'] as String,
-  password: json['password'] as String,
-  passwordConfirmation: json['password_confirmation'] as String,
+  newPassword: json['new_password'] as String,
 );
 
 Map<String, dynamic> _$ResetPasswordRequestToJson(
   ResetPasswordRequest instance,
 ) => <String, dynamic>{
   'token': instance.token,
-  'email': instance.email,
-  'password': instance.password,
-  'password_confirmation': instance.passwordConfirmation,
+  'new_password': instance.newPassword,
 };

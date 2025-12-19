@@ -44,9 +44,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       ref.read(authProvider.notifier).register(
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        username: _usernameController.text.trim().isEmpty
-            ? null
-            : _usernameController.text.trim(),
+        username: _usernameController.text.trim(),
       );
     } else if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -131,16 +129,22 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   // Username field
                   CustomTextField(
                     controller: _usernameController,
-                    label: '用户名 (可选)',
+                    label: 'Username',
                     prefixIcon: const Icon(Icons.person_outline),
                     onChanged: (value) {
                       _clearFieldErrors();
                       setState(() {}); // Trigger rebuild to update password requirements
                     },
                     validator: (value) {
-                      // Username is optional
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your username';
+                      }
+                      if (value.length < 3) {
+                        return 'Username must be at least 3 characters';
+                      }
                       return null;
                     },
+                    errorText: authState.fieldErrors?['username'],
                   ),
 
                   const SizedBox(height: 16),

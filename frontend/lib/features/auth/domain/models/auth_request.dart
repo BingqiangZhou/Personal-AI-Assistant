@@ -63,17 +63,13 @@ class ForgotPasswordRequest {
 @JsonSerializable()
 class ResetPasswordRequest {
   final String token;
-  final String email;
-  final String password;
 
-  @JsonKey(name: 'password_confirmation')
-  final String passwordConfirmation;
+  @JsonKey(name: 'new_password')
+  final String newPassword;
 
   const ResetPasswordRequest({
     required this.token,
-    required this.email,
-    required this.password,
-    required this.passwordConfirmation,
+    required this.newPassword,
   });
 
   factory ResetPasswordRequest.fromJson(Map<String, dynamic> json) => _$ResetPasswordRequestFromJson(json);

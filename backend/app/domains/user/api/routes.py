@@ -5,7 +5,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.core.database import get_db_session
 from app.core.security import get_current_user
@@ -16,7 +16,10 @@ from app.core.exceptions import (
     UnauthorizedError,
     NotFoundError
 )
-from app.shared.schemas import Token, UserCreate, UserResponse
+from app.shared.schemas import (
+    Token, UserCreate, UserResponse,
+    ForgotPasswordRequest, ResetPasswordRequest, PasswordResetResponse
+)
 from app.domains.user.services import AuthenticationService
 
 router = APIRouter(tags=["authentication"])
@@ -24,8 +27,18 @@ router = APIRouter(tags=["authentication"])
 
 class LoginRequest(BaseModel):
     """Login request schema."""
-    email_or_username: str
+    username: Optional[str] = Field(None, description="Username for login (alternative to email_or_username)")
+    email_or_username: Optional[str] = Field(None, description="Email or username for login (alternative to username)")
     password: str
+
+    @model_validator(mode='before')
+    @classmethod
+    def validate_identifier(cls, data):
+        """Ensure either username or email_or_username is provided."""
+        if isinstance(data, dict):
+            if not data.get('username') and not data.get('email_or_username'):
+                raise ValueError('Either username or email_or_username must be provided')
+        return data
 
 
 class RefreshTokenRequest(BaseModel):
@@ -95,9 +108,12 @@ async def login(
     try:
         auth_service = AuthenticationService(db)
 
+        # Determine which field to use (username takes priority if both provided)
+        identifier = login_data.username or login_data.email_or_username
+
         # Authenticate user
         user = await auth_service.authenticate_user(
-            email_or_username=login_data.email_or_username,
+            email_or_username=identifier,
             password=login_data.password
         )
 
@@ -223,4 +239,61 @@ async def logout_all(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Logout failed: {str(e)}"
+        )
+
+
+@router.post("/forgot-password", response_model=PasswordResetResponse)
+async def forgot_password(
+    request_data: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db_session)
+) -> Any:
+    """Request a password reset link via email."""
+    try:
+        auth_service = AuthenticationService(db)
+
+        # Create password reset token
+        result = await auth_service.create_password_reset_token(
+            email=request_data.email
+        )
+
+        return PasswordResetResponse(
+            message=result["message"],
+            token=result.get("token"),  # Will be None in production
+            expires_at=result.get("expires_at")
+        )
+
+    except BaseCustomException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process password reset request: {str(e)}"
+        )
+
+
+@router.post("/reset-password", response_model=PasswordResetResponse)
+async def reset_password(
+    request_data: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db_session)
+) -> Any:
+    """Reset password using a valid reset token."""
+    try:
+        auth_service = AuthenticationService(db)
+
+        # Reset password
+        result = await auth_service.reset_password(
+            token=request_data.token,
+            new_password=request_data.new_password
+        )
+
+        return PasswordResetResponse(
+            message=result["message"]
+        )
+
+    except BaseCustomException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to reset password: {str(e)}"
         )

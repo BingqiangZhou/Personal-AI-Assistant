@@ -7,6 +7,8 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/auth_test_page.dart';
 import '../../features/auth/presentation/pages/auth_verify_page.dart';
+import '../../features/auth/presentation/pages/forgot_password_page.dart';
+import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/assistant/presentation/pages/assistant_chat_page.dart';
 import '../../features/podcast/presentation/pages/podcast_list_page.dart';
@@ -47,6 +49,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/auth-verify',
         name: 'auth-verify',
         builder: (context, state) => const AuthVerifyPage(),
+      ),
+      GoRoute(
+        path: '/forgot-password',
+        name: 'forgot-password',
+        builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        name: 'reset-password',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'];
+          return ResetPasswordPage(token: token);
+        },
       ),
 
       // Main app (with bottom navigation)

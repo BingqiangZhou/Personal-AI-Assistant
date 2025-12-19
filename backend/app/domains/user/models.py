@@ -78,5 +78,26 @@ class UserSession(Base):
     # Indexes
     __table_args__ = (
         Index('idx_user_active', 'user_id', 'is_active'),
-        Index('idx_token_expires', 'session_token', 'expires_at'),
+        Index('idx_user_sessions_token_expires', 'session_token', 'expires_at'),
+    )
+
+
+class PasswordReset(Base):
+    """Password reset model for managing password reset tokens."""
+
+    __tablename__ = "password_resets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), nullable=False, index=True)
+    token = Column(String(255), unique=True, index=True, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    is_used = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Indexes
+    __table_args__ = (
+        Index('idx_email_token', 'email', 'token'),
+        Index('idx_password_reset_token_expires', 'token', 'expires_at'),
+        Index('idx_email_unused', 'email', 'is_used'),
     )

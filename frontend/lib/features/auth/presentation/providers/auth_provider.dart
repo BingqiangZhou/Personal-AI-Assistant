@@ -472,4 +472,73 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> checkAuthStatus() async {
     await _checkAuthStatus();
   }
+
+  Future<void> forgotPassword(String email) async {
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      clearFieldErrors: true,
+      currentOperation: AuthOperation.forgotPassword,
+    );
+
+    final request = ForgotPasswordRequest(email: email);
+
+    final result = await _authRepository.forgotPassword(request);
+    result.fold(
+      (error) {
+        String userMessage = _getErrorMessage(error);
+        state = state.copyWith(
+          isLoading: false,
+          error: userMessage,
+          currentOperation: null,
+        );
+      },
+      (_) {
+        state = state.copyWith(
+          isLoading: false,
+          error: null,
+          currentOperation: null,
+        );
+      },
+    );
+  }
+
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      clearFieldErrors: true,
+      currentOperation: AuthOperation.resetPassword,
+    );
+
+    final request = ResetPasswordRequest(
+      token: token,
+      newPassword: newPassword,
+    );
+
+    final result = await _authRepository.resetPassword(request);
+    result.fold(
+      (error) {
+        String userMessage = _getErrorMessage(error);
+        Map<String, String>? fieldErrors = _getFieldErrors(error);
+
+        state = state.copyWith(
+          isLoading: false,
+          error: userMessage,
+          fieldErrors: fieldErrors,
+          currentOperation: null,
+        );
+      },
+      (_) {
+        state = state.copyWith(
+          isLoading: false,
+          error: null,
+          currentOperation: null,
+        );
+      },
+    );
+  }
 }

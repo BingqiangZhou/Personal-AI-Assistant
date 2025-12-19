@@ -171,7 +171,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       const Spacer(),
                       TextButton(
                         onPressed: () {
-                          // TODO: Navigate to forgot password
+                          context.go('/forgot-password');
                         },
                         child: Text(
                           'Forgot Password?',

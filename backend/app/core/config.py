@@ -48,6 +48,18 @@ class Settings(BaseSettings):
 
     # Privacy & Security
     LLM_CONTENT_SANITIZE_MODE: str = "standard"  # 'strict' | 'standard' | 'none'
+
+    # Frontend URL
+    FRONTEND_URL: str = "http://localhost:3000"
+
+    # Email Configuration
+    SMTP_SERVER: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_USE_TLS: bool = True
+    FROM_EMAIL: str = "noreply@personalai.com"
+    FROM_NAME: str = "Personal AI Assistant"
     ALLOWED_AUDIO_SCHEMES: list[str] = ["http", "https"]
 
     # External APIs

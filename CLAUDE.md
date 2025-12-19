@@ -243,17 +243,28 @@ flutter test --coverage
 flutter packages pub run build_runner build --delete-conflicting-outputs
 ```
 
-### Docker Development
+### Docker Development (Backend Services)
 ```bash
-# Start all services (database, redis, backend, celery)
-docker-compose up -d
+# Navigate to docker folder first
+cd docker
+
+# Start all backend services using podcast configuration (database, redis, backend, celery)
+docker-compose -f docker-compose.podcast.yml up -d
 
 # View logs
-docker-compose logs -f
+docker-compose -f docker-compose.podcast.yml logs -f
 
 # Stop services
-docker-compose down
+docker-compose -f docker-compose.podcast.yml down
 ```
+
+**IMPORTANT**: This Docker configuration runs the **backend services** including:
+- PostgreSQL database
+- Redis cache
+- FastAPI backend server
+- Celery background workers
+
+The frontend Flutter application should be run separately using the commands in the Frontend (Flutter) section.
 
 ## Architecture Overview
 
