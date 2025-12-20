@@ -2,66 +2,160 @@
   "version": "1.0.0",
   "project": "personal-ai-assistant",
   "agents": {
+    "product-manager": {
+      "path": ".claude/agents/roles/product-manager.md",
+      "active": true,
+      "description": "Product Manager - Core driver of the workflow, responsible for product vision and execution",
+      "role_type": "lead",
+      "responsibilities": [
+        "Define product vision and strategy",
+        "Analyze and clarify user requirements and business needs",
+        "Create and maintain requirement documents in specs/",
+        "Coordinate work between all engineering teams",
+        "Validate feature completion and business value",
+        "Drive the 4-stage product development lifecycle",
+        "Manage product backlog and prioritize features",
+        "Ensure user satisfaction and business goals alignment"
+      ],
+      "default_workflow": "product-driven-development",
+      "workflow_priority": 1
+    },
     "architect": {
       "path": ".claude/agents/roles/architect.md",
       "active": true,
       "description": "System architecture and design lead",
-      "default_workflow": "architecture-review"
+      "role_type": "specialist",
+      "responsibilities": [
+        "Technical architecture design",
+        "Technology selection decisions",
+        "Architecture documentation"
+      ],
+      "default_workflow": "architecture-review",
+      "workflow_priority": 2
     },
     "backend-dev": {
       "path": ".claude/agents/roles/backend-dev.md",
       "active": true,
       "description": "FastAPI/Python backend development",
-      "default_workflow": "feature-development"
+      "role_type": "implementer",
+      "responsibilities": [
+        "API endpoint development",
+        "Database design and implementation",
+        "Business logic implementation",
+        "Unit and integration testing"
+      ],
+      "default_workflow": "feature-development",
+      "workflow_priority": 3
     },
     "frontend-dev": {
       "path": ".claude/agents/roles/frontend-dev.md",
       "active": true,
       "description": "Flutter desktop and web development",
-      "default_workflow": "feature-development"
+      "role_type": "implementer",
+      "responsibilities": [
+        "UI component development",
+        "User interaction implementation",
+        "Responsive design",
+        "Widget testing"
+      ],
+      "default_workflow": "feature-development",
+      "workflow_priority": 3
     },
     "mobile-dev": {
       "path": ".claude/agents/roles/mobile-dev.md",
       "active": true,
       "description": "Flutter iOS/Android mobile development",
-      "default_workflow": "feature-development"
-    },
-    "requirements-analyst": {
-      "path": ".claude/agents/roles/requirements-analyst.md",
-      "active": true,
-      "description": "Requirements gathering and documentation",
-      "default_workflow": "feature-development"
+      "role_type": "implementer",
+      "responsibilities": [
+        "Mobile platform adaptation",
+        "Native feature integration",
+        "Performance optimization",
+        "Mobile-specific testing"
+      ],
+      "default_workflow": "feature-development",
+      "workflow_priority": 3
     },
     "test-engineer": {
       "path": ".claude/agents/roles/test-engineer.md",
       "active": true,
       "description": "Quality assurance and test automation",
-      "default_workflow": "bug-fix"
+      "role_type": "validator",
+      "responsibilities": [
+        "Test strategy development",
+        "Automated test implementation",
+        "Quality gate enforcement",
+        "Verification report creation"
+      ],
+      "default_workflow": "bug-fix",
+      "workflow_priority": 4
     },
     "devops-engineer": {
       "path": ".claude/agents/roles/devops-engineer.md",
       "active": true,
       "description": "DevOps, deployment, and infrastructure",
-      "default_workflow": "feature-development"
+      "role_type": "enabler",
+      "responsibilities": [
+        "CI/CD pipeline setup",
+        "Deployment automation",
+        "Monitoring and alerting",
+        "Infrastructure management"
+      ],
+      "default_workflow": "feature-development",
+      "workflow_priority": 4
     }
   },
   "workflows": {
+    "product-driven-development": {
+      "path": ".claude/agents/workflows/product-driven-development.md",
+      "description": "Product-driven 4-stage workflow with Product Manager as the core driver, focusing on business value and user needs",
+      "stages": [
+        {
+          "name": "Product Analysis & Requirement Definition",
+          "owner": "product-manager",
+          "description": "Analyze user input and business needs, define product requirements, create/update requirement documents in specs/"
+        },
+        {
+          "name": "Feature Planning & Task Assignment",
+          "owner": "product-manager",
+          "description": "Plan features based on product vision, break down requirements into prioritized tasks and assign to appropriate engineers"
+        },
+        {
+          "name": "Development Execution & Status Tracking",
+          "owner": "assigned-engineer",
+          "description": "Engineers execute tasks according to product requirements and update status in requirement documents"
+        },
+        {
+          "name": "Product Validation & Business Value Assessment",
+          "owner": "product-manager",
+          "description": "Validate feature completion, assess business value, measure user satisfaction, and iterate if needed"
+        }
+      ],
+      "participants": ["product-manager", "architect", "backend-dev", "frontend-dev", "mobile-dev", "test-engineer", "devops-engineer"],
+      "estimated_duration": "1-2 weeks",
+      "default_workflow": true,
+      "key_principles": [
+        "Business value first",
+        "User-centric approach",
+        "Data-driven decisions",
+        "Continuous validation"
+      ]
+    },
     "feature-development": {
       "path": ".claude/agents/workflows/feature-development.md",
       "description": "End-to-end feature development workflow",
-      "participants": ["requirements-analyst", "architect", "backend-dev", "frontend-dev", "mobile-dev", "test-engineer", "devops-engineer"],
+      "participants": ["product-manager", "architect", "backend-dev", "frontend-dev", "mobile-dev", "test-engineer", "devops-engineer"],
       "estimated_duration": "2-3 weeks"
     },
     "bug-fix": {
       "path": ".claude/agents/workflows/bug-fix.md",
       "description": "Bug triage and resolution workflow",
-      "participants": ["test-engineer", "backend-dev", "frontend-dev", "mobile-dev", "devops-engineer"],
+      "participants": ["product-manager", "test-engineer", "backend-dev", "frontend-dev", "mobile-dev", "devops-engineer"],
       "estimated_duration": "1-5 days"
     },
     "architecture-review": {
       "path": ".claude/agents/workflows/architecture-review.md",
       "description": "Architecture design and review workflow",
-      "participants": ["architect", "backend-dev", "frontend-dev", "mobile-dev", "test-engineer", "devops-engineer"],
+      "participants": ["architect", "product-manager", "backend-dev", "frontend-dev", "mobile-dev", "test-engineer", "devops-engineer"],
       "estimated_duration": "2-4 hours"
     }
   },

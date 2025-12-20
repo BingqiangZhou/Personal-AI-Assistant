@@ -2,58 +2,121 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🤖 Subagent Collaboration System - Integration
+## 🤖 优化后的Subagent协作工作流程
 
-**📅 You Can Run Multi-Agent Workflow RIGHT NOW - Just Say It**
+**📅 基于需求工程师驱动的完整开发流程**
 
-Use **any** of these formats, or **just describe** what feature you want built:
+### 🔄 **核心工作流程（4阶段循环）**
 
-### 🔥 **Instant Commands - Copy & Run Immediately**
 ```
-/feature "feature-name" "description"   // 👉 Runs 7-role workflow
-/fix "bug description"                 // 👉 From diagnosis to deploy
-/architecture "topic"                  // 👉 Document + action plan
-```
-
-**Example (Copy & Paste test):**
-```
-/feature "social-login" "Add Google OAuth with JWT tokens"
+用户输入指令 → 产品经理分析 → 定义产品需求 → 规划功能 → 任务分配 → 工程师执行 → 更新状态 → 产品验证
+      ↑                                                                                  ↓
+      ←←←←←←←←←←←← 验证发现问题或价值不足，返回重新规划 ←←←←←←←←←←←←←←←←←←←←←←←←←
 ```
 
-### 🚀 **Test Commands - Choose Your Test Level**
-1. **(Recommended) Full Integration Test**: "Run complete 7-agent cycle for a basic `user-timezone` feature"
-2. **Minimal Role Test**: "As Backend Developer only, create FastAPI endpoint `/api/v2/timezone/info`"
-3. **Direct Workflow**: "Effectively act as Requirements Analyst + Architect + Mobile Dev to create `app-notification-icon`"
+### 📋 **阶段1：产品分析与需求定义**
+**负责人**：产品经理
+1. **分析用户指令和业务需求** - 理解用户痛点、业务价值和市场机会
+2. **定义产品需求**：
+   - 新功能 → 在`specs/active/`下创建产品需求文档
+   - 功能改进/优化 → 更新现有需求文档
+   - 问题修复 → 在需求文档中定义修复目标和优先级
+3. **输出**：完整的产品需求文档（用户故事、商业价值、验收标准、成功指标）
 
-#### Automatic Agent Orchestration Rules
-When you receive these commands, automatically:
+### 👥 **阶段2：功能规划与任务分配**
+1. **产品经理**进行功能规划：
+   - 基于产品愿景和战略规划功能
+   - 确定功能优先级（使用价值 vs 成本矩阵）
+   - 定义MVP范围和迭代计划
+2. **任务分配**：
+   - Backend任务 → Backend Developer
+   - Frontend任务 → Frontend Developer
+   - Mobile任务 → Mobile Developer
+   - 架构相关 → Architect
+   - 测试相关 → Test Engineer
+   - 部署相关 → DevOps Engineer
 
-1. **Load agent metadata** from `./claude/agents.json`
-2. **Determine workflow** from command type and task complexity
-3. **Activate required agents** in optimal sequence
-4. **Pass context forward** - output of one agent becomes input to next
-5. **Coordinate parallel work** - frontend/backend can work simultaneously
-6. **Maintain shared state** - task board updates across all agents
-7. **No intervention needed** - self-direct through full completion
+### ⚙️ **阶段3：开发执行与状态跟踪**
+**工程师团队**：
+1. 按照产品需求文档执行开发任务
+2. 在任务跟踪文档中实时更新状态
+3. 记录关键决策、技术方案和测试结果
+4. 主动沟通进度和阻塞点
 
-#### Self-Correction & Quality Gates
-- Agents automatically test their work before handoff
-- Architecture decisions require consensus
-- Security issues block deployment
-- Performance regression fails builds
-- Documentation must accompany all changes
+### ✅ **阶段4：产品验证与商业价值评估**
+**产品经理**：
+1. 验证功能完成度和用户体验
+2. 评估商业价值实现情况
+3. 收集用户反馈和数据分析
+4. 确认是否满足成功指标
+5. 如未达标 → 制定改进计划并返回阶段2
 
-### Agent Roles (7 Specialized Roles)
+### 🔥 **快速开始 - 直接输入需求**
 
-Based on `.claude/agents.json` configuration:
+无需特定命令，直接描述你的需求：
 
-1. **Architect** (🏛️) - System design & DDD architecture
-2. **Backend Developer** (⚙️) - FastAPI/Python development
-3. **Frontend Desktop Developer** (🖥️) - Flutter desktop/web
-4. **Mobile Developer** (📱) - Flutter iOS/Android
-5. **Requirements Analyst** (📋) - User stories & acceptance criteria
-6. **Test Engineer** (🧪) - QA & test automation
-7. **DevOps Engineer** (⚙️) - Deployment & infrastructure
+**示例**：
+- "添加用户时区设置功能"
+- "修复搜索结果不准确的bug"
+- "优化文档上传的性能"
+- "实现语音备忘录功能"
+
+系统将自动：
+1. **产品经理**分析需求并定义产品价值
+2. 规划功能优先级和MVP范围
+3. 分配相应任务给工程师团队
+4. 跟踪执行并验证商业价值
+
+### 📁 **文档结构**
+```
+specs/
+├── active/          # 进行中的需求
+├── completed/       # 已完成的需求
+├── templates/       # 文档模板
+└── README.md       # 需求索引
+```
+
+### Agent Roles (7个专业角色)
+
+基于 `.claude/agents.json` 配置：
+
+1. **产品经理** (📋) - **产品愿景与执行负责人**
+   - 定义产品愿景和战略方向
+   - 分析用户需求和商业价值
+   - 创建和维护产品需求文档（PRD）
+   - 管理产品路线图和功能优先级
+   - 协调所有工程团队
+   - 验证产品价值和用户满意度
+
+2. **架构师** (🏛️) - 系统设计与DDD架构
+   - 技术架构设计
+   - 技术选型决策
+   - 架构文档编写
+
+3. **后端工程师** (⚙️) - FastAPI/Python开发
+   - API接口开发
+   - 数据库设计
+   - 业务逻辑实现
+
+4. **前端工程师** (🖥️) - Flutter桌面/Web开发
+   - UI组件开发
+   - 用户交互实现
+   - 响应式设计
+
+5. **移动端工程师** (📱) - Flutter iOS/Android开发
+   - 移动端适配
+   - 原生功能集成
+   - 性能优化
+
+6. **测试工程师** (🧪) - 质量保证与自动化测试
+   - 测试策略制定
+   - 自动化测试开发
+   - 质量门禁把控
+
+7. **DevOps工程师** (⚙️) - 部署与基础设施
+   - CI/CD流水线
+   - 部署自动化
+   - 监控告警
 
 ### Workflows Available
 
