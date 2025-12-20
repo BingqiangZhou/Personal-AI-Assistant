@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/podcast_providers.dart';
+import '../../data/models/audio_player_state_model.dart';
 
 class AudioPlayerWidget extends ConsumerWidget {
   const AudioPlayerWidget({super.key});
@@ -46,17 +47,38 @@ class AudioPlayerWidget extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
-          // Episode thumbnail
+          // Episode thumbnail with podcast icon
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: theme.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              Icons.headphones,
-              color: theme.primaryColor,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: state.currentEpisode!.subscriptionImageUrl != null
+                  ? Image.network(
+                      state.currentEpisode!.subscriptionImageUrl!,
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: theme.primaryColor.withValues(alpha: 0.1),
+                          child: Icon(
+                            Icons.podcasts,
+                            color: theme.primaryColor,
+                          ),
+                        );
+                      },
+                    )
+                  : Container(
+                      color: theme.primaryColor.withValues(alpha: 0.1),
+                      child: Icon(
+                        Icons.podcasts,
+                        color: theme.primaryColor,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(width: 12),
@@ -153,8 +175,9 @@ class AudioPlayerWidget extends ConsumerWidget {
     return Container(
       height: MediaQuery.of(context).size.height * 0.7,
       padding: const EdgeInsets.all(24),
-      child: Column(
-        children: [
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
           // Header with close button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -175,12 +198,11 @@ class AudioPlayerWidget extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 32),
-          // Episode artwork
+          // Episode artwork with podcast icon
           Container(
             width: 200,
             height: 200,
             decoration: BoxDecoration(
-              color: theme.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -190,10 +212,33 @@ class AudioPlayerWidget extends ConsumerWidget {
                 ),
               ],
             ),
-            child: Icon(
-              Icons.headphones,
-              size: 80,
-              color: theme.primaryColor,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: state.currentEpisode!.subscriptionImageUrl != null
+                  ? Image.network(
+                      state.currentEpisode!.subscriptionImageUrl!,
+                      width: 200,
+                      height: 200,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: theme.primaryColor.withValues(alpha: 0.1),
+                          child: Icon(
+                            Icons.podcasts,
+                            size: 80,
+                            color: theme.primaryColor,
+                          ),
+                        );
+                      },
+                    )
+                  : Container(
+                      color: theme.primaryColor.withValues(alpha: 0.1),
+                      child: Icon(
+                        Icons.podcasts,
+                        size: 80,
+                        color: theme.primaryColor,
+                      ),
+                    ),
             ),
           ),
           const SizedBox(height: 32),
@@ -350,7 +395,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                         ),
                 ),
               ),
-              // Forward 15 seconds
+              // Forward 30 seconds
               Container(
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surface.withValues(alpha: 0.5),
@@ -362,7 +407,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                 ),
                 child: IconButton(
                   onPressed: () async {
-                    final newPosition = (state.position + 15000).clamp(0, state.duration);
+                    final newPosition = (state.position + 30000).clamp(0, state.duration);
                     await ref
                         .read(audioPlayerProvider.notifier)
                         .seekTo(newPosition);
@@ -489,6 +534,7 @@ class AudioPlayerWidget extends ConsumerWidget {
             ],
           ),
         ],
+        ),
       ),
     );
   }

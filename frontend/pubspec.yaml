@@ -49,7 +49,7 @@ dependencies:
   flutter_secure_storage: ^10.0.0
 
   # Audio Player
-  just_audio: ^0.10.5
+  audioplayers: ^6.1.0
   audio_service: ^0.18.12
 
   # HTML Rendering

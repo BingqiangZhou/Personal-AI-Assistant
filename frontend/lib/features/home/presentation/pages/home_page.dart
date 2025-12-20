@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
+import '../../../podcast/presentation/widgets/audio_player_widget.dart';
 import '../../../assistant/presentation/pages/assistant_chat_page.dart';
 import '../../../knowledge/presentation/pages/knowledge_base_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
@@ -82,7 +83,9 @@ class _HomePageState extends ConsumerState<HomePage> {
             }).toList(),
           ),
           const VerticalDivider(thickness: 1, width: 1),
-          Expanded(child: _buildCurrentTabContent()),
+          Expanded(
+            child: _buildCurrentTabContent(),
+          ),
         ],
       ),
     );

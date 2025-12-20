@@ -8,6 +8,8 @@ class PodcastEpisodeModel extends Equatable {
   final int id;
   @JsonKey(name: 'subscription_id')
   final int subscriptionId;
+  @JsonKey(name: 'subscription_image_url')
+  final String? subscriptionImageUrl;
   final String title;
   final String? description;
   @JsonKey(name: 'audio_url')
@@ -57,6 +59,7 @@ class PodcastEpisodeModel extends Equatable {
   const PodcastEpisodeModel({
     required this.id,
     required this.subscriptionId,
+    this.subscriptionImageUrl,
     required this.title,
     this.description,
     required this.audioUrl,
@@ -91,6 +94,7 @@ class PodcastEpisodeModel extends Equatable {
   PodcastEpisodeModel copyWith({
     int? id,
     int? subscriptionId,
+    String? subscriptionImageUrl,
     String? title,
     String? description,
     String? audioUrl,
@@ -119,6 +123,7 @@ class PodcastEpisodeModel extends Equatable {
     return PodcastEpisodeModel(
       id: id ?? this.id,
       subscriptionId: subscriptionId ?? this.subscriptionId,
+      subscriptionImageUrl: subscriptionImageUrl ?? this.subscriptionImageUrl,
       title: title ?? this.title,
       description: description ?? this.description,
       audioUrl: audioUrl ?? this.audioUrl,
@@ -191,6 +196,7 @@ class PodcastEpisodeModel extends Equatable {
   List<Object?> get props => [
         id,
         subscriptionId,
+        subscriptionImageUrl,
         title,
         description,
         audioUrl,
@@ -252,6 +258,8 @@ class PodcastEpisodeDetailResponse extends Equatable {
   final int id;
   @JsonKey(name: 'subscription_id')
   final int subscriptionId;
+  @JsonKey(name: 'subscription_image_url')
+  final String? subscriptionImageUrl;
   final String title;
   final String? description;
   @JsonKey(name: 'audio_url')
@@ -306,6 +314,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
   const PodcastEpisodeDetailResponse({
     required this.id,
     required this.subscriptionId,
+    this.subscriptionImageUrl,
     required this.title,
     this.description,
     required this.audioUrl,
@@ -344,6 +353,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
     return PodcastEpisodeModel(
       id: id,
       subscriptionId: subscriptionId,
+      subscriptionImageUrl: subscriptionImageUrl,
       title: title,
       description: description,
       audioUrl: audioUrl,
@@ -416,6 +426,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
   List<Object?> get props => [
         id,
         subscriptionId,
+        subscriptionImageUrl,
         title,
         description,
         audioUrl,

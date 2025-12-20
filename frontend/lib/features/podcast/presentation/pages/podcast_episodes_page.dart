@@ -52,16 +52,14 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     super.initState();
     // Load initial episodes
     Future.microtask(() {
-      ref.read(podcastEpisodeProvider.notifier).loadEpisodes(
-            subscriptionId: widget.subscriptionId,
-          );
+      ref.read(podcastEpisodesProvider(widget.subscriptionId).notifier).loadEpisodes();
     });
 
     // Setup scroll listener for infinite scroll
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-        ref.read(podcastEpisodeProvider.notifier).loadMoreEpisodes();
+        ref.read(podcastEpisodesProvider(widget.subscriptionId).notifier).loadMoreEpisodes();
       }
     });
   }
@@ -73,17 +71,16 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   }
 
   Future<void> _refreshEpisodes() async {
-    await ref.read(podcastEpisodeProvider.notifier).loadEpisodes(
-          subscriptionId: widget.subscriptionId,
-          hasSummary: _showOnlyWithSummary ? true : null,
-          isPlayed: _selectedFilter == 'played' ? true : _selectedFilter == 'unplayed' ? false : null,
+    await ref.read(podcastEpisodesProvider(widget.subscriptionId).notifier).loadEpisodes(
+          status: _selectedFilter == 'played' ? 'played' : _selectedFilter == 'unplayed' ? 'unplayed' : null,
         );
   }
 
   @override
   Widget build(BuildContext context) {
-    final episodesAsync = ref.watch(podcastEpisodeProvider);
-    final audioPlayerState = ref.watch(audioPlayerProvider);
+    final episodesState = ref.watch(podcastEpisodesProvider(widget.subscriptionId));
+    // Don't watch audioPlayerProvider to avoid initializing it on startup
+    // final audioPlayerState = ref.watch(audioPlayerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -180,23 +177,32 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
       ),
       body: RefreshIndicator(
         onRefresh: _refreshEpisodes,
-        child: episodesAsync.when(
-          data: (response) {
-            if (response.episodes.isEmpty) {
-              return _buildEmptyState();
-            }
-            return Column(
-              children: [
-                // Filter chips
-                _buildFilterChips(),
-                // Episodes list
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: response.episodes.length,
-                    itemBuilder: (context, index) {
-                      final episode = response.episodes[index];
+        child: episodesState.isLoading && episodesState.episodes.isEmpty
+            ? const Center(child: CircularProgressIndicator())
+            : episodesState.error != null
+                ? _buildErrorState(episodesState.error!)
+                : episodesState.episodes.isEmpty
+                    ? _buildEmptyState()
+                    : Column(
+                        children: [
+                          // Filter chips
+                          _buildFilterChips(),
+                          // Episodes list
+                          Expanded(
+                            child: ListView.builder(
+                              controller: _scrollController,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              itemCount: episodesState.episodes.length + (episodesState.isLoadingMore ? 1 : 0),
+                              itemBuilder: (context, index) {
+                                if (index == episodesState.episodes.length) {
+                                  return const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(16),
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  );
+                                }
+                                final episode = episodesState.episodes[index];
                       return PodcastEpisodeCard(
                         episode: episode,
                         onTap: () {
@@ -213,12 +219,6 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                   ),
                 ),
               ],
-            );
-          },
-          loading: () => const Center(
-            child: CircularProgressIndicator(),
-          ),
-          error: (error, stack) => _buildErrorState(error),
         ),
       ),
     );

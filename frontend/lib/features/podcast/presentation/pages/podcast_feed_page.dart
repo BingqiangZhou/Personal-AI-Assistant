@@ -238,7 +238,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
                       onTap: () {
                         context.push('/podcast/episode/detail/${episode.id}');
                       },
-                      onPlay: () {},
+                      // onPlay removed - play only available in detail page
                     );
                   },
                   childCount: feedState.episodes.length,

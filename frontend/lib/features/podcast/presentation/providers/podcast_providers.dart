@@ -1,15 +1,20 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/providers/core_providers.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_playback_model.dart';
 import '../../data/models/podcast_subscription_model.dart';
+import '../../data/models/audio_player_state_model.dart';
+import '../../data/models/podcast_state_models.dart';
 import '../../data/repositories/podcast_repository.dart';
 import '../../data/services/podcast_api_service.dart';
+import 'package:json_annotation/json_annotation.dart';
 
 part 'podcast_providers.g.dart';
 
@@ -25,8 +30,293 @@ final podcastRepositoryProvider = Provider<PodcastRepository>((ref) {
   return PodcastRepository(apiService);
 });
 
-// === Subscription Providers ===
+// === Audio Player Provider ===
 
+@riverpod
+class AudioPlayerNotifier extends _$AudioPlayerNotifier {
+  AudioPlayer? _player;
+  late PodcastRepository _repository;
+  bool _isDisposed = false;
+
+  @override
+  AudioPlayerState build() {
+    _repository = ref.read(podcastRepositoryProvider);
+    _isDisposed = false;
+
+    // Initialize audio player
+    _initializePlayer();
+
+    // Clean up when provider is disposed
+    ref.onDispose(() {
+      _isDisposed = true;
+      _player?.dispose();
+    });
+
+    return const AudioPlayerState();
+  }
+
+  Future<void> _initializePlayer() async {
+    if (_player != null || _isDisposed) return;
+
+    try {
+      _player = AudioPlayer();
+
+      // Listen to player state changes
+      _player!.onPlayerStateChanged.listen((state) {
+        if (_isDisposed || !ref.mounted) return;
+
+        if (kDebugMode) {
+          debugPrint('🎵 Player state changed: $state');
+        }
+
+        ProcessingState processingState;
+        switch (state) {
+          case PlayerState.stopped:
+          case PlayerState.completed:
+            processingState = ProcessingState.completed;
+            break;
+          case PlayerState.playing:
+            processingState = ProcessingState.ready;
+            break;
+          case PlayerState.paused:
+            processingState = ProcessingState.ready;
+            break;
+          case PlayerState.disposed:
+            processingState = ProcessingState.idle;
+            break;
+        }
+
+        this.state = this.state.copyWith(
+          isPlaying: state == PlayerState.playing,
+          isLoading: false,
+          processingState: processingState,
+        );
+      });
+
+      // Listen to position changes
+      _player!.onPositionChanged.listen((position) {
+        if (_isDisposed || !ref.mounted) return;
+
+        if (kDebugMode) {
+          debugPrint('🎵 Position updated: ${position.inMilliseconds}ms');
+        }
+
+        this.state = this.state.copyWith(
+          position: position.inMilliseconds,
+        );
+      });
+
+      // Listen to duration changes
+      _player!.onDurationChanged.listen((duration) {
+        if (_isDisposed || !ref.mounted) return;
+
+        if (duration != null) {
+          if (kDebugMode) {
+            debugPrint('🎵 Duration updated: ${duration.inMilliseconds}ms');
+          }
+
+          this.state = this.state.copyWith(
+            duration: duration.inMilliseconds,
+          );
+        }
+      });
+
+      if (kDebugMode) {
+        debugPrint('🎵 AudioPlayers player initialized successfully');
+      }
+    } catch (error) {
+      debugPrint('Failed to initialize audio player: $error');
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(error: 'Failed to initialize audio player: $error');
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> playEpisode(PodcastEpisodeModel episode) async {
+    try {
+      // Debug: Print audio URL
+      debugPrint('🎵 Playing episode: ${episode.title}');
+      debugPrint('🎵 Audio URL: ${episode.audioUrl}');
+
+      // Check if provider is still mounted
+      if (!ref.mounted || _isDisposed) return;
+
+      // Ensure player is initialized
+      await _initializePlayer();
+
+      // Check again after async operation
+      if (!ref.mounted || _isDisposed) return;
+
+      // Set current episode and loading state
+      state = state.copyWith(
+        currentEpisode: episode,
+        isLoading: true,
+        error: null,
+      );
+
+      // Load audio with error handling
+      debugPrint('🎵 Loading audio from URL...');
+      try {
+        await _player!.setSource(UrlSource(episode.audioUrl));
+        debugPrint('🎵 Audio loaded successfully');
+      } catch (loadError) {
+        debugPrint('❌ Failed to load audio: $loadError');
+        throw Exception('Failed to load audio: $loadError');
+      }
+
+      // Check again after async operation
+      if (!ref.mounted || _isDisposed) return;
+
+      // Seek to saved position if available
+      if (episode.playbackPosition != null && episode.playbackPosition! > 0) {
+        await _player!.seek(Duration(milliseconds: episode.playbackPosition!));
+      }
+
+      // Start playback
+      debugPrint('🎵 Starting playback...');
+      try {
+        await _player!.play(UrlSource(episode.audioUrl));
+        debugPrint('🎵 Playback started successfully');
+      } catch (playError) {
+        debugPrint('❌ Failed to start playback: $playError');
+        throw Exception('Failed to start playback: $playError');
+      }
+
+      // Update final state
+      state = state.copyWith(
+        isPlaying: true,
+        isLoading: false,
+        position: episode.playbackPosition ?? 0,
+      );
+
+      // Update playback state on server (non-blocking)
+      if (ref.mounted && !_isDisposed) {
+        _updatePlaybackStateOnServer().catchError((error) {
+          debugPrint('⚠️ Server update failed: $error');
+        });
+      }
+    } catch (error) {
+      debugPrint('❌ Failed to play episode: $error');
+
+      // Update error state
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Failed to play audio: $error',
+        );
+      }
+    }
+  }
+
+  Future<void> pause() async {
+    if (_player == null || _isDisposed) return;
+
+    try {
+      await _player!.pause();
+      if (ref.mounted && !_isDisposed) {
+        await _updatePlaybackStateOnServer();
+      }
+    } catch (error) {
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(error: error.toString());
+      }
+    }
+  }
+
+  Future<void> resume() async {
+    if (_player == null || _isDisposed) return;
+
+    try {
+      await _player!.resume();
+      if (ref.mounted && !_isDisposed) {
+        await _updatePlaybackStateOnServer();
+      }
+    } catch (error) {
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(error: error.toString());
+      }
+    }
+  }
+
+  Future<void> seekTo(int position) async {
+    if (_player == null || _isDisposed) return;
+
+    try {
+      await _player!.seek(Duration(milliseconds: position));
+      if (ref.mounted && !_isDisposed) {
+        await _updatePlaybackStateOnServer();
+      }
+    } catch (error) {
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(error: error.toString());
+      }
+    }
+  }
+
+  Future<void> setPlaybackRate(double rate) async {
+    if (_player == null || _isDisposed) return;
+
+    try {
+      await _player!.setPlaybackRate(rate);
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(playbackRate: rate);
+        await _updatePlaybackStateOnServer();
+      }
+    } catch (error) {
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(error: error.toString());
+      }
+    }
+  }
+
+  Future<void> stop() async {
+    if (_player == null || _isDisposed) return;
+
+    try {
+      await _player!.stop();
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(
+          currentEpisode: null,
+          isPlaying: false,
+          position: 0,
+        );
+      }
+    } catch (error) {
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(error: error.toString());
+      }
+    }
+  }
+
+  void setExpanded(bool expanded) {
+    if (ref.mounted && !_isDisposed) {
+      state = state.copyWith(isExpanded: expanded);
+    }
+  }
+
+  Future<void> _updatePlaybackStateOnServer() async {
+    if (_isDisposed) return;
+
+    final episode = state.currentEpisode;
+    if (episode == null) return;
+
+    try {
+      await _repository.updatePlaybackProgress(
+        episodeId: episode.id,
+        position: (state.position / 1000).round(), // Convert to seconds
+        isPlaying: state.isPlaying,
+        playbackRate: state.playbackRate,
+      );
+    } catch (error) {
+      // Log error but don't interrupt playback or crash
+      debugPrint('⚠️ Failed to update playback state on server: $error');
+      // Don't update the UI state for server errors - continue playback
+    }
+  }
+}
+
+// === Subscription Providers ===
 @riverpod
 class PodcastSubscriptionNotifier extends _$PodcastSubscriptionNotifier {
   late PodcastRepository _repository;
@@ -101,151 +391,22 @@ class PodcastSubscriptionNotifier extends _$PodcastSubscriptionNotifier {
     }
   }
 
-  Future<ReparseResponse> reparseSubscription(int subscriptionId, bool forceAll) async {
+  Future<void> reparseSubscription(int subscriptionId, bool forceAll) async {
     try {
-      final result = await _repository.reparseSubscription(subscriptionId, forceAll);
+      await _repository.reparseSubscription(subscriptionId, forceAll);
 
-      // Refresh the list after re-parsing
+      // Refresh the list
       await loadSubscriptions();
-
-      return result;
     } catch (error) {
       rethrow;
     }
   }
 }
 
-// === Episode Providers ===
-
-@riverpod
-class PodcastEpisodeNotifier extends _$PodcastEpisodeNotifier {
-  late PodcastRepository _repository;
-
-  @override
-  AsyncValue<PodcastEpisodeListResponse> build() {
-    _repository = ref.read(podcastRepositoryProvider);
-    return const AsyncValue.loading();
-  }
-
-  Future<void> loadEpisodes({
-    int? subscriptionId,
-    int page = 1,
-    int size = 20,
-    bool? hasSummary,
-    bool? isPlayed,
-  }) async {
-    state = const AsyncValue.loading();
-
-    try {
-      final response = await _repository.listEpisodes(
-        subscriptionId: subscriptionId,
-        page: page,
-        size: size,
-        hasSummary: hasSummary,
-        isPlayed: isPlayed,
-      );
-      state = AsyncValue.data(response);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-    }
-  }
-
-  Future<void> loadMoreEpisodes() async {
-    final currentPage = state.value?.page ?? 1;
-    final totalPages = state.value?.pages ?? 1;
-
-    if (currentPage >= totalPages) return;
-
-    try {
-      final currentData = state.value;
-      final response = await _repository.listEpisodes(
-        subscriptionId: currentData?.subscriptionId,
-        page: currentPage + 1,
-        size: currentData?.size ?? 20,
-        hasSummary: null,
-        isPlayed: null,
-      );
-
-      // Combine current and new episodes
-      final allEpisodes = [...?currentData?.episodes, ...response.episodes];
-      final updatedResponse = PodcastEpisodeListResponse(
-        episodes: allEpisodes,
-        total: response.total,
-        page: response.page,
-        size: response.size,
-        pages: response.pages,
-        subscriptionId: response.subscriptionId,
-      );
-
-      state = AsyncValue.data(updatedResponse);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-    }
-  }
-}
-
-final episodeDetailProvider = FutureProvider.family<PodcastEpisodeDetailResponse?, int>((ref, episodeId) async {
-  final repository = ref.read(podcastRepositoryProvider);
-  return await repository.getEpisode(episodeId);
-});
-
-// === Podcast Feed Providers ===
-
-class PodcastFeedState extends Equatable {
-  final List<PodcastEpisodeModel> episodes;
-  final bool hasMore;
-  final int? nextPage;
-  final int total;
-  final bool isLoading;
-  final bool isLoadingMore;
-  final String? error;
-
-  const PodcastFeedState({
-    this.episodes = const [],
-    this.hasMore = true,
-    this.nextPage,
-    this.total = 0,
-    this.isLoading = false,
-    this.isLoadingMore = false,
-    this.error,
-  });
-
-  PodcastFeedState copyWith({
-    List<PodcastEpisodeModel>? episodes,
-    bool? hasMore,
-    int? nextPage,
-    int? total,
-    bool? isLoading,
-    bool? isLoadingMore,
-    String? error,
-  }) {
-    return PodcastFeedState(
-      episodes: episodes ?? this.episodes,
-      hasMore: hasMore ?? this.hasMore,
-      nextPage: nextPage ?? this.nextPage,
-      total: total ?? this.total,
-      isLoading: isLoading ?? this.isLoading,
-      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      error: error ?? this.error,
-    );
-  }
-
-  @override
-  List<Object?> get props => [
-        episodes,
-        hasMore,
-        nextPage,
-        total,
-        isLoading,
-        isLoadingMore,
-        error,
-      ];
-}
-
+// === Feed Providers ===
 @riverpod
 class PodcastFeedNotifier extends _$PodcastFeedNotifier {
   late PodcastRepository _repository;
-  static const int _pageSize = 10;
 
   @override
   PodcastFeedState build() {
@@ -259,7 +420,7 @@ class PodcastFeedNotifier extends _$PodcastFeedNotifier {
     try {
       final response = await _repository.getPodcastFeed(
         page: 1,
-        pageSize: _pageSize,
+        pageSize: 20,
       );
 
       state = state.copyWith(
@@ -269,40 +430,34 @@ class PodcastFeedNotifier extends _$PodcastFeedNotifier {
         total: response.total,
         isLoading: false,
       );
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('❌ 加载最新内容失败: $error');
       state = state.copyWith(
         isLoading: false,
-        error: error.toString(),
+        error: '加载最新内容失败: ${error.toString()}',
       );
     }
   }
 
   Future<void> loadMoreFeed() async {
-    if (!state.hasMore || state.isLoadingMore || state.nextPage == null) {
-      debugPrint('🚫 懒加载被阻止: hasMore=${state.hasMore}, isLoadingMore=${state.isLoadingMore}, nextPage=${state.nextPage}');
-      return;
-    }
+    if (state.isLoadingMore || !state.hasMore) return;
 
-    debugPrint('⏳ 开始加载更多内容，页码: ${state.nextPage}');
     state = state.copyWith(isLoadingMore: true);
 
     try {
       final response = await _repository.getPodcastFeed(
-        page: state.nextPage!,
-        pageSize: _pageSize,
+        page: state.nextPage ?? 1,
+        pageSize: 20,
       );
 
-      debugPrint('✅ 成功加载 ${response.items.length} 条新内容，总数量: ${response.total}, 还有更多: ${response.hasMore}');
-      final allEpisodes = [...state.episodes, ...response.items];
-
       state = state.copyWith(
-        episodes: allEpisodes,
+        episodes: [...state.episodes, ...response.items],
         hasMore: response.hasMore,
         nextPage: response.nextPage,
         total: response.total,
         isLoadingMore: false,
       );
-    } catch (error) {
+    } catch (error, stackTrace) {
       debugPrint('❌ 加载更多内容失败: $error');
       state = state.copyWith(
         isLoadingMore: false,
@@ -326,166 +481,7 @@ class PodcastFeedNotifier extends _$PodcastFeedNotifier {
   }
 }
 
-// === Audio Player Provider ===
-
-@riverpod
-class AudioPlayerNotifier extends _$AudioPlayerNotifier {
-  late final AudioPlayer _player;
-  late PodcastRepository _repository;
-
-  @override
-  AudioPlayerState build() {
-    _player = AudioPlayer();
-    _repository = ref.read(podcastRepositoryProvider);
-
-    // Listen to player state changes
-    _player.playerStateStream.listen((playerState) {
-      state = state.copyWith(
-        isPlaying: playerState.playing,
-        processingState: playerState.processingState,
-      );
-
-      // Update playback position periodically
-      if (playerState.playing) {
-        _updatePlaybackPosition();
-      }
-    });
-
-    // Listen to position changes
-    _player.positionStream.listen((position) {
-      state = state.copyWith(
-        position: position.inMilliseconds,
-      );
-    });
-
-    // Listen to duration changes
-    _player.durationStream.listen((duration) {
-      if (duration != null) {
-        state = state.copyWith(
-          duration: duration.inMilliseconds,
-        );
-      }
-    });
-
-    // Clean up when provider is disposed
-    ref.onDispose(() {
-      _player.dispose();
-    });
-
-    return const AudioPlayerState();
-  }
-
-  Future<void> playEpisode(PodcastEpisodeModel episode) async {
-    try {
-      // Set current episode
-      state = state.copyWith(
-        currentEpisode: episode,
-        isLoading: true,
-      );
-
-      // Load and play audio
-      await _player.setUrl(episode.audioUrl);
-      await _player.play();
-
-      // Update playback state on server
-      await _updatePlaybackStateOnServer();
-
-      state = state.copyWith(
-        isPlaying: true,
-        isLoading: false,
-        position: episode.playbackPosition ?? 0,
-      );
-    } catch (error) {
-      state = state.copyWith(
-        isLoading: false,
-        error: error.toString(),
-      );
-    }
-  }
-
-  Future<void> pause() async {
-    try {
-      await _player.pause();
-      await _updatePlaybackStateOnServer();
-    } catch (error) {
-      state = state.copyWith(error: error.toString());
-    }
-  }
-
-  Future<void> resume() async {
-    try {
-      await _player.play();
-      await _updatePlaybackStateOnServer();
-    } catch (error) {
-      state = state.copyWith(error: error.toString());
-    }
-  }
-
-  Future<void> seekTo(int position) async {
-    try {
-      await _player.seek(Duration(milliseconds: position));
-      await _updatePlaybackStateOnServer();
-    } catch (error) {
-      state = state.copyWith(error: error.toString());
-    }
-  }
-
-  Future<void> setPlaybackRate(double rate) async {
-    try {
-      await _player.setSpeed(rate);
-      await _updatePlaybackStateOnServer();
-    } catch (error) {
-      state = state.copyWith(error: error.toString());
-    }
-  }
-
-  Future<void> stop() async {
-    try {
-      await _player.stop();
-      state = state.copyWith(
-        currentEpisode: null,
-        isPlaying: false,
-        position: 0,
-      );
-    } catch (error) {
-      state = state.copyWith(error: error.toString());
-    }
-  }
-
-  void setExpanded(bool expanded) {
-    state = state.copyWith(isExpanded: expanded);
-  }
-
-  void _updatePlaybackPosition() {
-    if (!state.isPlaying) return;
-
-    Future.delayed(const Duration(seconds: 1), () {
-      if (state.isPlaying) {
-        _updatePlaybackPosition();
-      }
-    });
-  }
-
-  Future<void> _updatePlaybackStateOnServer() async {
-    final episode = state.currentEpisode;
-    if (episode == null) return;
-
-    try {
-      await _repository.updatePlaybackProgress(
-        episodeId: episode.id,
-        position: (state.position / 1000).round(), // Convert to seconds
-        isPlaying: state.isPlaying,
-        playbackRate: state.playbackRate,
-      );
-    } catch (error) {
-      // Log error but don't interrupt playback
-      print('Failed to update playback state: $error');
-    }
-  }
-}
-
 // === Search Provider ===
-
 @riverpod
 class PodcastSearchNotifier extends _$PodcastSearchNotifier {
   late PodcastRepository _repository;
@@ -538,132 +534,100 @@ class PodcastSearchNotifier extends _$PodcastSearchNotifier {
 }
 
 // === Stats Provider ===
-
-final podcastStatsProvider = FutureProvider<PodcastStatsResponse?>((ref) async {
+@riverpod
+Future<PodcastStatsResponse?> podcastStatsProvider(Ref ref) async {
   final repository = ref.read(podcastRepositoryProvider);
   try {
     return await repository.getStats();
   } catch (error) {
     return null;
   }
-});
+}
 
-// === Summary Provider ===
-
+// === Episode Detail Provider ===
 @riverpod
-class PodcastSummaryNotifier extends _$PodcastSummaryNotifier {
+Future<PodcastEpisodeDetailResponse?> episodeDetailProvider(Ref ref, int episodeId) async {
+  final repository = ref.read(podcastRepositoryProvider);
+  try {
+    return await repository.getEpisode(episodeId);
+  } catch (error) {
+    debugPrint('Failed to load episode detail: $error');
+    return null;
+  }
+}
+
+// === Episode Episodes Provider ===
+@riverpod
+class PodcastEpisodesNotifier extends _$PodcastEpisodesNotifier {
   late PodcastRepository _repository;
 
   @override
-  AsyncValue<PodcastSummaryResponse?> build(int episodeId) {
+  PodcastEpisodesState build(int subscriptionId) {
     _repository = ref.read(podcastRepositoryProvider);
-    return const AsyncValue.data(null);
+    return const PodcastEpisodesState();
   }
 
-  Future<PodcastSummaryResponse> generateSummary({
-    bool forceRegenerate = false,
-    bool? useTranscript,
+  Future<void> loadEpisodes({
+    int page = 1,
+    int size = 20,
+    String? status,
   }) async {
-    state = const AsyncValue.loading();
+    state = state.copyWith(isLoading: true);
 
     try {
-      final summary = await _repository.generateSummary(
-        episodeId: episodeId,
-        forceRegenerate: forceRegenerate,
-        useTranscript: useTranscript,
+      final response = await _repository.listEpisodes(
+        subscriptionId: subscriptionId,
+        page: page,
+        size: size,
+        isPlayed: status == 'played' ? true : (status == 'unplayed' ? false : null),
       );
-      state = AsyncValue.data(summary);
-      return summary;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
+
+      state = state.copyWith(
+        episodes: page == 1 ? response.episodes : [...state.episodes, ...response.episodes],
+        hasMore: page < response.pages,
+        nextPage: page < response.pages ? page + 1 : null,
+        currentPage: page,
+        total: response.total,
+        isLoading: false,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        error: error.toString(),
+      );
     }
+  }
+
+  Future<void> loadMoreEpisodes() async {
+    if (state.isLoadingMore || !state.hasMore) return;
+
+    state = state.copyWith(isLoadingMore: true);
+
+    try {
+      final response = await _repository.listEpisodes(
+        subscriptionId: subscriptionId,
+        page: state.nextPage ?? 1,
+        size: 20,
+      );
+
+      state = state.copyWith(
+        episodes: [...state.episodes, ...response.episodes],
+        hasMore: state.nextPage != null && state.nextPage! < response.pages,
+        nextPage: state.nextPage != null && state.nextPage! < response.pages ? state.nextPage! + 1 : null,
+        isLoadingMore: false,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        isLoadingMore: false,
+        error: error.toString(),
+      );
+    }
+  }
+
+  Future<void> refresh() async {
+    state = state.copyWith(episodes: []);
+    await loadEpisodes();
   }
 }
 
-// === Audio Player State Model ===
-
-class AudioPlayerState extends Equatable {
-  final PodcastEpisodeModel? currentEpisode;
-  final bool isPlaying;
-  final bool isLoading;
-  final bool isExpanded;
-  final int position;
-  final int duration;
-  final double playbackRate;
-  final ProcessingState? processingState;
-  final String? error;
-
-  const AudioPlayerState({
-    this.currentEpisode,
-    this.isPlaying = false,
-    this.isLoading = false,
-    this.isExpanded = false,
-    this.position = 0,
-    this.duration = 0,
-    this.playbackRate = 1.0,
-    this.processingState,
-    this.error,
-  });
-
-  AudioPlayerState copyWith({
-    PodcastEpisodeModel? currentEpisode,
-    bool? isPlaying,
-    bool? isLoading,
-    bool? isExpanded,
-    int? position,
-    int? duration,
-    double? playbackRate,
-    ProcessingState? processingState,
-    String? error,
-  }) {
-    return AudioPlayerState(
-      currentEpisode: currentEpisode ?? this.currentEpisode,
-      isPlaying: isPlaying ?? this.isPlaying,
-      isLoading: isLoading ?? this.isLoading,
-      isExpanded: isExpanded ?? this.isExpanded,
-      position: position ?? this.position,
-      duration: duration ?? this.duration,
-      playbackRate: playbackRate ?? this.playbackRate,
-      processingState: processingState ?? this.processingState,
-      error: error ?? this.error,
-    );
-  }
-
-  double get progress {
-    if (duration == 0) return 0.0;
-    return (position / duration).clamp(0.0, 1.0);
-  }
-
-  String get formattedPosition {
-    final duration = Duration(milliseconds: position);
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  String get formattedDuration {
-    final duration = Duration(milliseconds: this.duration);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final seconds = duration.inSeconds.remainder(60);
-
-    if (hours > 0) {
-      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-    }
-    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  @override
-  List<Object?> get props => [
-        currentEpisode,
-        isPlaying,
-        isLoading,
-        isExpanded,
-        position,
-        duration,
-        playbackRate,
-        processingState,
-        error,
-      ];
-}
+// Note: Models are defined in separate files. This file only contains providers.

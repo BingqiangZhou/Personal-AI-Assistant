@@ -384,7 +384,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 );
               }
 
-              final result = await ref
+              await ref
                   .read(podcastSubscriptionProvider.notifier)
                   .reparseSubscription(subscription.id, true);
 
@@ -392,7 +392,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'Reparse completed: ${result.result['new_episodes'] ?? 0} new, ${result.result['updated_episodes'] ?? 0} updated'
+                      'Reparse completed successfully'
                     ),
                     backgroundColor: Colors.green,
                     duration: const Duration(seconds: 3),

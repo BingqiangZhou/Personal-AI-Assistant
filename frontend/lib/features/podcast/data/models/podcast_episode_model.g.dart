@@ -10,6 +10,7 @@ PodcastEpisodeModel _$PodcastEpisodeModelFromJson(Map<String, dynamic> json) =>
     PodcastEpisodeModel(
       id: (json['id'] as num).toInt(),
       subscriptionId: (json['subscription_id'] as num).toInt(),
+      subscriptionImageUrl: json['subscription_image_url'] as String?,
       title: json['title'] as String,
       description: json['description'] as String?,
       audioUrl: json['audio_url'] as String,
@@ -45,6 +46,7 @@ Map<String, dynamic> _$PodcastEpisodeModelToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'subscription_id': instance.subscriptionId,
+  'subscription_image_url': instance.subscriptionImageUrl,
   'title': instance.title,
   'description': instance.description,
   'audio_url': instance.audioUrl,
@@ -100,6 +102,7 @@ PodcastEpisodeDetailResponse _$PodcastEpisodeDetailResponseFromJson(
 ) => PodcastEpisodeDetailResponse(
   id: (json['id'] as num).toInt(),
   subscriptionId: (json['subscription_id'] as num).toInt(),
+  subscriptionImageUrl: json['subscription_image_url'] as String?,
   title: json['title'] as String,
   description: json['description'] as String?,
   audioUrl: json['audio_url'] as String,
@@ -137,6 +140,7 @@ Map<String, dynamic> _$PodcastEpisodeDetailResponseToJson(
 ) => <String, dynamic>{
   'id': instance.id,
   'subscription_id': instance.subscriptionId,
+  'subscription_image_url': instance.subscriptionImageUrl,
   'title': instance.title,
   'description': instance.description,
   'audio_url': instance.audioUrl,

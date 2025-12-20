@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/models/podcast_episode_model.dart';
-import '../providers/podcast_providers.dart';
 
 class PodcastEpisodeCard extends ConsumerWidget {
   final PodcastEpisodeModel episode;
@@ -21,7 +20,8 @@ class PodcastEpisodeCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final audioPlayerState = ref.watch(audioPlayerProvider);
+    // Don't watch audioPlayerProvider to avoid initializing it on startup
+    // final audioPlayerState = ref.watch(audioPlayerProvider);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -38,12 +38,11 @@ class PodcastEpisodeCard extends ConsumerWidget {
               // Header with title and play button
               Row(
                 children: [
-                  // Episode thumbnail placeholder with enhanced contrast
+                  // Episode thumbnail with podcast icon
                   Container(
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: theme.primaryColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: theme.primaryColor.withValues(alpha: 0.3),
@@ -52,42 +51,39 @@ class PodcastEpisodeCard extends ConsumerWidget {
                     ),
                     child: Stack(
                       children: [
-                        Center(
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: theme.primaryColor.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.headphones,
-                              size: 24,
-                              color: theme.primaryColor.withValues(alpha: 0.9),
-                            ),
-                          ),
-                        ),
-                        // Show play/pause icon if currently playing
-                        if (audioPlayerState.currentEpisode?.id == episode.id)
-                          Center(
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: theme.primaryColor.withValues(alpha: 0.3),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: theme.primaryColor.withValues(alpha: 0.5),
-                                  width: 1,
+                        // Podcast icon image
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(7),
+                          child: episode.subscriptionImageUrl != null
+                              ? Image.network(
+                                  episode.subscriptionImageUrl!,
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: theme.primaryColor.withValues(alpha: 0.15),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.podcasts,
+                                          size: 30,
+                                          color: theme.primaryColor.withValues(alpha: 0.9),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                )
+                              : Container(
+                                  color: theme.primaryColor.withValues(alpha: 0.15),
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.podcasts,
+                                      size: 30,
+                                      color: theme.primaryColor.withValues(alpha: 0.9),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              child: Icon(
-                                audioPlayerState.isPlaying
-                                    ? Icons.pause
-                                    : Icons.play_arrow,
-                                size: 24,
-                                color: theme.primaryColor,
-                              ),
-                            ),
-                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -196,52 +192,7 @@ class PodcastEpisodeCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  // Enhanced play button with better contrast
-                  Container(
-                    decoration: BoxDecoration(
-                      color: theme.primaryColor,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: theme.primaryColor.withValues(alpha: 0.4),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                      border: Border.all(
-                        color: theme.primaryColor.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: IconButton(
-                      onPressed: () async {
-                        if (audioPlayerState.currentEpisode?.id == episode.id) {
-                          // Toggle play/pause for current episode
-                          if (audioPlayerState.isPlaying) {
-                            await ref
-                                .read(audioPlayerProvider.notifier)
-                                .pause();
-                          } else {
-                            await ref
-                                .read(audioPlayerProvider.notifier)
-                                .resume();
-                          }
-                        } else {
-                          // Play this episode
-                          onPlay?.call();
-                        }
-                      },
-                      icon: Icon(
-                        audioPlayerState.currentEpisode?.id == episode.id
-                            ? (audioPlayerState.isPlaying
-                                ? Icons.pause
-                                : Icons.play_arrow)
-                            : Icons.play_arrow,
-                        color: theme.colorScheme.onPrimary,
-                        size: 28,
-                      ),
-                    ),
-                  ),
+                  // Play button removed for Feed page - only show in detail page
                 ],
               ),
               // Description (if available)
