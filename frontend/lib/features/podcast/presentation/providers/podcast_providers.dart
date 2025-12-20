@@ -188,6 +188,134 @@ final episodeDetailProvider = FutureProvider.family<PodcastEpisodeDetailResponse
   return await repository.getEpisode(episodeId);
 });
 
+// === Podcast Feed Providers ===
+
+class PodcastFeedState extends Equatable {
+  final List<PodcastEpisodeModel> episodes;
+  final bool hasMore;
+  final int? nextPage;
+  final int total;
+  final bool isLoading;
+  final bool isLoadingMore;
+  final String? error;
+
+  const PodcastFeedState({
+    this.episodes = const [],
+    this.hasMore = true,
+    this.nextPage,
+    this.total = 0,
+    this.isLoading = false,
+    this.isLoadingMore = false,
+    this.error,
+  });
+
+  PodcastFeedState copyWith({
+    List<PodcastEpisodeModel>? episodes,
+    bool? hasMore,
+    int? nextPage,
+    int? total,
+    bool? isLoading,
+    bool? isLoadingMore,
+    String? error,
+  }) {
+    return PodcastFeedState(
+      episodes: episodes ?? this.episodes,
+      hasMore: hasMore ?? this.hasMore,
+      nextPage: nextPage ?? this.nextPage,
+      total: total ?? this.total,
+      isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      error: error ?? this.error,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+        episodes,
+        hasMore,
+        nextPage,
+        total,
+        isLoading,
+        isLoadingMore,
+        error,
+      ];
+}
+
+@riverpod
+class PodcastFeedNotifier extends _$PodcastFeedNotifier {
+  late PodcastRepository _repository;
+  static const int _pageSize = 10;
+
+  @override
+  PodcastFeedState build() {
+    _repository = ref.read(podcastRepositoryProvider);
+    return const PodcastFeedState();
+  }
+
+  Future<void> loadInitialFeed() async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final response = await _repository.getPodcastFeed(
+        page: 1,
+        pageSize: _pageSize,
+      );
+
+      state = state.copyWith(
+        episodes: response.items,
+        hasMore: response.hasMore,
+        nextPage: response.nextPage,
+        total: response.total,
+        isLoading: false,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        error: error.toString(),
+      );
+    }
+  }
+
+  Future<void> loadMoreFeed() async {
+    if (!state.hasMore || state.isLoadingMore || state.nextPage == null) return;
+
+    state = state.copyWith(isLoadingMore: true);
+
+    try {
+      final response = await _repository.getPodcastFeed(
+        page: state.nextPage!,
+        pageSize: _pageSize,
+      );
+
+      final allEpisodes = [...state.episodes, ...response.items];
+
+      state = state.copyWith(
+        episodes: allEpisodes,
+        hasMore: response.hasMore,
+        nextPage: response.nextPage,
+        total: response.total,
+        isLoadingMore: false,
+      );
+    } catch (error) {
+      state = state.copyWith(isLoadingMore: false);
+    }
+  }
+
+  Future<void> refreshFeed() async {
+    state = state.copyWith(
+      episodes: [],
+      hasMore: true,
+      nextPage: null,
+      total: 0,
+    );
+    await loadInitialFeed();
+  }
+
+  void clearError() {
+    state = state.copyWith(error: null);
+  }
+}
+
 // === Audio Player Provider ===
 
 @riverpod

@@ -82,6 +82,17 @@ class PodcastRepository {
 
   // === Episode Management ===
 
+  Future<PodcastFeedResponse> getPodcastFeed({
+    required int page,
+    required int pageSize,
+  }) async {
+    try {
+      return await _apiService.getPodcastFeed(page, pageSize);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   Future<PodcastEpisodeListResponse> listEpisodes({
     int? subscriptionId,
     int page = 1,

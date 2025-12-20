@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../widgets/bottom_navigation.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   final Widget? child;
@@ -168,9 +169,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     // In a real app, you would use a proper navigation setup
     switch (route) {
       case '/home':
-        return const Center(
-          child: Text('Home Page'),
-        );
+        return const PodcastFeedPage();
       case '/home/assistant':
         return const Center(
           child: Text('AI Assistant Page'),

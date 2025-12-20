@@ -175,6 +175,14 @@ class PodcastEpisodeDetailResponse(PodcastEpisodeResponse):
     related_episodes: Optional[List[Dict[str, Any]]] = []
 
 
+class PodcastFeedResponse(PodcastBaseSchema):
+    """播客信息流响应"""
+    items: List[PodcastEpisodeResponse]
+    has_more: bool
+    next_page: Optional[int] = None
+    total: int
+
+
 # === Playback相关 ===
 
 class PodcastPlaybackUpdate(PodcastBaseSchema):

@@ -149,6 +149,60 @@ abstract class _$PodcastEpisodeNotifier
   }
 }
 
+@ProviderFor(PodcastFeedNotifier)
+const podcastFeedProvider = PodcastFeedNotifierProvider._();
+
+final class PodcastFeedNotifierProvider
+    extends $NotifierProvider<PodcastFeedNotifier, PodcastFeedState> {
+  const PodcastFeedNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'podcastFeedProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$podcastFeedNotifierHash();
+
+  @$internal
+  @override
+  PodcastFeedNotifier create() => PodcastFeedNotifier();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PodcastFeedState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PodcastFeedState>(value),
+    );
+  }
+}
+
+String _$podcastFeedNotifierHash() =>
+    r'37027635c6687a39f50daba15315af29088de45e';
+
+abstract class _$PodcastFeedNotifier extends $Notifier<PodcastFeedState> {
+  PodcastFeedState build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final created = build();
+    final ref = this.ref as $Ref<PodcastFeedState, PodcastFeedState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<PodcastFeedState, PodcastFeedState>,
+              PodcastFeedState,
+              Object?,
+              Object?
+            >;
+    element.handleValue(ref, created);
+  }
+}
+
 @ProviderFor(AudioPlayerNotifier)
 const audioPlayerProvider = AudioPlayerNotifierProvider._();
 

@@ -49,6 +49,12 @@ abstract class PodcastApiService {
 
   // === Episode Management ===
 
+  @GET('/podcasts/episodes/feed')
+  Future<PodcastFeedResponse> getPodcastFeed(
+    @Query('page') int page,
+    @Query('page_size') int pageSize,
+  );
+
   @GET('/podcasts/episodes')
   Future<PodcastEpisodeListResponse> listEpisodes(
     @Query('subscription_id') int? subscriptionId,

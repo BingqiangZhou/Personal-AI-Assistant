@@ -7,6 +7,8 @@ GET    /podcasts/subscription           列出所有订阅
 GET    /podcasts/subscription/{id}      获取订阅详情
 DELETE /podcasts/subscription/{id}      删除订阅
 
+GET    /podcasts/episodes/feed          获取播客信息流
+GET    /podcasts/episodes               获取单集列表
 GET    /podcasts/episodes/{id}          获取单集详情
 POST   /podcasts/episodes/{id}/summary  触发AI总结
 POST   /podcasts/episodes/{id}/progress 更新播放进度
@@ -30,6 +32,7 @@ from app.domains.podcast.schemas import (
     PodcastEpisodeResponse,
     PodcastEpisodeListResponse,
     PodcastEpisodeDetailResponse,
+    PodcastFeedResponse,
     PodcastPlaybackUpdate,
     PodcastPlaybackStateResponse,
     PodcastSummaryRequest,
@@ -178,6 +181,44 @@ async def delete_subscription(
 
 
 # === 单集管理 ===
+
+@router.get(
+    "/episodes/feed",
+    response_model=PodcastFeedResponse,
+    summary="获取播客信息流"
+)
+async def get_podcast_feed(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(10, ge=1, le=50, description="每页数量"),
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """获取用户订阅的所有播客分集，按发布时间倒序排列"""
+    service = PodcastService(db, user["sub"])
+
+    # 获取用户所有订阅的播客分集
+    episodes, total = await service.list_episodes(
+        filters=None,  # 不过滤，获取所有订阅的分集
+        page=page,
+        size=page_size
+    )
+
+    # 转换为响应模型
+    episode_responses = []
+    for ep in episodes:
+        episode_responses.append(PodcastEpisodeResponse(**ep))
+
+    # 计算是否还有更多数据
+    has_more = (page * page_size) < total
+    next_page = page + 1 if has_more else None
+
+    return PodcastFeedResponse(
+        items=episode_responses,
+        has_more=has_more,
+        next_page=next_page,
+        total=total
+    )
+
 
 @router.get(
     "/episodes",

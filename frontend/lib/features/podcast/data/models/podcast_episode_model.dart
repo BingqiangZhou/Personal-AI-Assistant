@@ -266,3 +266,26 @@ class PodcastEpisodeDetailResponse extends Equatable {
   @override
   List<Object?> get props => [episode, subscription, relatedEpisodes];
 }
+
+@JsonSerializable()
+class PodcastFeedResponse extends Equatable {
+  final List<PodcastEpisodeModel> items;
+  final bool hasMore;
+  final int? nextPage;
+  final int total;
+
+  const PodcastFeedResponse({
+    required this.items,
+    required this.hasMore,
+    this.nextPage,
+    required this.total,
+  });
+
+  factory PodcastFeedResponse.fromJson(Map<String, dynamic> json) =>
+      _$PodcastFeedResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PodcastFeedResponseToJson(this);
+
+  @override
+  List<Object?> get props => [items, hasMore, nextPage, total];
+}
