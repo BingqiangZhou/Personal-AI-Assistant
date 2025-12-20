@@ -117,7 +117,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               return PodcastEpisodeDetailPage(episodeId: args.episodeId);
             },
           ),
-          // 3. 播放器: /podcast/player/1?subscriptionId=1
+          // 3. 单集详情页（新路由）: /podcast/episode/detail/123
+          GoRoute(
+            path: 'episode/detail/:episodeId',
+            name: 'episodeDetailNew',
+            builder: (context, state) {
+              final episodeId = int.tryParse(state.pathParameters['episodeId'] ?? '');
+              if (episodeId == null) {
+                return const Scaffold(
+                  body: Center(child: Text('Invalid episode ID')),
+                );
+              }
+              return PodcastEpisodeDetailPage(episodeId: episodeId);
+            },
+          ),
+          // 4. 播放器: /podcast/player/1?subscriptionId=1
           GoRoute(
             path: 'player/:episodeId',
             name: 'episodePlayer',

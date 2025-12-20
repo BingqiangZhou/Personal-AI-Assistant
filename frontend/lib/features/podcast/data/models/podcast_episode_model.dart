@@ -248,12 +248,88 @@ class PodcastEpisodeListResponse extends Equatable {
 
 @JsonSerializable()
 class PodcastEpisodeDetailResponse extends Equatable {
-  final PodcastEpisodeModel episode;
+  // Episode fields (directly from backend)
+  final int id;
+  @JsonKey(name: 'subscription_id')
+  final int subscriptionId;
+  final String title;
+  final String? description;
+  @JsonKey(name: 'audio_url')
+  final String audioUrl;
+  @JsonKey(name: 'audio_duration')
+  final int? audioDuration;
+  @JsonKey(name: 'audio_file_size')
+  final int? audioFileSize;
+  @JsonKey(name: 'published_at')
+  final DateTime publishedAt;
+  @JsonKey(name: 'transcript_url')
+  final String? transcriptUrl;
+  @JsonKey(name: 'transcript_content')
+  final String? transcriptContent;
+  @JsonKey(name: 'ai_summary')
+  final String? aiSummary;
+  @JsonKey(name: 'summary_version')
+  final String? summaryVersion;
+  @JsonKey(name: 'ai_confidence_score')
+  final double? aiConfidenceScore;
+  @JsonKey(name: 'play_count')
+  final int playCount;
+  @JsonKey(name: 'last_played_at')
+  final DateTime? lastPlayedAt;
+  final int? season;
+  @JsonKey(name: 'episode_number')
+  final int? episodeNumber;
+  final bool explicit;
+  final String status;
+  final Map<String, dynamic>? metadata;
+
+  // Playback state
+  @JsonKey(name: 'playback_position')
+  final int? playbackPosition;
+  @JsonKey(name: 'is_playing')
+  final bool isPlaying;
+  @JsonKey(name: 'playback_rate')
+  final double playbackRate;
+  @JsonKey(name: 'is_played')
+  final bool? isPlayed;
+
+  @JsonKey(name: 'created_at')
+  final DateTime createdAt;
+  @JsonKey(name: 'updated_at')
+  final DateTime? updatedAt;
+
+  // Additional fields
   final Map<String, dynamic>? subscription;
-  final List<Map<String, dynamic>>? relatedEpisodes;
+  @JsonKey(name: 'related_episodes')
+  final List<dynamic>? relatedEpisodes;
 
   const PodcastEpisodeDetailResponse({
-    required this.episode,
+    required this.id,
+    required this.subscriptionId,
+    required this.title,
+    this.description,
+    required this.audioUrl,
+    this.audioDuration,
+    this.audioFileSize,
+    required this.publishedAt,
+    this.transcriptUrl,
+    this.transcriptContent,
+    this.aiSummary,
+    this.summaryVersion,
+    this.aiConfidenceScore,
+    this.playCount = 0,
+    this.lastPlayedAt,
+    this.season,
+    this.episodeNumber,
+    this.explicit = false,
+    this.status = 'published',
+    this.metadata,
+    this.playbackPosition,
+    this.isPlaying = false,
+    this.playbackRate = 1.0,
+    this.isPlayed,
+    required this.createdAt,
+    this.updatedAt,
     this.subscription,
     this.relatedEpisodes,
   });
@@ -263,8 +339,110 @@ class PodcastEpisodeDetailResponse extends Equatable {
 
   Map<String, dynamic> toJson() => _$PodcastEpisodeDetailResponseToJson(this);
 
+  // Helper method to convert to PodcastEpisodeModel
+  PodcastEpisodeModel toEpisodeModel() {
+    return PodcastEpisodeModel(
+      id: id,
+      subscriptionId: subscriptionId,
+      title: title,
+      description: description,
+      audioUrl: audioUrl,
+      audioDuration: audioDuration,
+      audioFileSize: audioFileSize,
+      publishedAt: publishedAt,
+      transcriptUrl: transcriptUrl,
+      transcriptContent: transcriptContent,
+      aiSummary: aiSummary,
+      summaryVersion: summaryVersion,
+      aiConfidenceScore: aiConfidenceScore,
+      playCount: playCount,
+      lastPlayedAt: lastPlayedAt,
+      season: season,
+      episodeNumber: episodeNumber,
+      explicit: explicit,
+      status: status,
+      metadata: metadata,
+      playbackPosition: playbackPosition,
+      isPlaying: isPlaying,
+      playbackRate: playbackRate,
+      isPlayed: isPlayed ?? false,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
+
+  // Helper getters for UI display
+  String get formattedDuration {
+    if (audioDuration == null) return '--:--';
+    final duration = Duration(seconds: audioDuration!);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  String get formattedPlaybackPosition {
+    if (playbackPosition == null) return '00:00';
+    final duration = Duration(seconds: playbackPosition!);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  double get progressPercentage {
+    if (audioDuration == null || playbackPosition == null) return 0.0;
+    return (playbackPosition! / audioDuration!).clamp(0.0, 1.0);
+  }
+
+  String get episodeIdentifier {
+    if (season != null && episodeNumber != null) {
+      return 'S${season!.toString().padLeft(2, '0')}E${episodeNumber!.toString().padLeft(2, '0')}';
+    } else if (episodeNumber != null) {
+      return 'Episode $episodeNumber';
+    }
+    return '';
+  }
+
   @override
-  List<Object?> get props => [episode, subscription, relatedEpisodes];
+  List<Object?> get props => [
+        id,
+        subscriptionId,
+        title,
+        description,
+        audioUrl,
+        audioDuration,
+        audioFileSize,
+        publishedAt,
+        transcriptUrl,
+        transcriptContent,
+        aiSummary,
+        summaryVersion,
+        aiConfidenceScore,
+        playCount,
+        lastPlayedAt,
+        season,
+        episodeNumber,
+        explicit,
+        status,
+        metadata,
+        playbackPosition,
+        isPlaying,
+        playbackRate,
+        isPlayed,
+        createdAt,
+        updatedAt,
+        subscription,
+        relatedEpisodes,
+      ];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)

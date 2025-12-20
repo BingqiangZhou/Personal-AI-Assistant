@@ -50,7 +50,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
         onTap: onTap ?? () {
-          context.go('/podcast/episodes/${subscription.id}');
+          context.push('/podcast/episodes/${subscription.id}');
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -132,74 +132,30 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            _buildStatusChip(context, subscription.status),
-                            const SizedBox(width: 8),
-                            PlatformBadge(platform: subscription.platform),
-                            if (subscription.platform != null &&
-                                subscription.platform!.isNotEmpty &&
-                                subscription.platform != 'generic')
-                              const SizedBox(width: 8),
-                            // Categories
-                            if (subscription.categories?.isNotEmpty == true) ...[
-                              ...subscription.categories!.take(2).map((category) {
-                                return Text(
-                                  category.name,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: const Color(0xFF7E57C2),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
+                            Flexible(
+                              child: Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                children: [
+                                  _buildStatusChip(context, subscription.status),
+                                  PlatformBadge(platform: subscription.platform),
+                                  // Episodes count
+                                  _buildInlineStatItem(
+                                    context,
+                                    Icons.library_music,
+                                    '${subscription.episodeCount}',
                                   ),
-                                );
-                              }),
-                              if (subscription.categories!.length > 2) ...[
-                                Text(
-                                  '+${subscription.categories!.length - 2}',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: const Color(0xFF7E57C2),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
+                                  // Unplayed count
+                                  _buildInlineStatItem(
+                                    context,
+                                    Icons.play_circle_outline,
+                                    '${subscription.unplayedCount}',
                                   ),
-                                ),
-                              ],
-                              const SizedBox(width: 8),
-                            ],
-                            // Author info
-                            if (subscription.author != null) ...[
-                              Text(
-                                subscription.author!,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: const Color(0xFFFF8A65),
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 11,
-                                ),
+                                ],
                               ),
-                              const SizedBox(width: 8),
-                            ],
-                            // Episodes count
-                            _buildInlineStatItem(
-                              context,
-                              Icons.library_music,
-                              '${subscription.episodeCount}',
                             ),
-                            const SizedBox(width: 12),
-                            // Unplayed count
-                            _buildInlineStatItem(
-                              context,
-                              Icons.play_circle_outline,
-                              '${subscription.unplayedCount}',
-                            ),
-                            const SizedBox(width: 12),
-                            if (lastFetched != null)
-                              Text(
-                                'Updated ${DateFormat('MMM d').format(lastFetched)}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            const Spacer(),
                             Container(
-                              margin: EdgeInsets.zero,
+                              margin: const EdgeInsets.only(left: 8),
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.surface.withValues(alpha: 0.6),
                                 borderRadius: BorderRadius.circular(8),

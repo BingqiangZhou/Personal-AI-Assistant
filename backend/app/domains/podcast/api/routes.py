@@ -70,7 +70,7 @@ async def add_subscription(
     }
     ```
     """
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     try:
         subscription, new_episodes = await service.add_subscription(
             feed_url=subscription_data.feed_url,
@@ -116,7 +116,7 @@ async def list_subscriptions(
     db: AsyncSession = Depends(get_db_session)
 ):
     """返回用户的所有播客订阅及其最新节目"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
 
     # 构建过滤器
     filters = PodcastSearchFilter(
@@ -156,7 +156,7 @@ async def get_subscription(
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取订阅详情"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     details = await service.get_subscription_details(subscription_id)
     if not details:
         raise HTTPException(status_code=404, detail="订阅不存在或无权限")
@@ -173,7 +173,7 @@ async def delete_subscription(
     db: AsyncSession = Depends(get_db_session)
 ):
     """删除订阅和关联的单集数据"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     success = await service.remove_subscription(subscription_id)
     if not success:
         raise HTTPException(status_code=404, detail="订阅不存在")
@@ -194,7 +194,7 @@ async def get_podcast_feed(
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取用户订阅的所有播客分集，按发布时间倒序排列"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
 
     # 获取用户所有订阅的播客分集
     episodes, total = await service.list_episodes(
@@ -235,7 +235,7 @@ async def list_episodes(
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取播客单集列表"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
 
     # 构建过滤器
     filters = PodcastEpisodeFilter(
@@ -277,7 +277,7 @@ async def get_episode(
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取单集详情，包含AI总结（如有）"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     episode = await service.get_episode_with_summary(episode_id)
     if not episode:
         raise HTTPException(status_code=404, detail="单集不存在或无权限")
@@ -301,7 +301,7 @@ async def generate_summary(
     - 如果有总结，force=true时重新生成
     - 默认异步处理，返回任务ID
     """
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     try:
         if request.force_regenerate:
             summary = await service.regenerate_summary(episode_id, force=True)
@@ -338,7 +338,7 @@ async def update_playback_progress(
     db: AsyncSession = Depends(get_db_session)
 ):
     """更新播客播放进度和状态"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     try:
         result = await service.update_playback_progress(
             episode_id,
@@ -374,7 +374,7 @@ async def get_playback_state(
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取播客播放状态"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     try:
         playback = await service.get_playback_state(episode_id)
         if not playback:
@@ -395,7 +395,7 @@ async def get_pending_summaries(
     db: AsyncSession = Depends(get_db_session)
 ):
     """列出所有需要AI总结的单集"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     pending = await service.get_pending_summaries()
     return PodcastSummaryPendingResponse(
         count=len(pending),
@@ -419,7 +419,7 @@ async def search_podcasts(
     db: AsyncSession = Depends(get_db_session)
 ):
     """搜索播客和单集内容"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
 
     episodes, total = await service.search_podcasts(
         query=q,
@@ -456,7 +456,7 @@ async def get_podcast_stats(
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取用户的播客收听统计"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     stats = await service.get_user_stats()
     return PodcastStatsResponse(**stats)
 
@@ -473,7 +473,7 @@ async def refresh_subscription(
     db: AsyncSession = Depends(get_db_session)
 ):
     """手动刷新播客订阅，获取最新单集"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     try:
         new_episodes = await service.refresh_subscription(subscription_id)
         return {
@@ -503,7 +503,7 @@ async def reparse_subscription(
     - 默认只解析缺失的单集
     - force_all=true 时强制重新解析所有单集
     """
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     try:
         result = await service.reparse_subscription(subscription_id, force_all=force_all)
         return {
@@ -529,6 +529,6 @@ async def get_recommendations(
     db: AsyncSession = Depends(get_db_session)
 ):
     """基于用户收听历史获取播客推荐"""
-    service = PodcastService(db, user["sub"])
+    service = PodcastService(db, int(user["sub"]))
     recommendations = await service.get_recommendations(limit=limit)
     return recommendations

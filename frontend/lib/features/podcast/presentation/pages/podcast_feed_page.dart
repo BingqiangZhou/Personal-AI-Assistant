@@ -236,7 +236,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
                     return PodcastEpisodeCard(
                       episode: episode,
                       onTap: () {
-                        context.go('/podcast/player/${episode.id}?subscriptionId=${episode.subscriptionId}');
+                        context.push('/podcast/episode/detail/${episode.id}');
                       },
                       onPlay: () {},
                     );

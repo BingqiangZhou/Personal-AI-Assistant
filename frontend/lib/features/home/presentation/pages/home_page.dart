@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../widgets/bottom_navigation.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
 import '../../../assistant/presentation/pages/assistant_chat_page.dart';
@@ -22,37 +19,33 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   late int _currentIndex;
+  bool _isRailExtended = false;
 
-  final List<NavigationItem> _navigationItems = [
-    NavigationItem(
-      icon: Icons.home_outlined,
-      activeIcon: Icons.home,
+  final List<NavigationDestination> _destinations = const [
+    NavigationDestination(
+      icon: Icon(Icons.home_outlined),
+      selectedIcon: Icon(Icons.home),
       label: 'Feed',
-      route: '/home',
     ),
-    NavigationItem(
-      icon: Icons.feed_outlined,
-      activeIcon: Icons.feed,
+    NavigationDestination(
+      icon: Icon(Icons.feed_outlined),
+      selectedIcon: Icon(Icons.feed),
       label: 'Podcast',
-      route: '/podcast',
     ),
-    NavigationItem(
-      icon: Icons.psychology_outlined,
-      activeIcon: Icons.psychology,
+    NavigationDestination(
+      icon: Icon(Icons.psychology_outlined),
+      selectedIcon: Icon(Icons.psychology),
       label: 'AI Assistant',
-      route: '/home/assistant',
     ),
-    NavigationItem(
-      icon: Icons.folder_outlined,
-      activeIcon: Icons.folder,
+    NavigationDestination(
+      icon: Icon(Icons.folder_outlined),
+      selectedIcon: Icon(Icons.folder),
       label: 'Knowledge',
-      route: '/knowledge',
     ),
-    NavigationItem(
-      icon: Icons.person_outline,
-      activeIcon: Icons.person,
+    NavigationDestination(
+      icon: Icon(Icons.person_outline),
+      selectedIcon: Icon(Icons.person),
       label: 'Profile',
-      route: '/profile',
     ),
   ];
 
@@ -62,81 +55,53 @@ class _HomePageState extends ConsumerState<HomePage> {
     _currentIndex = widget.initialTab ?? 0;
   }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-    // 现在我们使用_buildCurrentTabContent()来显示内容，不需要Go Router导航
-  }
-
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final user = authState.user;
-
-    // 如果使用ShellRoute（有child），则不显示底部导航
-    // 如果使用Tab导航（无child），则显示底部导航
     if (widget.child != null) {
       return Scaffold(body: widget.child);
     }
 
     return Scaffold(
-      body: _buildCurrentTabContent(),
-      bottomNavigationBar: BottomNavigation(
-        items: _navigationItems,
-        currentIndex: _currentIndex,
-        onTap: _onItemTapped,
+      body: Row(
+        children: [
+          NavigationRail(
+            extended: _isRailExtended,
+            selectedIndex: _currentIndex,
+            onDestinationSelected: (index) => setState(() => _currentIndex = index),
+            leading: IconButton(
+              icon: Icon(_isRailExtended ? Icons.menu_open : Icons.menu),
+              onPressed: () => setState(() => _isRailExtended = !_isRailExtended),
+              tooltip: _isRailExtended ? 'Collapse menu' : 'Expand menu',
+            ),
+            destinations: _destinations.map((dest) {
+              return NavigationRailDestination(
+                icon: dest.icon,
+                selectedIcon: dest.selectedIcon,
+                label: Text(dest.label),
+              );
+            }).toList(),
+          ),
+          const VerticalDivider(thickness: 1, width: 1),
+          Expanded(child: _buildCurrentTabContent()),
+        ],
       ),
     );
   }
 
   Widget _buildCurrentTabContent() {
     switch (_currentIndex) {
-      case 0: // Feed
+      case 0:
         return const PodcastFeedPage();
-      case 1: // Podcast
+      case 1:
         return const PodcastListPage();
-      case 2: // AI Assistant
+      case 2:
         return const AssistantChatPage();
-      case 3: // Knowledge Base
+      case 3:
         return const KnowledgeBasePage();
-      case 4: // Profile
+      case 4:
         return const ProfilePage();
       default:
         return const Center(child: Text('Page Not Found'));
     }
   }
-
-  Widget _buildPage(String route) {
-    switch (route) {
-      case '/home':
-        return const PodcastFeedPage(); // Feed
-      case '/podcast':
-        return const PodcastListPage(); // Podcast List
-      case '/home/assistant':
-        return const AssistantChatPage(); // AI Assistant
-      case '/knowledge':
-        return const KnowledgeBasePage(); // Knowledge Base
-      case '/profile':
-        return const ProfilePage(); // Profile
-      default:
-        return const Center(
-          child: Text('Page Not Found'),
-        );
-    }
-  }
-}
-
-class NavigationItem {
-  final IconData icon;
-  final IconData activeIcon;
-  final String label;
-  final String route;
-
-  NavigationItem({
-    required this.icon,
-    required this.activeIcon,
-    required this.label,
-    required this.route,
-  });
 }

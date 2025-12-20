@@ -149,9 +149,9 @@ specs/
    - 业务逻辑实现
 
 4. **前端工程师** (🖥️) - Flutter桌面/Web开发
-   - UI组件开发
+   - UI组件开发（使用Material 3设计规范）
    - 用户交互实现
-   - 响应式设计
+   - 响应式设计（使用flutter_adaptive_scaffold适配不同屏幕尺寸）
 
 5. **移动端工程师** (📱) - Flutter iOS/Android开发
    - 移动端适配
@@ -396,14 +396,38 @@ The frontend Flutter application should be run separately using the commands in 
 - **Core Layer** (`lib/core/`): Fundamental components including constants, error handling, network client, storage, and utilities
 - **Shared Layer** (`lib/shared/`): Reusable UI components, themes, and extension methods
 - **Feature Layer** (`lib/features/`): Feature modules organized by domain mirroring the backend structure
+- **UI Design System**: Material 3 design language with flutter_adaptive_scaffold for responsive layouts across desktop, web, and mobile
 
 ### Key Technologies & Patterns
 - **Backend**: FastAPI with async/await, SQLAlchemy with async support, PostgreSQL, Redis, Celery for background tasks
 - **Frontend**: Flutter with Riverpod for state management, GoRouter for navigation, Dio for HTTP, Hive for local storage
+- **UI/UX**: Material 3 design system with flutter_adaptive_scaffold for responsive layouts
 - **Authentication**: JWT tokens with secure storage
 - **Database**: PostgreSQL with Alembic migrations
 - **Background Tasks**: Celery with Redis broker
 - **Dependency Injection**: dependency-injector (backend) and Riverpod (frontend)
+
+### 🎨 UI/UX Design Guidelines (MANDATORY for Frontend Development)
+
+**All frontend development MUST follow these design standards:**
+
+1. **Material 3 Design System**
+   - Use Material 3 components and design tokens exclusively
+   - Follow Material 3 color schemes, typography, and elevation
+   - Implement Material 3 theming with ThemeData using `useMaterial3: true`
+   - Reference: https://m3.material.io/
+
+2. **Responsive Layout with flutter_adaptive_scaffold**
+   - Use `flutter_adaptive_scaffold` package for all page layouts
+   - Implement adaptive navigation (NavigationRail for desktop, BottomNavigationBar for mobile)
+   - Support breakpoints: mobile (<600dp), tablet (600-840dp), desktop (>840dp)
+   - Ensure consistent UX across desktop, web, and mobile platforms
+
+3. **Implementation Requirements**
+   - All new pages must use `AdaptiveScaffold` or `AdaptiveLayout`
+   - Navigation must adapt based on screen size
+   - UI components must be responsive and scale appropriately
+   - Test on multiple screen sizes during development
 
 ### API Structure
 All API endpoints are prefixed with `/api/v1/`:

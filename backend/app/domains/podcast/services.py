@@ -645,24 +645,39 @@ class PodcastService:
         return {
             "id": episode.id,
             "subscription_id": episode.subscription_id,
-            "subscription_title": episode.subscription.title if episode.subscription else None,
-            "subscription_image_url": subscription_image_url,
-            "subscription_author": subscription_author,
-            "subscription_categories": subscription_categories,
             "title": episode.title,
             "description": episode.description,
             "audio_url": episode.audio_url,
-            "duration": episode.audio_duration,
+            "audio_duration": episode.audio_duration,
+            "audio_file_size": episode.audio_file_size,
             "published_at": episode.published_at,
-            "transcript": episode.transcript_content,
-            "summary": episode.ai_summary,
-            "summary_status": episode.status,
-            "ai_confidence": episode.ai_confidence_score,
-            "playback": {
-                "progress": playback.current_position if playback else 0,
-                "is_playing": playback.is_playing if playback else False,
-                "play_count": episode.play_count
-            } if playback else None
+            "transcript_url": episode.transcript_url,
+            "transcript_content": episode.transcript_content,
+            "ai_summary": episode.ai_summary,
+            "summary_version": episode.summary_version,
+            "ai_confidence_score": episode.ai_confidence_score,
+            "play_count": episode.play_count,
+            "last_played_at": episode.last_played_at,
+            "season": episode.season,
+            "episode_number": episode.episode_number,
+            "explicit": episode.explicit,
+            "status": episode.status,
+            "metadata": episode.metadata_json or {},
+            "created_at": episode.created_at,
+            "updated_at": episode.updated_at,
+            "playback_position": playback.current_position if playback else None,
+            "is_playing": playback.is_playing if playback else False,
+            "playback_rate": playback.playback_rate if playback else 1.0,
+            "is_played": None,
+            "subscription": {
+                "id": episode.subscription.id,
+                "title": episode.subscription.title,
+                "description": episode.subscription.description,
+                "image_url": subscription_image_url,
+                "author": subscription_author,
+                "categories": subscription_categories
+            } if episode.subscription else None,
+            "related_episodes": []
         }
 
     async def generate_summary_for_episode(self, episode_id: int) -> str:

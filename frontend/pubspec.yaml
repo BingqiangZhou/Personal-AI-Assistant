@@ -37,6 +37,7 @@ dependencies:
   flutter_svg: ^2.0.10
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
+  flutter_adaptive_scaffold: ^0.2.4
 
   # Utilities
   intl: ^0.20.2

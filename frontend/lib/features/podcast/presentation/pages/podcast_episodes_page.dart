@@ -199,6 +199,10 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                       final episode = response.episodes[index];
                       return PodcastEpisodeCard(
                         episode: episode,
+                        onTap: () {
+                          // 跳转到分集详细页面
+                          context.push('/podcast/episode/detail/${episode.id}');
+                        },
                         onPlay: () async {
                           await ref
                               .read(audioPlayerProvider.notifier)
@@ -228,7 +232,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           Icon(
             Icons.headphones_outlined,
             size: 80,
-            color: Colors.grey[400],
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -236,7 +240,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                 ? 'No Episodes with AI Summary'
                 : 'No Episodes Found',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
@@ -245,7 +249,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                 ? 'Try adjusting your filters'
                 : 'This podcast might not have any episodes yet',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[500],
+              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -319,13 +323,13 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           Icon(
             Icons.error_outline,
             size: 80,
-            color: Colors.red[400],
+            color: Theme.of(context).colorScheme.error,
           ),
           const SizedBox(height: 16),
           Text(
             'Failed to Load Episodes',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: Colors.red[600],
+              color: Theme.of(context).colorScheme.error,
             ),
           ),
           const SizedBox(height: 8),

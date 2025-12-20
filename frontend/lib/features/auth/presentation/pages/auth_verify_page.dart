@@ -201,7 +201,7 @@ class _AuthVerifyPageState extends State<AuthVerifyPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Auth Verification'),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -231,28 +231,28 @@ class _AuthVerifyPageState extends State<AuthVerifyPage> {
             // Test Buttons
             _TestButton(
               text: '🔧 1. Check Backend Health',
-              color: Colors.blue,
+              color: Theme.of(context).colorScheme.primary,
               onPressed: _testBackendHealth,
             ),
             const SizedBox(height: 8),
 
             _TestButton(
               text: '📝 2. Register New User',
-              color: Colors.green,
+              color: Theme.of(context).colorScheme.secondary,
               onPressed: _testRegister,
             ),
             const SizedBox(height: 8),
 
             _TestButton(
               text: '🔓 3. Login (Get Tokens)',
-              color: Colors.orange,
+              color: Theme.of(context).colorScheme.tertiary,
               onPressed: _testLogin,
             ),
             const SizedBox(height: 8),
 
             _TestButton(
               text: '👤 4. Get User Info (with Token)',
-              color: Colors.purple,
+              color: Theme.of(context).colorScheme.primaryContainer,
               onPressed: _testGetUser,
             ),
             const SizedBox(height: 20),
@@ -269,21 +269,21 @@ class _AuthVerifyPageState extends State<AuthVerifyPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Theme.of(context).colorScheme.surfaceVariant,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('📋 Test Flow:',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const SizedBox(height: 6),
-          Text('1. Must run Backend Docker first (port 8000)'),
-          Text('2. Click "Check Health" to verify connection'),
-          Text('3. Click "Register" to create test user'),
-          Text('4. Click "Login" to get access/refresh tokens'),
-          Text('5. Click "Get User Info" to verify tokens work'),
-          Text('6. If all pass → Backend ✅ Ready!'),
+          Text('1. Must run Backend Docker first (port 8000)', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text('2. Click "Check Health" to verify connection', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text('3. Click "Register" to create test user', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text('4. Click "Login" to get access/refresh tokens', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text('5. Click "Get User Info" to verify tokens work', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text('6. If all pass → Backend ✅ Ready!', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
         ],
       ),
     );

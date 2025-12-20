@@ -8,8 +8,33 @@ primary_stack: ["flutter", "dart", "riverpod", "web"]
 
 # Frontend Desktop Developer Role
 
+## 🎨 MANDATORY: UI Design Standards
+
+**ALL UI development MUST follow these standards:**
+
+### Material 3 Design System (Required)
+- Use Material 3 components and design tokens exclusively
+- Follow Material 3 color schemes, typography, and elevation
+- Implement Material 3 theming with `useMaterial3: true` in ThemeData
+- Reference: https://m3.material.io/
+
+### flutter_adaptive_scaffold (Required)
+- Use `flutter_adaptive_scaffold` package for all page layouts
+- Implement adaptive navigation (NavigationRail for desktop, BottomNavigationBar for mobile)
+- Support breakpoints: mobile (<600dp), tablet (600-840dp), desktop (>840dp)
+- All new pages must use `AdaptiveScaffold` or `AdaptiveLayout`
+
+### Implementation Checklist
+- [ ] Material 3 components used throughout
+- [ ] `useMaterial3: true` in theme configuration
+- [ ] `AdaptiveScaffold` or `AdaptiveLayout` for page structure
+- [ ] Navigation adapts based on screen size
+- [ ] UI tested on multiple screen sizes
+
 ## Work Style & Preferences
 
+- **Material 3 First**: Always use Material 3 components and design language
+- **Adaptive by Default**: Use flutter_adaptive_scaffold for all layouts
 - **Architecture First**: Always design component architecture before implementation
 - **Responsive by Default**: Design for multiple screen sizes from the start
 - **State Management**: Use Riverpod for predictable state handling

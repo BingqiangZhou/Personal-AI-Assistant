@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
-import '../../../../core/theme/app_theme.dart';
 
 class AuthTestPage extends ConsumerStatefulWidget {
   const AuthTestPage({super.key});
