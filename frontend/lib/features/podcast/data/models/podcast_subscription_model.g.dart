@@ -100,7 +100,7 @@ Map<String, dynamic> _$PodcastSubscriptionCreateRequestToJson(
 
 ReparseResponse _$ReparseResponseFromJson(Map<String, dynamic> json) =>
     ReparseResponse(
-      success: json['success'] as bool,
+      success: json['success'] as bool? ?? false,
       result: json['result'] as Map<String, dynamic>,
     );
 

@@ -38,16 +38,14 @@ void main() {
       // Arrange - Override provider to return empty state
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedNotifierProvider.overrideWith((ref) {
-            final notifier = TestPodcastFeedNotifier();
-            notifier.state = const PodcastFeedState(
+          podcastFeedProvider.overrideWith((ref) => MockPodcastFeedNotifier(
+            const PodcastFeedState(
               episodes: [],
               isLoading: false,
               hasMore: false,
               total: 0,
-            );
-            return notifier;
-          }),
+            ),
+          )),
         ],
       );
 
@@ -94,16 +92,14 @@ void main() {
       // Override provider with mock data
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedNotifierProvider.overrideWith((ref) {
-            final notifier = TestPodcastFeedNotifier();
-            notifier.state = PodcastFeedState(
+          podcastFeedProvider.overrideWith((ref) => MockPodcastFeedNotifier(
+            PodcastFeedState(
               episodes: mockEpisodes,
               isLoading: false,
               hasMore: true,
               total: 2,
-            );
-            return notifier;
-          }),
+            ),
+          )),
         ],
       );
 
@@ -130,17 +126,15 @@ void main() {
       // Arrange - Override provider to return error state
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedNotifierProvider.overrideWith((ref) {
-            final notifier = TestPodcastFeedNotifier();
-            notifier.state = const PodcastFeedState(
+          podcastFeedProvider.overrideWith((ref) => MockPodcastFeedNotifier(
+            const PodcastFeedState(
               episodes: [],
               isLoading: false,
               hasMore: false,
               total: 0,
               error: 'Network error occurred',
-            );
-            return notifier;
-          }),
+            ),
+          )),
         ],
       );
 
@@ -179,17 +173,15 @@ void main() {
       // Override provider with mock data and loading more state
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedNotifierProvider.overrideWith((ref) {
-            final notifier = TestPodcastFeedNotifier();
-            notifier.state = PodcastFeedState(
+          podcastFeedProvider.overrideWith((ref) => MockPodcastFeedNotifier(
+            PodcastFeedState(
               episodes: mockEpisodes,
               isLoading: false,
               isLoadingMore: true,
               hasMore: true,
               total: 1,
-            );
-            return notifier;
-          }),
+            ),
+          )),
         ],
       );
 
@@ -227,16 +219,14 @@ void main() {
       // Override provider with mock data and no more content
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedNotifierProvider.overrideWith((ref) {
-            final notifier = TestPodcastFeedNotifier();
-            notifier.state = PodcastFeedState(
+          podcastFeedProvider.overrideWith((ref) => MockPodcastFeedNotifier(
+            PodcastFeedState(
               episodes: mockEpisodes,
               isLoading: false,
               hasMore: false,
               total: 1,
-            );
-            return notifier;
-          }),
+            ),
+          )),
         ],
       );
 
@@ -261,11 +251,29 @@ void main() {
 }
 
 // Test helper classes
-class TestPodcastFeedNotifier extends _$PodcastFeedNotifier {
-  TestPodcastFeedNotifier();
+class MockPodcastFeedNotifier extends _$PodcastFeedNotifier {
+  MockPodcastFeedNotifier(this._initialState);
+
+  final PodcastFeedState _initialState;
 
   @override
   PodcastFeedState build() {
-    return const PodcastFeedState();
+    return _initialState;
+  }
+
+  // Mock the methods that the page might call
+  @override
+  Future<void> loadInitialFeed() async {
+    // Do nothing for testing
+  }
+
+  @override
+  Future<void> loadMoreFeed() async {
+    // Do nothing for testing
+  }
+
+  @override
+  Future<void> refreshFeed() async {
+    // Do nothing for testing
   }
 }

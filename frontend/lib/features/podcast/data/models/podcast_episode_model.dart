@@ -270,6 +270,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
 @JsonSerializable()
 class PodcastFeedResponse extends Equatable {
   final List<PodcastEpisodeModel> items;
+  @JsonKey(defaultValue: false)
   final bool hasMore;
   final int? nextPage;
   final int total;

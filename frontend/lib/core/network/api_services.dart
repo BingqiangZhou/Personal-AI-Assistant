@@ -155,7 +155,10 @@ class PaginatedResponse<T> {
   final int totalCount;
   final int currentPage;
   final int totalPages;
+  @JsonKey(defaultValue: false)
   final bool hasNextPage;
+
+  @JsonKey(defaultValue: false)
   final bool hasPreviousPage;
 
   const PaginatedResponse({

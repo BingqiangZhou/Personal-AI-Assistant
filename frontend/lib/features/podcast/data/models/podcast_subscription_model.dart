@@ -176,6 +176,7 @@ class PodcastSubscriptionCreateRequest extends Equatable {
 
 @JsonSerializable()
 class ReparseResponse extends Equatable {
+  @JsonKey(defaultValue: false)
   final bool success;
   final Map<String, dynamic> result;
 

@@ -10,7 +10,7 @@ ApiResponse<T> _$ApiResponseFromJson<T>(
   Map<String, dynamic> json,
   T Function(Object? json) fromJsonT,
 ) => ApiResponse<T>(
-  success: json['success'] as bool,
+  success: json['success'] as bool? ?? false,
   message: json['message'] as String?,
   data: _$nullableGenericFromJson(json['data'], fromJsonT),
   errors: json['errors'] as Map<String, dynamic>?,

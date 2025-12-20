@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../widgets/bottom_navigation.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
@@ -87,7 +86,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             PopupMenuButton<String>(
               icon: CircleAvatar(
                 backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
-                child: user.avatarUrl == null ? Text(user.displayName[0].toUpperCase()) : null,
+                child: user.avatarUrl == null ? Text(user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'U') : null,
               ),
               itemBuilder: (context) => [
                 PopupMenuItem(

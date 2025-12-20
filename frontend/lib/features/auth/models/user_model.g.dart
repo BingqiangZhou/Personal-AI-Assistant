@@ -11,8 +11,8 @@ UserModel _$UserModelFromJson(Map<String, dynamic> json) => UserModel(
   email: json['email'] as String,
   username: json['username'] as String?,
   avatar: json['avatar'] as String?,
-  isActive: json['isActive'] as bool,
-  isEmailVerified: json['isEmailVerified'] as bool,
+  isActive: json['isActive'] as bool? ?? false,
+  isEmailVerified: json['isEmailVerified'] as bool? ?? false,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: json['updatedAt'] == null
       ? null

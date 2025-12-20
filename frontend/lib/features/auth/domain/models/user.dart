@@ -19,10 +19,10 @@ class User {
   @JsonKey(name: 'avatar_url')
   final String? avatarUrl;
 
-  @JsonKey(name: 'is_verified')
+  @JsonKey(name: 'is_verified', defaultValue: false)
   final bool isVerified;
 
-  @JsonKey(name: 'is_active')
+  @JsonKey(name: 'is_active', defaultValue: false)
   final bool isActive;
 
   @JsonKey(name: 'is_superuser')

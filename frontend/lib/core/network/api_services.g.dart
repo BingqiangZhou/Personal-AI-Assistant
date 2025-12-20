@@ -14,8 +14,8 @@ PaginatedResponse<T> _$PaginatedResponseFromJson<T>(
   totalCount: (json['totalCount'] as num).toInt(),
   currentPage: (json['currentPage'] as num).toInt(),
   totalPages: (json['totalPages'] as num).toInt(),
-  hasNextPage: json['hasNextPage'] as bool,
-  hasPreviousPage: json['hasPreviousPage'] as bool,
+  hasNextPage: json['hasNextPage'] as bool? ?? false,
+  hasPreviousPage: json['hasPreviousPage'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$PaginatedResponseToJson<T>(

@@ -8,7 +8,10 @@ class UserModel {
   final String email;
   final String? username;  // Can be null from backend
   final String? avatar;  // avatar_url from backend
+  @JsonKey(defaultValue: false)
   final bool isActive;  // is_active from backend
+
+  @JsonKey(defaultValue: false)
   final bool isEmailVerified;  // is_verified from backend
   final DateTime createdAt;
   final DateTime? updatedAt;  // Optional since backend doesn't return this

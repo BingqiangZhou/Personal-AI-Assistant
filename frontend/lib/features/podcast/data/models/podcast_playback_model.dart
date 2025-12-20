@@ -9,7 +9,7 @@ class PodcastPlaybackStateResponse extends Equatable {
   final int episodeId;
   @JsonKey(name: 'current_position')
   final int currentPosition;
-  @JsonKey(name: 'is_playing')
+  @JsonKey(name: 'is_playing', defaultValue: false)
   final bool isPlaying;
   @JsonKey(name: 'playback_rate')
   final double playbackRate;
@@ -54,7 +54,7 @@ class PodcastPlaybackStateResponse extends Equatable {
 @JsonSerializable()
 class PodcastPlaybackUpdateRequest extends Equatable {
   final int position;
-  @JsonKey(name: 'is_playing')
+  @JsonKey(name: 'is_playing', defaultValue: false)
   final bool isPlaying;
   @JsonKey(name: 'playback_rate')
   final double playbackRate;
@@ -79,7 +79,7 @@ class PodcastSummaryResponse extends Equatable {
   final String version;
   @JsonKey(name: 'confidence_score')
   final double? confidenceScore;
-  @JsonKey(name: 'transcript_used')
+  @JsonKey(name: 'transcript_used', defaultValue: false)
   final bool transcriptUsed;
   @JsonKey(name: 'generated_at')
   final DateTime generatedAt;

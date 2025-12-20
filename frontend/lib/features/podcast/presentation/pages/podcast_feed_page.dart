@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../providers/podcast_providers.dart';
 import '../widgets/podcast_episode_card.dart';
 import '../widgets/podcast_feed_shimmer.dart';
@@ -18,7 +17,6 @@ class PodcastFeedPage extends ConsumerStatefulWidget {
 class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
     with AutomaticKeepAliveClientMixin {
   final ScrollController _scrollController = ScrollController();
-  static const int _pageSize = 10;
 
   @override
   bool get wantKeepAlive => true;
@@ -31,7 +29,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
 
     // Load initial feed
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(podcastFeedNotifierProvider.notifier).loadInitialFeed();
+      ref.read(podcastFeedProvider.notifier).loadInitialFeed();
     });
   }
 
@@ -49,8 +47,8 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
     final threshold = maxScroll * 0.8; // Load more when 80% scrolled
 
     if (currentScroll >= threshold) {
-      final notifier = ref.read(podcastFeedNotifierProvider.notifier);
-      final state = ref.read(podcastFeedNotifierProvider);
+      final notifier = ref.read(podcastFeedProvider.notifier);
+      final state = ref.read(podcastFeedProvider);
 
       if (state.hasMore && !state.isLoadingMore && !state.isLoading) {
         notifier.loadMoreFeed();
@@ -59,13 +57,13 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
   }
 
   Future<void> _refresh() async {
-    await ref.read(podcastFeedNotifierProvider.notifier).refreshFeed();
+    await ref.read(podcastFeedProvider.notifier).refreshFeed();
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final feedState = ref.watch(podcastFeedNotifierProvider);
+    final feedState = ref.watch(podcastFeedProvider);
 
     // Error state
     if (feedState.error != null && feedState.episodes.isEmpty) {

@@ -11,7 +11,7 @@ PodcastPlaybackStateResponse _$PodcastPlaybackStateResponseFromJson(
 ) => PodcastPlaybackStateResponse(
   episodeId: (json['episode_id'] as num).toInt(),
   currentPosition: (json['current_position'] as num).toInt(),
-  isPlaying: json['is_playing'] as bool,
+  isPlaying: json['is_playing'] as bool? ?? false,
   playbackRate: (json['playback_rate'] as num).toDouble(),
   playCount: (json['play_count'] as num).toInt(),
   lastUpdatedAt: DateTime.parse(json['last_updated_at'] as String),
@@ -36,7 +36,7 @@ PodcastPlaybackUpdateRequest _$PodcastPlaybackUpdateRequestFromJson(
   Map<String, dynamic> json,
 ) => PodcastPlaybackUpdateRequest(
   position: (json['position'] as num).toInt(),
-  isPlaying: json['is_playing'] as bool,
+  isPlaying: json['is_playing'] as bool? ?? false,
   playbackRate: (json['playback_rate'] as num?)?.toDouble() ?? 1.0,
 );
 
@@ -55,7 +55,7 @@ PodcastSummaryResponse _$PodcastSummaryResponseFromJson(
   summary: json['summary'] as String,
   version: json['version'] as String,
   confidenceScore: (json['confidence_score'] as num?)?.toDouble(),
-  transcriptUsed: json['transcript_used'] as bool,
+  transcriptUsed: json['transcript_used'] as bool? ?? false,
   generatedAt: DateTime.parse(json['generated_at'] as String),
   wordCount: (json['word_count'] as num).toInt(),
 );
