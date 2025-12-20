@@ -1,31 +1,45 @@
 ---
 name: "Claude Code Subagent System"
 description: "Personal AI Assistant - Multi-agent collaboration system"
-version: "1.0.0"
+version: "2.0.0"
 ---
 
-# Personal AI Assistant - Claude Code Subagent System
+# Personal AI Assistant - Claude Code Subagent System (Product-Driven Development)
 
 ## 系统概述
 
-这是一个为Personal AI Assistant项目设计的Claude Code subagent系统，包含7个专业工程师角色，支持并行开发和协作完成项目任务。
+这是一个为Personal AI Assistant项目设计的Claude Code subagent系统，**采用产品驱动开发模式（Product-Driven Development）**，包含7个专业工程师角色，由产品经理主导，支持并行开发和协作完成项目任务。
+
+**🚨 重要更新（v2.0.0）**：
+- ✅ 强化了产品经理的核心领导地位
+- ✅ 增加了强制性工作流程验证
+- ✅ 添加了流程违规检测和处理机制
+- ✅ 实现了自动化检查和验证脚本
 
 ## 目录结构
 
 ```
 .claude/agents/
-├── roles/                 # 角色定义文件
-│   ├── architect.md       # 软件架构师
-│   ├── backend-dev.md     # 后端开发工程师
-│   ├── frontend-dev.md    # 前端桌面开发工程师
-│   ├── mobile-dev.md      # 移动端开发工程师
-│   ├── requirements-analyst.md # 需求分析师
-│   ├── test-engineer.md   # 测试工程师
-│   └── devops-engineer.md # 运维工程师
-├── workflows/             # 工作流定义
-│   ├── feature-development.md # 功能开发流程
-│   ├── bug-fix.md         # Bug修复流程
-│   └── architecture-review.md # 架构评审流程
+├── README.md                           # 本文件（已更新）
+├── agents.json                         # Agent配置文件（已优化）
+├── roles/                             # Agent角色定义
+│   ├── product-manager.md             # 产品经理（核心领导者）
+│   ├── architect.md                   # 架构师角色
+│   ├── backend-dev.md                 # 后端工程师角色
+│   ├── frontend-dev.md               # 前端工程师角色
+│   ├── mobile-dev.md                  # 移动端工程师角色
+│   ├── test-engineer.md              # 测试工程师角色
+│   └── devops-engineer.md            # DevOps工程师角色
+├── workflows/                         # 工作流程定义
+│   ├── product-driven-development.md  # 产品驱动开发流程（主要流程）
+│   ├── feature-development.md        # 功能开发流程
+│   ├── bug-fix.md                     # Bug修复流程
+│   └── architecture-review.md         # 架构评审流程
+├── templates/                         # 模板和检查清单（新增）
+│   ├── workflow-validation-checklist.md # 工作流程验证检查清单
+│   └── product-manager-workflow-guide.md # 产品经理工作指导
+├── scripts/                          # 自动化脚本（新增）
+│   └── workflow-violation-handler.sh  # 流程违规处理脚本
 ├── prompts/               # 系统提示词
 │   ├── base-prompt.md     # 共享知识基础
 │   └── domain-context.md  # 领域上下文
@@ -34,7 +48,6 @@ version: "1.0.0"
 │   └── communication.md   # 通信协议
 ├── config/               # 配置文件
 │   └── base-agent.md     # 基础代理配置
-├── agents.json           # 代理注册文件
 └── README.md            # 本文件
 ```
 

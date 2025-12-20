@@ -15,10 +15,35 @@
         "Validate feature completion and business value",
         "Drive the 4-stage product development lifecycle",
         "Manage product backlog and prioritize features",
-        "Ensure user satisfaction and business goals alignment"
+        "Ensure user satisfaction and business goals alignment",
+        "MANDATORY: Always be the first to analyze user requests",
+        "MANDATORY: Create PRD in specs/active/ before any development",
+        "MANDATORY: Conduct final validation and update document status",
+        "MANDATORY: Move completed PRDs to specs/completed/ with verification reports"
       ],
       "default_workflow": "product-driven-development",
-      "workflow_priority": 1
+      "workflow_priority": 1,
+      "mandatory_actions": [
+        {
+          "trigger": "user_request_received",
+          "action": "analyze_requirements",
+          "required": true,
+          "before": ["any_development", "task_assignment"]
+        },
+        {
+          "trigger": "requirements_analyzed",
+          "action": "create_prd_document",
+          "path": "specs/active/",
+          "required": true,
+          "before": ["development_start"]
+        },
+        {
+          "trigger": "development_completed",
+          "action": "conduct_validation",
+          "required": true,
+          "before": ["mark_task_complete"]
+        }
+      ]
     },
     "architect": {
       "path": ".claude/agents/roles/architect.md",
@@ -108,26 +133,80 @@
     "product-driven-development": {
       "path": ".claude/agents/workflows/product-driven-development.md",
       "description": "Product-driven 4-stage workflow with Product Manager as the core driver, focusing on business value and user needs",
+      "enforced": true,
+      "validation_required": true,
       "stages": [
         {
           "name": "Product Analysis & Requirement Definition",
           "owner": "product-manager",
-          "description": "Analyze user input and business needs, define product requirements, create/update requirement documents in specs/"
+          "mandatory": true,
+          "description": "Analyze user input and business needs, define product requirements, create/update requirement documents in specs/",
+          "deliverables": [
+            "PRD document in specs/active/",
+            "User stories and acceptance criteria",
+            "Business value definition",
+            "Success metrics"
+          ],
+          "validation_criteria": [
+            "PRD document exists and is complete",
+            "All user stories are defined",
+            "Success metrics are measurable",
+            "Business value is clearly articulated"
+          ]
         },
         {
           "name": "Feature Planning & Task Assignment",
           "owner": "product-manager",
-          "description": "Plan features based on product vision, break down requirements into prioritized tasks and assign to appropriate engineers"
+          "mandatory": true,
+          "description": "Plan features based on product vision, break down requirements into prioritized tasks and assign to appropriate engineers",
+          "deliverables": [
+            "Task assignment plan",
+            "MVP scope definition",
+            "Timeline and milestones",
+            "Resource allocation"
+          ],
+          "validation_criteria": [
+            "Tasks are properly assigned to correct roles",
+            "MVP scope is clearly defined",
+            "Timeline is realistic",
+            "Dependencies are identified"
+          ]
         },
         {
           "name": "Development Execution & Status Tracking",
           "owner": "assigned-engineer",
-          "description": "Engineers execute tasks according to product requirements and update status in requirement documents"
+          "mandatory": true,
+          "description": "Engineers execute tasks according to product requirements and update status in requirement documents",
+          "deliverables": [
+            "Implemented features",
+            "Unit and integration tests",
+            "Code documentation",
+            "Status updates"
+          ],
+          "validation_criteria": [
+            "All requirements are implemented",
+            "Tests pass successfully",
+            "Code meets quality standards",
+            "Status is regularly updated"
+          ]
         },
         {
           "name": "Product Validation & Business Value Assessment",
           "owner": "product-manager",
-          "description": "Validate feature completion, assess business value, measure user satisfaction, and iterate if needed"
+          "mandatory": true,
+          "description": "Validate feature completion, assess business value, measure user satisfaction, and iterate if needed",
+          "deliverables": [
+            "Verification report in docs/verification/",
+            "Completion report in docs/completion/",
+            "Updated PRD status",
+            "Business value assessment"
+          ],
+          "validation_criteria": [
+            "All acceptance criteria are met",
+            "Verification report is created",
+            "PRD is moved to specs/completed/",
+            "Business value is assessed and documented"
+          ]
         }
       ],
       "participants": ["product-manager", "architect", "backend-dev", "frontend-dev", "mobile-dev", "test-engineer", "devops-engineer"],
@@ -138,6 +217,32 @@
         "User-centric approach",
         "Data-driven decisions",
         "Continuous validation"
+      ],
+      "workflow_gates": [
+        {
+          "stage": 1,
+          "gate": "prd_created",
+          "required_for_stage_2": true,
+          "validation": "Check if PRD exists in specs/active/"
+        },
+        {
+          "stage": 2,
+          "gate": "tasks_assigned",
+          "required_for_stage_3": true,
+          "validation": "Check if tasks are properly assigned"
+        },
+        {
+          "stage": 3,
+          "gate": "development_complete",
+          "required_for_stage_4": true,
+          "validation": "Check if all development tasks are completed"
+        },
+        {
+          "stage": 4,
+          "gate": "validation_complete",
+          "required_for_completion": true,
+          "validation": "Check if verification report is created and PRD is moved to completed/"
+        }
       ]
     },
     "feature-development": {
@@ -184,6 +289,44 @@
     "max_concurrent_agents": 7,
     "auto_assign_tasks": true,
     "track_metrics": true,
-    "enable_logging": true
+    "enable_logging": true,
+    "workflow_enforcement": {
+      "enabled": true,
+      "strict_mode": true,
+      "auto_validation": true,
+      "violation_handling": "stop_and_correct"
+    },
+    "product_manager_requirements": {
+      "must_analyze_first": true,
+      "must_create_prd": true,
+      "must_validate_completion": true,
+      "must_update_document_status": true
+    },
+    "validation_rules": [
+      {
+        "rule": "prd_must_exist_before_development",
+        "description": "PRD must be created in specs/active/ before any development starts",
+        "enforcement": "strict",
+        "check": "file_exists"
+      },
+      {
+        "rule": "product_manager_must_lead",
+        "description": "Product Manager must be the first to analyze any user request",
+        "enforcement": "strict",
+        "check": "agent_sequence"
+      },
+      {
+        "rule": "validation_must_be_completed",
+        "description": "Final validation by Product Manager must be completed before marking tasks as done",
+        "enforcement": "strict",
+        "check": "document_status"
+      },
+      {
+        "rule": "prd_must_be_moved_to_completed",
+        "description": "PRD must be moved to specs/completed/ with verification reports",
+        "enforcement": "strict",
+        "check": "file_location_and_content"
+      }
+    ]
   }
 }
