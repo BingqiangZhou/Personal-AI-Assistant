@@ -139,6 +139,8 @@ class PodcastEpisodeResponse(PodcastTimestampedSchema):
     audio_duration: Optional[int] = None
     audio_file_size: Optional[int] = None
     published_at: datetime
+    image_url: Optional[str] = None
+    subscription_image_url: Optional[str] = None
     transcript_url: Optional[str] = None
     transcript_content: Optional[str] = None
     ai_summary: Optional[str] = None

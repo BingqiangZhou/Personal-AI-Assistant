@@ -97,9 +97,9 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
       _player!.onPositionChanged.listen((position) {
         if (_isDisposed || !ref.mounted) return;
 
-        if (kDebugMode) {
-          debugPrint('🎵 Position updated: ${position.inMilliseconds}ms');
-        }
+        // if (kDebugMode) {
+        //   debugPrint('🎵 Position updated: ${position.inMilliseconds}ms');
+        // }
 
         this.state = this.state.copyWith(
           position: position.inMilliseconds,
@@ -309,8 +309,18 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
         playbackRate: state.playbackRate,
       );
     } catch (error) {
-      // Log error but don't interrupt playback or crash
+      // Log more detailed error for debugging
       debugPrint('⚠️ Failed to update playback state on server: $error');
+      debugPrint('📍 Episode ID: ${episode.id}');
+      debugPrint('📍 Position: ${state.position}ms (${(state.position / 1000).round()}s)');
+      debugPrint('📍 Is Playing: ${state.isPlaying}');
+      debugPrint('📍 Playback Rate: ${state.playbackRate}');
+
+      // Check if it's an authentication error
+      if (error.toString().contains('401') || error.toString().contains('authentication')) {
+        debugPrint('🔑 Authentication error - user may need to log in again');
+      }
+
       // Don't update the UI state for server errors - continue playback
     }
   }

@@ -55,6 +55,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
           audioDuration: episodeDetailAsync.audioDuration,
           audioFileSize: episodeDetailAsync.audioFileSize,
           publishedAt: episodeDetailAsync.publishedAt,
+          imageUrl: episodeDetailAsync.imageUrl,
           transcriptUrl: episodeDetailAsync.transcriptUrl,
           transcriptContent: episodeDetailAsync.transcriptContent,
           aiSummary: episodeDetailAsync.aiSummary,
@@ -68,8 +69,8 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
           status: episodeDetailAsync.status,
           metadata: episodeDetailAsync.metadata,
           playbackPosition: episodeDetailAsync.playbackPosition,
-          isPlaying: episodeDetailAsync.isPlaying ?? false,
-          playbackRate: episodeDetailAsync.playbackRate ?? 1.0,
+          isPlaying: episodeDetailAsync.isPlaying,
+          playbackRate: episodeDetailAsync.playbackRate,
           isPlayed: episodeDetailAsync.isPlayed ?? false,
           createdAt: episodeDetailAsync.createdAt,
           updatedAt: episodeDetailAsync.updatedAt,
@@ -141,6 +142,15 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
 
   // A. 顶部元数据区 (Header) - 无底部分割线
   Widget _buildHeader(dynamic episode) {
+    // Debug: 输出分集图像链接信息（已注释）
+    // debugPrint('📺 PodcastEpisodeDetailPage - Episode image debug:');
+    // debugPrint('  Episode ID: ${episode.id}');
+    // debugPrint('  Episode Title: ${episode.title}');
+    // debugPrint('  Image URL: ${episode.imageUrl}');
+    // debugPrint('  Subscription Image URL: ${episode.subscriptionImageUrl}');
+    // debugPrint('  Has episode image: ${episode.imageUrl != null}');
+    // debugPrint('  Has subscription image: ${episode.subscriptionImageUrl != null}');
+
     return Container(
       padding: const EdgeInsets.all(16),
       color: Theme.of(context).colorScheme.surface,
@@ -176,7 +186,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Podcast icon: 50x50px, rounded 8px
+                // Episode icon: 50x50px, rounded 8px - prioritize episode image over subscription image
                 Container(
                   width: 50,
                   height: 50,
@@ -189,31 +199,76 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(7),
-                    child: episode.subscriptionImageUrl != null
+                    child: episode.imageUrl != null
                         ? Image.network(
-                            episode.subscriptionImageUrl!,
+                            episode.imageUrl!,
                             width: 50,
                             height: 50,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
+                              debugPrint('❌ Failed to load episode image: $error');
+                              // Fallback to subscription image
+                              if (episode.subscriptionImageUrl != null) {
+                                return ClipRRect(
+                                  borderRadius: BorderRadius.circular(7),
+                                  child: Image.network(
+                                    episode.subscriptionImageUrl!,
+                                    width: 50,
+                                    height: 50,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      debugPrint('❌ Failed to load subscription image: $error');
+                                      return Container(
+                                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                        child: Icon(
+                                          Icons.headphones_outlined,
+                                          color: Theme.of(context).colorScheme.primary,
+                                          size: 28,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              }
                               return Container(
                                 color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                 child: Icon(
-                                  Icons.podcasts,
+                                  Icons.headphones_outlined,
                                   color: Theme.of(context).colorScheme.primary,
                                   size: 28,
                                 ),
                               );
                             },
                           )
-                        : Container(
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                            child: Icon(
-                              Icons.podcasts,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 28,
-                            ),
-                          ),
+                        : episode.subscriptionImageUrl != null
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(7),
+                                child: Image.network(
+                                  episode.subscriptionImageUrl!,
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    debugPrint('❌ Failed to load subscription image: $error');
+                                    return Container(
+                                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                      child: Icon(
+                                        Icons.podcasts,
+                                        color: Theme.of(context).colorScheme.primary,
+                                        size: 28,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            : Container(
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                child: Icon(
+                                  Icons.headphones_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 28,
+                                ),
+                              ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -248,15 +303,6 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                   ),
                 ),
               ],
-            ),
-          ),
-          // 右侧：总时长 (14px, 次要文字颜色, FontWeight.w500)
-          Text(
-            episode.formattedDuration ?? '3:00',
-            style: TextStyle(
-              fontSize: 14,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
             ),
           ),
         ],

@@ -33,6 +33,7 @@ class PodcastEpisode:
     duration: Optional[int] = None
     transcript_url: Optional[str] = None
     guid: Optional[str] = None
+    image_url: Optional[str] = None
 
 
 @dataclass
@@ -217,6 +218,18 @@ class SecureRSSParser:
             raw_desc = content_encoded or item.findtext('description', '')
             description = self._sanitize_description(raw_desc)
 
+            # Extract image URL from description or iTunes namespace
+            episode_image_url = None
+
+            # First, try to extract from iTunes:image namespace
+            episode_image = item.find('itunes:image', namespaces=itunes_ns)
+            if episode_image is not None:
+                episode_image_url = episode_image.get('href')
+
+            # If no iTunes image, try to extract from description (for xyzfm and other platforms)
+            if not episode_image_url:
+                episode_image_url = self._extract_first_image_from_text(raw_desc)
+
             # Published date
             pub_date = item.findtext('pubDate')
             published_at = self._parse_date(pub_date)
@@ -244,10 +257,6 @@ class SecureRSSParser:
             duration_text = item.findtext('itunes:duration', None, namespaces=itunes_ns)
             duration = self._parse_duration(duration_text)
 
-            # Episode image
-            episode_image = item.find('itunes:image', namespaces=itunes_ns)
-            episode_image_url = episode_image.get('href') if episode_image is not None else None
-
             # Transcript URL (if available)
             transcript_url = None
             # Check for podcast namespace transcript
@@ -272,7 +281,8 @@ class SecureRSSParser:
                 published_at=published_at,
                 duration=duration,
                 transcript_url=transcript_url,
-                guid=guid
+                guid=guid,
+                image_url=episode_image_url
             )
 
         except Exception as e:
@@ -325,6 +335,61 @@ class SecureRSSParser:
                 return int(duration_text)
         except:
             return None
+
+    def _extract_first_image_from_text(self, text: str) -> Optional[str]:
+        """Extract the first image URL from text using regex patterns"""
+        if not text:
+            return None
+
+        import re
+
+        # Pattern 1: Markdown images: ![alt](url)
+        markdown_pattern = r'!\[.*?\]\((https?://[^\s\)]+)\)'
+        markdown_match = re.search(markdown_pattern, text)
+        if markdown_match:
+            url = markdown_match.group(1)
+            # Validate URL
+            if self._is_valid_image_url(url):
+                return url
+
+        # Pattern 2: HTML img tags: <img src="url" ...>
+        html_pattern = r'<img[^>]+src=["\'](https?://[^"\']+)["\']'
+        html_match = re.search(html_pattern, text, re.IGNORECASE)
+        if html_match:
+            url = html_match.group(1)
+            # Validate URL
+            if self._is_valid_image_url(url):
+                return url
+
+        # Pattern 3: Plain image URLs (standalone URLs ending with image extensions)
+        url_pattern = r'(https?://[^\s]+\.(?:jpg|jpeg|png|gif|webp)(?:\?[^\s]*)?)'
+        url_match = re.search(url_pattern, text, re.IGNORECASE)
+        if url_match:
+            url = url_match.group(1)
+            # Validate URL
+            if self._is_valid_image_url(url):
+                return url
+
+        return None
+
+    def _is_valid_image_url(self, url: str) -> bool:
+        """Check if URL is a valid image URL"""
+        if not url:
+            return False
+
+        # Basic URL validation
+        if not url.startswith(('http://', 'https://')):
+            return False
+
+        # Check for common image file extensions
+        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']
+        url_lower = url.lower()
+
+        # Either ends with image extension or contains image-like patterns
+        has_extension = any(url_lower.endswith(ext) for ext in image_extensions)
+        has_image_keywords = any(keyword in url_lower for keyword in ['image', 'img', 'photo', 'pic', 'cover'])
+
+        return has_extension or has_image_keywords
 
 
 class PodcastValidationHelper:

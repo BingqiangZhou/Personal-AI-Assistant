@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
@@ -82,25 +81,123 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     // Don't watch audioPlayerProvider to avoid initializing it on startup
     // final audioPlayerState = ref.watch(audioPlayerProvider);
 
+    // Debug: 输出分集图像链接信息（已注释）
+    // if (episodesState.episodes.isNotEmpty) {
+    //   final firstEpisode = episodesState.episodes.first;
+    //   debugPrint('📺 PodcastEpisodesPage - First episode image debug:');
+    //   debugPrint('  Episode ID: ${firstEpisode.id}');
+    //   debugPrint('  Episode Title: ${firstEpisode.title}');
+    //   debugPrint('  Image URL: ${firstEpisode.imageUrl}');
+    //   debugPrint('  Subscription Image URL: ${firstEpisode.subscriptionImageUrl}');
+    //   debugPrint('  Has episode image: ${firstEpisode.imageUrl != null}');
+    //   debugPrint('  Has subscription image: ${firstEpisode.subscriptionImageUrl != null}');
+    // }
+
     return Scaffold(
       appBar: AppBar(
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-              width: 1,
+        title: Row(
+          children: [
+            // 使用第一个分集的图像作为图标，如果没有则使用订阅图像，最后使用默认图标
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: episodesState.episodes.isNotEmpty
+                  ? (episodesState.episodes.first.imageUrl != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(5),
+                          child: Image.network(
+                            episodesState.episodes.first.imageUrl!,
+                            width: 32,
+                            height: 32,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              debugPrint('❌ Failed to load episode image: $error');
+                              // Fallback to subscription image
+                              if (episodesState.episodes.first.subscriptionImageUrl != null) {
+                                return ClipRRect(
+                                  borderRadius: BorderRadius.circular(5),
+                                  child: Image.network(
+                                    episodesState.episodes.first.subscriptionImageUrl!,
+                                    width: 32,
+                                    height: 32,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      debugPrint('❌ Failed to load subscription image: $error');
+                                      return Icon(
+                                        Icons.headphones_outlined,
+                                        size: 18,
+                                        color: Theme.of(context).colorScheme.primary,
+                                      );
+                                    },
+                                  ),
+                                );
+                              }
+                              return Icon(
+                                Icons.headphones_outlined,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.primary,
+                              );
+                            },
+                          ),
+                        )
+                      : (episodesState.episodes.first.subscriptionImageUrl != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(5),
+                              child: Image.network(
+                                episodesState.episodes.first.subscriptionImageUrl!,
+                                width: 32,
+                                height: 32,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  debugPrint('❌ Failed to load subscription image: $error');
+                                  return Icon(
+                                    Icons.headphones_outlined,
+                                    size: 18,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  );
+                                },
+                              ),
+                            )
+                          : Icon(
+                              Icons.headphones_outlined,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.primary,
+                            )))
+                  : Icon(
+                      Icons.headphones_outlined,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
             ),
-          ),
-          child: Text(
-            widget.podcastTitle ?? 'Podcast Episodes',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
+            const SizedBox(width: 8),
+            // 标题
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                widget.podcastTitle ?? 'Podcast Episodes',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 2,

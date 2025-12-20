@@ -651,6 +651,8 @@ class PodcastService:
             "audio_duration": episode.audio_duration,
             "audio_file_size": episode.audio_file_size,
             "published_at": episode.published_at,
+            "image_url": episode.image_url,
+            "subscription_image_url": subscription_image_url,
             "transcript_url": episode.transcript_url,
             "transcript_content": episode.transcript_content,
             "ai_summary": episode.ai_summary,
@@ -669,6 +671,7 @@ class PodcastService:
             "is_playing": playback.is_playing if playback else False,
             "playback_rate": playback.playback_rate if playback else 1.0,
             "is_played": None,
+            "subscription_image_url": subscription_image_url,
             "subscription": {
                 "id": episode.subscription.id,
                 "title": episode.subscription.title,
@@ -730,7 +733,8 @@ class PodcastService:
         self,
         episode_id: int,
         progress_seconds: int,
-        is_playing: bool = False
+        is_playing: bool = False,
+        playback_rate: float = 1.0
     ) -> dict:
         """更新播放进度"""
         episode = await self.repo.get_episode_by_id(episode_id, self.user_id)
@@ -741,7 +745,8 @@ class PodcastService:
             self.user_id,
             episode_id,
             progress_seconds,
-            is_playing
+            is_playing,
+            playback_rate
         )
 
         return {

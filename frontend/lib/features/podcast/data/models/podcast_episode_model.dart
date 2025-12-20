@@ -20,6 +20,8 @@ class PodcastEpisodeModel extends Equatable {
   final int? audioFileSize;
   @JsonKey(name: 'published_at')
   final DateTime publishedAt;
+  @JsonKey(name: 'image_url')
+  final String? imageUrl;
   @JsonKey(name: 'transcript_url')
   final String? transcriptUrl;
   @JsonKey(name: 'transcript_content')
@@ -66,6 +68,7 @@ class PodcastEpisodeModel extends Equatable {
     this.audioDuration,
     this.audioFileSize,
     required this.publishedAt,
+    this.imageUrl,
     this.transcriptUrl,
     this.transcriptContent,
     this.aiSummary,
@@ -101,6 +104,7 @@ class PodcastEpisodeModel extends Equatable {
     int? audioDuration,
     int? audioFileSize,
     DateTime? publishedAt,
+    String? imageUrl,
     String? transcriptUrl,
     String? transcriptContent,
     String? aiSummary,
@@ -130,6 +134,7 @@ class PodcastEpisodeModel extends Equatable {
       audioDuration: audioDuration ?? this.audioDuration,
       audioFileSize: audioFileSize ?? this.audioFileSize,
       publishedAt: publishedAt ?? this.publishedAt,
+      imageUrl: imageUrl ?? this.imageUrl,
       transcriptUrl: transcriptUrl ?? this.transcriptUrl,
       transcriptContent: transcriptContent ?? this.transcriptContent,
       aiSummary: aiSummary ?? this.aiSummary,
@@ -203,6 +208,7 @@ class PodcastEpisodeModel extends Equatable {
         audioDuration,
         audioFileSize,
         publishedAt,
+        imageUrl,
         transcriptUrl,
         transcriptContent,
         aiSummary,
@@ -270,6 +276,8 @@ class PodcastEpisodeDetailResponse extends Equatable {
   final int? audioFileSize;
   @JsonKey(name: 'published_at')
   final DateTime publishedAt;
+  @JsonKey(name: 'image_url')
+  final String? imageUrl;
   @JsonKey(name: 'transcript_url')
   final String? transcriptUrl;
   @JsonKey(name: 'transcript_content')
@@ -321,6 +329,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
     this.audioDuration,
     this.audioFileSize,
     required this.publishedAt,
+    this.imageUrl,
     this.transcriptUrl,
     this.transcriptContent,
     this.aiSummary,
@@ -433,6 +442,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
         audioDuration,
         audioFileSize,
         publishedAt,
+        imageUrl,
         transcriptUrl,
         transcriptContent,
         aiSummary,

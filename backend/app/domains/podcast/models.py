@@ -49,6 +49,9 @@ class PodcastEpisode(Base):
     summary_version = Column(String(50))  # 用于跟踪总结版本
     ai_confidence_score = Column(Float)  # AI总结质量评分
 
+    # 分集图像
+    image_url = Column(String(500))  # 分集封面图URL
+
     # 播放统计（全局）
     play_count = Column(Integer, default=0)
     last_played_at = Column(DateTime)
@@ -73,6 +76,7 @@ class PodcastEpisode(Base):
         Index('idx_podcast_subscription', 'subscription_id'),
         Index('idx_podcast_status', 'status'),
         Index('idx_podcast_published', 'published_at'),
+        Index('idx_podcast_episode_image', 'image_url'),
     )
 
     def __repr__(self):

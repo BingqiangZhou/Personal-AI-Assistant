@@ -38,7 +38,7 @@ class PodcastEpisodeCard extends ConsumerWidget {
               // Header with title and play button
               Row(
                 children: [
-                  // Episode thumbnail with podcast icon
+                  // Episode thumbnail - prioritize episode image over subscription image
                   Container(
                     width: 60,
                     height: 60,
@@ -51,16 +51,42 @@ class PodcastEpisodeCard extends ConsumerWidget {
                     ),
                     child: Stack(
                       children: [
-                        // Podcast icon image
+                        // Episode image with fallback to subscription image
                         ClipRRect(
                           borderRadius: BorderRadius.circular(7),
-                          child: episode.subscriptionImageUrl != null
+                          child: episode.imageUrl != null
                               ? Image.network(
-                                  episode.subscriptionImageUrl!,
+                                  episode.imageUrl!,
                                   width: 60,
                                   height: 60,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
+                                    debugPrint('❌ Failed to load episode image in card: $error');
+                                    // Fallback to subscription image
+                                    if (episode.subscriptionImageUrl != null) {
+                                      return ClipRRect(
+                                        borderRadius: BorderRadius.circular(7),
+                                        child: Image.network(
+                                          episode.subscriptionImageUrl!,
+                                          width: 60,
+                                          height: 60,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            debugPrint('❌ Failed to load subscription image in card: $error');
+                                            return Container(
+                                              color: theme.primaryColor.withValues(alpha: 0.15),
+                                              child: Center(
+                                                child: Icon(
+                                                  Icons.podcasts,
+                                                  size: 30,
+                                                  color: theme.primaryColor.withValues(alpha: 0.9),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    }
                                     return Container(
                                       color: theme.primaryColor.withValues(alpha: 0.15),
                                       child: Center(
@@ -73,16 +99,39 @@ class PodcastEpisodeCard extends ConsumerWidget {
                                     );
                                   },
                                 )
-                              : Container(
-                                  color: theme.primaryColor.withValues(alpha: 0.15),
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.podcasts,
-                                      size: 30,
-                                      color: theme.primaryColor.withValues(alpha: 0.9),
+                              : episode.subscriptionImageUrl != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(7),
+                                      child: Image.network(
+                                        episode.subscriptionImageUrl!,
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          debugPrint('❌ Failed to load subscription image in card: $error');
+                                          return Container(
+                                            color: theme.primaryColor.withValues(alpha: 0.15),
+                                            child: Center(
+                                              child: Icon(
+                                                Icons.podcasts,
+                                                size: 30,
+                                                color: theme.primaryColor.withValues(alpha: 0.9),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  : Container(
+                                      color: theme.primaryColor.withValues(alpha: 0.15),
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.podcasts,
+                                          size: 30,
+                                          color: theme.primaryColor.withValues(alpha: 0.9),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
                         ),
                       ],
                     ),
@@ -162,7 +211,7 @@ class PodcastEpisodeCard extends ConsumerWidget {
                                 child: Text(
                                   'E',
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: Colors.red.shade700 ?? Colors.red[700],
+                                    color: Colors.red.shade700,
                                     fontWeight: FontWeight.w900,
                                     fontSize: 11,
                                   ),
@@ -206,40 +255,6 @@ class PodcastEpisodeCard extends ConsumerWidget {
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              // Progress bar and duration
-              if (episode.playbackPosition != null && episode.audioDuration != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Column(
-                    children: [
-                      LinearProgressIndicator(
-                        value: episode.progressPercentage,
-                        backgroundColor: Colors.grey[300],
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          theme.primaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            episode.formattedPlaybackPosition,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          Text(
-                            episode.formattedDuration,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
                   ),
                 ),
               // Bottom row with metadata
