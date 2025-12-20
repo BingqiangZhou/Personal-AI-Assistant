@@ -2,32 +2,32 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 🤖 优化后的Subagent协作工作流程
+## 🤖 Product-Driven Development Workflow
 
-**📅 基于需求工程师驱动的完整开发流程**
+**📅 基于产品经理驱动的完整开发流程**
 
 ### 🔄 **核心工作流程（4阶段循环）**
 
 ```
-用户输入指令 → 产品经理分析 → 定义产品需求 → 规划功能 → 任务分配 → 工程师执行 → 更新状态 → 产品验证
+用户输入指令 → 产品经理分析 → 定义需求 → 规划功能 → 任务分配 → 工程师执行 → 更新状态 → 产品验证
       ↑                                                                                  ↓
-      ←←←←←←←←←←←← 验证发现问题或价值不足，返回重新规划 ←←←←←←←←←←←←←←←←←←←←←←←←←
+      ←←←←←←←←←←←← 验证发现问题，返回重新规划 ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 ```
 
-### 📋 **阶段1：产品分析与需求定义**
+### 📋 **阶段1：需求分析与定义**
 **负责人**：产品经理
-1. **分析用户指令和业务需求** - 理解用户痛点、业务价值和市场机会
+1. **分析用户指令和技术需求** - 理解用户需求、技术可行性
 2. **定义产品需求**：
-   - 新功能 → 在`specs/active/`下创建产品需求文档
+   - 新功能 → 在`specs/active/`下创建需求文档
    - 功能改进/优化 → 更新现有需求文档
    - 问题修复 → 在需求文档中定义修复目标和优先级
-3. **输出**：完整的产品需求文档（用户故事、商业价值、验收标准、成功指标）
+3. **输出**：完整的需求文档（用户故事、验收标准、技术要求）
 
 ### 👥 **阶段2：功能规划与任务分配**
-1. **产品经理**进行功能规划：
-   - 基于产品愿景和战略规划功能
-   - 确定功能优先级（使用价值 vs 成本矩阵）
-   - 定义MVP范围和迭代计划
+**负责人**：产品经理
+1. **功能规划**：
+   - 确定功能优先级和实现范围
+   - 定义 MVP 范围和迭代计划
 2. **任务分配**：
    - Backend任务 → Backend Developer
    - Frontend任务 → Frontend Developer
@@ -38,18 +38,125 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### ⚙️ **阶段3：开发执行与状态跟踪**
 **工程师团队**：
-1. 按照产品需求文档执行开发任务
-2. 在任务跟踪文档中实时更新状态
-3. 记录关键决策、技术方案和测试结果
-4. 主动沟通进度和阻塞点
+1. 按照需求文档执行开发任务
+2. **建议使用 MCP 工具提高开发效率**：
+   - 使用 context7 查询相关库的官方文档
+   - 使用 exa 搜索实现示例和最佳实践
+   - 审查现有代码库模式
+3. 在任务跟踪文档中实时更新状态
+4. 记录关键决策、技术方案和测试结果
+5. 主动沟通进度和阻塞点
 
-### ✅ **阶段4：产品验证与商业价值评估**
+### ✅ **阶段4：产品验证**
 **产品经理**：
 1. 验证功能完成度和用户体验
-2. 评估商业价值实现情况
-3. 收集用户反馈和数据分析
-4. 确认是否满足成功指标
-5. 如未达标 → 制定改进计划并返回阶段2
+2. 确认是否满足验收标准
+3. 如未达标 → 制定改进计划并返回阶段2
+
+## 📚 MCP Tools for Documentation & Problem Solving
+
+**💡 提示：使用 MCP 工具可以提高开发效率，快速查找文档和解决方案**
+
+### Context7 - Library Documentation
+
+Use `context7` to get up-to-date library documentation and code examples:
+
+```bash
+# When you need to understand how to use a library/framework
+# Example: Need to understand FastAPI dependency injection
+→ Use mcp__context7__resolve-library-id with "fastapi"
+→ Then use mcp__context7__get-library-docs with the resolved ID
+
+# Example: Need Flutter Riverpod state management docs
+→ Use mcp__context7__resolve-library-id with "riverpod"
+→ Then use mcp__context7__get-library-docs with topic "providers"
+```
+
+**When to use Context7:**
+- Learning a new library API
+- Finding correct usage patterns
+- Getting code examples for specific features
+- Understanding library architecture
+- Checking latest features and best practices
+
+### Exa - Code Context & Solutions
+
+Use `exa` to search for coding solutions and implementation examples:
+
+```bash
+# When you need to find solutions or code examples
+# Example: How to implement JWT authentication in FastAPI
+→ Use mcp__exa__get_code_context_exa with query "FastAPI JWT authentication implementation"
+
+# Example: Flutter adaptive layout examples
+→ Use mcp__exa__get_code_context_exa with query "Flutter adaptive scaffold responsive layout"
+```
+
+**When to use Exa:**
+- Finding implementation examples
+- Researching best practices
+- Solving specific technical problems
+- Learning design patterns
+- Finding error solutions
+
+### 🎯 MCP-First Development Approach
+
+**建议：在开始编码前，使用 MCP 工具查询文档可以避免重复造轮子**
+
+#### Development Workflow with MCP:
+
+1. **Receive Task** → Identify required libraries/technologies
+
+2. **Research Phase (Optional but Recommended)**:
+   ```
+   a. Use context7 to get official library documentation
+   b. Use exa to find implementation examples and solutions
+   c. Review existing codebase patterns
+   ```
+
+3. **Plan Implementation**:
+   - Based on documentation and examples
+   - Follow project architecture patterns
+   - Consider existing code standards
+
+4. **Implement**:
+   - Write code following researched patterns
+   - Reference documentation as needed
+   - Apply best practices found in examples
+
+5. **Verify**:
+   - Run tests
+   - Verify against documentation
+   - Check code quality
+
+#### Example Scenarios:
+
+**Scenario 1: Add new FastAPI endpoint**
+```
+1. context7 → Get FastAPI router and dependency injection docs
+2. exa → Find similar endpoint implementation examples
+3. Review backend/app/domains/ structure
+4. Implement following DDD pattern
+5. Write tests and verify
+```
+
+**Scenario 2: Create Flutter widget**
+```
+1. context7 → Get Material 3 component documentation
+2. exa → Find adaptive scaffold widget examples
+3. Review existing widgets in lib/shared/
+4. Implement following Material 3 design
+5. Write widget tests and verify
+```
+
+**Scenario 3: Fix a bug**
+```
+1. exa → Search for similar error messages and solutions
+2. context7 → Check relevant library documentation
+3. Analyze stack trace and affected code
+4. Apply solution
+5. Write regression test
+```
 
 ### 🔥 **快速开始 - 直接输入需求**
 
@@ -64,19 +171,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - "实现语音备忘录功能"
 
 **📋 强制性流程要求**：
-1. **第1步（必须）**: **产品经理**必须先分析需求并创建产品需求文档（PRD）
+1. **第1步（必须）**: **产品经理**必须先分析需求并创建需求文档
 2. **第2步（必须）**: 产品经理进行功能规划和任务分配
-3. **第3步（必须）**: 工程师团队按照PRD执行开发
+3. **第3步（必须）**: 工程师团队按照需求执行开发
 4. **第4步（必须）**: 产品经理进行最终验收并更新文档状态
 
 **🚫 禁止行为**：
 - ❌ 跳过产品经理直接开始开发
 - ❌ 开发完成后不进行产品验收
-- ❌ 不更新PRD状态就标记完成
+- ❌ 不更新需求文档状态就标记完成
 - ❌ 违反4阶段开发流程
 
 **⚡ 流程自动化检查**：
-- 系统会自动验证是否已创建PRD文档
+- 系统会自动验证是否已创建需求文档
 - 每个阶段完成后会更新任务状态
 - 最终验收前会检查所有验收标准
 
@@ -86,8 +193,6 @@ specs/
 ├── active/          # 进行中的需求
 ├── completed/       # 已完成的需求
 ├── templates/       # 文档模板
-├── verification/    # 验证报告
-├── completion/      # 完成报告
 └── README.md       # 需求索引
 ```
 
@@ -95,29 +200,26 @@ specs/
 
 **阶段1：需求分析检查**
 - [ ] 产品经理已分析用户需求
-- [ ] 已创建PRD文档（`specs/active/`）
-- [ ] PRD包含用户故事、验收标准、成功指标
-- [ ] 商业价值已明确定义
+- [ ] 已创建需求文档（`specs/active/`）
+- [ ] 需求文档包含用户故事、验收标准、技术要求
 
 **阶段2：功能规划检查**
 - [ ] 功能优先级已确定
 - [ ] MVP范围已定义
 - [ ] 任务已分配给正确的工程师
-- [ ] 时间规划已制定
 
 **阶段3：开发执行检查**
 - [ ] 后端API已实现（如需要）
 - [ ] 前端UI已实现
 - [ ] 测试已编写并执行
 - [ ] 代码审查已完成
+- [ ] （可选）使用 context7 查询了相关文档
+- [ ] （可选）使用 exa 搜索了实现示例
 
 **阶段4：产品验收检查**
 - [ ] 产品经理已验证功能完成度
 - [ ] 所有验收标准已通过
-- [ ] 商业价值已评估
-- [ ] PRD状态已更新为"已完成"
-- [ ] 验证报告已创建
-- [ ] 完成报告已创建
+- [ ] 需求文档状态已更新为"已完成"
 
 **❌ 流程违规处理**
 如果发现违反流程的情况：
@@ -130,43 +232,56 @@ specs/
 
 基于 `.claude/agents.json` 配置：
 
-1. **产品经理** (📋) - **产品愿景与执行负责人**
-   - 定义产品愿景和战略方向
-   - 分析用户需求和商业价值
-   - 创建和维护产品需求文档（PRD）
-   - 管理产品路线图和功能优先级
+1. **产品经理** (📋) - **产品需求与执行负责人**
+   - 定义产品需求和功能规划
+   - 分析用户需求和技术可行性
+   - 创建和维护需求文档
+   - 管理功能优先级
    - 协调所有工程团队
-   - 验证产品价值和用户满意度
+   - 验证功能完成度
+   - 建议使用 context7/exa 进行需求调研
 
 2. **架构师** (🏛️) - 系统设计与DDD架构
    - 技术架构设计
    - 技术选型决策
    - 架构文档编写
+   - 建议使用 context7 查询库文档
+   - 建议使用 exa 搜索架构模式
 
 3. **后端工程师** (⚙️) - FastAPI/Python开发
    - API接口开发
    - 数据库设计
    - 业务逻辑实现
+   - 建议使用 context7 查询 FastAPI/SQLAlchemy 文档
+   - 建议使用 exa 搜索实现示例
 
 4. **前端工程师** (🖥️) - Flutter桌面/Web开发
    - UI组件开发（使用Material 3设计规范）
    - 用户交互实现
    - 响应式设计（使用flutter_adaptive_scaffold适配不同屏幕尺寸）
+   - 建议使用 context7 查询 Flutter/Material 3 文档
+   - 建议使用 exa 搜索 Flutter UI 模式
 
 5. **移动端工程师** (📱) - Flutter iOS/Android开发
    - 移动端适配
    - 原生功能集成
    - 性能优化
+   - 建议使用 context7 查询 Flutter 平台文档
+   - 建议使用 exa 搜索移动开发模式
 
 6. **测试工程师** (🧪) - 质量保证与自动化测试
    - 测试策略制定
    - 自动化测试开发
    - 质量门禁把控
+   - 建议使用 exa 搜索测试模式和最佳实践
+   - 建议使用 context7 查询测试框架文档
 
 7. **DevOps工程师** (⚙️) - 部署与基础设施
    - CI/CD流水线
    - 部署自动化
    - 监控告警
+   - 建议使用 context7 查询 Docker/K8s 文档
+   - 建议使用 exa 搜索 DevOps 模式
 
 ### Workflows Available
 
@@ -195,6 +310,7 @@ When you activate auto-collaboration, agents automatically share:
 4. Test results
 5. Performance metrics
 6. Deployment status
+7. MCP research findings (if used)
 
 All agents use `./claude/agents/coordination/task-board.md` to track progress and `./claude/agents/coordination/communication.md` for protocol standards.
 
@@ -209,75 +325,57 @@ All agents use `./claude/agents/coordination/task-board.md` to track progress an
 
 #### 1. Full Feature Implementation
 ```bash
-User: /feature "api-rate-limiting" "Add rate limiting for subscription API endpoints"
+User: "Add rate limiting for API endpoints"
 ```
 **Auto-Orchestration Flow:**
 ```
-Requirements Analyst → Dives into why we need rate limiting
+Product Manager → Analyze requirements, create spec document
     ↓
-Architect → Design Redis-based rate limiter, rate limit schedule
+Architect → context7: Redis docs, exa: rate limiting patterns
     ↓
-Backend Developer → Implement FastAPI middleware, database limits
+Backend Developer → context7: FastAPI middleware docs, implement
     ↓
-Frontend Developer → Implement rate limit error UI in mobile app
+Frontend Developer → Handle rate limit errors in UI
     ↓
-Mobile Developer → Handle rate limit errors gracefully in mobile app
+Mobile Developer → Handle rate limit errors in mobile app
     ↓
-Test Engineer → Load testing, rate limit boundary testing
+Test Engineer → exa: load testing best practices, implement tests
     ↓
-DevOps Engineer → Redis config, monitoring alerts for rate limits
+DevOps Engineer → context7: Redis configuration, deploy
 ```
 
 #### 2. Bug Fix Production Issue
 ```bash
-User: /fix "search crashing for users with large knowledge base"
+User: "Fix search crashing with large datasets"
 ```
 **Auto-Triage & Resolution:**
 ```
-Test Engineer → "Reproduces in test, checks DB index usage"
+Product Manager → Define bug fix requirements
     ↓
-Backend Dev → Optimize indexing, implement streaming search
+Test Engineer → Reproduce bug
     ↓
-Test Engineer → "Performance target hit, no crashes"
+Backend Dev → exa: PostgreSQL optimization, fix implementation
+    ↓
+Test Engineer → Verify fix
     ↓
 DevOps Engineer → Deploy and monitor
 ```
 
 #### 3. Architecture Decision
 ```bash
-User: /architecture "chat message encryption at rest"
+User: "Choose encryption strategy for sensitive data"
 ```
 **Auto-Research & Decision:**
 ```
-Architect → Research AES-256 vs. GCP KMS, performance impact
-Backend Dev → "Zero-knowledge requires device-specific key management"
-Test Engineer → "Performance impact minimal at message scale"
-Consensus → Recommended GCP KMS with client-side key wrapping
-```
-
-#### 4. Flexible Team Coordination
-```bash
-User: /collaborate "Need a new feature for batch document processing"
-```
-**Auto-Determined Need:**
-```
-Requirements Analyst → Creates acceptance criteria
-Architect → Firebase Cloud Functions for scaling?
-Backend Dev → OR Backend Celery workers? Let's do Celery.
-DevOps → "Kubernetes CronJob for scheduled batch processing"
-```
----
-#### Simple Task Assignment
-```bash
-User: /task "#342 - Add user preference persistence"
-```
-**AI Selection:**
-```json
-{
-  "selected_agent": "backend-dev",
-  "action": "Backend task - add user_preferences table + API endpoints",
-  "next_task": "frontend-dev for UI binding"
-}
+Product Manager → Define technical requirements
+    ↓
+Architect → context7: cryptography libraries, exa: encryption patterns
+    ↓
+Backend Dev → Evaluate implementation complexity
+    ↓
+Test Engineer → Security testing requirements
+    ↓
+Consensus → Decision based on research and requirements
 ```
 
 ## Project Overview
@@ -416,12 +514,14 @@ The frontend Flutter application should be run separately using the commands in 
    - Follow Material 3 color schemes, typography, and elevation
    - Implement Material 3 theming with ThemeData using `useMaterial3: true`
    - Reference: https://m3.material.io/
+   - 建议使用 context7 获取 Material 3 文档
 
 2. **Responsive Layout with flutter_adaptive_scaffold**
    - Use `flutter_adaptive_scaffold` package for all page layouts
    - Implement adaptive navigation (NavigationRail for desktop, BottomNavigationBar for mobile)
    - Support breakpoints: mobile (<600dp), tablet (600-840dp), desktop (>840dp)
    - Ensure consistent UX across desktop, web, and mobile platforms
+   - 建议使用 context7 获取 flutter_adaptive_scaffold 文档
 
 3. **Implementation Requirements**
    - All new pages must use `AdaptiveScaffold` or `AdaptiveLayout`
@@ -495,6 +595,7 @@ Uses PostgreSQL with the following key entities:
    - Verify accessibility with semantic labels
    - Group related tests with `group()`
    - Use descriptive test names: `'[widget] [condition] [expected outcome]'`
+   - 建议使用 exa 查找 Flutter 测试模式和示例
 
 5. **Test Commands**
    ```bash
@@ -534,10 +635,26 @@ When making changes:
 4. Write tests for new functionality
 5. Update API documentation automatically generated by FastAPI
 6. Keep the frontend and backend domain structures in sync
+7. 建议使用 context7 和 exa MCP 工具查询文档和搜索解决方案以提高开发效率
 
 ### 🔒 **MANDATORY: Code Modification and Verification Rules**
 
 **CRITICAL**: Every code modification MUST follow this verification workflow:
+
+#### 0. **Research Phase (建议但非必须)**
+```bash
+# 建议：在编码前使用 MCP 工具进行研究可以提高效率
+
+# For library-specific implementation:
+→ 可以使用 context7 获取官方文档
+→ 可以使用 exa 查找实现示例
+
+# Example: Adding FastAPI authentication
+1. (Optional) context7 → Get FastAPI security documentation
+2. (Optional) exa → Find JWT authentication examples
+3. Review existing auth patterns in app/core/security/
+4. Then proceed with implementation
+```
 
 #### 1. **Syntax Validation (Always Required)**
 ```bash
@@ -632,6 +749,29 @@ curl http://localhost:8000/api/v1/health
 curl http://localhost:8000/api/v1/podcast/subscriptions
 ```
 
-**⚠️ WARNING**: Never mark a task as complete without running these verifications. "It should work" is not enough - it must actually work. Both backend (via Docker) and frontend must be tested and verified.
+**⚠️ WARNING**: Never mark a task as complete without:
+1. Running all verifications
+2. Testing the actual functionality
+
+"It should work" is not enough - it must actually work. Both backend (via Docker) and frontend must be tested and verified.
+
+## 📝 Summary: Product-Driven Development with MCP Tools
+
+**Remember: Requirement → Plan → Implement → Verify**
+
+1. **Product Manager leads requirement analysis and planning**
+2. **Follow clean architecture and coding standards**
+3. **Write comprehensive tests**
+4. **建议使用 context7 查询官方库文档以提高效率**
+5. **建议使用 exa 搜索实现示例和解决方案**
+6. **Document your decisions and implementations**
+
+This approach ensures:
+- ✅ Clear requirements and planning
+- ✅ Correct usage of libraries and frameworks
+- ✅ Following best practices
+- ✅ Avoiding common pitfalls
+- ✅ Writing maintainable code
+- ✅ Faster development with fewer errors
 
 The project uses clean architecture principles with clear separation of concerns, making it easy to extend with new features or modify existing functionality.

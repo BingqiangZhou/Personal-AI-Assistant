@@ -5,24 +5,27 @@
     "product-manager": {
       "path": ".claude/agents/roles/product-manager.md",
       "active": true,
-      "description": "Product Manager - Core driver of the workflow, responsible for product vision and execution",
+      "description": "Product Manager - Core driver of the workflow, responsible for requirements and execution coordination",
       "role_type": "lead",
       "responsibilities": [
-        "Define product vision and strategy",
-        "Analyze and clarify user requirements and business needs",
+        "Define product requirements and functional planning",
+        "Analyze user requirements and technical feasibility",
         "Create and maintain requirement documents in specs/",
         "Coordinate work between all engineering teams",
-        "Validate feature completion and business value",
+        "Validate feature completion and user experience",
         "Drive the 4-stage product development lifecycle",
-        "Manage product backlog and prioritize features",
-        "Ensure user satisfaction and business goals alignment",
+        "Manage feature prioritization",
         "MANDATORY: Always be the first to analyze user requests",
-        "MANDATORY: Create PRD in specs/active/ before any development",
+        "MANDATORY: Create requirement doc in specs/active/ before any development",
         "MANDATORY: Conduct final validation and update document status",
-        "MANDATORY: Move completed PRDs to specs/completed/ with verification reports"
+        "Recommended: Use context7/exa for requirement research"
       ],
       "default_workflow": "product-driven-development",
       "workflow_priority": 1,
+      "mcp_tools": {
+        "context7": "Recommended for researching similar features and best practices",
+        "exa": "Recommended for finding implementation examples and user experience patterns"
+      },
       "mandatory_actions": [
         {
           "trigger": "user_request_received",
@@ -32,7 +35,7 @@
         },
         {
           "trigger": "requirements_analyzed",
-          "action": "create_prd_document",
+          "action": "create_requirement_document",
           "path": "specs/active/",
           "required": true,
           "before": ["development_start"]
@@ -53,10 +56,16 @@
       "responsibilities": [
         "Technical architecture design",
         "Technology selection decisions",
-        "Architecture documentation"
+        "Architecture documentation",
+        "Recommended: Use context7 for library documentation",
+        "Recommended: Use exa for architecture patterns and examples"
       ],
       "default_workflow": "architecture-review",
-      "workflow_priority": 2
+      "workflow_priority": 2,
+      "mcp_tools": {
+        "context7": "Recommended for library documentation research",
+        "exa": "Recommended for architecture patterns and best practices"
+      }
     },
     "backend-dev": {
       "path": ".claude/agents/roles/backend-dev.md",
@@ -67,10 +76,16 @@
         "API endpoint development",
         "Database design and implementation",
         "Business logic implementation",
-        "Unit and integration testing"
+        "Unit and integration testing",
+        "Recommended: Use context7 for FastAPI/SQLAlchemy/Python docs",
+        "Recommended: Use exa for implementation examples and patterns"
       ],
       "default_workflow": "feature-development",
-      "workflow_priority": 3
+      "workflow_priority": 3,
+      "mcp_tools": {
+        "context7": "Recommended for FastAPI, SQLAlchemy, Python documentation",
+        "exa": "Recommended for implementation examples and solutions"
+      }
     },
     "frontend-dev": {
       "path": ".claude/agents/roles/frontend-dev.md",
@@ -78,13 +93,19 @@
       "description": "Flutter desktop and web development",
       "role_type": "implementer",
       "responsibilities": [
-        "UI component development",
+        "UI component development (Material 3)",
         "User interaction implementation",
-        "Responsive design",
-        "Widget testing"
+        "Responsive design (flutter_adaptive_scaffold)",
+        "Widget testing",
+        "Recommended: Use context7 for Flutter/Material 3/Riverpod docs",
+        "Recommended: Use exa for Flutter UI patterns and examples"
       ],
       "default_workflow": "feature-development",
-      "workflow_priority": 3
+      "workflow_priority": 3,
+      "mcp_tools": {
+        "context7": "Recommended for Flutter, Material 3, Riverpod documentation",
+        "exa": "Recommended for Flutter patterns and UI examples"
+      }
     },
     "mobile-dev": {
       "path": ".claude/agents/roles/mobile-dev.md",
@@ -95,10 +116,16 @@
         "Mobile platform adaptation",
         "Native feature integration",
         "Performance optimization",
-        "Mobile-specific testing"
+        "Mobile-specific testing",
+        "Recommended: Use context7 for Flutter platform docs",
+        "Recommended: Use exa for mobile development patterns"
       ],
       "default_workflow": "feature-development",
-      "workflow_priority": 3
+      "workflow_priority": 3,
+      "mcp_tools": {
+        "context7": "Recommended for Flutter platform-specific documentation",
+        "exa": "Recommended for mobile development patterns"
+      }
     },
     "test-engineer": {
       "path": ".claude/agents/roles/test-engineer.md",
@@ -109,10 +136,16 @@
         "Test strategy development",
         "Automated test implementation",
         "Quality gate enforcement",
-        "Verification report creation"
+        "Verification report creation",
+        "Recommended: Use exa for testing patterns and best practices",
+        "Recommended: Use context7 for testing framework docs (pytest, flutter_test)"
       ],
       "default_workflow": "bug-fix",
-      "workflow_priority": 4
+      "workflow_priority": 4,
+      "mcp_tools": {
+        "context7": "Recommended for pytest, flutter_test documentation",
+        "exa": "Recommended for testing patterns and best practices"
+      }
     },
     "devops-engineer": {
       "path": ".claude/agents/roles/devops-engineer.md",
@@ -123,42 +156,50 @@
         "CI/CD pipeline setup",
         "Deployment automation",
         "Monitoring and alerting",
-        "Infrastructure management"
+        "Infrastructure management",
+        "Recommended: Use context7 for Docker/Kubernetes/infrastructure docs",
+        "Recommended: Use exa for DevOps patterns and solutions"
       ],
       "default_workflow": "feature-development",
-      "workflow_priority": 4
+      "workflow_priority": 4,
+      "mcp_tools": {
+        "context7": "Recommended for Docker, K8s, CI/CD documentation",
+        "exa": "Recommended for DevOps patterns and infrastructure solutions"
+      }
     }
   },
   "workflows": {
     "product-driven-development": {
       "path": ".claude/agents/workflows/product-driven-development.md",
-      "description": "Product-driven 4-stage workflow with Product Manager as the core driver, focusing on business value and user needs",
+      "description": "Product-driven 4-stage workflow with Product Manager as the core driver, focusing on requirements and user needs",
       "enforced": true,
       "validation_required": true,
       "stages": [
         {
-          "name": "Product Analysis & Requirement Definition",
+          "name": "Requirement Analysis & Definition",
           "owner": "product-manager",
           "mandatory": true,
-          "description": "Analyze user input and business needs, define product requirements, create/update requirement documents in specs/",
+          "description": "Analyze user input and technical requirements, define product requirements, create/update requirement documents in specs/",
+          "mcp_required": false,
           "deliverables": [
-            "PRD document in specs/active/",
+            "Requirement document in specs/active/",
             "User stories and acceptance criteria",
-            "Business value definition",
-            "Success metrics"
+            "Technical requirements",
+            "Success criteria"
           ],
           "validation_criteria": [
-            "PRD document exists and is complete",
+            "Requirement document exists and is complete",
             "All user stories are defined",
-            "Success metrics are measurable",
-            "Business value is clearly articulated"
+            "Success criteria are measurable",
+            "Technical requirements are clearly articulated"
           ]
         },
         {
           "name": "Feature Planning & Task Assignment",
           "owner": "product-manager",
           "mandatory": true,
-          "description": "Plan features based on product vision, break down requirements into prioritized tasks and assign to appropriate engineers",
+          "description": "Plan features, break down requirements into prioritized tasks and assign to appropriate engineers",
+          "mcp_required": false,
           "deliverables": [
             "Task assignment plan",
             "MVP scope definition",
@@ -176,7 +217,8 @@
           "name": "Development Execution & Status Tracking",
           "owner": "assigned-engineer",
           "mandatory": true,
-          "description": "Engineers execute tasks according to product requirements and update status in requirement documents",
+          "description": "Engineers execute tasks according to requirements and update status. Recommended to research using MCP tools before implementation.",
+          "mcp_required": false,
           "deliverables": [
             "Implemented features",
             "Unit and integration tests",
@@ -191,21 +233,19 @@
           ]
         },
         {
-          "name": "Product Validation & Business Value Assessment",
+          "name": "Product Validation",
           "owner": "product-manager",
           "mandatory": true,
-          "description": "Validate feature completion, assess business value, measure user satisfaction, and iterate if needed",
+          "description": "Validate feature completion, assess user experience, and iterate if needed",
+          "mcp_required": false,
           "deliverables": [
-            "Verification report in docs/verification/",
-            "Completion report in docs/completion/",
-            "Updated PRD status",
-            "Business value assessment"
+            "Updated requirement doc status",
+            "Feature validation results"
           ],
           "validation_criteria": [
             "All acceptance criteria are met",
-            "Verification report is created",
-            "PRD is moved to specs/completed/",
-            "Business value is assessed and documented"
+            "Requirement doc is moved to specs/completed/",
+            "Feature meets user requirements"
           ]
         }
       ],
@@ -213,17 +253,16 @@
       "estimated_duration": "1-2 weeks",
       "default_workflow": true,
       "key_principles": [
-        "Business value first",
         "User-centric approach",
-        "Data-driven decisions",
+        "Technical excellence",
         "Continuous validation"
       ],
       "workflow_gates": [
         {
           "stage": 1,
-          "gate": "prd_created",
+          "gate": "requirement_doc_created",
           "required_for_stage_2": true,
-          "validation": "Check if PRD exists in specs/active/"
+          "validation": "Check if requirement doc exists in specs/active/"
         },
         {
           "stage": 2,
@@ -241,7 +280,7 @@
           "stage": 4,
           "gate": "validation_complete",
           "required_for_completion": true,
-          "validation": "Check if verification report is created and PRD is moved to completed/"
+          "validation": "Check if requirement doc is moved to completed/"
         }
       ]
     },
@@ -249,18 +288,84 @@
       "path": ".claude/agents/workflows/feature-development.md",
       "description": "End-to-end feature development workflow",
       "participants": ["product-manager", "architect", "backend-dev", "frontend-dev", "mobile-dev", "test-engineer", "devops-engineer"],
+      "stages": [
+        {
+          "name": "Requirement Analysis",
+          "description": "Understand technical requirements and break down into tasks",
+          "mcp_required": false
+        },
+        {
+          "name": "Research & Planning",
+          "description": "Plan implementation, optionally research using context7/exa",
+          "mcp_required": false
+        },
+        {
+          "name": "Implementation",
+          "description": "Develop features following project patterns",
+          "mcp_required": false
+        },
+        {
+          "name": "Testing & Verification",
+          "description": "Test and verify implementation",
+          "mcp_required": false
+        }
+      ],
       "estimated_duration": "2-3 weeks"
     },
     "bug-fix": {
       "path": ".claude/agents/workflows/bug-fix.md",
       "description": "Bug triage and resolution workflow",
       "participants": ["product-manager", "test-engineer", "backend-dev", "frontend-dev", "mobile-dev", "devops-engineer"],
+      "stages": [
+        {
+          "name": "Bug Reproduction",
+          "description": "Reproduce and analyze the bug",
+          "mcp_required": false
+        },
+        {
+          "name": "Research Solution",
+          "description": "Find solution, optionally use exa to search for similar issues",
+          "mcp_required": false
+        },
+        {
+          "name": "Implementation",
+          "description": "Apply fix and add regression tests",
+          "mcp_required": false
+        },
+        {
+          "name": "Verification",
+          "description": "Verify fix and deploy",
+          "mcp_required": false
+        }
+      ],
       "estimated_duration": "1-5 days"
     },
     "architecture-review": {
       "path": ".claude/agents/workflows/architecture-review.md",
       "description": "Architecture design and review workflow",
       "participants": ["architect", "product-manager", "backend-dev", "frontend-dev", "mobile-dev", "test-engineer", "devops-engineer"],
+      "stages": [
+        {
+          "name": "Research Phase",
+          "description": "Research patterns, libraries, and best practices, optionally use context7/exa",
+          "mcp_required": false
+        },
+        {
+          "name": "Design Phase",
+          "description": "Design architecture based on research",
+          "mcp_required": false
+        },
+        {
+          "name": "Review Phase",
+          "description": "Review and validate design decisions",
+          "mcp_required": false
+        },
+        {
+          "name": "Documentation",
+          "description": "Document architecture decisions",
+          "mcp_required": false
+        }
+      ],
       "estimated_duration": "2-4 hours"
     }
   },
@@ -290,6 +395,13 @@
     "auto_assign_tasks": true,
     "track_metrics": true,
     "enable_logging": true,
+    "mcp_tools_enforcement": {
+      "enabled": true,
+      "mandatory_research_phase": false,
+      "context7_recommended": true,
+      "exa_recommended": true,
+      "violation_handling": "log_only"
+    },
     "workflow_enforcement": {
       "enabled": true,
       "strict_mode": true,
@@ -298,14 +410,14 @@
     },
     "product_manager_requirements": {
       "must_analyze_first": true,
-      "must_create_prd": true,
+      "must_create_requirement_doc": true,
       "must_validate_completion": true,
       "must_update_document_status": true
     },
     "validation_rules": [
       {
-        "rule": "prd_must_exist_before_development",
-        "description": "PRD must be created in specs/active/ before any development starts",
+        "rule": "requirement_doc_must_exist_before_development",
+        "description": "Requirement doc must be created in specs/active/ before any development starts",
         "enforcement": "strict",
         "check": "file_exists"
       },
@@ -322,10 +434,30 @@
         "check": "document_status"
       },
       {
-        "rule": "prd_must_be_moved_to_completed",
-        "description": "PRD must be moved to specs/completed/ with verification reports",
+        "rule": "requirement_doc_must_be_moved_to_completed",
+        "description": "Requirement doc must be moved to specs/completed/",
         "enforcement": "strict",
         "check": "file_location_and_content"
+      }
+    ],
+    "development_rules": [
+      {
+        "rule": "follow_coding_standards",
+        "description": "Follow project coding standards and architecture patterns",
+        "enforcement": "mandatory",
+        "check": "code_review"
+      },
+      {
+        "rule": "write_tests",
+        "description": "Write comprehensive tests for new functionality",
+        "enforcement": "mandatory",
+        "check": "test_coverage"
+      },
+      {
+        "rule": "use_mcp_tools_recommended",
+        "description": "Recommended to use context7/exa for research to improve efficiency",
+        "enforcement": "recommended",
+        "check": "optional"
       }
     ]
   }
