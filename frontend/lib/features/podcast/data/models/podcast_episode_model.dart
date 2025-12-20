@@ -267,7 +267,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
   List<Object?> get props => [episode, subscription, relatedEpisodes];
 }
 
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class PodcastFeedResponse extends Equatable {
   final List<PodcastEpisodeModel> items;
   @JsonKey(defaultValue: false)

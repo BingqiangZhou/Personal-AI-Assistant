@@ -5,24 +5,29 @@ import 'package:go_router/go_router.dart';
 import '../widgets/bottom_navigation.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
+import '../../../podcast/presentation/pages/podcast_list_page.dart';
+import '../../../assistant/presentation/pages/assistant_chat_page.dart';
+import '../../../knowledge/presentation/pages/knowledge_base_page.dart';
+import '../../../profile/presentation/pages/profile_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   final Widget? child;
+  final int? initialTab;
 
-  const HomePage({super.key, this.child});
+  const HomePage({super.key, this.child, this.initialTab});
 
   @override
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   final List<NavigationItem> _navigationItems = [
     NavigationItem(
       icon: Icons.home_outlined,
       activeIcon: Icons.home,
-      label: 'Home',
+      label: 'Feed',
       route: '/home',
     ),
     NavigationItem(
@@ -51,15 +56,17 @@ class _HomePageState extends ConsumerState<HomePage> {
     ),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialTab ?? 0;
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _currentIndex = index;
     });
-
-    final item = _navigationItems[index];
-    if (widget.child == null) {
-      context.go(item.route);
-    }
+    // 现在我们使用_buildCurrentTabContent()来显示内容，不需要Go Router导航
   }
 
   @override
@@ -67,115 +74,54 @@ class _HomePageState extends ConsumerState<HomePage> {
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
+    // 如果使用ShellRoute（有child），则不显示底部导航
+    // 如果使用Tab导航（无child），则显示底部导航
+    if (widget.child != null) {
+      return Scaffold(body: widget.child);
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _navigationItems[_currentIndex].label,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        actions: [
-          if (user != null) ...[
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              onPressed: () {
-                // TODO: Show notifications
-              },
-            ),
-            PopupMenuButton<String>(
-              icon: CircleAvatar(
-                backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
-                child: user.avatarUrl == null ? Text(user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : 'U') : null,
-              ),
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'profile',
-                  child: Row(
-                    children: [
-                      const Icon(Icons.person),
-                      const SizedBox(width: 8),
-                      Text(user.displayName),
-                    ],
-                  ),
-                ),
-                const PopupMenuDivider(),
-                PopupMenuItem(
-                  value: 'settings',
-                  child: Row(
-                    children: const [
-                      Icon(Icons.settings),
-                      SizedBox(width: 8),
-                      Text('Settings'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'logout',
-                  child: Row(
-                    children: const [
-                      Icon(Icons.logout),
-                      SizedBox(width: 8),
-                      Text('Logout'),
-                    ],
-                  ),
-                ),
-              ],
-              onSelected: (value) {
-                switch (value) {
-                  case 'profile':
-                    context.go('/profile');
-                    break;
-                  case 'settings':
-                    context.go('/profile/settings');
-                    break;
-                  case 'logout':
-                    ref.read(authProvider.notifier).logout();
-                    break;
-                }
-              },
-            ),
-          ],
-        ],
+      body: _buildCurrentTabContent(),
+      bottomNavigationBar: BottomNavigation(
+        items: _navigationItems,
+        currentIndex: _currentIndex,
+        onTap: _onItemTapped,
       ),
-
-      body: widget.child ??
-          IndexedStack(
-            index: _currentIndex,
-            children: _navigationItems.map((item) {
-              return Navigator(
-                onGenerateRoute: (settings) {
-                  return MaterialPageRoute(
-                    builder: (context) => _buildPage(item.route),
-                  );
-                },
-              );
-            }).toList(),
-          ),
-
-      bottomNavigationBar: widget.child == null
-          ? BottomNavigation(
-              items: _navigationItems,
-              currentIndex: _currentIndex,
-              onTap: _onItemTapped,
-            )
-          : null,
     );
   }
 
+  Widget _buildCurrentTabContent() {
+    switch (_currentIndex) {
+      case 0: // Feed
+        return const PodcastFeedPage();
+      case 1: // Podcast
+        return const PodcastListPage();
+      case 2: // AI Assistant
+        return const AssistantChatPage();
+      case 3: // Knowledge Base
+        return const KnowledgeBasePage();
+      case 4: // Profile
+        return const ProfilePage();
+      default:
+        return const Center(child: Text('Page Not Found'));
+    }
+  }
+
   Widget _buildPage(String route) {
-    // This is a placeholder for actual page content
-    // In a real app, you would use a proper navigation setup
     switch (route) {
       case '/home':
-        return const PodcastFeedPage();
+        return const PodcastFeedPage(); // Feed
+      case '/podcast':
+        return const PodcastListPage(); // Podcast List
       case '/home/assistant':
-        return const Center(
-          child: Text('AI Assistant Page'),
-        );
+        return const AssistantChatPage(); // AI Assistant
+      case '/knowledge':
+        return const KnowledgeBasePage(); // Knowledge Base
+      case '/profile':
+        return const ProfilePage(); // Profile
       default:
         return const Center(
-          child: Text('Page'),
+          child: Text('Page Not Found'),
         );
     }
   }

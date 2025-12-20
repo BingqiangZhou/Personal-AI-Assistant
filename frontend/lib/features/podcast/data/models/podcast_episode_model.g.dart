@@ -120,8 +120,8 @@ PodcastFeedResponse _$PodcastFeedResponseFromJson(Map<String, dynamic> json) =>
       items: (json['items'] as List<dynamic>)
           .map((e) => PodcastEpisodeModel.fromJson(e as Map<String, dynamic>))
           .toList(),
-      hasMore: json['hasMore'] as bool? ?? false,
-      nextPage: (json['nextPage'] as num?)?.toInt(),
+      hasMore: json['has_more'] as bool? ?? false,
+      nextPage: (json['next_page'] as num?)?.toInt(),
       total: (json['total'] as num).toInt(),
     );
 
@@ -129,7 +129,7 @@ Map<String, dynamic> _$PodcastFeedResponseToJson(
   PodcastFeedResponse instance,
 ) => <String, dynamic>{
   'items': instance.items,
-  'hasMore': instance.hasMore,
-  'nextPage': instance.nextPage,
+  'has_more': instance.hasMore,
+  'next_page': instance.nextPage,
   'total': instance.total,
 };

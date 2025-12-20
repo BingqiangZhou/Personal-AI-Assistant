@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -277,8 +278,12 @@ class PodcastFeedNotifier extends _$PodcastFeedNotifier {
   }
 
   Future<void> loadMoreFeed() async {
-    if (!state.hasMore || state.isLoadingMore || state.nextPage == null) return;
+    if (!state.hasMore || state.isLoadingMore || state.nextPage == null) {
+      debugPrint('🚫 懒加载被阻止: hasMore=${state.hasMore}, isLoadingMore=${state.isLoadingMore}, nextPage=${state.nextPage}');
+      return;
+    }
 
+    debugPrint('⏳ 开始加载更多内容，页码: ${state.nextPage}');
     state = state.copyWith(isLoadingMore: true);
 
     try {
@@ -287,6 +292,7 @@ class PodcastFeedNotifier extends _$PodcastFeedNotifier {
         pageSize: _pageSize,
       );
 
+      debugPrint('✅ 成功加载 ${response.items.length} 条新内容，总数量: ${response.total}, 还有更多: ${response.hasMore}');
       final allEpisodes = [...state.episodes, ...response.items];
 
       state = state.copyWith(
@@ -297,7 +303,11 @@ class PodcastFeedNotifier extends _$PodcastFeedNotifier {
         isLoadingMore: false,
       );
     } catch (error) {
-      state = state.copyWith(isLoadingMore: false);
+      debugPrint('❌ 加载更多内容失败: $error');
+      state = state.copyWith(
+        isLoadingMore: false,
+        error: '加载更多内容失败: ${error.toString()}',
+      );
     }
   }
 
