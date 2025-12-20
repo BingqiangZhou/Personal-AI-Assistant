@@ -69,7 +69,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -85,7 +85,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
-                                  color: theme.primaryColor.withOpacity(0.1),
+                                  color: theme.primaryColor.withValues(alpha: 0.1),
                                   child: Icon(
                                     Icons.podcasts,
                                     size: 40,
@@ -95,7 +95,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                               },
                             )
                           : Container(
-                              color: theme.primaryColor.withOpacity(0.1),
+                              color: theme.primaryColor.withValues(alpha: 0.1),
                               child: Icon(
                                 Icons.podcasts,
                                 size: 40,
@@ -123,7 +123,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                           Text(
                               subscription.description!,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.textTheme.bodySmall?.color?.withOpacity(0.7),
+                                color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -201,10 +201,10 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                             Container(
                               margin: EdgeInsets.zero,
                               decoration: BoxDecoration(
-                                color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                                color: theme.colorScheme.surface.withValues(alpha: 0.6),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: theme.dividerColor.withOpacity(0.4),
+                                  color: theme.dividerColor.withValues(alpha: 0.4),
                                   width: 1,
                                 ),
                               ),
@@ -212,7 +212,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                                 icon: Icon(
                                   Icons.more_vert,
                                   size: 20,
-                                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
                                 ),
                                 onSelected: (value) {
                                   switch (value) {

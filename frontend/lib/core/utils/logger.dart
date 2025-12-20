@@ -14,7 +14,7 @@ class AppLogger {
         lineLength: 120,
         colors: true,
         printEmojis: true,
-        printTime: true,
+        dateTimeFormat: DateTimeFormat.none,
       ),
       output: MultiOutput([
         ConsoleOutput(),
@@ -40,7 +40,7 @@ class AppLogger {
     _logger.e(message, error: error, stackTrace: stackTrace);
   }
 
-  void wtf(dynamic message, [dynamic error, StackTrace? stackTrace]) {
-    _logger.wtf(message, error: error, stackTrace: stackTrace);
+  void fatal(dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    _logger.f(message, error: error, stackTrace: stackTrace);
   }
 }

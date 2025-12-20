@@ -15,10 +15,7 @@ import '../../features/podcast/presentation/pages/podcast_list_page.dart';
 import '../../features/podcast/presentation/pages/podcast_player_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episode_detail_page.dart';
-import '../../features/podcast/presentation/pages/podcast_feed_page.dart';
 import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
-import '../../features/knowledge/presentation/pages/knowledge_base_page.dart';
-import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {

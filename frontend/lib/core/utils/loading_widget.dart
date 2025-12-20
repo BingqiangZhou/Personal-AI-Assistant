@@ -54,7 +54,7 @@ class FullScreenLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white.withOpacity(0.8),
+      backgroundColor: Colors.white.withValues(alpha: 0.8),
       body: LoadingWidget(message: message),
     );
   }

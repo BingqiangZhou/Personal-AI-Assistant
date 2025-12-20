@@ -26,11 +26,7 @@ class ServiceLocator {
     sl.registerSingleton<SharedPreferences>(sharedPreferences);
 
     // Register FlutterSecureStorage
-    const secureStorage = FlutterSecureStorage(
-      aOptions: AndroidOptions(
-        encryptedSharedPreferences: true,
-      ),
-    );
+    const secureStorage = FlutterSecureStorage();
     sl.registerSingleton<FlutterSecureStorage>(secureStorage);
 
     // Register storage services

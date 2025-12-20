@@ -21,7 +21,7 @@ class PasswordRequirementItem extends StatelessWidget {
             size: 16,
             color: isValid
                 ? Colors.green
-                : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.6),
+                : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
           ),
           const SizedBox(width: 8),
           Expanded(

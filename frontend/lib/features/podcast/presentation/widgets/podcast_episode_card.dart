@@ -43,10 +43,10 @@ class PodcastEpisodeCard extends ConsumerWidget {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: theme.primaryColor.withOpacity(0.15),
+                      color: theme.primaryColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: theme.primaryColor.withOpacity(0.3),
+                        color: theme.primaryColor.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -56,13 +56,13 @@ class PodcastEpisodeCard extends ConsumerWidget {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: theme.primaryColor.withOpacity(0.2),
+                              color: theme.primaryColor.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.headphones,
                               size: 24,
-                              color: theme.primaryColor.withOpacity(0.9),
+                              color: theme.primaryColor.withValues(alpha: 0.9),
                             ),
                           ),
                         ),
@@ -72,10 +72,10 @@ class PodcastEpisodeCard extends ConsumerWidget {
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: theme.primaryColor.withOpacity(0.3),
+                                color: theme.primaryColor.withValues(alpha: 0.3),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: theme.primaryColor.withOpacity(0.5),
+                                  color: theme.primaryColor.withValues(alpha: 0.5),
                                   width: 1,
                                 ),
                               ),
@@ -107,17 +107,17 @@ class PodcastEpisodeCard extends ConsumerWidget {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: theme.primaryColor.withOpacity(0.2),
+                                  color: theme.primaryColor.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: theme.primaryColor.withOpacity(0.4),
+                                    color: theme.primaryColor.withValues(alpha: 0.4),
                                     width: 1,
                                   ),
                                 ),
                                 child: Text(
                                   episode.episodeIdentifier,
                                   style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.primaryColor.withOpacity(0.9),
+                                    color: theme.primaryColor.withValues(alpha: 0.9),
                                     fontWeight: FontWeight.w700,
                                     fontSize: 11,
                                   ),
@@ -132,10 +132,10 @@ class PodcastEpisodeCard extends ConsumerWidget {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.withOpacity(0.3),
+                                  color: Colors.grey.withValues(alpha: 0.3),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: Colors.grey.withOpacity(0.5),
+                                    color: Colors.grey.withValues(alpha: 0.5),
                                     width: 1,
                                   ),
                                 ),
@@ -156,10 +156,10 @@ class PodcastEpisodeCard extends ConsumerWidget {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.2),
+                                  color: Colors.red.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: Colors.red.withOpacity(0.4),
+                                    color: Colors.red.withValues(alpha: 0.4),
                                     width: 1,
                                   ),
                                 ),
@@ -203,13 +203,13 @@ class PodcastEpisodeCard extends ConsumerWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: theme.primaryColor.withOpacity(0.4),
+                          color: theme.primaryColor.withValues(alpha: 0.4),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
                       ],
                       border: Border.all(
-                        color: theme.primaryColor.withOpacity(0.3),
+                        color: theme.primaryColor.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -251,7 +251,7 @@ class PodcastEpisodeCard extends ConsumerWidget {
                   child: Text(
                     episode.description!,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                     ),
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
@@ -349,10 +349,10 @@ class PodcastEpisodeCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: defaultColor.withOpacity(0.1),
+        color: defaultColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: defaultColor.withOpacity(0.3),
+          color: defaultColor.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -362,13 +362,13 @@ class PodcastEpisodeCard extends ConsumerWidget {
           Icon(
             icon,
             size: 14,
-            color: defaultColor.withOpacity(0.9),
+            color: defaultColor.withValues(alpha: 0.9),
           ),
           const SizedBox(width: 4),
           Text(
             text,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: defaultColor.withOpacity(0.9),
+              color: defaultColor.withValues(alpha: 0.9),
               fontWeight: FontWeight.w600,
               fontSize: 11,
             ),

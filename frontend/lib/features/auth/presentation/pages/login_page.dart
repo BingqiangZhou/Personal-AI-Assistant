@@ -99,7 +99,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         Text(
                           'Sign in to continue to your AI assistant',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                       ],

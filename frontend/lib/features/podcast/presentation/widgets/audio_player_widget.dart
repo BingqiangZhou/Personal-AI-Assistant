@@ -21,7 +21,7 @@ class AudioPlayerWidget extends ConsumerWidget {
         color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),
@@ -51,7 +51,7 @@ class AudioPlayerWidget extends ConsumerWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
+              color: theme.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -78,7 +78,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                 Text(
                   state.formattedPosition,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                    color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -87,10 +87,10 @@ class AudioPlayerWidget extends ConsumerWidget {
           // Play/pause button
           Container(
             decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.15),
+              color: theme.primaryColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: theme.primaryColor.withOpacity(0.3),
+                color: theme.primaryColor.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -117,7 +117,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                     )
                   : Icon(
                       state.isPlaying ? Icons.pause : Icons.play_arrow,
-                      color: theme.primaryColor.withOpacity(0.8),
+                      color: theme.primaryColor.withValues(alpha: 0.8),
                     ),
             ),
           ),
@@ -125,10 +125,10 @@ class AudioPlayerWidget extends ConsumerWidget {
           // Expand button
           Container(
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+              color: theme.colorScheme.surface.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: theme.dividerColor.withOpacity(0.3),
+                color: theme.dividerColor.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -138,7 +138,7 @@ class AudioPlayerWidget extends ConsumerWidget {
               },
               icon: Icon(
                 Icons.keyboard_arrow_up,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
               ),
             ),
           ),
@@ -180,11 +180,11 @@ class AudioPlayerWidget extends ConsumerWidget {
             width: 200,
             height: 200,
             decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
+              color: theme.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -214,7 +214,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                 Text(
                   state.currentEpisode!.description!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                    color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
@@ -267,10 +267,10 @@ class AudioPlayerWidget extends ConsumerWidget {
               // Previous button (placeholder)
               Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  color: theme.colorScheme.surface.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: theme.dividerColor.withOpacity(0.3),
+                    color: theme.dividerColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -280,7 +280,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                   },
                   icon: Icon(
                     Icons.skip_previous,
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                   ),
                   iconSize: 36,
                 ),
@@ -288,10 +288,10 @@ class AudioPlayerWidget extends ConsumerWidget {
               // Rewind 15 seconds
               Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  color: theme.colorScheme.surface.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: theme.dividerColor.withOpacity(0.3),
+                    color: theme.dividerColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -304,7 +304,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                   },
                   icon: Icon(
                     Icons.fast_rewind,
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                   ),
                   iconSize: 36,
                 ),
@@ -316,7 +316,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: theme.primaryColor.withOpacity(0.3),
+                      color: theme.primaryColor.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -353,10 +353,10 @@ class AudioPlayerWidget extends ConsumerWidget {
               // Forward 15 seconds
               Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  color: theme.colorScheme.surface.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: theme.dividerColor.withOpacity(0.3),
+                    color: theme.dividerColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -369,7 +369,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                   },
                   icon: Icon(
                     Icons.fast_forward,
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                   ),
                   iconSize: 36,
                 ),
@@ -377,10 +377,10 @@ class AudioPlayerWidget extends ConsumerWidget {
               // Next button (placeholder)
               Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  color: theme.colorScheme.surface.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: theme.dividerColor.withOpacity(0.3),
+                    color: theme.dividerColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -390,7 +390,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                   },
                   icon: Icon(
                     Icons.skip_next,
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                   ),
                   iconSize: 36,
                 ),
@@ -405,10 +405,10 @@ class AudioPlayerWidget extends ConsumerWidget {
               // Playback speed
               Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  color: theme.colorScheme.surface.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: theme.dividerColor.withOpacity(0.3),
+                    color: theme.dividerColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -416,7 +416,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                   icon: Text(
                     '${state.playbackRate}x',
                     style: TextStyle(
-                      color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -457,10 +457,10 @@ class AudioPlayerWidget extends ConsumerWidget {
               // View episode details
               Container(
                 decoration: BoxDecoration(
-                  color: theme.primaryColor.withOpacity(0.15),
+                  color: theme.primaryColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: theme.primaryColor.withOpacity(0.3),
+                    color: theme.primaryColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -473,12 +473,12 @@ class AudioPlayerWidget extends ConsumerWidget {
                   },
                   icon: Icon(
                     Icons.info_outline,
-                    color: theme.primaryColor.withOpacity(0.8),
+                    color: theme.primaryColor.withValues(alpha: 0.8),
                   ),
                   label: Text(
                     'Episode Details',
                     style: TextStyle(
-                      color: theme.primaryColor.withOpacity(0.8),
+                      color: theme.primaryColor.withValues(alpha: 0.8),
                     ),
                   ),
                   style: TextButton.styleFrom(

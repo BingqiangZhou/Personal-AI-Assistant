@@ -7,7 +7,6 @@ class AppTheme {
   static const Color secondaryColor = Color(0xFF8B5CF6);
   static const Color accentColor = Color(0xFFEC4899);
 
-  static const Color backgroundColor = Color(0xFFFAFAFA);
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color cardColor = Color(0xFFFFFFFF);
 
@@ -24,7 +23,6 @@ class AppTheme {
   static const Color borderColor = Color(0xFFE5E7EB);
 
   // Dark theme colors
-  static const Color darkBackgroundColor = Color(0xFF0F172A);
   static const Color darkSurfaceColor = Color(0xFF1E293B);
   static const Color darkCardColor = Color(0xFF334155);
 
@@ -46,13 +44,11 @@ class AppTheme {
         secondary: secondaryColor,
         tertiary: accentColor,
         surface: surfaceColor,
-        background: backgroundColor,
         error: errorColor,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onTertiary: Colors.white,
         onSurface: textPrimary,
-        onBackground: textPrimary,
         onError: Colors.white,
       ),
 
@@ -79,7 +75,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: cardColor,
         elevation: 0,
-        shadowColor: Colors.black.withOpacity(0.05),
+        shadowColor: Colors.black.withValues(alpha: 0.05),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
@@ -274,7 +270,7 @@ class AppTheme {
       // Chip theme
       chipTheme: ChipThemeData(
         backgroundColor: const Color(0xFFF3F4F6),
-        selectedColor: primaryColor.withOpacity(0.1),
+        selectedColor: primaryColor.withValues(alpha: 0.1),
         disabledColor: const Color(0xFFF9FAFB),
         labelStyle: const TextStyle(
           color: textPrimary,
@@ -303,13 +299,11 @@ class AppTheme {
         secondary: secondaryColor,
         tertiary: accentColor,
         surface: darkSurfaceColor,
-        background: darkBackgroundColor,
         error: errorColor,
         onPrimary: Colors.white,
         onSecondary: Colors.white,
         onTertiary: Colors.white,
         onSurface: darkTextPrimary,
-        onBackground: darkTextPrimary,
         onError: Colors.white,
       ),
 
@@ -336,7 +330,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         color: darkCardColor,
         elevation: 0,
-        shadowColor: Colors.black.withOpacity(0.2),
+        shadowColor: Colors.black.withValues(alpha: 0.2),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),

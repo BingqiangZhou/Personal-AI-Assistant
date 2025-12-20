@@ -389,7 +389,7 @@ class ChatListTile extends StatelessWidget {
           '${session.messageCount} messages • ${session.formattedLastMessageAt}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: isActive
-                ? Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.8)
+                ? Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8)
                 : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           maxLines: 1,
@@ -435,7 +435,7 @@ class MessageWidget extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isUser
                     ? Theme.of(context).colorScheme.primaryContainer
-                    : Theme.of(context).colorScheme.surfaceVariant,
+                    : Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
@@ -454,8 +454,8 @@ class MessageWidget extends StatelessWidget {
                     '${message.createdAt.hour.toString().padLeft(2, '0')}:${message.createdAt.minute.toString().padLeft(2, '0')}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: isUser
-                          ? Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.7)
-                          : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.7),
+                          ? Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
+                          : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -505,7 +505,7 @@ class StreamingMessageWidget extends StatelessWidget {
             ),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceVariant,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Row(

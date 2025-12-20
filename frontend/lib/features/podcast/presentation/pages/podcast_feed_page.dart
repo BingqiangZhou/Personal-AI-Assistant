@@ -106,10 +106,10 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
           padding: const EdgeInsets.all(32),
           margin: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: theme.dividerColor.withOpacity(0.5),
+              color: theme.dividerColor.withValues(alpha: 0.5),
               width: 1,
             ),
           ),
@@ -119,17 +119,17 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: theme.primaryColor.withOpacity(0.1),
+                  color: theme.primaryColor.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: theme.primaryColor.withOpacity(0.3),
+                    color: theme.primaryColor.withValues(alpha: 0.3),
                     width: 2,
                   ),
                 ),
                 child: Icon(
                   Icons.feed_outlined,
                   size: 80,
-                  color: theme.primaryColor.withOpacity(0.8),
+                  color: theme.primaryColor.withValues(alpha: 0.8),
                 ),
               ),
               const SizedBox(height: 24),
@@ -144,10 +144,10 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: theme.dividerColor.withOpacity(0.3),
+                    color: theme.dividerColor.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -166,13 +166,13 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.primaryColor.withOpacity(0.3),
+                      color: theme.primaryColor.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 4),
                     ),
                   ],
                   border: Border.all(
-                    color: theme.primaryColor.withOpacity(0.5),
+                    color: theme.primaryColor.withValues(alpha: 0.5),
                     width: 1,
                   ),
                 ),
@@ -204,10 +204,10 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
               title: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.15),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: theme.colorScheme.primary.withOpacity(0.3),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -261,10 +261,10 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer.withOpacity(0.3),
+                    color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: theme.colorScheme.error.withOpacity(0.3),
+                      color: theme.colorScheme.error.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -291,7 +291,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
                             Text(
                               'Tap retry to load more',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.error.withOpacity(0.7),
+                                color: theme.colorScheme.error.withValues(alpha: 0.7),
                               ),
                             ),
                           ],
@@ -320,10 +320,10 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
                   margin: const EdgeInsets.all(16),
                   padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: theme.dividerColor.withOpacity(0.3),
+                      color: theme.dividerColor.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -333,13 +333,13 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
                       Icon(
                         Icons.check_circle_outline,
                         size: 16,
-                        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'All content loaded',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                           fontWeight: FontWeight.w500,
                         ),
                       ),

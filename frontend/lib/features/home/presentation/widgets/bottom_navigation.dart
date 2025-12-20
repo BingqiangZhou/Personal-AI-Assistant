@@ -21,7 +21,7 @@ class BottomNavigation extends ConsumerWidget {
       decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -33,7 +33,7 @@ class BottomNavigation extends ConsumerWidget {
         type: BottomNavigationBarType.fixed,
         backgroundColor: Theme.of(context).colorScheme.surface,
         selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
         elevation: 8,
         items: items.map((item) {
           return BottomNavigationBarItem(

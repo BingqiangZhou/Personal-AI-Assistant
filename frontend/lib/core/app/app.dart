@@ -4,16 +4,12 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import '../router/app_router.dart';
 import '../theme/app_theme.dart';
-import '../utils/loading_widget.dart';
-import '../../features/splash/presentation/pages/splash_page.dart';
 
 class PersonalAIAssistantApp extends ConsumerWidget {
   const PersonalAIAssistantApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final appRouter = ref.watch(appRouterProvider);
-
     return MaterialApp.router(
       title: 'Personal AI Assistant',
       debugShowCheckedModeBanner: false,
@@ -39,11 +35,9 @@ class PersonalAIAssistantApp extends ConsumerWidget {
 
       // Loading widget builder
       builder: (context, child) {
-        return MediaQuery(
-          // Ensure text scale factor doesn't exceed certain limits
-          data: MediaQuery.of(context).copyWith(
-            textScaleFactor: MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.2),
-          ),
+        return MediaQuery.withClampedTextScaling(
+          minScaleFactor: 0.8,
+          maxScaleFactor: 1.2,
           child: child!,
         );
       },

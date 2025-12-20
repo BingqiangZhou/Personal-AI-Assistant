@@ -90,10 +90,10 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         title: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -111,10 +111,10 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           Container(
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -130,10 +130,10 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           Container(
             margin: const EdgeInsets.only(right: 16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -357,35 +357,31 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
             children: [
               const Text('Playback Status:'),
               const SizedBox(height: 8),
-              RadioListTile<String>(
-                title: const Text('All Episodes'),
-                value: 'all',
+              RadioGroup<String>(
                 groupValue: _selectedFilter,
                 onChanged: (value) {
-                  setDialogState(() {
-                    _selectedFilter = value!;
-                  });
+                  if (value != null) {
+                    setDialogState(() {
+                      _selectedFilter = value;
+                    });
+                  }
                 },
-              ),
-              RadioListTile<String>(
-                title: const Text('Unplayed Only'),
-                value: 'unplayed',
-                groupValue: _selectedFilter,
-                onChanged: (value) {
-                  setDialogState(() {
-                    _selectedFilter = value!;
-                  });
-                },
-              ),
-              RadioListTile<String>(
-                title: const Text('Played Only'),
-                value: 'played',
-                groupValue: _selectedFilter,
-                onChanged: (value) {
-                  setDialogState(() {
-                    _selectedFilter = value!;
-                  });
-                },
+                child: Column(
+                  children: [
+                    RadioListTile<String>(
+                      title: const Text('All Episodes'),
+                      value: 'all',
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('Unplayed Only'),
+                      value: 'unplayed',
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('Played Only'),
+                      value: 'played',
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               CheckboxListTile(

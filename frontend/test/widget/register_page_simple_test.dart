@@ -10,8 +10,8 @@ void main() {
   group('Register Page Widget Tests (Simple)', () {
     testWidgets('Should display all form fields', (WidgetTester tester) async {
       // Set a larger surface size for the test
-      tester.binding.window.physicalSizeTestValue = const Size(800, 1200);
-      tester.binding.window.devicePixelRatioTestValue = 1.0;
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -33,8 +33,8 @@ void main() {
 
     testWidgets('Should validate empty form fields', (WidgetTester tester) async {
       // Set a larger surface size for the test
-      tester.binding.window.physicalSizeTestValue = const Size(800, 1200);
-      tester.binding.window.devicePixelRatioTestValue = 1.0;
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -57,8 +57,8 @@ void main() {
 
     testWidgets('Should validate email format', (WidgetTester tester) async {
       // Set a larger surface size for the test
-      tester.binding.window.physicalSizeTestValue = const Size(800, 1200);
-      tester.binding.window.devicePixelRatioTestValue = 1.0;
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -91,8 +91,8 @@ void main() {
 
     testWidgets('Should validate password requirements', (WidgetTester tester) async {
       // Set a larger surface size for the test
-      tester.binding.window.physicalSizeTestValue = const Size(800, 1200);
-      tester.binding.window.devicePixelRatioTestValue = 1.0;
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -161,8 +161,8 @@ void main() {
 
     testWidgets('Should validate password confirmation', (WidgetTester tester) async {
       // Set a larger surface size for the test
-      tester.binding.window.physicalSizeTestValue = const Size(800, 1200);
-      tester.binding.window.devicePixelRatioTestValue = 1.0;
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -202,8 +202,8 @@ void main() {
 
     testWidgets('Should show terms agreement error', (WidgetTester tester) async {
       // Set a larger surface size for the test
-      tester.binding.window.physicalSizeTestValue = const Size(800, 1200);
-      tester.binding.window.devicePixelRatioTestValue = 1.0;
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -245,8 +245,8 @@ void main() {
 
     testWidgets('Should toggle password visibility', (WidgetTester tester) async {
       // Set a larger surface size for the test
-      tester.binding.window.physicalSizeTestValue = const Size(800, 1200);
-      tester.binding.window.devicePixelRatioTestValue = 1.0;
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -274,8 +274,8 @@ void main() {
 
     testWidgets('Should display password requirements', (WidgetTester tester) async {
       // Set a larger surface size for the test
-      tester.binding.window.physicalSizeTestValue = const Size(800, 1200);
-      tester.binding.window.devicePixelRatioTestValue = 1.0;
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(
         ProviderScope(

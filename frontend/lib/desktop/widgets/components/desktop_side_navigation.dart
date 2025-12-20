@@ -22,7 +22,7 @@ class DesktopSideNavigation extends ConsumerWidget {
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           right: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.2),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -48,10 +48,10 @@ class DesktopSideNavigation extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.4),
+        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.3),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -66,7 +66,7 @@ class DesktopSideNavigation extends ConsumerWidget {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -87,14 +87,14 @@ class DesktopSideNavigation extends ConsumerWidget {
                   AppConstants.appName,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.9),
+                    color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.9),
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   'Desktop Version',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer.withOpacity(0.8),
+                    color: Theme.of(context).colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -183,10 +183,10 @@ class DesktopSideNavigation extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.3),
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).dividerColor.withOpacity(0.2),
+            color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
             width: 1,
           ),
         ),
@@ -247,13 +247,13 @@ class NavigationTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
         color: isSelected
-            ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.8)
-            : Theme.of(context).colorScheme.surface.withOpacity(0.5),
+            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.8)
+            : Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isSelected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-              : Theme.of(context).dividerColor.withOpacity(0.2),
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
+              : Theme.of(context).dividerColor.withValues(alpha: 0.2),
           width: 0.5,
         ),
       ),
@@ -274,7 +274,7 @@ class NavigationTile extends StatelessWidget {
                   isSelected ? selectedIcon : icon,
                   color: isSelected
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                   size: 24,
                 ),
                 const SizedBox(width: 16),
@@ -284,7 +284,7 @@ class NavigationTile extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: isSelected
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.onSurface.withOpacity(0.9),
+                          : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.9),
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                     ),
                   ),
@@ -294,7 +294,7 @@ class NavigationTile extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: isSelected
                         ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.8),
+                        : Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w500,
                   ),
                 ),

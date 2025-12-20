@@ -18,10 +18,10 @@ class FeedErrorWidget extends StatelessWidget {
         padding: const EdgeInsets.all(32),
         margin: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: theme.colorScheme.errorContainer.withOpacity(0.3),
+          color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: theme.colorScheme.error.withOpacity(0.3),
+            color: theme.colorScheme.error.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -34,7 +34,7 @@ class FeedErrorWidget extends StatelessWidget {
                 color: theme.colorScheme.errorContainer,
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: theme.colorScheme.error.withOpacity(0.5),
+                  color: theme.colorScheme.error.withValues(alpha: 0.5),
                   width: 2,
                 ),
               ),
@@ -56,10 +56,10 @@ class FeedErrorWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.error.withOpacity(0.1),
+                color: theme.colorScheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: theme.colorScheme.error.withOpacity(0.3),
+                  color: theme.colorScheme.error.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -78,13 +78,13 @@ class FeedErrorWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.colorScheme.error.withOpacity(0.3),
+                    color: theme.colorScheme.error.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
                 ],
                 border: Border.all(
-                  color: theme.colorScheme.error.withOpacity(0.5),
+                  color: theme.colorScheme.error.withValues(alpha: 0.5),
                   width: 1,
                 ),
               ),

@@ -78,9 +78,9 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                     colors: [
-                      theme.primaryColor.withOpacity(0.9),
-                      theme.primaryColor.withOpacity(0.6),
-                      theme.primaryColor.withOpacity(0.3),
+                      theme.primaryColor.withValues(alpha: 0.9),
+                      theme.primaryColor.withValues(alpha: 0.6),
+                      theme.primaryColor.withValues(alpha: 0.3),
                     ],
                   ),
                 ),
@@ -92,15 +92,15 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.25),
+                          color: Colors.white.withValues(alpha: 0.25),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                             width: 2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                               blurRadius: 20,
                               offset: const Offset(0, 8),
                             ),
@@ -138,7 +138,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
@@ -159,10 +159,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
               Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -221,11 +221,11 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
         color: isDark
-            ? theme.colorScheme.surface.withOpacity(0.95)
+            ? theme.colorScheme.surface.withValues(alpha: 0.95)
             : theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),
@@ -233,7 +233,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
         border: Border(
           top: BorderSide(
             color: isDark
-                ? theme.dividerColor.withOpacity(0.3)
+                ? theme.dividerColor.withValues(alpha: 0.3)
                 : theme.dividerColor,
             width: 1,
           ),
@@ -245,10 +245,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
             // Previous button
             Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                color: theme.colorScheme.surface.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: theme.colorScheme.outline.withOpacity(0.3),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
               ),
@@ -256,7 +256,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                 onPressed: () {},
                 icon: Icon(
                   Icons.skip_previous,
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
                   size: 28,
                 ),
               ),
@@ -265,10 +265,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
             // Rewind button
             Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                color: theme.colorScheme.surface.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: theme.colorScheme.outline.withOpacity(0.3),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
               ),
@@ -276,7 +276,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                 onPressed: () {},
                 icon: Icon(
                   Icons.fast_rewind,
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
                   size: 28,
                 ),
               ),
@@ -291,13 +291,13 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: theme.primaryColor.withOpacity(0.4),
+                    color: theme.primaryColor.withValues(alpha: 0.4),
                     blurRadius: 16,
                     offset: const Offset(0, 4),
                   ),
                 ],
                 border: Border.all(
-                  color: theme.primaryColor.withOpacity(0.5),
+                  color: theme.primaryColor.withValues(alpha: 0.5),
                   width: 2,
                 ),
               ),
@@ -314,10 +314,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
             // Forward button
             Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                color: theme.colorScheme.surface.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: theme.colorScheme.outline.withOpacity(0.3),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
               ),
@@ -325,7 +325,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                 onPressed: () {},
                 icon: Icon(
                   Icons.fast_forward,
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
                   size: 28,
                 ),
               ),
@@ -334,10 +334,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
             // Next button
             Container(
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant.withOpacity(0.6),
+                color: theme.colorScheme.surface.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: theme.colorScheme.outline.withOpacity(0.3),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
               ),
@@ -345,7 +345,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                 onPressed: () {},
                 icon: Icon(
                   Icons.skip_next,
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.9),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.9),
                   size: 28,
                 ),
               ),
@@ -355,17 +355,17 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: theme.colorScheme.secondaryContainer.withOpacity(0.3),
+                color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: theme.colorScheme.secondary.withOpacity(0.3),
+                  color: theme.colorScheme.secondary.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
               child: Text(
                 '1.0x',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSecondaryContainer.withOpacity(0.9),
+                  color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.9),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -386,20 +386,20 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isDark
-              ? theme.colorScheme.surface.withOpacity(0.7)
+              ? theme.colorScheme.surface.withValues(alpha: 0.7)
               : Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
           border: Border.all(
             color: isDark
-                ? theme.dividerColor.withOpacity(0.3)
-                : Colors.grey.withOpacity(0.3),
+                ? theme.dividerColor.withValues(alpha: 0.3)
+                : Colors.grey.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -409,10 +409,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: theme.primaryColor.withOpacity(0.1),
+                color: theme.primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: theme.primaryColor.withOpacity(0.3),
+                  color: theme.primaryColor.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -420,7 +420,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                 'Description',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: theme.primaryColor.withOpacity(0.9),
+                      color: theme.primaryColor.withValues(alpha: 0.9),
                     ),
               ),
             ),
@@ -430,7 +430,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     height: 1.6,
                     color: isDark
-                        ? theme.colorScheme.onSurface.withOpacity(0.9)
+                        ? theme.colorScheme.onSurface.withValues(alpha: 0.9)
                         : Colors.black87,
                     fontSize: 16,
                   ),
@@ -451,20 +451,20 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isDark
-              ? theme.colorScheme.surface.withOpacity(0.7)
+              ? theme.colorScheme.surface.withValues(alpha: 0.7)
               : Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
           border: Border.all(
             color: isDark
-                ? theme.dividerColor.withOpacity(0.3)
-                : Colors.grey.withOpacity(0.3),
+                ? theme.dividerColor.withValues(alpha: 0.3)
+                : Colors.grey.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -474,10 +474,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.tertiary.withOpacity(0.15),
+                color: theme.colorScheme.tertiary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: theme.colorScheme.tertiary.withOpacity(0.3),
+                  color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -485,7 +485,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                 'AI Summary',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onTertiary.withOpacity(0.9),
+                      color: theme.colorScheme.onTertiary.withValues(alpha: 0.9),
                     ),
               ),
             ),
@@ -496,7 +496,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       height: 1.6,
                       color: isDark
-                          ? theme.colorScheme.onSurface.withOpacity(0.9)
+                          ? theme.colorScheme.onSurface.withValues(alpha: 0.9)
                           : Colors.black87,
                       fontSize: 16,
                     ),
@@ -505,10 +505,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Colors.orange.withOpacity(0.3),
+                    color: Colors.orange.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -538,20 +538,20 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: isDark
-              ? theme.colorScheme.surface.withOpacity(0.7)
+              ? theme.colorScheme.surface.withValues(alpha: 0.7)
               : Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
           border: Border.all(
             color: isDark
-                ? theme.dividerColor.withOpacity(0.3)
-                : Colors.grey.withOpacity(0.3),
+                ? theme.dividerColor.withValues(alpha: 0.3)
+                : Colors.grey.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -561,10 +561,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: theme.colorScheme.secondary.withOpacity(0.15),
+                color: theme.colorScheme.secondary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: theme.colorScheme.secondary.withOpacity(0.3),
+                  color: theme.colorScheme.secondary.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -572,7 +572,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                 'Transcript',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSecondary.withOpacity(0.9),
+                      color: theme.colorScheme.onSecondary.withValues(alpha: 0.9),
                     ),
               ),
             ),
@@ -581,10 +581,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.05),
+                  color: Colors.grey.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Colors.grey.withOpacity(0.2),
+                    color: Colors.grey.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -594,7 +594,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                         fontFamily: 'monospace',
                         height: 1.5,
                         color: isDark
-                            ? theme.colorScheme.onSurface.withOpacity(0.9)
+                            ? theme.colorScheme.onSurface.withValues(alpha: 0.9)
                             : Colors.black87,
                       ),
                 ),
@@ -603,10 +603,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.all(Radius.circular(8)),
                   border: Border.all(
-                    color: Colors.blue.withOpacity(0.3),
+                    color: Colors.blue.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),

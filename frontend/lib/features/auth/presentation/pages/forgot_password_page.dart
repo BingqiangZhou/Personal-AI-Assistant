@@ -87,7 +87,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryColor.withOpacity(0.1),
+                              color: AppTheme.primaryColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Icon(
@@ -108,7 +108,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                           Text(
                             'Enter your email address and we\'ll send you a link to reset your password',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -153,7 +153,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
+                              color: Colors.green.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Icon(
@@ -174,7 +174,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                           Text(
                             'We\'ve sent a password reset link to\n${_emailController.text.trim()}',
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -182,7 +182,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                           Text(
                             'Please check your email and click the link to reset your password',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onBackground.withOpacity(0.6),
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                             textAlign: TextAlign.center,
                           ),

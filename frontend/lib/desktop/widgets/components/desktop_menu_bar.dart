@@ -30,10 +30,10 @@ class DesktopMenuBar extends ConsumerWidget implements PreferredSizeWidget {
           if (MediaQuery.of(context).size.width <= 1200)
             Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                   width: 0.5,
                 ),
               ),
@@ -43,7 +43,7 @@ class DesktopMenuBar extends ConsumerWidget implements PreferredSizeWidget {
                   Icons.menu,
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                      : Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                 ),
                 tooltip: 'Menu',
               ),
@@ -55,10 +55,10 @@ class DesktopMenuBar extends ConsumerWidget implements PreferredSizeWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                   width: 0.5,
                 ),
               ),
@@ -68,7 +68,7 @@ class DesktopMenuBar extends ConsumerWidget implements PreferredSizeWidget {
                   fontWeight: FontWeight.w600,
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                      : Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                 ),
               ),
             ),
@@ -77,7 +77,7 @@ class DesktopMenuBar extends ConsumerWidget implements PreferredSizeWidget {
       ),
       centerTitle: false,
       elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.1),
+      shadowColor: Colors.black.withValues(alpha: 0.1),
       backgroundColor: Theme.of(context).colorScheme.surface,
       surfaceTintColor: Theme.of(context).colorScheme.primary,
       actions: [
@@ -95,10 +95,10 @@ class DesktopMenuBar extends ConsumerWidget implements PreferredSizeWidget {
   Widget _buildSearchButton(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
           width: 0.5,
         ),
       ),
@@ -110,7 +110,7 @@ class DesktopMenuBar extends ConsumerWidget implements PreferredSizeWidget {
           Icons.search_outlined,
           color: Theme.of(context).brightness == Brightness.dark
               ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.primary.withOpacity(0.8),
+              : Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
         ),
         tooltip: 'Search (Ctrl+K)',
       ),
@@ -122,10 +122,10 @@ class DesktopMenuBar extends ConsumerWidget implements PreferredSizeWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
               width: 0.5,
             ),
           ),
@@ -137,7 +137,7 @@ class DesktopMenuBar extends ConsumerWidget implements PreferredSizeWidget {
               Icons.notifications_outlined,
               color: Theme.of(context).brightness == Brightness.dark
                   ? Theme.of(context).colorScheme.secondary
-                  : Theme.of(context).colorScheme.secondary.withOpacity(0.8),
+                  : Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
             ),
             tooltip: 'Notifications',
           ),

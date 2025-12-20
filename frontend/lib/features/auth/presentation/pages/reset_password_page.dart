@@ -117,7 +117,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
+                      color: Colors.green.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Icon(
@@ -139,7 +139,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   Text(
                     'Your password has been successfully reset. You can now login with your new password.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -187,7 +187,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryColor.withOpacity(0.1),
+                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Icon(
@@ -208,7 +208,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                         Text(
                           'Your new password must be different from\nprevious used passwords',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                           textAlign: TextAlign.center,
                         ),

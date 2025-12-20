@@ -283,8 +283,8 @@ void main() {
 
     testWidgets('handles small screen sizes', (WidgetTester tester) async {
       // Arrange
-      tester.binding.window.physicalSizeTestValue = const Size(300, 600);
-      tester.binding.window.devicePixelRatioTestValue = 1.0;
+      tester.view.physicalSize = const Size(300, 600);
+      tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(createTestWidget(
         child: const PodcastPlayerPage(),
@@ -299,15 +299,15 @@ void main() {
 
       // Reset to original size
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
     });
 
     testWidgets('handles large screen sizes', (WidgetTester tester) async {
       // Arrange
-      tester.binding.window.physicalSizeTestValue = const Size(800, 1200);
-      tester.binding.window.devicePixelRatioTestValue = 1.0;
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
 
       await tester.pumpWidget(createTestWidget(
         child: const PodcastPlayerPage(),
@@ -321,8 +321,8 @@ void main() {
 
       // Reset to original size
       addTearDown(() {
-        tester.binding.window.clearPhysicalSizeTestValue();
-        tester.binding.window.clearDevicePixelRatioTestValue();
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
       });
     });
 
