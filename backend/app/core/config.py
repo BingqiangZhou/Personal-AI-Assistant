@@ -70,6 +70,29 @@ class Settings(BaseSettings):
     MAX_FILE_SIZE: int = 10 * 1024 * 1024  # 10MB
     UPLOAD_DIR: str = "uploads"
 
+    # Transcription API Configuration
+    TRANSCRIPTION_API_URL: str = "https://api.siliconflow.cn/v1/audio/transcriptions"
+    TRANSCRIPTION_API_KEY: Optional[str] = None
+
+    # Transcription File Processing Configuration
+    TRANSCRIPTION_CHUNK_SIZE_MB: int = 10  # 10MB per chunk
+    TRANSCRIPTION_TARGET_FORMAT: str = "mp3"
+    TRANSCRIPTION_TEMP_DIR: str = "./temp/transcription"
+    TRANSCRIPTION_STORAGE_DIR: str = "./storage/podcasts"
+
+    # Transcription Concurrency Control
+    TRANSCRIPTION_MAX_THREADS: int = 4  # Maximum concurrent transcription requests
+    TRANSCRIPTION_QUEUE_SIZE: int = 100  # Maximum queue size for pending tasks
+
+    # Transcription Model Configuration
+    TRANSCRIPTION_MODEL: str = "FunAudioLLM/SenseVoiceSmall"  # Default transcription model
+    SUPPORTED_TRANSCRIPTION_MODELS: str = "FunAudioLLM/SenseVoiceSmall,whisper-1,whisper-large-v3"  # Comma-separated list
+
+    # AI Summary Configuration
+    OPENAI_API_BASE_URL: str = "https://api.openai.com/v1"
+    SUMMARY_MODEL: str = "gpt-4o-mini"  # Default AI summary model
+    SUPPORTED_SUMMARY_MODELS: str = "gpt-4o-mini,gpt-4o,gpt-3.5-turbo"  # Comma-separated list
+
     @validator("ALLOWED_HOSTS", pre=True)
     def assemble_cors_origins(cls, v):
         if isinstance(v, str) and not v.startswith("["):
@@ -81,6 +104,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Allow extra environment variables from Docker compose
 
 
 @lru_cache()
@@ -95,3 +119,12 @@ settings = get_settings()
 if settings.SECRET_KEY is None:
     from app.core.security import get_or_generate_secret_key
     settings.SECRET_KEY = get_or_generate_secret_key()
+
+# Helper methods for model lists
+def get_supported_transcription_models() -> list[str]:
+    """Get list of supported transcription models"""
+    return [model.strip() for model in settings.SUPPORTED_TRANSCRIPTION_MODELS.split(',') if model.strip()]
+
+def get_supported_summary_models() -> list[str]:
+    """Get list of supported summary models"""
+    return [model.strip() for model in settings.SUPPORTED_SUMMARY_MODELS.split(',') if model.strip()]

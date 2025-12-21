@@ -77,6 +77,8 @@ PodcastSummaryRequest _$PodcastSummaryRequestFromJson(
 ) => PodcastSummaryRequest(
   forceRegenerate: json['force_regenerate'] as bool? ?? false,
   useTranscript: json['use_transcript'] as bool?,
+  summaryModel: json['summary_model'] as String?,
+  customPrompt: json['custom_prompt'] as String?,
 );
 
 Map<String, dynamic> _$PodcastSummaryRequestToJson(
@@ -84,6 +86,8 @@ Map<String, dynamic> _$PodcastSummaryRequestToJson(
 ) => <String, dynamic>{
   'force_regenerate': instance.forceRegenerate,
   'use_transcript': instance.useTranscript,
+  'summary_model': instance.summaryModel,
+  'custom_prompt': instance.customPrompt,
 };
 
 PodcastStatsResponse _$PodcastStatsResponseFromJson(

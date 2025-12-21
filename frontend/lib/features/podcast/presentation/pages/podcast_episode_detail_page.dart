@@ -3,7 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/podcast_providers.dart';
+import '../providers/transcription_providers.dart';
 import '../../data/models/podcast_episode_model.dart';
+import '../../data/models/podcast_transcription_model.dart';
+import '../widgets/transcript_display_widget.dart';
+import '../widgets/shownotes_display_widget.dart';
+import '../widgets/transcription_status_widget.dart';
 
 class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
   final int episodeId;
@@ -18,23 +23,16 @@ class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
 }
 
 class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailPage> {
-  bool _isTranscriptTab = true; // true = 文字转录, false = 节目简介
+  int _selectedTabIndex = 0; // 0 = 节目简介, 1 = 文字转录, 2 = 转录状态
 
-  // 模拟转录对话数据（根据用户要求的精确格式）
-  final List<Map<String, String>> _dialogueItems = [
-    {'speaker': '主持人', 'time': '00:00', 'content': '大家好，欢迎收听本期节目。今天我们来聊聊AI应用的最新发展。'},
-    {'speaker': '嘉宾A', 'time': '00:15', 'content': '很高兴来到这里。AI技术确实在快速发展，特别是在自然语言处理领域。'},
-    {'speaker': '主持人', 'time': '00:32', 'content': '没错，我们看到很多创新应用。能分享一下你们的具体实践吗？'},
-    {'speaker': '嘉宾B', 'time': '00:48', 'content': '当然。我们主要关注企业级应用，帮助客户提升效率的同时降低成本。'},
-    {'speaker': '主持人', 'time': '01:05', 'content': '听起来很有价值。听众朋友们，如果你们有任何问题，欢迎在评论区留言。'},
-  ];
-
+  
   @override
   void initState() {
     super.initState();
     // Auto-play episode when page loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadAndPlayEpisode();
+      _loadTranscriptionStatus();
     });
   }
 
@@ -81,6 +79,15 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
       }
     } catch (error) {
       debugPrint('❌ Failed to auto-play episode: $error');
+    }
+  }
+
+  Future<void> _loadTranscriptionStatus() async {
+    try {
+      final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
+      await ref.read(transcriptionProvider.notifier).loadTranscription();
+    } catch (error) {
+      debugPrint('❌ Failed to load transcription status: $error');
     }
   }
 
@@ -316,14 +323,12 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
       color: Theme.of(context).colorScheme.surface,
       child: Column(
         children: [
-          // Tabs：文字转录 / 节目简介
+          // Tabs：节目简介 / 文字转录 / 转录状态
           _buildTabs(),
 
           // 内容区域
           Expanded(
-            child: _isTranscriptTab
-                ? _buildTranscriptContent(episode)
-                : _buildDescriptionContent(episode),
+            child: _buildTabContent(episode),
           ),
         ],
       ),
@@ -339,22 +344,32 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
           bottom: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 1),
         ),
       ),
-      child: Row(
-        children: [
-          // 文字转录 Tab
-          _buildTabButton('文字转录', _isTranscriptTab, () {
-            setState(() {
-              _isTranscriptTab = true;
-            });
-          }),
-          const SizedBox(width: 8),
-          // 节目简介 Tab
-          _buildTabButton('节目简介', !_isTranscriptTab, () {
-            setState(() {
-              _isTranscriptTab = false;
-            });
-          }),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // 节目简介 Tab
+            _buildTabButton('节目简介', _selectedTabIndex == 0, () {
+              setState(() {
+                _selectedTabIndex = 0;
+              });
+            }),
+            const SizedBox(width: 8),
+            // 文字转录 Tab
+            _buildTabButton('文字转录', _selectedTabIndex == 1, () {
+              setState(() {
+                _selectedTabIndex = 1;
+              });
+            }),
+            const SizedBox(width: 8),
+            // 转录状态 Tab
+            _buildTabButton('转录状态', _selectedTabIndex == 2, () {
+              setState(() {
+                _selectedTabIndex = 2;
+              });
+            }),
+          ],
+        ),
       ),
     );
   }
@@ -385,102 +400,189 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
     );
   }
 
-  // 文字转录内容 - 多人对话脚本
+  
+  // Tab内容根据选择显示
+  Widget _buildTabContent(dynamic episode) {
+    switch (_selectedTabIndex) {
+      case 0:
+        return ShownotesDisplayWidget(episode: episode);
+      case 1:
+        return _buildTranscriptContent(episode);
+      case 2:
+        return _buildTranscriptionStatusContent(episode);
+      default:
+        return ShownotesDisplayWidget(episode: episode);
+    }
+  }
+
+  // 转录内容
   Widget _buildTranscriptContent(dynamic episode) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: ListView.builder(
-        itemCount: _dialogueItems.length,
-        itemBuilder: (context, index) {
-          final item = _dialogueItems[index];
-          return Column(
-            children: [
-              _buildDialogueItem(
-                item['speaker']!,
-                item['content']!,
-                item['time']!,
-              ),
-              if (index < _dialogueItems.length - 1) const SizedBox(height: 16),
-            ],
-          );
-        },
-      ),
+    final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
+    final transcriptionState = ref.watch(transcriptionProvider);
+
+    return transcriptionState.when(
+      data: (transcription) {
+        if (transcription == null || !isTranscriptionCompleted(transcription)) {
+          return _buildTranscriptEmptyState(context);
+        }
+        return TranscriptDisplayWidget(
+          episodeId: widget.episodeId,
+          transcription: transcription,
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => _buildTranscriptErrorState(context, error),
     );
   }
 
-  // 对话项组件
-  Widget _buildDialogueItem(String speaker, String content, String time) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                speaker,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              time,
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          content,
-          style: TextStyle(
-            fontSize: 15,
-            height: 1.6,
-            color: Theme.of(context).colorScheme.onSurface,
+  // 转录状态内容
+  Widget _buildTranscriptionStatusContent(dynamic episode) {
+    final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
+    final transcriptionState = ref.watch(transcriptionProvider);
+
+    return transcriptionState.when(
+      data: (transcription) {
+        return TranscriptionStatusWidget(
+          episodeId: widget.episodeId,
+          transcription: transcription,
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stack) => _buildTranscriptErrorState(context, error),
+    );
+  }
+
+  Widget _buildTranscriptEmptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.transcribe,
+            size: 64,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-        ),
-      ],
-    );
-  }
-
-  // 节目简介内容
-  Widget _buildDescriptionContent(dynamic episode) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Text(
-        episode.aiSummary ?? '这是一期关于AI技术应用的深度讨论节目。我们邀请了行业专家，分享了他们在实际项目中的经验和见解。内容涵盖了从技术架构到商业应用的各个方面，对于想要了解AI落地实践的听众来说非常有价值。',
-        style: TextStyle(
-          fontSize: 15,
-          height: 1.8,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
+          const SizedBox(height: 16),
+          Text(
+            '暂无转录内容',
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '请先在"转录状态"标签页中开始转录',
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // B. 右侧侧边栏 - 只有节目AI总结
+  Widget _buildTranscriptErrorState(BuildContext context, dynamic error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Theme.of(context).colorScheme.error,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '加载转录失败',
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              error.toString(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // B. 右侧侧边栏 - 节目AI总结和转录信息
   Widget _buildSidebar(dynamic episode) {
+    final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
+    final transcriptionState = ref.watch(transcriptionProvider);
+
     return Container(
       color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.all(16),
-      child: _buildSidebarSection(
-        '节目AI总结',
-        episode.aiSummary ?? '这是一期关于AI技术应用的深度讨论节目。我们邀请了行业专家，分享了他们在实际项目中的经验和见解。内容涵盖了从技术架构到商业应用的各个方面，对于想要了解AI落地实践的听众来说非常有价值。',
+      child: Column(
+        children: [
+          // 节目AI总结
+          _buildSidebarSection(
+            '节目AI总结',
+            episode.aiSummary ?? '这是一期关于AI技术应用的深度讨论节目。我们邀请了行业专家，分享了他们在实际项目中的经验和见解。内容涵盖了从技术架构到商业应用的各个方面，对于想要了解AI落地实践的听众来说非常有价值。',
+          ),
+
+          const SizedBox(height: 24),
+
+          // 转录信息
+          transcriptionState.when(
+            data: (transcription) {
+              return _buildTranscriptionSidebarSection(transcription);
+            },
+            loading: () => _buildTranscriptionSidebarLoadingSection(),
+            error: (error, stack) => _buildTranscriptionSidebarErrorSection(error),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildTranscriptionSidebarSection(PodcastTranscriptionResponse? transcription) {
+    if (transcription == null) {
+      return _buildSidebarSection(
+        '转录状态',
+        '暂未开始转录',
+      );
+    }
+
+    String statusText = getTranscriptionStatusDescription(transcription);
+    String infoText = '';
+
+    if (isTranscriptionCompleted(transcription)) {
+      final wordCount = transcription.wordCount ?? 0;
+      infoText = '转录已完成\n字数: ${wordCount.toString()}';
+    } else if (isTranscriptionProcessing(transcription)) {
+      infoText = '进度: ${transcription.progressPercentage.toStringAsFixed(1)}%';
+    } else if (isTranscriptionFailed(transcription)) {
+      infoText = '转录失败\n${transcription.errorMessage ?? '未知错误'}';
+    }
+
+    return _buildSidebarSection('转录状态', '$statusText\n\n$infoText');
+  }
+
+  Widget _buildTranscriptionSidebarLoadingSection() {
+    return _buildSidebarSection(
+      '转录状态',
+      '加载中...',
+    );
+  }
+
+  Widget _buildTranscriptionSidebarErrorSection(dynamic error) {
+    return _buildSidebarSection(
+      '转录状态',
+      '加载失败\n${error.toString()}',
     );
   }
 

@@ -145,7 +145,7 @@ void main() {
       expect(find.byType(AdaptiveScaffoldMenu), findsOneWidget);
     });
 
-    testWidgetsrenders floating action', (WidgetTester tester) async {
+    testWidgets('renders floating action', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: AdaptiveScaffoldMenu(
@@ -320,8 +320,7 @@ void main() {
     test('handles empty list', () {
       final destinations = NavigationDestinationHelper.fromMenuItems([]);
 
- []);
-      expect(destinations.length, equals(0));
+   expect(destinations.length, equals(0));
     });
 
     test('handles list with only dividers', () {

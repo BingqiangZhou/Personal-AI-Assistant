@@ -4,6 +4,7 @@ import 'package:retrofit/retrofit.dart';
 import '../models/podcast_episode_model.dart';
 import '../models/podcast_playback_model.dart';
 import '../models/podcast_subscription_model.dart';
+import '../models/podcast_transcription_model.dart';
 
 part 'podcast_api_service.g.dart';
 
@@ -113,5 +114,28 @@ abstract class PodcastApiService {
   @GET('/podcasts/recommendations')
   Future<SimpleResponse> getRecommendations(
     @Query('limit') int limit,
+  );
+
+  // === Transcription Management ===
+
+  @GET('/podcasts/episodes/{episodeId}/transcription')
+  Future<PodcastTranscriptionResponse> getTranscription(
+    @Path('episodeId') int episodeId,
+  );
+
+  @POST('/podcasts/episodes/{episodeId}/transcription')
+  Future<PodcastTranscriptionResponse> startTranscription(
+    @Path('episodeId') int episodeId,
+    @Body() PodcastTranscriptionRequest request,
+  );
+
+  @DELETE('/podcasts/episodes/{episodeId}/transcription')
+  Future<void> deleteTranscription(
+    @Path('episodeId') int episodeId,
+  );
+
+  @GET('/podcasts/episodes/{episodeId}/transcription/status')
+  Future<PodcastTranscriptionResponse> getTranscriptionStatus(
+    @Path('episodeId') int episodeId,
   );
 }

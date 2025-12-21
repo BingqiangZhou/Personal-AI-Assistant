@@ -119,16 +119,27 @@ class PodcastSummaryRequest extends Equatable {
   final bool forceRegenerate;
   @JsonKey(name: 'use_transcript')
   final bool? useTranscript;
+  @JsonKey(name: 'summary_model')
+  final String? summaryModel;
+  @JsonKey(name: 'custom_prompt')
+  final String? customPrompt;
 
   const PodcastSummaryRequest({
     this.forceRegenerate = false,
     this.useTranscript,
+    this.summaryModel,
+    this.customPrompt,
   });
 
   Map<String, dynamic> toJson() => _$PodcastSummaryRequestToJson(this);
 
   @override
-  List<Object?> get props => [forceRegenerate, useTranscript];
+  List<Object?> get props => [
+        forceRegenerate,
+        useTranscript,
+        summaryModel,
+        customPrompt
+      ];
 }
 
 @JsonSerializable()

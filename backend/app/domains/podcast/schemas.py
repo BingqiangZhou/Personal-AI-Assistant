@@ -240,6 +240,8 @@ class PodcastSummaryRequest(PodcastBaseSchema):
     """生成AI总结请求"""
     force_regenerate: bool = Field(default=False, description="是否强制重新生成")
     use_transcript: Optional[bool] = Field(None, description="是否使用转录文本（如果有）")
+    summary_model: Optional[str] = Field(None, description="AI总结模型名称")
+    custom_prompt: Optional[str] = Field(None, description="自定义提示词")
 
 
 class PodcastSummaryResponse(PodcastBaseSchema):
@@ -322,3 +324,108 @@ class PodcastBulkActionResponse(PodcastBaseSchema):
     success_count: int
     failed_count: int
     errors: List[str] = []
+
+
+# === Transcription相关 ===
+
+class PodcastTranscriptionRequest(PodcastBaseSchema):
+    """启动转录请求"""
+    force_regenerate: bool = Field(default=False, description="是否强制重新转录")
+    chunk_size_mb: Optional[int] = Field(None, ge=1, le=100, description="分片大小（MB）")
+    transcription_model: Optional[str] = Field(None, description="转录模型名称")
+
+
+class PodcastTranscriptionResponse(PodcastBaseSchema):
+    """转录任务响应"""
+    id: int
+    episode_id: int
+    status: str
+    progress_percentage: float = 0.0
+    original_audio_url: str
+    original_file_size: Optional[int] = None
+    transcript_word_count: Optional[int] = None
+    transcript_duration: Optional[int] = None
+    error_message: Optional[str] = None
+    error_code: Optional[str] = None
+    download_time: Optional[float] = None
+    conversion_time: Optional[float] = None
+    transcription_time: Optional[float] = None
+    chunk_size_mb: int = 10
+    model_used: Optional[str] = None
+    created_at: datetime
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+    # AI总结信息
+    summary_content: Optional[str] = None
+    summary_model_used: Optional[str] = None
+    summary_word_count: Optional[int] = None
+    summary_processing_time: Optional[float] = None
+    summary_error_message: Optional[str] = None
+
+    # 计算字段
+    duration_seconds: Optional[int] = None
+    total_processing_time: Optional[float] = None
+
+    # 关联信息
+    episode: Optional[Dict[str, Any]] = None
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def validate_status(cls, v):
+        """确保状态是字符串"""
+        if hasattr(v, 'value'):  # 处理枚举值
+            return v.value
+        return str(v) if v else None
+
+
+class PodcastTranscriptionDetailResponse(PodcastTranscriptionResponse):
+    """转录任务详情响应"""
+    chunk_info: Optional[Dict[str, Any]] = None
+    transcript_content: Optional[str] = None
+    original_file_path: Optional[str] = None
+
+    # 格式化后的时间信息
+    formatted_duration: Optional[str] = None
+    formatted_processing_time: Optional[str] = None
+    formatted_created_at: Optional[str] = None
+    formatted_started_at: Optional[str] = None
+    formatted_completed_at: Optional[str] = None
+
+
+class PodcastTranscriptionListResponse(PodcastBaseSchema):
+    """转录任务列表响应"""
+    tasks: List[PodcastTranscriptionResponse]
+    total: int
+    page: int
+    size: int
+    pages: int
+
+
+class PodcastTranscriptionStatusResponse(PodcastBaseSchema):
+    """转录状态响应"""
+    task_id: int
+    episode_id: int
+    status: str
+    progress: float = 0.0
+    message: str = ""
+    current_chunk: int = 0
+    total_chunks: int = 0
+    eta_seconds: Optional[int] = None  # 预计剩余时间（秒）
+
+    @field_validator('status', mode='before')
+    @classmethod
+    def validate_status(cls, v):
+        if hasattr(v, 'value'):
+            return v.value
+        return str(v) if v else None
+
+
+class PodcastTranscriptionChunkInfo(PodcastBaseSchema):
+    """转录分片信息"""
+    index: int
+    start_time: float
+    duration: float
+    transcript: Optional[str] = None
+    word_count: int = 0

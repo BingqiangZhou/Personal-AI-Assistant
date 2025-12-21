@@ -4,10 +4,11 @@
 基于现有subscription实体进行扩展，新增播客特定字段
 """
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Float, Boolean, ForeignKey, JSON, Index
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, Boolean, ForeignKey, JSON, Index, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from typing import List, Optional
+import enum
 
 from app.core.database import Base
 from app.domains.subscription.models import Subscription
@@ -132,6 +133,107 @@ class PodcastPlaybackState(Base):
 
     def __repr__(self):
         return f"<PlaybackState(user={self.user_id}, ep={self.episode_id}, pos={self.current_position}s)>"
+
+
+# 转录任务枚举
+class TranscriptionStatus(str, enum.Enum):
+    """转录任务状态枚举"""
+    PENDING = "pending"  # 等待中
+    DOWNLOADING = "downloading"  # 下载中
+    CONVERTING = "converting"  # 格式转换中
+    SPLITTING = "splitting"  # 文件分割中
+    TRANSCRIBING = "transcribing"  # 转录中
+    MERGING = "merging"  # 合并结果中
+    COMPLETED = "completed"  # 已完成
+    FAILED = "failed"  # 失败
+    CANCELLED = "cancelled"  # 已取消
+
+
+class TranscriptionTask(Base):
+    """
+    播客音频转录任务模型
+
+    跟踪音频转录的整个生命周期，包括下载、转换、分割、转录和合并等阶段
+    """
+    __tablename__ = "transcription_tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    episode_id = Column(Integer, ForeignKey("podcast_episodes.id"), nullable=False, unique=True)
+
+    # 任务状态
+    status = Column(Enum(TranscriptionStatus), default=TranscriptionStatus.PENDING, nullable=False)
+    progress_percentage = Column(Float, default=0.0)  # 进度百分比 0-100
+
+    # 文件信息
+    original_audio_url = Column(String(500), nullable=False)
+    original_file_path = Column(String(1000))  # 原始下载文件路径
+    original_file_size = Column(Integer)  # 原始文件大小（字节）
+
+    # 处理结果
+    transcript_content = Column(Text)  # 最终转录文本
+    transcript_word_count = Column(Integer)  # 转录字数
+    transcript_duration = Column(Integer)  # 实际转录时长（秒）
+
+    # AI总结结果
+    summary_content = Column(Text)  # AI总结内容
+    summary_model_used = Column(String(100))  # 使用的AI总结模型
+    summary_word_count = Column(Integer)  # 总结字数
+    summary_processing_time = Column(Float)  # 总结处理时间（秒）
+    summary_error_message = Column(Text)  # 总结错误信息
+
+    # 分片信息（JSON格式存储）
+    chunk_info = Column(JSON, default=dict)  # 存储分片信息，如：{"chunks": [{"index": 1, "file": "path", "size": 1024, "transcript": "..."}]}
+
+    # 错误信息
+    error_message = Column(Text)  # 错误详情
+    error_code = Column(String(50))  # 错误代码
+
+    # 性能统计
+    download_time = Column(Float)  # 下载耗时（秒）
+    conversion_time = Column(Float)  # 转换耗时（秒）
+    transcription_time = Column(Float)  # 转录总耗时（秒）
+
+    # 配置信息（记录任务使用的配置）
+    chunk_size_mb = Column(Integer, default=10)  # 分片大小（MB）
+    model_used = Column(String(100))  # 使用的转录模型
+
+    # 时间戳
+    created_at = Column(DateTime, default=datetime.utcnow)
+    started_at = Column(DateTime)  # 任务开始时间
+    completed_at = Column(DateTime)  # 任务完成时间
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    episode = relationship("PodcastEpisode", backref="transcription_task")
+
+    # Indexes
+    __table_args__ = (
+        Index('idx_transcription_episode', 'episode_id', unique=True),
+        Index('idx_transcription_status', 'status'),
+        Index('idx_transcription_created', 'created_at'),
+    )
+
+    @property
+    def duration_seconds(self) -> Optional[int]:
+        """获取任务执行时长（秒）"""
+        if self.started_at and self.completed_at:
+            return int((self.completed_at - self.started_at).total_seconds())
+        return None
+
+    @property
+    def total_processing_time(self) -> Optional[float]:
+        """获取总处理时间（秒）"""
+        total = 0
+        if self.download_time:
+            total += self.download_time
+        if self.conversion_time:
+            total += self.conversion_time
+        if self.transcription_time:
+            total += self.transcription_time
+        return total if total > 0 else None
+
+    def __repr__(self):
+        return f"<TranscriptionTask(id={self.id}, episode_id={self.episode_id}, status='{self.status}')>"
 
 
 # 辅助方法：判断订阅是否播客

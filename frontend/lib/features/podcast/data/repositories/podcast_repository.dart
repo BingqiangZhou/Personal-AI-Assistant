@@ -4,6 +4,7 @@ import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../models/podcast_episode_model.dart';
 import '../models/podcast_playback_model.dart';
 import '../models/podcast_subscription_model.dart';
+import '../models/podcast_transcription_model.dart';
 import '../services/podcast_api_service.dart';
 
 class PodcastRepository {
@@ -211,6 +212,58 @@ class PodcastRepository {
     try {
       await _apiService.getRecommendations(limit);
     } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // === Transcription Management ===
+
+  Future<PodcastTranscriptionResponse?> getTranscription(int episodeId) async {
+    try {
+      return await _apiService.getTranscription(episodeId);
+    } on DioException catch (e) {
+      // If transcription not found (404), return null instead of throwing
+      if (e.response?.statusCode == 404) {
+        return null;
+      }
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastTranscriptionResponse> startTranscription(
+    int episodeId, {
+    bool forceRegenerate = false,
+    int? chunkSizeMb,
+    String? transcriptionModel,
+  }) async {
+    try {
+      final request = PodcastTranscriptionRequest(
+        forceRegenerate: forceRegenerate,
+        chunkSizeMb: chunkSizeMb,
+        transcriptionModel: transcriptionModel,
+      );
+      return await _apiService.startTranscription(episodeId, request);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<void> deleteTranscription(int episodeId) async {
+    try {
+      await _apiService.deleteTranscription(episodeId);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastTranscriptionResponse?> getTranscriptionStatus(int episodeId) async {
+    try {
+      return await _apiService.getTranscriptionStatus(episodeId);
+    } on DioException catch (e) {
+      // If transcription not found (404), return null instead of throwing
+      if (e.response?.statusCode == 404) {
+        return null;
+      }
       throw NetworkException.fromDioError(e);
     }
   }

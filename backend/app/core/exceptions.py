@@ -54,6 +54,20 @@ class ConflictError(BaseCustomException):
         super().__init__(message, 409)
 
 
+class ValidationError(BaseCustomException):
+    """Validation exception."""
+
+    def __init__(self, message: str = "Validation failed"):
+        super().__init__(message, 400)
+
+
+class DatabaseError(BaseCustomException):
+    """Database exception."""
+
+    def __init__(self, message: str = "Database error"):
+        super().__init__(message, 500)
+
+
 async def custom_exception_handler(request: Request, exc: BaseCustomException) -> JSONResponse:
     """Handle custom exceptions."""
     logger.error(f"Custom exception: {exc.message} - Status: {exc.status_code}")
