@@ -85,7 +85,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                     child: Icon(
                       Icons.psychology,
                       size: 32,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).colorScheme.secondary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -145,7 +145,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                         Icon(
                           Icons.psychology,
                           size: 32,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: Theme.of(context).colorScheme.secondary,
                         ),
                         const SizedBox(width: 12),
                         Text(

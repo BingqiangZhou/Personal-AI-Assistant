@@ -84,15 +84,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   /// 构建浮动操作按钮
   Widget? _buildFloatingActionButton() {
-    // 只在播客列表页面显示添加按钮
-    if (_currentIndex == 1) { // Podcasts tab
-      return FloatingActionButton(
-        onPressed: () {
-          // TODO: 实现添加播客功能
-        },
-        child: const Icon(Icons.add),
-      );
-    }
     return null;
   }
 

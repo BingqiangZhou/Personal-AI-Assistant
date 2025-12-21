@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
+import '../../data/models/podcast_episode_model.dart';
+import '../navigation/podcast_navigation.dart';
+import '../providers/podcast_providers.dart';
 
 /// Material Design 3自适应Feed页面
-class PodcastFeedPage extends StatelessWidget {
+class PodcastFeedPage extends ConsumerStatefulWidget {
   const PodcastFeedPage({super.key});
+
+  @override
+  ConsumerState<PodcastFeedPage> createState() => _PodcastFeedPageState();
+}
+
+class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(podcastFeedProvider.notifier).loadInitialFeed();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,11 +30,23 @@ class PodcastFeedPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 页面标题
-          Text(
-            'Feed',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+          SizedBox(
+            height: 56,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Feed',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
                 ),
+                IconButton(onPressed: () {
+                  ref.read(podcastFeedProvider.notifier).refreshFeed();
+                }, icon: const Icon(Icons.refresh))
+              ],
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -32,58 +61,44 @@ class PodcastFeedPage extends StatelessWidget {
 
   /// 构建Feed内容
   Widget _buildFeedContent(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final feedState = ref.watch(podcastFeedProvider);
 
-    // 暂时显示静态数据，用于测试UI
-    return _buildMockFeed(context, isMobile);
-  }
+    if (feedState.isLoading && feedState.episodes.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-  /// 模拟Feed内容（用于UI测试）- 优化布局，避免溢出
-  Widget _buildMockFeed(BuildContext context, bool isMobile) {
-    // 模拟数据
-    final mockEpisodes = [
-      {
-        'title': 'The Future of AI in Software Development',
-        'podcast': 'Tech Talks Daily',
-        'description': 'Exploring how artificial intelligence is transforming the way we write code and software',
-        'duration': '45 min',
-        'published': '2 hours ago',
-        'isPlayed': false,
-      },
-      {
-        'title': 'Building Scalable Microservices',
-        'podcast': 'Engineering Podcast',
-        'description': 'Best practices for designing and implementing microservice architectures that can scale',
-        'duration': '38 min',
-        'published': '5 hours ago',
-        'isPlayed': true,
-      },
-      {
-        'title': 'The Psychology of Product Design',
-        'podcast': 'Design Insights',
-        'description': 'Understanding user behavior and cognitive biases to create better products',
-        'duration': '52 min',
-        'published': '1 day ago',
-        'isPlayed': false,
-      },
-      {
-        'title': 'Startup Funding Strategies',
-        'podcast': 'Entrepreneur Weekly',
-        'description': 'From seed rounds to Series A, navigating the complex world of startup financing',
-        'duration': '41 min',
-        'published': '2 days ago',
-        'isPlayed': false,
-      },
-      {
-        'title': 'Clean Code Principles',
-        'podcast': 'Dev Masters',
-        'description': 'Essential principles for writing maintainable, readable, and robust code',
-        'duration': '35 min',
-        'published': '3 days ago',
-        'isPlayed': true,
-      },
-    ];
+    if (feedState.error != null && feedState.episodes.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: Colors.orange),
+            const SizedBox(height: 16),
+            Text('Failed to load feed: ${feedState.error}'),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () {
+                ref.read(podcastFeedProvider.notifier).loadInitialFeed();
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (feedState.episodes.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.rss_feed, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text('No episodes found', style: Theme.of(context).textTheme.titleLarge),
+          ],
+        ),
+      );
+    }
 
     // 使用LayoutBuilder来动态调整布局
     return LayoutBuilder(
@@ -94,13 +109,21 @@ class PodcastFeedPage extends StatelessWidget {
         if (screenWidth < 600) {
           return RefreshIndicator(
             onRefresh: () async {
-              // TODO: 实现刷新逻辑
+              await ref.read(podcastFeedProvider.notifier).refreshFeed();
             },
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              itemCount: mockEpisodes.length,
+              itemCount: feedState.episodes.length + (feedState.hasMore ? 1 : 0),
               itemBuilder: (context, index) {
-                return _buildMobileCard(context, mockEpisodes[index]);
+                if (index >= feedState.episodes.length) {
+                  // Loading more indicator
+                  Future.microtask(() => ref.read(podcastFeedProvider.notifier).loadMoreFeed());
+                  return const Center(child: Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: CircularProgressIndicator(),
+                  ));
+                }
+                return _buildMobileCard(context, feedState.episodes[index]);
               },
             ),
           );
@@ -108,17 +131,19 @@ class PodcastFeedPage extends StatelessWidget {
 
         // 桌面端：使用GridView，优化卡片高度
         final crossAxisCount = screenWidth < 900 ? 2 : (screenWidth < 1200 ? 3 : 4);
-        final horizontalPadding = 48.0;
+        final horizontalPadding = 0.0; // ResponsiveContainer handles padding? Checking...
+        // ResponsiveContainer has default padding, so we might not need extra. 
+        // But GridView needs spacing.
         final spacing = 16.0;
         final availableWidth = screenWidth - horizontalPadding - (crossAxisCount - 1) * spacing;
         final cardWidth = availableWidth / crossAxisCount;
 
         // 优化宽高比：卡片内容高度约180-200，确保不溢出
-        final childAspectRatio = cardWidth / 200;
+        final childAspectRatio = cardWidth / 210;
 
         return RefreshIndicator(
           onRefresh: () async {
-            // TODO: 实现刷新逻辑
+            await ref.read(podcastFeedProvider.notifier).refreshFeed();
           },
           child: GridView.builder(
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -128,9 +153,12 @@ class PodcastFeedPage extends StatelessWidget {
               mainAxisSpacing: spacing,
               childAspectRatio: childAspectRatio,
             ),
-            itemCount: mockEpisodes.length,
+            itemCount: feedState.episodes.length, // Grid infinite scroll is harder, skipping for MVP-ish
             itemBuilder: (context, index) {
-              return _buildDesktopCard(context, mockEpisodes[index]);
+               if (index == feedState.episodes.length - 1 && feedState.hasMore) {
+                  Future.microtask(() => ref.read(podcastFeedProvider.notifier).loadMoreFeed());
+               }
+              return _buildDesktopCard(context, feedState.episodes[index]);
             },
           ),
         );
@@ -139,12 +167,17 @@ class PodcastFeedPage extends StatelessWidget {
   }
 
   /// 构建移动端卡片
-  Widget _buildMobileCard(BuildContext context, Map<String, dynamic> episode) {
+  Widget _buildMobileCard(BuildContext context, PodcastEpisodeModel episode) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: InkWell(
         onTap: () {
-          // TODO: 实现播客详情导航
+          PodcastNavigation.goToEpisodeDetail(
+            context,
+            episodeId: episode.id,
+            subscriptionId: episode.subscriptionId,
+            episodeTitle: episode.title,
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -156,48 +189,69 @@ class PodcastFeedPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 播放按钮
+                  // 播放按钮
                   Container(
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer,
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
-                      episode['isPlayed'] == true
-                          ? Icons.play_arrow
-                          : Icons.play_circle_filled,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      size: 28,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: (episode.imageUrl != null || episode.subscriptionImageUrl != null)
+                          ? Image.network(
+                              episode.imageUrl ?? episode.subscriptionImageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Icon(
+                                episode.isPlayed ? Icons.play_arrow : Icons.play_circle_filled,
+                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                size: 28,
+                              ),
+                            )
+                          : Icon(
+                              episode.isPlayed ? Icons.play_arrow : Icons.play_circle_filled,
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              size: 28,
+                            ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   // 标题和信息
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          episode['title'] as String,
+                          episode.title,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          episode['podcast'] as String,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         Wrap(
-                          spacing: 16,
-                          runSpacing: 4,
+                          spacing: 12,
+                          runSpacing: 8,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
+                            // 播客名 (圆角框)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                episode.subscriptionTitle ?? 'Podcast',
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.onPrimary,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                    ),
+                              ),
+                            ),
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -208,7 +262,7 @@ class PodcastFeedPage extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  episode['duration'] as String,
+                                  episode.formattedDuration,
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                                       ),
@@ -225,7 +279,7 @@ class PodcastFeedPage extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  episode['published'] as String,
+                                  _formatDate(episode.publishedAt),
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                                       ),
@@ -239,14 +293,14 @@ class PodcastFeedPage extends StatelessWidget {
                   ),
                 ],
               ),
-              if (episode['description'] != null) ...[
+              if (episode.description != null) ...[
                 const SizedBox(height: 12),
                 Text(
-                  episode['description'] as String,
+                  episode.description!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
-                  maxLines: 3,
+                  maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -285,7 +339,12 @@ class PodcastFeedPage extends StatelessWidget {
                   ),
                   FilledButton.tonal(
                     onPressed: () {
-                      // TODO: 实现播放功能
+                      PodcastNavigation.goToEpisodeDetail(
+                        context,
+                        episodeId: episode.id,
+                        subscriptionId: episode.subscriptionId,
+                        episodeTitle: episode.title,
+                      );
                     },
                     child: const Text('Play'),
                   ),
@@ -298,12 +357,21 @@ class PodcastFeedPage extends StatelessWidget {
     );
   }
 
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
   /// 构建桌面端卡片（优化布局，避免溢出）
-  Widget _buildDesktopCard(BuildContext context, Map<String, dynamic> episode) {
+  Widget _buildDesktopCard(BuildContext context, PodcastEpisodeModel episode) {
     return Card(
       child: InkWell(
         onTap: () {
-          // TODO: 实现播客详情导航
+          PodcastNavigation.goToEpisodeDetail(
+            context,
+            episodeId: episode.id,
+            subscriptionId: episode.subscriptionId,
+            episodeTitle: episode.title,
+          );
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -321,38 +389,40 @@ class PodcastFeedPage extends StatelessWidget {
                     height: 44,
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer,
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
-                      episode['isPlayed'] == true
-                          ? Icons.play_arrow
-                          : Icons.play_circle_filled,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      size: 22,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: (episode.imageUrl != null || episode.subscriptionImageUrl != null)
+                          ? Image.network(
+                              episode.imageUrl ?? episode.subscriptionImageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Icon(
+                                episode.isPlayed ? Icons.play_arrow : Icons.play_circle_filled,
+                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                size: 22,
+                              ),
+                            )
+                          : Icon(
+                              episode.isPlayed ? Icons.play_arrow : Icons.play_circle_filled,
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              size: 22,
+                            ),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  // 标题和播客名
+                  const SizedBox(width: 12),
+                  // 标题和信息
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          episode['title'] as String,
+                          episode.title,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
+                                fontSize: 16,
                               ),
                           maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          episode['podcast'] as String,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -362,30 +432,46 @@ class PodcastFeedPage extends StatelessWidget {
               ),
 
               // 描述
-              if (episode['description'] != null) ...[
+              if (episode.description != null) ...[
                 const SizedBox(height: 8),
-                Expanded(
-                  child: Text(
-                    episode['description'] as String,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                Text(
+                  episode.description!,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
 
               // 元数据和操作按钮
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   // 时间信息
                   Expanded(
                     child: Wrap(
-                      spacing: 10,
-                      runSpacing: 4,
+                      spacing: 12,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
+                        // 播客名 (圆角框)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            episode.subscriptionTitle ?? 'Podcast',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                          ),
+                        ),
+                        // 时长
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -396,13 +482,15 @@ class PodcastFeedPage extends StatelessWidget {
                             ),
                             const SizedBox(width: 2),
                             Text(
-                              episode['duration'] as String,
+                              episode.formattedDuration,
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
                                   ),
                             ),
                           ],
                         ),
+                        // 日期
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -413,9 +501,10 @@ class PodcastFeedPage extends StatelessWidget {
                             ),
                             const SizedBox(width: 2),
                             Text(
-                              episode['published'] as String,
+                              _formatDate(episode.publishedAt),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
                                   ),
                             ),
                           ],
@@ -428,7 +517,7 @@ class PodcastFeedPage extends StatelessWidget {
                   const SizedBox(width: 8),
                   FilledButton.tonal(
                     onPressed: () {
-                      // TODO: 实现播放功能
+                      ref.read(audioPlayerProvider.notifier).playEpisode(episode);
                     },
                     child: const Text('Play'),
                   ),

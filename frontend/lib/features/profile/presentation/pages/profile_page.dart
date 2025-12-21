@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
+import '../../../auth/domain/models/user.dart';
+import '../../../user/presentation/providers/user_provider.dart';
 
 /// Material Design 3自适应Profile页面
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
   bool _autoSyncEnabled = true;
@@ -19,9 +22,10 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return ResponsiveContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           // 页面标题和操作区域
           Row(
             children: [
@@ -76,10 +80,9 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 24),
 
           // 设置选项
-          Expanded(
-            child: _buildSettingsContent(context),
-          ),
+          _buildSettingsContent(context),
         ],
+      ),
       ),
     );
   }
@@ -88,6 +91,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildUserProfileCard(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    final userState = ref.watch(userProvider);
 
     return Card(
       child: Padding(
@@ -101,12 +105,20 @@ class _ProfilePageState extends State<ProfilePage> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primaryContainer,
                 shape: BoxShape.circle,
+                image: userState.value?.avatarUrl != null
+                    ? DecorationImage(
+                        image: NetworkImage(userState.value!.avatarUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
-              child: Icon(
-                Icons.person,
-                size: isMobile ? 40 : 50,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
-              ),
+              child: userState.value?.avatarUrl == null
+                  ? Icon(
+                      Icons.person,
+                      size: isMobile ? 40 : 50,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    )
+                  : null,
             ),
             const SizedBox(width: 24),
             // 用户信息
@@ -114,18 +126,27 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'John Doe',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
+                  userState.when(
+                    data: (user) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.displayName ?? 'Guest User',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'john.doe@example.com',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        const SizedBox(height: 8),
+                        Text(
+                          user?.email ?? 'Please log in',
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
                         ),
+                      ],
+                    ),
+                    loading: () => const CircularProgressIndicator(),
+                    error: (e, s) => Text('Error loading profile'),
                   ),
                   const SizedBox(height: 8),
                   Row(

@@ -360,13 +360,11 @@ class PodcastSubscriptionNotifier extends _$PodcastSubscriptionNotifier {
 
   Future<PodcastSubscriptionModel> addSubscription({
     required String feedUrl,
-    String? customName,
     List<int>? categoryIds,
   }) async {
     try {
       final subscription = await _repository.addSubscription(
         feedUrl: feedUrl,
-        customName: customName,
         categoryIds: categoryIds,
       );
 

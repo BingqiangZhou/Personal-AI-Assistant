@@ -157,21 +157,18 @@ class PodcastSubscriptionListResponse extends Equatable {
 class PodcastSubscriptionCreateRequest extends Equatable {
   @JsonKey(name: 'feed_url')
   final String feedUrl;
-  @JsonKey(name: 'custom_name')
-  final String? customName;
   @JsonKey(name: 'category_ids')
   final List<int>? categoryIds;
 
   const PodcastSubscriptionCreateRequest({
     required this.feedUrl,
-    this.customName,
     this.categoryIds,
   });
 
   Map<String, dynamic> toJson() => _$PodcastSubscriptionCreateRequestToJson(this);
 
   @override
-  List<Object?> get props => [feedUrl, customName, categoryIds];
+  List<Object?> get props => [feedUrl, categoryIds];
 }
 
 @JsonSerializable()

@@ -94,229 +94,136 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     // }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            // 使用第一个分集的图像作为图标，如果没有则使用订阅图像，最后使用默认图标
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                  width: 1,
+      body: Column(
+        children: [
+          // Custom Header
+          Container(
+            height: 56,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => context.pop(),
                 ),
-              ),
-              child: episodesState.episodes.isNotEmpty
-                  ? (episodesState.episodes.first.imageUrl != null
+                const SizedBox(width: 8),
+                // Icon
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: episodesState.episodes.isNotEmpty && episodesState.episodes.first.imageUrl != null
                       ? ClipRRect(
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(6),
                           child: Image.network(
                             episodesState.episodes.first.imageUrl!,
-                            width: 32,
-                            height: 32,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              debugPrint('❌ Failed to load episode image: $error');
-                              // Fallback to subscription image
-                              if (episodesState.episodes.first.subscriptionImageUrl != null) {
-                                return ClipRRect(
-                                  borderRadius: BorderRadius.circular(5),
-                                  child: Image.network(
-                                    episodesState.episodes.first.subscriptionImageUrl!,
-                                    width: 32,
-                                    height: 32,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      debugPrint('❌ Failed to load subscription image: $error');
-                                      return Icon(
-                                        Icons.headphones_outlined,
-                                        size: 18,
-                                        color: Theme.of(context).colorScheme.primary,
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.podcasts,
+                              size: 18,
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          Icons.podcasts,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    widget.podcastTitle ?? 'Episodes',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.filter_list,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  onPressed: _showFilterDialog,
+                  tooltip: 'Filter',
+                ),
+                PopupMenuButton<String>(
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                  onSelected: (value) {
+                    // TODO: Implement
+                  },
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'mark_all_played',
+                      child: Text('Mark All as Played'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'mark_all_unplayed',
+                      child: Text('Mark All as Unplayed'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: _refreshEpisodes,
+              child: episodesState.isLoading && episodesState.episodes.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : episodesState.error != null
+                      ? _buildErrorState(episodesState.error!)
+                      : episodesState.episodes.isEmpty
+                          ? _buildEmptyState()
+                          : Column(
+                              children: [
+                                // Filter chips
+                                _buildFilterChips(),
+                                // Episodes list
+                                Expanded(
+                                  child: ListView.builder(
+                                    controller: _scrollController,
+                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    itemCount: episodesState.episodes.length + (episodesState.isLoadingMore ? 1 : 0),
+                                    itemBuilder: (context, index) {
+                                      if (index == episodesState.episodes.length) {
+                                        return const Center(
+                                          child: Padding(
+                                            padding: EdgeInsets.all(16),
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        );
+                                      }
+                                      final episode = episodesState.episodes[index];
+                                      return PodcastEpisodeCard(
+                                        episode: episode,
+                                        onTap: () {
+                                          context.push('/podcast/episode/detail/${episode.id}');
+                                        },
+                                        onPlay: () async {
+                                          await ref
+                                              .read(audioPlayerProvider.notifier)
+                                              .playEpisode(episode);
+                                        },
                                       );
                                     },
                                   ),
-                                );
-                              }
-                              return Icon(
-                                Icons.headphones_outlined,
-                                size: 18,
-                                color: Theme.of(context).colorScheme.primary,
-                              );
-                            },
-                          ),
-                        )
-                      : (episodesState.episodes.first.subscriptionImageUrl != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(5),
-                              child: Image.network(
-                                episodesState.episodes.first.subscriptionImageUrl!,
-                                width: 32,
-                                height: 32,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  debugPrint('❌ Failed to load subscription image: $error');
-                                  return Icon(
-                                    Icons.headphones_outlined,
-                                    size: 18,
-                                    color: Theme.of(context).colorScheme.primary,
-                                  );
-                                },
-                              ),
-                            )
-                          : Icon(
-                              Icons.headphones_outlined,
-                              size: 18,
-                              color: Theme.of(context).colorScheme.primary,
-                            )))
-                  : Icon(
-                      Icons.headphones_outlined,
-                      size: 18,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-            ),
-            const SizedBox(width: 8),
-            // 标题
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                widget.podcastTitle ?? 'Podcast Episodes',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 2,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: IconButton(
-              icon: Icon(
-                Icons.filter_list,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              onPressed: _showFilterDialog,
-              tooltip: 'Filter',
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: PopupMenuButton<String>(
-              icon: Icon(
-                Icons.more_vert,
-                color: Theme.of(context).colorScheme.secondary,
-              ),
-              onSelected: (value) {
-                switch (value) {
-                  case 'mark_all_played':
-                    // TODO: Implement mark all as played
-                    break;
-                  case 'mark_all_unplayed':
-                    // TODO: Implement mark all as unplayed
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'mark_all_played',
-                  child: Row(
-                    children: [
-                      Icon(Icons.check_circle),
-                      SizedBox(width: 8),
-                      Text('Mark All as Played'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'mark_all_unplayed',
-                  child: Row(
-                    children: [
-                      Icon(Icons.radio_button_unchecked),
-                      SizedBox(width: 8),
-                      Text('Mark All as Unplayed'),
-                    ],
-                  ),
-                ),
-              ],
+                                ),
+                              ],
+                            ),
             ),
           ),
         ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: _refreshEpisodes,
-        child: episodesState.isLoading && episodesState.episodes.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : episodesState.error != null
-                ? _buildErrorState(episodesState.error!)
-                : episodesState.episodes.isEmpty
-                    ? _buildEmptyState()
-                    : Column(
-                        children: [
-                          // Filter chips
-                          _buildFilterChips(),
-                          // Episodes list
-                          Expanded(
-                            child: ListView.builder(
-                              controller: _scrollController,
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              itemCount: episodesState.episodes.length + (episodesState.isLoadingMore ? 1 : 0),
-                              itemBuilder: (context, index) {
-                                if (index == episodesState.episodes.length) {
-                                  return const Center(
-                                    child: Padding(
-                                      padding: EdgeInsets.all(16),
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  );
-                                }
-                                final episode = episodesState.episodes[index];
-                      return PodcastEpisodeCard(
-                        episode: episode,
-                        onTap: () {
-                          // 跳转到分集详细页面
-                          context.push('/podcast/episode/detail/${episode.id}');
-                        },
-                        onPlay: () async {
-                          await ref
-                              .read(audioPlayerProvider.notifier)
-                              .playEpisode(episode);
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-        ),
       ),
     );
   }
@@ -458,31 +365,39 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
             children: [
               const Text('Playback Status:'),
               const SizedBox(height: 8),
-              RadioGroup<String>(
-                groupValue: _selectedFilter,
-                onChanged: (value) {
-                  if (value != null) {
-                    setDialogState(() {
-                      _selectedFilter = value;
-                    });
-                  }
-                },
-                child: Column(
-                  children: [
-                    RadioListTile<String>(
-                      title: const Text('All Episodes'),
-                      value: 'all',
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('Unplayed Only'),
-                      value: 'unplayed',
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('Played Only'),
-                      value: 'played',
-                    ),
-                  ],
-                ),
+              Column(
+                children: [
+                  RadioListTile<String>(
+                    title: const Text('All Episodes'),
+                    value: 'all',
+                    groupValue: _selectedFilter,
+                    onChanged: (value) {
+                      setDialogState(() {
+                        _selectedFilter = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('Unplayed Only'),
+                    value: 'unplayed',
+                    groupValue: _selectedFilter,
+                    onChanged: (value) {
+                      setDialogState(() {
+                        _selectedFilter = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('Played Only'),
+                    value: 'played',
+                    groupValue: _selectedFilter,
+                    onChanged: (value) {
+                      setDialogState(() {
+                        _selectedFilter = value!;
+                      });
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               CheckboxListTile(

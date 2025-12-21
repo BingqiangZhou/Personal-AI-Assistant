@@ -25,7 +25,6 @@ class PodcastTimestampedSchema(PodcastBaseSchema):
 class PodcastSubscriptionCreate(PodcastBaseSchema):
     """创建播客订阅请求"""
     feed_url: str = Field(..., description="RSS feed URL", min_length=10, max_length=500)
-    custom_name: Optional[str] = Field(None, description="自定义订阅名称", max_length=255)
     category_ids: Optional[List[int]] = Field(default_factory=list, description="分类ID列表")
 
     @field_validator('feed_url')
@@ -58,7 +57,7 @@ class PodcastSubscriptionResponse(PodcastTimestampedSchema):
     status: str
     last_fetched_at: Optional[datetime] = None
     error_message: Optional[str] = None
-    fetch_interval: int
+    fetch_interval: Optional[int] = None
     episode_count: Optional[int] = 0
     unplayed_count: Optional[int] = 0
     latest_episode: Optional[Dict[str, Any]] = None
@@ -155,6 +154,7 @@ class PodcastEpisodeResponse(PodcastTimestampedSchema):
     metadata: Optional[Dict[str, Any]] = {}
 
     # 播放状态（如果用户有收听记录）
+    subscription_title: Optional[str] = None
     playback_position: Optional[int] = None
     is_playing: bool = False
     playback_rate: float = 1.0

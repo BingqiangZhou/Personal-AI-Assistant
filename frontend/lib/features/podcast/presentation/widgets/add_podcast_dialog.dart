@@ -14,13 +14,11 @@ class AddPodcastDialog extends ConsumerStatefulWidget {
 class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
   final _formKey = GlobalKey<FormState>();
   final _feedUrlController = TextEditingController();
-  final _customNameController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
     _feedUrlController.dispose();
-    _customNameController.dispose();
     super.dispose();
   }
 
@@ -34,9 +32,6 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
     try {
       await ref.read(podcastSubscriptionProvider.notifier).addSubscription(
             feedUrl: _feedUrlController.text.trim(),
-            customName: _customNameController.text.trim().isNotEmpty
-                ? _customNameController.text.trim()
-                : null,
           );
 
       if (mounted) {
@@ -89,30 +84,21 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
                     controller: _feedUrlController,
                     decoration: const InputDecoration(
                       labelText: 'RSS Feed URL',
-                      hintText: 'https://example.com/podcast/feed.xml',
+                      hintText: 'https://example.com/feed.xml',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.rss_feed),
                     ),
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a RSS feed URL';
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a URL';
                       }
-                      if (!value.startsWith('http://') && !value.startsWith('https://')) {
-                        return 'Please enter a valid URL starting with http:// or https://';
+                      if (!value.startsWith('http')) {
+                        return 'Please enter a valid URL';
                       }
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _customNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Custom Name (Optional)',
-                      hintText: 'My Podcast',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.edit),
-                    ),
-                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),

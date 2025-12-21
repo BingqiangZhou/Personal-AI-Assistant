@@ -225,6 +225,11 @@ class DocumentResponse(DocumentBase, TimestampedSchema):
     indexed_at: Optional[datetime] = None
 
 
+class KnowledgeSearchRequest(BaseSchema):
+    query: str
+    kb_ids: Optional[List[int]] = None
+
+
 # Message schemas
 class MessageBase(BaseSchema):
     content: str

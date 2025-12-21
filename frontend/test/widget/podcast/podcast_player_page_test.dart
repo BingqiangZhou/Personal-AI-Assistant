@@ -8,6 +8,7 @@ import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episo
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_playback_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_player_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
 
 import '../../../mocks/test_mocks.dart';
 import 'podcast_player_page_test.mocks.dart';

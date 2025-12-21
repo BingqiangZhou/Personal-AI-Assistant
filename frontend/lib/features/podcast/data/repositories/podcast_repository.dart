@@ -16,13 +16,11 @@ class PodcastRepository {
 
   Future<PodcastSubscriptionModel> addSubscription({
     required String feedUrl,
-    String? customName,
     List<int>? categoryIds,
   }) async {
     try {
       final request = PodcastSubscriptionCreateRequest(
         feedUrl: feedUrl,
-        customName: customName,
         categoryIds: categoryIds,
       );
       return await _apiService.addSubscription(request);

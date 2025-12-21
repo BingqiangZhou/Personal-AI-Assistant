@@ -46,7 +46,6 @@ class PodcastService:
     async def add_subscription(
         self,
         feed_url: str,
-        custom_name: Optional[str] = None,
         category_ids: Optional[List[int]] = None
     ) -> Tuple[Subscription, List[PodcastEpisode]]:
         """
@@ -82,7 +81,7 @@ class PodcastService:
             feed_url,
             feed.title,
             feed.description,
-            custom_name,
+            None,  # custom_name
             metadata=metadata
         )
 
@@ -140,7 +139,7 @@ class PodcastService:
             author = config.get("author")
             platform = config.get("platform")
             # 处理categories格式 - 统一转换为字典列表
-            raw_categories = config.get("categories", [])
+            raw_categories = config.get("categories") or []
             categories = []
             for cat in raw_categories:
                 if isinstance(cat, str):
@@ -572,7 +571,7 @@ class PodcastService:
         config = sub.config or {}
         image_url = config.get("image_url")
         author = config.get("author")
-        categories = config.get("categories", [])
+        categories = config.get("categories") or []
         podcast_type = config.get("podcast_type")
         language = config.get("language")
         explicit = config.get("explicit", False)
@@ -648,7 +647,7 @@ class PodcastService:
             config = episode.subscription.config
             subscription_image_url = config.get("image_url")
             subscription_author = config.get("author")
-            subscription_categories = config.get("categories", [])
+            subscription_categories = config.get("categories") or []
 
         return {
             "id": episode.id,

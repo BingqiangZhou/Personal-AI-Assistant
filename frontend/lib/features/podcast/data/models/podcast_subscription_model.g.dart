@@ -84,7 +84,6 @@ PodcastSubscriptionCreateRequest _$PodcastSubscriptionCreateRequestFromJson(
   Map<String, dynamic> json,
 ) => PodcastSubscriptionCreateRequest(
   feedUrl: json['feed_url'] as String,
-  customName: json['custom_name'] as String?,
   categoryIds: (json['category_ids'] as List<dynamic>?)
       ?.map((e) => (e as num).toInt())
       .toList(),
@@ -94,7 +93,6 @@ Map<String, dynamic> _$PodcastSubscriptionCreateRequestToJson(
   PodcastSubscriptionCreateRequest instance,
 ) => <String, dynamic>{
   'feed_url': instance.feedUrl,
-  'custom_name': instance.customName,
   'category_ids': instance.categoryIds,
 };
 

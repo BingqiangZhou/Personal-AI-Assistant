@@ -91,7 +91,6 @@ async def add_subscription(
     try:
         subscription, new_episodes = await service.add_subscription(
             feed_url=subscription_data.feed_url,
-            custom_name=subscription_data.custom_name,
             category_ids=subscription_data.category_ids
         )
 

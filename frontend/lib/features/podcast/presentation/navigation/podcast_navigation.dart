@@ -32,9 +32,12 @@ class PodcastEpisodesPageArgs {
     final subscriptionId = int.tryParse(subscriptionIdStr);
     if (subscriptionId == null) return null;
 
+    final subscription = state.extra as PodcastSubscriptionModel?;
+
     return PodcastEpisodesPageArgs(
       subscriptionId: subscriptionId,
-      podcastTitle: state.uri.queryParameters['title'],
+      podcastTitle: state.uri.queryParameters['title'] ?? subscription?.title,
+      subscription: subscription,
     );
   }
 }

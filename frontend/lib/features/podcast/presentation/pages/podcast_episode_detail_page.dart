@@ -158,11 +158,13 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
     // debugPrint('  Has episode image: ${episode.imageUrl != null}');
     // debugPrint('  Has subscription image: ${episode.subscriptionImageUrl != null}');
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: Theme.of(context).colorScheme.surface,
-      child: Row(
-        children: [
+    return SizedBox(
+      height: 56,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        color: Theme.of(context).colorScheme.surface,
+        child: Row(
+          children: [
           // 左侧：返回按钮 + Logo + 文本
           Expanded(
             child: Row(
@@ -314,8 +316,9 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   // B. 左侧主内容
   Widget _buildMainContent(dynamic episode) {

@@ -11,6 +11,8 @@ class PodcastEpisodeModel extends Equatable {
   @JsonKey(name: 'subscription_image_url')
   final String? subscriptionImageUrl;
   final String title;
+  @JsonKey(name: 'subscription_title')
+  final String? subscriptionTitle;
   final String? description;
   @JsonKey(name: 'audio_url')
   final String audioUrl;
@@ -63,6 +65,7 @@ class PodcastEpisodeModel extends Equatable {
     required this.subscriptionId,
     this.subscriptionImageUrl,
     required this.title,
+    this.subscriptionTitle,
     this.description,
     required this.audioUrl,
     this.audioDuration,
@@ -99,6 +102,7 @@ class PodcastEpisodeModel extends Equatable {
     int? subscriptionId,
     String? subscriptionImageUrl,
     String? title,
+    String? subscriptionTitle,
     String? description,
     String? audioUrl,
     int? audioDuration,
@@ -129,6 +133,7 @@ class PodcastEpisodeModel extends Equatable {
       subscriptionId: subscriptionId ?? this.subscriptionId,
       subscriptionImageUrl: subscriptionImageUrl ?? this.subscriptionImageUrl,
       title: title ?? this.title,
+      subscriptionTitle: subscriptionTitle ?? this.subscriptionTitle,
       description: description ?? this.description,
       audioUrl: audioUrl ?? this.audioUrl,
       audioDuration: audioDuration ?? this.audioDuration,
@@ -203,6 +208,7 @@ class PodcastEpisodeModel extends Equatable {
         subscriptionId,
         subscriptionImageUrl,
         title,
+        subscriptionTitle,
         description,
         audioUrl,
         audioDuration,
