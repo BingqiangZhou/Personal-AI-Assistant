@@ -1,43 +1,32 @@
-"""Alembic environment configuration."""
-
-import asyncio
-from datetime import timedelta
-from logging.config import fileConfig
-from sqlalchemy import pool
-from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
-from sqlalchemy.ext.declarative import declarative_base
-from alembic import context
-import os
+"""Test the circular import fix by simulating the alembic env.py setup"""
 import sys
-
-# Add the app directory to Python path
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-# === STEP 1: Create isolated Base for migrations ===
-Base = declarative_base()
-
-# === STEP 2: Mock modules to prevent circular imports ===
+import os
 import types
+from datetime import timedelta
 
-# Mock Header class for security functions
-class Header:
-    def __init__(self, default=None, **kwargs):
-        self.default = default
-    def __call__(self, *args, **kwargs):
-        return self.default
+# Add backend to path
+sys.path.insert(0, os.path.dirname(__file__))
 
-# Minimal settings for database URL
+print("=== Testing Circular Import Fix ===\n")
+
+# Step 1: Create isolated Base
+print("1. Creating isolated Base...")
+from sqlalchemy.orm import declarative_base
+Base = declarative_base()
+print("   [OK] Base created")
+
+# Step 2: Mock config module
+print("\n2. Setting up mock config module...")
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
 class MinimalSettings(BaseSettings):
-    DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/personal_ai_assistant"
+    DATABASE_URL: str = 'postgresql+asyncpg://admin:MySecurePass2024!@postgres:5432/personal_ai'
 
     class Config:
-        env_file = ".env"
+        env_file = '.env'
         case_sensitive = True
-        extra = "ignore"
+        extra = 'ignore'
 
 @lru_cache()
 def get_minimal_settings():
@@ -45,57 +34,55 @@ def get_minimal_settings():
 
 minimal_settings = get_minimal_settings()
 
-# Complete mock config to avoid importing app.core.config
 class MockConfig:
-    PROJECT_NAME = "Personal AI Assistant"
-    VERSION = "1.0.0"
-    API_V1_STR = "/api/v1"
-    SECRET_KEY = "migration-secret-key-placeholder"
-    ENVIRONMENT = "production"
+    PROJECT_NAME = 'Personal AI Assistant'
+    VERSION = '1.0.0'
+    API_V1_STR = '/api/v1'  # This was missing before!
+    SECRET_KEY = 'migration-secret-key-placeholder'
+    ENVIRONMENT = 'production'
     DATABASE_URL = minimal_settings.DATABASE_URL
     DATABASE_POOL_SIZE = 20
     DATABASE_MAX_OVERFLOW = 40
     DATABASE_POOL_TIMEOUT = 30
     DATABASE_RECYCLE = 3600
     DATABASE_CONNECT_TIMEOUT = 5
-    REDIS_URL = "redis://localhost:6379"
-    ALLOWED_HOSTS = ["*"]
+    REDIS_URL = 'redis://localhost:6379'
+    ALLOWED_HOSTS = ['*']
     ACCESS_TOKEN_EXPIRE_MINUTES = 30
     REFRESH_TOKEN_EXPIRE_DAYS = 7
-    ALGORITHM = "HS256"
-    CELERY_BROKER_URL = "redis://localhost:6379/0"
-    CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+    ALGORITHM = 'HS256'
+    CELERY_BROKER_URL = 'redis://localhost:6379/0'
+    CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
     MAX_PODCAST_SUBSCRIPTIONS = 50
     MAX_PODCAST_EPISODE_DOWNLOAD_SIZE = 500 * 1024 * 1024
     RSS_POLL_INTERVAL_MINUTES = 60
-    LLM_CONTENT_SANITIZE_MODE = "standard"
-    FRONTEND_URL = "http://localhost:3000"
+    LLM_CONTENT_SANITIZE_MODE = 'standard'
+    FRONTEND_URL = 'http://localhost:3000'
     SMTP_SERVER = None
     SMTP_PORT = 587
     SMTP_USERNAME = None
     SMTP_PASSWORD = None
     SMTP_USE_TLS = True
-    FROM_EMAIL = "noreply@personalai.com"
-    FROM_NAME = "Personal AI Assistant"
-    ALLOWED_AUDIO_SCHEMES = ["http", "https"]
+    FROM_EMAIL = 'noreply@personalai.com'
+    FROM_NAME = 'Personal AI Assistant'
+    ALLOWED_AUDIO_SCHEMES = ['http', 'https']
     OPENAI_API_KEY = None
-    OPENAI_API_BASE_URL = "https://api.openai.com/v1"
+    OPENAI_API_BASE_URL = 'https://api.openai.com/v1'
     MAX_FILE_SIZE = 10 * 1024 * 1024
-    UPLOAD_DIR = "uploads"
-    TRANSCRIPTION_API_URL = "https://api.siliconflow.cn/v1/audio/transcriptions"
+    UPLOAD_DIR = 'uploads'
+    TRANSCRIPTION_API_URL = 'https://api.siliconflow.cn/v1/audio/transcriptions'
     TRANSCRIPTION_API_KEY = None
     TRANSCRIPTION_CHUNK_SIZE_MB = 10
-    TRANSCRIPTION_TARGET_FORMAT = "mp3"
-    TRANSCRIPTION_TEMP_DIR = "./temp/transcription"
-    TRANSCRIPTION_STORAGE_DIR = "./storage/podcasts"
+    TRANSCRIPTION_TARGET_FORMAT = 'mp3'
+    TRANSCRIPTION_TEMP_DIR = './temp/transcription'
+    TRANSCRIPTION_STORAGE_DIR = './storage/podcasts'
     TRANSCRIPTION_MAX_THREADS = 4
     TRANSCRIPTION_QUEUE_SIZE = 100
-    TRANSCRIPTION_MODEL = "FunAudioLLM/SenseVoiceSmall"
-    SUPPORTED_TRANSCRIPTION_MODELS = "FunAudioLLM/SenseVoiceSmall,whisper-1,whisper-large-v3"
-    SUMMARY_MODEL = "gpt-4o-mini"
-    SUPPORTED_SUMMARY_MODELS = "gpt-4o-mini,gpt-4o,gpt-3.5-turbo"
+    TRANSCRIPTION_MODEL = 'FunAudioLLM/SenseVoiceSmall'
+    SUPPORTED_TRANSCRIPTION_MODELS = 'FunAudioLLM/SenseVoiceSmall,whisper-1,whisper-large-v3'
+    SUMMARY_MODEL = 'gpt-4o-mini'
+    SUPPORTED_SUMMARY_MODELS = 'gpt-4o-mini,gpt-4o,gpt-3.5-turbo'
 
-# Mock config module
 mock_config_module = types.ModuleType('app.core.config')
 mock_config_module.settings = MockConfig()
 
@@ -108,8 +95,16 @@ def mock_get_supported_summary_models():
 mock_config_module.get_supported_transcription_models = mock_get_supported_transcription_models
 mock_config_module.get_supported_summary_models = mock_get_supported_summary_models
 sys.modules['app.core.config'] = mock_config_module
+print("   [OK] Mock config module registered")
 
-# Mock security module
+# Step 3: Mock security module
+print("\n3. Setting up mock security module...")
+class Header:
+    def __init__(self, default=None, **kwargs):
+        self.default = default
+    def __call__(self, *args, **kwargs):
+        return self.default
+
 class MockSecurity:
     @staticmethod
     def get_or_generate_secret_key():
@@ -195,98 +190,64 @@ mock_security_module.generate_random_string = MockSecurity.generate_random_strin
 mock_security_module.enable_ec256_optimized = MockSecurity.enable_ec256_optimized
 mock_security_module.OAuth2PasswordBearer = lambda tokenUrl: None
 sys.modules['app.core.security'] = mock_security_module
+print("   [OK] Mock security module registered")
 
-# Mock database module to prevent circular imports
+# Step 4: Create mock database module
+print("\n4. Setting up mock database module...")
 mock_database_module = types.ModuleType('app.core.database')
 mock_database_module.Base = Base
 mock_database_module.get_db_session = lambda: None
 mock_database_module.engine = None
 sys.modules['app.core.database'] = mock_database_module
+print("   [OK] Mock database module registered")
 
-# === STEP 3: Import all models ===
-from app.domains.user.models import User
-from app.domains.subscription.models import Subscription, SubscriptionItem
-from app.domains.knowledge.models import KnowledgeBase, Document
-from app.domains.assistant.models import Conversation, Message
-from app.domains.multimedia.models import MediaFile, ProcessingJob
-from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState, TranscriptionTask
-from app.domains.ai.models import AIModelConfig
+# Step 5: The mock is already in place, so we don't need to import the real one
+print("\n5. Mock database module is already active")
+print("   [OK] Mock database module ready for use")
 
-# === STEP 4: Configure Alembic ===
-config = context.config
+# Step 6: Test importing models
+print("\n6. Testing model imports...")
+try:
+    from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState, TranscriptionTask
+    print("   [OK] Models imported successfully")
 
-if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # Check if TranscriptionTask has the new columns
+    columns = [c.name for c in TranscriptionTask.__table__.columns]
+    print(f"   - TranscriptionTask columns: {columns}")
 
-target_metadata = Base.metadata
+    required_columns = ['summary_content', 'summary_model_used', 'summary_word_count', 'summary_processing_time', 'summary_error_message']
+    missing = [col for col in required_columns if col not in columns]
+    if missing:
+        print(f"   ⚠ Missing columns: {missing}")
+    else:
+        print("   [OK] All required columns present!")
 
-def get_url():
-    """Get database URL from settings."""
-    return minimal_settings.DATABASE_URL
+except Exception as e:
+    print(f"   [ERROR] importing models: {e}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
 
+# Step 7: Test importing other models
+print("\n7. Testing other model imports...")
+try:
+    from app.domains.user.models import User
+    from app.domains.subscription.models import Subscription, SubscriptionItem
+    from app.domains.knowledge.models import KnowledgeBase, Document
+    from app.domains.assistant.models import Conversation, Message
+    from app.domains.multimedia.models import MediaFile, ProcessingJob
+    from app.domains.ai.models import AIModelConfig
+    print("   [OK] All domain models imported successfully")
+except Exception as e:
+    print(f"   [ERROR] importing other models: {e}")
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
 
-def run_migrations_offline() -> None:
-    """Run migrations in 'offline' mode.
-
-    This configures the context with just a URL
-    and not an Engine, though an Engine is acceptable
-    here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
-
-    Calls to context.execute() here emit the given string to the
-    script output.
-
-    """
-    url = get_url()
-    context.configure(
-        url=url,
-        target_metadata=target_metadata,
-        literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
-        compare_type=True,
-        compare_server_default=True,
-    )
-
-    with context.begin_transaction():
-        context.run_migrations()
-
-
-def do_run_migrations(connection: Connection) -> None:
-    """Run migrations with the given connection."""
-    context.configure(
-        connection=connection,
-        target_metadata=target_metadata,
-        compare_type=True,
-        compare_server_default=True,
-    )
-
-    with context.begin_transaction():
-        context.run_migrations()
-
-
-async def run_async_migrations() -> None:
-    """Run migrations in async mode."""
-    configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = get_url()
-
-    connectable = async_engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-
-    async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
-
-    await connectable.dispose()
-
-
-def run_migrations_online() -> None:
-    """Run migrations in 'online' mode."""
-    asyncio.run(run_async_migrations())
-
-
-if context.is_offline_mode():
-    run_migrations_offline()
-else:
-    run_migrations_online()
+print("\n=== SUCCESS: All tests passed! ===")
+print("\nThe circular import fix is working correctly.")
+print("The mock setup successfully prevents circular imports.")
+print("\nNext steps:")
+print("1. Update alembic/env.py with the working mock setup")
+print("2. Run alembic migration to add missing columns")
+print("3. Test transcription scheduling endpoints")

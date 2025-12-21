@@ -26,6 +26,16 @@ from app.core.security import get_token_from_request
 from app.domains.podcast.services import PodcastService
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.transcription import PodcastTranscriptionService, AISummaryService
+from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
+from app.domains.podcast.transcription_scheduler import (
+    TranscriptionScheduler,
+    AutomatedTranscriptionScheduler,
+    ScheduleFrequency,
+    schedule_episode_transcription,
+    get_episode_transcript,
+    batch_transcribe_subscription
+)
 from app.domains.podcast.schemas import (
     PodcastSubscriptionCreate,
     PodcastSubscriptionResponse,
@@ -590,7 +600,7 @@ async def start_transcription(
     ```
     """
     service = PodcastService(db, int(user["sub"]))
-    transcription_service = PodcastTranscriptionService(db)
+    transcription_service = DatabaseBackedTranscriptionService(db)
 
     try:
         # 验证播客单集存在且属于当前用户
@@ -693,7 +703,7 @@ async def get_transcription(
 ):
     """获取转录任务详情"""
     service = PodcastService(db, int(user["sub"]))
-    transcription_service = PodcastTranscriptionService(db)
+    transcription_service = DatabaseBackedTranscriptionService(db)
 
     try:
         # 验证播客单集存在且属于当前用户
@@ -799,7 +809,7 @@ async def get_transcription_status(
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取转录任务状态"""
-    transcription_service = PodcastTranscriptionService(db)
+    transcription_service = DatabaseBackedTranscriptionService(db)
 
     try:
         # 获取转录任务
@@ -875,3 +885,415 @@ async def get_transcription_status(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get transcription status: {str(e)}"
         )
+
+
+# === 转录调度功能 ===
+
+@router.post(
+    "/episodes/{episode_id}/transcribe/schedule",
+    status_code=status.HTTP_201_CREATED,
+    summary="安排播客单集转录（支持调度规则）",
+    description="为指定播客单集安排转录任务，支持自动调度和避免重复转录"
+)
+async def schedule_episode_transcription_endpoint(
+    episode_id: int,
+    force: bool = Body(False, description="是否强制重新转录（即使已存在结果）"),
+    frequency: str = Body("manual", description="调度频率: hourly, daily, weekly, manual"),
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    安排转录任务，支持以下特性：
+    - 自动检查是否已存在转录结果
+    - 避免重复转录已成功的内容
+    - 支持定时调度
+    - 可强制重新转录
+
+    请求示例:
+    ```json
+    {
+        "force": false,
+        "frequency": "manual"
+    }
+    ```
+    """
+    service = PodcastService(db, int(user["sub"]))
+
+    try:
+        # 验证播客单集存在且属于当前用户
+        episode = await service.get_episode_by_id(episode_id)
+        if not episode:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Episode {episode_id} not found"
+            )
+
+        # 验证用户权限
+        if episode.subscription.user_id != int(user["sub"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this episode"
+            )
+
+        # 检查是否已有转录结果
+        existing_transcript = await get_episode_transcript(db, episode_id)
+        if existing_transcript and not force:
+            return {
+                "status": "skipped",
+                "message": "Transcription already exists. Use force=true to re-transcribe.",
+                "episode_id": episode_id,
+                "transcript_preview": existing_transcript[:100] + "..." if len(existing_transcript) > 100 else existing_transcript
+            }
+
+        # 安排转录
+        scheduler = TranscriptionScheduler(db)
+        result = await scheduler.schedule_transcription(
+            episode_id=episode_id,
+            frequency=ScheduleFrequency(frequency),
+            force=force
+        )
+
+        return result
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to schedule transcription for episode {episode_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to schedule transcription: {str(e)}"
+        )
+
+
+@router.get(
+    "/episodes/{episode_id}/transcript",
+    summary="获取转录文本（避免重复转录）",
+    description="获取播客单集的转录文本，如果已存在则直接返回，避免重复转录"
+)
+async def get_episode_transcript_endpoint(
+    episode_id: int,
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    核心功能：读取已存在的转录文本
+
+    逻辑：
+    1. 检查PodcastEpisode.transcript_content
+    2. 检查TranscriptionTask.transcript_content
+    3. 如果都不存在，返回404
+    """
+    service = PodcastService(db, int(user["sub"]))
+
+    try:
+        # 验证播客单集存在且属于当前用户
+        episode = await service.get_episode_by_id(episode_id)
+        if not episode:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Episode {episode_id} not found"
+            )
+
+        # 验证用户权限
+        if episode.subscription.user_id != int(user["sub"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this episode"
+            )
+
+        # 获取转录文本
+        transcript = await get_episode_transcript(db, episode_id)
+
+        if not transcript:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No transcription found for this episode. Please schedule transcription first."
+            )
+
+        return {
+            "episode_id": episode_id,
+            "episode_title": episode.title,
+            "transcript_length": len(transcript),
+            "transcript": transcript,
+            "status": "success"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to get transcript for episode {episode_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get transcript: {str(e)}"
+        )
+
+
+@router.post(
+    "/subscriptions/{subscription_id}/transcribe/batch",
+    status_code=status.HTTP_201_CREATED,
+    summary="批量转录订阅的所有分集",
+    description="为订阅的所有分集批量安排转录，自动跳过已转录的内容"
+)
+async def batch_transcribe_subscription_endpoint(
+    subscription_id: int,
+    skip_existing: bool = Body(True, description="是否跳过已存在转录的分集"),
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    批量转录功能：
+    - 自动获取订阅的所有分集
+    - 跳过已成功转录的分集
+    - 批量安排转录任务
+
+    请求示例:
+    ```json
+    {
+        "skip_existing": true
+    }
+    ```
+    """
+    service = PodcastService(db, int(user["sub"]))
+
+    try:
+        # 验证订阅存在且属于当前用户
+        subscription = await service.get_subscription_by_id(subscription_id)
+        if not subscription:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Subscription {subscription_id} not found"
+            )
+
+        if subscription.user_id != int(user["sub"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this subscription"
+            )
+
+        # 批量转录
+        result = await batch_transcribe_subscription(
+            db,
+            subscription_id,
+            skip_existing=skip_existing
+        )
+
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to batch transcribe subscription {subscription_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to batch transcribe: {str(e)}"
+        )
+
+
+@router.get(
+    "/episodes/{episode_id}/transcription/schedule-status",
+    summary="获取转录调度状态",
+    description="获取指定分集的转录任务状态和调度信息"
+)
+async def get_transcription_schedule_status(
+    episode_id: int,
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """获取转录任务的详细状态信息"""
+    service = PodcastService(db, int(user["sub"]))
+    scheduler = TranscriptionScheduler(db)
+
+    try:
+        # 验证播客单集存在且属于当前用户
+        episode = await service.get_episode_by_id(episode_id)
+        if not episode:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Episode {episode_id} not found"
+            )
+
+        # 验证用户权限
+        if episode.subscription.user_id != int(user["sub"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this episode"
+            )
+
+        # 获取转录状态
+        status = await scheduler.get_transcription_status(episode_id)
+
+        return status
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to get transcription status for episode {episode_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get transcription status: {str(e)}"
+        )
+
+
+@router.post(
+    "/episodes/{episode_id}/transcription/cancel",
+    summary="取消转录任务",
+    description="取消指定分集的转录任务"
+)
+async def cancel_transcription_endpoint(
+    episode_id: int,
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """取消转录任务"""
+    service = PodcastService(db, int(user["sub"]))
+    scheduler = TranscriptionScheduler(db)
+
+    try:
+        # 验证播客单集存在且属于当前用户
+        episode = await service.get_episode_by_id(episode_id)
+        if not episode:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Episode {episode_id} not found"
+            )
+
+        # 验证用户权限
+        if episode.subscription.user_id != int(user["sub"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this episode"
+            )
+
+        # 取消转录
+        success = await scheduler.cancel_transcription(episode_id)
+
+        return {
+            "success": success,
+            "message": "Transcription cancelled" if success else "No active transcription to cancel"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to cancel transcription for episode {episode_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to cancel transcription: {str(e)}"
+        )
+
+
+@router.post(
+    "/subscriptions/{subscription_id}/check-new-episodes",
+    summary="检查并转录新分集",
+    description="检查订阅中的新分集并自动安排转录"
+)
+async def check_and_transcribe_new_episodes(
+    subscription_id: int,
+    hours_since_published: int = Body(24, description="检查多少小时内发布的分集"),
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    智能检查新分集并转录：
+    - 检查指定时间范围内发布的新分集
+    - 自动跳过已转录的分集
+    - 批量安排转录任务
+
+    请求示例:
+    ```json
+    {
+        "hours_since_published": 24
+    }
+    ```
+    """
+    service = PodcastService(db, int(user["sub"]))
+    scheduler = TranscriptionScheduler(db)
+
+    try:
+        # 验证订阅存在且属于当前用户
+        subscription = await service.get_subscription_by_id(subscription_id)
+        if not subscription:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Subscription {subscription_id} not found"
+            )
+
+        if subscription.user_id != int(user["sub"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this subscription"
+            )
+
+        # 检查并转录新分集
+        result = await scheduler.check_and_transcribe_new_episodes(
+            subscription_id=subscription_id,
+            hours_since_published=hours_since_published
+        )
+
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to check new episodes for subscription {subscription_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to check new episodes: {str(e)}"
+        )
+
+
+@router.get(
+    "/transcriptions/pending",
+    summary="获取待处理的转录任务",
+    description="获取所有待处理的转录任务列表"
+)
+async def get_pending_transcriptions(
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """获取当前用户所有待处理的转录任务"""
+    scheduler = TranscriptionScheduler(db)
+
+    try:
+        # 获取待处理任务
+        tasks = await scheduler.get_pending_transcriptions()
+
+        # 过滤当前用户的任务
+        service = PodcastService(db, int(user["sub"]))
+        user_tasks = []
+        for task in tasks:
+            episode = await service.get_episode_by_id(task["episode_id"])
+            if episode and episode.subscription.user_id == int(user["sub"]):
+                user_tasks.append(task)
+
+        return {
+            "total": len(user_tasks),
+            "tasks": user_tasks
+        }
+
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to get pending transcriptions: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get pending transcriptions: {str(e)}"
+        )
+
+
+# Export router
+__all__ = ["router"]

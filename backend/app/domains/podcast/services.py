@@ -619,6 +619,14 @@ class PodcastService:
 
     # === 单集管理与AI总结 ===
 
+    async def get_episode_by_id(self, episode_id: int) -> Optional[PodcastEpisode]:
+        """获取单集详情"""
+        return await self.repo.get_episode_by_id(episode_id, self.user_id)
+
+    async def get_subscription_by_id(self, subscription_id: int) -> Optional[Subscription]:
+        """获取订阅详情"""
+        return await self.repo.get_subscription_by_id(self.user_id, subscription_id)
+
     async def get_episode_with_summary(self, episode_id: int) -> Optional[dict]:
         """获取单集详情和AI总结"""
         episode = await self.repo.get_episode_by_id(episode_id, self.user_id)

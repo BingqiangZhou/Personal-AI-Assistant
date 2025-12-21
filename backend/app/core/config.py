@@ -3,6 +3,71 @@ from typing import List, Optional
 from pydantic_settings import BaseSettings
 from pydantic import AnyHttpUrl, validator
 import secrets
+import os
+from pathlib import Path
+
+
+# Secret Key Management (moved here to avoid circular imports)
+class SecretKeyManager:
+    """Manages SECRET_KEY generation and storage - moved to config.py to avoid circular imports"""
+
+    def __init__(self, data_dir: str = "data"):
+        self.data_dir = Path(data_dir)
+        self.secret_key_file = self.data_dir / ".secret_key"
+        self._secret_key: Optional[str] = None
+
+    def ensure_data_dir(self):
+        """Ensure data directory exists"""
+        self.data_dir.mkdir(exist_ok=True, parents=True)
+
+    def generate_secret_key(self) -> str:
+        """Generate a new secure SECRET_KEY"""
+        return secrets.token_urlsafe(48)
+
+    def load_secret_key(self) -> str:
+        """Load existing SECRET_KEY or generate new one"""
+        if self._secret_key:
+            return self._secret_key
+
+        self.ensure_data_dir()
+
+        # Try to load existing key
+        if self.secret_key_file.exists():
+            try:
+                with open(self.secret_key_file, 'r') as f:
+                    self._secret_key = f.read().strip()
+                return self._secret_key
+            except (IOError, OSError):
+                pass
+
+        # Generate new key if none exists
+        self._secret_key = self.generate_secret_key()
+        self.save_secret_key(self._secret_key)
+        return self._secret_key
+
+    def save_secret_key(self, secret_key: str):
+        """Save SECRET_KEY to file"""
+        self.ensure_data_dir()
+        with open(self.secret_key_file, 'w') as f:
+            f.write(secret_key)
+
+    def get_secret_key(self) -> str:
+        """Get the current SECRET_KEY"""
+        return self.load_secret_key()
+
+
+def get_or_generate_secret_key() -> str:
+    """
+    Get the SECRET_KEY for the application
+
+    This function will:
+    1. Load existing SECRET_KEY from file
+    2. Generate new one if not exists
+    3. Return the SECRET_KEY as a string
+    """
+    data_dir = os.getenv("DATA_DIR", "data")
+    manager = SecretKeyManager(data_dir)
+    return manager.get_secret_key()
 
 
 class Settings(BaseSettings):
@@ -117,7 +182,6 @@ settings = get_settings()
 
 # Ensure SECRET_KEY is loaded on import
 if settings.SECRET_KEY is None:
-    from app.core.security import get_or_generate_secret_key
     settings.SECRET_KEY = get_or_generate_secret_key()
 
 # Helper methods for model lists

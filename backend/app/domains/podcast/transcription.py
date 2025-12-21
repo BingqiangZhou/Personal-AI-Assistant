@@ -25,6 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
 from app.core.config import settings
+from app.core.database import async_session_factory
 from app.domains.podcast.models import TranscriptionTask, PodcastEpisode, TranscriptionStatus
 from app.core.exceptions import ValidationError, DatabaseError
 
@@ -174,7 +175,7 @@ class AudioConverter:
                     f='mp3'
                 )
                 .overwrite_output()
-                .quiet()
+                .global_args('-loglevel', 'quiet')
             )
 
             # 执行转换
@@ -268,7 +269,7 @@ class AudioSplitter:
                     .input(input_path, ss=start_time, t=chunk_duration)
                     .output(output_path, c='copy')
                     .overwrite_output()
-                    .quiet()
+                    .global_args('-loglevel', 'quiet')
                     .run()
                 )
 
@@ -531,17 +532,68 @@ class PodcastTranscriptionService:
         result = await self.db.execute(stmt)
         return result.scalar()
 
-    async def start_transcription(self, episode_id: int, model: Optional[str] = None) -> TranscriptionTask:
+    async def _update_task_progress_with_session(
+        self,
+        session: AsyncSession,
+        task_id: int,
+        status: TranscriptionStatus,
+        progress: float,
+        message: str,
+        error_message: Optional[str] = None
+    ):
+        """使用指定的数据库会话更新任务进度（用于后台任务）"""
+        update_data = {
+            'status': status,
+            'progress_percentage': progress,
+            'updated_at': datetime.utcnow()
+        }
+
+        if error_message:
+            update_data['error_message'] = error_message
+
+        # 设置开始时间
+        if status == TranscriptionStatus.DOWNLOADING:
+            # Check if started_at is None using a query
+            stmt_check = select(TranscriptionTask.started_at).where(TranscriptionTask.id == task_id)
+            result = await session.execute(stmt_check)
+            started_at = result.scalar()
+            if not started_at:
+                update_data['started_at'] = datetime.utcnow()
+
+        # 设置完成时间
+        if status in [TranscriptionStatus.COMPLETED, TranscriptionStatus.FAILED, TranscriptionStatus.CANCELLED]:
+            update_data['completed_at'] = datetime.utcnow()
+
+        stmt = (
+            update(TranscriptionTask)
+            .where(TranscriptionTask.id == task_id)
+            .values(**update_data)
+        )
+
+        await session.execute(stmt)
+        await session.commit()
+
+        logger.info(f"Updated task {task_id}: status={status}, progress={progress:.1f}%")
+
+    async def start_transcription(self, episode_id: int, model: Optional[str] = None, force: bool = False) -> TranscriptionTask:
         """启动转录任务"""
         # 检查是否已存在转录任务
         stmt = select(TranscriptionTask).where(TranscriptionTask.episode_id == episode_id)
         result = await self.db.execute(stmt)
         existing_task = result.scalar_one_or_none()
 
-        if existing_task and existing_task.status not in [TranscriptionStatus.FAILED, TranscriptionStatus.CANCELLED]:
-            raise ValidationError(
-                f"Transcription task already exists for episode {episode_id} with status {existing_task.status}"
-            )
+        if existing_task:
+            if force:
+                # Force mode: delete existing task and create new one (regardless of status)
+                await self.db.delete(existing_task)
+                await self.db.flush()
+                await self.db.commit()  # Commit the delete to release the unique constraint
+            elif existing_task.status not in [TranscriptionStatus.FAILED, TranscriptionStatus.CANCELLED]:
+                # Task exists with non-failed/cancelled status and force=false: raise error
+                raise ValidationError(
+                    f"Transcription task already exists for episode {episode_id} with status {existing_task.status}"
+                )
+            # If task exists with failed/cancelled status and force=false: allow the insert to continue below
 
         # 获取播客单集信息
         stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
@@ -574,248 +626,261 @@ class PodcastTranscriptionService:
 
     async def _execute_transcription(self, task_id: int):
         """执行转录任务（后台运行）"""
-        try:
-            # 获取任务信息
-            stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
-            result = await self.db.execute(stmt)
-            task = result.scalar_one_or_none()
+        # Create a new database session for this background task
+        async with async_session_factory() as session:
+            try:
+                # 获取任务信息
+                stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
+                result = await session.execute(stmt)
+                task = result.scalar_one_or_none()
 
-            if not task:
-                logger.error(f"Transcription task {task_id} not found")
-                return
+                if not task:
+                    logger.error(f"Transcription task {task_id} not found")
+                    return
 
-            # 获取播客单集信息
-            stmt = select(PodcastEpisode).where(PodcastEpisode.id == task.episode_id)
-            result = await self.db.execute(stmt)
-            episode = result.scalar_one_or_none()
+                # 获取播客单集信息
+                stmt = select(PodcastEpisode).where(PodcastEpisode.id == task.episode_id)
+                result = await session.execute(stmt)
+                episode = result.scalar_one_or_none()
 
-            if not episode:
-                await self.update_task_progress(
+                if not episode:
+                    await self._update_task_progress_with_session(
+                        session, task_id,
+                        TranscriptionStatus.FAILED,
+                        0,
+                        "Episode not found"
+                    )
+                    return
+
+                # 创建临时目录
+                temp_episode_dir = os.path.join(self.temp_dir, f"episode_{task.episode_id}")
+                os.makedirs(temp_episode_dir, exist_ok=True)
+
+                # 步骤1：下载音频文件
+                await self._update_task_progress_with_session(
+                    session,
+                    task_id,
+                    TranscriptionStatus.DOWNLOADING,
+                    5,
+                    "Downloading audio file..."
+                )
+
+                download_start = time.time()
+                original_file = os.path.join(temp_episode_dir, f"original{os.path.splitext(task.original_audio_url)[-1]}")
+
+                async with AudioDownloader() as downloader:
+                    async def download_progress(progress):
+                        await self._update_task_progress_with_session(
+                            session,
+                            task_id,
+                            TranscriptionStatus.DOWNLOADING,
+                            5 + (progress * 0.15),  # 5-20%
+                            f"Downloading... {progress:.1f}%"
+                        )
+
+                    file_path, file_size = await downloader.download_file(
+                        task.original_audio_url,
+                        original_file,
+                        download_progress
+                    )
+
+                download_time = time.time() - download_start
+
+                # 步骤2：转换为MP3
+                await self._update_task_progress_with_session(
+                    session,
+                    task_id,
+                    TranscriptionStatus.CONVERTING,
+                    20,
+                    "Converting to MP3..."
+                )
+
+                converted_file = os.path.join(temp_episode_dir, "converted.mp3")
+
+                async def convert_progress(progress):
+                    await self._update_task_progress_with_session(
+                        session,
+                        task_id,
+                        TranscriptionStatus.CONVERTING,
+                        20 + (progress * 0.15),  # 20-35%
+                        f"Converting... {progress:.1f}%"
+                    )
+
+                _, conversion_time = await AudioConverter.convert_to_mp3(
+                    file_path,
+                    converted_file,
+                    convert_progress
+                )
+
+                # 步骤3：切割音频文件
+                await self._update_task_progress_with_session(
+                    session,
+                    task_id,
+                    TranscriptionStatus.SPLITTING,
+                    35,
+                    "Splitting audio file..."
+                )
+
+                split_dir = os.path.join(temp_episode_dir, "chunks")
+
+                async def split_progress(progress):
+                    await self._update_task_progress_with_session(
+                        session,
+                        task_id,
+                        TranscriptionStatus.SPLITTING,
+                        35 + (progress * 0.10),  # 35-45%
+                        f"Splitting... {progress:.1f}%"
+                    )
+
+                chunks = await AudioSplitter.split_mp3(
+                    converted_file,
+                    split_dir,
+                    task.chunk_size_mb,
+                    split_progress
+                )
+
+                # 步骤4：转录音频片段
+                await self._update_task_progress_with_session(
+                    session,
+                    task_id,
+                    TranscriptionStatus.TRANSCRIBING,
+                    45,
+                    f"Transcribing {len(chunks)} audio chunks..."
+                )
+
+                transcription_start = time.time()
+
+                async def transcribe_progress(progress):
+                    await self._update_task_progress_with_session(
+                        session,
+                        task_id,
+                        TranscriptionStatus.TRANSCRIBING,
+                        45 + (progress * 0.50),  # 45-95%
+                        f"Transcribing... {progress:.1f}%"
+                    )
+
+                async with SiliconFlowTranscriber(
+                    self.api_key,
+                    self.api_url,
+                    self.max_threads
+                ) as transcriber:
+                    transcribed_chunks = await transcriber.transcribe_chunks(
+                        chunks,
+                        task.model_used,
+                        transcribe_progress
+                    )
+
+                transcription_time = time.time() - transcription_start
+
+                # 步骤5：合并转录结果
+                await self._update_task_progress_with_session(
+                    session,
+                    task_id,
+                    TranscriptionStatus.MERGING,
+                    95,
+                    "Merging transcription results..."
+                )
+
+                # 按顺序合并转录文本
+                sorted_chunks = sorted(transcribed_chunks, key=lambda x: x.index)
+                full_transcript = "\n\n".join([
+                    chunk.transcript.strip() for chunk in sorted_chunks
+                    if chunk.transcript and chunk.transcript.strip()
+                ])
+
+                # 步骤6：保存结果到永久存储
+                storage_path = self._get_episode_storage_path(episode)
+                os.makedirs(storage_path, exist_ok=True)
+
+                # 保存原始音频文件
+                final_audio_path = os.path.join(storage_path, "original.mp3")
+                os.replace(converted_file, final_audio_path)
+
+                # 保存转录文本
+                transcript_path = os.path.join(storage_path, "transcript.txt")
+                async with aiofiles.open(transcript_path, 'w', encoding='utf-8') as f:
+                    await f.write(full_transcript)
+
+                # 更新数据库
+                await self._update_task_progress_with_session(
+                    session,
+                    task_id,
+                    TranscriptionStatus.COMPLETED,
+                    100,
+                    "Transcription completed successfully"
+                )
+
+                # 更新任务详细信息
+                task_update = {
+                    'status': TranscriptionStatus.COMPLETED,
+                    'progress_percentage': 100.0,
+                    'transcript_content': full_transcript,
+                    'transcript_word_count': len(full_transcript.split()),
+                    'original_file_path': final_audio_path,
+                    'original_file_size': file_size,
+                    'download_time': download_time,
+                    'conversion_time': conversion_time,
+                    'transcription_time': transcription_time,
+                    'chunk_info': {
+                        'total_chunks': len(chunks),
+                        'chunks': [
+                            {
+                                'index': chunk.index,
+                                'start_time': chunk.start_time,
+                                'duration': chunk.duration,
+                                'transcript': chunk.transcript
+                            }
+                            for chunk in sorted_chunks
+                        ]
+                    },
+                    'completed_at': datetime.utcnow()
+                }
+
+                stmt = (
+                    update(TranscriptionTask)
+                    .where(TranscriptionTask.id == task_id)
+                    .values(**task_update)
+                )
+                await session.execute(stmt)
+
+                # 更新播客单集的转录信息
+                episode_update = {
+                    'transcript_content': full_transcript,
+                    'transcript_url': f"file://{transcript_path}",
+                    'status': 'completed'
+                }
+
+                stmt = (
+                    update(PodcastEpisode)
+                    .where(PodcastEpisode.id == episode_id)
+                    .values(**episode_update)
+                )
+                await session.execute(stmt)
+
+                await session.commit()
+
+                logger.info(f"Successfully completed transcription for episode {episode_id}")
+
+            except Exception as e:
+                logger.error(f"Transcription failed for task {task_id}: {str(e)}", exc_info=True)
+                await self._update_task_progress_with_session(
+                    session,
                     task_id,
                     TranscriptionStatus.FAILED,
                     0,
-                    "Episode not found"
+                    f"Transcription failed: {str(e)}",
+                    str(e)
                 )
-                return
-
-            # 创建临时目录
-            temp_episode_dir = os.path.join(self.temp_dir, f"episode_{task.episode_id}")
-            os.makedirs(temp_episode_dir, exist_ok=True)
-
-            # 步骤1：下载音频文件
-            await self.update_task_progress(
-                task_id,
-                TranscriptionStatus.DOWNLOADING,
-                5,
-                "Downloading audio file..."
-            )
-
-            download_start = time.time()
-            original_file = os.path.join(temp_episode_dir, f"original{os.path.splitext(task.original_audio_url)[-1]}")
-
-            async with AudioDownloader() as downloader:
-                async def download_progress(progress):
-                    await self.update_task_progress(
-                        task_id,
-                        TranscriptionStatus.DOWNLOADING,
-                        5 + (progress * 0.15),  # 5-20%
-                        f"Downloading... {progress:.1f}%"
-                    )
-
-                file_path, file_size = await downloader.download_file(
-                    task.original_audio_url,
-                    original_file,
-                    download_progress
-                )
-
-            download_time = time.time() - download_start
-
-            # 步骤2：转换为MP3
-            await self.update_task_progress(
-                task_id,
-                TranscriptionStatus.CONVERTING,
-                20,
-                "Converting to MP3..."
-            )
-
-            converted_file = os.path.join(temp_episode_dir, "converted.mp3")
-
-            async def convert_progress(progress):
-                await self.update_task_progress(
-                    task_id,
-                    TranscriptionStatus.CONVERTING,
-                    20 + (progress * 0.15),  # 20-35%
-                    f"Converting... {progress:.1f}%"
-                )
-
-            _, conversion_time = await AudioConverter.convert_to_mp3(
-                file_path,
-                converted_file,
-                convert_progress
-            )
-
-            # 步骤3：切割音频文件
-            await self.update_task_progress(
-                task_id,
-                TranscriptionStatus.SPLITTING,
-                35,
-                "Splitting audio file..."
-            )
-
-            split_dir = os.path.join(temp_episode_dir, "chunks")
-
-            async def split_progress(progress):
-                await self.update_task_progress(
-                    task_id,
-                    TranscriptionStatus.SPLITTING,
-                    35 + (progress * 0.10),  # 35-45%
-                    f"Splitting... {progress:.1f}%"
-                )
-
-            chunks = await AudioSplitter.split_mp3(
-                converted_file,
-                split_dir,
-                task.chunk_size_mb,
-                split_progress
-            )
-
-            # 步骤4：转录音频片段
-            await self.update_task_progress(
-                task_id,
-                TranscriptionStatus.TRANSCRIBING,
-                45,
-                f"Transcribing {len(chunks)} audio chunks..."
-            )
-
-            transcription_start = time.time()
-
-            async def transcribe_progress(progress):
-                await self.update_task_progress(
-                    task_id,
-                    TranscriptionStatus.TRANSCRIBING,
-                    45 + (progress * 0.50),  # 45-95%
-                    f"Transcribing... {progress:.1f}%"
-                )
-
-            async with SiliconFlowTranscriber(
-                self.api_key,
-                self.api_url,
-                self.max_threads
-            ) as transcriber:
-                transcribed_chunks = await transcriber.transcribe_chunks(
-                    chunks,
-                    task.model_used,
-                    transcribe_progress
-                )
-
-            transcription_time = time.time() - transcription_start
-
-            # 步骤5：合并转录结果
-            await self.update_task_progress(
-                task_id,
-                TranscriptionStatus.MERGING,
-                95,
-                "Merging transcription results..."
-            )
-
-            # 按顺序合并转录文本
-            sorted_chunks = sorted(transcribed_chunks, key=lambda x: x.index)
-            full_transcript = "\n\n".join([
-                chunk.transcript.strip() for chunk in sorted_chunks
-                if chunk.transcript and chunk.transcript.strip()
-            ])
-
-            # 步骤6：保存结果到永久存储
-            storage_path = self._get_episode_storage_path(episode)
-            os.makedirs(storage_path, exist_ok=True)
-
-            # 保存原始音频文件
-            final_audio_path = os.path.join(storage_path, "original.mp3")
-            os.replace(converted_file, final_audio_path)
-
-            # 保存转录文本
-            transcript_path = os.path.join(storage_path, "transcript.txt")
-            async with aiofiles.open(transcript_path, 'w', encoding='utf-8') as f:
-                await f.write(full_transcript)
-
-            # 更新数据库
-            await self.update_task_progress(
-                task_id,
-                TranscriptionStatus.COMPLETED,
-                100,
-                "Transcription completed successfully"
-            )
-
-            # 更新任务详细信息
-            task_update = {
-                'status': TranscriptionStatus.COMPLETED,
-                'progress_percentage': 100.0,
-                'transcript_content': full_transcript,
-                'transcript_word_count': len(full_transcript.split()),
-                'original_file_path': final_audio_path,
-                'original_file_size': file_size,
-                'download_time': download_time,
-                'conversion_time': conversion_time,
-                'transcription_time': transcription_time,
-                'chunk_info': {
-                    'total_chunks': len(chunks),
-                    'chunks': [
-                        {
-                            'index': chunk.index,
-                            'start_time': chunk.start_time,
-                            'duration': chunk.duration,
-                            'transcript': chunk.transcript
-                        }
-                        for chunk in sorted_chunks
-                    ]
-                },
-                'completed_at': datetime.utcnow()
-            }
-
-            stmt = (
-                update(TranscriptionTask)
-                .where(TranscriptionTask.id == task_id)
-                .values(**task_update)
-            )
-            await self.db.execute(stmt)
-
-            # 更新播客单集的转录信息
-            episode_update = {
-                'transcript_content': full_transcript,
-                'transcript_url': f"file://{transcript_path}",
-                'status': 'completed'
-            }
-
-            stmt = (
-                update(PodcastEpisode)
-                .where(PodcastEpisode.id == episode_id)
-                .values(**episode_update)
-            )
-            await self.db.execute(stmt)
-
-            await self.db.commit()
-
-            logger.info(f"Successfully completed transcription for episode {episode_id}")
-
-        except Exception as e:
-            logger.error(f"Transcription failed for task {task_id}: {str(e)}", exc_info=True)
-            await self.update_task_progress(
-                task_id,
-                TranscriptionStatus.FAILED,
-                0,
-                f"Transcription failed: {str(e)}",
-                str(e)
-            )
-        finally:
-            # 清理临时文件
-            try:
-                import shutil
-                temp_episode_dir = os.path.join(self.temp_dir, f"episode_{task.episode_id}")
-                if os.path.exists(temp_episode_dir):
-                    shutil.rmtree(temp_episode_dir)
-                    logger.info(f"Cleaned up temporary directory: {temp_episode_dir}")
-            except Exception as e:
-                logger.error(f"Failed to clean up temporary files: {str(e)}")
+            finally:
+                # 清理临时文件
+                try:
+                    import shutil
+                    temp_episode_dir = os.path.join(self.temp_dir, f"episode_{task.episode_id}")
+                    if os.path.exists(temp_episode_dir):
+                        shutil.rmtree(temp_episode_dir)
+                        logger.info(f"Cleaned up temporary directory: {temp_episode_dir}")
+                except Exception as e:
+                    logger.error(f"Failed to clean up temporary files: {str(e)}")
 
     async def get_transcription_status(self, task_id: int) -> Optional[TranscriptionTask]:
         """获取转录任务状态"""

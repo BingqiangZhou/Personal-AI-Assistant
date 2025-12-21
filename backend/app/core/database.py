@@ -82,6 +82,8 @@ async def init_db() -> None:
     from app.domains.assistant.models import Conversation, Message
     from app.domains.multimedia.models import MediaFile, ProcessingJob
     from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
+    from app.domains.podcast.models import TranscriptionTask
+    from app.domains.ai.models import AIModelConfig
 
     # Create all tables with checkfirst=True
     async with engine.begin() as conn:

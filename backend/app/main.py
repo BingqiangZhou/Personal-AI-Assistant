@@ -47,6 +47,7 @@ def create_application() -> FastAPI:
     from app.domains.assistant.api.routes import router as assistant_router
     from app.domains.multimedia.api.routes import router as multimedia_router
     from app.domains.podcast.api.routes import router as podcast_router
+    from app.domains.ai.api.routes import router as ai_model_router
 
     app.include_router(
         user_router,
@@ -82,6 +83,12 @@ def create_application() -> FastAPI:
         multimedia_router,
         prefix=f"{settings.API_V1_STR}/multimedia",
         tags=["multimedia"]
+    )
+
+    app.include_router(
+        ai_model_router,
+        prefix=f"{settings.API_V1_STR}/ai",
+        tags=["ai-models"]
     )
 
     # Health check endpoint

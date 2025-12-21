@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -49,13 +50,11 @@ class SettingsPage extends ConsumerWidget {
             title: 'AI Assistant',
             children: [
               ListTile(
-                title: const Text('Model Settings'),
-                subtitle: const Text('Configure AI behavior'),
+                title: const Text('AI Model Management'),
+                subtitle: const Text('Configure AI models and providers'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Model settings coming soon!')),
-                  );
+                  context.go('/profile/settings/ai-models');
                 },
               ),
               SwitchListTile(

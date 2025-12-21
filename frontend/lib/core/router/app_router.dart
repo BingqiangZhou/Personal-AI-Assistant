@@ -17,6 +17,7 @@ import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episode_detail_page.dart';
 import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/ai/presentation/pages/model_management_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -165,6 +166,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'settings',
             name: 'settings',
             builder: (context, state) => const SettingsPage(),
+            routes: [
+              GoRoute(
+                path: 'ai-models',
+                name: 'ai-models',
+                builder: (context, state) => const ModelManagementPage(),
+              ),
+            ],
           ),
         ],
       ),
