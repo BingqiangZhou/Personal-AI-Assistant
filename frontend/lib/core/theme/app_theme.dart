@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../constants/breakpoints.dart';
 
 class AppTheme {
   static const Color primaryColor = Color(0xFF6366F1);
@@ -32,6 +33,58 @@ class AppTheme {
 
   static const Color darkDividerColor = Color(0xFF334155);
   static const Color darkBorderColor = Color(0xFF334155);
+
+  /// 响应式边距助手
+  static EdgeInsetsGeometry getResponsivePadding(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    if (screenWidth < AppBreakpoints.medium) {
+      return const EdgeInsets.all(16.0); // 移动端
+    } else if (screenWidth < AppBreakpoints.mediumLarge) {
+      return const EdgeInsets.all(24.0); // 平板端
+    } else {
+      return const EdgeInsets.all(32.0); // 桌面端
+    }
+  }
+
+  /// 响应式水平边距助手
+  static EdgeInsetsGeometry getResponsiveHorizontalPadding(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    if (screenWidth < AppBreakpoints.medium) {
+      return const EdgeInsets.symmetric(horizontal: 16.0); // 移动端
+    } else if (screenWidth < AppBreakpoints.mediumLarge) {
+      return const EdgeInsets.symmetric(horizontal: 24.0); // 平板端
+    } else {
+      return const EdgeInsets.symmetric(horizontal: 32.0); // 桌面端
+    }
+  }
+
+  /// 响应式垂直边距助手
+  static EdgeInsetsGeometry getResponsiveVerticalPadding(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    if (screenWidth < AppBreakpoints.medium) {
+      return const EdgeInsets.symmetric(vertical: 8.0); // 移动端
+    } else if (screenWidth < AppBreakpoints.mediumLarge) {
+      return const EdgeInsets.symmetric(vertical: 12.0); // 平板端
+    } else {
+      return const EdgeInsets.symmetric(vertical: 16.0); // 桌面端
+    }
+  }
+
+  /// 获取响应式最大宽度
+  static double getResponsiveMaxWidth(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    if (screenWidth < AppBreakpoints.medium) {
+      return screenWidth; // 移动端全宽
+    } else if (screenWidth < AppBreakpoints.mediumLarge) {
+      return AppBreakpoints.mediumLarge; // 平板端限制宽度
+    } else {
+      return AppBreakpoints.large; // 桌面端限制宽度
+    }
+  }
 
   static ThemeData get lightTheme {
     return ThemeData(

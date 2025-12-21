@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
-import '../../../podcast/presentation/widgets/audio_player_widget.dart';
 import '../../../assistant/presentation/pages/assistant_chat_page.dart';
 import '../../../knowledge/presentation/pages/knowledge_base_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 
+/// Material Design 3自适应主页
+///
+/// 使用AdaptiveScaffoldWrapper实现跨设备响应式导航
 class HomePage extends ConsumerStatefulWidget {
   final Widget? child;
   final int? initialTab;
@@ -20,8 +23,8 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   late int _currentIndex;
-  bool _isRailExtended = false;
 
+  /// 导航目的地配置
   final List<NavigationDestination> _destinations = const [
     NavigationDestination(
       icon: Icon(Icons.home_outlined),
@@ -29,9 +32,9 @@ class _HomePageState extends ConsumerState<HomePage> {
       label: 'Feed',
     ),
     NavigationDestination(
-      icon: Icon(Icons.feed_outlined),
-      selectedIcon: Icon(Icons.feed),
-      label: 'Podcast',
+      icon: Icon(Icons.podcasts_outlined),
+      selectedIcon: Icon(Icons.podcasts),
+      label: 'Podcasts',
     ),
     NavigationDestination(
       icon: Icon(Icons.psychology_outlined),
@@ -53,44 +56,61 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialTab ?? 0;
+    _currentIndex = widget.initialTab ?? 0; // Default to Feed (index 0)
   }
 
   @override
   Widget build(BuildContext context) {
+    // 如果有子组件，直接显示（用于内嵌页面）
     if (widget.child != null) {
-      return Scaffold(body: widget.child);
+      return Scaffold(
+        appBar: null, // 移除顶部标题栏
+        body: widget.child,
+        floatingActionButton: _buildFloatingActionButton(),
+      );
     }
 
-    return Scaffold(
-      body: Row(
-        children: [
-          NavigationRail(
-            extended: _isRailExtended,
-            selectedIndex: _currentIndex,
-            onDestinationSelected: (index) => setState(() => _currentIndex = index),
-            leading: IconButton(
-              icon: Icon(_isRailExtended ? Icons.menu_open : Icons.menu),
-              onPressed: () => setState(() => _isRailExtended = !_isRailExtended),
-              tooltip: _isRailExtended ? 'Collapse menu' : 'Expand menu',
-            ),
-            destinations: _destinations.map((dest) {
-              return NavigationRailDestination(
-                icon: dest.icon,
-                selectedIcon: dest.selectedIcon,
-                label: Text(dest.label),
-              );
-            }).toList(),
-          ),
-          const VerticalDivider(thickness: 1, width: 1),
-          Expanded(
-            child: _buildCurrentTabContent(),
-          ),
-        ],
-      ),
+    // 主导航布局 - 使用自定义的Material Design 3自适应导航
+    return CustomAdaptiveNavigation(
+      key: const ValueKey('home_custom_adaptive_navigation'),
+      destinations: _destinations,
+      selectedIndex: _currentIndex,
+      onDestinationSelected: _handleNavigation,
+      appBar: null, // 移除顶部标题栏
+      floatingActionButton: _buildFloatingActionButton(),
+      body: _buildTabContent(context, _currentIndex),
     );
   }
 
+  /// 构建浮动操作按钮
+  Widget? _buildFloatingActionButton() {
+    // 只在播客列表页面显示添加按钮
+    if (_currentIndex == 1) { // Podcasts tab
+      return FloatingActionButton(
+        onPressed: () {
+          // TODO: 实现添加播客功能
+        },
+        child: const Icon(Icons.add),
+      );
+    }
+    return null;
+  }
+
+  /// 处理导航选择
+  void _handleNavigation(int index) {
+    if (_currentIndex != index) {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
+  }
+
+  /// 构建当前标签页内容
+  Widget _buildTabContent(BuildContext context, int index) {
+    return _buildCurrentTabContent();
+  }
+
+  /// 构建当前标签页内容（保持原有逻辑）
   Widget _buildCurrentTabContent() {
     switch (_currentIndex) {
       case 0:
@@ -104,7 +124,36 @@ class _HomePageState extends ConsumerState<HomePage> {
       case 4:
         return const ProfilePage();
       default:
-        return const Center(child: Text('Page Not Found'));
+        return const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.grey,
+              ),
+              SizedBox(height: 16),
+              Text(
+                'Page Not Found',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Please select a valid tab from the navigation',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        );
     }
   }
 }

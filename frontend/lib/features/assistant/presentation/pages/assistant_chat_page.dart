@@ -1,287 +1,590 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AssistantChatPage extends ConsumerStatefulWidget {
+import '../../../../core/widgets/custom_adaptive_navigation.dart';
+
+/// Material Design 3自适应AI Assistant页面
+class AssistantChatPage extends StatefulWidget {
   const AssistantChatPage({super.key});
 
   @override
-  ConsumerState<AssistantChatPage> createState() => _AssistantChatPageState();
+  State<AssistantChatPage> createState() => _AssistantChatPageState();
 }
 
-class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
+class _AssistantChatPageState extends State<AssistantChatPage> {
   final TextEditingController _controller = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
-          child: Text(
-            'AI Assistant',
-            style: TextStyle(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        backgroundColor: theme.colorScheme.surface,
-        elevation: 2,
-        actions: [
-          // Settings button with enhanced contrast
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.secondary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: theme.colorScheme.secondary.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: IconButton(
-              icon: Icon(
-                Icons.settings,
-                color: theme.colorScheme.secondary,
-              ),
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Settings feature coming soon!')),
-                );
-              },
-              tooltip: 'Settings',
-            ),
-          ),
-          // Menu button with enhanced contrast
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: PopupMenuButton<String>(
-              icon: Icon(
-                Icons.more_vert,
-                color: theme.colorScheme.tertiary,
-              ),
-              onSelected: (value) {
-                switch (value) {
-                  case 'clear_history':
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Clear history feature coming soon!')),
-                    );
-                    break;
-                  case 'export_chat':
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Export chat feature coming soon!')),
-                    );
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'clear_history',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.clear_all,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text('Clear History'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'export_chat',
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.download,
-                        color: theme.colorScheme.secondary,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text('Export Chat'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.all(32),
-                  margin: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: theme.dividerColor.withValues(alpha: 0.5),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                            width: 2,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.smart_toy_outlined,
-                          size: 80,
-                          color: theme.colorScheme.primary.withValues(alpha: 0.8),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'AI Assistant Chat',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: theme.dividerColor.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          'Start a conversation with your AI assistant',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                          border: Border.all(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                            width: 1,
-                          ),
-                        ),
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('New conversation feature coming soon!')),
-                            );
-                          },
-                          icon: const Icon(Icons.add_comment),
-                          label: const Text('Start New Chat'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            foregroundColor: theme.colorScheme.onPrimary,
-                            shadowColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          _buildMessageInput(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageInput() {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
-        border: Border(
-          top: BorderSide(
-            color: theme.dividerColor.withValues(alpha: 0.3),
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              decoration: const InputDecoration(
-                hintText: 'Type your message...',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-              maxLines: null,
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton.filled(
-            onPressed: () {
-              if (_controller.text.isNotEmpty) {
-                // TODO: Send message
-                _controller.clear();
-              }
-            },
-            icon: const Icon(Icons.send),
-          ),
-        ],
-      ),
-    );
-  }
+  final ScrollController _scrollController = ScrollController();
+  final List<ChatMessage> _messages = [
+    ChatMessage(
+      content: '你好！我是你的AI助手。我可以帮助你回答问题、提供建议、生成内容等。有什么我可以帮助你的吗？',
+      isUser: false,
+      timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
+    ),
+  ];
 
   @override
   void dispose() {
     _controller.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return ResponsiveContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 页面标题和操作区域
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'AI Assistant',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Row(
+                children: [
+                  // 清除对话按钮
+                  FilledButton.tonal(
+                    onPressed: () {
+                      _showClearChatDialog(context);
+                    },
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.clear, size: 16),
+                        SizedBox(width: 4),
+                        Text('Clear'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // 设置按钮
+                  IconButton.filled(
+                    onPressed: () {
+                      _showSettingsDialog(context);
+                    },
+                    icon: const Icon(Icons.settings),
+                    tooltip: 'Settings',
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // AI模型选择栏
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                // AI模型选择器
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: 'claude-3-5-sonnet',
+                    decoration: InputDecoration(
+                      labelText: 'AI Model',
+                      prefixIcon: const Icon(Icons.psychology),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'claude-3-5-sonnet',
+                        child: Text('Claude 3.5 Sonnet'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'claude-3-opus',
+                        child: Text('Claude 3 Opus'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'claude-3-haiku',
+                        child: Text('Claude 3 Haiku'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'gpt-4-turbo',
+                        child: Text('GPT-4 Turbo'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      // TODO: 实现模型切换逻辑
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // 对话模式选择
+                IconButton.filled(
+                  onPressed: () {
+                    _showModeSelector(context);
+                  },
+                  icon: const Icon(Icons.chat),
+                  tooltip: 'Chat Mode',
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // 聊天内容区域
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // 消息列表
+                  Expanded(
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        return _buildMessageBubble(_messages[index]);
+                      },
+                    ),
+                  ),
+
+                  // 输入区域
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(12),
+                        bottomRight: Radius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // 附件按钮
+                        IconButton.filled(
+                          onPressed: () {
+                            _showAttachmentOptions(context);
+                          },
+                          icon: const Icon(Icons.attach_file),
+                          tooltip: 'Attach File',
+                          style: IconButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                            foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+
+                        // 文本输入框
+                        Expanded(
+                          child: TextField(
+                            controller: _controller,
+                            decoration: InputDecoration(
+                              hintText: 'Type your message...',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  _sendMessage();
+                                },
+                                icon: const Icon(Icons.send),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Theme.of(context).colorScheme.primary,
+                                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                            maxLines: 3,
+                            minLines: 1,
+                            textCapitalization: TextCapitalization.sentences,
+                            onSubmitted: (_) => _sendMessage(),
+                          ),
+                        ),
+
+                        // 语音输入按钮
+                        const SizedBox(width: 12),
+                        IconButton.filled(
+                          onPressed: () {
+                            _startVoiceInput();
+                          },
+                          icon: const Icon(Icons.mic),
+                          tooltip: 'Voice Input',
+                          style: IconButton.styleFrom(
+                            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                            foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建消息气泡
+  Widget _buildMessageBubble(ChatMessage message) {
+    final isUser = message.isUser;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (!isUser) ...[
+            CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              child: Icon(
+                Icons.psychology,
+                color: Theme.of(context).colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Flexible(
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: isMobile ? screenWidth * 0.8 : screenWidth * 0.6,
+              ),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isUser
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(16),
+                border: isUser
+                    ? null
+                    : Border.all(
+                        color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                      ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message.content,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: isUser
+                              ? Theme.of(context).colorScheme.onPrimaryContainer
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _formatTime(message.timestamp),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                            ),
+                      ),
+                      if (!isUser) ...[
+                        const SizedBox(width: 8),
+                        // 复制按钮
+                        IconButton(
+                          onPressed: () {
+                            _copyMessage(message.content);
+                          },
+                          icon: const Icon(Icons.copy, size: 16),
+                          visualDensity: VisualDensity.compact,
+                          style: IconButton.styleFrom(
+                            foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        // 重新生成按钮
+                        IconButton(
+                          onPressed: () {
+                            _regenerateResponse();
+                          },
+                          icon: const Icon(Icons.refresh, size: 16),
+                          visualDensity: VisualDensity.compact,
+                          style: IconButton.styleFrom(
+                            foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (isUser) ...[
+            const SizedBox(width: 12),
+            CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
+              child: Icon(
+                Icons.person,
+                color: Theme.of(context).colorScheme.onSecondaryContainer,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// 发送消息
+  void _sendMessage() {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() {
+      _messages.add(ChatMessage(
+        content: text,
+        isUser: true,
+        timestamp: DateTime.now(),
+      ));
+    });
+
+    _controller.clear();
+    _scrollToBottom();
+
+    // 模拟AI响应
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        setState(() {
+          _messages.add(ChatMessage(
+            content: _generateMockResponse(text),
+            isUser: false,
+            timestamp: DateTime.now(),
+          ));
+        });
+        _scrollToBottom();
+      }
+    });
+  }
+
+  /// 生成模拟响应
+  String _generateMockResponse(String userMessage) {
+    // 简单的模拟响应逻辑
+    if (userMessage.toLowerCase().contains('hello') || userMessage.toLowerCase().contains('hi')) {
+      return '你好！很高兴见到你。今天有什么我可以帮助你的吗？';
+    } else if (userMessage.toLowerCase().contains('help')) {
+      return '我可以帮助你：\n\n• 回答问题和提供信息\n• 生成文本内容\n• 代码编写和调试\n• 翻译和语言学习\n• 创意写作和头脑风暴\n• 数据分析和解释\n\n还有什么特定的帮助需要吗？';
+    } else if (userMessage.toLowerCase().contains('code')) {
+      return '我可以帮助你编写各种编程语言的代码，包括Python、JavaScript、Java、C++等。请告诉我你需要什么类型的代码帮助？';
+    } else {
+      return '这是一个很好的问题。基于你的询问，我建议...\n\n\n这里有一些相关的信息和建议：\n\n1. 首先考虑这个问题的背景\n2. 分析可能的解决方案\n3. 评估每种方案的优缺点\n\n需要我详细解释某个方面吗？';
+    }
+  }
+
+  /// 滚动到底部
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  /// 格式化时间
+  String _formatTime(DateTime time) {
+    final now = DateTime.now();
+    final difference = now.difference(time);
+
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inHours < 1) {
+      return '${difference.inMinutes} min ago';
+    } else if (difference.inDays < 1) {
+      return '${difference.inHours} h ago';
+    } else {
+      return '${difference.inDays} d ago';
+    }
+  }
+
+  /// 复制消息
+  void _copyMessage(String content) {
+    // TODO: 实现复制功能
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Message copied to clipboard')),
+    );
+  }
+
+  /// 重新生成响应
+  void _regenerateResponse() {
+    // TODO: 实现重新生成逻辑
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Regenerating response...')),
+    );
+  }
+
+  /// 显示清除对话对话框
+  void _showClearChatDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear Chat History'),
+        content: const Text('Are you sure you want to clear all chat history? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              setState(() {
+                _messages.clear();
+                _messages.add(ChatMessage(
+                  content: '你好！我是你的AI助手。我可以帮助你回答问题、提供建议、生成内容等。有什么我可以帮助你的吗？',
+                  isUser: false,
+                  timestamp: DateTime.now(),
+                ));
+              });
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Chat history cleared')),
+              );
+            },
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 显示设置对话框
+  void _showSettingsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('AI Assistant Settings'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.speed),
+              title: const Text('Response Speed'),
+              subtitle: const Text('Balanced'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.format_size),
+              title: const Text('Response Length'),
+              subtitle: const Text('Medium'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {},
+            ),
+            ListTile(
+              leading: const Icon(Icons.language),
+              title: const Text('Language'),
+              subtitle: const Text('Auto-detect'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {},
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 显示模式选择器
+  void _showModeSelector(BuildContext context) {
+    // TODO: 实现模式选择器
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Chat mode selector coming soon!')),
+    );
+  }
+
+  /// 显示附件选项
+  void _showAttachmentOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Attach File',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.image),
+              title: const Text('Image'),
+              onTap: () {
+                Navigator.of(context).pop();
+                // TODO: 实现图片选择
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.description),
+              title: const Text('Document'),
+              onTap: () {
+                Navigator.of(context).pop();
+                // TODO: 实现文档选择
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.code),
+              title: const Text('Code'),
+              onTap: () {
+                Navigator.of(context).pop();
+                // TODO: 实现代码输入
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 开始语音输入
+  void _startVoiceInput() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Voice input coming soon!')),
+    );
+  }
+}
+
+/// 聊天消息模型
+class ChatMessage {
+  final String content;
+  final bool isUser;
+  final DateTime timestamp;
+
+  ChatMessage({
+    required this.content,
+    required this.isUser,
+    required this.timestamp,
+  });
 }

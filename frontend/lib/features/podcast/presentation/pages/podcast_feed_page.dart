@@ -1,359 +1,443 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../providers/podcast_providers.dart';
-import '../widgets/podcast_episode_card.dart';
-import '../widgets/podcast_feed_shimmer.dart';
-import '../widgets/feed_error_widget.dart';
+import '../../../../core/widgets/custom_adaptive_navigation.dart';
 
-class PodcastFeedPage extends ConsumerStatefulWidget {
+/// Material Design 3自适应Feed页面
+class PodcastFeedPage extends StatelessWidget {
   const PodcastFeedPage({super.key});
 
   @override
-  ConsumerState<PodcastFeedPage> createState() => _PodcastFeedPageState();
-}
-
-class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage>
-    with AutomaticKeepAliveClientMixin {
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  bool get wantKeepAlive => true;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _scrollController.addListener(_onScroll);
-
-    // Load initial feed
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(podcastFeedProvider.notifier).loadInitialFeed();
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    final currentScroll = _scrollController.position.pixels;
-
-    // 当滚动到距离底部300px时触发加载更多
-    // 修复: 确保threshold不为负值
-    final threshold = maxScroll > 300 ? maxScroll - 300.0 : maxScroll * 0.8;
-
-    // debugPrint('📏 滚动位置: current=$currentScroll, max=$maxScroll, threshold=$threshold, diff=${maxScroll - currentScroll}');
-
-    // 修复: 添加更多调试信息
-    if (currentScroll >= threshold) {
-      debugPrint('✅ 达到阈值，准备加载更多...');
-      final notifier = ref.read(podcastFeedProvider.notifier);
-      final state = ref.read(podcastFeedProvider);
-
-      debugPrint('📊 当前状态: hasMore=${state.hasMore}, isLoadingMore=${state.isLoadingMore}, isLoading=${state.isLoading}, nextPage=${state.nextPage}');
-      debugPrint('📊 episodes数量: ${state.episodes.length}, total: ${state.total}');
-
-      // 防抖处理，避免重复触发
-      if (state.hasMore && !state.isLoadingMore && !state.isLoading) {
-        debugPrint('🚀 触发加载更多内容...');
-        notifier.loadMoreFeed();
-        debugPrint('✅ loadMoreFeed()已调用');
-      } else {
-        debugPrint('🚫 加载被阻止，条件不满足: hasMore=${state.hasMore}, isLoadingMore=${state.isLoadingMore}, isLoading=${state.isLoading}');
-      }
-    }
-  }
-
-  Future<void> _refresh() async {
-    await ref.read(podcastFeedProvider.notifier).refreshFeed();
-  }
-
-  void _clearError() {
-    ref.read(podcastFeedProvider.notifier).clearError();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    super.build(context);
-    final theme = Theme.of(context);
-    final feedState = ref.watch(podcastFeedProvider);
-
-    // Determine what to display
-    Widget bodyContent;
-
-    if (feedState.error != null && feedState.episodes.isEmpty) {
-      // Error state
-      bodyContent = FeedErrorWidget(
-        error: feedState.error!,
-        onRetry: _refresh,
-      );
-    } else if (!feedState.isLoading &&
-        feedState.episodes.isEmpty &&
-        feedState.error == null) {
-      // Empty state - enhanced styling to match podcast list page
-      final theme = Theme.of(context);
-      bodyContent = Center(
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          margin: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: theme.dividerColor.withValues(alpha: 0.5),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: theme.primaryColor.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: theme.primaryColor.withValues(alpha: 0.3),
-                    width: 2,
-                  ),
-                ),
-                child: Icon(
-                  Icons.feed_outlined,
-                  size: 80,
-                  color: theme.primaryColor.withValues(alpha: 0.8),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'No Feed Content',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  color: theme.colorScheme.onSurface,
+    return ResponsiveContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 页面标题
+          Text(
+            'Feed',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: theme.dividerColor.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  'Subscribe to podcasts to see your feed',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: 32),
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.primaryColor,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.primaryColor.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+          ),
+          const SizedBox(height: 24),
+
+          // Feed内容 - 直接使用Expanded填充剩余空间
+          Expanded(
+            child: _buildFeedContent(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 构建Feed内容
+  Widget _buildFeedContent(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // 暂时显示静态数据，用于测试UI
+    return _buildMockFeed(context, isMobile);
+  }
+
+  /// 模拟Feed内容（用于UI测试）- 优化布局，避免溢出
+  Widget _buildMockFeed(BuildContext context, bool isMobile) {
+    // 模拟数据
+    final mockEpisodes = [
+      {
+        'title': 'The Future of AI in Software Development',
+        'podcast': 'Tech Talks Daily',
+        'description': 'Exploring how artificial intelligence is transforming the way we write code and software',
+        'duration': '45 min',
+        'published': '2 hours ago',
+        'isPlayed': false,
+      },
+      {
+        'title': 'Building Scalable Microservices',
+        'podcast': 'Engineering Podcast',
+        'description': 'Best practices for designing and implementing microservice architectures that can scale',
+        'duration': '38 min',
+        'published': '5 hours ago',
+        'isPlayed': true,
+      },
+      {
+        'title': 'The Psychology of Product Design',
+        'podcast': 'Design Insights',
+        'description': 'Understanding user behavior and cognitive biases to create better products',
+        'duration': '52 min',
+        'published': '1 day ago',
+        'isPlayed': false,
+      },
+      {
+        'title': 'Startup Funding Strategies',
+        'podcast': 'Entrepreneur Weekly',
+        'description': 'From seed rounds to Series A, navigating the complex world of startup financing',
+        'duration': '41 min',
+        'published': '2 days ago',
+        'isPlayed': false,
+      },
+      {
+        'title': 'Clean Code Principles',
+        'podcast': 'Dev Masters',
+        'description': 'Essential principles for writing maintainable, readable, and robust code',
+        'duration': '35 min',
+        'published': '3 days ago',
+        'isPlayed': true,
+      },
+    ];
+
+    // 使用LayoutBuilder来动态调整布局
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+
+        // 移动端：使用ListView
+        if (screenWidth < 600) {
+          return RefreshIndicator(
+            onRefresh: () async {
+              // TODO: 实现刷新逻辑
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              itemCount: mockEpisodes.length,
+              itemBuilder: (context, index) {
+                return _buildMobileCard(context, mockEpisodes[index]);
+              },
+            ),
+          );
+        }
+
+        // 桌面端：使用GridView，优化卡片高度
+        final crossAxisCount = screenWidth < 900 ? 2 : (screenWidth < 1200 ? 3 : 4);
+        final horizontalPadding = 48.0;
+        final spacing = 16.0;
+        final availableWidth = screenWidth - horizontalPadding - (crossAxisCount - 1) * spacing;
+        final cardWidth = availableWidth / crossAxisCount;
+
+        // 优化宽高比：卡片内容高度约180-200，确保不溢出
+        final childAspectRatio = cardWidth / 200;
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            // TODO: 实现刷新逻辑
+          },
+          child: GridView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: spacing,
+              mainAxisSpacing: spacing,
+              childAspectRatio: childAspectRatio,
+            ),
+            itemCount: mockEpisodes.length,
+            itemBuilder: (context, index) {
+              return _buildDesktopCard(context, mockEpisodes[index]);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  /// 构建移动端卡片
+  Widget _buildMobileCard(BuildContext context, Map<String, dynamic> episode) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: InkWell(
+        onTap: () {
+          // TODO: 实现播客详情导航
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 播放按钮
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      shape: BoxShape.circle,
                     ),
-                  ],
-                  border: Border.all(
-                    color: theme.primaryColor.withValues(alpha: 0.5),
-                    width: 1,
+                    child: Icon(
+                      episode['isPlayed'] == true
+                          ? Icons.play_arrow
+                          : Icons.play_circle_filled,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      size: 28,
+                    ),
                   ),
-                ),
-                child: ElevatedButton.icon(
-                  onPressed: _refresh,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Refresh Feed'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: theme.colorScheme.onPrimary,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  const SizedBox(width: 16),
+                  // 标题和信息
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          episode['title'] as String,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          episode['podcast'] as String,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 4,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.schedule,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  episode['duration'] as String,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.access_time,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  episode['published'] as String,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
+                ],
+              ),
+              if (episode['description'] != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  episode['description'] as String,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
+              ],
+              const SizedBox(height: 12),
+              // 操作按钮 - 使用Wrap避免溢出
+              Wrap(
+                alignment: WrapAlignment.end,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  IconButton.filled(
+                    onPressed: () {
+                      // TODO: 实现收藏功能
+                    },
+                    icon: const Icon(Icons.bookmark_border),
+                    tooltip: 'Bookmark',
+                    style: IconButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                      minimumSize: const Size(40, 40),
+                      padding: const EdgeInsets.all(8),
+                    ),
+                  ),
+                  IconButton.filled(
+                    onPressed: () {
+                      // TODO: 实现分享功能
+                    },
+                    icon: const Icon(Icons.share),
+                    tooltip: 'Share',
+                    style: IconButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                      minimumSize: const Size(40, 40),
+                      padding: const EdgeInsets.all(8),
+                    ),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: () {
+                      // TODO: 实现播放功能
+                    },
+                    child: const Text('Play'),
+                  ),
+                ],
               ),
             ],
           ),
         ),
-      );
-    } else {
-      // Normal content with loading state
-      bodyContent = RefreshIndicator(
-        onRefresh: _refresh,
-        child: CustomScrollView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(), // 确保滚动事件可以被检测
-          slivers: [
-            SliverAppBar(
-              title: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: Text(
-                  'Feed',
-                  style: TextStyle(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              backgroundColor: theme.colorScheme.surface,
-              elevation: 2,
-            ),
-            // Loading shimmer (initial load)
-            if (feedState.isLoading && feedState.episodes.isEmpty)
-              const SliverFillRemaining(
-                child: PodcastFeedShimmer(),
-              ),
-            // Episodes list
-            if (feedState.episodes.isNotEmpty)
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final episode = feedState.episodes[index];
-                    return PodcastEpisodeCard(
-                      episode: episode,
-                      onTap: () {
-                        context.push('/podcast/episode/detail/${episode.id}');
-                      },
-                      // onPlay removed - play only available in detail page
-                    );
-                  },
-                  childCount: feedState.episodes.length,
-                ),
-              ),
-            // Loading more indicator
-            if (feedState.isLoadingMore && feedState.episodes.isNotEmpty)
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-              ),
-            // Load more error indicator
-            if (feedState.error != null && feedState.episodes.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: theme.colorScheme.error.withValues(alpha: 0.3),
-                      width: 1,
+      ),
+    );
+  }
+
+  /// 构建桌面端卡片（优化布局，避免溢出）
+  Widget _buildDesktopCard(BuildContext context, Map<String, dynamic> episode) {
+    return Card(
+      child: InkWell(
+        onTap: () {
+          // TODO: 实现播客详情导航
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 第一行：播放按钮 + 标题信息
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 播放按钮
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      episode['isPlayed'] == true
+                          ? Icons.play_arrow
+                          : Icons.play_circle_filled,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      size: 22,
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: theme.colorScheme.error,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Load failed: ${feedState.error}',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: theme.colorScheme.error,
+                  const SizedBox(width: 10),
+                  // 标题和播客名
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          episode['title'] as String,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          episode['podcast'] as String,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.w500,
                               ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              // 描述
+              if (episode['description'] != null) ...[
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Text(
+                    episode['description'] as String,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+
+              // 元数据和操作按钮
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  // 时间信息
+                  Expanded(
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 4,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.schedule,
+                              size: 13,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(width: 2),
                             Text(
-                              'Tap retry to load more',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.error.withValues(alpha: 0.7),
-                              ),
+                              episode['duration'] as String,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      TextButton.icon(
-                        onPressed: () {
-                          _clearError();
-                          ref.read(podcastFeedProvider.notifier).loadMoreFeed();
-                        },
-                        icon: const Icon(Icons.refresh, size: 16),
-                        label: const Text('Retry'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: theme.colorScheme.error,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.access_time,
+                              size: 13,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              episode['published'] as String,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            // End of content indicator
-            if (!feedState.hasMore && feedState.episodes.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: theme.dividerColor.withValues(alpha: 0.3),
-                      width: 1,
+                      ],
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.check_circle_outline,
-                        size: 16,
-                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'All content loaded',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      );
-    }
 
-    return Scaffold(
-      body: bodyContent,
+                  // Play 按钮
+                  const SizedBox(width: 8),
+                  FilledButton.tonal(
+                    onPressed: () {
+                      // TODO: 实现播放功能
+                    },
+                    child: const Text('Play'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
