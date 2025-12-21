@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../auth/domain/models/user.dart';
 import '../../../user/presentation/providers/user_provider.dart';
@@ -27,45 +28,48 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
           // 页面标题和操作区域
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Profile',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+          SizedBox(
+            height: 56,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Profile',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Row(
-                children: [
-                  // 设置按钮
-                  FilledButton.tonal(
-                    onPressed: () {
-                      _showSettingsDialog(context);
-                    },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.settings, size: 16),
-                        SizedBox(width: 4),
-                        Text('Settings'),
-                      ],
+                const SizedBox(width: 16),
+                Row(
+                  children: [
+                    // 设置按钮
+                    FilledButton.tonal(
+                      onPressed: () {
+                        context.push('/profile/settings');
+                      },
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.settings, size: 16),
+                          SizedBox(width: 4),
+                          Text('Settings'),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  // 编辑按钮
-                  FilledButton.icon(
-                    onPressed: () {
-                      _showEditProfileDialog(context);
-                    },
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Edit'),
-                  ),
-                ],
-              ),
-            ],
+                    const SizedBox(width: 12),
+                    // 编辑按钮
+                    FilledButton.icon(
+                      onPressed: () {
+                        _showEditProfileDialog(context);
+                      },
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Edit'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -189,104 +193,107 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 构建活动统计卡片
   Widget _buildActivityCards(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // On narrow screens, stack cards vertically to prevent squishing
+    if (isMobile) {
+      return Column(
+        children: [
+          _buildActivityCard(
+            context,
+            Icons.podcasts,
+            'Podcasts',
+            '42',
+            Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(height: 12),
+          _buildActivityCard(
+            context,
+            Icons.article,
+            'Knowledge',
+            '128',
+            Theme.of(context).colorScheme.secondary,
+          ),
+          const SizedBox(height: 12),
+          _buildActivityCard(
+            context,
+            Icons.chat,
+            'AI Chats',
+            '1,024',
+            Theme.of(context).colorScheme.tertiary,
+          ),
+        ],
+      );
+    }
+
+    // Desktop: horizontal layout
     return Row(
       children: [
         Expanded(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.podcasts,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 24,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Podcasts',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '42',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
-              ),
-            ),
+          child: _buildActivityCard(
+            context,
+            Icons.podcasts,
+            'Podcasts',
+            '42',
+            Theme.of(context).colorScheme.primary,
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.article,
-                    color: Theme.of(context).colorScheme.secondary,
-                    size: 24,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Knowledge',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '128',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
-              ),
-            ),
+          child: _buildActivityCard(
+            context,
+            Icons.article,
+            'Knowledge',
+            '128',
+            Theme.of(context).colorScheme.secondary,
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.chat,
-                    color: Theme.of(context).colorScheme.tertiary,
-                    size: 24,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'AI Chats',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '1,024',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
-              ),
-            ),
+          child: _buildActivityCard(
+            context,
+            Icons.chat,
+            'AI Chats',
+            '1,024',
+            Theme.of(context).colorScheme.tertiary,
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildActivityCard(BuildContext context, IconData icon, String label, String value, Color color) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -296,8 +303,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final isMobile = screenWidth < 600;
 
     if (isMobile) {
-      return ListView(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+      return Column(
         children: [
           _buildSettingsSection(context, 'Account Settings', [
             _buildSettingsItem(
@@ -407,8 +413,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ],
       );
     } else {
-      // 桌面端两列布局
-      return Row(
+      // 桌面端两列布局，优化间距和布局
+      return Column(
+        children: [
+          Row(
         children: [
           Expanded(
             child: Column(
@@ -441,23 +449,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         });
                       },
                     ),
-                  ),
-                ]),
-                const SizedBox(height: 24),
-                _buildSettingsSection(context, 'Support', [
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.help,
-                    title: 'Help Center',
-                    subtitle: 'Get help and support',
-                    onTap: () => _showHelpDialog(context),
-                  ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.info,
-                    title: 'About',
-                    subtitle: 'App version and information',
-                    onTap: () => _showAboutDialog(context),
                   ),
                 ]),
               ],
@@ -504,27 +495,50 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ),
                   ),
                 ]),
-                const SizedBox(height: 24),
-                // 登出按钮
-                FilledButton.tonal(
-                  onPressed: () => _showLogoutDialog(context),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                    foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.logout),
-                      SizedBox(width: 8),
-                      Text('Logout'),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
-        ],
+          ],
+        ),
+        const SizedBox(height: 24),
+        _buildSettingsSection(context, 'Support', [
+          _buildSettingsItem(
+            context,
+            icon: Icons.help,
+            title: 'Help Center',
+            subtitle: 'Get help and support',
+            onTap: () => _showHelpDialog(context),
+          ),
+          _buildSettingsItem(
+            context,
+            icon: Icons.info,
+            title: 'About',
+            subtitle: 'App version and information',
+            onTap: () => _showAboutDialog(context),
+          ),
+        ]),
+        const SizedBox(height: 24),
+        // 登出按钮
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.tonal(
+            onPressed: () => _showLogoutDialog(context),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.errorContainer,
+              foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
+              minimumSize: const Size(double.infinity, 48),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.logout),
+                SizedBox(width: 8),
+                Text('Logout'),
+              ],
+            ),
+          ),
+        ),
+      ],
       );
     }
   }
@@ -535,7 +549,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -545,7 +559,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
         ),
         Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
+          margin: EdgeInsets.zero,
           child: Column(children: children),
         ),
       ],

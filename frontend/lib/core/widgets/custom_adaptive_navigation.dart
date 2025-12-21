@@ -68,10 +68,14 @@ class CustomAdaptiveNavigation extends StatelessWidget {
             width: 80,
             child: Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 border: Border(
                   right: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -91,8 +95,8 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 8),
-                  // 导航项目
-                  ...destinations.asMap().entries.map((entry) {
+                  // 导航项目（除了最后一个Profile）
+                  ...destinations.take(destinations.length - 1).toList().asMap().entries.map((entry) {
                     final index = entry.key;
                     final destination = entry.value;
                     return _buildCompactNavItem(
@@ -103,6 +107,15 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                     );
                   }),
                   const Spacer(),
+                  // Profile按钮单独在底部
+                  if (destinations.isNotEmpty)
+                    _buildCompactNavItem(
+                      context,
+                      destinations.last,
+                      destinations.length - 1 == selectedIndex,
+                      () => onDestinationSelected?.call(destinations.length - 1),
+                    ),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -126,10 +139,14 @@ class CustomAdaptiveNavigation extends StatelessWidget {
             width: 280,
             child: Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 border: Border(
                   right: BorderSide(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -137,9 +154,10 @@ class CustomAdaptiveNavigation extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 应用标题区域
-                  Padding(
-                    padding: const EdgeInsets.all(24.0),
+                  // 应用标题区域 - 与页面标题保持相同高度和对齐
+                  Container(
+                    height: 56,
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
                     child: Row(
                       children: [
                         Icon(
@@ -149,9 +167,12 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Personal AI',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          'AI Assistant',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
@@ -160,8 +181,8 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                   ),
                   const Divider(),
                   const SizedBox(height: 8),
-                  // 导航项目
-                  ...destinations.asMap().entries.map((entry) {
+                  // 导航项目（除了最后一个Profile）
+                  ...destinations.take(destinations.length - 1).toList().asMap().entries.map((entry) {
                     final index = entry.key;
                     final destination = entry.value;
                     return _buildExpandedNavItem(
@@ -172,6 +193,15 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                     );
                   }),
                   const Spacer(),
+                  // Profile按钮单独在底部
+                  if (destinations.isNotEmpty)
+                    _buildExpandedNavItem(
+                      context,
+                      destinations.last,
+                      destinations.length - 1 == selectedIndex,
+                      () => onDestinationSelected?.call(destinations.length - 1),
+                    ),
+                  const SizedBox(height: 8),
                 ],
               ),
             ),
@@ -207,8 +237,8 @@ class CustomAdaptiveNavigation extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
           ),
           child: isSelected
-            ? (destination.selectedIcon ?? destination.icon)
-            : destination.icon,
+              ? (destination.selectedIcon ?? destination.icon)
+              : destination.icon,
         ),
       ),
     );
@@ -249,11 +279,11 @@ class CustomAdaptiveNavigation extends StatelessWidget {
               child: Text(
                 destination.label,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.onSecondaryContainer
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                    ),
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.onSecondaryContainer
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
               ),
             ),
             if (isSelected)
@@ -293,26 +323,29 @@ class ResponsiveContainer extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
 
     // 计算安全的最大宽度
-    final safeMaxWidth = maxWidth ?? (screenWidth < 600
-        ? screenWidth
-        : screenWidth < 1200
-        ? 1000
-        : 1200);
+    final safeMaxWidth =
+        maxWidth ??
+        (screenWidth < 600
+            ? screenWidth
+            : screenWidth < 1200
+            ? 1000
+            : 1200);
 
     // 计算安全的内边距
-    final safePadding = padding ?? EdgeInsets.symmetric(
-      horizontal: screenWidth < 600 ? 16.0 : 24.0,
-      vertical: 16.0,
-    );
+    final safePadding =
+        padding ??
+        EdgeInsets.only(
+          left: screenWidth < 600 ? 16.0 : 24.0,
+          right: screenWidth < 600 ? 16.0 : 24.0,
+          top: 0.0, // 移除顶部padding,让页面标题与"Personal AI"对齐
+          bottom: 0.0,
+        );
 
     return Container(
       alignment: alignment,
       padding: safePadding,
       child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: safeMaxWidth,
-          minHeight: 0,
-        ),
+        constraints: BoxConstraints(maxWidth: safeMaxWidth, minHeight: 0),
         child: child,
       ),
     );

@@ -13,19 +13,17 @@ import '../widgets/transcription_status_widget.dart';
 class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
   final int episodeId;
 
-  const PodcastEpisodeDetailPage({
-    super.key,
-    required this.episodeId,
-  });
+  const PodcastEpisodeDetailPage({super.key, required this.episodeId});
 
   @override
-  ConsumerState<PodcastEpisodeDetailPage> createState() => _PodcastEpisodeDetailPageState();
+  ConsumerState<PodcastEpisodeDetailPage> createState() =>
+      _PodcastEpisodeDetailPageState();
 }
 
-class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailPage> {
+class _PodcastEpisodeDetailPageState
+    extends ConsumerState<PodcastEpisodeDetailPage> {
   int _selectedTabIndex = 0; // 0 = 节目简介, 1 = 文字转录, 2 = 转录状态
 
-  
   @override
   void initState() {
     super.initState();
@@ -39,7 +37,9 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
   Future<void> _loadAndPlayEpisode() async {
     try {
       // Wait for episode detail to be loaded
-      final episodeDetailAsync = await ref.read(episodeDetailProviderProvider(widget.episodeId).future);
+      final episodeDetailAsync = await ref.read(
+        episodeDetailProviderProvider(widget.episodeId).future,
+      );
 
       if (episodeDetailAsync != null) {
         // Convert PodcastEpisodeDetailResponse to PodcastEpisodeModel
@@ -93,7 +93,9 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
 
   @override
   Widget build(BuildContext context) {
-    final episodeDetailAsync = ref.watch(episodeDetailProviderProvider(widget.episodeId));
+    final episodeDetailAsync = ref.watch(
+      episodeDetailProviderProvider(widget.episodeId),
+    );
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -128,15 +130,9 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                   ? Row(
                       children: [
                         // 左侧主内容 (Flex 7)
-                        Expanded(
-                          flex: 7,
-                          child: _buildMainContent(episode),
-                        ),
+                        Expanded(flex: 7, child: _buildMainContent(episode)),
                         // 右侧侧边栏 (Flex 3)
-                        Expanded(
-                          flex: 3,
-                          child: _buildSidebar(episode),
-                        ),
+                        Expanded(flex: 3, child: _buildSidebar(episode)),
                       ],
                     )
                   : _buildMainContent(episode),
@@ -158,98 +154,118 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
     // debugPrint('  Has episode image: ${episode.imageUrl != null}');
     // debugPrint('  Has subscription image: ${episode.subscriptionImageUrl != null}');
 
-    return SizedBox(
-      height: 56,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        color: Theme.of(context).colorScheme.surface,
-        child: Row(
-          children: [
-          // 左侧：返回按钮 + Logo + 文本
-          Expanded(
-            child: Row(
-              children: [
-                // 返回按钮
-                Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                      width: 1,
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: SizedBox(
+        height: 56,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          color: Theme.of(context).colorScheme.surface,
+          child: Row(
+            children: [
+              // 左侧：返回按钮 + Logo + 文本
+              Expanded(
+                child: Row(
+                  children: [
+                    // 返回按钮
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 20,
+                        ),
+                        onPressed: () => context.pop(),
+                        tooltip: '返回',
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                        padding: EdgeInsets.zero,
+                      ),
                     ),
-                  ),
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.arrow_back,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 20,
-                    ),
-                    onPressed: () => context.pop(),
-                    tooltip: '返回',
-                    constraints: const BoxConstraints(
-                      minWidth: 36,
-                      minHeight: 36,
-                    ),
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Episode icon: 50x50px, rounded 8px - prioritize episode image over subscription image
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(7),
-                    child: episode.imageUrl != null
-                        ? Image.network(
-                            episode.imageUrl!,
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              debugPrint('❌ Failed to load episode image: $error');
-                              // Fallback to subscription image
-                              if (episode.subscriptionImageUrl != null) {
-                                return ClipRRect(
-                                  borderRadius: BorderRadius.circular(7),
-                                  child: Image.network(
-                                    episode.subscriptionImageUrl!,
-                                    width: 50,
-                                    height: 50,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      debugPrint('❌ Failed to load subscription image: $error');
-                                      return Container(
-                                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                                        child: Icon(
-                                          Icons.headphones_outlined,
-                                          color: Theme.of(context).colorScheme.primary,
-                                          size: 28,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                );
-                              }
-                              return Container(
-                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                                child: Icon(
-                                  Icons.headphones_outlined,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  size: 28,
-                                ),
-                              );
-                            },
-                          )
-                        : episode.subscriptionImageUrl != null
+                    const SizedBox(width: 12),
+                    // Episode icon: 50x50px, rounded 8px - prioritize episode image over subscription image
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(7),
+                        child: episode.imageUrl != null
+                            ? Image.network(
+                                episode.imageUrl!,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  debugPrint(
+                                    '❌ Failed to load episode image: $error',
+                                  );
+                                  // Fallback to subscription image
+                                  if (episode.subscriptionImageUrl != null) {
+                                    return ClipRRect(
+                                      borderRadius: BorderRadius.circular(7),
+                                      child: Image.network(
+                                        episode.subscriptionImageUrl!,
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          debugPrint(
+                                            '❌ Failed to load subscription image: $error',
+                                          );
+                                          return Container(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                                .withValues(alpha: 0.1),
+                                            child: Icon(
+                                              Icons.headphones_outlined,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                              size: 28,
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  }
+                                  return Container(
+                                    color: Theme.of(context).colorScheme.primary
+                                        .withValues(alpha: 0.1),
+                                    child: Icon(
+                                      Icons.headphones_outlined,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      size: 28,
+                                    ),
+                                  );
+                                },
+                              )
+                            : episode.subscriptionImageUrl != null
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(7),
                                 child: Image.network(
@@ -258,12 +274,19 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                                   height: 50,
                                   fit: BoxFit.cover,
                                   errorBuilder: (context, error, stackTrace) {
-                                    debugPrint('❌ Failed to load subscription image: $error');
+                                    debugPrint(
+                                      '❌ Failed to load subscription image: $error',
+                                    );
                                     return Container(
-                                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.1),
                                       child: Icon(
                                         Icons.podcasts,
-                                        color: Theme.of(context).colorScheme.primary,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                         size: 28,
                                       ),
                                     );
@@ -271,54 +294,63 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                                 ),
                               )
                             : Container(
-                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.1),
                                 child: Icon(
                                   Icons.headphones_outlined,
                                   color: Theme.of(context).colorScheme.primary,
                                   size: 28,
                                 ),
                               ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // 文本：垂直排列的Column
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // 标题: 16px, FontWeight.bold, 主题色
-                      Text(
-                        episode.title ?? 'Unknown Episode',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
-                      // 副标题: 12px, 次要文字颜色, 单行省略
-                      Text(
-                        episode.description?.substring(0, min(40, episode.description?.length ?? 0)) ?? 'No description',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(width: 12),
+                    // 文本：垂直排列的Column
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 标题: 16px, FontWeight.bold, 主题色
+                          Text(
+                            episode.title ?? 'Unknown Episode',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          // 副标题: 12px, 次要文字颜色, 单行省略
+                          Text(
+                            episode.description?.substring(
+                                  0,
+                                  min(40, episode.description?.length ?? 0),
+                                ) ??
+                                'No description',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   // B. 左侧主内容
   Widget _buildMainContent(dynamic episode) {
@@ -330,9 +362,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
           _buildTabs(),
 
           // 内容区域
-          Expanded(
-            child: _buildTabContent(episode),
-          ),
+          Expanded(child: _buildTabContent(episode)),
         ],
       ),
     );
@@ -344,7 +374,10 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: Theme.of(context).colorScheme.outlineVariant, width: 1),
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 1,
+          ),
         ),
       ),
       child: SingleChildScrollView(
@@ -384,17 +417,23 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outline,
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outline,
             width: 1,
           ),
         ),
         child: Text(
           text,
           style: TextStyle(
-            color: isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurfaceVariant,
+            color: isSelected
+                ? Theme.of(context).colorScheme.onPrimary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             fontSize: 13,
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
           ),
@@ -403,7 +442,6 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
     );
   }
 
-  
   // Tab内容根据选择显示
   Widget _buildTabContent(dynamic episode) {
     switch (_selectedTabIndex) {
@@ -478,7 +516,9 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
             '请先在"转录状态"标签页中开始转录',
             style: TextStyle(
               fontSize: 14,
-              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -534,7 +574,8 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
           // 节目AI总结
           _buildSidebarSection(
             '节目AI总结',
-            episode.aiSummary ?? '这是一期关于AI技术应用的深度讨论节目。我们邀请了行业专家，分享了他们在实际项目中的经验和见解。内容涵盖了从技术架构到商业应用的各个方面，对于想要了解AI落地实践的听众来说非常有价值。',
+            episode.aiSummary ??
+                '这是一期关于AI技术应用的深度讨论节目。我们邀请了行业专家，分享了他们在实际项目中的经验和见解。内容涵盖了从技术架构到商业应用的各个方面，对于想要了解AI落地实践的听众来说非常有价值。',
           ),
 
           const SizedBox(height: 24),
@@ -545,19 +586,19 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
               return _buildTranscriptionSidebarSection(transcription);
             },
             loading: () => _buildTranscriptionSidebarLoadingSection(),
-            error: (error, stack) => _buildTranscriptionSidebarErrorSection(error),
+            error: (error, stack) =>
+                _buildTranscriptionSidebarErrorSection(error),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTranscriptionSidebarSection(PodcastTranscriptionResponse? transcription) {
+  Widget _buildTranscriptionSidebarSection(
+    PodcastTranscriptionResponse? transcription,
+  ) {
     if (transcription == null) {
-      return _buildSidebarSection(
-        '转录状态',
-        '暂未开始转录',
-      );
+      return _buildSidebarSection('转录状态', '暂未开始转录');
     }
 
     String statusText = getTranscriptionStatusDescription(transcription);
@@ -576,17 +617,11 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
   }
 
   Widget _buildTranscriptionSidebarLoadingSection() {
-    return _buildSidebarSection(
-      '转录状态',
-      '加载中...',
-    );
+    return _buildSidebarSection('转录状态', '加载中...');
   }
 
   Widget _buildTranscriptionSidebarErrorSection(dynamic error) {
-    return _buildSidebarSection(
-      '转录状态',
-      '加载失败\n${error.toString()}',
-    );
+    return _buildSidebarSection('转录状态', '加载失败\n${error.toString()}');
   }
 
   // 侧边栏通用部分组件
@@ -669,9 +704,13 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
         min: 0,
         max: 1,
         activeColor: Theme.of(context).colorScheme.primary,
-        inactiveColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+        inactiveColor: Theme.of(
+          context,
+        ).colorScheme.outline.withValues(alpha: 0.3),
         thumbColor: Theme.of(context).colorScheme.primary,
-        overlayColor: WidgetStateProperty.all(Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)),
+        overlayColor: WidgetStateProperty.all(
+          Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        ),
       ),
     );
   }
@@ -699,17 +738,24 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
               // 回退15s
               Container(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
                 child: IconButton(
                   onPressed: () async {
-                    final newPosition = (audioPlayerState.position - 15000).clamp(0, audioPlayerState.duration);
-                    await ref.read(audioPlayerProvider.notifier).seekTo(newPosition);
+                    final newPosition = (audioPlayerState.position - 15000)
+                        .clamp(0, audioPlayerState.duration);
+                    await ref
+                        .read(audioPlayerProvider.notifier)
+                        .seekTo(newPosition);
                   },
                   icon: Icon(
                     Icons.replay_10,
@@ -734,7 +780,9 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 3),
                     ),
@@ -745,9 +793,13 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                       ? null
                       : () async {
                           if (audioPlayerState.isPlaying) {
-                            await ref.read(audioPlayerProvider.notifier).pause();
+                            await ref
+                                .read(audioPlayerProvider.notifier)
+                                .pause();
                           } else {
-                            await ref.read(audioPlayerProvider.notifier).resume();
+                            await ref
+                                .read(audioPlayerProvider.notifier)
+                                .resume();
                           }
                         },
                   icon: audioPlayerState.isLoading
@@ -762,7 +814,9 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                           ),
                         )
                       : Icon(
-                          audioPlayerState.isPlaying ? Icons.pause : Icons.play_arrow,
+                          audioPlayerState.isPlaying
+                              ? Icons.pause
+                              : Icons.play_arrow,
                           color: Theme.of(context).colorScheme.onPrimary,
                           size: 32,
                         ),
@@ -778,17 +832,24 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
               // 前进30s
               Container(
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
                 child: IconButton(
                   onPressed: () async {
-                    final newPosition = (audioPlayerState.position + 30000).clamp(0, audioPlayerState.duration);
-                    await ref.read(audioPlayerProvider.notifier).seekTo(newPosition);
+                    final newPosition = (audioPlayerState.position + 30000)
+                        .clamp(0, audioPlayerState.duration);
+                    await ref
+                        .read(audioPlayerProvider.notifier)
+                        .seekTo(newPosition);
                   },
                   icon: Icon(
                     Icons.forward_30,
@@ -819,14 +880,23 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
               const SizedBox(width: 12),
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5)),
+                  border: Border.all(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.outline.withValues(alpha: 0.5),
+                  ),
                   borderRadius: BorderRadius.circular(16),
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 ),
                 child: PopupMenuButton<double>(
                   padding: EdgeInsets.zero,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     child: Text(
                       '${audioPlayerState.playbackRate}x',
                       style: TextStyle(
@@ -837,7 +907,9 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
                     ),
                   ),
                   onSelected: (speed) async {
-                    await ref.read(audioPlayerProvider.notifier).setPlaybackRate(speed);
+                    await ref
+                        .read(audioPlayerProvider.notifier)
+                        .setPlaybackRate(speed);
                   },
                   itemBuilder: (context) => [
                     const PopupMenuItem(value: 0.5, child: Text('0.5x')),
@@ -866,11 +938,7 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.red,
-          ),
+          const Icon(Icons.error_outline, size: 64, color: Colors.red),
           const SizedBox(height: 16),
           Text(
             'Error loading episode',
@@ -882,9 +950,9 @@ class _PodcastEpisodeDetailPageState extends ConsumerState<PodcastEpisodeDetailP
             child: Text(
               error.toString(),
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
           ),
           const SizedBox(height: 24),

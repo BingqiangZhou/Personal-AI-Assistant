@@ -678,7 +678,6 @@ class PodcastService:
             "is_playing": playback.is_playing if playback else False,
             "playback_rate": playback.playback_rate if playback else 1.0,
             "is_played": None,
-            "subscription_image_url": subscription_image_url,
             "subscription": {
                 "id": episode.subscription.id,
                 "title": episode.subscription.title,

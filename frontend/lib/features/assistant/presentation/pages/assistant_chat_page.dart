@@ -35,45 +35,48 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 页面标题和操作区域
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'AI Assistant',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+          SizedBox(
+            height: 56,
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'AI Assistant',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Row(
-                children: [
-                  // 清除对话按钮
-                  FilledButton.tonal(
-                    onPressed: () {
-                      _showClearChatDialog(context);
-                    },
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.clear, size: 16),
-                        SizedBox(width: 4),
-                        Text('Clear'),
-                      ],
+                const SizedBox(width: 16),
+                Row(
+                  children: [
+                    // 清除对话按钮
+                    FilledButton.tonal(
+                      onPressed: () {
+                        _showClearChatDialog(context);
+                      },
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.clear, size: 16),
+                          SizedBox(width: 4),
+                          Text('Clear'),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  // 设置按钮
-                  IconButton.filled(
-                    onPressed: () {
-                      _showSettingsDialog(context);
-                    },
-                    icon: const Icon(Icons.settings),
-                    tooltip: 'Settings',
-                  ),
-                ],
-              ),
-            ],
+                    const SizedBox(width: 12),
+                    // 设置按钮
+                    IconButton.filled(
+                      onPressed: () {
+                        _showSettingsDialog(context);
+                      },
+                      icon: const Icon(Icons.settings),
+                      tooltip: 'Settings',
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
 

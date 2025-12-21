@@ -38,22 +38,23 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                   child: Text(
                     'Feed',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                IconButton(onPressed: () {
-                  ref.read(podcastFeedProvider.notifier).refreshFeed();
-                }, icon: const Icon(Icons.refresh))
+                IconButton(
+                  onPressed: () {
+                    ref.read(podcastFeedProvider.notifier).refreshFeed();
+                  },
+                  icon: const Icon(Icons.refresh),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 24),
 
           // Feed内容 - 直接使用Expanded填充剩余空间
-          Expanded(
-            child: _buildFeedContent(context),
-          ),
+          Expanded(child: _buildFeedContent(context)),
         ],
       ),
     );
@@ -94,7 +95,10 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           children: [
             const Icon(Icons.rss_feed, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            Text('No episodes found', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'No episodes found',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
           ],
         ),
       );
@@ -113,15 +117,20 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
             },
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 12),
-              itemCount: feedState.episodes.length + (feedState.hasMore ? 1 : 0),
+              itemCount:
+                  feedState.episodes.length + (feedState.hasMore ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index >= feedState.episodes.length) {
                   // Loading more indicator
-                  Future.microtask(() => ref.read(podcastFeedProvider.notifier).loadMoreFeed());
-                  return const Center(child: Padding(
-                    padding: EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(),
-                  ));
+                  Future.microtask(
+                    () => ref.read(podcastFeedProvider.notifier).loadMoreFeed(),
+                  );
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
                 }
                 return _buildMobileCard(context, feedState.episodes[index]);
               },
@@ -130,12 +139,16 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
         }
 
         // 桌面端：使用GridView，优化卡片高度
-        final crossAxisCount = screenWidth < 900 ? 2 : (screenWidth < 1200 ? 3 : 4);
-        final horizontalPadding = 0.0; // ResponsiveContainer handles padding? Checking...
-        // ResponsiveContainer has default padding, so we might not need extra. 
+        final crossAxisCount = screenWidth < 900
+            ? 2
+            : (screenWidth < 1200 ? 3 : 4);
+        final horizontalPadding =
+            0.0; // ResponsiveContainer handles padding? Checking...
+        // ResponsiveContainer has default padding, so we might not need extra.
         // But GridView needs spacing.
         final spacing = 16.0;
-        final availableWidth = screenWidth - horizontalPadding - (crossAxisCount - 1) * spacing;
+        final availableWidth =
+            screenWidth - horizontalPadding - (crossAxisCount - 1) * spacing;
         final cardWidth = availableWidth / crossAxisCount;
 
         // 优化宽高比：卡片内容高度约180-200，确保不溢出
@@ -153,11 +166,15 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
               mainAxisSpacing: spacing,
               childAspectRatio: childAspectRatio,
             ),
-            itemCount: feedState.episodes.length, // Grid infinite scroll is harder, skipping for MVP-ish
+            itemCount: feedState
+                .episodes
+                .length, // Grid infinite scroll is harder, skipping for MVP-ish
             itemBuilder: (context, index) {
-               if (index == feedState.episodes.length - 1 && feedState.hasMore) {
-                  Future.microtask(() => ref.read(podcastFeedProvider.notifier).loadMoreFeed());
-               }
+              if (index == feedState.episodes.length - 1 && feedState.hasMore) {
+                Future.microtask(
+                  () => ref.read(podcastFeedProvider.notifier).loadMoreFeed(),
+                );
+              }
               return _buildDesktopCard(context, feedState.episodes[index]);
             },
           ),
@@ -199,19 +216,30 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: (episode.imageUrl != null || episode.subscriptionImageUrl != null)
+                      child:
+                          (episode.imageUrl != null ||
+                              episode.subscriptionImageUrl != null)
                           ? Image.network(
                               episode.imageUrl ?? episode.subscriptionImageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Icon(
-                                episode.isPlayed ? Icons.play_arrow : Icons.play_circle_filled,
-                                color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                size: 28,
-                              ),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Icon(
+                                    episode.isPlayed
+                                        ? Icons.play_arrow
+                                        : Icons.play_circle_filled,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimaryContainer,
+                                    size: 28,
+                                  ),
                             )
                           : Icon(
-                              episode.isPlayed ? Icons.play_arrow : Icons.play_circle_filled,
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              episode.isPlayed
+                                  ? Icons.play_arrow
+                                  : Icons.play_circle_filled,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
                               size: 28,
                             ),
                     ),
@@ -224,9 +252,8 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                       children: [
                         Text(
                           episode.title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -238,15 +265,21 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                           children: [
                             // 播客名 (圆角框)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
                                 color: Theme.of(context).colorScheme.primary,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
                                 episode.subscriptionTitle ?? 'Podcast',
-                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                      color: Theme.of(context).colorScheme.onPrimary,
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 10,
                                     ),
@@ -258,13 +291,18 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                 Icon(
                                   Icons.schedule,
                                   size: 16,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   episode.formattedDuration,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
                                       ),
                                 ),
                               ],
@@ -275,13 +313,18 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                 Icon(
                                   Icons.access_time,
                                   size: 16,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   _formatDate(episode.publishedAt),
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
                                       ),
                                 ),
                               ],
@@ -298,8 +341,8 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                 Text(
                   episode.description!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -318,8 +361,12 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     icon: const Icon(Icons.bookmark_border),
                     tooltip: 'Bookmark',
                     style: IconButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      foregroundColor: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant,
                       minimumSize: const Size(40, 40),
                       padding: const EdgeInsets.all(8),
                     ),
@@ -331,8 +378,12 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     icon: const Icon(Icons.share),
                     tooltip: 'Share',
                     style: IconButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      foregroundColor: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant,
                       minimumSize: const Size(40, 40),
                       padding: const EdgeInsets.all(8),
                     ),
@@ -361,7 +412,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  /// 构建桌面端卡片（优化布局，避免溢出）
+  /// 构建桌面端卡片（使用小图标布局）
   Widget _buildDesktopCard(BuildContext context, PodcastEpisodeModel episode) {
     return Card(
       child: InkWell(
@@ -379,76 +430,81 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 第一行：播放按钮 + 标题信息
+              // 第一行：小图标 + 标题
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 播放按钮
+                  // 小图标（48x48）
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 48,
+                    height: 48,
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: (episode.imageUrl != null || episode.subscriptionImageUrl != null)
+                      child:
+                          (episode.imageUrl != null ||
+                              episode.subscriptionImageUrl != null)
                           ? Image.network(
                               episode.imageUrl ?? episode.subscriptionImageUrl!,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Icon(
-                                episode.isPlayed ? Icons.play_arrow : Icons.play_circle_filled,
-                                color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                size: 22,
-                              ),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Icon(
+                                    Icons.podcasts,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimaryContainer,
+                                    size: 28,
+                                  ),
                             )
                           : Icon(
-                              episode.isPlayed ? Icons.play_arrow : Icons.play_circle_filled,
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
-                              size: 22,
+                              Icons.podcasts,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
+                              size: 28,
                             ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // 标题和信息
+                  // 标题
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          episode.title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                              ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                    child: Text(
+                      episode.title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
 
-              // 描述
+              // 描述 - 自适应填充剩余高度
               if (episode.description != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  episode.description!,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Text(
+                    episode.description!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    overflow: TextOverflow.fade,
+                  ),
                 ),
               ],
 
-              // 元数据和操作按钮
               const SizedBox(height: 12),
+
+              // 底部一行：元数据（左侧） + Play 按钮（右侧）
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // 时间信息
+                  // 左侧：元数据
                   Expanded(
                     child: Wrap(
                       spacing: 12,
@@ -457,7 +513,10 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                       children: [
                         // 播客名 (圆角框)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.primary,
                             borderRadius: BorderRadius.circular(12),
@@ -465,10 +524,10 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                           child: Text(
                             episode.subscriptionTitle ?? 'Podcast',
                             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 10,
-                                ),
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
                           ),
                         ),
                         // 时长
@@ -484,9 +543,9 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             Text(
                               episode.formattedDuration,
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
-                                  ),
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                         ),
@@ -503,22 +562,30 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             Text(
                               _formatDate(episode.publishedAt),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
-                                  ),
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                         ),
                       ],
                     ),
                   ),
-
-                  // Play 按钮
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
+                  // 右侧：Play 按钮
                   FilledButton.tonal(
                     onPressed: () {
-                      ref.read(audioPlayerProvider.notifier).playEpisode(episode);
+                      ref
+                          .read(audioPlayerProvider.notifier)
+                          .playEpisode(episode);
                     },
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(70, 36),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                    ),
                     child: const Text('Play'),
                   ),
                 ],

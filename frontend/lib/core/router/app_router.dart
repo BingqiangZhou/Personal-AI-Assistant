@@ -118,10 +118,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               return PodcastEpisodeDetailPage(episodeId: args.episodeId);
             },
           ),
-          // 3. 单集详情页（新路由）: /podcast/episode/detail/123
+          // Direct episode detail route (for backward compatibility)
           GoRoute(
             path: 'episode/detail/:episodeId',
-            name: 'episodeDetailNew',
+            name: 'episodeDetailDirect',
             builder: (context, state) {
               final episodeId = int.tryParse(state.pathParameters['episodeId'] ?? '');
               if (episodeId == null) {

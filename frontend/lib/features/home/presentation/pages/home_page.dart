@@ -37,9 +37,9 @@ class _HomePageState extends ConsumerState<HomePage> {
       label: 'Podcasts',
     ),
     NavigationDestination(
-      icon: Icon(Icons.psychology_outlined),
-      selectedIcon: Icon(Icons.psychology),
-      label: 'AI Assistant',
+      icon: Icon(Icons.chat_outlined),
+      selectedIcon: Icon(Icons.chat),
+      label: 'Chat',
     ),
     NavigationDestination(
       icon: Icon(Icons.folder_outlined),
