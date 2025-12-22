@@ -109,15 +109,14 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
               // Description - expanded to fill remaining space
               if (episode.description != null) ...[
                 const SizedBox(height: 8),
-                Expanded(
-                  child: Text(
+                Text(
                     episode.description!,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                    overflow: TextOverflow.fade,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 4,
                   ),
-                ),
               ],
             ],
           ),

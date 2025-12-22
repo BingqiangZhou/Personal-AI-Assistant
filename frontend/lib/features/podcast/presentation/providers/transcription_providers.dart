@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/podcast_transcription_model.dart';
@@ -20,8 +22,14 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
 
   TranscriptionNotifier(this.episodeId);
 
+  Timer? _pollTimer;
+
   @override
   Future<PodcastTranscriptionResponse?> build() async {
+    // Cancel timer when provider is disposed
+    ref.onDispose(() {
+      _pollTimer?.cancel();
+    });
     return null;
   }
 
@@ -33,6 +41,48 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
       final repository = ref.read(podcastRepositoryProvider);
       final transcription = await repository.getTranscription(episodeId);
       state = AsyncValue.data(transcription);
+      
+      // If transcription is in progress, start polling
+      if (transcription != null && transcription.isProcessing) {
+        _startPolling();
+      }
+    } catch (error, stackTrace) {
+      if (error is DioException && error.response?.statusCode == 404) {
+         state = const AsyncValue.data(null);
+      } else {
+         state = AsyncValue.error(error, stackTrace);
+      }
+    }
+  }
+
+  /// Check if transcription exists, if not start it. Always load/monitor.
+  Future<void> checkOrStartTranscription() async {
+    state = const AsyncValue.loading();
+    PodcastTranscriptionResponse? transcription;
+
+    try {
+      final repository = ref.read(podcastRepositoryProvider);
+      try {
+        transcription = await repository.getTranscription(episodeId);
+      } catch (e) {
+        if (e is DioException && e.response?.statusCode == 404) {
+          transcription = null;
+        } else {
+          rethrow;
+        }
+      }
+      
+      if (transcription == null) {
+         // 2. If missing, start it
+         transcription = await repository.startTranscription(episodeId);
+      }
+
+      state = AsyncValue.data(transcription);
+
+      // 3. Start polling if processing
+      if (transcription != null && transcription.isProcessing) {
+        _startPolling();
+      }
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
     }
@@ -46,6 +96,8 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
       final repository = ref.read(podcastRepositoryProvider);
       final transcription = await repository.startTranscription(episodeId);
       state = AsyncValue.data(transcription);
+      
+      _startPolling();
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
     }
@@ -53,6 +105,7 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
 
   /// Refresh transcription status
   Future<void> refreshStatus() async {
+    // If we have no data yet, don't just refresh status, better to load
     if (state.value == null) {
       await loadTranscription();
       return;
@@ -60,15 +113,40 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
 
     try {
       final repository = ref.read(podcastRepositoryProvider);
-      final transcription = await repository.getTranscriptionStatus(episodeId);
+      // Use getTranscription to poll status as it returns the full task info including status
+      final transcription = await repository.getTranscription(episodeId);
       state = AsyncValue.data(transcription);
+      
+      // Stop polling if completed or failed
+      if (transcription != null && (transcription.isCompleted || transcription.isFailed)) {
+        _stopPolling();
+      }
     } catch (error, stackTrace) {
+      // Don't set state to error on poll fail, just log? 
+      // Or set error? If we set error, UI shows error. 
+      // Maybe specific error handling for polling? 
+      // For now, let's keep it simple.
       state = AsyncValue.error(error, stackTrace);
+      _stopPolling();
     }
+  }
+
+  void _startPolling() {
+    _stopPolling();
+    // Poll every 1 second
+    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      refreshStatus();
+    });
+  }
+
+  void _stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
   }
 
   /// Delete transcription
   Future<void> deleteTranscription() async {
+    _stopPolling();
     try {
       final repository = ref.read(podcastRepositoryProvider);
       await repository.deleteTranscription(episodeId);
@@ -80,6 +158,7 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
 
   /// Reset state
   void reset() {
+    _stopPolling();
     state = const AsyncValue.data(null);
   }
 }

@@ -28,6 +28,8 @@ from app.core.config import settings
 from app.core.database import async_session_factory
 from app.domains.podcast.models import TranscriptionTask, PodcastEpisode, TranscriptionStatus
 from app.core.exceptions import ValidationError, DatabaseError
+from app.domains.ai.repositories import AIModelConfigRepository
+from app.domains.ai.models import ModelType
 
 
 logger = logging.getLogger(__name__)
@@ -335,7 +337,7 @@ class SiliconFlowTranscriber:
         self,
         chunk: AudioChunk,
         model: str = "FunAudioLLM/SenseVoiceSmall"
-    ) -> str:
+    ) -> AudioChunk:
         """
         转录单个音频片段
 
@@ -344,7 +346,7 @@ class SiliconFlowTranscriber:
             model: 转录模型名称
 
         Returns:
-            str: 转录文本
+            AudioChunk: 包含转录结果的音频片段
         """
         async with self.semaphore:  # 限制并发数
             if not self.session:
@@ -366,29 +368,21 @@ class SiliconFlowTranscriber:
                     if response.status != 200:
                         error_text = await response.text()
                         logger.error(f"Transcription API error: {response.status} - {error_text}")
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Transcription API error: {response.status}"
-                        )
+                        chunk.transcript = None
+                        return chunk
 
                     result = await response.json()
                     transcript = result.get('text', '')
 
                     logger.info(f"Successfully transcribed chunk {chunk.index}")
-                    return transcript
+                    chunk.transcript = transcript
+                    return chunk
 
-            except asyncio.TimeoutError:
-                logger.error(f"Transcription timeout for chunk {chunk.index}")
-                raise HTTPException(
-                    status_code=status.HTTP_408_REQUEST_TIMEOUT,
-                    detail=f"Transcription timeout for chunk {chunk.index}"
-                )
             except Exception as e:
                 logger.error(f"Transcription failed for chunk {chunk.index}: {str(e)}")
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Transcription failed: {str(e)}"
-                )
+                chunk.transcript = None
+                return chunk
+
 
     async def transcribe_chunks(
         self,
@@ -398,25 +392,14 @@ class SiliconFlowTranscriber:
     ) -> List[AudioChunk]:
         """
         并发转录多个音频片段
-
-        Args:
-            chunks: 音频片段列表
-            model: 转录模型名称
-            progress_callback: 进度回调函数
-
-        Returns:
-            List[AudioChunk]: 包含转录结果的音频片段列表
         """
         start_time = time.time()
 
         # 创建转录任务
-        tasks = []
-        for chunk in chunks:
-            task = asyncio.create_task(
-                self.transcribe_chunk(chunk, model),
-                name=f"transcribe_chunk_{chunk.index}"
-            )
-            tasks.append(task)
+        tasks = [
+            asyncio.create_task(self.transcribe_chunk(chunk, model))
+            for chunk in chunks
+        ]
 
         # 执行并发转录
         results = []
@@ -424,12 +407,9 @@ class SiliconFlowTranscriber:
 
         for coro in asyncio.as_completed(tasks):
             try:
-                transcript = await coro
-
-                # 找到对应的chunk并更新
-                chunk_index = int(asyncio.current_task().get_name().split('_')[-1]) - 1
-                chunks[chunk_index].transcript = transcript
-                results.append(chunks[chunk_index])
+                # transcribe_chunk now returns the chunk itself
+                chunk = await coro
+                results.append(chunk)
 
                 completed += 1
                 if progress_callback:
@@ -437,13 +417,17 @@ class SiliconFlowTranscriber:
                     await progress_callback(progress)
 
             except Exception as e:
-                logger.error(f"Chunk transcription failed: {str(e)}")
-                # 继续处理其他chunks
+                logger.error(f"Unexpected error in transcribe_chunks sequence: {str(e)}")
 
         duration = time.time() - start_time
-        logger.info(f"Completed transcription of {len(results)} chunks in {duration:.2f}s")
+        # Ensure correct order
+        results.sort(key=lambda x: x.index)
+        
+        success_count = sum(1 for c in results if c.transcript is not None)
+        logger.info(f"Completed transcription of {success_count}/{len(chunks)} chunks in {duration:.2f}s")
 
         return results
+
 
 
 class PodcastTranscriptionService:
@@ -455,11 +439,9 @@ class PodcastTranscriptionService:
         self.storage_dir = getattr(settings, 'TRANSCRIPTION_STORAGE_DIR', './storage/podcasts')
         self.chunk_size_mb = getattr(settings, 'TRANSCRIPTION_CHUNK_SIZE_MB', 10)
         self.max_threads = getattr(settings, 'TRANSCRIPTION_MAX_THREADS', 4)
-        self.api_url = getattr(settings, 'TRANSCRIPTION_API_URL', 'https://api.siliconflow.cn/v1/audio/transcriptions')
-        self.api_key = getattr(settings, 'TRANSCRIPTION_API_KEY', None)
-
-        if not self.api_key:
-            raise ValidationError("TRANSCRIPTION_API_KEY is not configured")
+        # API configuration is now dynamic, but we keep defaults for fallback
+        self.default_api_url = getattr(settings, 'TRANSCRIPTION_API_URL', 'https://api.siliconflow.cn/v1/audio/transcriptions')
+        self.default_api_key = getattr(settings, 'TRANSCRIPTION_API_KEY', None)
 
     def _get_episode_storage_path(self, episode: PodcastEpisode) -> str:
         """获取播客单集的存储路径"""
@@ -564,6 +546,21 @@ class PodcastTranscriptionService:
         if status in [TranscriptionStatus.COMPLETED, TranscriptionStatus.FAILED, TranscriptionStatus.CANCELLED]:
             update_data['completed_at'] = datetime.utcnow()
 
+        # Try to update chunk_info with the debug message
+        # Since we can't easily do partial JSON updates, and this is high frequency,
+        # we will fetch the current chunk_info first.
+        if message:
+            stmt_info = select(TranscriptionTask.chunk_info).where(TranscriptionTask.id == task_id)
+            result_info = await session.execute(stmt_info)
+            current_chunk_info = result_info.scalar() or {}
+            
+            if not isinstance(current_chunk_info, dict):
+                current_chunk_info = {}
+            
+            # Update debug_message
+            current_chunk_info['debug_message'] = message
+            update_data['chunk_info'] = current_chunk_info
+
         stmt = (
             update(TranscriptionTask)
             .where(TranscriptionTask.id == task_id)
@@ -603,29 +600,53 @@ class PodcastTranscriptionService:
         if not episode:
             raise ValidationError(f"Episode {episode_id} not found")
 
-        # 使用指定的模型或默认模型
-        transcription_model = model or getattr(settings, 'TRANSCRIPTION_MODEL', 'FunAudioLLM/SenseVoiceSmall')
+        # 确定使用的模型
+        ai_repo = AIModelConfigRepository(self.db)
+        
+        # 1. 如果指定了模型名称，尝试查找
+        model_config = None
+        if model:
+            model_config = await ai_repo.get_by_name(model)
+        
+        # 2. 如果未指定或未找到，使用默认转录模型
+        if not model_config:
+            model_config = await ai_repo.get_default_model(ModelType.TRANSCRIPTION)
+            
+        # 3. 如果没有默认模型，使用第一个活跃的转录模型
+        if not model_config:
+            active_models = await ai_repo.get_active_models(ModelType.TRANSCRIPTION)
+            if active_models:
+                model_config = active_models[0]
+        
+        # 确定最终使用的模型ID字符串 (传递给API的model参数)
+        transcription_model = model_config.model_id if model_config else getattr(settings, 'TRANSCRIPTION_MODEL', 'FunAudioLLM/SenseVoiceSmall')
 
         # 创建新的转录任务
         task = TranscriptionTask(
             episode_id=episode_id,
             original_audio_url=episode.audio_url,
             chunk_size_mb=self.chunk_size_mb,
-            model_used=transcription_model
+            model_used=transcription_model  # 这里存储的是API模型ID (如 whisper-1)，不是数据库ID
         )
 
         self.db.add(task)
         await self.db.commit()
         await self.db.refresh(task)
 
-        # 启动后台转录任务
-        asyncio.create_task(self._execute_transcription(task.id))
+        # 启动后台转录任务，传递已确定的模型配置ID (如果存在)
+        # 注意: 只有当 model_config 存在时才传递其 DB ID，否则传递 None (回退到默认设置)
+        config_db_id = model_config.id if model_config else None
+        
+        logger.info(f"PodcastTranscriptionService.start_transcription: About to create_task for _execute_transcription(task_id={task.id})")
+        asyncio.create_task(self._execute_transcription(task.id, config_db_id))
+        logger.info(f"PodcastTranscriptionService.start_transcription: Task {task.id} background process initiated")
 
-        logger.info(f"Started transcription task {task.id} for episode {episode_id}")
         return task
 
-    async def _execute_transcription(self, task_id: int):
+
+    async def _execute_transcription(self, task_id: int, config_db_id: Optional[int] = None):
         """执行转录任务（后台运行）"""
+        logger.info(f"transcription._execute_transcription: Starting task execution for task {task_id}, config_db_id={config_db_id}")
         # Create a new database session for this background task
         async with async_session_factory() as session:
             try:
@@ -635,7 +656,7 @@ class PodcastTranscriptionService:
                 task = result.scalar_one_or_none()
 
                 if not task:
-                    logger.error(f"Transcription task {task_id} not found")
+                    logger.error(f"transcription._execute_transcription: Transcription task {task_id} not found")
                     return
 
                 # 获取播客单集信息
@@ -644,6 +665,7 @@ class PodcastTranscriptionService:
                 episode = result.scalar_one_or_none()
 
                 if not episode:
+                    logger.error(f"transcription._execute_transcription: Episode {task.episode_id} not found for task {task_id}")
                     await self._update_task_progress_with_session(
                         session, task_id,
                         TranscriptionStatus.FAILED,
@@ -652,11 +674,41 @@ class PodcastTranscriptionService:
                     )
                     return
 
+                # 获取转录配置
+                api_url = self.default_api_url
+                api_key = self.default_api_key
+
+                if config_db_id:
+                    logger.info(f"transcription._execute_transcription: Using custom model config {config_db_id}")
+                    ai_repo = AIModelConfigRepository(session)
+                    model_config = await ai_repo.get_by_id(config_db_id)
+                    if model_config and model_config.is_active:
+                        api_url = model_config.api_url
+                        # 获取API Key (如果加密了需要解密，这里简化处理...同上)
+                        if model_config.is_system and model_config.provider == 'siliconflow':
+                             api_key = getattr(settings, 'TRANSCRIPTION_API_KEY', None) or model_config.api_key
+                        elif model_config.is_system and model_config.provider == 'openai':
+                             api_key = getattr(settings, 'OPENAI_API_KEY', None) or model_config.api_key
+                        else:
+                             api_key = model_config.api_key
+
+                if not api_key:
+                     logger.error(f"transcription._execute_transcription: API Key missing for task {task_id}")
+                     await self._update_task_progress_with_session(
+                        session, task_id,
+                        TranscriptionStatus.FAILED,
+                        0,
+                        "Transcription API Key not found"
+                    )
+                     return
+
                 # 创建临时目录
                 temp_episode_dir = os.path.join(self.temp_dir, f"episode_{task.episode_id}")
                 os.makedirs(temp_episode_dir, exist_ok=True)
+                logger.info(f"transcription._execute_transcription: Created temp dir {temp_episode_dir}")
 
                 # 步骤1：下载音频文件
+                logger.info(f"transcription._execute_transcription: [Step 1] Downloading audio from {task.original_audio_url}")
                 await self._update_task_progress_with_session(
                     session,
                     task_id,
@@ -670,6 +722,10 @@ class PodcastTranscriptionService:
 
                 async with AudioDownloader() as downloader:
                     async def download_progress(progress):
+                        # Reduce log frequency for progress updates
+                        if int(progress) % 10 == 0:
+                            logger.debug(f"transcription._execute_transcription: Download progress {progress}%")
+                            
                         await self._update_task_progress_with_session(
                             session,
                             task_id,
@@ -683,10 +739,13 @@ class PodcastTranscriptionService:
                         original_file,
                         download_progress
                     )
+                
+                logger.info(f"transcription._execute_transcription: Download complete. Path: {file_path}, Size: {file_size} bytes")
 
                 download_time = time.time() - download_start
 
                 # 步骤2：转换为MP3
+                logger.info(f"transcription._execute_transcription: [Step 2] Converting to MP3")
                 await self._update_task_progress_with_session(
                     session,
                     task_id,
@@ -711,8 +770,10 @@ class PodcastTranscriptionService:
                     converted_file,
                     convert_progress
                 )
+                logger.info(f"transcription._execute_transcription: Conversion complete. Time: {conversion_time:.2f}s")
 
                 # 步骤3：切割音频文件
+                logger.info(f"transcription._execute_transcription: [Step 3] Splitting audio file")
                 await self._update_task_progress_with_session(
                     session,
                     task_id,
@@ -738,8 +799,10 @@ class PodcastTranscriptionService:
                     task.chunk_size_mb,
                     split_progress
                 )
+                logger.info(f"transcription._execute_transcription: Split complete. Created {len(chunks)} chunks.")
 
                 # 步骤4：转录音频片段
+                logger.info(f"transcription._execute_transcription: [Step 4] Starting transcription of {len(chunks)} chunks using model {task.model_used}")
                 await self._update_task_progress_with_session(
                     session,
                     task_id,
@@ -751,6 +814,9 @@ class PodcastTranscriptionService:
                 transcription_start = time.time()
 
                 async def transcribe_progress(progress):
+                    if int(progress) % 10 == 0:
+                        logger.debug(f"transcription._execute_transcription: Transcription progress {progress}%")
+                        
                     await self._update_task_progress_with_session(
                         session,
                         task_id,
@@ -760,8 +826,8 @@ class PodcastTranscriptionService:
                     )
 
                 async with SiliconFlowTranscriber(
-                    self.api_key,
-                    self.api_url,
+                    api_key,
+                    api_url,
                     self.max_threads
                 ) as transcriber:
                     transcribed_chunks = await transcriber.transcribe_chunks(
@@ -769,10 +835,13 @@ class PodcastTranscriptionService:
                         task.model_used,
                         transcribe_progress
                     )
+                
+                logger.info(f"transcription._execute_transcription: Transcription chunks finished.")
 
                 transcription_time = time.time() - transcription_start
 
                 # 步骤5：合并转录结果
+                logger.info(f"transcription._execute_transcription: [Step 5] Merging results.")
                 await self._update_task_progress_with_session(
                     session,
                     task_id,
@@ -787,19 +856,34 @@ class PodcastTranscriptionService:
                     chunk.transcript.strip() for chunk in sorted_chunks
                     if chunk.transcript and chunk.transcript.strip()
                 ])
+                
+                logger.info(f"transcription._execute_transcription: Merged transcript length: {len(full_transcript)} chars.")
 
                 # 步骤6：保存结果到永久存储
                 storage_path = self._get_episode_storage_path(episode)
                 os.makedirs(storage_path, exist_ok=True)
+                logger.info(f"transcription._execute_transcription: Saving to storage path: {storage_path}")
 
                 # 保存原始音频文件
                 final_audio_path = os.path.join(storage_path, "original.mp3")
-                os.replace(converted_file, final_audio_path)
+                try:
+                    # Windows下os.replace不能跨驱动器移动，也不能覆盖使用中的文件 (though 'converted.mp3' should be free now)
+                    # Use shutil.move or copy if unsure, but replace is atomic on POSIX.
+                    # On Windows, if destination exists, os.replace raises OSError.
+                    if os.path.exists(final_audio_path):
+                        os.remove(final_audio_path)
+                    os.replace(converted_file, final_audio_path)
+                except OSError as e:
+                    logger.warning(f"transcription._execute_transcription: os.replace failed ({e}), trying shutil.copy")
+                    import shutil
+                    shutil.copy2(converted_file, final_audio_path)
 
                 # 保存转录文本
                 transcript_path = os.path.join(storage_path, "transcript.txt")
                 async with aiofiles.open(transcript_path, 'w', encoding='utf-8') as f:
                     await f.write(full_transcript)
+                
+                logger.info(f"transcription._execute_transcription: Transcript saved to {transcript_path}")
 
                 # 更新数据库
                 await self._update_task_progress_with_session(
@@ -859,10 +943,12 @@ class PodcastTranscriptionService:
 
                 await session.commit()
 
-                logger.info(f"Successfully completed transcription for episode {episode_id}")
+                logger.info(f"transcription._execute_transcription: Successfully completed transcription for episode {episode_id}")
 
             except Exception as e:
-                logger.error(f"Transcription failed for task {task_id}: {str(e)}", exc_info=True)
+                import traceback
+                error_trace = traceback.format_exc()
+                logger.error(f"transcription._execute_transcription: Transcription failed for task {task_id}: {str(e)}\nTraceback: {error_trace}", exc_info=True)
                 await self._update_task_progress_with_session(
                     session,
                     task_id,
@@ -878,9 +964,9 @@ class PodcastTranscriptionService:
                     temp_episode_dir = os.path.join(self.temp_dir, f"episode_{task.episode_id}")
                     if os.path.exists(temp_episode_dir):
                         shutil.rmtree(temp_episode_dir)
-                        logger.info(f"Cleaned up temporary directory: {temp_episode_dir}")
+                        logger.info(f"transcription._execute_transcription: Cleaned up temporary directory: {temp_episode_dir}")
                 except Exception as e:
-                    logger.error(f"Failed to clean up temporary files: {str(e)}")
+                    logger.error(f"transcription._execute_transcription: Failed to clean up temporary files: {str(e)}")
 
     async def get_transcription_status(self, task_id: int) -> Optional[TranscriptionTask]:
         """获取转录任务状态"""

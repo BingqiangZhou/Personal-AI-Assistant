@@ -180,7 +180,9 @@ class SummaryModelManager:
         if model_config.is_system:
             from app.core.config import settings
             if model_config.provider == "openai":
-                return getattr(settings, 'OPENAI_API_KEY', '')
+                return getattr(settings, 'OPENAI_API_KEY', '') or model_config.api_key
+            elif model_config.provider == "siliconflow":
+                return getattr(settings, 'TRANSCRIPTION_API_KEY', '') or model_config.api_key
 
         # 对于用户自定义的模型，这里应该从安全存储解密
         # 暂时直接返回（实际应该解密）

@@ -5,6 +5,7 @@
 
 import logging
 from typing import Optional, Dict, Any
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -142,11 +143,14 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
         # 调用父类方法，传递模型名称和force参数
         return await super().start_transcription(episode_id, model_name, force)
 
-    async def _execute_transcription(self, task_id: int):
+    async def _execute_transcription(self, task_id: int, config_db_id: Optional[int] = None):
         """执行转录任务（后台运行），使用数据库中的模型配置"""
-        # Create a new database session for this background task
+        logger.info(f"manager._execute_transcription: Starting background transcription execution for task {task_id}")
+        # Add a diagnostic log to see if we're hitting the session factory
+        logger.info(f"manager._execute_transcription: Attempting to create session for task {task_id}")
         async with async_session_factory() as session:
             try:
+                logger.info(f"manager._execute_transcription: Retrieving task {task_id} from database")
                 # 获取任务信息
                 from app.domains.podcast.models import TranscriptionTask
                 stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
@@ -154,19 +158,24 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
                 task = result.scalar_one_or_none()
 
                 if not task:
-                    logger.error(f"Transcription task {task_id} not found")
+                    logger.error(f"manager._execute_transcription: Transcription task {task_id} not found")
                     return
 
+                logger.info(f"manager._execute_transcription: Task {task_id} found, checking extra_config")
                 # 从任务的extra_config中获取指定的模型名称（如果有）
                 model_name = None
                 if task.extra_config and isinstance(task.extra_config, dict):
                     model_name = task.extra_config.get('model_name')
 
+                logger.info(f"manager._execute_transcription: Creating transcriber for model: {model_name}")
                 # 创建转录器
                 transcriber = await self.model_manager.create_transcriber(model_name)
 
+                logger.info("manager._execute_transcription: Transcriber created successfully, updating usage stats")
                 # 更新模型使用统计
                 model_config = await self.model_manager.get_active_transcription_model(model_name)
+                logger.info(f"manager._execute_transcription: Using model config: {model_config.model_id} (Provider: {model_config.provider})")
+                
                 await self.model_manager.ai_model_repo.increment_usage(
                     model_config.id,
                     success=True
@@ -175,10 +184,14 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
                 # 继续执行原有的转录逻辑
                 # Note: The parent's _execute_transcription will use its own session
                 # We need to call it directly since it already handles session management
-                await super()._execute_transcription(task_id)
+                logger.info(f"manager._execute_transcription: Calling parent _execute_transcription for task {task_id}")
+                await super()._execute_transcription(task_id, config_db_id)
+                logger.info(f"manager._execute_transcription: Parent _execute_transcription completed for task {task_id}")
 
             except Exception as e:
-                logger.error(f"Transcription failed for task {task_id}: {str(e)}")
+                import traceback
+                error_trace = traceback.format_exc()
+                logger.error(f"manager._execute_transcription: Transcription failed for task {task_id}: {str(e)}\nTraceback: {error_trace}")
 
                 # 更新失败统计
                 try:
@@ -195,8 +208,45 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
                     pass  # 忽略统计更新错误
 
                 # 调用父类的错误处理
-                await super()._execute_transcription(task_id)
+                await super()._execute_transcription(task_id, config_db_id)
 
     async def get_transcription_models(self):
         """获取可用的转录模型列表"""
         return await self.model_manager.list_available_models()
+
+    async def reset_stale_tasks(self):
+        """
+        重置所有处于中间状态的任务为失败
+        用于服务器重启后清理僵尸任务
+        """
+        from app.domains.podcast.models import TranscriptionTask, TranscriptionStatus
+        from sqlalchemy import update
+        
+        stale_statuses = [
+            TranscriptionStatus.PENDING,
+            TranscriptionStatus.DOWNLOADING,
+            TranscriptionStatus.CONVERTING,
+            TranscriptionStatus.SPLITTING,
+            TranscriptionStatus.TRANSCRIBING,
+            TranscriptionStatus.MERGING
+        ]
+        
+        try:
+            stmt = (
+                update(TranscriptionTask)
+                .where(TranscriptionTask.status.in_(stale_statuses))
+                .values(
+                    status=TranscriptionStatus.FAILED,
+                    error_message="Task interrupted by server restart",
+                    updated_at=datetime.utcnow(),
+                    completed_at=datetime.utcnow()
+                )
+            )
+            
+            result = await self.db.execute(stmt)
+            await self.db.commit()
+            
+            if result.rowcount > 0:
+                logger.warning(f"Reset {result.rowcount} stale transcription tasks to FAILED")
+        except Exception as e:
+            logger.error(f"Failed to reset stale tasks: {str(e)}")

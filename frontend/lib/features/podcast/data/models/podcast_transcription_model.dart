@@ -61,11 +61,11 @@ class PodcastTranscriptionResponse extends Equatable {
   final String? transcriptContent;
   @JsonKey(name: 'processed_transcript')
   final String? processedTranscript;
-  @JsonKey(name: 'word_count')
+  @JsonKey(name: 'transcript_word_count')
   final int? wordCount;
   @JsonKey(name: 'duration_seconds')
   final int? durationSeconds;
-  @JsonKey(name: 'processing_progress')
+  @JsonKey(name: 'progress_percentage')
   final double? processingProgress;
   @JsonKey(name: 'error_message')
   final String? errorMessage;
@@ -75,6 +75,9 @@ class PodcastTranscriptionResponse extends Equatable {
   final DateTime? updatedAt;
   @JsonKey(name: 'completed_at')
   final DateTime? completedAt;
+
+  @JsonKey(name: 'debug_message')
+  final String? debugMessage;
 
   // AI总结相关字段
   @JsonKey(name: 'summary_content')
@@ -101,6 +104,7 @@ class PodcastTranscriptionResponse extends Equatable {
     required this.createdAt,
     this.updatedAt,
     this.completedAt,
+    this.debugMessage,
     // AI总结相关
     this.summaryContent,
     this.summaryModelUsed,
@@ -156,7 +160,7 @@ class PodcastTranscriptionResponse extends Equatable {
   /// 获取进度百分比
   double get progressPercentage {
     if (processingProgress != null) {
-      return (processingProgress! * 100).clamp(0.0, 100.0);
+      return processingProgress!.clamp(0.0, 100.0);
     }
     if (isCompleted) return 100.0;
     if (isFailed) return 0.0;
@@ -197,6 +201,7 @@ class PodcastTranscriptionResponse extends Equatable {
         createdAt,
         updatedAt,
         completedAt,
+        debugMessage,
         // AI总结相关
         summaryContent,
         summaryModelUsed,

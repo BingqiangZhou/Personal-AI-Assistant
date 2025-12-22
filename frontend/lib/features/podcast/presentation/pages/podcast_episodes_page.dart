@@ -125,7 +125,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                   ),
                   const SizedBox(width: 8),
                   // Icon
-                  Container(
+                    Container(
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
@@ -134,47 +134,45 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: (widget.subscription?.imageUrl != null)
-                          ? Image.network(
-                              widget.subscription!.imageUrl!,
+                      child: Builder(
+                        builder: (context) {
+                          final sub = widget.subscription;
+                          if (sub?.imageUrl != null) {
+                            return Image.network(
+                              sub!.imageUrl!,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Icon(
                                     Icons.podcasts,
                                     size: 24,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimaryContainer,
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
                                   ),
-                            )
-                          : (episodesState.episodes.isNotEmpty &&
-                                episodesState
-                                        .episodes
-                                        .first
-                                        .subscriptionImageUrl !=
-                                    null)
-                          ? Image.network(
-                              episodesState
-                                  .episodes
-                                  .first
-                                  .subscriptionImageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Icon(
-                                    Icons.podcasts,
-                                    size: 24,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimaryContainer,
-                                  ),
-                            )
-                          : Icon(
+                            );
+                          }
+                          
+                          if (episodesState.episodes.isNotEmpty) {
+                            final firstEp = episodesState.episodes.first;
+                            if (firstEp.subscriptionImageUrl != null) {
+                              return Image.network(
+                                firstEp.subscriptionImageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Icon(
+                                      Icons.podcasts,
+                                      size: 24,
+                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                    ),
+                              );
+                            }
+                          }
+                          
+                          return Icon(
                               Icons.podcasts,
                               size: 24,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onPrimaryContainer,
-                            ),
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            );
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -189,7 +187,18 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                     ),
                   ),
                   // 筛选按钮移到标题行
-                  _buildFilterChips(),
+                  if (MediaQuery.of(context).size.width < 700) ...[
+                     IconButton(
+                      icon: const Icon(Icons.filter_list),
+                      onPressed: _showFilterDialog,
+                      tooltip: 'Filter',
+                    ),
+                    _buildMoreMenu(),
+                  ] else ...[
+                    _buildFilterChips(),
+                     const SizedBox(width: 8),
+                    _buildMoreMenu(),
+                  ],
                 ],
               ),
             ),
@@ -264,7 +273,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                       crossAxisCount: crossAxisCount,
                                       crossAxisSpacing: 12,
                                       mainAxisSpacing: 12,
-                                      childAspectRatio: 1.2,
+                                      mainAxisExtent: 180,
                                     ),
                                 itemCount:
                                     episodesState.episodes.length +
@@ -342,6 +351,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
 
   Widget _buildFilterChips() {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         FilterChip(
@@ -390,25 +400,28 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
               ? const Icon(Icons.summarize, size: 16)
               : null,
         ),
-        const SizedBox(width: 8),
-        PopupMenuButton<String>(
-          icon: Icon(
-            Icons.more_vert,
-            color: Theme.of(context).colorScheme.secondary,
-          ),
-          onSelected: (value) {
-            // TODO: Implement
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'mark_all_played',
-              child: Text('Mark All as Played'),
-            ),
-            const PopupMenuItem(
-              value: 'mark_all_unplayed',
-              child: Text('Mark All as Unplayed'),
-            ),
-          ],
+
+      ],
+    );
+  }
+
+  Widget _buildMoreMenu() {
+    return PopupMenuButton<String>(
+      icon: Icon(
+        Icons.more_vert,
+        color: Theme.of(context).colorScheme.secondary,
+      ),
+      onSelected: (value) {
+        // TODO: Implement
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'mark_all_played',
+          child: Text('Mark All as Played'),
+        ),
+        const PopupMenuItem(
+          value: 'mark_all_unplayed',
+          child: Text('Mark All as Unplayed'),
         ),
       ],
     );

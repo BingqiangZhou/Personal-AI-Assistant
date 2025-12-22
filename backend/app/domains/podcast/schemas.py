@@ -364,6 +364,9 @@ class PodcastTranscriptionResponse(PodcastBaseSchema):
     summary_processing_time: Optional[float] = None
     summary_error_message: Optional[str] = None
 
+    # Debug info
+    debug_message: Optional[str] = None
+
     # 计算字段
     duration_seconds: Optional[int] = None
     total_processing_time: Optional[float] = None

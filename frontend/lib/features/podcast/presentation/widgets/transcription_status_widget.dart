@@ -48,6 +48,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Icon
             Container(
@@ -68,7 +69,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Title
             Text(
-              '开始转录',
+              'Start Transcription',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -80,7 +81,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Description
             Text(
-              '为这个播客分集生成完整的文字转录\n支持多语言识别和高精度转录',
+              'Generate full text transcription for this episode\nSupports multi-language and high accuracy',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -97,7 +98,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               child: ElevatedButton.icon(
                 onPressed: () => _startTranscription(ref),
                 icon: const Icon(Icons.play_arrow),
-                label: const Text('开始转录'),
+                label: const Text('Start Transcription'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -125,6 +126,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Icon
             Container(
@@ -145,7 +147,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Title
             Text(
-              '等待开始',
+              'Pending',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -157,7 +159,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Description
             Text(
-              '转录任务已添加到队列中\n将尽快开始处理',
+              'Transcription task has been queued\nProcessing will start shortly',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -187,6 +189,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Animated icon
             Container(
@@ -236,7 +239,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Progress text
             Text(
-              '${progress.toStringAsFixed(1)}% 完成',
+              '${progress.toStringAsFixed(1)}% Complete',
               style: TextStyle(
                 fontSize: 14,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -255,11 +258,53 @@ class TranscriptionStatusWidget extends ConsumerWidget {
             ),
 
             const SizedBox(height: 16),
+            
+            // Debug Info
+             if (transcription.debugMessage != null)
+              Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 12, 
+                      height: 12, 
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.7)
+                        ),
+                      )
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        transcription.debugMessage!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                          color: Theme.of(context).colorScheme.secondary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             // Additional info
             if (transcription.wordCount != null)
               Text(
-                '预计字数: ${transcription.wordCount}',
+                'Estimated words: ${transcription.wordCount}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -268,7 +313,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             if (transcription.durationSeconds != null)
               Text(
-                '音频时长: ${_formatDuration(transcription.durationSeconds!)}',
+                'Duration: ${_formatDuration(transcription.durationSeconds!)}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -297,6 +342,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Success icon
             Container(
@@ -317,7 +363,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Title
             Text(
-              '转录完成',
+              'Transcription Complete',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -329,7 +375,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Description
             Text(
-              '转录文本已生成完成\n可以开始阅读和搜索内容',
+              'Transcript generated successfully\nYou can now read and search the content',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -358,19 +404,19 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                       _buildStatItem(
                         context,
                         '${(wordCount / 1000).toStringAsFixed(1)}K',
-                        '转录字数',
+                        'Words',
                         Icons.text_fields,
                       ),
                       _buildStatItem(
                         context,
                         _formatDuration(duration),
-                        '音频时长',
+                        'Duration',
                         Icons.schedule,
                       ),
                       _buildStatItem(
                         context,
                         _formatAccuracy(null),
-                        '准确率',
+                        'Accuracy',
                         Icons.speed,
                       ),
                     ],
@@ -382,7 +428,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
             if (completedAt != null) ...[
               const SizedBox(height: 8),
               Text(
-                '完成时间: ${_formatDateTime(completedAt)}',
+                'Completed at: ${_formatDateTime(completedAt)}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -399,7 +445,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _deleteTranscription(ref),
                     icon: const Icon(Icons.delete_outline),
-                    label: const Text('删除转录'),
+                    label: const Text('Delete'),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -417,7 +463,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _viewTranscription(ref),
                     icon: const Icon(Icons.visibility),
-                    label: const Text('查看转录'),
+                    label: const Text('View Transcript'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -449,6 +495,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Error icon
             Container(
@@ -469,7 +516,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Title
             Text(
-              '转录失败',
+              'Transcription Failed',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -492,7 +539,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               child: Column(
                 children: [
                   Text(
-                    '错误信息',
+                    'Error Message',
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -519,7 +566,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               child: ElevatedButton.icon(
                 onPressed: () => _retryTranscription(ref),
                 icon: const Icon(Icons.refresh),
-                label: const Text('重新尝试'),
+                label: const Text('Retry'),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(

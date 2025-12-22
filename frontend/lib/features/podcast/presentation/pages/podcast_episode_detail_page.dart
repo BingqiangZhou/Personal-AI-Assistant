@@ -85,7 +85,8 @@ class _PodcastEpisodeDetailPageState
   Future<void> _loadTranscriptionStatus() async {
     try {
       final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
-      await ref.read(transcriptionProvider.notifier).loadTranscription();
+      // Automatically check/start transcription if missing
+      await ref.read(transcriptionProvider.notifier).checkOrStartTranscription();
     } catch (error) {
       debugPrint('❌ Failed to load transcription status: $error');
     }
@@ -518,10 +519,16 @@ class _PodcastEpisodeDetailPageState
 
     return transcriptionState.when(
       data: (transcription) {
-        if (transcription == null || !isTranscriptionCompleted(transcription)) {
-          return _buildTranscriptEmptyState(context);
+        // If transcription is completed, show the text
+        if (transcription != null && isTranscriptionCompleted(transcription)) {
+          return TranscriptDisplayWidget(
+            episodeId: widget.episodeId,
+            transcription: transcription,
+          );
         }
-        return TranscriptDisplayWidget(
+        
+        // Otherwise (pending, processing, failed, or null), show the status widget
+        return TranscriptionStatusWidget(
           episodeId: widget.episodeId,
           transcription: transcription,
         );

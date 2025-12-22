@@ -123,7 +123,7 @@ abstract class PodcastApiService {
     @Path('episodeId') int episodeId,
   );
 
-  @POST('/podcasts/episodes/{episodeId}/transcription')
+  @POST('/podcasts/episodes/{episodeId}/transcribe')
   Future<PodcastTranscriptionResponse> startTranscription(
     @Path('episodeId') int episodeId,
     @Body() PodcastTranscriptionRequest request,

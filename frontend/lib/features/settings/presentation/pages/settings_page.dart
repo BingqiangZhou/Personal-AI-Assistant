@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../ai/models/ai_model_config_model.dart';
+import '../providers/ai_settings_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -22,6 +24,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   String _selectedTranscriptionModel = 'FunAudioLLM/SenseVoiceSmall';
   final List<String> _transcriptionModels = ['FunAudioLLM/SenseVoiceSmall', 'whisper-1', 'whisper-large-v3'];
 
+  // Add state variables for key visibility
+  bool _isTextKeyObscured = true;
+  bool _isTranscriptionKeyObscured = true;
+  bool _isTextInitialized = false;
+  bool _isTranscriptionInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Controllers are initialized with defaults, but we'll update them when data loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(activeTextModelsProvider);
+      ref.invalidate(activeTranscriptionModelsProvider);
+    });
+  }
+
   // App Settings
   bool _darkModeEnabled = false;
   int _chunkSizeMB = 10;
@@ -38,13 +56,62 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Listen to active models to populate fields once
+    ref.listen(activeTextModelsProvider, (previous, next) {
+      next.whenData((models) {
+        if (models.isNotEmpty && !_isTextInitialized) { 
+           final model = models.first;
+           _textGenerationUrlController.text = model.apiUrl;
+           if (model.apiKey != null && model.apiKey!.isNotEmpty) {
+             _textGenerationApiKeyController.text = model.apiKey!;
+           }
+           if (_textModels.contains(model.name)) {
+             setState(() {
+               _selectedTextModel = model.name;
+               _isTextInitialized = true;
+             });
+           } else {
+             _isTextInitialized = true;
+           }
+        }
+      });
+    });
+
+    ref.listen(activeTranscriptionModelsProvider, (previous, next) {
+      next.whenData((models) {
+        if (models.isNotEmpty && !_isTranscriptionInitialized) {
+            final model = models.first;
+            _transcriptionUrlController.text = model.apiUrl;
+            if (model.apiKey != null && model.apiKey!.isNotEmpty) {
+             _transcriptionApiKeyController.text = model.apiKey!;
+           }
+           if (_transcriptionModels.contains(model.name)) {
+             setState(() {
+               _selectedTranscriptionModel = model.name;
+               _isTranscriptionInitialized = true;
+             });
+           } else {
+             _isTranscriptionInitialized = true;
+           }
+        }
+      });
+    });
+
+    // Mark as initialized after first build to prevent continuous overwriting if we wanted, 
+    // but better to rely on separate loading state or just manual save. 
+    // For this simple implementation, we'll let the user edit and save.
+
+    final settingsState = ref.watch(aiSettingsControllerProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Settings'),
         actions: [
           TextButton.icon(
-            onPressed: _saveSettings,
-            icon: const Icon(Icons.save),
+            onPressed: settingsState.isLoading ? null : _saveSettings,
+            icon: settingsState.isLoading 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+                : const Icon(Icons.save),
             label: const Text('Save'),
           ),
           const SizedBox(width: 8),
@@ -72,7 +139,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   label: 'API Key',
                   hint: 'sk-...',
                   prefixIcon: Icons.key,
-                  obscureText: true,
+                  obscureText: _isTextKeyObscured,
+                  onToggleObscure: () {
+                    setState(() {
+                      _isTextKeyObscured = !_isTextKeyObscured;
+                    });
+                  },
                 ),
                 const SizedBox(height: 16),
                 _buildDropdown(
@@ -111,7 +183,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   label: 'API Key',
                   hint: 'Enter your transcription API key',
                   prefixIcon: Icons.key,
-                  obscureText: true,
+                  obscureText: _isTranscriptionKeyObscured,
+                  onToggleObscure: () {
+                    setState(() {
+                      _isTranscriptionKeyObscured = !_isTranscriptionKeyObscured;
+                    });
+                  },
                 ),
                 const SizedBox(height: 16),
                 _buildDropdown(
@@ -267,6 +344,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     required String hint,
     required IconData prefixIcon,
     bool obscureText = false,
+    VoidCallback? onToggleObscure,
   }) {
     return TextField(
       controller: controller,
@@ -276,12 +354,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         hintText: hint,
         prefixIcon: Icon(prefixIcon),
         border: const OutlineInputBorder(),
-        suffixIcon: obscureText
+        suffixIcon: onToggleObscure != null
             ? IconButton(
-                icon: const Icon(Icons.visibility),
-                onPressed: () {
-                  // Toggle visibility
-                },
+                icon: Icon(obscureText ? Icons.visibility : Icons.visibility_off),
+                onPressed: onToggleObscure,
               )
             : null,
       ),
@@ -340,19 +416,77 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     );
   }
 
-  void _saveSettings() {
-    // TODO: Implement API call to save settings
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Settings saved successfully!'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        action: SnackBarAction(
-          label: 'OK',
-          textColor: Colors.white,
-          onPressed: () {},
-        ),
-      ),
+  Future<void> _saveSettings() async {
+    // Get current loaded models to check against masked keys
+    final textModels = ref.read(activeTextModelsProvider).asData?.value ?? [];
+    final transcriptionModels = ref.read(activeTranscriptionModelsProvider).asData?.value ?? [];
+
+    // Helper to determine if key should be sent
+    String? getEffectiveApiKey(String currentInput, List<AIModelConfigModel> models, String modelName) {
+      if (currentInput.isEmpty) return null;
+      
+      // Find the model we are checking
+      // Note: modelName used here might be the ID or name depending on how we match. 
+      // The controller populates based on active models. 
+      // If the Input equals the apiKey from the model (which is masked), do NOT send it.
+      
+      try {
+        final existing = models.firstWhere((m) => m.name == modelName || m.modelId == modelName);
+        if (existing.apiKey == currentInput) {
+          return null; // Input matches masked key, don't update
+        }
+      } catch (_) {}
+      
+      return currentInput;
+    }
+
+    final textApiKey = getEffectiveApiKey(
+      _textGenerationApiKeyController.text, 
+      textModels, 
+      _selectedTextModel
     );
+
+    // Save Text Generation Settings
+    await ref.read(aiSettingsControllerProvider.notifier).saveSettings(
+      type: 'text_generation',
+      apiUrl: _textGenerationUrlController.text,
+      apiKey: textApiKey,
+      modelId: _selectedTextModel, 
+      name: _selectedTextModel,
+      provider: 'openai', 
+    );
+
+    final transcriptionApiKey = getEffectiveApiKey(
+      _transcriptionApiKeyController.text,
+      transcriptionModels,
+      _selectedTranscriptionModel
+    );
+
+    // Save Transcription Settings
+    await ref.read(aiSettingsControllerProvider.notifier).saveSettings(
+      type: 'transcription',
+      apiUrl: _transcriptionUrlController.text,
+      apiKey: transcriptionApiKey,
+      modelId: _selectedTranscriptionModel, 
+      name: _selectedTranscriptionModel,
+      provider: _selectedTranscriptionModel.contains('SenseVoice') ? 'siliconflow' : 'openai',
+    );
+
+    if (mounted) {
+       final state = ref.read(aiSettingsControllerProvider);
+       if (state.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${state.error}'), backgroundColor: Colors.red),
+          );
+       } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Settings saved successfully!'),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+            ),
+          );
+       }
+    }
   }
 
   void _showApiDocsDialog() {

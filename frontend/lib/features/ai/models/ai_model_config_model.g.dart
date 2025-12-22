@@ -10,71 +10,72 @@ AIModelConfigModel _$AIModelConfigModelFromJson(Map<String, dynamic> json) =>
     AIModelConfigModel(
       id: (json['id'] as num).toInt(),
       name: json['name'] as String,
-      displayName: json['displayName'] as String,
+      displayName: json['display_name'] as String,
       description: json['description'] as String?,
-      modelType: $enumDecode(_$AIModelTypeEnumMap, json['modelType']),
-      apiUrl: json['apiUrl'] as String,
-      apiKey: json['apiKey'] as String?,
-      apiKeyEncrypted: json['apiKeyEncrypted'] as bool,
-      modelId: json['modelId'] as String,
+      modelType: $enumDecode(_$AIModelTypeEnumMap, json['model_type']),
+      apiUrl: json['api_url'] as String,
+      apiKey: json['api_key'] as String?,
+      apiKeyEncrypted: json['api_key_encrypted'] as bool,
+      modelId: json['model_id'] as String,
       provider: json['provider'] as String,
-      maxTokens: (json['maxTokens'] as num?)?.toInt(),
+      maxTokens: (json['max_tokens'] as num?)?.toInt(),
       temperature: json['temperature'] as String?,
-      timeoutSeconds: (json['timeoutSeconds'] as num?)?.toInt() ?? 300,
-      maxRetries: (json['maxRetries'] as num?)?.toInt() ?? 3,
+      timeoutSeconds: (json['timeout_seconds'] as num?)?.toInt() ?? 300,
+      maxRetries: (json['max_retries'] as num?)?.toInt() ?? 3,
       maxConcurrentRequests:
-          (json['maxConcurrentRequests'] as num?)?.toInt() ?? 1,
-      rateLimitPerMinute: (json['rateLimitPerMinute'] as num?)?.toInt() ?? 60,
-      costPerInputToken: json['costPerInputToken'] as String?,
-      costPerOutputToken: json['costPerOutputToken'] as String?,
-      extraConfig: json['extraConfig'] as Map<String, dynamic>?,
-      isActive: json['isActive'] as bool? ?? true,
-      isDefault: json['isDefault'] as bool? ?? false,
-      isSystem: json['isSystem'] as bool? ?? false,
-      usageCount: (json['usageCount'] as num?)?.toInt() ?? 0,
-      successCount: (json['successCount'] as num?)?.toInt() ?? 0,
-      errorCount: (json['errorCount'] as num?)?.toInt() ?? 0,
-      totalTokensUsed: (json['totalTokensUsed'] as num?)?.toInt() ?? 0,
-      successRate: (json['successRate'] as num?)?.toDouble() ?? 0.0,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-      lastUsedAt: json['lastUsedAt'] == null
+          (json['max_concurrent_requests'] as num?)?.toInt() ?? 1,
+      rateLimitPerMinute:
+          (json['rate_limit_per_minute'] as num?)?.toInt() ?? 60,
+      costPerInputToken: json['cost_per_input_token'] as String?,
+      costPerOutputToken: json['cost_per_output_token'] as String?,
+      extraConfig: json['extra_config'] as Map<String, dynamic>?,
+      isActive: json['is_active'] as bool? ?? true,
+      isDefault: json['is_default'] as bool? ?? false,
+      isSystem: json['is_system'] as bool? ?? false,
+      usageCount: (json['usage_count'] as num?)?.toInt() ?? 0,
+      successCount: (json['success_count'] as num?)?.toInt() ?? 0,
+      errorCount: (json['error_count'] as num?)?.toInt() ?? 0,
+      totalTokensUsed: (json['total_tokens_used'] as num?)?.toInt() ?? 0,
+      successRate: (json['success_rate'] as num?)?.toDouble() ?? 0.0,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+      lastUsedAt: json['last_used_at'] == null
           ? null
-          : DateTime.parse(json['lastUsedAt'] as String),
+          : DateTime.parse(json['last_used_at'] as String),
     );
 
 Map<String, dynamic> _$AIModelConfigModelToJson(AIModelConfigModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
-      'displayName': instance.displayName,
+      'display_name': instance.displayName,
       'description': instance.description,
-      'modelType': _$AIModelTypeEnumMap[instance.modelType]!,
-      'apiUrl': instance.apiUrl,
-      'apiKey': instance.apiKey,
-      'apiKeyEncrypted': instance.apiKeyEncrypted,
-      'modelId': instance.modelId,
+      'model_type': _$AIModelTypeEnumMap[instance.modelType]!,
+      'api_url': instance.apiUrl,
+      'api_key': instance.apiKey,
+      'api_key_encrypted': instance.apiKeyEncrypted,
+      'model_id': instance.modelId,
       'provider': instance.provider,
-      'maxTokens': instance.maxTokens,
+      'max_tokens': instance.maxTokens,
       'temperature': instance.temperature,
-      'timeoutSeconds': instance.timeoutSeconds,
-      'maxRetries': instance.maxRetries,
-      'maxConcurrentRequests': instance.maxConcurrentRequests,
-      'rateLimitPerMinute': instance.rateLimitPerMinute,
-      'costPerInputToken': instance.costPerInputToken,
-      'costPerOutputToken': instance.costPerOutputToken,
-      'extraConfig': instance.extraConfig,
-      'isActive': instance.isActive,
-      'isDefault': instance.isDefault,
-      'isSystem': instance.isSystem,
-      'usageCount': instance.usageCount,
-      'successCount': instance.successCount,
-      'errorCount': instance.errorCount,
-      'totalTokensUsed': instance.totalTokensUsed,
-      'successRate': instance.successRate,
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
-      'lastUsedAt': instance.lastUsedAt?.toIso8601String(),
+      'timeout_seconds': instance.timeoutSeconds,
+      'max_retries': instance.maxRetries,
+      'max_concurrent_requests': instance.maxConcurrentRequests,
+      'rate_limit_per_minute': instance.rateLimitPerMinute,
+      'cost_per_input_token': instance.costPerInputToken,
+      'cost_per_output_token': instance.costPerOutputToken,
+      'extra_config': instance.extraConfig,
+      'is_active': instance.isActive,
+      'is_default': instance.isDefault,
+      'is_system': instance.isSystem,
+      'usage_count': instance.usageCount,
+      'success_count': instance.successCount,
+      'error_count': instance.errorCount,
+      'total_tokens_used': instance.totalTokensUsed,
+      'success_rate': instance.successRate,
+      'created_at': instance.createdAt.toIso8601String(),
+      'updated_at': instance.updatedAt.toIso8601String(),
+      'last_used_at': instance.lastUsedAt?.toIso8601String(),
     };
 
 const _$AIModelTypeEnumMap = {
@@ -106,94 +107,94 @@ Map<String, dynamic> _$AIModelConfigListResponseToJson(
 
 ModelUsageStats _$ModelUsageStatsFromJson(Map<String, dynamic> json) =>
     ModelUsageStats(
-      modelId: (json['modelId'] as num).toInt(),
-      modelName: json['modelName'] as String,
-      modelType: json['modelType'] as String,
-      usageCount: (json['usageCount'] as num).toInt(),
-      successCount: (json['successCount'] as num).toInt(),
-      errorCount: (json['errorCount'] as num).toInt(),
-      successRate: (json['successRate'] as num).toDouble(),
-      totalTokensUsed: (json['totalTokensUsed'] as num).toInt(),
-      lastUsedAt: json['lastUsedAt'] == null
+      modelId: (json['model_id'] as num).toInt(),
+      modelName: json['model_name'] as String,
+      modelType: json['model_type'] as String,
+      usageCount: (json['usage_count'] as num).toInt(),
+      successCount: (json['success_count'] as num).toInt(),
+      errorCount: (json['error_count'] as num).toInt(),
+      successRate: (json['success_rate'] as num).toDouble(),
+      totalTokensUsed: (json['total_tokens_used'] as num).toInt(),
+      lastUsedAt: json['last_used_at'] == null
           ? null
-          : DateTime.parse(json['lastUsedAt'] as String),
-      totalCost: (json['totalCost'] as num?)?.toDouble(),
+          : DateTime.parse(json['last_used_at'] as String),
+      totalCost: (json['total_cost'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$ModelUsageStatsToJson(ModelUsageStats instance) =>
     <String, dynamic>{
-      'modelId': instance.modelId,
-      'modelName': instance.modelName,
-      'modelType': instance.modelType,
-      'usageCount': instance.usageCount,
-      'successCount': instance.successCount,
-      'errorCount': instance.errorCount,
-      'successRate': instance.successRate,
-      'totalTokensUsed': instance.totalTokensUsed,
-      'lastUsedAt': instance.lastUsedAt?.toIso8601String(),
-      'totalCost': instance.totalCost,
+      'model_id': instance.modelId,
+      'model_name': instance.modelName,
+      'model_type': instance.modelType,
+      'usage_count': instance.usageCount,
+      'success_count': instance.successCount,
+      'error_count': instance.errorCount,
+      'success_rate': instance.successRate,
+      'total_tokens_used': instance.totalTokensUsed,
+      'last_used_at': instance.lastUsedAt?.toIso8601String(),
+      'total_cost': instance.totalCost,
     };
 
 ModelTestRequest _$ModelTestRequestFromJson(Map<String, dynamic> json) =>
     ModelTestRequest(
-      modelId: (json['modelId'] as num).toInt(),
-      testData: json['testData'] as Map<String, dynamic>? ?? const {},
+      modelId: (json['model_id'] as num).toInt(),
+      testData: json['test_data'] as Map<String, dynamic>? ?? const {},
     );
 
 Map<String, dynamic> _$ModelTestRequestToJson(ModelTestRequest instance) =>
     <String, dynamic>{
-      'modelId': instance.modelId,
-      'testData': instance.testData,
+      'model_id': instance.modelId,
+      'test_data': instance.testData,
     };
 
 ModelTestResponse _$ModelTestResponseFromJson(Map<String, dynamic> json) =>
     ModelTestResponse(
       success: json['success'] as bool,
-      responseTimeMs: (json['responseTimeMs'] as num).toDouble(),
+      responseTimeMs: (json['response_time_ms'] as num).toDouble(),
       result: json['result'] as String?,
-      errorMessage: json['errorMessage'] as String?,
+      errorMessage: json['error_message'] as String?,
     );
 
 Map<String, dynamic> _$ModelTestResponseToJson(ModelTestResponse instance) =>
     <String, dynamic>{
       'success': instance.success,
-      'responseTimeMs': instance.responseTimeMs,
+      'response_time_ms': instance.responseTimeMs,
       'result': instance.result,
-      'errorMessage': instance.errorMessage,
+      'error_message': instance.errorMessage,
     };
 
 APIKeyValidationRequest _$APIKeyValidationRequestFromJson(
   Map<String, dynamic> json,
 ) => APIKeyValidationRequest(
-  apiUrl: json['apiUrl'] as String,
-  apiKey: json['apiKey'] as String,
-  modelId: json['modelId'] as String?,
-  modelType: $enumDecode(_$AIModelTypeEnumMap, json['modelType']),
+  apiUrl: json['api_url'] as String,
+  apiKey: json['api_key'] as String,
+  modelId: json['model_id'] as String?,
+  modelType: $enumDecode(_$AIModelTypeEnumMap, json['model_type']),
 );
 
 Map<String, dynamic> _$APIKeyValidationRequestToJson(
   APIKeyValidationRequest instance,
 ) => <String, dynamic>{
-  'apiUrl': instance.apiUrl,
-  'apiKey': instance.apiKey,
-  'modelId': instance.modelId,
-  'modelType': _$AIModelTypeEnumMap[instance.modelType]!,
+  'api_url': instance.apiUrl,
+  'api_key': instance.apiKey,
+  'model_id': instance.modelId,
+  'model_type': _$AIModelTypeEnumMap[instance.modelType]!,
 };
 
 APIKeyValidationResponse _$APIKeyValidationResponseFromJson(
   Map<String, dynamic> json,
 ) => APIKeyValidationResponse(
   valid: json['valid'] as bool,
-  errorMessage: json['errorMessage'] as String?,
-  testResult: json['testResult'] as String?,
-  responseTimeMs: (json['responseTimeMs'] as num).toDouble(),
+  errorMessage: json['error_message'] as String?,
+  testResult: json['test_result'] as String?,
+  responseTimeMs: (json['response_time_ms'] as num).toDouble(),
 );
 
 Map<String, dynamic> _$APIKeyValidationResponseToJson(
   APIKeyValidationResponse instance,
 ) => <String, dynamic>{
   'valid': instance.valid,
-  'errorMessage': instance.errorMessage,
-  'testResult': instance.testResult,
-  'responseTimeMs': instance.responseTimeMs,
+  'error_message': instance.errorMessage,
+  'test_result': instance.testResult,
+  'response_time_ms': instance.responseTimeMs,
 };

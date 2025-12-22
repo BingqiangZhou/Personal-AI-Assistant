@@ -666,6 +666,7 @@ async def start_transcription(
             "summary_word_count": task.summary_word_count,
             "summary_processing_time": task.summary_processing_time,
             "summary_error_message": task.summary_error_message,
+            "debug_message": (task.chunk_info or {}).get("debug_message"),
             "episode": {
                 "id": episode.id,
                 "title": episode.title,
@@ -758,7 +759,8 @@ async def get_transcription(
                 "title": episode.title,
                 "audio_url": episode.audio_url,
                 "audio_duration": episode.audio_duration
-            }
+            },
+            "debug_message": (task.chunk_info or {}).get("debug_message")
         }
 
         # 根据参数决定是否包含转录内容

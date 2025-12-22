@@ -11,7 +11,7 @@ enum AIModelType {
 }
 
 /// AI模型配置
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class AIModelConfigModel {
   final int id;
   final String name;
@@ -248,7 +248,7 @@ class AIModelConfigModel {
 }
 
 /// AI模型配置列表响应
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class AIModelConfigListResponse {
   final List<AIModelConfigModel> models;
   final int total;
@@ -271,7 +271,7 @@ class AIModelConfigListResponse {
 }
 
 /// 模型使用统计
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class ModelUsageStats {
   final int modelId;
   final String modelName;
@@ -304,7 +304,7 @@ class ModelUsageStats {
 }
 
 /// 模型测试请求
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class ModelTestRequest {
   final int modelId;
   final Map<String, dynamic> testData;
@@ -321,7 +321,7 @@ class ModelTestRequest {
 }
 
 /// 模型测试响应
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class ModelTestResponse {
   final bool success;
   final double responseTimeMs;
@@ -342,7 +342,7 @@ class ModelTestResponse {
 }
 
 /// API密钥验证请求
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class APIKeyValidationRequest {
   final String apiUrl;
   final String apiKey;
@@ -363,7 +363,7 @@ class APIKeyValidationRequest {
 }
 
 /// API密钥验证响应
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.snake)
 class APIKeyValidationResponse {
   final bool valid;
   final String? errorMessage;

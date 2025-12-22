@@ -528,7 +528,7 @@ class _PodcastApiService implements PodcastApiService {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/podcasts/episodes/${episodeId}/transcription',
+            '/podcasts/episodes/${episodeId}/transcribe',
             queryParameters: queryParameters,
             data: _data,
           )

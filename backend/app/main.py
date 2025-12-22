@@ -12,6 +12,19 @@ from app.core.exceptions import setup_exception_handlers
 async def lifespan(app: FastAPI):
     # Startup
     await init_db()
+    
+    # Reset stale transcription tasks
+    try:
+        from app.core.database import async_session_factory
+        from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+        
+        async with async_session_factory() as session:
+            service = DatabaseBackedTranscriptionService(session)
+            await service.reset_stale_tasks()
+    except Exception as e:
+        import logging
+        logging.getLogger("app.main").error(f"Failed to reset stale tasks on startup: {e}")
+
     yield
     # Shutdown
     pass
