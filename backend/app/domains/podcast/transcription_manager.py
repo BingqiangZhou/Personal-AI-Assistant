@@ -5,7 +5,7 @@
 
 import logging
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -20,6 +20,7 @@ from app.domains.podcast.transcription import (
 )
 from app.core.exceptions import ValidationError
 from app.core.database import async_session_factory
+from app.domains.podcast.transcription_state import get_transcription_state_manager
 
 logger = logging.getLogger(__name__)
 
@@ -57,25 +58,35 @@ class TranscriptionModelManager:
         # 解密API密钥
         api_key = await self._get_api_key(model_config)
 
+        # 获取API URL - 如果模型配置的URL为空，使用默认值
+        api_url = model_config.api_url
+        if not api_url or api_url.strip() == "":
+            from app.core.config import settings
+            default_url = "https://api.siliconflow.cn/v1/audio/transcriptions"
+            api_url = getattr(settings, 'TRANSCRIPTION_API_URL', default_url)
+            logger.warning(f"⚠️ [MODEL] Model {model_config.name} has no api_url configured, using default: {api_url}")
+        else:
+            logger.info(f"🔗 [MODEL] Using api_url from model config: {api_url}")
+
         # 根据提供商创建对应的转录器
         if model_config.provider == "siliconflow":
             return SiliconFlowTranscriber(
                 api_key=api_key,
-                api_url=model_config.api_url,
+                api_url=api_url,
                 max_concurrent=model_config.max_concurrent_requests
             )
         elif model_config.provider == "openai":
             # OpenAI的转录服务API格式类似，可以使用相同的转录器
             return SiliconFlowTranscriber(
                 api_key=api_key,
-                api_url=model_config.api_url,
+                api_url=api_url,
                 max_concurrent=model_config.max_concurrent_requests
             )
         else:
             # 自定义提供商，尝试使用通用转录器
             return SiliconFlowTranscriber(
                 api_key=api_key,
-                api_url=model_config.api_url,
+                api_url=api_url,
                 max_concurrent=model_config.max_concurrent_requests
             )
 
@@ -109,18 +120,38 @@ class TranscriptionModelManager:
         ]
 
     async def _get_api_key(self, model_config) -> str:
-        """获取API密钥"""
+        """获取API密钥（支持解密）"""
+        api_key = ""
+
         # 对于系统预设模型，从环境变量获取
         if model_config.is_system:
             from app.core.config import settings
             if model_config.provider == "openai":
-                return getattr(settings, 'OPENAI_API_KEY', '')
+                api_key = getattr(settings, 'OPENAI_API_KEY', '')
             elif model_config.provider == "siliconflow":
-                return getattr(settings, 'TRANSCRIPTION_API_KEY', '')
+                api_key = getattr(settings, 'TRANSCRIPTION_API_KEY', '')
+            logger.info(f"🔑 [KEY] Using system API key for {model_config.provider}, key (first 10 chars): {api_key[:10]}...")
+            return api_key
 
-        # 对于用户自定义的模型，这里应该从安全存储解密
-        # 暂时直接返回（实际应该解密）
-        return model_config.api_key if model_config.api_key else ""
+        # 对于用户自定义的模型，检查是否需要解密
+        if model_config.api_key_encrypted and model_config.api_key:
+            from app.core.security import decrypt_data
+            try:
+                api_key = decrypt_data(model_config.api_key)
+                logger.info(f"🔑 [KEY] Decrypted API key for model {model_config.name} (first 10 chars): {api_key[:10]}..., (last 4 chars): ...{api_key[-4:]}")
+
+                # Check if key has the expected SiliconFlow format (starts with sk-)
+                if model_config.provider == "siliconflow" and not api_key.startswith("sk-"):
+                    logger.warning(f"⚠️ [KEY] API key for model {model_config.name} does not start with 'sk-' prefix. SiliconFlow keys typically start with 'sk-'")
+
+                return api_key
+            except Exception as e:
+                logger.error(f"Failed to decrypt API key for model {model_config.name}: {e}")
+                raise ValidationError(f"Failed to decrypt API key for model {model_config.name}")
+
+        api_key = model_config.api_key if model_config.api_key else ""
+        logger.info(f"🔑 [KEY] Using API key from model config (first 10 chars): {api_key[:10]}...")
+        return api_key
 
 
 class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
@@ -137,78 +168,123 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
         force: bool = False
     ):
         """启动转录任务，支持指定模型和强制模式"""
-        # 获取模型信息
-        model_info = await self.model_manager.get_model_info(model_name)
+        # 获取模型信息（验证模型是否存在）
+        if model_name:
+            await self.model_manager.get_active_transcription_model(model_name)
 
-        # 调用父类方法，传递模型名称和force参数
-        return await super().start_transcription(episode_id, model_name, force)
+        # 检查是否有失败的任务可以重试（增量恢复）
+        from app.domains.podcast.models import TranscriptionTask, TranscriptionStatus
+        from sqlalchemy import select
 
-    async def _execute_transcription(self, task_id: int, config_db_id: Optional[int] = None):
-        """执行转录任务（后台运行），使用数据库中的模型配置"""
-        logger.info(f"manager._execute_transcription: Starting background transcription execution for task {task_id}")
-        # Add a diagnostic log to see if we're hitting the session factory
-        logger.info(f"manager._execute_transcription: Attempting to create session for task {task_id}")
-        async with async_session_factory() as session:
-            try:
-                logger.info(f"manager._execute_transcription: Retrieving task {task_id} from database")
-                # 获取任务信息
-                from app.domains.podcast.models import TranscriptionTask
-                stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
-                result = await session.execute(stmt)
-                task = result.scalar_one_or_none()
+        stmt = select(TranscriptionTask).where(
+            TranscriptionTask.episode_id == episode_id
+        ).order_by(TranscriptionTask.created_at.desc())
 
-                if not task:
-                    logger.error(f"manager._execute_transcription: Transcription task {task_id} not found")
-                    return
+        result = await self.db.execute(stmt)
+        existing_task = result.scalar_one_or_none()
 
-                logger.info(f"manager._execute_transcription: Task {task_id} found, checking extra_config")
-                # 从任务的extra_config中获取指定的模型名称（如果有）
-                model_name = None
-                if task.extra_config and isinstance(task.extra_config, dict):
-                    model_name = task.extra_config.get('model_name')
+        # 如果有 PENDING 状态的任务，重新发送到 Celery
+        if existing_task and existing_task.status == 'pending':  # Use string comparison
+            if not force:
+                # Check if this task already owns the lock before re-dispatching
+                state_manager = await get_transcription_state_manager()
+                locked_task_id = await state_manager.is_episode_locked(episode_id)
 
-                logger.info(f"manager._execute_transcription: Creating transcriber for model: {model_name}")
-                # 创建转录器
-                transcriber = await self.model_manager.create_transcriber(model_name)
+                if locked_task_id == existing_task.id:
+                    # Task already owns lock and is being processed, don't re-dispatch
+                    logger.info(f"🔄 [TRANSCRIPTION] PENDING task {existing_task.id} already owns lock, skipping re-dispatch")
+                    return existing_task
+                elif locked_task_id is not None:
+                    # Different task owns the lock
+                    logger.warning(f"⚠️ [TRANSCRIPTION] Episode {episode_id} locked by different task {locked_task_id}, cannot re-dispatch task {existing_task.id}")
+                    return existing_task
 
-                logger.info("manager._execute_transcription: Transcriber created successfully, updating usage stats")
-                # 更新模型使用统计
-                model_config = await self.model_manager.get_active_transcription_model(model_name)
-                logger.info(f"manager._execute_transcription: Using model config: {model_config.model_id} (Provider: {model_config.provider})")
-                
-                await self.model_manager.ai_model_repo.increment_usage(
-                    model_config.id,
-                    success=True
-                )
+                # No lock exists, safe to dispatch
+                logger.info(f"🔄 [TRANSCRIPTION] Re-sending existing PENDING task {existing_task.id} to Celery")
+                # 提交到 Celery 队列
+                from app.domains.podcast.tasks import process_audio_transcription
 
-                # 继续执行原有的转录逻辑
-                # Note: The parent's _execute_transcription will use its own session
-                # We need to call it directly since it already handles session management
-                logger.info(f"manager._execute_transcription: Calling parent _execute_transcription for task {task_id}")
-                await super()._execute_transcription(task_id, config_db_id)
-                logger.info(f"manager._execute_transcription: Parent _execute_transcription completed for task {task_id}")
+                # 获取模型配置 ID
+                ai_repo = AIModelConfigRepository(self.db)
+                model_config = None
+                if model_name:
+                    model_config = await ai_repo.get_by_name(model_name)
+                if not model_config:
+                    model_config = await ai_repo.get_default_model(ModelType.TRANSCRIPTION)
+                config_db_id = model_config.id if model_config else None
 
-            except Exception as e:
-                import traceback
-                error_trace = traceback.format_exc()
-                logger.error(f"manager._execute_transcription: Transcription failed for task {task_id}: {str(e)}\nTraceback: {error_trace}")
+                process_audio_transcription.delay(existing_task.id, config_db_id)
+                logger.info(f"🚀 [TRANSCRIPTION] Re-dispatched PENDING task {existing_task.id} to Celery")
 
-                # 更新失败统计
-                try:
-                    model_name = None
-                    if 'task' in locals() and task.extra_config and isinstance(task.extra_config, dict):
-                        model_name = task.extra_config.get('model_name')
+                return existing_task
 
-                    model_config = await self.model_manager.get_active_transcription_model(model_name)
-                    await self.model_manager.ai_model_repo.increment_usage(
-                        model_config.id,
-                        success=False
-                    )
-                except:
-                    pass  # 忽略统计更新错误
+        # 如果有失败的任务且不是 force 模式，尝试重用它
+        if existing_task and existing_task.status in ['failed', 'cancelled']:  # Use string comparison
+            if not force:
+                # 检查临时文件是否存在
+                import os
+                temp_episode_dir = os.path.join(self.temp_dir, f"episode_{episode_id}")
 
-                # 调用父类的错误处理
-                await super()._execute_transcription(task_id, config_db_id)
+                # 检查是否有可用的临时文件
+                has_temp_files = False
+                if os.path.exists(temp_episode_dir):
+                    # 检查是否有 downloaded 或 converted 文件
+                    for root, dirs, files in os.walk(temp_episode_dir):
+                        if files:
+                            has_temp_files = True
+                            break
+
+                if has_temp_files:
+                    # Check if episode is locked before re-dispatching
+                    state_manager = await get_transcription_state_manager()
+                    locked_task_id = await state_manager.is_episode_locked(episode_id)
+
+                    if locked_task_id is not None:
+                        # Episode is locked by another task
+                        logger.warning(f"⚠️ [TRANSCRIPTION] Episode {episode_id} locked by task {locked_task_id}, cannot re-dispatch failed task {existing_task.id}")
+                        return existing_task
+
+                    # 重用现有任务，重置状态为 PENDING
+                    logger.info(f"🔄 [TRANSCRIPTION] Reusing existing failed task {existing_task.id} with temp files for incremental recovery")
+                    existing_task.status = 'pending'  # Use string value
+                    existing_task.error_message = None
+                    existing_task.started_at = None
+                    existing_task.completed_at = None
+                    existing_task.progress_percentage = 0
+                    existing_task.current_step = 'not_started'
+                    await self.db.commit()
+                    await self.db.refresh(existing_task)
+
+                    # 提交到 Celery 队列
+                    from app.domains.podcast.tasks import process_audio_transcription
+
+                    # 获取模型配置 ID
+                    ai_repo = AIModelConfigRepository(self.db)
+                    model_config = None
+                    if model_name:
+                        model_config = await ai_repo.get_by_name(model_name)
+                    if not model_config:
+                        model_config = await ai_repo.get_default_model(ModelType.TRANSCRIPTION)
+                    config_db_id = model_config.id if model_config else None
+
+                    process_audio_transcription.delay(existing_task.id, config_db_id)
+                    logger.info(f"🚀 [TRANSCRIPTION] Re-dispatched existing task {existing_task.id} for incremental recovery")
+
+                    return existing_task
+
+        # 没有可重用的任务，创建新任务
+        task, config_db_id = await super().create_transcription_task_record(episode_id, model_name, force)
+
+        # 提交到 Celery 队列
+        from app.domains.podcast.tasks import process_audio_transcription
+
+        # 使用 delay() 异步发送任务
+        # task.id 是数据库主键，config_db_id 是相关模型配置ID
+        process_audio_transcription.delay(task.id, config_db_id)
+
+        logger.info(f"🚀 [TRANSCRIPTION] Dispatched Celery task for transcription task {task.id} (config_id={config_db_id})")
+
+        return task
 
     async def get_transcription_models(self):
         """获取可用的转录模型列表"""
@@ -218,35 +294,144 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
         """
         重置所有处于中间状态的任务为失败
         用于服务器重启后清理僵尸任务
+
+        注意：只重置已实际开始执行的任务（started_at 不为空）
+        未开始执行的 PENDING 任务保持原状态，可以被重新调度
         """
         from app.domains.podcast.models import TranscriptionTask, TranscriptionStatus
-        from sqlalchemy import update
-        
-        stale_statuses = [
-            TranscriptionStatus.PENDING,
-            TranscriptionStatus.DOWNLOADING,
-            TranscriptionStatus.CONVERTING,
-            TranscriptionStatus.SPLITTING,
-            TranscriptionStatus.TRANSCRIBING,
-            TranscriptionStatus.MERGING
-        ]
-        
+        from sqlalchemy import update, and_
+
+        # 任务状态阈值：只重置超过这个时间的任务（5分钟）
+        # 避免重置刚刚创建但还没执行的任务
+        stale_threshold = datetime.utcnow() - timedelta(minutes=5)
+
+        # 只有实际开始执行的任务状态才应该被重置
+        # PENDING 状态如果 started_at 为空，说明任务还没开始，不应该被重置
+        # 在新模型中，所有进行中的任务都是 in_progress 状态，current_step 记录具体步骤
+        in_progress_statuses = ['in_progress']  # Use string values
+
         try:
+            # 重置已开始执行但超时的任务
             stmt = (
                 update(TranscriptionTask)
-                .where(TranscriptionTask.status.in_(stale_statuses))
+                .where(
+                    and_(
+                        TranscriptionTask.status.in_(in_progress_statuses),
+                        TranscriptionTask.started_at.isnot(None),
+                        TranscriptionTask.updated_at < stale_threshold
+                    )
+                )
                 .values(
-                    status=TranscriptionStatus.FAILED,
+                    status='failed',  # Use string value
                     error_message="Task interrupted by server restart",
                     updated_at=datetime.utcnow(),
                     completed_at=datetime.utcnow()
                 )
             )
-            
+
             result = await self.db.execute(stmt)
             await self.db.commit()
-            
+
             if result.rowcount > 0:
-                logger.warning(f"Reset {result.rowcount} stale transcription tasks to FAILED")
+                logger.warning(f"Reset {result.rowcount} stale transcription tasks to FAILED (in-progress tasks that timed out)")
+
+            # 对于 PENDING 状态的任务，如果创建时间很久了但从未开始执行，也标记为失败
+            # 这些任务可能是由于某些原因从未被调度执行
+            pending_stale_threshold = datetime.utcnow() - timedelta(hours=1)  # 1小时
+            stmt2 = (
+                update(TranscriptionTask)
+                .where(
+                    and_(
+                        TranscriptionTask.status == 'pending',  # Use string value
+                        TranscriptionTask.started_at.is_(None),  # 从未开始
+                        TranscriptionTask.created_at < pending_stale_threshold  # 创建超过1小时
+                    )
+                )
+                .values(
+                    status='failed',  # Use string value
+                    error_message="Task was never scheduled for execution",
+                    updated_at=datetime.utcnow(),
+                    completed_at=datetime.utcnow()
+                )
+            )
+
+            result2 = await self.db.execute(stmt2)
+            await self.db.commit()
+
+            if result2.rowcount > 0:
+                logger.warning(f"Reset {result2.rowcount} stale PENDING tasks to FAILED (never started)")
+
         except Exception as e:
             logger.error(f"Failed to reset stale tasks: {str(e)}")
+
+    async def cleanup_old_temp_files(self, days: int = 7):
+        """
+        清理旧的临时文件
+        清理超过指定天数的失败或已取消任务的临时文件
+
+        Args:
+            days: 保留天数，默认7天
+        """
+        from app.domains.podcast.models import TranscriptionTask, TranscriptionStatus
+        from sqlalchemy import and_
+        import os
+        import shutil
+        from app.core.config import settings
+
+        temp_dir = getattr(settings, 'TRANSCRIPTION_TEMP_DIR', './temp/transcription')
+        temp_dir_abs = os.path.abspath(temp_dir)
+
+        try:
+            if not os.path.exists(temp_dir_abs):
+                logger.info(f"🧹 [CLEANUP] Temp directory does not exist: {temp_dir_abs}")
+                return {"cleaned": 0, "freed_bytes": 0}
+
+            # 获取需要清理的episode_id列表
+            # 条件：失败/已取消的任务，且超过指定天数
+            stale_threshold = datetime.utcnow() - timedelta(days=days)
+            stmt = select(TranscriptionTask.episode_id).where(
+                and_(
+                    TranscriptionTask.status.in_(['failed', 'cancelled']),  # Use string values
+                    TranscriptionTask.completed_at < stale_threshold
+                )
+            ).distinct()
+
+            result = await self.db.execute(stmt)
+            episode_ids_to_cleanup = [row[0] for row in result.all()]
+
+            cleaned_count = 0
+            freed_bytes = 0
+
+            for episode_id in episode_ids_to_cleanup:
+                temp_episode_dir = os.path.join(temp_dir_abs, f"episode_{episode_id}")
+
+                if os.path.exists(temp_episode_dir):
+                    try:
+                        # 计算目录大小
+                        dir_size = sum(
+                            os.path.getsize(os.path.join(dirpath, filename))
+                            for dirpath, _, filenames in os.walk(temp_episode_dir)
+                            for filename in filenames
+                            if os.path.isfile(os.path.join(dirpath, filename))
+                        )
+
+                        # 删除目录
+                        shutil.rmtree(temp_episode_dir)
+                        cleaned_count += 1
+                        freed_bytes += dir_size
+                        logger.info(f"🧹 [CLEANUP] Removed old temp directory for episode {episode_id}: {temp_episode_dir} ({dir_size/1024/1024:.2f} MB)")
+
+                    except Exception as e:
+                        logger.error(f"⚠️ [CLEANUP] Failed to remove temp directory for episode {episode_id}: {e}")
+
+            logger.info(f"🧹 [CLEANUP] Summary: Cleaned {cleaned_count} old temp directories, freed {freed_bytes/1024/1024:.2f} MB")
+
+            return {
+                "cleaned": cleaned_count,
+                "freed_bytes": freed_bytes,
+                "freed_mb": round(freed_bytes / 1024 / 1024, 2)
+            }
+
+        except Exception as e:
+            logger.error(f"❌ [CLEANUP] Failed to cleanup old temp files: {str(e)}")
+            raise

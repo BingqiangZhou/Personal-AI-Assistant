@@ -50,6 +50,9 @@ services:
       # 数据库配置 - 覆盖.env中的localhost为Docker服务名
       - DATABASE_URL=postgresql+asyncpg://admin:MySecurePass2024!@postgres:5432/personal_ai
       - REDIS_URL=redis://redis:6379
+      # 使用绝对路径确保在Docker环境中路径一致
+      - TRANSCRIPTION_TEMP_DIR=/app/temp/transcription
+      - TRANSCRIPTION_STORAGE_DIR=/app/storage/podcasts
 
     volumes:
       - ../backend:/app
@@ -71,24 +74,31 @@ services:
              uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --log-level info"
 
   # 可选: Celery Worker - 如果需要后台任务才启用
-  # celery_worker:
-  #   build:
-  #     context: ../backend
-  #     dockerfile: Dockerfile
-  #   container_name: podcast_celery_worker
-  #   env_file:
-  #     - ../backend/.env
-  #   volumes:
-  #     - ../backend:/app
-  #     - backend_uploads:/app/uploads
-  #     - ../backend/storage/podcasts:/app/storage/podcasts
-  #     - ../backend/temp/transcription:/app/temp/transcription
-  #   depends_on:
-  #     - postgres
-  #     - redis
-  #   networks:
-  #     - podcast_network
-  #   command: celery -A app.integration.celery_app worker --loglevel=info --concurrency=2
+  celery_worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: podcast_celery_worker
+    env_file:
+      - ../backend/.env
+    environment:
+      # 使用绝对路径确保在Docker环境中路径一致（与backend相同）
+      - TRANSCRIPTION_TEMP_DIR=/app/temp/transcription
+      - TRANSCRIPTION_STORAGE_DIR=/app/storage/podcasts
+    volumes:
+      - ../backend:/app
+      - backend_uploads:/app/uploads
+      - ../backend/storage/podcasts:/app/storage/podcasts
+      - ../backend/temp/transcription:/app/temp/transcription
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - podcast_network
+    restart: unless-stopped
+    command: celery -A app.domains.podcast.tasks.celery_app worker --loglevel=info --concurrency=2 -Q celery,podcast,ai,transcription,cleanup,recommendation
 
 volumes:
   postgres_data:

@@ -135,18 +135,25 @@ class PodcastPlaybackState(Base):
         return f"<PlaybackState(user={self.user_id}, ep={self.episode_id}, pos={self.current_position}s)>"
 
 
-# 转录任务枚举
+# 转录任务状态枚举（简化版）
 class TranscriptionStatus(str, enum.Enum):
-    """转录任务状态枚举"""
-    PENDING = "pending"  # 等待中
-    DOWNLOADING = "downloading"  # 下载中
-    CONVERTING = "converting"  # 格式转换中
-    SPLITTING = "splitting"  # 文件分割中
-    TRANSCRIBING = "transcribing"  # 转录中
-    MERGING = "merging"  # 合并结果中
+    """转录任务状态枚举（简化版）"""
+    PENDING = "pending"  # 等待开始
+    IN_PROGRESS = "in_progress"  # 处理中
     COMPLETED = "completed"  # 已完成
     FAILED = "failed"  # 失败
     CANCELLED = "cancelled"  # 已取消
+
+
+# 转录任务步骤枚举
+class TranscriptionStep(str, enum.Enum):
+    """转录任务执行步骤枚举"""
+    NOT_STARTED = "not_started"  # 未开始
+    DOWNLOADING = "downloading"  # 下载音频文件
+    CONVERTING = "converting"  # 格式转换为MP3
+    SPLITTING = "splitting"  # 切割音频文件
+    TRANSCRIBING = "transcribing"  # 语音识别转录
+    MERGING = "merging"  # 合并转录结果
 
 
 class TranscriptionTask(Base):
@@ -154,15 +161,32 @@ class TranscriptionTask(Base):
     播客音频转录任务模型
 
     跟踪音频转录的整个生命周期，包括下载、转换、分割、转录和合并等阶段
+
+    状态管理：
+    - status: 整体任务状态 (PENDING, IN_PROGRESS, COMPLETED, FAILED, CANCELLED)
+    - current_step: 当前执行到的步骤 (NOT_STARTED, DOWNLOADING, CONVERTING, SPLITTING, TRANSCRIBING, MERGING)
     """
     __tablename__ = "transcription_tasks"
 
     id = Column(Integer, primary_key=True, index=True)
     episode_id = Column(Integer, ForeignKey("podcast_episodes.id"), nullable=False, unique=True)
 
-    # 任务状态
-    status = Column(Enum(TranscriptionStatus), default=TranscriptionStatus.PENDING, nullable=False)
-    progress_percentage = Column(Float, default=0.0)  # 进度百分比 0-100
+    # 任务状态（简化版）- Use explicit values to match database enum
+    status = Column(
+        Enum('pending', 'in_progress', 'completed', 'failed', 'cancelled', name='transcriptionstatus'),
+        default='pending',
+        nullable=False
+    )
+
+    # 当前执行步骤 - Use explicit values to match database enum
+    current_step = Column(
+        Enum('not_started', 'downloading', 'converting', 'splitting', 'transcribing', 'merging', name='transcriptionstep'),
+        default='not_started',
+        nullable=False
+    )
+
+    # 进度百分比 0-100
+    progress_percentage = Column(Float, default=0.0)
 
     # 文件信息
     original_audio_url = Column(String(500), nullable=False)

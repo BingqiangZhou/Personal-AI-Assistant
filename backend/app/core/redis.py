@@ -31,7 +31,20 @@ class PodcastRedis:
 
     async def _get_client(self) -> aioredis.Redis:
         """Get Redis client instance"""
-        if self._client is None or not self._client.ping():
+        if self._client is None:
+            self._client = aioredis.from_url(
+                settings.REDIS_URL,
+                decode_responses=True,
+                socket_timeout=5,
+                socket_connect_timeout=5,
+                retry_on_timeout=True,
+                max_connections=20
+            )
+        # Ping to verify connection (async)
+        try:
+            await self._client.ping()
+        except Exception:
+            # Reconnect if ping fails
             self._client = aioredis.from_url(
                 settings.REDIS_URL,
                 decode_responses=True,

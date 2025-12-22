@@ -57,35 +57,9 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
 
   /// Check if transcription exists, if not start it. Always load/monitor.
   Future<void> checkOrStartTranscription() async {
-    state = const AsyncValue.loading();
-    PodcastTranscriptionResponse? transcription;
-
-    try {
-      final repository = ref.read(podcastRepositoryProvider);
-      try {
-        transcription = await repository.getTranscription(episodeId);
-      } catch (e) {
-        if (e is DioException && e.response?.statusCode == 404) {
-          transcription = null;
-        } else {
-          rethrow;
-        }
-      }
-      
-      if (transcription == null) {
-         // 2. If missing, start it
-         transcription = await repository.startTranscription(episodeId);
-      }
-
-      state = AsyncValue.data(transcription);
-
-      // 3. Start polling if processing
-      if (transcription != null && transcription.isProcessing) {
-        _startPolling();
-      }
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-    }
+    // OPTIMIZATION: Backend is now idempotent (returns existing task if found).
+    // So we can just call startTranscription directly without checking first (1 round-trip instead of 2).
+    await startTranscription();
   }
 
   /// Start transcription for the episode
@@ -133,8 +107,8 @@ class TranscriptionNotifier extends AsyncNotifier<PodcastTranscriptionResponse?>
 
   void _startPolling() {
     _stopPolling();
-    // Poll every 1 second
-    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+    // OPTIMIZATION: Poll every 3 seconds instead of 1 second to reduce network traffic
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       refreshStatus();
     });
   }

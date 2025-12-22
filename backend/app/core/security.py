@@ -367,3 +367,83 @@ async def get_token_from_request(
 
     # Verify the token
     return verify_token(token, token_type="access")
+
+
+# === Data Encryption/Decryption for API Keys and Sensitive Data ===
+
+# Global encryption key cache (initialized once)
+_fernet_key = None
+_fernet = None
+
+
+def _get_fernet():
+    """Get or create Fernet cipher instance with key caching."""
+    global _fernet_key, _fernet
+
+    if _fernet is None:
+        # Use the SECRET_KEY from settings for encryption
+        # Generate a Fernet-compatible key from SECRET_KEY
+        secret = get_or_generate_secret_key().encode()
+
+        # Fernet requires a 32-byte URL-safe base64-encoded key
+        import hashlib
+        import base64
+
+        # Derive a 32-byte key from SECRET_KEY using SHA256
+        key_hash = hashlib.sha256(secret).digest()
+        _fernet_key = base64.urlsafe_b64encode(key_hash)
+
+        from cryptography.fernet import Fernet
+        _fernet = Fernet(_fernet_key)
+
+    return _fernet
+
+
+def encrypt_data(plaintext: str) -> str:
+    """
+    Encrypt sensitive data (e.g., API keys) using Fernet symmetric encryption.
+
+    Args:
+        plaintext: The plaintext string to encrypt
+
+    Returns:
+        Encrypted string (URL-safe base64-encoded)
+
+    Example:
+        >>> encrypted = encrypt_data("my-secret-api-key")
+        >>> # Store 'encrypted' in database
+    """
+    if not plaintext:
+        return ""
+
+    fernet = _get_fernet()
+    encrypted_bytes = fernet.encrypt(plaintext.encode('utf-8'))
+    return encrypted_bytes.decode('utf-8')
+
+
+def decrypt_data(ciphertext: str) -> str:
+    """
+    Decrypt sensitive data that was encrypted using encrypt_data().
+
+    Args:
+        ciphertext: The encrypted string to decrypt
+
+    Returns:
+        Decrypted plaintext string
+
+    Raises:
+        ValueError: If decryption fails (invalid data, wrong key, etc.)
+
+    Example:
+        >>> decrypted = decrypt_data(encrypted_value_from_db)
+        >>> print(decrypted)  # "my-secret-api-key"
+    """
+    if not ciphertext:
+        return ""
+
+    fernet = _get_fernet()
+    try:
+        decrypted_bytes = fernet.decrypt(ciphertext.encode('utf-8'))
+        return decrypted_bytes.decode('utf-8')
+    except Exception as e:
+        raise ValueError(f"Failed to decrypt data: {e}")

@@ -98,6 +98,54 @@ class _PodcastEpisodeDetailPageState
       episodeDetailProviderProvider(widget.episodeId),
     );
 
+    // Listen to transcription status changes to provide user feedback
+    ref.listen(getTranscriptionProvider(widget.episodeId), (previous, next) {
+      final prevData = previous?.value;
+      final nextData = next.value;
+
+      if (nextData != null && prevData != null) {
+        // Only notify if status changed from something else to processing or if we just started
+        if (nextData.isProcessing && !prevData.isProcessing) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const SizedBox(
+                    width: 16, 
+                    height: 16, 
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text('Processing transcription...'),
+                ],
+              ),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else if (nextData != null && prevData == null && nextData.isProcessing) {
+         // Auto-start case
+         ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const SizedBox(
+                    width: 16, 
+                    height: 16, 
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text('Starting transcription automatically...'),
+                ],
+              ),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+      }
+    });
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: episodeDetailAsync.when(

@@ -16,6 +16,7 @@ POST   /podcasts/episodes/{id}/progress 更新播放进度
 GET    /podcasts/summary/pending        待总结列表
 """
 
+import logging
 from typing import List, Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, status, Body
@@ -26,8 +27,12 @@ from app.core.security import get_token_from_request
 from app.domains.podcast.services import PodcastService
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.transcription import PodcastTranscriptionService, AISummaryService
+from app.domains.podcast.models import TranscriptionStatus
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
+from app.domains.podcast.transcription_state import get_transcription_state_manager
+
+logger = logging.getLogger(__name__)
 from app.domains.podcast.transcription_scheduler import (
     TranscriptionScheduler,
     AutomatedTranscriptionScheduler,
@@ -61,6 +66,8 @@ from app.domains.podcast.schemas import (
 )
 
 router = APIRouter(prefix="")
+
+logger = logging.getLogger(__name__)
 
 
 # === 订阅管理 ===
@@ -597,9 +604,16 @@ async def start_transcription(
         "chunk_size_mb": 10
     }
     ```
+
+    工作流程:
+    1. 检查Redis缓存是否有正在进行的任务（快速路径）
+    2. 检查数据库是否有已完成的转录
+    3. 如果都不存在，创建新任务并立即返回task_id
+    4. 后台Celery worker异步处理转录
     """
     service = PodcastService(db, int(user["sub"]))
     transcription_service = DatabaseBackedTranscriptionService(db)
+    state_manager = await get_transcription_state_manager()
 
     try:
         # 验证播客单集存在且属于当前用户
@@ -617,76 +631,131 @@ async def start_transcription(
                 detail="You don't have permission to access this episode"
             )
 
-        # 检查是否已有转录任务
-        existing_task = await transcription_service.get_episode_transcription(episode_id)
-        if existing_task and not transcription_request.force_regenerate:
-            if existing_task.status in ["pending", "downloading", "converting", "splitting", "transcribing", "merging"]:
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="Transcription task already in progress"
-                )
-            if existing_task.status == "completed":
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="Transcription already completed. Use force_regenerate=true to re-transcribe"
-                )
+        # === FAST PATH 1: Check Redis for in-progress task ===
+        redis_task_id = await state_manager.get_episode_task(episode_id)
+        if redis_task_id:
+            # Get task progress from Redis cache
+            cached_progress = await state_manager.get_task_progress(redis_task_id)
+            if cached_progress and cached_progress.get("status") not in ["completed", "failed"]:
+                logger.info(f"⚡ [REDIS] Returning cached in-progress task {redis_task_id} for episode {episode_id}")
+                # Return cached task data
+                task = await transcription_service.get_transcription_status(redis_task_id)
+                if task:
+                    return _build_transcription_response(task, episode)
 
-        # 启动转录任务
+        # === FAST PATH 2: Check DB for existing completed or in-progress task ===
+        existing_task = await transcription_service.get_episode_transcription(episode_id)
+        if existing_task:
+            if existing_task.status == 'completed' and not transcription_request.force_regenerate:  # Use string value
+                logger.info(f"✅ [DB] Returning existing completed task {existing_task.id} for episode {episode_id}")
+                return _build_transcription_response(existing_task, episode)
+            elif existing_task.status == 'in_progress':  # Use string value
+                if not transcription_request.force_regenerate:
+                    # Task is in progress, map it in Redis and return
+                    await state_manager.set_episode_task(episode_id, existing_task.id)
+                    logger.info(f"🔄 [DB] Returning existing in-progress task {existing_task.id} (step: {existing_task.current_step}) for episode {episode_id}")
+                    return _build_transcription_response(existing_task, episode)
+
+        # === Create new task if force_regenerate or no existing task ===
+        if existing_task and transcription_request.force_regenerate:
+            logger.info(f"🔄 [FORCE] Deleting existing task {existing_task.id} for regeneration")
+            await db.delete(existing_task)
+            await db.commit()
+
+        # Acquire Redis lock before creating task
+        lock_acquired = await state_manager.acquire_task_lock(episode_id, 0)  # task_id not known yet
+        if not lock_acquired and not transcription_request.force_regenerate:
+            # Someone else is processing this episode
+            locked_task_id = await state_manager.is_episode_locked(episode_id)
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Transcription already in progress. Task ID: {locked_task_id}"
+            )
+
+        # Create new transcription task
         task = await transcription_service.start_transcription(
             episode_id,
             transcription_request.transcription_model
         )
 
-        # 构建响应数据
-        response_data = {
-            "id": task.id,
-            "episode_id": task.episode_id,
-            "status": task.status.value if hasattr(task.status, 'value') else task.status,
-            "progress_percentage": task.progress_percentage,
-            "original_audio_url": task.original_audio_url,
-            "original_file_size": task.original_file_size,
-            "transcript_word_count": task.transcript_word_count,
-            "transcript_duration": task.transcript_duration,
-            "error_message": task.error_message,
-            "error_code": task.error_code,
-            "download_time": task.download_time,
-            "conversion_time": task.conversion_time,
-            "transcription_time": task.transcription_time,
-            "chunk_size_mb": task.chunk_size_mb,
-            "model_used": task.model_used,
-            "created_at": task.created_at,
-            "started_at": task.started_at,
-            "completed_at": task.completed_at,
-            "updated_at": task.updated_at,
-            "duration_seconds": task.duration_seconds,
-            "total_processing_time": task.total_processing_time,
-            # AI总结信息
-            "summary_content": task.summary_content,
-            "summary_model_used": task.summary_model_used,
-            "summary_word_count": task.summary_word_count,
-            "summary_processing_time": task.summary_processing_time,
-            "summary_error_message": task.summary_error_message,
-            "debug_message": (task.chunk_info or {}).get("debug_message"),
-            "episode": {
-                "id": episode.id,
-                "title": episode.title,
-                "audio_url": episode.audio_url,
-                "audio_duration": episode.audio_duration
-            }
-        }
+        # Update Redis lock with actual task_id and map episode to task
+        await state_manager.release_task_lock(episode_id, 0)  # Release temp lock
+        await state_manager.acquire_task_lock(episode_id, task.id)  # Acquire with real task_id
+        await state_manager.set_episode_task(episode_id, task.id)
 
-        return PodcastTranscriptionResponse(**response_data)
+        # Set initial progress in Redis
+        await state_manager.set_task_progress(
+            task.id,
+            TranscriptionStatus.PENDING.value,
+            0,
+            "Transcription task created, waiting for worker to start..."
+        )
+
+        # Check if this task was already dispatched to Celery (prevent duplicate dispatch)
+        celery_dispatch_key = f"podcast:transcription:dispatched:{task.id}"
+        already_dispatched = await state_manager.cache_get(celery_dispatch_key)
+        if already_dispatched:
+            logger.warning(f"⚠️ [CELERY] Task {task.id} was already dispatched to Celery, skipping duplicate dispatch")
+            return _build_transcription_response(task, episode)
+
+        # Mark task as dispatched before actually sending to prevent race conditions
+        await state_manager.cache_set(celery_dispatch_key, "1", ttl=3600)
+
+        # Send task to Celery queue for asynchronous processing
+        from app.domains.podcast.tasks import process_audio_transcription
+        celery_task = process_audio_transcription.delay(task.id, transcription_request.transcription_model)
+        logger.info(f"📤 [CELERY] Sent task {task.id} to Celery queue. Celery task ID: {celery_task.id}")
+
+        logger.info(f"✅ [CREATED] New transcription task {task.id} for episode {episode_id}")
+        return _build_transcription_response(task, episode)
 
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to start transcription for episode {episode_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to start transcription: {str(e)}"
         )
+
+
+def _build_transcription_response(task, episode) -> PodcastTranscriptionResponse:
+    """Helper to build transcription response from task and episode"""
+    return PodcastTranscriptionResponse(
+        id=task.id,
+        episode_id=task.episode_id,
+        status=task.status.value if hasattr(task.status, 'value') else task.status,
+        progress_percentage=task.progress_percentage,
+        original_audio_url=task.original_audio_url,
+        original_file_size=task.original_file_size,
+        transcript_word_count=task.transcript_word_count,
+        transcript_duration=task.transcript_duration,
+        error_message=task.error_message,
+        error_code=task.error_code,
+        download_time=task.download_time,
+        conversion_time=task.conversion_time,
+        transcription_time=task.transcription_time,
+        chunk_size_mb=task.chunk_size_mb,
+        model_used=task.model_used,
+        created_at=task.created_at,
+        started_at=task.started_at,
+        completed_at=task.completed_at,
+        updated_at=task.updated_at,
+        duration_seconds=task.duration_seconds,
+        total_processing_time=task.total_processing_time,
+        summary_content=task.summary_content,
+        summary_model_used=task.summary_model_used,
+        summary_word_count=task.summary_word_count,
+        summary_processing_time=task.summary_processing_time,
+        summary_error_message=task.summary_error_message,
+        debug_message=(task.chunk_info or {}).get("debug_message"),
+        episode={
+            "id": episode.id,
+            "title": episode.title,
+            "audio_url": episode.audio_url,
+            "audio_duration": episode.audio_duration
+        }
+    )
 
 
 @router.get(
@@ -789,8 +858,6 @@ async def get_transcription(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to get transcription for episode {episode_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -879,8 +946,6 @@ async def get_transcription_status(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to get transcription status for task {task_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -961,8 +1026,6 @@ async def schedule_episode_transcription_endpoint(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to schedule transcription for episode {episode_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1026,8 +1089,6 @@ async def get_episode_transcript_endpoint(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to get transcript for episode {episode_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1089,8 +1150,6 @@ async def batch_transcribe_subscription_endpoint(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to batch transcribe subscription {subscription_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1136,8 +1195,6 @@ async def get_transcription_schedule_status(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to get transcription status for episode {episode_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1186,8 +1243,6 @@ async def cancel_transcription_endpoint(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to cancel transcription for episode {episode_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1248,8 +1303,6 @@ async def check_and_transcribe_new_episodes(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to check new episodes for subscription {subscription_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1287,8 +1340,6 @@ async def get_pending_transcriptions(
         }
 
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Failed to get pending transcriptions: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

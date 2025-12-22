@@ -38,7 +38,7 @@ engine = create_async_engine(
     pool_recycle=settings.DATABASE_RECYCLE,  # recycle connections after configurable period
 
     # Performance optimizations
-    echo=settings.ENVIRONMENT == "development",
+    echo=False,  # Disable SQL query logging to reduce noise
     future=True,  # SQLAlchemy 2.0 style
     isolation_level="READ COMMITTED",  # Optimized for read-heavy workload
 
