@@ -22,7 +22,7 @@ class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
 
 class _PodcastEpisodeDetailPageState
     extends ConsumerState<PodcastEpisodeDetailPage> {
-  int _selectedTabIndex = 0; // 0 = 节目简介, 1 = 文字转录, 2 = 转录状态
+  int _selectedTabIndex = 0; // 0 = Shownotes, 1 = Transcript, 2 = AI Summary
 
   @override
   void initState() {
@@ -115,31 +115,14 @@ class _PodcastEpisodeDetailPageState
 
   // 新的页面布局
   Widget _buildNewLayout(BuildContext context, dynamic episode) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWideScreen = constraints.maxWidth > 840;
+    return Column(
+      children: [
+        // A. 顶部元数据区 (Header)
+        _buildHeader(episode),
 
-        return Column(
-          children: [
-            // A. 顶部元数据区 (Header)
-            _buildHeader(episode),
-
-            // B. 中间主体内容区 (Body - 响应式布局)
-            Expanded(
-              child: isWideScreen
-                  ? Row(
-                      children: [
-                        // 左侧主内容 (Flex 7)
-                        Expanded(flex: 7, child: _buildMainContent(episode)),
-                        // 右侧侧边栏 (Flex 3)
-                        Expanded(flex: 3, child: _buildSidebar(episode)),
-                      ],
-                    )
-                  : _buildMainContent(episode),
-            ),
-          ],
-        );
-      },
+        // B. 中间主体内容区 (Body)
+        Expanded(child: _buildMainContent(episode)),
+      ],
     );
   }
 
@@ -156,107 +139,131 @@ class _PodcastEpisodeDetailPageState
 
     return Padding(
       padding: const EdgeInsets.only(top: 16),
-      child: SizedBox(
-        height: 56,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          color: Theme.of(context).colorScheme.surface,
-          child: Row(
-            children: [
-              // 左侧：返回按钮 + Logo + 文本
-              Expanded(
-                child: Row(
-                  children: [
-                    // 返回按钮
-                    Container(
-                      decoration: BoxDecoration(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        color: Theme.of(context).colorScheme.surface,
+        child: Row(
+          children: [
+            // 左侧：返回按钮 + Logo + 文本
+            Expanded(
+              child: Row(
+                children: [
+                  // 返回按钮
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.arrow_back,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 20,
-                        ),
-                        onPressed: () => context.pop(),
-                        tooltip: '返回',
-                        constraints: const BoxConstraints(
-                          minWidth: 36,
-                          minHeight: 36,
-                        ),
-                        padding: EdgeInsets.zero,
+                        ).colorScheme.primary.withValues(alpha: 0.3),
+                        width: 1,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    // Episode icon: 50x50px, rounded 8px - prioritize episode image over subscription image
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.arrow_back,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 20,
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(7),
-                        child: episode.imageUrl != null
-                            ? Image.network(
-                                episode.imageUrl!,
+                      onPressed: () => context.pop(),
+                      tooltip: '返回',
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Episode icon: 50x50px, rounded 8px - prioritize episode image over subscription image
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(7),
+                      child: episode.imageUrl != null
+                          ? Image.network(
+                              episode.imageUrl!,
+                              width: 50,
+                              height: 50,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                debugPrint(
+                                  '❌ Failed to load episode image: $error',
+                                );
+                                // Fallback to subscription image
+                                if (episode.subscriptionImageUrl != null) {
+                                  return ClipRRect(
+                                    borderRadius: BorderRadius.circular(7),
+                                    child: Image.network(
+                                      episode.subscriptionImageUrl!,
+                                      width: 50,
+                                      height: 50,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        debugPrint(
+                                          '❌ Failed to load subscription image: $error',
+                                        );
+                                        return Container(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withValues(alpha: 0.1),
+                                          child: Icon(
+                                            Icons.headphones_outlined,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                            size: 28,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                }
+                                return Container(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.1),
+                                  child: Icon(
+                                    Icons.headphones_outlined,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    size: 28,
+                                  ),
+                                );
+                              },
+                            )
+                          : episode.subscriptionImageUrl != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(7),
+                              child: Image.network(
+                                episode.subscriptionImageUrl!,
                                 width: 50,
                                 height: 50,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   debugPrint(
-                                    '❌ Failed to load episode image: $error',
+                                    '❌ Failed to load subscription image: $error',
                                   );
-                                  // Fallback to subscription image
-                                  if (episode.subscriptionImageUrl != null) {
-                                    return ClipRRect(
-                                      borderRadius: BorderRadius.circular(7),
-                                      child: Image.network(
-                                        episode.subscriptionImageUrl!,
-                                        width: 50,
-                                        height: 50,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          debugPrint(
-                                            '❌ Failed to load subscription image: $error',
-                                          );
-                                          return Container(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                                .withValues(alpha: 0.1),
-                                            child: Icon(
-                                              Icons.headphones_outlined,
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.primary,
-                                              size: 28,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  }
                                   return Container(
                                     color: Theme.of(context).colorScheme.primary
                                         .withValues(alpha: 0.1),
                                     child: Icon(
-                                      Icons.headphones_outlined,
+                                      Icons.podcasts,
                                       color: Theme.of(
                                         context,
                                       ).colorScheme.primary,
@@ -264,89 +271,56 @@ class _PodcastEpisodeDetailPageState
                                     ),
                                   );
                                 },
-                              )
-                            : episode.subscriptionImageUrl != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(7),
-                                child: Image.network(
-                                  episode.subscriptionImageUrl!,
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    debugPrint(
-                                      '❌ Failed to load subscription image: $error',
-                                    );
-                                    return Container(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withValues(alpha: 0.1),
-                                      child: Icon(
-                                        Icons.podcasts,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                        size: 28,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              )
-                            : Container(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.1),
-                                child: Icon(
-                                  Icons.headphones_outlined,
-                                  color: Theme.of(context).colorScheme.primary,
-                                  size: 28,
-                                ),
                               ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // 文本：垂直排列的Column
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 标题: 16px, FontWeight.bold, 主题色
-                          Text(
-                            episode.title ?? 'Unknown Episode',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          // 副标题: 12px, 次要文字颜色, 单行省略
-                          Text(
-                            episode.description?.substring(
-                                  0,
-                                  min(40, episode.description?.length ?? 0),
-                                ) ??
-                                'No description',
-                            style: TextStyle(
-                              fontSize: 12,
+                            )
+                          : Container(
                               color: Theme.of(
                                 context,
-                              ).colorScheme.onSurfaceVariant,
+                              ).colorScheme.primary.withValues(alpha: 0.1),
+                              child: Icon(
+                                Icons.headphones_outlined,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 28,
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 12),
+                  // 文本：垂直排列的Column
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // 标题: 16px, FontWeight.bold, 主题色
+                        Text(
+                          episode.title ?? 'Unknown Episode',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // 副标题: 12px, 次要文字颜色, 支持多行显示
+                        Text(
+                          episode.description ?? 'No description',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -357,6 +331,7 @@ class _PodcastEpisodeDetailPageState
     return Container(
       color: Theme.of(context).colorScheme.surface,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Tabs：节目简介 / 文字转录 / 转录状态
           _buildTabs(),
@@ -368,8 +343,12 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // Tabs 组件 - 胶囊状按钮
+  // Tabs 组件 - 胶囊状按钮，右侧显示发布时间和时长
   Widget _buildTabs() {
+    final episodeDetailAsync = ref.watch(
+      episodeDetailProviderProvider(widget.episodeId),
+    );
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -380,32 +359,108 @@ class _PodcastEpisodeDetailPageState
           ),
         ),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            // 节目简介 Tab
-            _buildTabButton('节目简介', _selectedTabIndex == 0, () {
-              setState(() {
-                _selectedTabIndex = 0;
-              });
-            }),
-            const SizedBox(width: 8),
-            // 文字转录 Tab
-            _buildTabButton('文字转录', _selectedTabIndex == 1, () {
-              setState(() {
-                _selectedTabIndex = 1;
-              });
-            }),
-            const SizedBox(width: 8),
-            // 转录状态 Tab
-            _buildTabButton('转录状态', _selectedTabIndex == 2, () {
-              setState(() {
-                _selectedTabIndex = 2;
-              });
-            }),
-          ],
-        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 600;
+
+          final timeWidget = episodeDetailAsync.when(
+            data: (episode) {
+              if (episode == null) return const SizedBox.shrink();
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Published date
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _formatDate(episode.publishedAt),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+                  // Duration
+                  if (episode.audioDuration != null)
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.schedule_outlined,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          episode.formattedDuration,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              );
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+          );
+
+          final buttonsWidget = Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Shownotes Tab
+              _buildTabButton('Shownotes', _selectedTabIndex == 0, () {
+                setState(() {
+                  _selectedTabIndex = 0;
+                });
+              }),
+              const SizedBox(width: 8),
+              // Transcript Tab
+              _buildTabButton('Transcript', _selectedTabIndex == 1, () {
+                setState(() {
+                  _selectedTabIndex = 1;
+                });
+              }),
+              const SizedBox(width: 8),
+              // AI Summary Tab
+              _buildTabButton('AI Summary', _selectedTabIndex == 2, () {
+                setState(() {
+                  _selectedTabIndex = 2;
+                });
+              }),
+            ],
+          );
+
+          if (isWide) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [timeWidget, buttonsWidget],
+            );
+          } else {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(children: [timeWidget]),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [buttonsWidget],
+                ),
+              ],
+            );
+          }
+        },
       ),
     );
   }
@@ -450,7 +505,7 @@ class _PodcastEpisodeDetailPageState
       case 1:
         return _buildTranscriptContent(episode);
       case 2:
-        return _buildTranscriptionStatusContent(episode);
+        return _buildAiSummaryContent(episode);
       default:
         return ShownotesDisplayWidget(episode: episode);
     }
@@ -561,92 +616,73 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // B. 右侧侧边栏 - 节目AI总结和转录信息
-  Widget _buildSidebar(dynamic episode) {
-    final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
-    final transcriptionState = ref.watch(transcriptionProvider);
+  // AI Summary 内容
+  Widget _buildAiSummaryContent(dynamic episode) {
+    final aiSummary = episode.aiSummary;
+
+    if (aiSummary == null || aiSummary.isEmpty) {
+      return _buildAiSummaryEmptyState(context);
+    }
 
     return Container(
-      color: Theme.of(context).colorScheme.surface,
       padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // 节目AI总结
-          _buildSidebarSection(
-            '节目AI总结',
-            episode.aiSummary ??
-                '这是一期关于AI技术应用的深度讨论节目。我们邀请了行业专家，分享了他们在实际项目中的经验和见解。内容涵盖了从技术架构到商业应用的各个方面，对于想要了解AI落地实践的听众来说非常有价值。',
-          ),
-
-          const SizedBox(height: 24),
-
-          // 转录信息
-          transcriptionState.when(
-            data: (transcription) {
-              return _buildTranscriptionSidebarSection(transcription);
-            },
-            loading: () => _buildTranscriptionSidebarLoadingSection(),
-            error: (error, stack) =>
-                _buildTranscriptionSidebarErrorSection(error),
-          ),
-        ],
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'AI Summary',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              aiSummary,
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.6,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildTranscriptionSidebarSection(
-    PodcastTranscriptionResponse? transcription,
-  ) {
-    if (transcription == null) {
-      return _buildSidebarSection('转录状态', '暂未开始转录');
-    }
-
-    String statusText = getTranscriptionStatusDescription(transcription);
-    String infoText = '';
-
-    if (isTranscriptionCompleted(transcription)) {
-      final wordCount = transcription.wordCount ?? 0;
-      infoText = '转录已完成\n字数: ${wordCount.toString()}';
-    } else if (isTranscriptionProcessing(transcription)) {
-      infoText = '进度: ${transcription.progressPercentage.toStringAsFixed(1)}%';
-    } else if (isTranscriptionFailed(transcription)) {
-      infoText = '转录失败\n${transcription.errorMessage ?? '未知错误'}';
-    }
-
-    return _buildSidebarSection('转录状态', '$statusText\n\n$infoText');
-  }
-
-  Widget _buildTranscriptionSidebarLoadingSection() {
-    return _buildSidebarSection('转录状态', '加载中...');
-  }
-
-  Widget _buildTranscriptionSidebarErrorSection(dynamic error) {
-    return _buildSidebarSection('转录状态', '加载失败\n${error.toString()}');
-  }
-
-  // 侧边栏通用部分组件
-  Widget _buildSidebarSection(String title, String content) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          content,
-          style: TextStyle(
-            fontSize: 13,
+  Widget _buildAiSummaryEmptyState(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.auto_awesome,
+            size: 64,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
-            height: 1.5,
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+          Text(
+            '暂无AI摘要',
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'AI摘要即将生成',
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -717,216 +753,295 @@ class _PodcastEpisodeDetailPageState
 
   // 控制区
   Widget _buildControlArea(dynamic audioPlayerState) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // 左边：当前时间
-          Text(
-            audioPlayerState.formattedPosition,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 判断是否宽屏 (大于800px为宽屏，以便在平板和桌面上横向显示)
+        final isWideScreen = constraints.maxWidth > 800;
+
+        if (isWideScreen) {
+          // 宽屏布局:横向排列
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // 左边:当前时间
+                SizedBox(
+                  width: 70,
+                  child: Text(
+                    audioPlayerState.formattedPosition,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+
+                // 中间:播放控制组
+                _buildPlaybackControls(audioPlayerState),
+
+                // 右边:剩余时间 + 倍速按钮
+                _buildTimeAndSpeed(audioPlayerState),
+              ],
+            ),
+          );
+        } else {
+          // 窄屏布局:按钮在时间下方 (手机模式)
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 第一行:时间信息
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // 当前时间 - 使用Flexible防止溢出
+                    Flexible(
+                      child: Text(
+                        audioPlayerState.formattedPosition,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    // 剩余时间 + 倍速 - 使用Flexible防止溢出
+                    Flexible(child: _buildTimeAndSpeed(audioPlayerState)),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                // 第二行:播放控制按钮 (居中)
+                Center(child: _buildPlaybackControls(audioPlayerState)),
+              ],
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  // 播放控制按钮组
+  Widget _buildPlaybackControls(dynamic audioPlayerState) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // 回退10s
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: IconButton(
+            onPressed: () async {
+              final newPosition = (audioPlayerState.position - 10000).clamp(
+                0,
+                audioPlayerState.duration,
+              );
+              await ref.read(audioPlayerProvider.notifier).seekTo(newPosition);
+            },
+            icon: Icon(
+              Icons.replay_10,
+              size: 24,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            padding: EdgeInsets.zero,
+          ),
+        ),
+        const SizedBox(width: 16),
+
+        // 播放/暂停主按钮
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: IconButton(
+            onPressed: audioPlayerState.isLoading
+                ? null
+                : () async {
+                    if (audioPlayerState.isPlaying) {
+                      await ref.read(audioPlayerProvider.notifier).pause();
+                    } else {
+                      await ref.read(audioPlayerProvider.notifier).resume();
+                    }
+                  },
+            icon: audioPlayerState.isLoading
+                ? SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                  )
+                : Icon(
+                    audioPlayerState.isPlaying ? Icons.pause : Icons.play_arrow,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    size: 32,
+                  ),
+            constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
+            padding: EdgeInsets.zero,
+          ),
+        ),
+        const SizedBox(width: 16),
+
+        // 前进30s
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: IconButton(
+            onPressed: () async {
+              final newPosition = (audioPlayerState.position + 30000).clamp(
+                0,
+                audioPlayerState.duration,
+              );
+              await ref.read(audioPlayerProvider.notifier).seekTo(newPosition);
+            },
+            icon: Icon(
+              Icons.forward_30,
+              size: 24,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+            padding: EdgeInsets.zero,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 时间和倍速控件
+  Widget _buildTimeAndSpeed(dynamic audioPlayerState) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: Text(
+            _formatRemainingTime(audioPlayerState),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
               color: Theme.of(context).colorScheme.onSurface,
             ),
+            textAlign: TextAlign.right,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
-
-          // 中间：播放控制组
-          Row(
-            children: [
-              // 回退15s
-              Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: IconButton(
-                  onPressed: () async {
-                    final newPosition = (audioPlayerState.position - 15000)
-                        .clamp(0, audioPlayerState.duration);
-                    await ref
-                        .read(audioPlayerProvider.notifier)
-                        .seekTo(newPosition);
-                  },
-                  icon: Icon(
-                    Icons.replay_10,
-                    size: 24,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 40,
-                    minHeight: 40,
-                  ),
-                  padding: EdgeInsets.zero,
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // 播放/暂停主按钮 - 圆形，主题色
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  onPressed: audioPlayerState.isLoading
-                      ? null
-                      : () async {
-                          if (audioPlayerState.isPlaying) {
-                            await ref
-                                .read(audioPlayerProvider.notifier)
-                                .pause();
-                          } else {
-                            await ref
-                                .read(audioPlayerProvider.notifier)
-                                .resume();
-                          }
-                        },
-                  icon: audioPlayerState.isLoading
-                      ? SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              Theme.of(context).colorScheme.onPrimary,
-                            ),
-                          ),
-                        )
-                      : Icon(
-                          audioPlayerState.isPlaying
-                              ? Icons.pause
-                              : Icons.play_arrow,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          size: 32,
-                        ),
-                  constraints: const BoxConstraints(
-                    minWidth: 56,
-                    minHeight: 56,
-                  ),
-                  padding: EdgeInsets.zero,
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // 前进30s
-              Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                ),
-                child: IconButton(
-                  onPressed: () async {
-                    final newPosition = (audioPlayerState.position + 30000)
-                        .clamp(0, audioPlayerState.duration);
-                    await ref
-                        .read(audioPlayerProvider.notifier)
-                        .seekTo(newPosition);
-                  },
-                  icon: Icon(
-                    Icons.forward_30,
-                    size: 24,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 40,
-                    minHeight: 40,
-                  ),
-                  padding: EdgeInsets.zero,
-                ),
-              ),
-            ],
+        ),
+        const SizedBox(width: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Theme.of(
+                context,
+              ).colorScheme.outline.withValues(alpha: 0.5),
+            ),
+            borderRadius: BorderRadius.circular(16),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           ),
-
-          // 右边：总时间 + 倍速按钮（圆角矩形边框）
-          Row(
-            children: [
-              Text(
-                audioPlayerState.formattedDuration,
+          child: PopupMenuButton<double>(
+            padding: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              child: Text(
+                '${audioPlayerState.playbackRate}x',
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(width: 12),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withValues(alpha: 0.5),
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                ),
-                child: PopupMenuButton<double>(
-                  padding: EdgeInsets.zero,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    child: Text(
-                      '${audioPlayerState.playbackRate}x',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  onSelected: (speed) async {
-                    await ref
-                        .read(audioPlayerProvider.notifier)
-                        .setPlaybackRate(speed);
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(value: 0.5, child: Text('0.5x')),
-                    const PopupMenuItem(value: 0.75, child: Text('0.75x')),
-                    const PopupMenuItem(value: 1.0, child: Text('1.0x')),
-                    const PopupMenuItem(value: 1.25, child: Text('1.25x')),
-                    const PopupMenuItem(value: 1.5, child: Text('1.5x')),
-                    const PopupMenuItem(value: 1.75, child: Text('1.75x')),
-                    const PopupMenuItem(value: 2.0, child: Text('2.0x')),
-                  ],
-                ),
-              ),
+            ),
+            onSelected: (speed) async {
+              await ref
+                  .read(audioPlayerProvider.notifier)
+                  .setPlaybackRate(speed);
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 0.5, child: Text('0.5x')),
+              const PopupMenuItem(value: 0.75, child: Text('0.75x')),
+              const PopupMenuItem(value: 1.0, child: Text('1.0x')),
+              const PopupMenuItem(value: 1.25, child: Text('1.25x')),
+              const PopupMenuItem(value: 1.5, child: Text('1.5x')),
+              const PopupMenuItem(value: 1.75, child: Text('1.75x')),
+              const PopupMenuItem(value: 2.0, child: Text('2.0x')),
+              const PopupMenuItem(value: 2.5, child: Text('2.5x')),
+              const PopupMenuItem(value: 3.0, child: Text('3.0x')),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
+  }
+
+  // 格式化剩余时长
+  String _formatRemainingTime(dynamic audioPlayerState) {
+    final remaining = audioPlayerState.duration - audioPlayerState.position;
+    if (remaining <= 0) {
+      return '00:00';
+    }
+
+    final seconds = (remaining / 1000).floor();
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+
+    if (hours > 0) {
+      return '-${hours.toString().padLeft(1, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    } else {
+      return '-${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    }
+  }
+
+  // 格式化日期
+  String _formatDate(DateTime date) {
+    final year = date.year;
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year年$month月$day日';
   }
 
   // 工具方法：取最小值

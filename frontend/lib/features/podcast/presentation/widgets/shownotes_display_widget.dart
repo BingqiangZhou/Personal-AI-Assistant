@@ -27,12 +27,7 @@ class ShownotesDisplayWidget extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Episode metadata
-            _buildEpisodeMetadata(context),
-
-            const SizedBox(height: 16),
-
-            // Shownotes content
+            // Shownotes content - 节目描述自适应整个宽度
             _buildShownotesContent(context, shownotes),
           ],
         ),
@@ -41,161 +36,56 @@ class ShownotesDisplayWidget extends ConsumerWidget {
   }
 
   String _getShownotesContent() {
-    // Priority: AI summary > description > metadata
-    if (episode.aiSummary?.isNotEmpty == true) {
-      return episode.aiSummary!;
-    }
-
+    // Priority: 
+    // 1. Episode description (Most accurate for shownotes)
+    // 2. Episode AI summary
+    // 3. Metadata
+    // 4. Subscription description (Fallback)
+    
+    // 1. Try to get episode description first
     if (episode.description?.isNotEmpty == true) {
       return episode.description!;
     }
 
-    // Try to get from metadata
+    // 2. Fallback to episode AI summary
+    if (episode.aiSummary?.isNotEmpty == true) {
+      return episode.aiSummary!;
+    }
+
+    // 3. Try to get from metadata
     if (episode.metadata != null && episode.metadata!['shownotes'] != null) {
       return episode.metadata!['shownotes'].toString();
     }
 
+    // 4. Fallback to subscription description
+    if (episode.subscription != null) {
+      final subscriptionDesc = episode.subscription!['description'];
+      if (subscriptionDesc != null && subscriptionDesc.toString().isNotEmpty) {
+        return subscriptionDesc.toString();
+      }
+    }
+
     return '';
-  }
-
-  Widget _buildEpisodeMetadata(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Episode identifier
-            if (episode.episodeIdentifier.isNotEmpty)
-              Text(
-                episode.episodeIdentifier,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            if (episode.episodeIdentifier.isNotEmpty)
-              const SizedBox(height: 8),
-
-            // Published date
-            Row(
-              children: [
-                Icon(
-                  Icons.calendar_today_outlined,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _formatDate(episode.publishedAt),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            // Duration
-            if (episode.audioDuration != null)
-              Row(
-                children: [
-                  Icon(
-                    Icons.schedule_outlined,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    episode.formattedDuration,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-
-            // Explicit content warning
-            if (episode.explicit)
-              Container(
-                margin: const EdgeInsets.only(top: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: Colors.red.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.warning_amber_outlined,
-                      size: 14,
-                      color: Colors.red.shade700,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '包含成人内容',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.red.shade700,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildShownotesContent(BuildContext context, String content) {
     // Parse for rich text elements
     final segments = _parseRichText(content);
 
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).colorScheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Shownotes',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '节目简介',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 12),
-            ...segments.map((segment) => _buildTextSegment(context, segment)),
-          ],
-        ),
-      ),
+        const SizedBox(height: 12),
+        ...segments.map((segment) => _buildTextSegment(context, segment)),
+      ],
     );
   }
 
