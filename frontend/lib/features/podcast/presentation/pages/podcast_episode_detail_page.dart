@@ -4,11 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/podcast_providers.dart';
 import '../providers/transcription_providers.dart';
+import '../providers/summary_providers.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_transcription_model.dart';
 import '../widgets/transcript_display_widget.dart';
 import '../widgets/shownotes_display_widget.dart';
 import '../widgets/transcription_status_widget.dart';
+import '../widgets/ai_summary_control_widget.dart';
 
 class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
   final int episodeId;
@@ -673,11 +675,10 @@ class _PodcastEpisodeDetailPageState
 
   // AI Summary 内容
   Widget _buildAiSummaryContent(dynamic episode) {
-    final aiSummary = episode.aiSummary;
-
-    if (aiSummary == null || aiSummary.isEmpty) {
-      return _buildAiSummaryEmptyState(context);
-    }
+    final provider = getSummaryProvider(widget.episodeId);
+    final summaryState = ref.watch(provider);
+    final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
+    final transcriptionState = ref.watch(transcriptionProvider);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -685,23 +686,59 @@ class _PodcastEpisodeDetailPageState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'AI Summary',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+            // AI总结控制区域
+            AISummaryControlWidget(
+              episodeId: widget.episodeId,
+              hasTranscript: transcriptionState.value?.transcriptContent != null &&
+                  transcriptionState.value!.transcriptContent!.isNotEmpty,
             ),
-            const SizedBox(height: 12),
-            Text(
-              aiSummary,
-              style: TextStyle(
-                fontSize: 15,
-                height: 1.6,
-                color: Theme.of(context).colorScheme.onSurface,
+
+            const SizedBox(height: 16),
+
+            // 总结内容显示
+            if (summaryState.hasSummary) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.auto_awesome,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'AI 总结',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      summaryState.summary!,
+                      style: TextStyle(
+                        fontSize: 15,
+                        height: 1.6,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ] else if (!summaryState.isLoading && !summaryState.hasError) ...[
+              _buildAiSummaryEmptyState(context),
+            ],
           ],
         ),
       ),
@@ -728,7 +765,7 @@ class _PodcastEpisodeDetailPageState
           ),
           const SizedBox(height: 8),
           Text(
-            'AI摘要即将生成',
+            '完成转录后，点击上方按钮生成AI摘要',
             style: TextStyle(
               fontSize: 14,
               color: Theme.of(

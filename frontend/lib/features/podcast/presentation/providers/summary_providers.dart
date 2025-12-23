@@ -1,0 +1,134 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../data/models/podcast_playback_model.dart';
+import 'podcast_providers.dart';
+
+// Summary state providers for each episode
+final summaryStateProviders = <int, NotifierProvider<SummaryNotifier, SummaryState>>{};
+
+/// Get or create a summary state provider for a specific episode
+NotifierProvider<SummaryNotifier, SummaryState> getSummaryProvider(int episodeId) {
+  return summaryStateProviders.putIfAbsent(
+    episodeId,
+    () => NotifierProvider<SummaryNotifier, SummaryState>(() => SummaryNotifier(episodeId)),
+  );
+}
+
+// Provider for available summary models
+final availableModelsProvider = FutureProvider<List<SummaryModelInfo>>((ref) async {
+  final repository = ref.watch(podcastRepositoryProvider);
+  try {
+    return await repository.getSummaryModels();
+  } catch (e) {
+    return [];
+  }
+});
+
+/// Summary state class
+class SummaryState {
+  final String? summary;
+  final String? modelUsed;
+  final double? processingTime;
+  final int? wordCount;
+  final DateTime? generatedAt;
+  final bool isLoading;
+  final String? errorMessage;
+
+  const SummaryState({
+    this.summary,
+    this.modelUsed,
+    this.processingTime,
+    this.wordCount,
+    this.generatedAt,
+    this.isLoading = false,
+    this.errorMessage,
+  });
+
+  bool get hasError => errorMessage != null;
+  bool get hasSummary => summary != null && summary!.isNotEmpty;
+  bool get isSuccess => hasSummary && !isLoading && !hasError;
+
+  SummaryState copyWith({
+    String? summary,
+    String? modelUsed,
+    double? processingTime,
+    int? wordCount,
+    DateTime? generatedAt,
+    bool? isLoading,
+    String? errorMessage,
+  }) {
+    return SummaryState(
+      summary: summary ?? this.summary,
+      modelUsed: modelUsed ?? this.modelUsed,
+      processingTime: processingTime ?? this.processingTime,
+      wordCount: wordCount ?? this.wordCount,
+      generatedAt: generatedAt ?? this.generatedAt,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
+}
+
+/// Notifier for managing summary state
+class SummaryNotifier extends Notifier<SummaryState> {
+  final int episodeId;
+
+  SummaryNotifier(this.episodeId);
+
+  @override
+  SummaryState build() {
+    return const SummaryState();
+  }
+
+  /// Generate AI summary
+  Future<void> generateSummary({
+    String? model,
+    String? customPrompt,
+    bool forceRegenerate = true,
+  }) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      final repository = ref.read(podcastRepositoryProvider);
+      final response = await repository.generateSummary(
+        episodeId: episodeId,
+        forceRegenerate: forceRegenerate,
+        summaryModel: model,
+        customPrompt: customPrompt,
+      );
+
+      state = SummaryState(
+        summary: response.summary,
+        modelUsed: response.modelUsed,
+        processingTime: response.processingTime,
+        wordCount: response.wordCount,
+        generatedAt: response.generatedAt,
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
+  /// Regenerate summary
+  Future<void> regenerateSummary({
+    String? model,
+    String? customPrompt,
+  }) async {
+    return generateSummary(
+      model: model,
+      customPrompt: customPrompt,
+      forceRegenerate: true,
+    );
+  }
+
+  /// Clear error
+  void clearError() {
+    if (state.hasError) {
+      state = state.copyWith(errorMessage: null);
+    }
+  }
+}

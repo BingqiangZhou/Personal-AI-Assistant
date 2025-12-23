@@ -154,13 +154,26 @@ class PodcastRepository {
     required int episodeId,
     bool forceRegenerate = false,
     bool? useTranscript,
+    String? summaryModel,
+    String? customPrompt,
   }) async {
     try {
       final request = PodcastSummaryRequest(
         forceRegenerate: forceRegenerate,
         useTranscript: useTranscript,
+        summaryModel: summaryModel,
+        customPrompt: customPrompt,
       );
       return await _apiService.generateSummary(episodeId, request);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<List<SummaryModelInfo>> getSummaryModels() async {
+    try {
+      final response = await _apiService.getSummaryModels();
+      return response.models;
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }

@@ -91,6 +91,9 @@ abstract class PodcastApiService {
     @Body() PodcastSummaryRequest request,
   );
 
+  @GET('/podcasts/summaries/models')
+  Future<SummaryModelsResponse> getSummaryModels();
+
   @GET('/podcasts/summaries/pending')
   Future<SimpleResponse> getPendingSummaries();
 

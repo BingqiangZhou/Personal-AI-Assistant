@@ -253,6 +253,24 @@ class PodcastSummaryResponse(PodcastBaseSchema):
     transcript_used: bool
     generated_at: datetime
     word_count: int
+    model_used: Optional[str] = None  # 使用的模型名称
+    processing_time: Optional[float] = None  # 处理时间（秒）
+
+
+class SummaryModelInfo(PodcastBaseSchema):
+    """AI总结模型信息"""
+    id: int
+    name: str
+    display_name: str
+    provider: str
+    model_id: str
+    is_default: bool
+
+
+class SummaryModelsResponse(PodcastBaseSchema):
+    """可用总结模型列表响应"""
+    models: List[SummaryModelInfo]
+    total: int
 
 
 class PodcastSummaryPendingResponse(PodcastBaseSchema):

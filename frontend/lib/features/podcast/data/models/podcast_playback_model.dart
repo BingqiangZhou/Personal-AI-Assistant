@@ -85,6 +85,10 @@ class PodcastSummaryResponse extends Equatable {
   final DateTime generatedAt;
   @JsonKey(name: 'word_count')
   final int wordCount;
+  @JsonKey(name: 'model_used')
+  final String? modelUsed;
+  @JsonKey(name: 'processing_time')
+  final double? processingTime;
 
   const PodcastSummaryResponse({
     required this.episodeId,
@@ -94,6 +98,8 @@ class PodcastSummaryResponse extends Equatable {
     required this.transcriptUsed,
     required this.generatedAt,
     required this.wordCount,
+    this.modelUsed,
+    this.processingTime,
   });
 
   factory PodcastSummaryResponse.fromJson(Map<String, dynamic> json) =>
@@ -110,6 +116,8 @@ class PodcastSummaryResponse extends Equatable {
         transcriptUsed,
         generatedAt,
         wordCount,
+        modelUsed,
+        processingTime,
       ];
 }
 
@@ -239,4 +247,55 @@ class PodcastSearchFilter extends Equatable {
         durationMin,
         durationMax,
       ];
+}
+
+/// AI总结模型信息
+@JsonSerializable()
+class SummaryModelInfo extends Equatable {
+  final int id;
+  final String name;
+  @JsonKey(name: 'display_name')
+  final String displayName;
+  final String provider;
+  @JsonKey(name: 'model_id')
+  final String modelId;
+  @JsonKey(name: 'is_default')
+  final bool isDefault;
+
+  const SummaryModelInfo({
+    required this.id,
+    required this.name,
+    required this.displayName,
+    required this.provider,
+    required this.modelId,
+    required this.isDefault,
+  });
+
+  factory SummaryModelInfo.fromJson(Map<String, dynamic> json) =>
+      _$SummaryModelInfoFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SummaryModelInfoToJson(this);
+
+  @override
+  List<Object?> get props => [id, name, displayName, provider, modelId, isDefault];
+}
+
+/// 可用总结模型列表响应
+@JsonSerializable()
+class SummaryModelsResponse extends Equatable {
+  final List<SummaryModelInfo> models;
+  final int total;
+
+  const SummaryModelsResponse({
+    required this.models,
+    required this.total,
+  });
+
+  factory SummaryModelsResponse.fromJson(Map<String, dynamic> json) =>
+      _$SummaryModelsResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SummaryModelsResponseToJson(this);
+
+  @override
+  List<Object?> get props => [models, total];
 }

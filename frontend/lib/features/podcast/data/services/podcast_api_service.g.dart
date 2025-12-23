@@ -43,7 +43,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastSubscriptionModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -81,7 +81,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastSubscriptionListResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -108,7 +108,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastSubscriptionModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -176,7 +176,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = ReparseResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -206,7 +206,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastFeedResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -246,7 +246,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastEpisodeListResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -273,7 +273,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastEpisodeDetailResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -304,7 +304,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastPlaybackStateResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -331,7 +331,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastPlaybackStateResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -362,7 +362,34 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastSummaryResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<SummaryModelsResponse> getSummaryModels() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<SummaryModelsResponse>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/podcasts/summaries/models',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late SummaryModelsResponse _value;
+    try {
+      _value = SummaryModelsResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -389,7 +416,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = SimpleResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -427,7 +454,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastEpisodeListResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -454,7 +481,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastStatsResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -481,7 +508,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = SimpleResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -508,7 +535,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastTranscriptionResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -539,7 +566,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastTranscriptionResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;
@@ -587,7 +614,7 @@ class _PodcastApiService implements PodcastApiService {
     try {
       _value = PodcastTranscriptionResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     return _value;

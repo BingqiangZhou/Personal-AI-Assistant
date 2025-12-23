@@ -176,17 +176,30 @@ class SummaryModelManager:
 
     async def _get_api_key(self, model_config) -> str:
         """获取API密钥"""
+        # 如果未加密，直接返回
+        if not model_config.api_key_encrypted:
+            return model_config.api_key if model_config.api_key else ""
+
         # 对于系统预设模型，从环境变量获取
         if model_config.is_system:
             from app.core.config import settings
             if model_config.provider == "openai":
-                return getattr(settings, 'OPENAI_API_KEY', '') or model_config.api_key
+                return getattr(settings, 'OPENAI_API_KEY', '')
             elif model_config.provider == "siliconflow":
-                return getattr(settings, 'TRANSCRIPTION_API_KEY', '') or model_config.api_key
+                return getattr(settings, 'TRANSCRIPTION_API_KEY', '')
 
-        # 对于用户自定义的模型，这里应该从安全存储解密
-        # 暂时直接返回（实际应该解密）
-        return model_config.api_key if model_config.api_key else ""
+        # 对于用户自定义模型，使用Fernet解密
+        from app.core.security import decrypt_data
+        try:
+            decrypted = decrypt_data(model_config.api_key)
+            logger.info(f"Successfully decrypted API key for model {model_config.name}")
+            return decrypted
+        except Exception as e:
+            logger.error(f"Failed to decrypt API key for model {model_config.name}: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to decrypt API key for model {model_config.name}"
+            )
 
     async def get_model_info(self, model_name: Optional[str] = None) -> Dict[str, Any]:
         """获取模型信息"""

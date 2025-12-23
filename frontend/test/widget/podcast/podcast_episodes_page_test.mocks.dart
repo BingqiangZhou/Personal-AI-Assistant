@@ -324,12 +324,16 @@ class MockPodcastRepository extends _i1.Mock implements _i6.PodcastRepository {
     required int? episodeId,
     bool? forceRegenerate = false,
     bool? useTranscript,
+    String? summaryModel,
+    String? customPrompt,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#generateSummary, [], {
               #episodeId: episodeId,
               #forceRegenerate: forceRegenerate,
               #useTranscript: useTranscript,
+              #summaryModel: summaryModel,
+              #customPrompt: customPrompt,
             }),
             returnValue: _i7.Future<_i4.PodcastSummaryResponse>.value(
               _FakePodcastSummaryResponse_7(
@@ -338,11 +342,23 @@ class MockPodcastRepository extends _i1.Mock implements _i6.PodcastRepository {
                   #episodeId: episodeId,
                   #forceRegenerate: forceRegenerate,
                   #useTranscript: useTranscript,
+                  #summaryModel: summaryModel,
+                  #customPrompt: customPrompt,
                 }),
               ),
             ),
           )
           as _i7.Future<_i4.PodcastSummaryResponse>);
+
+  @override
+  _i7.Future<List<_i4.SummaryModelInfo>> getSummaryModels() =>
+      (super.noSuchMethod(
+            Invocation.method(#getSummaryModels, []),
+            returnValue: _i7.Future<List<_i4.SummaryModelInfo>>.value(
+              <_i4.SummaryModelInfo>[],
+            ),
+          )
+          as _i7.Future<List<_i4.SummaryModelInfo>>);
 
   @override
   _i7.Future<void> getPendingSummaries() =>

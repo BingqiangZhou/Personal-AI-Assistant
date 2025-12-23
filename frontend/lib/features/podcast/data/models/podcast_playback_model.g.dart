@@ -58,6 +58,8 @@ PodcastSummaryResponse _$PodcastSummaryResponseFromJson(
   transcriptUsed: json['transcript_used'] as bool? ?? false,
   generatedAt: DateTime.parse(json['generated_at'] as String),
   wordCount: (json['word_count'] as num).toInt(),
+  modelUsed: json['model_used'] as String?,
+  processingTime: (json['processing_time'] as num?)?.toDouble(),
 );
 
 Map<String, dynamic> _$PodcastSummaryResponseToJson(
@@ -70,6 +72,8 @@ Map<String, dynamic> _$PodcastSummaryResponseToJson(
   'transcript_used': instance.transcriptUsed,
   'generated_at': instance.generatedAt.toIso8601String(),
   'word_count': instance.wordCount,
+  'model_used': instance.modelUsed,
+  'processing_time': instance.processingTime,
 };
 
 PodcastSummaryRequest _$PodcastSummaryRequestFromJson(
@@ -152,3 +156,36 @@ Map<String, dynamic> _$PodcastSearchFilterToJson(
   'duration_min': instance.durationMin,
   'duration_max': instance.durationMax,
 };
+
+SummaryModelInfo _$SummaryModelInfoFromJson(Map<String, dynamic> json) =>
+    SummaryModelInfo(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      displayName: json['display_name'] as String,
+      provider: json['provider'] as String,
+      modelId: json['model_id'] as String,
+      isDefault: json['is_default'] as bool,
+    );
+
+Map<String, dynamic> _$SummaryModelInfoToJson(SummaryModelInfo instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'display_name': instance.displayName,
+      'provider': instance.provider,
+      'model_id': instance.modelId,
+      'is_default': instance.isDefault,
+    };
+
+SummaryModelsResponse _$SummaryModelsResponseFromJson(
+  Map<String, dynamic> json,
+) => SummaryModelsResponse(
+  models: (json['models'] as List<dynamic>)
+      .map((e) => SummaryModelInfo.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  total: (json['total'] as num).toInt(),
+);
+
+Map<String, dynamic> _$SummaryModelsResponseToJson(
+  SummaryModelsResponse instance,
+) => <String, dynamic>{'models': instance.models, 'total': instance.total};

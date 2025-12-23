@@ -54,6 +54,8 @@ from app.domains.podcast.schemas import (
     PodcastSummaryRequest,
     PodcastSummaryResponse,
     PodcastSummaryPendingResponse,
+    SummaryModelInfo,
+    SummaryModelsResponse,
     PodcastEpisodeFilter,
     PodcastSearchFilter,
     PodcastStatsResponse,
@@ -325,7 +327,7 @@ async def generate_summary(
     - 支持切换AI模型和自定义提示词
     """
     service = PodcastService(db, int(user["sub"]))
-    ai_summary_service = AISummaryService(db)
+    ai_summary_service = DatabaseBackedAISummaryService(db)
 
     try:
         # 验证播客单集存在且属于当前用户
@@ -344,32 +346,28 @@ async def generate_summary(
             )
 
         # 生成或重新生成总结
-        if request.force_regenerate:
-            task = await ai_summary_service.regenerate_summary(
-                episode_id,
-                request.summary_model,
-                request.custom_prompt
-            )
-        else:
-            task = await ai_summary_service.generate_summary(
-                episode_id,
-                request.summary_model,
-                request.custom_prompt
-            )
+        summary_result = await ai_summary_service.generate_summary(
+            episode_id,
+            request.summary_model,
+            request.custom_prompt
+        )
 
         # 返回总结响应
         return PodcastSummaryResponse(
             episode_id=episode_id,
-            summary=task.summary_content or "",
-            version="1.0",  # 可以根据需要管理版本
-            confidence_score=None,  # 可以后续添加
-            transcript_used=True,  # AI总结服务总是使用转录内容
-            generated_at=task.updated_at,
-            word_count=task.summary_word_count or 0
+            summary=summary_result["summary_content"],
+            version="1.0",
+            confidence_score=None,
+            transcript_used=True,
+            generated_at=datetime.utcnow(),
+            word_count=len(summary_result["summary_content"].split()),
+            model_used=summary_result["model_name"],
+            processing_time=summary_result["processing_time"]
         )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
+        logger.error(f"Failed to generate summary for episode {episode_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -448,6 +446,43 @@ async def get_pending_summaries(
         count=len(pending),
         episodes=pending
     )
+
+
+@router.get(
+    "/summaries/models",
+    response_model=SummaryModelsResponse,
+    summary="获取可用的AI总结模型列表"
+)
+async def get_summary_models(
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """获取所有可用的AI总结模型"""
+    ai_summary_service = DatabaseBackedAISummaryService(db)
+
+    try:
+        models = await ai_summary_service.get_summary_models()
+
+        # 转换为SummaryModelInfo格式
+        model_infos = [
+            SummaryModelInfo(
+                id=model["id"],
+                name=model["name"],
+                display_name=model["display_name"],
+                provider=model["provider"],
+                model_id=model["model_id"],
+                is_default=model["is_default"]
+            )
+            for model in models
+        ]
+
+        return SummaryModelsResponse(
+            models=model_infos,
+            total=len(model_infos)
+        )
+    except Exception as e:
+        logger.error(f"Failed to get summary models: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # === 搜索功能 ===
