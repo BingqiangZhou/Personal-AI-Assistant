@@ -55,7 +55,7 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
       };
 
       final response = await ref
-          .read(modelProvider(widget.model.id))
+          .read(modelNotifierProvider(widget.model.id).notifier)
           .testModel(testData: testData);
 
       if (response != null && mounted) {

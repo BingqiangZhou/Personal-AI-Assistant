@@ -123,22 +123,6 @@ class AIModelConfigResponse(AIModelConfigBase):
         # 告诉Pydantic从ORM模型读取时忽略未定义的字段
         orm_mode = True
 
-    # 隐藏真实API密钥，返回掩码后的值
-    def dict(self, *args, **kwargs):
-        data = super().dict(*args, **kwargs)
-        if data.get('api_key'):
-            data['api_key'] = self.api_key_masked
-        return data
-
-    @property
-    def api_key_masked(self) -> str:
-        """返回掩码后的API密钥"""
-        if not self.api_key:
-            return ""
-        if len(self.api_key) <= 8:
-            return "*" * len(self.api_key)
-        return self.api_key[:4] + "*" * (len(self.api_key) - 8) + self.api_key[-4:]
-
 
 class AIModelConfigList(BaseModel):
     """AI模型配置列表响应模式"""

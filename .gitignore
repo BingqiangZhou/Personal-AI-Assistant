@@ -136,3 +136,4 @@ credentials.txt.bak
 temp_*
 *.tmp
 backend/data/.rsa_keys
+.trae/

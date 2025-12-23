@@ -3,6 +3,7 @@ import '../../../../core/providers/core_providers.dart';
 import '../../../ai/data/services/ai_model_api_service.dart';
 import '../../../ai/models/ai_model_config_model.dart';
 import 'package:logger/logger.dart';
+import 'package:dio/dio.dart';
 
 // API Service Provider
 final aiModelApiServiceProvider = Provider<AIModelApiService>((ref) {
@@ -67,22 +68,15 @@ class AISettingsController extends Notifier<AISettingsState> {
     required String modelId, // The specific model ID (e.g. gpt-4o)
     required String name, // Config name (e.g. gpt-4o)
     required String provider,
+    int? id, // Optional: if provided, updates this specific config
   }) async {
     state = state.copyWith(isLoading: true, error: null, success: false);
     final apiService = ref.read(aiModelApiServiceProvider);
 
     try {
-      // API密钥通过HTTPS直接传输（安全）
-      // 后端会使用Fernet加密存储
+      // API key transmitted directly over HTTPS (secure)
+      // Backend stores it encrypted using Fernet
       _logger.d('Saving API key for model $name (transmitted over HTTPS, encrypted with Fernet at rest)');
-
-      // 检查模型配置是否存在
-      final allModels = await apiService.getModels(search: name, modelType: type);
-      AIModelConfigModel? existingModel;
-
-      if (allModels.models.isNotEmpty) {
-        existingModel = allModels.models.firstWhere((m) => m.name == name, orElse: () => allModels.models.first);
-      }
 
       final modelData = {
         'name': name,
@@ -95,18 +89,32 @@ class AISettingsController extends Notifier<AISettingsState> {
         if (apiKey != null && apiKey.isNotEmpty) 'api_key': apiKey,
       };
 
-      if (existingModel != null) {
-        // Update
-        await apiService.updateModel(existingModel.id, modelData);
+      if (id != null) {
+        // Update existing by ID
+        await apiService.updateModel(id, modelData);
         // Ensure it is default
-        await apiService.setDefaultModel(existingModel.id, type);
+        await apiService.setDefaultModel(id, type);
       } else {
-        // Create
-        final newModel = await apiService.createModel({
-            ...modelData,
-            'display_name': name,
-            'is_default': true,
-        });
+        // Check if config exists by name
+        final allModels = await apiService.getModels(search: name, modelType: type);
+        AIModelConfigModel? existingModel;
+
+        if (allModels.models.isNotEmpty) {
+          existingModel = allModels.models.firstWhere((m) => m.name == name, orElse: () => allModels.models.first);
+        }
+
+        if (existingModel != null) {
+          // Update found model
+          await apiService.updateModel(existingModel.id, modelData);
+          await apiService.setDefaultModel(existingModel.id, type);
+        } else {
+          // Create new
+          await apiService.createModel({
+              ...modelData,
+              'display_name': name,
+              'is_default': true,
+          });
+        }
       }
 
       // Refresh providers
@@ -121,6 +129,44 @@ class AISettingsController extends Notifier<AISettingsState> {
       state = state.copyWith(isLoading: false, success: true);
     } catch (e) {
       _logger.e('Failed to save settings: $e');
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> deleteModel(int modelId) async {
+    state = state.copyWith(isLoading: true, error: null, success: false);
+    final apiService = ref.read(aiModelApiServiceProvider);
+
+    try {
+      await apiService.deleteModel(modelId);
+      
+      // Refresh all model providers
+      ref.refresh(activeTranscriptionModelsProvider);
+      ref.refresh(transcriptionModelsListProvider);
+      ref.refresh(activeTextModelsProvider);
+      ref.refresh(textModelsListProvider);
+
+      state = state.copyWith(isLoading: false, success: true);
+    } on DioException catch (e) {
+      // Check if the response was actually successful (200 or 204)
+      // Dio might throw 'bad response' if the body is empty but it expects JSON,
+      // or if validateStatus failed but we want to allow it.
+      final int? statusCode = e.response?.statusCode;
+      if (statusCode == 200 || statusCode == 204) {
+         // Refresh all model providers
+        ref.refresh(activeTranscriptionModelsProvider);
+        ref.refresh(transcriptionModelsListProvider);
+        ref.refresh(activeTextModelsProvider);
+        ref.refresh(textModelsListProvider);
+
+        state = state.copyWith(isLoading: false, success: true);
+        return;
+      }
+      
+      _logger.e('Failed to delete model: $e. Status: $statusCode. Data: ${e.response?.data}');
+      state = state.copyWith(isLoading: false, error: e.message?.isNotEmpty == true ? e.message : e.toString());
+    } catch (e) {
+      _logger.e('Failed to delete model: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }

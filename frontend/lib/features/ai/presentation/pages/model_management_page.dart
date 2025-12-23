@@ -109,7 +109,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
     );
 
     if (confirmed == true) {
-      final notifier = ref.read(modelProvider(model.id));
+      final notifier = ref.read(modelNotifierProvider(model.id).notifier);
       final success = await notifier.deleteModel();
       if (mounted) {
         if (success) {
@@ -134,7 +134,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
 
   void _setAsDefault(AIModelConfigModel model) async {
     final success = await ref
-        .read(modelProvider(model.id))
+        .read(modelNotifierProvider(model.id).notifier)
         .setAsDefault(_selectedType.toString().split('.').last);
 
     if (mounted) {
@@ -158,7 +158,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
   }
 
   void _toggleModelActive(AIModelConfigModel model) async {
-    final notifier = ref.read(modelProvider(model.id));
+    final notifier = ref.read(modelNotifierProvider(model.id).notifier);
     final success = await notifier.updateModel({
       'is_active': !model.isActive,
     });

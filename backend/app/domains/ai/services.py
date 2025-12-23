@@ -247,46 +247,8 @@ class AIModelConfigService:
         ]
 
     async def init_default_models(self) -> List[AIModelConfig]:
-        """初始化默认模型配置"""
-        preset_configs = self._get_preset_model_configs()
-
-        created_models = []
-
-        for preset in preset_configs:
-            # 检查是否已存在
-            existing = await self.repo.get_by_name(preset.name)
-            if existing:
-                logger.info(f"Model {preset.name} already exists, skipping")
-                continue
-
-            # 从环境变量获取API密钥
-            api_key = self._get_preset_api_key(preset)
-
-            # 创建模型配置
-            model_data = AIModelConfigCreate(
-                name=preset.name,
-                display_name=preset.display_name,
-                description=preset.description,
-                model_type=preset.model_type,
-                api_url=preset.api_url,
-                api_key=api_key,
-                model_id=preset.model_id,
-                provider=preset.provider,
-                max_tokens=preset.max_tokens,
-                temperature=preset.temperature,
-                extra_config=preset.extra_config,
-                is_default=True,  # 预设模型默认为默认模型
-                is_active=bool(api_key)  # 有API密钥才激活
-            )
-
-            model = await self.create_model(model_data)
-            model.is_system = True  # 标记为系统预设
-            await self.db.commit()
-
-            created_models.append(model)
-            logger.info(f"Created default model: {preset.name}")
-
-        return created_models
+        """初始化默认模型配置 - 已禁用系统预设"""
+        return []
 
     async def _get_decrypted_api_key(self, model: AIModelConfig) -> str:
         """获取解密的API密钥"""
@@ -374,67 +336,7 @@ class AIModelConfigService:
         await self.db.execute(stmt)
         await self.db.commit()
 
-    def _get_preset_model_configs(self) -> List[PresetModelConfig]:
-        """获取预设模型配置"""
-        return [
-            # 转录模型
-            PresetModelConfig(
-                name="whisper-1",
-                display_name="OpenAI Whisper",
-                description="OpenAI的Whisper语音识别模型",
-                model_type=ModelType.TRANSCRIPTION,
-                provider="openai",
-                model_id="whisper-1",
-                api_url="https://api.openai.com/v1/audio/transcriptions",
-                max_tokens=None,
-                temperature=None
-            ),
-            PresetModelConfig(
-                name="sensevoice-small",
-                display_name="SenseVoice Small",
-                description="硅基流动的SenseVoice语音识别模型",
-                model_type=ModelType.TRANSCRIPTION,
-                provider="siliconflow",
-                model_id="FunAudioLLM/SenseVoiceSmall",
-                api_url="https://api.siliconflow.cn/v1/audio/transcriptions",
-                max_tokens=None,
-                temperature=None
-            ),
-            # 文本生成模型
-            PresetModelConfig(
-                name="gpt-4o-mini",
-                display_name="GPT-4o Mini",
-                description="OpenAI的GPT-4o Mini模型",
-                model_type=ModelType.TEXT_GENERATION,
-                provider="openai",
-                model_id="gpt-4o-mini",
-                api_url="https://api.openai.com/v1",
-                max_tokens=1000,
-                temperature="0.7"
-            ),
-            PresetModelConfig(
-                name="gpt-4o",
-                display_name="GPT-4o",
-                description="OpenAI的GPT-4o模型",
-                model_type=ModelType.TEXT_GENERATION,
-                provider="openai",
-                model_id="gpt-4o",
-                api_url="https://api.openai.com/v1",
-                max_tokens=1000,
-                temperature="0.7"
-            ),
-            PresetModelConfig(
-                name="gpt-3.5-turbo",
-                display_name="GPT-3.5 Turbo",
-                description="OpenAI的GPT-3.5 Turbo模型",
-                model_type=ModelType.TEXT_GENERATION,
-                provider="openai",
-                model_id="gpt-3.5-turbo",
-                api_url="https://api.openai.com/v1",
-                max_tokens=1000,
-                temperature="0.7"
-            )
-        ]
+        return []
 
     def _get_preset_api_key(self, preset: PresetModelConfig) -> Optional[str]:
         """获取预设模型的API密钥"""

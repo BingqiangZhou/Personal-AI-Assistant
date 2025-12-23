@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/riverpod.dart';
 
 import '../../data/services/ai_model_api_service.dart';
 import '../../data/repositories/ai_model_repository.dart';
 import '../../models/ai_model_config_model.dart';
 import '../../../../core/providers/core_providers.dart';
 
-// API服务Provider
+// API Service Provider
 final aiModelApiServiceProvider = Provider<AIModelApiService>((ref) {
   final dioClient = ref.watch(dioClientProvider);
   return AIModelApiService(dioClient.dio);
@@ -17,7 +18,7 @@ final aiModelRepositoryProvider = Provider<AIModelRepository>((ref) {
   return AIModelRepository(apiService);
 });
 
-// 模型列表状态
+// Model List State
 class ModelListState {
   final List<AIModelConfigModel> models;
   final bool isLoading;
@@ -54,7 +55,7 @@ class ModelListState {
   }
 }
 
-// 模型列表Notifier - 使用Notifier（Riverpod 3.x推荐）
+// Model List Notifier - Uses Notifier (Recommended for Riverpod 3.x)
 class ModelListNotifier extends Notifier<ModelListState> {
   @override
   ModelListState build() {
@@ -67,7 +68,7 @@ class ModelListNotifier extends Notifier<ModelListState> {
     _repository = ref.read(aiModelRepositoryProvider);
   }
 
-  /// 加载模型列表
+  /// Load model list
   Future<void> loadModels({
     String? modelType,
     bool? isActive,
@@ -104,7 +105,7 @@ class ModelListNotifier extends Notifier<ModelListState> {
     }
   }
 
-  /// 刷新列表
+  /// Refresh list
   Future<void> refresh({
     String? modelType,
     bool? isActive,
@@ -120,7 +121,7 @@ class ModelListNotifier extends Notifier<ModelListState> {
     );
   }
 
-  /// 加载更多
+  /// Load more
   Future<void> loadMore({
     String? modelType,
     bool? isActive,
@@ -138,7 +139,7 @@ class ModelListNotifier extends Notifier<ModelListState> {
     );
   }
 
-  /// 添加模型到列表
+  /// Add model to list
   void addModel(AIModelConfigModel model) {
     state = state.copyWith(
       models: [model, ...state.models],
@@ -146,7 +147,7 @@ class ModelListNotifier extends Notifier<ModelListState> {
     );
   }
 
-  /// 更新列表中的模型
+  /// Update model in list
   void updateModel(AIModelConfigModel updatedModel) {
     final models = state.models.map((model) {
       return model.id == updatedModel.id ? updatedModel : model;
@@ -155,7 +156,7 @@ class ModelListNotifier extends Notifier<ModelListState> {
     state = state.copyWith(models: models);
   }
 
-  /// 从列表中移除模型
+  /// Remove model from list
   void removeModel(int modelId) {
     final models = state.models.where((model) => model.id != modelId).toList();
     state = state.copyWith(
@@ -164,16 +165,16 @@ class ModelListNotifier extends Notifier<ModelListState> {
     );
   }
 
-  /// 清除错误
+  /// Clear error
   void clearError() {
     state = state.copyWith(error: null);
   }
 }
 
-// 模型列表Provider
+// Model List Provider
 final modelListProvider = NotifierProvider<ModelListNotifier, ModelListState>(ModelListNotifier.new);
 
-// 单个模型状态
+// Single Model State
 class ModelState {
   final AIModelConfigModel? model;
   final bool isLoading;
@@ -210,28 +211,23 @@ class ModelState {
   }
 }
 
-// 单个模型Notifier - 使用Notifier.family
+// Single Model Notifier - Uses Notifier pattern for Riverpod 3.0
 class ModelNotifier extends Notifier<ModelState> {
-  late final int modelId;
-  late final AIModelRepository _repository;
+  late AIModelRepository _repository;
+  final int modelId;
+
+  ModelNotifier(this.modelId);
 
   @override
   ModelState build() {
-    // In Riverpod 3.x, family parameters are passed via ref.watch
-    // We need to get them from the provider's context
+    _repository = ref.read(aiModelRepositoryProvider);
     return const ModelState();
-  }
-
-  // Called by the provider factory to set up the notifier
-  void setup(int id, AIModelRepository repo) {
-    modelId = id;
-    _repository = repo;
   }
 
   // Getter to expose current model
   AIModelConfigModel? get currentModel => state.model;
 
-  /// 加载模型详情
+  /// Load model details
   Future<void> loadModel() async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -249,7 +245,7 @@ class ModelNotifier extends Notifier<ModelState> {
     }
   }
 
-  /// 更新模型
+  /// Update model
   Future<bool> updateModel(Map<String, dynamic> updateData) async {
     state = state.copyWith(isSaving: true, error: null);
 
@@ -260,7 +256,7 @@ class ModelNotifier extends Notifier<ModelState> {
         isSaving: false,
       );
 
-      // 同时更新列表中的模型
+      // Also update model in list
       ref.read(modelListProvider.notifier).updateModel(updatedModel);
 
       return true;
@@ -273,14 +269,14 @@ class ModelNotifier extends Notifier<ModelState> {
     }
   }
 
-  /// 删除模型
+  /// Delete model
   Future<bool> deleteModel() async {
     state = state.copyWith(isDeleting: true, error: null);
 
     try {
       await _repository.deleteModel(modelId);
 
-      // 从列表中移除
+      // Remove from list
       ref.read(modelListProvider.notifier).removeModel(modelId);
 
       state = state.copyWith(isDeleting: false);
@@ -294,7 +290,7 @@ class ModelNotifier extends Notifier<ModelState> {
     }
   }
 
-  /// 测试模型
+  /// Test model
   Future<ModelTestResponse?> testModel({
     Map<String, dynamic>? testData,
   }) async {
@@ -317,7 +313,7 @@ class ModelNotifier extends Notifier<ModelState> {
     }
   }
 
-  /// 设置为默认模型
+  /// Set as default model
   Future<bool> setAsDefault(String modelType) async {
     state = state.copyWith(isSaving: true, error: null);
 
@@ -328,7 +324,7 @@ class ModelNotifier extends Notifier<ModelState> {
         isSaving: false,
       );
 
-      // 同时更新列表中的模型
+      // Also update model in list
       ref.read(modelListProvider.notifier).updateModel(updatedModel);
 
       return true;
@@ -341,31 +337,16 @@ class ModelNotifier extends Notifier<ModelState> {
     }
   }
 
-  /// 清除错误
+  /// Clear error
   void clearError() {
     state = state.copyWith(error: null);
   }
 }
 
-// 单个模型Provider - 使用自定义family工厂
-// Riverpod 3.x的NotifierProvider.family在某些情况下可能有兼容性问题
-// 这里使用Provider.family返回Notifier，然后通过额外的Provider暴露状态
-final modelProvider = Provider.family<ModelNotifier, int>((ref, modelId) {
-  final repository = ref.read(aiModelRepositoryProvider);
-  final notifier = ModelNotifier();
-  notifier.setup(modelId, repository);
-  return notifier;
-});
+// Single Model Notifier Provider
+final modelNotifierProvider = NotifierProvider.family<ModelNotifier, ModelState, int>(ModelNotifier.new);
 
-// 状态访问Provider - 包装modelProvider以暴露状态
-final modelStateProvider = Provider.family<ModelState, int>((ref, modelId) {
-  // 这里我们无法直接watch到ModelNotifier的state变化
-  // 所以需要使用StateNotifierProvider或者改变设计
-  // 为简化，我们将使用FutureProvider来加载单个模型
-  return const ModelState();
-});
-
-// 单个模型详情Future Provider（替代方案，更简单可靠）
+// Single Model Details Future Provider (Alternative, simpler and more reliable)
 final modelDetailProvider = FutureProvider.family<AIModelConfigModel?, int>((ref, modelId) async {
   final repository = ref.watch(aiModelRepositoryProvider);
   try {
@@ -375,7 +356,7 @@ final modelDetailProvider = FutureProvider.family<AIModelConfigModel?, int>((ref
   }
 });
 
-// 创建模型状态
+// Create Model State
 class CreateModelState {
   final bool isCreating;
   final String? error;
@@ -400,7 +381,7 @@ class CreateModelState {
   }
 }
 
-// 创建模型Notifier
+// Create Model Notifier
 class CreateModelNotifier extends Notifier<CreateModelState> {
   late AIModelRepository _repository;
 
@@ -410,7 +391,7 @@ class CreateModelNotifier extends Notifier<CreateModelState> {
     return const CreateModelState();
   }
 
-  /// 创建新模型
+  /// Create new model
   Future<AIModelConfigModel?> createModel(Map<String, dynamic> modelData) async {
     state = state.copyWith(isCreating: true, error: null);
 
@@ -422,7 +403,7 @@ class CreateModelNotifier extends Notifier<CreateModelState> {
         createdModel: createdModel,
       );
 
-      // 添加到列表
+      // Add to list
       ref.read(modelListProvider.notifier).addModel(createdModel);
 
       return createdModel;
@@ -435,21 +416,21 @@ class CreateModelNotifier extends Notifier<CreateModelState> {
     }
   }
 
-  /// 重置状态
+  /// Reset state
   void reset() {
     state = const CreateModelState();
   }
 
-  /// 清除错误
+  /// Clear error
   void clearError() {
     state = state.copyWith(error: null);
   }
 }
 
-// 创建模型Provider
+// Create Model Provider
 final createModelProvider = NotifierProvider<CreateModelNotifier, CreateModelState>(CreateModelNotifier.new);
 
-// 默认模型Provider
+// Default Model Provider
 final defaultModelsProvider = FutureProvider.family<Map<String, AIModelConfigModel?>, String>((ref, modelType) async {
   final repository = ref.watch(aiModelRepositoryProvider);
   try {
@@ -460,19 +441,19 @@ final defaultModelsProvider = FutureProvider.family<Map<String, AIModelConfigMod
   }
 });
 
-// 活跃模型Provider
+// Active Models Provider
 final activeModelsProvider = FutureProvider.family<List<AIModelConfigModel>, String>((ref, modelType) async {
   final repository = ref.watch(aiModelRepositoryProvider);
   return repository.getActiveModels(modelType);
 });
 
-// 模型统计Provider
+// Model Stats Provider
 final modelStatsProvider = FutureProvider.family<ModelUsageStats, int>((ref, modelId) async {
   final repository = ref.watch(aiModelRepositoryProvider);
   return repository.getModelStats(modelId);
 });
 
-// 类型统计Provider
+// Type Stats Provider
 final typeStatsProvider = FutureProvider.family<List<ModelUsageStats>, String>((ref, modelType) async {
   final repository = ref.watch(aiModelRepositoryProvider);
   return repository.getTypeStats(modelType);

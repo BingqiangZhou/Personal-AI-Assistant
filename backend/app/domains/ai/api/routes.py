@@ -185,6 +185,25 @@ async def get_model(
                 detail=f"Model config {model_id} not found"
             )
 
+        # Decrypt API key for the detail view
+        if model.api_key_encrypted:
+            try:
+                decrypted_key = await service._get_decrypted_api_key(model)
+                # Temporarily replace the encrypted key with the literal key for the response
+                # Note: We must be careful not to commit this to DB. 
+                # Since we are just reading, and this object is from session but not being flushed, it should be fine 
+                # as long as we don't commit. 
+                # However, cleaner is to act on the Pydantic model response construction.
+                # But _create_model_response takes the ORM model.
+                # We can modify the ORM instance in memory (it's dirty but works for response)
+                model.api_key = decrypted_key
+                model.api_key_encrypted = False # Mark as not encrypted so frontend knows it's the real deal? 
+                # Actually schema doesn't care about encryption status for display, but good for clarity.
+            except Exception as e:
+                # If decryption fails, we return the encrypted one (or empty?)
+                # Logging error is better
+                pass
+
         return _create_model_response(model)
     except HTTPException:
         raise

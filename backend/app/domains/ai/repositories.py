@@ -171,7 +171,10 @@ class AIModelConfigRepository:
             if not model:
                 return False
             if model.is_system:
-                raise ValidationError("Cannot delete system model")
+                # 系统模型不能物理删除，只能逻辑删除（停用）
+                # 这样用户界面上如果不显示非活跃模型，就达到了"删除/不显示"的效果
+                await self.update(model_id, {"is_active": False})
+                return True
 
             stmt = delete(AIModelConfig).where(AIModelConfig.id == model_id)
             result = await self.db.execute(stmt)

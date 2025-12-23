@@ -30,6 +30,7 @@ from app.domains.podcast.models import TranscriptionTask, PodcastEpisode, Transc
 from app.core.exceptions import ValidationError, DatabaseError
 from app.domains.ai.repositories import AIModelConfigRepository
 from app.domains.ai.models import ModelType
+from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
 
 logger = logging.getLogger(__name__)
@@ -1486,6 +1487,10 @@ class PodcastTranscriptionService:
                 log_with_timestamp("INFO", f"✅ [TRANSCRIPTION COMPLETE] Successfully completed transcription for episode {task.episode_id}", task_id)
                 log_with_timestamp("INFO", f"✅ [TRANSCRIPTION COMPLETE] Total time: {total_time:.2f}s (download:{download_time:.2f}s, convert:{conversion_time:.2f}s, transcribe:{transcription_time:.2f}s)", task_id)
                 log_with_timestamp("INFO", f"✅ [TRANSCRIPTION COMPLETE] Transcript: {len(full_transcript)} chars, {len(full_transcript.split())} words", task_id)
+                
+                # 触发AI总结
+                log_with_timestamp("INFO", f"🤖 [AI SUMMARY] Scheduling AI summary for episode {task.episode_id}", task_id)
+                await self._schedule_ai_summary(session, task_id)
 
             except Exception as e:
                 import traceback
@@ -1532,6 +1537,35 @@ class PodcastTranscriptionService:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def _schedule_ai_summary(self, session: AsyncSession, task_id: int):
+        """调度AI总结任务"""
+        try:
+            # 获取转录任务
+            task = await self.get_transcription_status(task_id)
+            if not task:
+                log_with_timestamp("ERROR", f"❌ [AI SUMMARY] Transcription task {task_id} not found", task_id)
+                return
+            
+            # 使用DatabaseBackedAISummaryService生成总结
+            summary_service = DatabaseBackedAISummaryService(session)
+            log_with_timestamp("INFO", f"🤖 [AI SUMMARY] Starting AI summary generation for episode {task.episode_id}", task_id)
+            
+            # 调用AI总结服务
+            summary_result = await summary_service.generate_summary(task.episode_id)
+            
+            # 计算字数
+            word_count = len(summary_result['summary_content'].split())
+            
+            log_with_timestamp("INFO", f"✅ [AI SUMMARY] Successfully generated summary for episode {task.episode_id}", task_id)
+            log_with_timestamp("INFO", f"✅ [AI SUMMARY] Summary: {len(summary_result['summary_content'])} chars, {word_count} words", task_id)
+            log_with_timestamp("INFO", f"✅ [AI SUMMARY] Processing time: {summary_result['processing_time']:.2f}s, Model: {summary_result['model_name']}", task_id)
+            
+        except Exception as e:
+            import traceback
+            error_trace = traceback.format_exc()
+            log_with_timestamp("ERROR", f"❌ [AI SUMMARY] Failed to generate summary for task {task_id}: {str(e)}", task_id)
+            logger.error(f"❌ [AI SUMMARY] Traceback: {error_trace}")
+    
     async def cancel_transcription(self, task_id: int) -> bool:
         """取消转录任务"""
         task = await self.get_transcription_status(task_id)

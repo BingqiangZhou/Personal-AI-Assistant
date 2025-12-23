@@ -2,7 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'ai_model_config_model.g.dart';
 
-/// AI模型类型
+/// AI Model Type
 enum AIModelType {
   @JsonValue('transcription')
   transcription,
@@ -10,7 +10,7 @@ enum AIModelType {
   textGeneration,
 }
 
-/// AI模型配置
+/// AI Model Configuration
 @JsonSerializable(fieldRename: FieldRename.snake)
 class AIModelConfigModel {
   final int id;
@@ -19,7 +19,7 @@ class AIModelConfigModel {
   final String? description;
   final AIModelType modelType;
   final String apiUrl;
-  final String? apiKey;  // 返回的会是掩码后的key
+  final String? apiKey;  // Returns masked key
   final bool apiKeyEncrypted;
   final String modelId;
   final String provider;
@@ -82,7 +82,7 @@ class AIModelConfigModel {
 
   Map<String, dynamic> toJson() => _$AIModelConfigModelToJson(this);
 
-  /// 创建模型配置请求（不包含id等只读字段）
+  /// Create model config request (excludes read-only fields like id)
   factory AIModelConfigModel.create({
     required String name,
     required String displayName,
@@ -105,7 +105,7 @@ class AIModelConfigModel {
     bool isDefault = false,
   }) {
     return AIModelConfigModel(
-      id: 0, // 创建时不需要id
+      id: 0, // ID not needed for creation
       name: name,
       displayName: displayName,
       description: description,
@@ -132,7 +132,7 @@ class AIModelConfigModel {
     );
   }
 
-  /// 复制并修改部分字段
+  /// Copy and modify some fields
   AIModelConfigModel copyWith({
     int? id,
     String? name,
@@ -199,23 +199,23 @@ class AIModelConfigModel {
     );
   }
 
-  /// 获取模型类型的显示名称
+  /// Get model type display name
   String get modelTypeDisplayName {
     switch (modelType) {
       case AIModelType.transcription:
-        return '转录模型';
+        return 'Transcription Model';
       case AIModelType.textGeneration:
-        return '文本生成模型';
+        return 'Text Generation Model';
     }
   }
 
-  /// 获取提供商的显示名称
+  /// Get provider display name
   String get providerDisplayName {
     switch (provider) {
       case 'openai':
         return 'OpenAI';
       case 'siliconflow':
-        return '硅基流动';
+        return 'SiliconFlow';
       case 'anthropic':
         return 'Anthropic';
       case 'azure':
@@ -225,10 +225,10 @@ class AIModelConfigModel {
     }
   }
 
-  /// 是否正在使用中
+  /// Is in use
   bool get isInUse => usageCount > 0;
 
-  /// 获取成功率百分比字符串
+  /// Get success rate percentage string
   String get successRatePercentage => '${successRate.toStringAsFixed(1)}%';
 
   @override
@@ -247,7 +247,7 @@ class AIModelConfigModel {
   }
 }
 
-/// AI模型配置列表响应
+/// AI Model Config List Response
 @JsonSerializable(fieldRename: FieldRename.snake)
 class AIModelConfigListResponse {
   final List<AIModelConfigModel> models;
@@ -270,7 +270,7 @@ class AIModelConfigListResponse {
   Map<String, dynamic> toJson() => _$AIModelConfigListResponseToJson(this);
 }
 
-/// 模型使用统计
+/// Model Usage Stats
 @JsonSerializable(fieldRename: FieldRename.snake)
 class ModelUsageStats {
   final int modelId;
@@ -303,7 +303,7 @@ class ModelUsageStats {
   Map<String, dynamic> toJson() => _$ModelUsageStatsToJson(this);
 }
 
-/// 模型测试请求
+/// Model Test Request
 @JsonSerializable(fieldRename: FieldRename.snake)
 class ModelTestRequest {
   final int modelId;
@@ -320,7 +320,7 @@ class ModelTestRequest {
   Map<String, dynamic> toJson() => _$ModelTestRequestToJson(this);
 }
 
-/// 模型测试响应
+/// Model Test Response
 @JsonSerializable(fieldRename: FieldRename.snake)
 class ModelTestResponse {
   final bool success;
@@ -341,7 +341,7 @@ class ModelTestResponse {
   Map<String, dynamic> toJson() => _$ModelTestResponseToJson(this);
 }
 
-/// API密钥验证请求
+/// API Key Validation Request
 @JsonSerializable(fieldRename: FieldRename.snake)
 class APIKeyValidationRequest {
   final String apiUrl;
@@ -362,7 +362,7 @@ class APIKeyValidationRequest {
   Map<String, dynamic> toJson() => _$APIKeyValidationRequestToJson(this);
 }
 
-/// API密钥验证响应
+/// API Key Validation Response
 @JsonSerializable(fieldRename: FieldRename.snake)
 class APIKeyValidationResponse {
   final bool valid;
