@@ -105,7 +105,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = AuthResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -133,7 +133,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = AuthResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -161,7 +161,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = AuthResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -207,7 +207,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = UserModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -238,7 +238,7 @@ class _ApiServices implements ApiServices {
           )
           .toList();
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -268,7 +268,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = ChatSessionModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -295,7 +295,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = ChatSessionModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -326,7 +326,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = ChatSessionModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -384,7 +384,7 @@ class _ApiServices implements ApiServices {
           )
           .toList();
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -415,7 +415,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = ChatMessageModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -476,7 +476,7 @@ class _ApiServices implements ApiServices {
         (json) => KnowledgeItemModel.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -506,7 +506,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = KnowledgeItemModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -533,7 +533,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = KnowledgeItemModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -564,7 +564,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = KnowledgeItemModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -613,7 +613,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = KnowledgeItemModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -665,7 +665,7 @@ class _ApiServices implements ApiServices {
         (json) => KnowledgeItemModel.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -706,7 +706,7 @@ class _ApiServices implements ApiServices {
         (json) => SubscriptionModel.fromJson(json as Map<String, dynamic>),
       );
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -736,7 +736,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = SubscriptionModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -763,7 +763,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = SubscriptionModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -794,7 +794,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = SubscriptionModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;
@@ -840,7 +840,7 @@ class _ApiServices implements ApiServices {
     try {
       _value = SubscriptionModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, _result);
       rethrow;
     }
     return _value;

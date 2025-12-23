@@ -55,8 +55,8 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     // Load initial episodes
     Future.microtask(() {
       ref
-          .read(podcastEpisodesProvider(widget.subscriptionId).notifier)
-          .loadEpisodes();
+          .read(podcastEpisodesProvider.notifier)
+          .loadEpisodesForSubscription(subscriptionId: widget.subscriptionId);
     });
 
     // Setup scroll listener for infinite scroll
@@ -64,8 +64,8 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
         ref
-            .read(podcastEpisodesProvider(widget.subscriptionId).notifier)
-            .loadMoreEpisodes();
+            .read(podcastEpisodesProvider.notifier)
+            .loadMoreEpisodesForSubscription(subscriptionId: widget.subscriptionId);
       }
     });
   }
@@ -78,8 +78,9 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
 
   Future<void> _refreshEpisodes() async {
     await ref
-        .read(podcastEpisodesProvider(widget.subscriptionId).notifier)
-        .loadEpisodes(
+        .read(podcastEpisodesProvider.notifier)
+        .refreshEpisodesForSubscription(
+          subscriptionId: widget.subscriptionId,
           status: _selectedFilter == 'played'
               ? 'played'
               : _selectedFilter == 'unplayed'
@@ -90,9 +91,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final episodesState = ref.watch(
-      podcastEpisodesProvider(widget.subscriptionId),
-    );
+    final episodesState = ref.watch(podcastEpisodesProvider);
     // Don't watch audioPlayerProvider to avoid initializing it on startup
     // final audioPlayerState = ref.watch(audioPlayerProvider);
 

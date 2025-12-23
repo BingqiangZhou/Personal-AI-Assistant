@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:async/async.dart';
 
 import '../../../../core/providers/core_providers.dart';
 import '../../data/models/podcast_episode_model.dart';
@@ -16,8 +17,6 @@ import '../../data/models/podcast_state_models.dart';
 import '../../data/repositories/podcast_repository.dart';
 import '../../data/services/podcast_api_service.dart';
 import 'package:json_annotation/json_annotation.dart';
-
-part 'podcast_providers.g.dart';
 
 // === API Service & Repository Providers ===
 
@@ -31,10 +30,9 @@ final podcastRepositoryProvider = Provider<PodcastRepository>((ref) {
   return PodcastRepository(apiService);
 });
 
-// === Audio Player Provider ===
+final audioPlayerProvider = NotifierProvider<AudioPlayerNotifier, AudioPlayerState>(AudioPlayerNotifier.new);
 
-@riverpod
-class AudioPlayerNotifier extends _$AudioPlayerNotifier {
+class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   AudioPlayer? _player;
   late PodcastRepository _repository;
   bool _isDisposed = false;
@@ -63,15 +61,15 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
       _player = AudioPlayer();
 
       // Listen to player state changes
-      _player!.onPlayerStateChanged.listen((state) {
+      _player!.onPlayerStateChanged.listen((playerState) {
         if (_isDisposed || !ref.mounted) return;
 
         if (kDebugMode) {
-          debugPrint('🎵 Player state changed: $state');
+          debugPrint('🎵 Player state changed: $playerState');
         }
 
         ProcessingState processingState;
-        switch (state) {
+        switch (playerState) {
           case PlayerState.stopped:
           case PlayerState.completed:
             processingState = ProcessingState.completed;
@@ -87,8 +85,8 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
             break;
         }
 
-        this.state = this.state.copyWith(
-          isPlaying: state == PlayerState.playing,
+        state = state.copyWith(
+          isPlaying: playerState == PlayerState.playing,
           isLoading: false,
           processingState: processingState,
         );
@@ -98,11 +96,7 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
       _player!.onPositionChanged.listen((position) {
         if (_isDisposed || !ref.mounted) return;
 
-        // if (kDebugMode) {
-        //   debugPrint('🎵 Position updated: ${position.inMilliseconds}ms');
-        // }
-
-        this.state = this.state.copyWith(
+        state = state.copyWith(
           position: position.inMilliseconds,
         );
       });
@@ -116,7 +110,7 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
             debugPrint('🎵 Duration updated: ${duration.inMilliseconds}ms');
           }
 
-          this.state = this.state.copyWith(
+          state = state.copyWith(
             duration: duration.inMilliseconds,
           );
         }
@@ -128,7 +122,9 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
     } catch (error) {
       debugPrint('Failed to initialize audio player: $error');
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(error: 'Failed to initialize audio player: $error');
+        state = state.copyWith(
+          error: 'Failed to initialize audio player: $error'
+        );
       }
       rethrow;
     }
@@ -220,7 +216,9 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
       }
     } catch (error) {
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(error: error.toString());
+        state = state.copyWith(
+          error: error.toString()
+        );
       }
     }
   }
@@ -235,7 +233,9 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
       }
     } catch (error) {
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(error: error.toString());
+        state = state.copyWith(
+          error: error.toString()
+        );
       }
     }
   }
@@ -246,11 +246,16 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
     try {
       await _player!.seek(Duration(milliseconds: position));
       if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(
+          position: position
+        );
         await _updatePlaybackStateOnServer();
       }
     } catch (error) {
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(error: error.toString());
+        state = state.copyWith(
+          error: error.toString()
+        );
       }
     }
   }
@@ -261,12 +266,16 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
     try {
       await _player!.setPlaybackRate(rate);
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(playbackRate: rate);
+        state = state.copyWith(
+          playbackRate: rate
+        );
         await _updatePlaybackStateOnServer();
       }
     } catch (error) {
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(error: error.toString());
+        state = state.copyWith(
+          error: error.toString()
+        );
       }
     }
   }
@@ -285,14 +294,18 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
       }
     } catch (error) {
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(error: error.toString());
+        state = state.copyWith(
+          error: error.toString()
+        );
       }
     }
   }
 
   void setExpanded(bool expanded) {
     if (ref.mounted && !_isDisposed) {
-      state = state.copyWith(isExpanded: expanded);
+      state = state.copyWith(
+        isExpanded: expanded
+      );
     }
   }
 
@@ -327,18 +340,18 @@ class AudioPlayerNotifier extends _$AudioPlayerNotifier {
   }
 }
 
-// === Subscription Providers ===
-@riverpod
-class PodcastSubscriptionNotifier extends _$PodcastSubscriptionNotifier {
+final podcastSubscriptionProvider = AsyncNotifierProvider<PodcastSubscriptionNotifier, PodcastSubscriptionListResponse>(PodcastSubscriptionNotifier.new);
+
+class PodcastSubscriptionNotifier extends AsyncNotifier<PodcastSubscriptionListResponse> {
   late PodcastRepository _repository;
 
   @override
-  AsyncValue<PodcastSubscriptionListResponse> build() {
+  FutureOr<PodcastSubscriptionListResponse> build() {
     _repository = ref.read(podcastRepositoryProvider);
-    return const AsyncValue.loading();
+    return loadSubscriptions();
   }
 
-  Future<void> loadSubscriptions({
+  Future<PodcastSubscriptionListResponse> loadSubscriptions({
     int page = 1,
     int size = 20,
     int? categoryId,
@@ -354,8 +367,10 @@ class PodcastSubscriptionNotifier extends _$PodcastSubscriptionNotifier {
         status: status,
       );
       state = AsyncValue.data(response);
+      return response;
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
+      rethrow;
     }
   }
 
@@ -412,9 +427,9 @@ class PodcastSubscriptionNotifier extends _$PodcastSubscriptionNotifier {
   }
 }
 
-// === Feed Providers ===
-@riverpod
-class PodcastFeedNotifier extends _$PodcastFeedNotifier {
+final podcastFeedProvider = NotifierProvider<PodcastFeedNotifier, PodcastFeedState>(PodcastFeedNotifier.new);
+
+class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
   late PodcastRepository _repository;
 
   @override
@@ -449,13 +464,14 @@ class PodcastFeedNotifier extends _$PodcastFeedNotifier {
   }
 
   Future<void> loadMoreFeed() async {
-    if (state.isLoadingMore || !state.hasMore) return;
+    final currentState = state;
+    if (currentState.isLoadingMore || !currentState.hasMore) return;
 
     state = state.copyWith(isLoadingMore: true);
 
     try {
       final response = await _repository.getPodcastFeed(
-        page: state.nextPage ?? 1,
+        page: currentState.nextPage ?? 1,
         pageSize: 20,
       );
 
@@ -490,15 +506,15 @@ class PodcastFeedNotifier extends _$PodcastFeedNotifier {
   }
 }
 
-// === Search Provider ===
-@riverpod
-class PodcastSearchNotifier extends _$PodcastSearchNotifier {
+final podcastSearchProvider = AsyncNotifierProvider<PodcastSearchNotifier, PodcastEpisodeListResponse>(PodcastSearchNotifier.new);
+
+class PodcastSearchNotifier extends AsyncNotifier<PodcastEpisodeListResponse> {
   late PodcastRepository _repository;
 
   @override
-  AsyncValue<PodcastEpisodeListResponse> build() {
+  FutureOr<PodcastEpisodeListResponse> build() {
     _repository = ref.read(podcastRepositoryProvider);
-    return const AsyncValue.data(PodcastEpisodeListResponse(
+    return Future.value(const PodcastEpisodeListResponse(
       episodes: [],
       total: 0,
       page: 1,
@@ -515,7 +531,7 @@ class PodcastSearchNotifier extends _$PodcastSearchNotifier {
     int size = 20,
   }) async {
     if (query.trim().isEmpty) {
-      state = const AsyncValue.data(PodcastEpisodeListResponse(
+      state = AsyncValue.data(const PodcastEpisodeListResponse(
         episodes: [],
         total: 0,
         page: 1,
@@ -543,19 +559,17 @@ class PodcastSearchNotifier extends _$PodcastSearchNotifier {
 }
 
 // === Stats Provider ===
-@riverpod
-Future<PodcastStatsResponse?> podcastStatsProvider(Ref ref) async {
+final podcastStatsProvider = FutureProvider<PodcastStatsResponse?>((ref) async {
   final repository = ref.read(podcastRepositoryProvider);
   try {
     return await repository.getStats();
   } catch (error) {
     return null;
   }
-}
+});
 
 // === Episode Detail Provider ===
-@riverpod
-Future<PodcastEpisodeDetailResponse?> episodeDetailProvider(Ref ref, int episodeId) async {
+final episodeDetailProvider = FutureProvider.family<PodcastEpisodeDetailResponse?, int>((ref, episodeId) async {
   final repository = ref.read(podcastRepositoryProvider);
   try {
     return await repository.getEpisode(episodeId);
@@ -563,20 +577,24 @@ Future<PodcastEpisodeDetailResponse?> episodeDetailProvider(Ref ref, int episode
     debugPrint('Failed to load episode detail: $error');
     return null;
   }
-}
+});
 
-// === Episode Episodes Provider ===
-@riverpod
-class PodcastEpisodesNotifier extends _$PodcastEpisodesNotifier {
+// For Riverpod 3.0.3, we need to use a different approach for family providers
+// Let's use a simple Notifier and pass the subscriptionId through methods
+final podcastEpisodesProvider = NotifierProvider<PodcastEpisodesNotifier, PodcastEpisodesState>(PodcastEpisodesNotifier.new);
+
+class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
   late PodcastRepository _repository;
 
   @override
-  PodcastEpisodesState build(int subscriptionId) {
+  PodcastEpisodesState build() {
     _repository = ref.read(podcastRepositoryProvider);
     return const PodcastEpisodesState();
   }
 
-  Future<void> loadEpisodes({
+  // Load episodes for a specific subscription
+  Future<void> loadEpisodesForSubscription({
+    required int subscriptionId,
     int page = 1,
     int size = 20,
     String? status,
@@ -607,15 +625,19 @@ class PodcastEpisodesNotifier extends _$PodcastEpisodesNotifier {
     }
   }
 
-  Future<void> loadMoreEpisodes() async {
-    if (state.isLoadingMore || !state.hasMore) return;
+  // Load more episodes for the current subscription
+  Future<void> loadMoreEpisodesForSubscription({
+    required int subscriptionId,
+  }) async {
+    final currentState = state;
+    if (currentState.isLoadingMore || !currentState.hasMore) return;
 
     state = state.copyWith(isLoadingMore: true);
 
     try {
       final response = await _repository.listEpisodes(
         subscriptionId: subscriptionId,
-        page: state.nextPage ?? 1,
+        page: currentState.nextPage ?? 1,
         size: 20,
       );
 
@@ -633,9 +655,16 @@ class PodcastEpisodesNotifier extends _$PodcastEpisodesNotifier {
     }
   }
 
-  Future<void> refresh() async {
+  // Refresh episodes for a specific subscription
+  Future<void> refreshEpisodesForSubscription({
+    required int subscriptionId,
+    String? status,
+  }) async {
     state = state.copyWith(episodes: []);
-    await loadEpisodes();
+    await loadEpisodesForSubscription(
+      subscriptionId: subscriptionId,
+      status: status,
+    );
   }
 }
 

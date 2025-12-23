@@ -56,7 +56,7 @@ class _AdaptiveMenuDemoPageState extends State<AdaptiveMenuDemoPage> {
     ),
   ];
 
-  // NavigationDestination 列表（用于 flutter_adaptive_scaffold）
+  // NavigationDestination 列表（用于自定义自适应布局）
   final List<NavigationDestination> _destinations = [
     const NavigationDestination(
       icon: Icon(Icons.chat_outlined),
@@ -164,7 +164,7 @@ class _AdaptiveMenuDemoPageState extends State<AdaptiveMenuDemoPage> {
                   ),
                 ),
 
-                // 右侧：flutter_adaptive_scaffold 实现
+                // 右侧：自定义 AdaptiveScaffoldMenu 实现
                 Expanded(
                   flex: 1,
                   child: AdaptiveScaffoldMenu(
@@ -177,7 +177,7 @@ class _AdaptiveMenuDemoPageState extends State<AdaptiveMenuDemoPage> {
                       });
                     },
                     title: 'Adaptive Scaffold',
-                    subtitle: 'flutter_adaptive_scaffold',
+                    subtitle: '自定义组件',
                     floatingActionButton: FloatingActionButton(
                       onPressed: () {},
                       child: const Icon(Icons.add),
@@ -226,7 +226,7 @@ class _AdaptiveMenuDemoPageState extends State<AdaptiveMenuDemoPage> {
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
                 '这是一个演示页面，展示了两种不同的自适应菜单实现方式。\n\n'
-                '左侧使用自定义组件，右侧使用 flutter_adaptive_scaffold。\n\n'
+                '左侧使用自定义组件，右侧使用自定义 AdaptiveScaffoldMenu。\n\n'
                 '两者都支持响应式布局，根据屏幕大小自动调整显示方式。',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -434,7 +434,7 @@ class _CustomAdaptiveMenuPageState extends State<CustomAdaptiveMenuPage> {
   }
 }
 
-/// 独立使用 flutter_adaptive_scaffold 的示例页面
+/// 独立使用自定义 AdaptiveScaffoldMenu 的示例页面
 class ScaffoldAdaptiveMenuPage extends StatefulWidget {
   const ScaffoldAdaptiveMenuPage({super.key});
 
@@ -501,7 +501,7 @@ class _ScaffoldAdaptiveMenuPageState extends State<ScaffoldAdaptiveMenuPage> {
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('这是一个使用 flutter_adaptive_scaffold 的页面示例'),
+                      content: Text('这是一个使用自定义 AdaptiveScaffoldMenu 的页面示例'),
                       duration: Duration(seconds: 2),
                     ),
                   );

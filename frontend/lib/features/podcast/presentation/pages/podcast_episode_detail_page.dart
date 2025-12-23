@@ -40,7 +40,7 @@ class _PodcastEpisodeDetailPageState
     try {
       // Wait for episode detail to be loaded
       final episodeDetailAsync = await ref.read(
-        episodeDetailProviderProvider(widget.episodeId).future,
+        episodeDetailProvider(widget.episodeId).future,
       );
 
       if (episodeDetailAsync != null) {
@@ -97,7 +97,7 @@ class _PodcastEpisodeDetailPageState
   @override
   Widget build(BuildContext context) {
     final episodeDetailAsync = ref.watch(
-      episodeDetailProviderProvider(widget.episodeId),
+      episodeDetailProvider(widget.episodeId),
     );
 
     // Listen to transcription status changes to provide user feedback
@@ -397,7 +397,7 @@ class _PodcastEpisodeDetailPageState
   // Tabs 组件 - 胶囊状按钮，右侧显示发布时间和时长
   Widget _buildTabs() {
     final episodeDetailAsync = ref.watch(
-      episodeDetailProviderProvider(widget.episodeId),
+      episodeDetailProvider(widget.episodeId),
     );
 
     return Container(

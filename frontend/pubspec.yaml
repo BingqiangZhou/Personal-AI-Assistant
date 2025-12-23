@@ -26,7 +26,7 @@ dependencies:
 
   # HTTP Client
   dio: ^5.5.0
-  retrofit: ^4.3.1
+  retrofit: ^4.9.1
   json_annotation: ^4.9.0
 
   # Local Storage
@@ -37,7 +37,6 @@ dependencies:
   flutter_svg: ^2.0.10
   cached_network_image: ^3.4.1
   shimmer: ^3.0.0
-  flutter_adaptive_scaffold: ^0.2.6
 
   # Utilities
   intl: ^0.20.2

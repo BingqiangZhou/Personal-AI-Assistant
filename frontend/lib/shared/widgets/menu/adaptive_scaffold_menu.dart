@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_adaptive_scaffold/flutter_adaptive_scaffold.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/breakpoints.dart';
 import 'adaptive_menu.dart';
 
 /// 使用 flutter_adaptive_scaffold 的自适应菜单布局
@@ -37,127 +37,74 @@ class _AdaptiveScaffoldMenuState extends State<AdaptiveScaffoldMenu> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // 使用 flutter_adaptive_scaffold 的 AdaptiveLayout
-      body: AdaptiveLayout(
-        // 主导航区域 - 使用 NavigationRail
-        primaryNavigation: SlotLayout(
-          config: {
-            // 小屏幕 (<600dp) - 不显示侧边导航
-            Breakpoints.small: SlotLayout.from(
-              key: const Key('empty-nav'),
-              builder: null,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        
+        // 小屏幕 (<600dp) - 使用底部导航栏
+        if (screenWidth < Breakpoints.medium) {
+          return Scaffold(
+            appBar: widget.appBar ?? _buildAppBar(),
+            body: _buildBodyWithAppBar(),
+            floatingActionButton: widget.floatingActionButton,
+            bottomNavigationBar: _buildBottomNavigation(),
+          );
+        }
+        
+        // 中等屏幕 (600-840dp) - 折叠的 NavigationRail（仅图标）
+        else if (screenWidth < Breakpoints.mediumLarge) {
+          return Scaffold(
+            appBar: widget.appBar ?? _buildAppBar(),
+            body: Row(
+              children: [
+                _buildNavigationRail(
+                  extended: false,
+                  showLabels: false,
+                ),
+                const VerticalDivider(thickness: 1, width: 1),
+                Expanded(child: _buildBodyWithAppBar()),
+              ],
             ),
-
-            // 中等屏幕 (600-840dp) - 折叠的 NavigationRail（仅图标）
-            Breakpoints.medium: SlotLayout.from(
-              key: const Key('collapsed-nav'),
-              inAnimation: AdaptiveScaffold.leftOutIn,
-              builder: (_) => _buildNavigationRail(
-                extended: false,
-                showLabels: false,
-              ),
+            floatingActionButton: widget.floatingActionButton,
+          );
+        }
+        
+        // 大屏幕 (840-1200dp) - 折叠的 NavigationRail（图标 + 简短标签）
+        else if (screenWidth < Breakpoints.large) {
+          return Scaffold(
+            appBar: widget.appBar ?? _buildAppBar(),
+            body: Row(
+              children: [
+                _buildNavigationRail(
+                  extended: false,
+                  showLabels: true,
+                ),
+                const VerticalDivider(thickness: 1, width: 1),
+                Expanded(child: _buildBodyWithAppBar()),
+              ],
             ),
-
-            // 大屏幕 (840-1200dp) - 折叠的 NavigationRail（图标 + 简短标签）
-            Breakpoints.mediumLarge: SlotLayout.from(
-              key: const Key('semi-expanded-nav'),
-              inAnimation: AdaptiveScaffold.leftOutIn,
-              builder: (_) => _buildNavigationRail(
-                extended: false,
-                showLabels: true,
-              ),
+            floatingActionButton: widget.floatingActionButton,
+          );
+        }
+        
+        // 超大屏幕 (>=1200dp) - 完全展开的 NavigationRail
+        else {
+          return Scaffold(
+            appBar: widget.appBar ?? _buildAppBar(),
+            body: Row(
+              children: [
+                _buildNavigationRail(
+                  extended: true,
+                  showLabels: true,
+                ),
+                const VerticalDivider(thickness: 1, width: 1),
+                Expanded(child: _buildBodyWithAppBar()),
+              ],
             ),
-
-            // 超大屏幕 (>=1200dp) - 完全展开的 NavigationRail
-            Breakpoints.large: SlotLayout.from(
-              key: const Key('expanded-nav'),
-              inAnimation: AdaptiveScaffold.leftOutIn,
-              builder: (_) => _buildNavigationRail(
-                extended: true,
-                showLabels: true,
-              ),
-            ),
-
-            // 超大屏幕 - 同样展开
-            Breakpoints.extraLarge: SlotLayout.from(
-              key: const Key('extra-expanded-nav'),
-              inAnimation: AdaptiveScaffold.leftOutIn,
-              builder: (_) => _buildNavigationRail(
-                extended: true,
-                showLabels: true,
-              ),
-            ),
-          },
-        ),
-
-        // 主体内容区域
-        body: SlotLayout(
-          config: {
-            Breakpoints.small: SlotLayout.from(
-              key: const Key('body-small'),
-              builder: (_) => _buildBodyWithAppBar(),
-            ),
-            Breakpoints.medium: SlotLayout.from(
-              key: const Key('body-medium'),
-              builder: (_) => _buildBodyWithAppBar(),
-            ),
-            Breakpoints.mediumLarge: SlotLayout.from(
-              key: const Key('body-mediumLarge'),
-              builder: (_) => _buildBodyWithAppBar(),
-            ),
-            Breakpoints.large: SlotLayout.from(
-              key: const Key('body-large'),
-              builder: (_) => _buildBodyWithAppBar(),
-            ),
-            Breakpoints.extraLarge: SlotLayout.from(
-              key: const Key('body-extraLarge'),
-              builder: (_) => _buildBodyWithAppBar(),
-            ),
-          },
-        ),
-
-        // 底部导航 - 仅在小屏幕显示
-        bottomNavigation: SlotLayout(
-          config: {
-            Breakpoints.small: SlotLayout.from(
-              key: const Key('bottom-nav'),
-              inAnimation: AdaptiveScaffold.bottomToTop,
-              outAnimation: AdaptiveScaffold.topToBottom,
-              builder: (_) => _buildBottomNavigation(),
-            ),
-          },
-        ),
-
-        // 顶部应用栏
-        topNavigation: SlotLayout(
-          config: {
-            Breakpoints.small: SlotLayout.from(
-              key: const Key('top-appbar-small'),
-              builder: (_) => widget.appBar ?? _buildAppBar(),
-            ),
-            Breakpoints.medium: SlotLayout.from(
-              key: const Key('top-appbar-medium'),
-              builder: (_) => widget.appBar ?? _buildAppBar(),
-            ),
-            Breakpoints.mediumLarge: SlotLayout.from(
-              key: const Key('top-appbar-mediumLarge'),
-              builder: (_) => widget.appBar ?? _buildAppBar(),
-            ),
-            Breakpoints.large: SlotLayout.from(
-              key: const Key('top-appbar-large'),
-              builder: (_) => widget.appBar ?? _buildAppBar(),
-            ),
-            Breakpoints.extraLarge: SlotLayout.from(
-              key: const Key('top-appbar-extraLarge'),
-              builder: (_) => widget.appBar ?? _buildAppBar(),
-            ),
-          },
-        ),
-      ),
-
-      // 悬浮操作按钮
-      floatingActionButton: widget.floatingActionButton,
+            floatingActionButton: widget.floatingActionButton,
+          );
+        }
+      },
     );
   }
 

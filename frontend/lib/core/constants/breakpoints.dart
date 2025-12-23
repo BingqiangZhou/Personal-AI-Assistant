@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// 应用程序响应式断点常量
 ///
-/// 基于Material Design 3推荐断点和flutter_adaptive_scaffold实现
+/// 基于Material Design 3推荐断点实现
 class AppBreakpoints {
   const AppBreakpoints._();
 
@@ -24,6 +24,26 @@ class AppBreakpoints {
 
   /// 超大屏幕断点 - 大桌面
   /// >= 1600dp width
+  static const double extraLarge = 1600;
+}
+
+/// 替代flutter_adaptive_scaffold的Breakpoints类
+class Breakpoints {
+  const Breakpoints._();
+
+  /// 小屏幕断点
+  static const double small = 0;
+
+  /// 中等屏幕断点
+  static const double medium = 600;
+
+  /// 中大屏幕断点
+  static const double mediumLarge = 840;
+
+  /// 大屏幕断点
+  static const double large = 1200;
+
+  /// 超大屏幕断点
   static const double extraLarge = 1600;
 
   /// 判断是否为小屏幕（移动设备）
@@ -60,28 +80,28 @@ extension BreakpointsExtension on BuildContext {
   double get screenHeight => MediaQuery.of(this).size.height;
 
   /// 判断是否为小屏幕
-  bool get isSmall => AppBreakpoints.isSmall(screenWidth);
+  bool get isSmall => Breakpoints.isSmall(screenWidth);
 
   /// 判断是否为中等屏幕
-  bool get isMedium => AppBreakpoints.isMedium(screenWidth);
+  bool get isMedium => Breakpoints.isMedium(screenWidth);
 
   /// 判断是否为中大屏幕
-  bool get isMediumLarge => AppBreakpoints.isMediumLarge(screenWidth);
+  bool get isMediumLarge => Breakpoints.isMediumLarge(screenWidth);
 
   /// 判断是否为大屏幕
-  bool get isLarge => AppBreakpoints.isLarge(screenWidth);
+  bool get isLarge => Breakpoints.isLarge(screenWidth);
 
   /// 判断是否为超大屏幕
-  bool get isExtraLarge => AppBreakpoints.isExtraLarge(screenWidth);
+  bool get isExtraLarge => Breakpoints.isExtraLarge(screenWidth);
 
   /// 判断是否为移动设备
-  bool get isMobile => AppBreakpoints.isMobile(screenWidth);
+  bool get isMobile => Breakpoints.isMobile(screenWidth);
 
   /// 判断是否为平板设备
-  bool get isTablet => AppBreakpoints.isTablet(screenWidth);
+  bool get isTablet => Breakpoints.isTablet(screenWidth);
 
   /// 判断是否为桌面设备
-  bool get isDesktop => AppBreakpoints.isDesktop(screenWidth);
+  bool get isDesktop => Breakpoints.isDesktop(screenWidth);
 
   /// 判断是否为横屏
   bool get isLandscape => MediaQuery.of(this).orientation == Orientation.landscape;
