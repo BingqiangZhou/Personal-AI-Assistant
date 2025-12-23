@@ -33,7 +33,7 @@ class AIModelConfig(Base):
 
     # API配置
     api_url = Column(String(500), nullable=False, comment="API端点URL")
-    api_key = Column(String(500), nullable=False, comment="API密钥（加密存储）")
+    api_key = Column(String(1000), nullable=False, comment="API密钥（加密存储）")
     api_key_encrypted = Column(Boolean, default=True, comment="API密钥是否加密")
 
     # 模型特定配置
@@ -120,7 +120,7 @@ class AIModelConfigBase(BaseModel):
     description: Optional[str] = Field(None, description="模型描述")
     model_type: ModelType = Field(..., description="模型类型")
     api_url: str = Field(..., min_length=1, max_length=500, description="API端点URL")
-    api_key: Optional[str] = Field(None, max_length=500, description="API密钥")
+    api_key: Optional[str] = Field(None, max_length=1000, description="API密钥")
     model_id: str = Field(..., min_length=1, max_length=200, description="模型标识符")
     provider: str = Field(default="custom", max_length=100, description="提供商")
     max_tokens: Optional[int] = Field(None, gt=0, description="最大令牌数")
@@ -168,7 +168,7 @@ class AIModelConfigUpdate(BaseModel):
     display_name: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
     api_url: Optional[str] = Field(None, min_length=1, max_length=500)
-    api_key: Optional[str] = Field(None, max_length=500)
+    api_key: Optional[str] = Field(None, max_length=1000)
     model_id: Optional[str] = Field(None, min_length=1, max_length=200)
     max_tokens: Optional[int] = Field(None, gt=0)
     temperature: Optional[str] = None

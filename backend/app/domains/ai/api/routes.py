@@ -432,3 +432,26 @@ async def init_default_models(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except DatabaseError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.get(
+    "/security/rsa-public-key",
+    summary="获取RSA公钥"
+)
+async def get_rsa_public_key(
+    user=Depends(get_token_from_request)
+):
+    """
+    获取RSA公钥用于前端加密API密钥
+
+    返回PEM格式的RSA公钥，前端使用此公钥加密敏感数据（如API密钥）后再传输到后端。
+
+    安全流程:
+    1. 前端获取此公钥
+    2. 使用RSA公钥加密API密钥
+    3. 将加密后的密钥发送到后端
+    4. 后端使用RSA私钥解密，再用Fernet加密存储
+    """
+    from app.core.security import get_rsa_public_key_pem
+    public_key_pem = get_rsa_public_key_pem()
+    return {"public_key": public_key_pem}

@@ -250,90 +250,122 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
     logger.info(f"🎬 [CELERY] 开始处理音频转录任务: task_id={task_id}, config_id={config_db_id}")
 
     async def _do_transcription():
-        async with async_session_factory() as session:
-            state_manager = await get_transcription_state_manager()
+        # 创建新的数据库引擎（避免fork进程后事件循环冲突）
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from app.core.config import settings
 
-            try:
-                # Get task info to verify episode_id
-                from app.domains.podcast.models import TranscriptionTask
-                from sqlalchemy import select
+        # 为Celery worker创建独立的数据库引擎（使用NullPool避免fork后连接池问题）
+        worker_engine = create_async_engine(
+            settings.DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=3600,
+            connect_args={
+                "server_settings": {
+                    "application_name": "celery-worker",
+                    "client_encoding": "utf8"
+                },
+                "timeout": settings.DATABASE_CONNECT_TIMEOUT
+            }
+        )
 
-                stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
-                result = await session.execute(stmt)
-                task = result.scalar_one_or_none()
+        # 创建worker专用的session factory
+        worker_session_factory = async_sessionmaker(
+            worker_engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
 
-                if not task:
-                    logger.error(f"❌ [CELERY] Transcription task {task_id} not found")
-                    return
-
-                episode_id = task.episode_id
-
-                # Try to acquire lock - only one worker should execute this task
-                lock_acquired = await state_manager.acquire_task_lock(episode_id, task_id, expire_seconds=3600)
-                if not lock_acquired:
-                    # Another worker already owns the lock
-                    locked_task_id = await state_manager.is_episode_locked(episode_id)
-                    logger.info(f"🔄 [CELERY] Task {task_id} skipping execution - episode {episode_id} already locked by task {locked_task_id}")
-                    return
-
-                logger.info(f"🔒 [CELERY] Task {task_id} acquired lock for episode {episode_id}")
+        try:
+            async with worker_session_factory() as session:
+                state_manager = await get_transcription_state_manager()
 
                 try:
-                    # Update Redis initial progress
-                    await state_manager.set_task_progress(
-                        task_id,
-                        "pending",
-                        0,
-                        "Worker starting transcription process..."
-                    )
-
-                    # Execute transcription
-                    service = DatabaseBackedTranscriptionService(session)
-
-                    # Patch the service to update Redis progress during execution
-                    original_update = service._update_task_progress_with_session
-
-                    async def redis_update_progress(session, task_id, status, progress, message, error_message=None):
-                        # Call original DB update
-                        await original_update(session, task_id, status, progress, message, error_message)
-                        # Also update Redis cache
-                        await state_manager.set_task_progress(task_id, status.value if hasattr(status, 'value') else status, progress, message)
-
-                    # Monkey-patch the progress update method
-                    service._update_task_progress_with_session = redis_update_progress
-
-                    # Execute the actual transcription
-                    await service.execute_transcription_task(task_id, config_db_id)
-
-                    # Clear Redis state on success
-                    await state_manager.clear_task_state(task_id, episode_id)
-
-                    logger.info(f"✅ [CELERY] Transcription task {task_id} completed successfully")
-
-                except Exception as e:
-                    logger.error(f"❌ [CELERY] 转录任务执行出错 {task_id}: {e}")
-                    import traceback
-                    logger.error(traceback.format_exc())
-
-                    # Mark as failed in Redis
+                    # Get task info to verify episode_id
                     from app.domains.podcast.models import TranscriptionTask
+                    from sqlalchemy import select
+
                     stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
                     result = await session.execute(stmt)
                     task = result.scalar_one_or_none()
 
-                    if task:
-                        await state_manager.fail_task_state(task_id, task.episode_id, str(e))
+                    if not task:
+                        logger.error(f"❌ [CELERY] Transcription task {task_id} not found")
+                        return
 
-                    raise
-                finally:
-                    # Always release the lock
-                    await state_manager.release_task_lock(episode_id, task_id)
-                    logger.info(f"🔓 [CELERY] Task {task_id} released lock for episode {episode_id}")
+                    episode_id = task.episode_id
 
-            except Exception as e:
-                logger.error(f"❌ [CELERY] Unexpected error during transcription: {e}")
-                import traceback
-                logger.error(traceback.format_exc())
+                    # Try to acquire lock - only one worker should execute this task
+                    lock_acquired = await state_manager.acquire_task_lock(episode_id, task_id, expire_seconds=3600)
+                    if not lock_acquired:
+                        # Another worker already owns the lock
+                        locked_task_id = await state_manager.is_episode_locked(episode_id)
+                        logger.info(f"🔄 [CELERY] Task {task_id} skipping execution - episode {episode_id} already locked by task {locked_task_id}")
+                        return
+
+                    logger.info(f"🔒 [CELERY] Task {task_id} acquired lock for episode {episode_id}")
+
+                    try:
+                        # Update Redis initial progress
+                        await state_manager.set_task_progress(
+                            task_id,
+                            "pending",
+                            0,
+                            "Worker starting transcription process..."
+                        )
+
+                        # Execute transcription
+                        service = DatabaseBackedTranscriptionService(session)
+
+                        # Patch the service to update Redis progress during execution
+                        original_update = service._update_task_progress_with_session
+
+                        async def redis_update_progress(session, task_id, status, progress, message, error_message=None):
+                            # Call original DB update
+                            await original_update(session, task_id, status, progress, message, error_message)
+                            # Also update Redis cache
+                            await state_manager.set_task_progress(task_id, status.value if hasattr(status, 'value') else status, progress, message)
+
+                        # Monkey-patch the progress update method
+                        service._update_task_progress_with_session = redis_update_progress
+
+                        # Execute the actual transcription
+                        await service.execute_transcription_task(task_id, config_db_id)
+
+                        # Clear Redis state on success
+                        await state_manager.clear_task_state(task_id, episode_id)
+
+                        logger.info(f"✅ [CELERY] Transcription task {task_id} completed successfully")
+
+                    except Exception as e:
+                        logger.error(f"❌ [CELERY] 转录任务执行出错 {task_id}: {e}")
+                        import traceback
+                        logger.error(traceback.format_exc())
+
+                        # Mark as failed in Redis
+                        from app.domains.podcast.models import TranscriptionTask
+                        stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
+                        result = await session.execute(stmt)
+                        task = result.scalar_one_or_none()
+
+                        if task:
+                            await state_manager.fail_task_state(task_id, task.episode_id, str(e))
+
+                        raise
+                    finally:
+                        # Always release the lock
+                        await state_manager.release_task_lock(episode_id, task_id)
+                        logger.info(f"🔓 [CELERY] Task {task_id} released lock for episode {episode_id}")
+
+                except Exception as e:
+                    logger.error(f"❌ [CELERY] Unexpected error during transcription: {e}")
+                    import traceback
+                    logger.error(traceback.format_exc())
+
+        finally:
+            # 确保关闭worker引擎
+            await worker_engine.dispose()
 
     try:
         # Run async code in sync Celery worker

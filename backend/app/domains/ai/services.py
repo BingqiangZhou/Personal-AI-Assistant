@@ -29,26 +29,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class APIKeyEncryption:
-    """API密钥加密/解密工具"""
-
-    @staticmethod
-    def encrypt_key(api_key: str) -> str:
-        """加密API密钥（简单示例，实际应使用更安全的加密方式）"""
-        # 这里使用简单的哈希，实际应用中应使用AES等加密算法
-        return f"encrypted_{hashlib.sha256(api_key.encode()).hexdigest()[:16]}"
-
-    @staticmethod
-    def decrypt_key(encrypted_key: str) -> str:
-        """解密API密钥"""
-        # 这里只是示例，实际需要解密逻辑
-        if encrypted_key.startswith("encrypted_"):
-            # 实际应该解密返回原始密钥
-            # 这里返回占位符，实际应该从安全存储中获取
-            return "DECRYPTED_KEY_PLACEHOLDER"
-        return encrypted_key
-
-
 class AIModelConfigService:
     """AI模型配置服务"""
 
@@ -67,10 +47,13 @@ class AIModelConfigService:
         if model_data.is_default:
             await self._clear_default_models(model_data.model_type)
 
-        # 加密API密钥
+        # 处理API密钥加密
+        # 使用Fernet加密存储（HTTPS保护传输安全）
         encrypted_key = None
         if model_data.api_key:
-            encrypted_key = APIKeyEncryption.encrypt_key(model_data.api_key)
+            from app.core.security import encrypt_data
+            encrypted_key = encrypt_data(model_data.api_key)
+            logger.info(f"API key encrypted for model {model_data.name}")
 
         # 创建模型配置
         model_config = AIModelConfig(
@@ -158,7 +141,10 @@ class AIModelConfigService:
         # 处理API密钥更新
         if 'api_key' in update_data:
             if update_data['api_key']:
-                update_data['api_key'] = APIKeyEncryption.encrypt_key(update_data['api_key'])
+                # 使用Fernet加密存储（HTTPS保护传输安全）
+                from app.core.security import encrypt_data
+                update_data['api_key'] = encrypt_data(update_data['api_key'])
+                logger.info(f"API key encrypted for model {model_id}")
                 update_data['api_key_encrypted'] = True
             else:
                 update_data['api_key'] = ""
@@ -311,9 +297,15 @@ class AIModelConfigService:
         if model.is_system:
             return self._get_preset_api_key_from_env(model.name)
 
-        # 对于用户自定义模型，这里应该从安全存储中解密获取
-        # 暂时返回占位符
-        return "DECRYPTED_KEY_PLACEHOLDER"
+        # 对于用户自定义模型，使用Fernet解密
+        from app.core.security import decrypt_data
+        try:
+            decrypted = decrypt_data(model.api_key)
+            logger.info(f"Successfully decrypted API key for model {model.name}")
+            return decrypted
+        except Exception as e:
+            logger.error(f"Failed to decrypt API key for model {model.name}: {e}")
+            raise ValidationError(f"Failed to decrypt API key for model {model.name}")
 
     async def _test_transcription_model(
         self,

@@ -447,3 +447,126 @@ def decrypt_data(ciphertext: str) -> str:
         return decrypted_bytes.decode('utf-8')
     except Exception as e:
         raise ValueError(f"Failed to decrypt data: {e}")
+
+
+# === RSA Key Management for Secure API Key Transmission ===
+
+# Global RSA key cache (initialized once)
+_RSA_PRIVATE_KEY = None
+_RSA_PUBLIC_KEY = None
+
+
+def get_or_generate_rsa_keys():
+    """
+    Get or generate RSA key pair for asymmetric encryption.
+
+    The private key is stored in `data/.rsa_keys` file.
+    The public key is derived from the private key.
+
+    Returns:
+        Tuple of (private_key, public_key) from cryptography library
+
+    Note:
+        - RSA-2048 with OAEP padding provides strong security
+        - Keys are cached in memory for performance
+        - Private key is stored on disk (protect this file in production)
+    """
+    global _RSA_PRIVATE_KEY, _RSA_PUBLIC_KEY
+
+    if _RSA_PRIVATE_KEY is None or _RSA_PUBLIC_KEY is None:
+        from cryptography.hazmat.primitives.asymmetric import rsa
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.backends import default_backend
+
+        rsa_key_file = Path("data/.rsa_keys")
+
+        if rsa_key_file.exists():
+            # Load existing key pair
+            with open(rsa_key_file, 'rb') as f:
+                pem_data = f.read()
+                from cryptography.hazmat.primitives.serialization import load_pem_private_key
+                _RSA_PRIVATE_KEY = load_pem_private_key(pem_data, password=None)
+                _RSA_PUBLIC_KEY = _RSA_PRIVATE_KEY.public_key()
+        else:
+            # Generate new key pair
+            _RSA_PRIVATE_KEY = rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=2048,
+                backend=default_backend()
+            )
+            _RSA_PUBLIC_KEY = _RSA_PRIVATE_KEY.public_key()
+
+            # Save private key to disk
+            rsa_key_file.parent.mkdir(parents=True, exist_ok=True)
+            pem_private = _RSA_PRIVATE_KEY.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption()
+            )
+            with open(rsa_key_file, 'wb') as f:
+                f.write(pem_private)
+
+    return _RSA_PRIVATE_KEY, _RSA_PUBLIC_KEY
+
+
+def get_rsa_public_key_pem() -> str:
+    """
+    Get the RSA public key in PEM format.
+
+    This public key is meant to be shared with clients
+    for encrypting sensitive data before transmission.
+
+    Returns:
+        PEM-formatted public key string
+
+    Example:
+        >>> public_key = get_rsa_public_key_pem()
+        >>> # Send this to frontend for client-side encryption
+    """
+    _, public_key = get_or_generate_rsa_keys()
+    from cryptography.hazmat.primitives import serialization
+    pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+    return pem.decode('utf-8')
+
+
+def decrypt_rsa_data(ciphertext_b64: str) -> str:
+    """
+    Decrypt data that was encrypted with the RSA public key.
+
+    This is used on the backend to decrypt API keys sent from the frontend.
+
+    Args:
+        ciphertext_b64: Base64-encoded ciphertext encrypted with RSA public key
+
+    Returns:
+        Decrypted plaintext string
+
+    Raises:
+        ValueError: If decryption fails
+
+    Example:
+        >>> decrypted = decrypt_rsa_data(encrypted_from_frontend)
+        >>> # Now encrypt with Fernet for storage
+        >>> storage_key = encrypt_data(decrypted)
+    """
+    private_key, _ = get_or_generate_rsa_keys()
+    import base64
+    from cryptography.hazmat.primitives.asymmetric import padding
+    from cryptography.hazmat.primitives import hashes
+
+    try:
+        ciphertext = base64.b64decode(ciphertext_b64)
+        plaintext = private_key.decrypt(
+            ciphertext,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+        return plaintext.decode('utf-8')
+    except Exception as e:
+        raise ValueError(f"Failed to decrypt RSA data: {e}")

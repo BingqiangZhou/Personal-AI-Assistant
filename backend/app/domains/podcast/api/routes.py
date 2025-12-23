@@ -691,20 +691,8 @@ async def start_transcription(
             "Transcription task created, waiting for worker to start..."
         )
 
-        # Check if this task was already dispatched to Celery (prevent duplicate dispatch)
-        celery_dispatch_key = f"podcast:transcription:dispatched:{task.id}"
-        already_dispatched = await state_manager.cache_get(celery_dispatch_key)
-        if already_dispatched:
-            logger.warning(f"⚠️ [CELERY] Task {task.id} was already dispatched to Celery, skipping duplicate dispatch")
-            return _build_transcription_response(task, episode)
-
-        # Mark task as dispatched before actually sending to prevent race conditions
-        await state_manager.cache_set(celery_dispatch_key, "1", ttl=3600)
-
-        # Send task to Celery queue for asynchronous processing
-        from app.domains.podcast.tasks import process_audio_transcription
-        celery_task = process_audio_transcription.delay(task.id, transcription_request.transcription_model)
-        logger.info(f"📤 [CELERY] Sent task {task.id} to Celery queue. Celery task ID: {celery_task.id}")
+        # Note: Celery task dispatch is handled by transcription_service.start_transcription()
+        # No need to dispatch again here to avoid duplicate execution
 
         logger.info(f"✅ [CREATED] New transcription task {task.id} for episode {episode_id}")
         return _build_transcription_response(task, episode)

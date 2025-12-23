@@ -569,9 +569,12 @@ class SiliconFlowTranscriber:
                         content_type='audio/mpeg'
                     )
 
-                    # Debug: Log request headers
-                    logger.debug(f"🔑 [API DEBUG] Request URL: {self.api_url}")
-                    logger.debug(f"🔑 [API DEBUG] Request Headers: {dict(self.session.headers)}")
+                    # 详细输出请求信息
+                    logger.info(f"📡 [REQUEST] URL: {self.api_url}")
+                    logger.info(f"📡 [REQUEST] Model: {model}")
+                    logger.info(f"📡 [REQUEST] API Key (first 15 chars): {self.api_key[:15]}...")
+                    logger.info(f"📡 [REQUEST] API Key (last 5 chars): ...{self.api_key[-5:]}")
+                    logger.info(f"📡 [REQUEST] API Key length: {len(self.api_key)}")
 
                     # 发送请求
                     async with self.session.post(self.api_url, data=data) as response:

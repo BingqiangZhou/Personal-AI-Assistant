@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/core_providers.dart';
 import '../../../ai/data/services/ai_model_api_service.dart';
 import '../../../ai/models/ai_model_config_model.dart';
+import 'package:logger/logger.dart';
 
 // API Service Provider
 final aiModelApiServiceProvider = Provider<AIModelApiService>((ref) {
@@ -52,6 +53,8 @@ class AISettingsState {
 }
 
 class AISettingsController extends Notifier<AISettingsState> {
+  final Logger _logger = Logger();
+
   @override
   AISettingsState build() {
     return AISettingsState();
@@ -69,10 +72,14 @@ class AISettingsController extends Notifier<AISettingsState> {
     final apiService = ref.read(aiModelApiServiceProvider);
 
     try {
-      // 1. Check if model config exists by name
+      // API密钥通过HTTPS直接传输（安全）
+      // 后端会使用Fernet加密存储
+      _logger.d('Saving API key for model $name (transmitted over HTTPS, encrypted with Fernet at rest)');
+
+      // 检查模型配置是否存在
       final allModels = await apiService.getModels(search: name, modelType: type);
       AIModelConfigModel? existingModel;
-      
+
       if (allModels.models.isNotEmpty) {
         existingModel = allModels.models.firstWhere((m) => m.name == name, orElse: () => allModels.models.first);
       }
@@ -113,6 +120,7 @@ class AISettingsController extends Notifier<AISettingsState> {
 
       state = state.copyWith(isLoading: false, success: true);
     } catch (e) {
+      _logger.e('Failed to save settings: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }

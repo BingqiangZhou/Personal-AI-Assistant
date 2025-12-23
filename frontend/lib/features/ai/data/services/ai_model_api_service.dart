@@ -93,4 +93,8 @@ abstract class AIModelApiService {
   Future<APIKeyValidationResponse> validateAPIKey(
     @Body() APIKeyValidationRequest request,
   );
+
+  /// 获取RSA公钥用于前端加密
+  @GET('/ai/security/rsa-public-key')
+  Future<Map<String, dynamic>> getRSAPublicKey();
 }
