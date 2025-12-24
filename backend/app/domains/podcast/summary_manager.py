@@ -157,21 +157,47 @@ class SummaryModelManager:
         title = episode_info.get('title', '未知标题')
         description = episode_info.get('description', '')
 
-        prompt = f"""
-请为以下播客内容生成一个简洁但信息丰富的总结。
+        prompt = f"""你是一位专业的播客内容分析师。请为以下播客内容生成一份详细且结构化的总结。
 
-播客标题：{title}
-播客描述：{description}
+## 播客信息
+**标题**：{title}
+**描述**：{description}
 
-总结内容应该包括：
-1. 主要话题和核心观点
-2. 关键信息或要点
-3. 适合的听众群体
-4. 总结长度控制在200-500字之间
-
-播客转录内容：
+## 转录内容
 {transcript}
-"""
+
+## 总结要求
+
+请按以下结构生成总结（使用Markdown格式）：
+
+### 1. 主要话题概述
+简要概括本期播客的核心主题（2-3句话）
+
+### 2. 核心观点
+列出本期播客表达的主要观点和见解（3-5个要点，每个要点用一句话概括）
+
+### 3. 关键信息与要点
+详细列出本期播客讨论的关键信息、数据、案例和重要细节：
+- 重要数据或统计信息
+- 具体案例或实例
+- 人物、公司、事件等关键要素
+- 时间、地点等背景信息
+- 其他值得关注的细节
+
+### 4. 讨论亮点
+本期播客最有趣或最有价值的部分（1-2点）
+
+### 5. 总结性陈述
+用1-2句话总结本期播客的价值和意义
+
+**注意事项**：
+- 保持客观中立的立场
+- 突出信息的准确性和完整性
+- 使用清晰简洁的语言
+- 确保总结的可读性和实用性
+- 总结总长度建议在500-1500字之间
+
+请开始生成总结："""
         return prompt
 
     async def _get_api_key(self, model_config) -> str:
@@ -282,37 +308,77 @@ class DatabaseBackedAISummaryService:
 
     async def _update_episode_summary(self, episode_id: int, summary_result: Dict[str, Any]):
         """更新播客单集的摘要信息"""
+        import logging
+        logger = logging.getLogger(__name__)
         from sqlalchemy import update
 
-        # 更新播客单集表
-        stmt = (
-            update(PodcastEpisode)
-            .where(PodcastEpisode.id == episode_id)
-            .values(
-                ai_summary=summary_result["summary_content"],
-                summary_version="1.0",
-                updated_at=datetime.utcnow()
-            )
-        )
-        await self.db.execute(stmt)
+        try:
+            # 获取总结内容和相关信息
+            summary_content = summary_result["summary_content"]
+            model_name = summary_result["model_name"]
+            processing_time = summary_result["processing_time"]
+            
+            # 字段长度检查和处理
+            max_summary_length = 100000  # 设置合理的最大长度限制
+            original_length = len(summary_content)
+            
+            if original_length > max_summary_length:
+                logger.warning(f"Summary content too long ({original_length} chars), truncating to {max_summary_length} chars")
+                summary_content = summary_content[:max_summary_length] + "..."
+            
+            # 计算字数
+            word_count = len(summary_content.split())
+            
+            logger.info(f"Updating summary for episode {episode_id}: {word_count} words, model: {model_name}")
+            logger.debug(f"Summary content: {summary_content[:100]}...")
 
-        # 更新转录任务表（如果存在）
-        from app.domains.podcast.models import TranscriptionTask
-        stmt = (
-            update(TranscriptionTask)
-            .where(TranscriptionTask.episode_id == episode_id)
-            .values(
-                summary_content=summary_result["summary_content"],
-                summary_model_used=summary_result["model_name"],
-                summary_word_count=len(summary_result["summary_content"].split()),
-                summary_processing_time=summary_result["processing_time"],
-                summary_error_message=None,
-                updated_at=datetime.utcnow()
+            # 更新播客单集表
+            stmt = (
+                update(PodcastEpisode)
+                .where(PodcastEpisode.id == episode_id)
+                .values(
+                    ai_summary=summary_content,
+                    summary_version="1.0",
+                    updated_at=datetime.utcnow()
+                )
             )
-        )
-        await self.db.execute(stmt)
+            logger.debug(f"Executing update on podcast_episodes table for episode {episode_id}")
+            result = await self.db.execute(stmt)
+            logger.debug(f"Update result on podcast_episodes: {result.rowcount} rows affected")
 
-        await self.db.commit()
+            # 更新转录任务表（如果存在）
+            from app.domains.podcast.models import TranscriptionTask
+            stmt = (
+                update(TranscriptionTask)
+                .where(TranscriptionTask.episode_id == episode_id)
+                .values(
+                    summary_content=summary_content,
+                    summary_model_used=model_name,
+                    summary_word_count=word_count,
+                    summary_processing_time=processing_time,
+                    summary_error_message=None,
+                    updated_at=datetime.utcnow()
+                )
+            )
+            logger.debug(f"Executing update on transcription_tasks table for episode {episode_id}")
+            result = await self.db.execute(stmt)
+            logger.debug(f"Update result on transcription_tasks: {result.rowcount} rows affected")
+
+            logger.debug(f"Committing transaction for episode {episode_id}")
+            await self.db.commit()
+            logger.info(f"Successfully updated summary for episode {episode_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to update summary for episode {episode_id}: {str(e)}")
+            logger.exception("Exception details:")
+            try:
+                # 尝试回滚事务
+                await self.db.rollback()
+                logger.debug(f"Transaction rolled back for episode {episode_id}")
+            except Exception as rollback_error:
+                logger.error(f"Failed to rollback transaction for episode {episode_id}: {str(rollback_error)}")
+            # 重新抛出异常，让上层处理
+            raise
 
     async def regenerate_summary(
         self,

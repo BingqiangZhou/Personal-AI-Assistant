@@ -206,7 +206,7 @@ class ShownotesDisplayWidget extends ConsumerWidget {
       case RichTextType.paragraph:
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: Text(
+          child: SelectableText(
             segment.text,
             style: TextStyle(
               fontSize: 15,
@@ -234,7 +234,7 @@ class ShownotesDisplayWidget extends ConsumerWidget {
                 ),
               ),
               Expanded(
-                child: Text(
+                child: SelectableText(
                   segment.text,
                   style: TextStyle(
                     fontSize: 15,
@@ -265,7 +265,7 @@ class ShownotesDisplayWidget extends ConsumerWidget {
                 ),
               ),
               Expanded(
-                child: Text(
+                child: SelectableText(
                   segment.text,
                   style: TextStyle(
                     fontSize: 15,

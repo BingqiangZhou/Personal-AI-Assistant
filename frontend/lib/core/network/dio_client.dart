@@ -56,6 +56,13 @@ class DioClient {
     Response response,
     ResponseInterceptorHandler handler,
   ) {
+    // 🔍 Debug: 打印AI Summary相关响应
+    if (response.requestOptions.path.contains('/episodes/')) {
+      final data = response.data;
+      if (data is Map && data.containsKey('ai_summary')) {
+        debugPrint('🔍 [API RESPONSE] Episode ${data['id']} has ai_summary: ${data['ai_summary'] != null ? "YES (${data['ai_summary'].length} chars)" : "NO"}');
+      }
+    }
     handler.next(response);
   }
 

@@ -331,7 +331,7 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
                         service._update_task_progress_with_session = redis_update_progress
 
                         # Execute the actual transcription
-                        await service.execute_transcription_task(task_id, config_db_id)
+                        await service.execute_transcription_task(task_id, session, config_db_id)
 
                         # Clear Redis state on success
                         await state_manager.clear_task_state(task_id, episode_id)

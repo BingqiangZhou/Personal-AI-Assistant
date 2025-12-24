@@ -125,6 +125,19 @@ class SummaryNotifier extends Notifier<SummaryState> {
     );
   }
 
+  /// Update summary from existing data (used when loading episode detail)
+  void updateSummary(String summary) {
+    state = SummaryState(
+      summary: summary,
+      modelUsed: state.modelUsed,
+      processingTime: state.processingTime,
+      wordCount: state.wordCount,
+      generatedAt: state.generatedAt,
+      isLoading: false,
+      errorMessage: null,
+    );
+  }
+
   /// Clear error
   void clearError() {
     if (state.hasError) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -25,6 +26,7 @@ class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
 class _PodcastEpisodeDetailPageState
     extends ConsumerState<PodcastEpisodeDetailPage> {
   int _selectedTabIndex = 0; // 0 = Shownotes, 1 = Transcript, 2 = AI Summary
+  Timer? _summaryPollingTimer; // AI摘要轮询定时器
 
   @override
   void initState() {
@@ -472,23 +474,32 @@ class _PodcastEpisodeDetailPageState
             children: [
               // Shownotes Tab
               _buildTabButton('Shownotes', _selectedTabIndex == 0, () {
-                setState(() {
-                  _selectedTabIndex = 0;
-                });
+                if (_selectedTabIndex != 0) {
+                  setState(() {
+                    _selectedTabIndex = 0;
+                    _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
+                  });
+                }
               }),
               const SizedBox(width: 8),
               // Transcript Tab
               _buildTabButton('Transcript', _selectedTabIndex == 1, () {
-                setState(() {
-                  _selectedTabIndex = 1;
-                });
+                if (_selectedTabIndex != 1) {
+                  setState(() {
+                    _selectedTabIndex = 1;
+                    _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
+                  });
+                }
               }),
               const SizedBox(width: 8),
               // AI Summary Tab
               _buildTabButton('AI Summary', _selectedTabIndex == 2, () {
-                setState(() {
-                  _selectedTabIndex = 2;
-                });
+                if (_selectedTabIndex != 2) {
+                  setState(() {
+                    _selectedTabIndex = 2;
+                    _startSummaryPolling(); // 切换到AI Summary tab时启动轮询
+                  });
+                }
               }),
             ],
           );
@@ -677,8 +688,23 @@ class _PodcastEpisodeDetailPageState
   Widget _buildAiSummaryContent(dynamic episode) {
     final provider = getSummaryProvider(widget.episodeId);
     final summaryState = ref.watch(provider);
+    final summaryNotifier = ref.read(provider.notifier);
     final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
     final transcriptionState = ref.watch(transcriptionProvider);
+
+    // 🔍 Debug: 打印AI摘要信息
+    debugPrint('🔍 [AI SUMMARY] episode.aiSummary: ${episode.aiSummary != null ? "${episode.aiSummary!.substring(0, episode.aiSummary!.length > 50 ? 50 : episode.aiSummary!.length)}..." : "null"}');
+    debugPrint('🔍 [AI SUMMARY] summaryState.hasSummary: ${summaryState.hasSummary}');
+    debugPrint('🔍 [AI SUMMARY] summaryState.summary: ${summaryState.summary != null ? "${summaryState.summary!.substring(0, summaryState.summary!.length > 50 ? 50 : summaryState.summary!.length)}..." : "null"}');
+    debugPrint('🔍 [AI SUMMARY] summaryState.isLoading: ${summaryState.isLoading}');
+    debugPrint('🔍 [AI SUMMARY] transcriptionState.value?.transcriptContent: ${transcriptionState.value?.transcriptContent != null ? "exists" : "null"}');
+
+    // 初始化总结状态：如果后端返回了aiSummary，同步到状态中
+    if (episode.aiSummary != null && episode.aiSummary!.isNotEmpty && !summaryState.hasSummary && !summaryState.isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        summaryNotifier.updateSummary(episode.aiSummary!);
+      });
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -696,7 +722,29 @@ class _PodcastEpisodeDetailPageState
             const SizedBox(height: 16),
 
             // 总结内容显示
-            if (summaryState.hasSummary) ...[
+            if (summaryState.isLoading) ...[
+              const Center(child: CircularProgressIndicator()),
+            ] else if (summaryState.hasError) ...[
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      summaryState.errorMessage ?? '生成总结失败',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (summaryState.hasSummary) ...[
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -725,7 +773,7 @@ class _PodcastEpisodeDetailPageState
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text(
+                    SelectableText(
                       summaryState.summary!,
                       style: TextStyle(
                         fontSize: 15,
@@ -736,7 +784,48 @@ class _PodcastEpisodeDetailPageState
                   ],
                 ),
               ),
-            ] else if (!summaryState.isLoading && !summaryState.hasError) ...[
+            ] else if (episode.aiSummary != null && episode.aiSummary!.isNotEmpty) ...[
+              // 兼容旧版本：如果episode有aiSummary但state还没有，显示episode的aiSummary
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.auto_awesome,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'AI 总结',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SelectableText(
+                      episode.aiSummary!,
+                      style: TextStyle(
+                        fontSize: 15,
+                        height: 1.6,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
               _buildAiSummaryEmptyState(context),
             ],
           ],
@@ -1172,5 +1261,50 @@ class _PodcastEpisodeDetailPageState
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    // 停止AI摘要轮询
+    _summaryPollingTimer?.cancel();
+    super.dispose();
+  }
+
+  // 启动AI摘要轮询
+  void _startSummaryPolling() {
+    // 停止现有的轮询
+    _summaryPollingTimer?.cancel();
+
+    // 每5秒轮询一次，检查AI摘要是否已生成
+    _summaryPollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      // 检查当前episode的AI摘要状态
+      final episodeDetailAsync = await ref.read(episodeDetailProvider(widget.episodeId).future);
+
+      if (episodeDetailAsync != null) {
+        // 如果AI摘要已存在，停止轮询
+        if (episodeDetailAsync.aiSummary != null && episodeDetailAsync.aiSummary!.isNotEmpty) {
+          debugPrint('✅ [AI SUMMARY] Summary generated, stopping polling');
+          _stopSummaryPolling();
+          return;
+        }
+      }
+
+      // 刷新episode detail数据
+      ref.invalidate(episodeDetailProvider(widget.episodeId));
+
+      debugPrint('🔄 [AI SUMMARY] Polling for summary update...');
+    });
+  }
+
+  // 停止AI摘要轮询
+  void _stopSummaryPolling() {
+    _summaryPollingTimer?.cancel();
+    _summaryPollingTimer = null;
+    debugPrint('⏹️ [AI SUMMARY] Stopped polling');
   }
 }

@@ -155,17 +155,68 @@ class _TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidge
   }
 
   Widget _buildFullTranscript(BuildContext context, String content) {
+    // 根据句号分段（支持中英文句号）
+    final segments = _splitIntoSentences(content);
+
     return Container(
       padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
+      child: ListView.separated(
         controller: _scrollController,
-        child: SelectableText(
-          content,
-          style: TextStyle(
-            fontSize: 15,
-            height: 1.6,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
+        itemCount: segments.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          return _buildSentenceSegment(context, segments[index], index);
+        },
+      ),
+    );
+  }
+
+  /// 将文本根据句号分段（支持中英文句号）
+  List<String> _splitIntoSentences(String text) {
+    final segments = <String>[];
+
+    // 使用正则表达式按句号分段，支持：
+    // - 中文句号 。
+    // - 英文句号 .
+    // - 问号 ?
+    // - 感叹号 ！!
+    // - 省略号 ......
+    final sentencePattern = RegExp(r'[^。.！!？?]+[。.！!？?]+[^。.！!？?]*');
+
+    final matches = sentencePattern.allMatches(text);
+
+    for (final match in matches) {
+      final sentence = match.group(0)?.trim();
+      if (sentence != null && sentence.isNotEmpty) {
+        segments.add(sentence);
+      }
+    }
+
+    // 如果没有匹配到任何句子，返回原文本
+    if (segments.isEmpty) {
+      return [text];
+    }
+
+    return segments;
+  }
+
+  Widget _buildSentenceSegment(BuildContext context, String sentence, int index) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: SelectableText(
+        sentence,
+        style: TextStyle(
+          fontSize: 15,
+          height: 1.6,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
     );
