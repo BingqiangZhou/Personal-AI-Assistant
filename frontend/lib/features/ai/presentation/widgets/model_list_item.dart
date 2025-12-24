@@ -236,13 +236,15 @@ class ModelListItem extends ConsumerWidget {
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'edit', child: Text('编辑配置')),
             const PopupMenuItem(value: 'test', child: Text('测试连接')),
-            if (!model.isSystem)
-              const PopupMenuItem(value: 'set_default', child: Text('设为默认')),
-            if (!model.isSystem)
-              const PopupMenuItem(
-                value: 'delete',
-                child: Text('删除', style: TextStyle(color: Colors.red)),
-              ),
+            PopupMenuItem(
+              enabled: !model.isDefault,
+              value: 'set_default', 
+              child: const Text('设为默认')
+            ),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Text('删除', style: TextStyle(color: Colors.red)),
+            ),
           ],
         ),
       ],

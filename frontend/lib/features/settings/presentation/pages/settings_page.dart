@@ -28,8 +28,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   // Add state variables for key visibility
   bool _isTextKeyObscured = true;
   bool _isTranscriptionKeyObscured = true;
-  bool _isTextInitialized = false;
-  bool _isTranscriptionInitialized = false;
 
   // Model Selection State
   List<AIModelConfigModel> _textGenerationConfigs = [];
@@ -64,12 +62,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   Future<void> _fetchFullModelDetails(int id, Function(AIModelConfigModel) onLoaded) async {
     try {
-      // Use the notifier we fixed to load full model details
-      final notifier = ref.read(modelNotifierProvider(id).notifier);
-      await notifier.loadModel();
-      final fullModel = notifier.currentModel;
+      // Use repository directly to request decrypted key
+      final repository = ref.read(aiModelRepositoryProvider);
+      final fullModel = await repository.getModel(id, decryptKey: true);
       
-      if (fullModel != null && mounted) {
+      if (mounted) {
         onLoaded(fullModel);
       }
     } catch (e) {
@@ -79,49 +76,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen to active models to populate fields once
-    ref.listen(activeTextModelsProvider, (previous, next) {
-      next.whenData((models) {
-        if (models.isNotEmpty && !_isTextInitialized) {
-           final model = models.first;
-           _textGenerationUrlController.text = model.apiUrl;
-           if (model.apiKey != null && model.apiKey!.isNotEmpty) {
-             _textGenerationApiKeyController.text = model.apiKey!;
-           }
-           _textModelController.text = model.modelId;
-           setState(() {
-             _isTextInitialized = true;
-           });
-        }
-      });
-    });
-
-    ref.listen(activeTranscriptionModelsProvider, (previous, next) {
-      next.whenData((models) {
-        if (models.isNotEmpty && !_isTranscriptionInitialized) {
-           final model = models.first;
-           _transcriptionUrlController.text = model.apiUrl;
-           if (model.apiKey != null && model.apiKey!.isNotEmpty) {
-             _transcriptionApiKeyController.text = model.apiKey!;
-           }
-           _transcriptionModelController.text = model.modelId;
-           setState(() {
-             _isTranscriptionInitialized = true;
-             _selectedTranscriptionConfig = model;
-           });
-           
-           // Fetch full details/keys
-           _fetchFullModelDetails(model.id, (fullModel) {
-             _transcriptionApiKeyController.text = fullModel.apiKey ?? '';
-           });
-        }
-      });
-    });
-
-    // Mark as initialized after first build to prevent continuous overwriting if we wanted, 
-    // but better to rely on separate loading state or just manual save. 
-    // For this simple implementation, we'll let the user edit and save.
-
     final settingsState = ref.watch(aiSettingsControllerProvider);
 
     // Removed state-variable driven dialog logic, now handled directly in event handlers
@@ -776,8 +730,83 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       setState(() {
         _textGenerationConfigs = models.models.where((model) => model.modelType == AIModelType.textGeneration).toList();
         _transcriptionConfigs = models.models.where((model) => model.modelType == AIModelType.transcription).toList();
+
+        // --- Validate Text Generation Selection ---
+        if (_selectedTextGenerationConfig != null) {
+          // Check if current selection still exists in the new list
+          try {
+            final match = _textGenerationConfigs.firstWhere((m) => m.id == _selectedTextGenerationConfig!.id);
+            _selectedTextGenerationConfig = match; // Update reference to fresh object
+          } catch (e) {
+            // Previously selected model was deleted or is gone
+            _selectedTextGenerationConfig = null;
+          }
+        }
+        
+        // If nothing selected (or just reset), try to pick a default
+        if (_selectedTextGenerationConfig == null && _textGenerationConfigs.isNotEmpty) {
+           _selectedTextGenerationConfig = _textGenerationConfigs.firstWhere(
+              (m) => m.isDefault,
+              orElse: () => _textGenerationConfigs.first,
+           );
+        }
+
+        // Update Text Controllers based on final selection
+        if (_selectedTextGenerationConfig != null) {
+          _textGenerationUrlController.text = _selectedTextGenerationConfig!.apiUrl;
+          _textModelController.text = _selectedTextGenerationConfig!.modelId;
+          _textGenerationApiKeyController.text = _selectedTextGenerationConfig!.apiKey ?? '';
+        } else {
+          // List is empty
+          _textGenerationUrlController.clear();
+          _textModelController.clear();
+          _textGenerationApiKeyController.clear();
+        }
+
+
+        // --- Validate Transcription Selection ---
+        if (_selectedTranscriptionConfig != null) {
+          try {
+            final match = _transcriptionConfigs.firstWhere((m) => m.id == _selectedTranscriptionConfig!.id);
+            _selectedTranscriptionConfig = match;
+          } catch (e) {
+            _selectedTranscriptionConfig = null;
+          }
+        }
+
+        if (_selectedTranscriptionConfig == null && _transcriptionConfigs.isNotEmpty) {
+           _selectedTranscriptionConfig = _transcriptionConfigs.firstWhere(
+              (m) => m.isDefault,
+              orElse: () => _transcriptionConfigs.first,
+           );
+        }
+
+        // Update Transcription Controllers based on final selection
+        if (_selectedTranscriptionConfig != null) {
+          _transcriptionUrlController.text = _selectedTranscriptionConfig!.apiUrl;
+          _transcriptionModelController.text = _selectedTranscriptionConfig!.modelId;
+          _transcriptionApiKeyController.text = _selectedTranscriptionConfig!.apiKey ?? '';
+        } else {
+          _transcriptionUrlController.clear();
+          _transcriptionModelController.clear();
+          _transcriptionApiKeyController.clear();
+        }
+
         _isLoadingModels = false;
       });
+
+      // Fetch decrypted keys for selected models to update controllers
+      if (_selectedTextGenerationConfig != null && mounted) {
+        _fetchFullModelDetails(_selectedTextGenerationConfig!.id, (model) {
+           if (mounted) _textGenerationApiKeyController.text = model.apiKey ?? '';
+        });
+      }
+      if (_selectedTranscriptionConfig != null && mounted) {
+        _fetchFullModelDetails(_selectedTranscriptionConfig!.id, (model) {
+           if (mounted) _transcriptionApiKeyController.text = model.apiKey ?? '';
+        });
+      }
+
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -867,30 +896,120 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Future<void> _testConnection() async {
-    // Implementation for testing connection
+    final url = _textGenerationUrlController.text.trim();
+    final key = _textGenerationApiKeyController.text.trim();
+    final modelId = _textModelController.text.trim();
+
+    if (url.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter API URL')),
+      );
+      return;
+    }
+    if (key.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter API Key')),
+      );
+      return;
+    }
+
+    if (modelId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter Model Name')),
+      );
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Testing connection...'),
+        duration: Duration(seconds: 1), 
       ),
     );
 
     try {
-      // Here you would implement actual connection testing
-      await Future.delayed(const Duration(seconds: 1));
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Connection test successful!'),
-          backgroundColor: Colors.green,
-        ),
+      final result = await ref.read(aiModelRepositoryProvider).validateAPIKey(
+        url,
+        key,
+        modelId,
+        AIModelType.textGeneration,
       );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        showDialog(
+          context: context, 
+          builder: (context) => AlertDialog(
+            title: Row(children: [
+              Icon(
+                result.valid ? Icons.check_circle : Icons.error,
+                color: result.valid ? Colors.green : Colors.red,
+              ),
+              const SizedBox(width: 8),
+              Text(result.valid ? "Connection Successful" : "Connection Failed")
+            ]),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   Text("Response Time: ${result.responseTimeMs.toInt()}ms"),
+                   const SizedBox(height: 8),
+                   if (result.valid) ...[
+                     const Text("Test Response:", style: TextStyle(fontWeight: FontWeight.bold)),
+                     Container(
+                       padding: const EdgeInsets.all(8),
+                       color: Colors.grey.shade800,
+                       child: Text(result.testResult ?? "No content")
+                     )
+                   ] else ...[
+                     const Text("Error Message:", style: TextStyle(fontWeight: FontWeight.bold)),
+                     Container(
+                       padding: const EdgeInsets.all(8),
+                       color: Colors.red.shade900,
+                       child: Text(result.errorMessage ?? "Unknown error occurred")
+                     )
+                   ]
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))
+            ]
+          )
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Connection test failed: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        showDialog(
+          context: context, 
+          builder: (context) => AlertDialog(
+            title: const Row(children: [
+              Icon(Icons.error, color: Colors.red),
+              SizedBox(width: 8),
+              Text("Connection Error")
+            ]),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   const Text("An unexpected error occurred:", style: TextStyle(fontWeight: FontWeight.bold)),
+                   Container(
+                     padding: const EdgeInsets.all(8),
+                     color: Colors.red.shade50,
+                     child: Text(e.toString())
+                   )
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))
+            ]
+          )
+        );
+      }
     }
   }
 }

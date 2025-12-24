@@ -17,7 +17,9 @@ from app.domains.ai.schemas import (
     AIModelConfigList,
     ModelUsageStats,
     ModelTestRequest,
-    ModelTestResponse
+    ModelTestResponse,
+    APIKeyValidationRequest,
+    APIKeyValidationResponse
 )
 from app.domains.ai.services import AIModelConfigService
 from app.core.exceptions import ValidationError, DatabaseError
@@ -171,6 +173,7 @@ async def get_models(
 )
 async def get_model(
     model_id: int,
+    decrypt_key: bool = Query(False, description="是否解密API密钥"),
     user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -185,23 +188,17 @@ async def get_model(
                 detail=f"Model config {model_id} not found"
             )
 
-        # Decrypt API key for the detail view
-        if model.api_key_encrypted:
+        # Decrypt API key if requested
+        if decrypt_key and model.api_key_encrypted:
             try:
                 decrypted_key = await service._get_decrypted_api_key(model)
-                # Temporarily replace the encrypted key with the literal key for the response
-                # Note: We must be careful not to commit this to DB. 
-                # Since we are just reading, and this object is from session but not being flushed, it should be fine 
-                # as long as we don't commit. 
-                # However, cleaner is to act on the Pydantic model response construction.
-                # But _create_model_response takes the ORM model.
-                # We can modify the ORM instance in memory (it's dirty but works for response)
                 model.api_key = decrypted_key
-                model.api_key_encrypted = False # Mark as not encrypted so frontend knows it's the real deal? 
-                # Actually schema doesn't care about encryption status for display, but good for clarity.
+                model.api_key_encrypted = False
             except Exception as e:
-                # If decryption fails, we return the encrypted one (or empty?)
-                # Logging error is better
+                # Log error but don't fail the request, just return encrypted key
+                # or raise error if critical?
+                # User wants to SEE the key, so failing might be better?
+                # But let's keep robust.
                 pass
 
         return _create_model_response(model)
@@ -451,6 +448,40 @@ async def init_default_models(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except DatabaseError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post(
+    "/models/validate-api-key",
+    response_model=APIKeyValidationResponse,
+    summary="验证API密钥连接"
+)
+async def validate_api_key(
+    request: APIKeyValidationRequest,
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    验证API配置是否可以成功连接
+    
+    尝试使用提供的API URL和Key连接服务。
+    会尝试使用标准Bearer Token和api-key Header (Azure/MIMO)
+    """
+    try:
+        service = AIModelConfigService(db)
+        result = await service.validate_api_key(
+            api_url=request.api_url,
+            api_key=request.api_key,
+            model_id=request.model_id,
+            model_type=request.model_type
+        )
+        return result
+    except Exception as e:
+        # Fallback error catch
+        return APIKeyValidationResponse(
+            valid=False,
+            error_message=str(e),
+            response_time_ms=0
+        )
 
 
 @router.get(

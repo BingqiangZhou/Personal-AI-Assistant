@@ -166,15 +166,10 @@ class AIModelConfigRepository:
     async def delete(self, model_id: int) -> bool:
         """删除模型配置"""
         try:
-            # 检查是否是系统预设模型
+            # 检查模型是否存在
             model = await self.get_by_id(model_id)
             if not model:
                 return False
-            if model.is_system:
-                # 系统模型不能物理删除，只能逻辑删除（停用）
-                # 这样用户界面上如果不显示非活跃模型，就达到了"删除/不显示"的效果
-                await self.update(model_id, {"is_active": False})
-                return True
 
             stmt = delete(AIModelConfig).where(AIModelConfig.id == model_id)
             result = await self.db.execute(stmt)

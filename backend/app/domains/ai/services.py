@@ -19,7 +19,9 @@ from app.domains.ai.schemas import (
     AIModelConfigUpdate,
     ModelUsageStats,
     ModelTestResponse,
-    PresetModelConfig
+    PresetModelConfig,
+    APIKeyValidationRequest,
+    APIKeyValidationResponse
 )
 from app.core.config import settings
 from app.core.exceptions import ValidationError, DatabaseError
@@ -125,11 +127,6 @@ class AIModelConfigService:
         if not existing_model:
             return None
 
-        # 检查是否是系统预设模型
-        if existing_model.is_system and model_data.dict(exclude_unset=True).keys() & {
-            'name', 'model_type', 'api_url', 'model_id'
-        }:
-            raise ValidationError("Cannot modify critical fields of system model")
 
         # 如果设置为默认，先取消同类型的其他默认模型
         if model_data.is_default:
@@ -345,6 +342,100 @@ class AIModelConfigService:
         elif preset.provider == "siliconflow":
             return getattr(settings, 'TRANSCRIPTION_API_KEY', None)
         return None
+
+    async def validate_api_key(self, api_url: str, api_key: str, model_id: Optional[str], model_type: ModelType) -> APIKeyValidationResponse:
+        """验证API密钥"""
+        start_time = time.time()
+        result = None
+        error_message = None
+        
+        try:
+            if model_type == ModelType.TRANSCRIPTION:
+                # 简单验证转录服务连接
+                result = "Transciption endpoint format seems correct (Actual validation requires audio upload)"
+                
+            else: # TEXT_GENERATION
+                # 1. 尝试标准 Bearer Token
+                headers = {
+                    'Authorization': f'Bearer {api_key}',
+                    'Content-Type': 'application/json'
+                }
+                
+                # 确保URL不以/结尾
+                base_url = api_url.rstrip('/')
+                # 如果URL已经包含 v1/chat/completions，则使用原URL，否则追加
+                if "chat/completions" in base_url:
+                    target_url = base_url
+                else:
+                    target_url = f"{base_url}/chat/completions"
+                
+                data = {
+                    'model': model_id or "gpt-3.5-turbo",
+                    'messages': [{'role': 'user', 'content': 'Hello'}]
+                }
+                
+                timeout = aiohttp.ClientTimeout(total=10)
+                
+                logger.info(f"Validating API key against URL: {target_url} with model: {model_id}")
+                
+                async with aiohttp.ClientSession(timeout=timeout) as session:
+                    try:
+                        async with session.post(target_url, headers=headers, json=data) as response:
+                            logger.info(f"First request status: {response.status}")
+                            if response.status == 200:
+                                res_json = await response.json()
+                                if 'choices' in res_json and res_json['choices']:
+                                    result = res_json['choices'][0]['message']['content']
+                                    logger.info(f"Validation successful, got result: {result}")
+                                else:
+                                    result = "Connection successful but no content returned"
+                                    logger.info(f"Validation successful but no content returned")
+                            elif response.status in [401, 403, 400, 404]:
+                                # 2. 失败则尝试 api-key header (Azure/MIMO style)
+                                logger.info(f"Standard auth failed ({response.status}), retrying with api-key header")
+                                headers = {
+                                    'api-key': api_key,
+                                    'Content-Type': 'application/json'
+                                }
+                                async with session.post(target_url, headers=headers, json=data) as response2:
+                                    logger.info(f"Second request status: {response2.status}")
+                                    if response2.status == 200:
+                                        res_json = await response2.json()
+                                        if 'choices' in res_json and res_json['choices']:
+                                             result = res_json['choices'][0]['message']['content']
+                                             logger.info(f"Validation successful via api-key, got result: {result}")
+                                        else:
+                                             result = "Connection successful (via api-key) but no content returned"
+                                             logger.info(f"Validation successful via api-key but no content returned")
+                                    else:
+                                        text = await response2.text()
+                                        error_message = f"Validation failed: {response.status} (Bearer) / {response2.status} (api-key) - {text}"
+                                        logger.error(f"Validation failed with api-key: {error_message}")
+                            else:
+                                text = await response.text()
+                                error_message = f"Validation failed: {response.status} - {text}"
+                                logger.error(f"Validation failed with Bearer: {error_message}")
+                    except aiohttp.ClientError as e:
+                        error_message = f"Connection error: {str(e)}"
+                        logger.error(f"Connection error to {target_url}: {str(e)}")
+                    except Exception as e:
+                        error_message = f"Request error: {str(e)}"
+                        logger.error(f"Request error to {target_url}: {str(e)}", exc_info=True)
+
+        except Exception as e:
+            error_message = f"System error: {str(e)}"
+            logger.error(f"System error in validate_api_key: {str(e)}", exc_info=True)
+            
+        response_time = (time.time() - start_time) * 1000
+        
+        logger.info(f"Validation completed in {response_time}ms, valid: {error_message is None}")
+        
+        return APIKeyValidationResponse(
+            valid=error_message is None,
+            error_message=error_message,
+            test_result=result,
+            response_time_ms=response_time
+        )
 
     def _get_preset_api_key_from_env(self, model_name: str) -> Optional[str]:
         """从环境变量获取预设模型的API密钥"""

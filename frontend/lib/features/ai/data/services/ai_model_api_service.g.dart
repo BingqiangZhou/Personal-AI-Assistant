@@ -90,9 +90,10 @@ class _AIModelApiService implements AIModelApiService {
   }
 
   @override
-  Future<AIModelConfigModel> getModel(int modelId) async {
+  Future<AIModelConfigModel> getModel(int modelId, {bool? decryptKey}) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'decrypt_key': decryptKey};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<AIModelConfigModel>(
@@ -411,12 +412,12 @@ class _AIModelApiService implements AIModelApiService {
   }
 
   @override
-  Future<Map<String, dynamic>> getRSAPublicKey() async {
+  Future<RSAPublicKeyResponse> getRSAPublicKey() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<Map<String, dynamic>>(
+    final _options = _setStreamType<RSAPublicKeyResponse>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -427,9 +428,9 @@ class _AIModelApiService implements AIModelApiService {
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late Map<String, dynamic> _value;
+    late RSAPublicKeyResponse _value;
     try {
-      _value = _result.data as Map<String, dynamic>;
+      _value = RSAPublicKeyResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, _result);
       rethrow;

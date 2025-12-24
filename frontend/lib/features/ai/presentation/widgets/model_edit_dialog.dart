@@ -31,6 +31,7 @@ class _ModelEditDialogState extends ConsumerState<ModelEditDialog> {
 
   bool _isLoading = false;
   String? _error;
+  bool _isApiKeyVisible = false;
 
   @override
   void initState() {
@@ -39,11 +40,22 @@ class _ModelEditDialogState extends ConsumerState<ModelEditDialog> {
     _displayNameController = TextEditingController(text: widget.model.displayName);
     _apiUrlController = TextEditingController(text: widget.model.apiUrl);
     _modelIdController = TextEditingController(text: widget.model.modelId);
-    // Note: We don't pre-fill API key for security usually, unless it's stored locally insecurely or fetched purely for this.
-    // However, if the user wants to *change* it, they can enter a new one.
-    // If we leave it empty, the backend logic should handle "don't update if empty" 
-    // BUT the 'updateModel' logic in provider might overwrite it if we send empty string.
-    // Let's check `_updateModel`.
+    // Fetch decrypted API key from backend
+    _loadDecryptedKey();
+  }
+
+  Future<void> _loadDecryptedKey() async {
+    try {
+      // Use repository directly to request decrypted key
+      // Assuming aiModelRepositoryProvider is available from imports
+      final repo = ref.read(aiModelRepositoryProvider);
+      final fullModel = await repo.getModel(widget.model.id, decryptKey: true);
+      if (mounted && fullModel.apiKey != null) {
+         _apiKeyController.text = fullModel.apiKey!;
+      }
+    } catch (e) {
+      debugPrint('Failed to load decrypted API key: $e');
+    }
   }
 
   Future<void> _updateModel() async {
@@ -132,7 +144,11 @@ class _ModelEditDialogState extends ConsumerState<ModelEditDialog> {
                   controller: _apiKeyController,
                   label: 'API Key',
                   hint: 'Leave empty to keep unchanged',
-                  isPassword: true,
+                  isPassword: !_isApiKeyVisible,
+                  suffixIcon: IconButton(
+                    icon: Icon(_isApiKeyVisible ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () => setState(() => _isApiKeyVisible = !_isApiKeyVisible),
+                  ),
                 ),
 
                 if (_error != null) ...[
@@ -220,17 +236,6 @@ class _ModelEditDialogState extends ConsumerState<ModelEditDialog> {
               color: Colors.grey[600],
             ),
           ),
-          if (widget.model.isSystem) ...[
-             const SizedBox(height: 4),
-             const Text(
-              '⚠️ System config, some fields may be read-only', // Simplified
-              style: TextStyle(
-                color: Colors.orange,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-             ),
-          ]
         ],
       ),
     );
@@ -244,6 +249,7 @@ class _ModelEditDialogState extends ConsumerState<ModelEditDialog> {
     bool isPassword = false,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
+    Widget? suffixIcon,
   }) {
     return TextFormField(
       controller: controller,
@@ -252,6 +258,7 @@ class _ModelEditDialogState extends ConsumerState<ModelEditDialog> {
         hintText: hint,
         border: const OutlineInputBorder(),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        suffixIcon: suffixIcon,
       ),
       maxLines: maxLines,
       keyboardType: keyboardType,

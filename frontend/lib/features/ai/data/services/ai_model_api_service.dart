@@ -29,8 +29,9 @@ abstract class AIModelApiService {
   /// 获取AI模型配置详情
   @GET('/ai/models/{modelId}')
   Future<AIModelConfigModel> getModel(
-    @Path() int modelId,
-  );
+    @Path() int modelId, {
+    @Query('decrypt_key') bool? decryptKey,
+  });
 
   /// 更新AI模型配置
   @PUT('/ai/models/{modelId}')
@@ -96,5 +97,5 @@ abstract class AIModelApiService {
 
   /// 获取RSA公钥用于前端加密
   @GET('/ai/security/rsa-public-key')
-  Future<Map<String, dynamic>> getRSAPublicKey();
+  Future<RSAPublicKeyResponse> getRSAPublicKey();
 }

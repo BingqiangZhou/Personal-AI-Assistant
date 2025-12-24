@@ -198,3 +198,11 @@ Map<String, dynamic> _$APIKeyValidationResponseToJson(
   'test_result': instance.testResult,
   'response_time_ms': instance.responseTimeMs,
 };
+
+RSAPublicKeyResponse _$RSAPublicKeyResponseFromJson(
+  Map<String, dynamic> json,
+) => RSAPublicKeyResponse(publicKey: json['public_key'] as String);
+
+Map<String, dynamic> _$RSAPublicKeyResponseToJson(
+  RSAPublicKeyResponse instance,
+) => <String, dynamic>{'public_key': instance.publicKey};

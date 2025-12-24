@@ -382,3 +382,18 @@ class APIKeyValidationResponse {
 
   Map<String, dynamic> toJson() => _$APIKeyValidationResponseToJson(this);
 }
+
+/// RSA Public Key Response
+@JsonSerializable(fieldRename: FieldRename.snake)
+class RSAPublicKeyResponse {
+  final String publicKey;
+
+  const RSAPublicKeyResponse({
+    required this.publicKey,
+  });
+
+  factory RSAPublicKeyResponse.fromJson(Map<String, dynamic> json) =>
+      _$RSAPublicKeyResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RSAPublicKeyResponseToJson(this);
+}

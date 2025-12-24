@@ -33,8 +33,8 @@ class AIModelRepository {
   }
 
   /// 获取模型详情
-  Future<AIModelConfigModel> getModel(int modelId) async {
-    final response = await _apiService.getModel(modelId);
+  Future<AIModelConfigModel> getModel(int modelId, {bool? decryptKey}) async {
+    final response = await _apiService.getModel(modelId, decryptKey: decryptKey);
     return response;
   }
 
