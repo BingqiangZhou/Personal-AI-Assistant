@@ -131,7 +131,7 @@ class _AISummaryControlWidgetState
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '需要先完成转录才能生成AI总结',
+              'Transcription required to generate AI summary',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
@@ -153,7 +153,7 @@ class _AISummaryControlWidgetState
         ElevatedButton.icon(
           onPressed: _generateSummary,
           icon: const Icon(Icons.auto_awesome),
-          label: const Text('生成AI总结'),
+          label: const Text('Generate AI Summary'),
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             backgroundColor: Theme.of(context).colorScheme.primary,
@@ -171,7 +171,7 @@ class _AISummaryControlWidgetState
                 _showOptions ? Icons.expand_less : Icons.expand_more,
                 size: 18,
               ),
-              label: const Text('高级选项'),
+              label: const Text('Advanced Options'),
               style: TextButton.styleFrom(
                 foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -223,7 +223,7 @@ class _AISummaryControlWidgetState
                   _buildMetadataItem(
                     context,
                     Icons.text_fields,
-                    '${summaryState.wordCount}字',
+                    '${summaryState.wordCount} chars',
                   ),
               ],
             ),
@@ -238,7 +238,7 @@ class _AISummaryControlWidgetState
               child: OutlinedButton.icon(
                 onPressed: _regenerateSummary,
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('重新生成'),
+                label: const Text('Regenerate'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   foregroundColor: Theme.of(context).colorScheme.primary,
@@ -251,7 +251,7 @@ class _AISummaryControlWidgetState
               icon: Icon(
                 _showOptions ? Icons.expand_less : Icons.expand_more,
               ),
-              tooltip: '高级选项',
+              tooltip: 'Advanced Options',
             ),
           ],
         ),
@@ -305,7 +305,7 @@ class _AISummaryControlWidgetState
             DropdownButtonFormField<SummaryModelInfo>(
               value: _selectedModel,
               decoration: InputDecoration(
-                labelText: 'AI模型',
+                labelText: 'AI Model',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -336,7 +336,7 @@ class _AISummaryControlWidgetState
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              '默认',
+                              'Default',
                               style: TextStyle(
                                 fontSize: 10,
                                 color: Theme.of(context).colorScheme.primary,
@@ -359,8 +359,8 @@ class _AISummaryControlWidgetState
           TextField(
             controller: _promptController,
             decoration: InputDecoration(
-              labelText: '自定义提示词（可选）',
-              hintText: '例如：请重点总结技术要点...',
+              labelText: 'Custom Prompt (Optional)',
+              hintText: 'e.g., Focus on technical points...',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -394,7 +394,7 @@ class _AISummaryControlWidgetState
             ),
             const SizedBox(height: 12),
             Text(
-              '正在生成AI总结...',
+              'Generating AI summary...',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 14,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 import '../providers/podcast_providers.dart';
 import '../providers/transcription_providers.dart';
@@ -781,12 +782,38 @@ class _PodcastEpisodeDetailPageState
                       ],
                     ),
                     const SizedBox(height: 12),
-                    SelectableText(
-                      summaryState.summary!,
-                      style: TextStyle(
-                        fontSize: 15,
-                        height: 1.6,
-                        color: Theme.of(context).colorScheme.onSurface,
+                    SelectionArea(
+                      child: MarkdownBody(
+                        data: summaryState.summary!,
+                        styleSheet: MarkdownStyleSheet(
+                          p: TextStyle(
+                            fontSize: 15,
+                            height: 1.6,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          h1: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          h2: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          h3: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          listBullet: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          strong: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -822,12 +849,38 @@ class _PodcastEpisodeDetailPageState
                       ],
                     ),
                     const SizedBox(height: 12),
-                    SelectableText(
-                      episode.aiSummary!,
-                      style: TextStyle(
-                        fontSize: 15,
-                        height: 1.6,
-                        color: Theme.of(context).colorScheme.onSurface,
+                    SelectionArea(
+                      child: MarkdownBody(
+                        data: episode.aiSummary!,
+                        styleSheet: MarkdownStyleSheet(
+                          p: TextStyle(
+                            fontSize: 15,
+                            height: 1.6,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          h1: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          h2: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          h3: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          listBullet: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          strong: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
                       ),
                     ),
                   ],
