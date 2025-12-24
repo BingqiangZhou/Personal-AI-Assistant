@@ -5,6 +5,7 @@ import '../models/podcast_episode_model.dart';
 import '../models/podcast_playback_model.dart';
 import '../models/podcast_subscription_model.dart';
 import '../models/podcast_transcription_model.dart';
+import '../models/podcast_conversation_model.dart';
 import '../services/podcast_api_service.dart';
 
 class PodcastRepository {
@@ -275,6 +276,40 @@ class PodcastRepository {
       if (e.response?.statusCode == 404) {
         return null;
       }
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  // === Conversation Management ===
+
+  Future<PodcastConversationHistoryResponse> getConversationHistory({
+    required int episodeId,
+    int limit = 50,
+  }) async {
+    try {
+      return await _apiService.getConversationHistory(episodeId, limit);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastConversationSendResponse> sendConversationMessage({
+    required int episodeId,
+    required PodcastConversationSendRequest request,
+  }) async {
+    try {
+      return await _apiService.sendConversationMessage(episodeId, request);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastConversationClearResponse> clearConversationHistory({
+    required int episodeId,
+  }) async {
+    try {
+      return await _apiService.clearConversationHistory(episodeId);
+    } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
   }

@@ -123,9 +123,12 @@ class SummaryModelManager:
                     'content': prompt
                 }
             ],
-            'max_tokens': model_config.max_tokens or 1000,
             'temperature': model_config.get_temperature_float() or 0.7
         }
+
+        # Only include max_tokens if it's set (some APIs don't accept null)
+        if model_config.max_tokens is not None:
+            data['max_tokens'] = model_config.max_tokens
 
         # 添加额外配置
         if model_config.extra_config:
@@ -149,8 +152,15 @@ class SummaryModelManager:
                         detail="Invalid response from AI API"
                     )
 
-                summary = result['choices'][0]['message']['content']
-                return summary.strip()
+                content = result['choices'][0].get('message', {}).get('content')
+                if not content or not isinstance(content, str):
+                    logger.error(f"AI API returned invalid content: {result}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail="AI API returned empty or invalid content"
+                    )
+
+                return content.strip()
 
     def _build_default_prompt(self, episode_info: Dict[str, Any], transcript: str) -> str:
         """构建默认的摘要提示词"""
@@ -168,7 +178,7 @@ class SummaryModelManager:
 
 ## 总结要求
 
-请按以下结构生成总结（使用Markdown格式）：
+【重要】你必须严格按照以下5个部分结构生成完整的总结，**不得遗漏任何部分**：
 
 ### 1. 主要话题概述
 简要概括本期播客的核心主题（2-3句话）
@@ -190,14 +200,21 @@ class SummaryModelManager:
 ### 5. 总结性陈述
 用1-2句话总结本期播客的价值和意义
 
-**注意事项**：
+## 输出格式要求
+
+1. **必须包含全部5个部分**，每个部分都要有明确的标题（### 1. 主要话题概述、### 2. 核心观点 等）
+2. 每个部分都必须有实质内容，不能省略或跳过
+3. 使用Markdown格式，确保结构清晰
+4. 如果某个部分确实没有相关内容，请明确说明"本期播客未涉及此内容"，而不是直接省略该部分
+
+## 质量标准
 - 保持客观中立的立场
 - 突出信息的准确性和完整性
 - 使用清晰简洁的语言
 - 确保总结的可读性和实用性
 - 总结总长度建议在500-1500字之间
 
-请开始生成总结："""
+请开始生成完整的总结（确保包含所有5个部分）："""
         return prompt
 
     async def _get_api_key(self, model_config) -> str:

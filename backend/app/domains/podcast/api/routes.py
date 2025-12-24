@@ -64,7 +64,12 @@ from app.domains.podcast.schemas import (
     PodcastTranscriptionDetailResponse,
     PodcastTranscriptionListResponse,
     PodcastTranscriptionStatusResponse,
-    PodcastTranscriptionChunkInfo
+    PodcastTranscriptionChunkInfo,
+    PodcastConversationSendRequest,
+    PodcastConversationSendResponse,
+    PodcastConversationHistoryResponse,
+    PodcastConversationClearResponse,
+    PodcastConversationMessage
 )
 
 router = APIRouter(prefix="")
@@ -1367,6 +1372,191 @@ async def get_pending_transcriptions(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get pending transcriptions: {str(e)}"
+        )
+
+
+# === Conversation相关 ===
+
+@router.get(
+    "/episodes/{episode_id}/conversations",
+    response_model=PodcastConversationHistoryResponse,
+    summary="获取对话历史",
+    description="获取指定播客单集的对话历史"
+)
+async def get_conversation_history(
+    episode_id: int,
+    limit: int = Query(50, ge=1, le=200, description="返回的消息数量限制"),
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """获取对话历史"""
+    from app.domains.podcast.conversation_service import ConversationService
+
+    service = PodcastService(db, int(user["sub"]))
+    conversation_service = ConversationService(db)
+
+    try:
+        # 验证播客单集存在且属于当前用户
+        episode = await service.get_episode_by_id(episode_id)
+        if not episode:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Episode {episode_id} not found"
+            )
+
+        # 验证用户权限
+        if episode.subscription.user_id != int(user["sub"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this episode"
+            )
+
+        # 获取对话历史
+        messages = await conversation_service.get_conversation_history(
+            episode_id=episode_id,
+            user_id=int(user["sub"]),
+            limit=limit
+        )
+
+        # 转换为响应模型
+        message_responses = [
+            PodcastConversationMessage(**msg) for msg in messages
+        ]
+
+        return PodcastConversationHistoryResponse(
+            episode_id=episode_id,
+            messages=message_responses,
+            total=len(message_responses)
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get conversation history for episode {episode_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get conversation history: {str(e)}"
+        )
+
+
+@router.post(
+    "/episodes/{episode_id}/conversations",
+    status_code=status.HTTP_201_CREATED,
+    response_model=PodcastConversationSendResponse,
+    summary="发送对话消息",
+    description="向AI助手发送消息并获取回复，支持上下文保持"
+)
+async def send_conversation_message(
+    episode_id: int,
+    request: PodcastConversationSendRequest,
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    发送对话消息：
+
+    请求示例:
+    ```json
+    {
+        "message": "这期播客主要讲了什么？",
+        "model_name": "gpt-4"
+    }
+    ```
+    """
+    from app.domains.podcast.conversation_service import ConversationService
+
+    service = PodcastService(db, int(user["sub"]))
+    conversation_service = ConversationService(db)
+
+    try:
+        # 验证播客单集存在且属于当前用户
+        episode = await service.get_episode_by_id(episode_id)
+        if not episode:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Episode {episode_id} not found"
+            )
+
+        # 验证用户权限
+        if episode.subscription.user_id != int(user["sub"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this episode"
+            )
+
+        # 发送消息并获取AI回复
+        response = await conversation_service.send_message(
+            episode_id=episode_id,
+            user_id=int(user["sub"]),
+            user_message=request.message,
+            model_name=request.model_name
+        )
+
+        return PodcastConversationSendResponse(**response)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to send message for episode {episode_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send message: {str(e)}"
+        )
+
+
+@router.delete(
+    "/episodes/{episode_id}/conversations",
+    response_model=PodcastConversationClearResponse,
+    summary="清除对话历史",
+    description="清除指定播客单集的对话历史"
+)
+async def clear_conversation_history(
+    episode_id: int,
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """清除对话历史"""
+    from app.domains.podcast.conversation_service import ConversationService
+
+    service = PodcastService(db, int(user["sub"]))
+    conversation_service = ConversationService(db)
+
+    try:
+        # 验证播客单集存在且属于当前用户
+        episode = await service.get_episode_by_id(episode_id)
+        if not episode:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Episode {episode_id} not found"
+            )
+
+        # 验证用户权限
+        if episode.subscription.user_id != int(user["sub"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to access this episode"
+            )
+
+        # 清除对话历史
+        deleted_count = await conversation_service.clear_conversation_history(
+            episode_id=episode_id,
+            user_id=int(user["sub"])
+        )
+
+        return PodcastConversationClearResponse(
+            episode_id=episode_id,
+            deleted_count=deleted_count
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to clear conversation history for episode {episode_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to clear conversation history: {str(e)}"
         )
 
 

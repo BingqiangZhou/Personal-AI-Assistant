@@ -5,6 +5,7 @@ import '../models/podcast_episode_model.dart';
 import '../models/podcast_playback_model.dart';
 import '../models/podcast_subscription_model.dart';
 import '../models/podcast_transcription_model.dart';
+import '../models/podcast_conversation_model.dart';
 
 part 'podcast_api_service.g.dart';
 
@@ -139,6 +140,25 @@ abstract class PodcastApiService {
 
   @GET('/podcasts/episodes/{episodeId}/transcription/status')
   Future<PodcastTranscriptionResponse> getTranscriptionStatus(
+    @Path('episodeId') int episodeId,
+  );
+
+  // === Conversation Management ===
+
+  @GET('/podcasts/episodes/{episodeId}/conversations')
+  Future<PodcastConversationHistoryResponse> getConversationHistory(
+    @Path('episodeId') int episodeId,
+    @Query('limit') int limit,
+  );
+
+  @POST('/podcasts/episodes/{episodeId}/conversations')
+  Future<PodcastConversationSendResponse> sendConversationMessage(
+    @Path('episodeId') int episodeId,
+    @Body() PodcastConversationSendRequest request,
+  );
+
+  @DELETE('/podcasts/episodes/{episodeId}/conversations')
+  Future<PodcastConversationClearResponse> clearConversationHistory(
     @Path('episodeId') int episodeId,
   );
 }

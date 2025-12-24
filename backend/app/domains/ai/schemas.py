@@ -120,8 +120,6 @@ class AIModelConfigResponse(AIModelConfigBase):
 
     class Config:
         from_attributes = True
-        # 告诉Pydantic从ORM模型读取时忽略未定义的字段
-        orm_mode = True
 
 
 class AIModelConfigList(BaseModel):

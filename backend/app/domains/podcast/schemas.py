@@ -450,3 +450,44 @@ class PodcastTranscriptionChunkInfo(PodcastBaseSchema):
     duration: float
     transcript: Optional[str] = None
     word_count: int = 0
+
+
+# === Conversation相关 ===
+
+class PodcastConversationMessage(PodcastBaseSchema):
+    """对话消息"""
+    id: int
+    role: str  # 'user' or 'assistant'
+    content: str
+    conversation_turn: int
+    created_at: str
+    parent_message_id: Optional[int] = None
+
+
+class PodcastConversationSendRequest(PodcastBaseSchema):
+    """发送对话消息请求"""
+    message: str = Field(..., min_length=1, max_length=5000, description="用户消息内容")
+    model_name: Optional[str] = Field(None, description="使用的AI模型名称")
+
+
+class PodcastConversationSendResponse(PodcastBaseSchema):
+    """发送对话消息响应"""
+    id: int
+    role: str
+    content: str
+    conversation_turn: int
+    processing_time: Optional[float] = None
+    created_at: str
+
+
+class PodcastConversationHistoryResponse(PodcastBaseSchema):
+    """对话历史响应"""
+    episode_id: int
+    messages: List[PodcastConversationMessage]
+    total: int
+
+
+class PodcastConversationClearResponse(PodcastBaseSchema):
+    """清除对话历史响应"""
+    episode_id: int
+    deleted_count: int

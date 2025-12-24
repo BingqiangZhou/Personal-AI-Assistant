@@ -260,6 +260,50 @@ class TranscriptionTask(Base):
         return f"<TranscriptionTask(id={self.id}, episode_id={self.episode_id}, status='{self.status}')>"
 
 
+class PodcastConversation(Base):
+    """
+    播客单集对话交互模型
+
+    存储用户与AI基于播客摘要的对话历史，支持上下文保持的交互
+    """
+    __tablename__ = "podcast_conversations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    episode_id = Column(Integer, ForeignKey("podcast_episodes.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # 对话内容
+    role = Column(String(20), nullable=False)  # 'user' or 'assistant'
+    content = Column(Text, nullable=False)
+
+    # 上下文管理
+    parent_message_id = Column(Integer, ForeignKey("podcast_conversations.id"), nullable=True)  # 父消息ID，用于构建对话树
+    conversation_turn = Column(Integer, default=0)  # 对话轮次
+
+    # 元数据
+    tokens_used = Column(Integer)  # 本次消息使用的token数
+    model_used = Column(String(100))  # 使用的AI模型
+    processing_time = Column(Float)  # 处理时间（秒）
+
+    # 时间戳
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    # Relationships
+    episode = relationship("PodcastEpisode", backref="conversations")
+    parent_message = relationship("PodcastConversation", remote_side=[id], backref="replies")
+
+    # Indexes
+    __table_args__ = (
+        Index('idx_conversation_episode', 'episode_id'),
+        Index('idx_conversation_user', 'user_id'),
+        Index('idx_conversation_created', 'created_at'),
+        Index('idx_conversation_turn', 'episode_id', 'conversation_turn'),
+    )
+
+    def __repr__(self):
+        return f"<PodcastConversation(id={self.id}, episode_id={self.episode_id}, role='{self.role}')>"
+
+
 # 辅助方法：判断订阅是否播客
 def is_podcast_subscription(subscription) -> bool:
     """判断Subscription是否播客类型"""
