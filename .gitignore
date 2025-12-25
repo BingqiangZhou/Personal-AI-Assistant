@@ -137,3 +137,4 @@ temp_*
 *.tmp
 backend/data/.rsa_keys
 .trae/
+backend/celerybeat-schedule

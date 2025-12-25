@@ -100,6 +100,28 @@ services:
     restart: unless-stopped
     command: celery -A app.domains.podcast.tasks.celery_app worker --loglevel=info --concurrency=2 -Q celery,podcast,ai,transcription,cleanup,recommendation
 
+  # Celery Beat - 调度器，负责定时触发任务
+  celery_beat:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: podcast_celery_beat
+    env_file:
+      - ../backend/.env
+    volumes:
+      - ../backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      celery_worker:
+        condition: service_started
+    networks:
+      - podcast_network
+    restart: unless-stopped
+    command: celery -A app.domains.podcast.tasks.celery_app beat --loglevel=info
+
 volumes:
   postgres_data:
   redis_data:

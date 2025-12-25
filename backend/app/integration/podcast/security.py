@@ -45,8 +45,6 @@ class PodcastSecurityValidator:
     XXE_PATTERNS = [
         r'<!ENTITY\s+',
         r'<!DOCTYPE\s+.*\[',
-        r'&#[0-9]+;',
-        r'&#x[0-9a-fA-F]+;',
         r'SYSTEM\s+["\']',
         r'PUBLIC\s+["\']',
     ]
