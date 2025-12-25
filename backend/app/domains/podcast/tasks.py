@@ -7,6 +7,9 @@ import logging
 from typing import List, Optional
 from datetime import datetime, timedelta
 from celery import Celery
+from celery.schedules import crontab
+from celery.signals import after_setup_logger
+from sqlalchemy import select, delete
 
 from app.core.config import settings
 from app.domains.podcast.services import PodcastService
@@ -41,6 +44,7 @@ from app.domains.ai.models import AIModelConfig
 import asyncio
 
 logger = logging.getLogger(__name__)
+logger.propagate = False # Prevent duplicate logs from propagation to root
 
 # 创建Celery实例
 celery_app = Celery(
@@ -91,8 +95,7 @@ def refresh_all_podcast_feeds(self):
                 repo = PodcastRepository(db)
 
                 # 获取所有活跃的播客订阅
-                from app.domains.subscription.models import Subscription
-                from sqlalchemy import select
+                # from app.domains.subscription.models import Subscription # Redundant local import removed
 
                 # Get active podcast subscriptions that should be updated now
                 stmt = select(Subscription).where(
@@ -121,7 +124,8 @@ def refresh_all_podcast_feeds(self):
                         refreshed_count += 1
                         new_episodes_count += len(new_episodes)
 
-                        logger.info(f"刷新订阅 {sub.title}: {len(new_episodes)} 期新节目")
+                        # service.refresh_subscription already logs progress
+                        await service.refresh_subscription(sub.id)
 
                     except Exception as e:
                         logger.error(f"刷新订阅 {sub.id} 失败: {e}")
@@ -290,7 +294,6 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
                 try:
                     # Get task info to verify episode_id
                     from app.domains.podcast.models import TranscriptionTask
-                    from sqlalchemy import select
 
                     stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
                     result = await session.execute(stmt)
@@ -351,7 +354,6 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
 
                         # Mark as failed in Redis
                         from app.domains.podcast.models import TranscriptionTask
-                        stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
                         result = await session.execute(stmt)
                         task = result.scalar_one_or_none()
 
@@ -403,7 +405,6 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
             state_manager = await get_transcription_state_manager()
             async with async_session_factory() as session:
                 from app.domains.podcast.models import TranscriptionTask
-                from sqlalchemy import select
 
                 stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
                 result = await session.execute(stmt)
@@ -484,7 +485,6 @@ def cleanup_old_playback_states():
                 cutoff_date = datetime.utcnow() - timedelta(days=90)
 
                 from app.domains.podcast.models import PodcastPlaybackState
-                from sqlalchemy import delete
 
                 stmt = delete(PodcastPlaybackState).where(
                     PodcastPlaybackState.last_updated_at < cutoff_date
@@ -534,7 +534,6 @@ def generate_podcast_recommendations():
             try:
                 # 获取所有用户
                 from app.domains.user.models import User
-                from sqlalchemy import select
 
                 stmt = select(User).where(User.is_active == True)
                 result = await db.execute(stmt)
@@ -654,10 +653,10 @@ def _simulate_transcription(title: str, description: str) -> str:
 
 # 配置定时任务
 celery_app.conf.beat_schedule = {
-    # Check for subscriptions to update every minute
+    # Check for subscriptions to update every hour (on the hour)
     'refresh-podcast-feeds': {
         'task': 'app.domains.podcast.tasks.refresh_all_podcast_feeds',
-        'schedule': 60.0,  # 1 minute - check which subscriptions need updating
+        'schedule': crontab(minute=0),  # Top of every hour
         'options': {'queue': 'podcast'}
     },
 

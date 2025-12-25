@@ -86,67 +86,69 @@ class Subscription(Base):
         Index('idx_source_type', 'source_type'),
     )
 
+    def _parse_update_time(self) -> tuple[int, int]:
+        """Parse update_time string (HH:MM) to integers."""
+        if not self.update_time:
+            return 0, 0
+        try:
+            parts = self.update_time.split(':')
+            if len(parts) == 2:
+                return int(parts[0]), int(parts[1])
+        except (ValueError, AttributeError):
+            pass
+        return 0, 0
+
+    def _get_next_scheduled_time(self, base_time: datetime) -> datetime:
+        """Calculate the next scheduled time after base_time."""
+        hour, minute = self._parse_update_time()
+        
+        if self.update_frequency == UpdateFrequency.HOURLY.value:
+            # Next top of the hour after base_time
+            return (base_time + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+            
+        elif self.update_frequency == UpdateFrequency.DAILY.value:
+            # Scheduled time today
+            scheduled = base_time.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            if scheduled <= base_time:
+                # If already passed today, next one is tomorrow
+                scheduled += timedelta(days=1)
+            return scheduled
+            
+        elif self.update_frequency == UpdateFrequency.WEEKLY.value:
+            # Default to Monday (0) if not set. DB stores 1-7 (Mon-Sun)
+            target_weekday = (self.update_day_of_week - 1) if self.update_day_of_week else 0
+            # Scheduled time today
+            scheduled = base_time.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            
+            # Find days until target weekday
+            days_ahead = target_weekday - base_time.weekday()
+            if days_ahead < 0 or (days_ahead == 0 and scheduled <= base_time):
+                days_ahead += 7
+                
+            return scheduled + timedelta(days=days_ahead)
+            
+        return base_time + timedelta(hours=1) # Fallback
+
     @property
     def computed_next_update_at(self) -> Optional[datetime]:
         """
-        Calculate next update time based on frequency.
-        Aligns to the start of the next interval unit based on CURRENT time.
-        
-        Logic:
-        - HOURLY: Next top of the hour (XX:00:00)
-        - DAILY: Next midnight (00:00:00)
-        - WEEKLY: Next Monday midnight (Monday 00:00:00)
+        Calculate next update time based on frequency and user settings.
+        Aligns to the next scheduled interval based on CURRENT time.
         """
-        # Current time in UTC
-        now = datetime.utcnow()
-        
-        if self.update_frequency == UpdateFrequency.HOURLY.value:
-            # Align to start of current hour, then add 1 hour
-            current_hour = now.replace(minute=0, second=0, microsecond=0)
-            return current_hour + timedelta(hours=1)
-            
-        elif self.update_frequency == UpdateFrequency.DAILY.value:
-            # Align to start of current day, then add 1 day
-            current_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            return current_day + timedelta(days=1)
-            
-        elif self.update_frequency == UpdateFrequency.WEEKLY.value:
-            # Align to start of current day
-            current_day = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            # Calculate days until next Monday (0)
-            days_ahead = 7 - current_day.weekday() # If Mon(0) -> 7 days. If Sun(6) -> 1 day.
-            return current_day + timedelta(days=days_ahead)
-            
-        return None
+        return self._get_next_scheduled_time(datetime.utcnow())
 
     def should_update_now(self) -> bool:
         """
         Check if we should update now based on time passed since last fetch.
-        Independent of next_update_at (which shows future Schedule).
         """
         if not self.last_fetched_at:
             return True
 
-        # Calculate boundary relative to LAST FETCH
-        last = self.last_fetched_at
-        boundary_time = None
-
-        if self.update_frequency == UpdateFrequency.HOURLY.value:
-            boundary_time = (last + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
-            
-        elif self.update_frequency == UpdateFrequency.DAILY.value:
-            boundary_time = (last + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
-            
-        elif self.update_frequency == UpdateFrequency.WEEKLY.value:
-            days_ahead = 7 - last.weekday()
-            if days_ahead <= 0:
-                days_ahead += 7
-            boundary_time = (last + timedelta(days=days_ahead)).replace(hour=0, minute=0, second=0, microsecond=0)
-            
-        if boundary_time and datetime.utcnow() >= boundary_time:
-            return True
-            
-        return False
+        # Calculate the Earliest next scheduled time AFTER the last fetch
+        next_possible = self._get_next_scheduled_time(self.last_fetched_at)
+        
+        # If the scheduled time has arrived or passed, we should update
+        return datetime.utcnow() >= next_possible
 
 
 class SubscriptionItem(Base):
