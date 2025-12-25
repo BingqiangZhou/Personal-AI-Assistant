@@ -168,6 +168,7 @@ class SubscriptionResponse(SubscriptionBase, TimestampedSchema):
     user_id: int
     status: str
     last_fetched_at: Optional[datetime] = None
+    next_update_at: Optional[datetime] = None
     error_message: Optional[str] = None
 
 

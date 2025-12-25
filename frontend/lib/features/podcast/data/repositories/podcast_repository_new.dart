@@ -6,8 +6,8 @@ import '../models/podcast_playback_model.dart';
 import '../models/podcast_subscription_model.dart';
 import '../models/podcast_transcription_model.dart';
 import '../models/podcast_conversation_model.dart';
-import '../models/schedule_config_model.dart';
 import '../services/podcast_api_service.dart';
+import '../models/schedule_config_model.dart';
 
 class PodcastRepository {
   final PodcastApiService _apiService;
@@ -310,51 +310,6 @@ class PodcastRepository {
   }) async {
     try {
       return await _apiService.clearConversationHistory(episodeId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
-
-  // === Schedule Management ===
-
-  Future<ScheduleConfigResponse> getSubscriptionSchedule(int subscriptionId) async {
-    try {
-      return await _apiService.getSubscriptionSchedule(subscriptionId);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
-
-  Future<ScheduleConfigResponse> updateSubscriptionSchedule(
-    int subscriptionId,
-    ScheduleConfigUpdateRequest request,
-  ) async {
-    try {
-      return await _apiService.updateSubscriptionSchedule(subscriptionId, request);
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
-
-  /// Get all subscription schedules
-  Future<List<ScheduleConfigResponse>> getAllSubscriptionSchedules() async {
-    try {
-      return await _apiService.getAllSubscriptionSchedules();
-    } on DioException catch (e) {
-      throw NetworkException.fromDioError(e);
-    }
-  }
-
-  /// Batch update subscription schedules
-  Future<List<ScheduleConfigResponse>> batchUpdateSubscriptionSchedules(
-    List<int> subscriptionIds,
-    ScheduleConfigUpdateRequest request,
-  ) async {
-    try {
-      return await _apiService.batchUpdateSubscriptionSchedules({
-        'subscription_ids': subscriptionIds,
-        'schedule_data': request.toJson(),
-      });
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }

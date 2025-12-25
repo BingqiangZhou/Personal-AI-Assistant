@@ -15,6 +15,7 @@ import '../../features/podcast/presentation/pages/podcast_list_page.dart';
 import '../../features/podcast/presentation/pages/podcast_player_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episode_detail_page.dart';
+import '../../features/podcast/presentation/pages/global_rss_settings_page.dart';
 import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/ai/presentation/pages/model_management_page.dart';
@@ -171,6 +172,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: 'ai-models',
                 name: 'ai-models',
                 builder: (context, state) => const ModelManagementPage(),
+              ),
+              GoRoute(
+                path: 'rss-schedule',
+                name: 'rss-schedule',
+                builder: (context, state) => const GlobalRSSSettingsPage(),
               ),
             ],
           ),

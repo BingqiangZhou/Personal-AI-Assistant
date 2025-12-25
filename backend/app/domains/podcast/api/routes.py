@@ -21,6 +21,7 @@ from typing import List, Optional
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.core.database import get_db_session
 from app.core.security import get_token_from_request
@@ -69,7 +70,9 @@ from app.domains.podcast.schemas import (
     PodcastConversationSendResponse,
     PodcastConversationHistoryResponse,
     PodcastConversationClearResponse,
-    PodcastConversationMessage
+    PodcastConversationMessage,
+    ScheduleConfigUpdate,
+    ScheduleConfigResponse
 )
 
 router = APIRouter(prefix="")
@@ -208,6 +211,102 @@ async def delete_subscription(
     if not success:
         raise HTTPException(status_code=404, detail="订阅不存在")
     return {"success": True, "message": "订阅已删除"}
+
+
+@router.get(
+    "/subscriptions/{subscription_id}/schedule",
+    response_model=ScheduleConfigResponse,
+    summary="Get subscription schedule configuration",
+    description="Get the current schedule configuration for a subscription"
+)
+async def get_subscription_schedule(
+    subscription_id: int,
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Get subscription schedule configuration"""
+    from app.domains.subscription.models import Subscription
+    from sqlalchemy import select
+
+    stmt = select(Subscription).where(
+        Subscription.id == subscription_id
+    ).where(
+        Subscription.user_id == int(user['sub'])
+    )
+
+    result = await db.execute(stmt)
+    subscription = result.scalar_one_or_none()
+
+    if not subscription:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Subscription not found"
+        )
+
+    return ScheduleConfigResponse(
+        id=subscription.id,
+        title=subscription.title,
+        update_frequency=subscription.update_frequency,
+        update_time=subscription.update_time,
+        update_day_of_week=subscription.update_day_of_week,
+        fetch_interval=subscription.fetch_interval,
+        next_update_at=subscription.next_update_at,
+        last_updated_at=subscription.last_fetched_at
+    )
+
+
+@router.patch(
+    "/subscriptions/{subscription_id}/schedule",
+    response_model=ScheduleConfigResponse,
+    summary="Update subscription schedule configuration",
+    description="Update the schedule configuration for a subscription"
+)
+async def update_subscription_schedule(
+    subscription_id: int,
+    schedule_data: ScheduleConfigUpdate,
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Update subscription schedule configuration"""
+    from app.domains.subscription.models import Subscription
+    from sqlalchemy import select
+
+    stmt = select(Subscription).where(
+        Subscription.id == subscription_id
+    ).where(
+        Subscription.user_id == int(user['sub'])
+    )
+
+    result = await db.execute(stmt)
+    subscription = result.scalar_one_or_none()
+
+    if not subscription:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Subscription not found"
+        )
+
+    # Update schedule configuration
+    subscription.update_frequency = schedule_data.update_frequency
+    subscription.update_time = schedule_data.update_time
+    subscription.update_day_of_week = schedule_data.update_day_of_week
+
+    if schedule_data.fetch_interval is not None:
+        subscription.fetch_interval = schedule_data.fetch_interval
+
+    await db.commit()
+    await db.refresh(subscription)
+
+    return ScheduleConfigResponse(
+        id=subscription.id,
+        title=subscription.title,
+        update_frequency=subscription.update_frequency,
+        update_time=subscription.update_time,
+        update_day_of_week=subscription.update_day_of_week,
+        fetch_interval=subscription.fetch_interval,
+        next_update_at=subscription.next_update_at,
+        last_updated_at=subscription.last_fetched_at
+    )
 
 
 # === 单集管理 ===
@@ -1559,6 +1658,100 @@ async def clear_conversation_history(
             detail=f"Failed to clear conversation history: {str(e)}"
         )
 
+
+
+@router.get(
+    "/subscriptions/schedule/all",
+    response_model=List[ScheduleConfigResponse],
+    summary="Get all subscription schedules",
+    description="Get schedule configuration for all user subscriptions"
+)
+async def get_all_subscription_schedules(
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Get all subscription schedule configurations"""
+    from app.domains.subscription.models import Subscription
+
+    stmt = select(Subscription).where(
+        Subscription.user_id == int(user['sub'])
+    ).where(
+        Subscription.source_type == "podcast-rss"
+    ).order_by(Subscription.created_at)
+
+    result = await db.execute(stmt)
+    subscriptions = list(result.scalars().all())
+
+    return [
+        ScheduleConfigResponse(
+            id=sub.id,
+            title=sub.title,
+            update_frequency=sub.update_frequency,
+            update_time=sub.update_time,
+            update_day_of_week=sub.update_day_of_week,
+            fetch_interval=sub.fetch_interval,
+            next_update_at=sub.computed_next_update_at,
+            last_updated_at=sub.last_fetched_at
+        )
+        for sub in subscriptions
+    ]
+
+
+@router.post(
+    "/subscriptions/schedule/batch-update",
+    response_model=List[ScheduleConfigResponse],
+    summary="Batch update subscription schedules",
+    description="Update schedule configuration for multiple subscriptions"
+)
+async def batch_update_subscription_schedules(
+    subscription_ids: List[int] = Body(..., embed=True),
+    schedule_data: ScheduleConfigUpdate = Body(...),
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Batch update schedule configuration for multiple subscriptions"""
+    from app.domains.subscription.models import Subscription
+
+    stmt = select(Subscription).where(
+        Subscription.id.in_(subscription_ids)
+    ).where(
+        Subscription.user_id == int(user['sub'])
+    )
+
+    result = await db.execute(stmt)
+    subscriptions = list(result.scalars().all())
+
+    updated_subs = []
+    for sub in subscriptions:
+        # Update schedule configuration
+        sub.update_frequency = schedule_data.update_frequency
+        sub.update_time = schedule_data.update_time
+        sub.update_day_of_week = schedule_data.update_day_of_week
+
+        if schedule_data.fetch_interval is not None:
+            sub.fetch_interval = schedule_data.fetch_interval
+
+        updated_subs.append(sub)
+
+    await db.commit()
+
+    # Refresh to get computed properties
+    for sub in updated_subs:
+        await db.refresh(sub)
+
+    return [
+        ScheduleConfigResponse(
+            id=sub.id,
+            title=sub.title,
+            update_frequency=sub.update_frequency,
+            update_time=sub.update_time,
+            update_day_of_week=sub.update_day_of_week,
+            fetch_interval=sub.fetch_interval,
+            next_update_at=sub.computed_next_update_at,
+            last_updated_at=sub.last_fetched_at
+        )
+        for sub in updated_subs
+    ]
 
 # Export router
 __all__ = ["router"]

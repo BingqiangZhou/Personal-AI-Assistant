@@ -29,6 +29,12 @@ PodcastSubscriptionModel _$PodcastSubscriptionModelFromJson(
   imageUrl: json['image_url'] as String?,
   author: json['author'] as String?,
   platform: json['platform'] as String?,
+  updateFrequency: json['update_frequency'] as String?,
+  updateTime: json['update_time'] as String?,
+  updateDayOfWeek: (json['update_day_of_week'] as num?)?.toInt(),
+  nextUpdateAt: json['next_update_at'] == null
+      ? null
+      : DateTime.parse(json['next_update_at'] as String),
   createdAt: DateTime.parse(json['created_at'] as String),
   updatedAt: json['updated_at'] == null
       ? null
@@ -54,6 +60,10 @@ Map<String, dynamic> _$PodcastSubscriptionModelToJson(
   'image_url': instance.imageUrl,
   'author': instance.author,
   'platform': instance.platform,
+  'update_frequency': instance.updateFrequency,
+  'update_time': instance.updateTime,
+  'update_day_of_week': instance.updateDayOfWeek,
+  'next_update_at': instance.nextUpdateAt?.toIso8601String(),
   'created_at': instance.createdAt.toIso8601String(),
   'updated_at': instance.updatedAt?.toIso8601String(),
 };

@@ -22,7 +22,8 @@ from app.core.database import async_session_factory
 from app.domains.user.models import User, UserSession
 from app.domains.subscription.models import (
     Subscription, SubscriptionItem, SubscriptionCategory,
-    SubscriptionCategoryMapping, SubscriptionType, SubscriptionStatus
+    SubscriptionCategoryMapping, SubscriptionType, SubscriptionStatus,
+    UpdateFrequency
 )
 from app.domains.knowledge.models import (
     KnowledgeBase, Document, DocumentTag, SearchHistory
@@ -74,7 +75,12 @@ celery_app.conf.update(
 def refresh_all_podcast_feeds(self):
     """
     定时任务：刷新所有播客RSS Feed
-    每小时执行一次
+    每分钟执行一次，检查哪些订阅需要根据其调度配置进行更新
+    
+    支持的调度频率：
+    - HOURLY: 每N小时更新一次（使用fetch_interval）
+    - DAILY: 每天在指定时间更新（使用update_time）
+    - WEEKLY: 每周指定星期和时间更新（使用update_day_of_week和update_time）
     """
     logger.info("开始刷新所有播客RSS Feed")
 
@@ -88,18 +94,18 @@ def refresh_all_podcast_feeds(self):
                 from app.domains.subscription.models import Subscription
                 from sqlalchemy import select
 
+                # Get active podcast subscriptions that should be updated now
                 stmt = select(Subscription).where(
                     Subscription.source_type == "podcast-rss"
                 ).where(
-                    # 只刷新需要更新的订阅（根据last_fetched_at和fetch_interval）
-                    or_(
-                        Subscription.last_fetched_at.is_(None),
-                        Subscription.last_fetched_at <= datetime.utcnow() - timedelta(minutes=Subscription.fetch_interval)
-                    )
+                    Subscription.status == "active"
                 )
 
                 result = await db.execute(stmt)
-                subscriptions = list(result.scalars().all())
+                all_subscriptions = list(result.scalars().all())
+
+                # Filter subscriptions that should be updated now based on their schedule
+                subscriptions = [sub for sub in all_subscriptions if sub.should_update_now()]
 
                 refreshed_count = 0
                 new_episodes_count = 0
@@ -648,10 +654,10 @@ def _simulate_transcription(title: str, description: str) -> str:
 
 # 配置定时任务
 celery_app.conf.beat_schedule = {
-    # 每小时刷新RSS Feed
+    # Check for subscriptions to update every minute
     'refresh-podcast-feeds': {
         'task': 'app.domains.podcast.tasks.refresh_all_podcast_feeds',
-        'schedule': 3600.0,  # 1小时
+        'schedule': 60.0,  # 1 minute - check which subscriptions need updating
         'options': {'queue': 'podcast'}
     },
 

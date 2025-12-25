@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../ai/models/ai_model_config_model.dart';
 import '../../../ai/presentation/widgets/model_create_dialog.dart';
@@ -376,6 +377,23 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
             const SizedBox(height: 24),
 
+            // RSS Subscription Settings
+            _buildSection(
+              title: 'RSS Subscription Settings',
+              icon: Icons.rss_feed,
+              children: [
+                ListTile(
+                  title: const Text('RSS Schedule Configuration'),
+                  subtitle: const Text('Manage update frequency and schedule for all RSS subscriptions'),
+                  trailing: const Icon(Icons.arrow_forward_ios),
+                  onTap: () {
+                    context.push('/profile/settings/rss-schedule');
+                  },
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
             // About Section
             _buildSection(
               title: 'About',

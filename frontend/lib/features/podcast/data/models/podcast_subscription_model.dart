@@ -32,6 +32,14 @@ class PodcastSubscriptionModel extends Equatable {
   final String? imageUrl;
   final String? author;
   final String? platform;
+  @JsonKey(name: 'update_frequency')
+  final String? updateFrequency;
+  @JsonKey(name: 'update_time')
+  final String? updateTime;
+  @JsonKey(name: 'update_day_of_week')
+  final int? updateDayOfWeek;
+  @JsonKey(name: 'next_update_at')
+  final DateTime? nextUpdateAt;
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
   @JsonKey(name: 'updated_at')
@@ -54,6 +62,10 @@ class PodcastSubscriptionModel extends Equatable {
     this.imageUrl,
     this.author,
     this.platform,
+    this.updateFrequency,
+    this.updateTime,
+    this.updateDayOfWeek,
+    this.nextUpdateAt,
     required this.createdAt,
     this.updatedAt,
   });
@@ -80,6 +92,10 @@ class PodcastSubscriptionModel extends Equatable {
     String? imageUrl,
     String? author,
     String? platform,
+    String? updateFrequency,
+    String? updateTime,
+    int? updateDayOfWeek,
+    DateTime? nextUpdateAt,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -100,6 +116,10 @@ class PodcastSubscriptionModel extends Equatable {
       imageUrl: imageUrl ?? this.imageUrl,
       author: author ?? this.author,
       platform: platform ?? this.platform,
+      updateFrequency: updateFrequency ?? this.updateFrequency,
+      updateTime: updateTime ?? this.updateTime,
+      updateDayOfWeek: updateDayOfWeek ?? this.updateDayOfWeek,
+      nextUpdateAt: nextUpdateAt ?? this.nextUpdateAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -123,6 +143,10 @@ class PodcastSubscriptionModel extends Equatable {
         imageUrl,
         author,
         platform,
+        updateFrequency,
+        updateTime,
+        updateDayOfWeek,
+        nextUpdateAt,
         createdAt,
         updatedAt,
       ];

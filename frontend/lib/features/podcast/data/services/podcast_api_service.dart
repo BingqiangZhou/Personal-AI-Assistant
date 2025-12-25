@@ -4,6 +4,7 @@ import 'package:retrofit/retrofit.dart';
 import '../models/podcast_episode_model.dart';
 import '../models/podcast_playback_model.dart';
 import '../models/podcast_subscription_model.dart';
+import '../models/schedule_config_model.dart';
 import '../models/podcast_transcription_model.dart';
 import '../models/podcast_conversation_model.dart';
 
@@ -47,6 +48,17 @@ abstract class PodcastApiService {
   Future<ReparseResponse> reparseSubscription(
     @Path('subscriptionId') int subscriptionId,
     @Query('force_all') bool forceAll,
+  );
+
+  @GET('/podcasts/subscriptions/{subscriptionId}/schedule')
+  Future<ScheduleConfigResponse> getSubscriptionSchedule(
+    @Path('subscriptionId') int subscriptionId,
+  );
+
+  @PATCH('/podcasts/subscriptions/{subscriptionId}/schedule')
+  Future<ScheduleConfigResponse> updateSubscriptionSchedule(
+    @Path('subscriptionId') int subscriptionId,
+    @Body() ScheduleConfigUpdateRequest request,
   );
 
   // === Episode Management ===
@@ -160,5 +172,13 @@ abstract class PodcastApiService {
   @DELETE('/podcasts/episodes/{episodeId}/conversations')
   Future<PodcastConversationClearResponse> clearConversationHistory(
     @Path('episodeId') int episodeId,
+  );
+
+  @GET('/podcasts/subscriptions/schedule/all')
+  Future<List<ScheduleConfigResponse>> getAllSubscriptionSchedules();
+
+  @POST('/podcasts/subscriptions/schedule/batch-update')
+  Future<List<ScheduleConfigResponse>> batchUpdateSubscriptionSchedules(
+    @Body() Map<String, dynamic> requestData,
   );
 }

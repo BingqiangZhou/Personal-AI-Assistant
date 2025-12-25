@@ -491,3 +491,56 @@ class PodcastConversationClearResponse(PodcastBaseSchema):
     """清除对话历史响应"""
     episode_id: int
     deleted_count: int
+
+# === Schedule Configuration Schemas ===
+
+class ScheduleConfigUpdate(BaseModel):
+    """Update subscription schedule configuration"""
+    update_frequency: str = Field(..., description="Update frequency: HOURLY, DAILY, WEEKLY")
+    update_time: Optional[str] = Field(None, description="Update time in HH:MM format (24-hour)")
+    update_day_of_week: Optional[int] = Field(None, ge=1, le=7, description="Day of week (1=Monday, 7=Sunday)")
+    fetch_interval: Optional[int] = Field(None, ge=300, le=86400, description="Fetch interval in seconds (for HOURLY frequency)")
+
+    @field_validator('update_frequency')
+    @classmethod
+    def validate_frequency(cls, v):
+        valid_values = ['HOURLY', 'DAILY', 'WEEKLY']
+        if v not in valid_values:
+            raise ValueError(f'update_frequency must be one of {valid_values}')
+        return v
+
+    @field_validator('update_time')
+    @classmethod
+    def validate_time_format(cls, v):
+        if v is not None:
+            try:
+                hour, minute = map(int, v.split(':'))
+                if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                    raise ValueError('Invalid time')
+            except (ValueError, AttributeError):
+                raise ValueError('update_time must be in HH:MM format (24-hour)')
+        return v
+
+    @model_validator(mode='after')
+    def validate_schedule_config(self):
+        """Validate that required fields are present for each frequency type"""
+        if self.update_frequency == 'DAILY' and not self.update_time:
+            raise ValueError('update_time is required for DAILY frequency')
+        if self.update_frequency == 'WEEKLY' and (not self.update_time or not self.update_day_of_week):
+            raise ValueError('update_time and update_day_of_week are required for WEEKLY frequency')
+        if self.update_frequency == 'HOURLY' and not self.fetch_interval:
+            # Set default fetch_interval if not provided
+            self.fetch_interval = 3600
+        return self
+
+
+class ScheduleConfigResponse(PodcastBaseSchema):
+    """Schedule configuration response"""
+    id: int
+    title: str
+    update_frequency: str
+    update_time: Optional[str] = None
+    update_day_of_week: Optional[int] = None
+    fetch_interval: Optional[int] = None
+    next_update_at: Optional[datetime] = None
+    last_updated_at: Optional[datetime] = None

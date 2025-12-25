@@ -40,6 +40,8 @@ class PodcastService:
         self.sanitizer = ContentSanitizer(mode=settings.LLM_CONTENT_SANITIZE_MODE)
         self.security = PodcastSecurityValidator()
         self.parser = SecureRSSParser(user_id)
+        from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+        self.transcription_service = DatabaseBackedTranscriptionService(db)
 
     # === 订阅管理 ===
 
@@ -349,6 +351,15 @@ class PodcastService:
 
             if is_new:
                 new_episodes.append(saved_episode)
+                # 异步触发转录任务（使用Celery）
+                from app.domains.podcast.tasks import process_audio_transcription
+                try:
+                    # 创建并调度转录任务
+                    task = await self.transcription_service.start_transcription(saved_episode.id)
+                    logger.info(f"已为episode {saved_episode.id} 创建并调度转录任务 {task.id}")
+                except Exception as e:
+                    logger.error(f"创建转录任务失败 episode {saved_episode.id}: {e}")
+                
                 # 异步触发AI总结
                 asyncio.create_task(self._generate_summary_task(saved_episode))
 
