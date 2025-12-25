@@ -93,6 +93,9 @@ async def init_db() -> None:
 async def close_db() -> None:
     """Close database connections."""
     await engine.dispose()
+    # Tiny delay to allow asyncpg/sqlalchemy background tasks to settle
+    import asyncio
+    await asyncio.sleep(0.1)
 
 
 async def check_db_health() -> Dict[str, Any]:

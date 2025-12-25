@@ -42,18 +42,22 @@ async def check_subscriptions():
                 print(f"  Last Fetched: {sub.last_fetched_at}")
                 print(f"  Should Update Now: {should_update}")
                 
-                # Try to access next_update_at or computed_next_update_at
-                try:
-                    next_up = getattr(sub, 'next_update_at', None) or getattr(sub, 'computed_next_update_at', None)
-                    print(f"  Next Scheduled: {next_up}")
-                except Exception as e:
-                    print(f"  Error calculating next: {e}")
+                # Use getattr safely
+                next_up = getattr(sub, 'next_update_at', None) or getattr(sub, 'computed_next_update_at', None)
+                print(f"  Next Scheduled: {next_up}")
                 
             print(f"------------------------------------")
     except Exception as e:
         print(f"Error checking subscriptions: {e}")
     finally:
+        # 1. Close the engine explicitly
         await engine.dispose()
+        # 2. Add a tiny delay to allow any background cleanup tasks in the loop to finish.
+        # This prevents "RuntimeError: Event loop is closed" from asyncpg/sqlalchemy cleanup.
+        await asyncio.sleep(0.250)
 
 if __name__ == "__main__":
-    asyncio.run(check_subscriptions())
+    try:
+        asyncio.run(check_subscriptions())
+    except KeyboardInterrupt:
+        pass

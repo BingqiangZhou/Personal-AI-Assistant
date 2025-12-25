@@ -27,7 +27,8 @@ async def lifespan(app: FastAPI):
 
     yield
     # Shutdown
-    pass
+    from app.core.database import close_db
+    await close_db()
 
 
 def create_application() -> FastAPI:
