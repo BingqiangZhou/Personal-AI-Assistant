@@ -5,6 +5,8 @@ import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
+import '../widgets/add_podcast_dialog.dart';
+import '../widgets/bulk_import_dialog.dart';
 
 /// Material Design 3自适应Feed页面
 class PodcastFeedPage extends ConsumerStatefulWidget {
@@ -47,6 +49,33 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     ref.read(podcastFeedProvider.notifier).refreshFeed();
                   },
                   icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh Feed',
+                ),
+                IconButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const AddPodcastDialog(),
+                    );
+                  },
+                  icon: const Icon(Icons.add),
+                  tooltip: 'Add Podcast',
+                ),
+                IconButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => BulkImportDialog(
+                        onImport: (urls) async {
+                          await ref
+                              .read(podcastSubscriptionProvider.notifier)
+                              .addSubscriptionsBatch(feedUrls: urls);
+                        },
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.playlist_add),
+                  tooltip: 'Bulk Import',
                 ),
               ],
             ),

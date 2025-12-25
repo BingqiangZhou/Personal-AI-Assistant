@@ -17,7 +17,7 @@ GET    /podcasts/summary/pending        待总结列表
 """
 
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,7 +72,8 @@ from app.domains.podcast.schemas import (
     PodcastConversationClearResponse,
     PodcastConversationMessage,
     ScheduleConfigUpdate,
-    ScheduleConfigResponse
+    ScheduleConfigResponse,
+    PodcastSubscriptionBatchResponse
 )
 
 router = APIRouter(prefix="")
@@ -133,6 +134,33 @@ async def add_subscription(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"添加订阅失败: {str(e)}")
+
+
+@router.post(
+    "/subscriptions/bulk",
+    response_model=PodcastSubscriptionBatchResponse,
+    summary="批量添加播客订阅"
+)
+async def create_subscriptions_batch(
+    subscriptions_data: List[PodcastSubscriptionCreate],
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """批量添加播客订阅"""
+    service = PodcastService(db, int(user["sub"]))
+    results = await service.add_subscriptions_batch(subscriptions_data)
+    
+    success_count = sum(1 for r in results if r["status"] == "success")
+    skipped_count = sum(1 for r in results if r["status"] == "skipped")
+    error_count = sum(1 for r in results if r["status"] == "error")
+    
+    return PodcastSubscriptionBatchResponse(
+        results=results,
+        total_requested=len(subscriptions_data),
+        success_count=success_count,
+        skipped_count=skipped_count,
+        error_count=error_count
+    )
 
 
 @router.get(

@@ -8,7 +8,7 @@
 """
 
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 from datetime import datetime, timedelta
 import asyncio
 
@@ -19,6 +19,7 @@ from app.core.llm_privacy import ContentSanitizer
 from app.core.redis import PodcastRedis
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.models import PodcastEpisode
+from app.domains.podcast.schemas import PodcastSubscriptionCreate
 from app.domains.subscription.models import Subscription
 from app.domains.assistant.models import Conversation, Message
 from app.integration.podcast.security import PodcastSecurityValidator
@@ -113,6 +114,47 @@ class PodcastService:
 
         logger.info(f"用户{self.user_id} 添加播客: {feed.title}, {len(new_episodes)}期新节目")
         return subscription, new_episodes
+
+    async def add_subscriptions_batch(
+        self,
+        subscriptions_data: List[PodcastSubscriptionCreate]
+    ) -> List[Dict[str, Any]]:
+        """批量添加播客订阅"""
+        logger.info(f"DEBUG: Entering add_subscriptions_batch with {len(subscriptions_data)} items")
+        results = []
+        for sub_data in subscriptions_data:
+            try:
+                # 检查是否已存在记录 (通过URL)
+                existing = await self.repo.get_subscription_by_url(self.user_id, sub_data.feed_url)
+                if existing:
+                    results.append({
+                        "source_url": sub_data.feed_url,
+                        "status": "skipped",
+                        "message": "Subscription already exists"
+                    })
+                    continue
+                
+                # 添加订阅
+                subscription, new_episodes = await self.add_subscription(
+                    sub_data.feed_url,
+                    sub_data.category_ids
+                )
+                
+                results.append({
+                    "source_url": sub_data.feed_url,
+                    "status": "success",
+                    "id": subscription.id,
+                    "title": subscription.title,
+                    "new_episodes": len(new_episodes)
+                })
+            except Exception as e:
+                logger.error(f"批量添加订阅失败 {sub_data.feed_url}: {e}")
+                results.append({
+                    "source_url": sub_data.feed_url,
+                    "status": "error",
+                    "message": str(e)
+                })
+        return results
 
     async def list_subscriptions(
         self,

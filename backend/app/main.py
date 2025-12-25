@@ -114,6 +114,7 @@ def create_application() -> FastAPI:
 
 app = create_application()
 
+# raise Exception("TEST RELOAD")
 
 if __name__ == "__main__":
     uvicorn.run(
@@ -123,3 +124,4 @@ if __name__ == "__main__":
         reload=True if settings.ENVIRONMENT == "development" else False
     )
     # Trigger reload - Update 3
+ 

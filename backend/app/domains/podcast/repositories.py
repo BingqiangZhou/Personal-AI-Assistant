@@ -99,6 +99,18 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_subscription_by_url(self, user_id: int, feed_url: str) -> Optional[Subscription]:
+        """通过URL获取订阅"""
+        stmt = select(Subscription).where(
+            and_(
+                Subscription.user_id == user_id,
+                Subscription.source_url == feed_url,
+                Subscription.source_type == "podcast-rss"
+            )
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
     # === 单集管理 ===
 
     async def create_or_update_episode(

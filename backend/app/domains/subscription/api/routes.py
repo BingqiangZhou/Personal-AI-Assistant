@@ -1,6 +1,6 @@
 """Subscription API routes."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
@@ -54,6 +54,15 @@ class FetchResponse(BaseModel):
     error: Optional[str] = None
 
 
+class BatchSubscriptionResponse(BaseModel):
+    """Response model for batch subscription creation."""
+    results: List[Dict[str, Any]]
+    total_requested: int
+    success_count: int
+    skipped_count: int
+    error_count: int
+
+
 # Subscription endpoints
 @router.get("/", response_model=PaginatedResponse)
 async def list_subscriptions(
@@ -85,6 +94,29 @@ async def create_subscription(
         return await service.create_subscription(subscription_data)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/batch", response_model=BatchSubscriptionResponse)
+async def create_subscriptions_batch(
+    subscriptions_data: List[SubscriptionCreate],
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """Batch create subscriptions."""
+    service = SubscriptionService(db, current_user.id)
+    results = await service.create_subscriptions_batch(subscriptions_data)
+    
+    success_count = sum(1 for r in results if r["status"] == "success")
+    skipped_count = sum(1 for r in results if r["status"] == "skipped")
+    error_count = sum(1 for r in results if r["status"] == "error")
+    
+    return BatchSubscriptionResponse(
+        results=results,
+        total_requested=len(subscriptions_data),
+        success_count=success_count,
+        skipped_count=skipped_count,
+        error_count=error_count
+    )
 
 
 @router.get("/{subscription_id}", response_model=SubscriptionResponse)

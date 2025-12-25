@@ -165,6 +165,21 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
           as _i9.Future<_i2.PodcastSubscriptionModel>);
 
   @override
+  _i9.Future<void> addSubscriptionsBatch({
+    required List<String>? feedUrls,
+    List<int>? categoryIds,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#addSubscriptionsBatch, [], {
+              #feedUrls: feedUrls,
+              #categoryIds: categoryIds,
+            }),
+            returnValue: _i9.Future<void>.value(),
+            returnValueForMissingStub: _i9.Future<void>.value(),
+          )
+          as _i9.Future<void>);
+
+  @override
   _i9.Future<_i2.PodcastSubscriptionListResponse> listSubscriptions({
     int? page = 1,
     int? size = 20,

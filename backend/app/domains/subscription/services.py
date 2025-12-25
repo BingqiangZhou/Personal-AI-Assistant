@@ -103,6 +103,40 @@ class SubscriptionService:
             updated_at=sub.updated_at
         )
 
+    async def create_subscriptions_batch(
+        self,
+        subscriptions_data: List[SubscriptionCreate]
+    ) -> List[Dict[str, Any]]:
+        """Batch create subscriptions."""
+        results = []
+        for sub_data in subscriptions_data:
+            try:
+                # Check if URL already exists
+                existing = await self.repo.get_subscription_by_url(self.user_id, sub_data.source_url)
+                if existing:
+                    results.append({
+                        "source_url": sub_data.source_url,
+                        "status": "skipped",
+                        "message": "Subscription already exists"
+                    })
+                    continue
+
+                sub = await self.repo.create_subscription(self.user_id, sub_data)
+                results.append({
+                    "source_url": sub_data.source_url,
+                    "status": "success",
+                    "id": sub.id,
+                    "title": sub.title
+                })
+            except Exception as e:
+                logger.error(f"Error creating subscription for {sub_data.source_url}: {e}")
+                results.append({
+                    "source_url": sub_data.source_url,
+                    "status": "error",
+                    "message": str(e)
+                })
+        return results
+
     async def get_subscription(
         self,
         sub_id: int

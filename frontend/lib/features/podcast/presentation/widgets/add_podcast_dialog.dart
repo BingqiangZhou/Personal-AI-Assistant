@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/podcast_providers.dart';
+import 'bulk_import_dialog.dart';
 
 class AddPodcastDialog extends ConsumerStatefulWidget {
   const AddPodcastDialog({super.key});
@@ -99,6 +100,28 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
                     },
                   ),
                   const SizedBox(height: 24),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      const Text('Need to add many?'),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          showDialog(
+                            context: context,
+                            builder: (context) => BulkImportDialog(
+                              onImport: (urls) async {
+                                await ref
+                                    .read(podcastSubscriptionProvider.notifier)
+                                    .addSubscriptionsBatch(feedUrls: urls);
+                              },
+                            ),
+                          );
+                        },
+                        child: const Text('Bulk Import'),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),

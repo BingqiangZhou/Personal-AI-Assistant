@@ -21,6 +21,11 @@ abstract class PodcastApiService {
     @Body() PodcastSubscriptionCreateRequest request,
   );
 
+  @POST('/podcasts/subscriptions/bulk')
+  Future<dynamic> addSubscriptionsBatch(
+    @Body() List<PodcastSubscriptionCreateRequest> request,
+  );
+
   @GET('/podcasts/subscriptions')
   Future<PodcastSubscriptionListResponse> listSubscriptions(
     @Query('page') int page,

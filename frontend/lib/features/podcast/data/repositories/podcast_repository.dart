@@ -31,6 +31,21 @@ class PodcastRepository {
     }
   }
 
+  Future<void> addSubscriptionsBatch({
+    required List<String> feedUrls,
+    List<int>? categoryIds,
+  }) async {
+    try {
+      final requests = feedUrls.map((url) => PodcastSubscriptionCreateRequest(
+        feedUrl: url,
+        categoryIds: categoryIds,
+      )).toList();
+      await _apiService.addSubscriptionsBatch(requests);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   Future<PodcastSubscriptionListResponse> listSubscriptions({
     int page = 1,
     int size = 20,

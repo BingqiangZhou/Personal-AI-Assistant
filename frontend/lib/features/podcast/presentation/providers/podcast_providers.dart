@@ -393,6 +393,23 @@ class PodcastSubscriptionNotifier extends AsyncNotifier<PodcastSubscriptionListR
     }
   }
 
+  Future<void> addSubscriptionsBatch({
+    required List<String> feedUrls,
+    List<int>? categoryIds,
+  }) async {
+    try {
+      await _repository.addSubscriptionsBatch(
+        feedUrls: feedUrls,
+        categoryIds: categoryIds,
+      );
+
+      // Refresh the list
+      await loadSubscriptions();
+    } catch (error) {
+      rethrow;
+    }
+  }
+
   Future<void> deleteSubscription(int subscriptionId) async {
     try {
       await _repository.deleteSubscription(subscriptionId);

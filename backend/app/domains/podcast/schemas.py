@@ -344,6 +344,15 @@ class PodcastBulkActionResponse(PodcastBaseSchema):
     errors: List[str] = []
 
 
+class PodcastSubscriptionBatchResponse(PodcastBaseSchema):
+    """播客批量订阅响应"""
+    results: List[Dict[str, Any]]
+    total_requested: int
+    success_count: int
+    skipped_count: int
+    error_count: int
+
+
 # === Transcription相关 ===
 
 class PodcastTranscriptionRequest(PodcastBaseSchema):
