@@ -156,35 +156,41 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          cache: false
+          cache: true
+          cache-key: flutter-${{ hashFiles('frontend/**/pubspec.lock') }}
 
       - name: Get dependencies
         working-directory: frontend
+        shell: pwsh
         run: flutter pub get
 
       - name: Build Windows
         working-directory: frontend
-        shell: bash
+        shell: pwsh
         run: |
-          echo "🔨 Building Windows application..."
-          flutter build windows \
-            --release \
-            --build-number=${{ needs.prepare-release.outputs.build_number }}
-          echo "✅ Windows build completed"
+          Write-Host "🔨 Building Windows application..."
+          flutter build windows --release --build-number=${{ needs.prepare-release.outputs.build_number }}
+          Write-Host "✅ Windows build completed"
+
+      - name: Create release directory
+        working-directory: frontend
+        shell: pwsh
+        run: New-Item -ItemType Directory -Force -Path dist/windows
 
       - name: Archive Windows release
         working-directory: frontend
+        shell: pwsh
         run: |
           $version = "${{ needs.prepare-release.outputs.version }}"
-          $sourcePath = "build\windows\x64\runner\Release\*"
-          $destPath = "build\windows\x64\runner\Release\personal-ai-assistant-windows-$version.zip"
-          Compress-Archive -Path $sourcePath -DestinationPath $destPath -Force
+          $sourcePath = "build\windows\x64\runner\Release"
+          $destPath = "dist\windows\personal-ai-assistant-windows-$version.zip"
+          Compress-Archive -Path "$sourcePath\*" -DestinationPath $destPath -Force
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifact
-          path: frontend/build/windows/x64/runner/Release/*.zip
+          path: frontend/dist/windows/*.zip
           retention-days: 7
 
   # ============================================
