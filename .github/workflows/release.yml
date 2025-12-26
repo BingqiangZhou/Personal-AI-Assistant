@@ -335,17 +335,17 @@ jobs:
       - name: Create DMG
         working-directory: frontend
         run: |
-          APP_PATH="build/macos/Build/Products/Release/"*.app
           DMG_PATH="dist/macos/personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.dmg"
           TEMP_DIR="dist/macos/dmg-temp"
+          RELEASE_DIR="build/macos/Build/Products/Release"
 
           # Create temporary directory for DMG contents
           mkdir -p "$TEMP_DIR"
 
-          # Copy app to temp directory
-          cp -R "$APP_PATH" "$TEMP_DIR/"
+          # Copy app bundle to temp directory
+          cp -R "$RELEASE_DIR"/*.app "$TEMP_DIR/"
 
-          # Create Applications symlink
+          # Create Applications symlink for drag-and-drop
           ln -s /Applications "$TEMP_DIR/Applications"
 
           # Create DMG using hdiutil
