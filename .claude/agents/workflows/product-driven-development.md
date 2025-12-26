@@ -17,6 +17,35 @@ version: "2.0.0"
 3. **数据驱动** - 基于数据和反馈做决策，而不是凭感觉
 4. **持续验证** - 在每个阶段都验证价值和可行性
 5. **迭代优化** - 通过快速迭代不断改进产品
+6. **双语支持** - 所有产品功能必须支持中英文双语 (Bilingual Support Required)
+
+## 🌐 语言政策 / Language Policy
+
+**重要：所有功能开发必须遵循中英文双语政策**
+
+### 双语要求 / Bilingual Requirements
+
+1. **响应语言匹配 / Response Language Matching**
+   - 所有 Agent 必须使用与用户输入相同的语言回复
+   - All agents must respond in the same language as user input
+   - 产品经理必须使用用户首选语言进行需求分析
+   - Product Manager must analyze requirements in user's preferred language
+
+2. **产品文档双语 / Product Documentation Bilingual**
+   - 需求文档 (PRD) 必须使用双语格式
+   - Requirement documents (PRD) must use bilingual format
+   - 用户故事使用目标用户语言编写
+   - User stories written in target users' language
+   - 验收标准尽可能使用双语
+   - Acceptance criteria bilingual when possible
+
+3. **技术实现双语 / Technical Implementation Bilingual**
+   - 后端 API 错误消息必须包含中英文
+   - Backend API error messages must include both Chinese and English
+   - 前端 UI 必须支持语言切换/检测
+   - Frontend UI must support language switching/detection
+   - 所有面向用户的文本必须外部化
+   - All user-facing text must be externalized
 
 ## 工作流程图
 
@@ -81,6 +110,18 @@ graph TD
    - 商业价值分析报告
    - 用户研究和数据分析
    - 成功指标定义
+
+5. **🌐 双语要求检查 / Bilingual Requirements Check**
+   - [ ] 需求文档使用双语格式（中英文）
+   - [ ] Requirement document uses bilingual format (Chinese/English)
+   - [ ] 用户故事指定目标语言
+   - [ ] User stories specify target language(s)
+   - [ ] 验收标准包含双语验证条件
+   - [ ] Acceptance criteria include bilingual validation conditions
+   - [ ] 技术要求中包含 API 双语错误消息规范
+   - [ ] Technical requirements include bilingual API error message specifications
+   - [ ] 前端需求包含 i18n/国际化支持
+   - [ ] Frontend requirements include i18n/internationalization support
 
 **示例输出**:
 ```bash
@@ -296,6 +337,11 @@ cp specs/templates/requirement-template.md specs/active/ai-search/requirement.md
 - [ ] 风险识别充分
 - [ ] 时间线可行
 - [ ] 依赖关系明确
+- [ ] **🌐 双语任务已分配**
+- [ ] **Bilingual tasks assigned**
+  - Backend: 双语 API 错误响应任务已分配
+  - Frontend: i18n/语言切换任务已分配
+  - Testing: 双语测试用例已规划
 
 ### Stage 3 质量检查（开发质量）
 - [ ] 代码质量达标
@@ -303,6 +349,12 @@ cp specs/templates/requirement-template.md specs/active/ai-search/requirement.md
 - [ ] 性能指标达标
 - [ ] 安全检查通过
 - [ ] 文档更新及时
+- [ ] **🌐 双语实现验证**
+- [ ] **Bilingual implementation verified**
+  - Backend: API 返回双语错误消息 (message_en, message_zh)
+  - Frontend: UI 支持语言切换，文本外部化
+  - Testing: 包含双语测试场景
+  - Code: 无硬编码文本
 
 ### Stage 4 质量检查（价值验证）
 - [ ] 用户反馈积极
@@ -310,6 +362,13 @@ cp specs/templates/requirement-template.md specs/active/ai-search/requirement.md
 - [ ] ROI符合预期
 - [ ] 竞争优势明显
 - [ ] 可持续发展
+- [ ] **🌐 双语功能验证**
+- [ ] **Bilingual features validated**
+  - 用户可以无缝切换语言
+  - 语言偏好在会话间保持
+  - 所有文本在两种语言下正确显示
+  - 错误消息在两种语言下清晰易懂
+  - UI 无硬编码文本
 
 ## 协作指南
 

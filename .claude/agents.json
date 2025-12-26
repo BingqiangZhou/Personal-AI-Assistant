@@ -1,12 +1,22 @@
 {
   "version": "1.0.0",
   "project": "personal-ai-assistant",
+  "language_policy": {
+    "mode": "bilingual",
+    "primary_languages": ["en", "zh"],
+    "default_language": "en",
+    "user_language_detection": "auto",
+    "response_language_matching": true,
+    "documentation_bilingual": true,
+    "error_messages_bilingual": true
+  },
   "agents": {
     "product-manager": {
       "path": ".claude/agents/roles/product-manager.md",
       "active": true,
       "description": "Product Manager - Core driver of the workflow, responsible for requirements and execution coordination",
       "role_type": "lead",
+      "language_capability": "bilingual_required",
       "responsibilities": [
         "Define product requirements and functional planning",
         "Analyze user requirements and technical feasibility",
@@ -18,6 +28,7 @@
         "MANDATORY: Always be the first to analyze user requests",
         "MANDATORY: Create requirement doc in specs/active/ before any development",
         "MANDATORY: Conduct final validation and update document status",
+        "MANDATORY: Respond in the same language as user input (Chinese/English)",
         "Recommended: Use context7/exa for requirement research"
       ],
       "default_workflow": "product-driven-development",
@@ -53,10 +64,12 @@
       "active": true,
       "description": "System architecture and design lead",
       "role_type": "specialist",
+      "language_capability": "bilingual",
       "responsibilities": [
         "Technical architecture design",
         "Technology selection decisions",
-        "Architecture documentation",
+        "Architecture documentation (primary English, with Chinese summaries)",
+        "Respond in the same language as user input or task assignment",
         "Recommended: Use context7 for library documentation",
         "Recommended: Use exa for architecture patterns and examples"
       ],
@@ -72,11 +85,14 @@
       "active": true,
       "description": "FastAPI/Python backend development",
       "role_type": "implementer",
+      "language_capability": "bilingual",
       "responsibilities": [
-        "API endpoint development",
+        "API endpoint development with bilingual error responses",
         "Database design and implementation",
         "Business logic implementation",
         "Unit and integration testing",
+        "Code comments in team's primary language",
+        "Respond in the same language as task assignment",
         "Recommended: Use context7 for FastAPI/SQLAlchemy/Python docs",
         "Recommended: Use exa for implementation examples and patterns"
       ],
@@ -92,11 +108,14 @@
       "active": true,
       "description": "Flutter desktop and web development",
       "role_type": "implementer",
+      "language_capability": "bilingual",
       "responsibilities": [
-        "UI component development (Material 3)",
+        "UI component development (Material 3) with i18n support",
         "User interaction implementation",
         "Responsive design (flutter_adaptive_scaffold)",
         "Widget testing",
+        "Implement language switching/detection functionality",
+        "Respond in the same language as task assignment",
         "Recommended: Use context7 for Flutter/Material 3/Riverpod docs",
         "Recommended: Use exa for Flutter UI patterns and examples"
       ],
@@ -112,11 +131,14 @@
       "active": true,
       "description": "Flutter iOS/Android mobile development",
       "role_type": "implementer",
+      "language_capability": "bilingual",
       "responsibilities": [
         "Mobile platform adaptation",
         "Native feature integration",
         "Performance optimization",
         "Mobile-specific testing",
+        "Implement i18n support for mobile platforms",
+        "Respond in the same language as task assignment",
         "Recommended: Use context7 for Flutter platform docs",
         "Recommended: Use exa for mobile development patterns"
       ],
@@ -132,11 +154,14 @@
       "active": true,
       "description": "Quality assurance and test automation",
       "role_type": "validator",
+      "language_capability": "bilingual",
       "responsibilities": [
         "Test strategy development",
         "Automated test implementation",
         "Quality gate enforcement",
-        "Verification report creation",
+        "Verification report creation (bilingual when possible)",
+        "Test UI language switching functionality",
+        "Respond in the same language as task assignment",
         "Recommended: Use exa for testing patterns and best practices",
         "Recommended: Use context7 for testing framework docs (pytest, flutter_test)"
       ],
@@ -152,11 +177,14 @@
       "active": true,
       "description": "DevOps, deployment, and infrastructure",
       "role_type": "enabler",
+      "language_capability": "bilingual",
       "responsibilities": [
         "CI/CD pipeline setup",
         "Deployment automation",
-        "Monitoring and alerting",
+        "Monitoring and alerting (bilingual logs/alerts preferred)",
         "Infrastructure management",
+        "Configure language detection and switching in deployment",
+        "Respond in the same language as task assignment",
         "Recommended: Use context7 for Docker/Kubernetes/infrastructure docs",
         "Recommended: Use exa for DevOps patterns and solutions"
       ],
@@ -438,6 +466,24 @@
         "description": "Requirement doc must be moved to specs/completed/",
         "enforcement": "strict",
         "check": "file_location_and_content"
+      },
+      {
+        "rule": "language_matching_mandatory",
+        "description": "All agents must respond in the same language as user input or task assignment",
+        "enforcement": "strict",
+        "check": "response_language"
+      },
+      {
+        "rule": "bilingual_error_messages_required",
+        "description": "API error responses must include both English and Chinese messages",
+        "enforcement": "strict",
+        "check": "api_response_format"
+      },
+      {
+        "rule": "i18n_support_required",
+        "description": "Frontend components must implement internationalization support",
+        "enforcement": "strict",
+        "check": "code_review"
       }
     ],
     "development_rules": [

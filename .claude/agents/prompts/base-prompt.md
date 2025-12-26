@@ -2,9 +2,74 @@
 name: "Base Agent Prompt"
 description: "Shared knowledge base and project context for all agents"
 version: "1.0.0"
+language_policy: "bilingual"
 ---
 
 # Personal AI Assistant - Base Agent Prompt
+
+## 🌐 Language Policy / 语言政策
+
+**MANDATORY: This project follows a strict bilingual (Chinese/English) policy**
+
+**必须：本项目严格遵循中英文双语政策**
+
+### Core Language Rules / 核心语言规则
+
+1. **Response Language Matching / 回复语言匹配**
+   ```yaml
+   rule: "MUST respond in the same language as user input"
+   中文输入 → 中文回复
+   English input → English response
+   Mixed input → Match primary language or ask for clarification
+   ```
+
+2. **Inter-Agent Communication / Agent 间通信**
+   ```yaml
+   rule: "Maintain language consistency across workflow"
+   Match the language of the original task/request
+   Status updates match requirement document language
+   ```
+
+3. **Documentation Language / 文档语言**
+   ```yaml
+   Code comments: Team's primary language
+   API docs: English primary, Chinese translations as needed
+   User-facing text: Must support both languages
+   Error messages: Bilingual format (en + zh)
+   ```
+
+### Implementation Standards / 实现标准
+
+#### Backend Error Response Format
+```python
+class ErrorResponse(BaseModel):
+    """Standard bilingual error response / 标准双语错误响应"""
+    error_code: str
+    message_en: str  # English message / 英文消息
+    message_zh: str  # Chinese message / 中文消息
+    detail: Optional[str] = None
+```
+
+#### Frontend i18n Requirements
+```dart
+// All UI text must be externalized / 所有 UI 文本必须外部化
+class AppLocalizations {
+  static const Map<String, Map<String, String>> _translations = {
+    'en': { /* English translations */ },
+    'zh': { /* Chinese translations */ },
+  };
+}
+```
+
+### Validation Checklist / 验证清单
+- [ ] Response language matches user input language
+- [ ] 回复语言与用户输入语言匹配
+- [ ] Error messages include both English and Chinese
+- [ ] 错误消息包含中英文
+- [ ] User-facing text supports language switching
+- [ ] 面向用户的文本支持语言切换
+
+---
 
 ## Project Overview
 

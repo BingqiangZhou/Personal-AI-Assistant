@@ -2,6 +2,104 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🌐 Language Requirements / 语言要求
+
+**IMPORTANT: This project follows a strict bilingual (Chinese/English) policy**
+
+**重要：本项目严格遵循中英文双语政策**
+
+### Bilingual Communication Standards / 双语沟通标准
+
+1. **User Interaction / 用户交互**
+   - All agents MUST respond in the same language as the user's input
+   - 所有 agent 必须使用与用户输入相同的语言回复
+   - If user uses Chinese → respond in Chinese
+   - 如果用户使用中文 → 用中文回复
+   - If user uses English → respond in English
+   - 如果用户使用英文 → 用英文回复
+
+2. **Documentation Requirements / 文档要求**
+   - **Code Comments**: Use language matching the code context or project team's primary language
+   - **代码注释**：使用与代码上下文匹配的语言或项目团队主要语言
+   - **Technical Documents**: Provide bilingual headers/summaries when possible
+   - **技术文档**：尽可能提供双语标题/摘要
+   - **API Documentation**: English is preferred for API specs, with Chinese translations as needed
+   - **API 文档**：API 规范首选英文，必要时提供中文翻译
+
+3. **Agent Communication Protocol / Agent 通信协议**
+   - Inter-agent messages: Use language matching the original task/request
+   - Agent 间消息：使用与原始任务/请求匹配的语言
+   - Status updates: Match the language of requirement document
+   - 状态更新：与需求文档语言匹配
+   - Error messages: Bilingual format preferred (English primary, Chinese secondary)
+   - 错误消息：首选双语格式（英文为主，中文为辅）
+
+4. **Product Documentation / 产品文档**
+   - **Requirement Documents (PRD)**: Bilingual format preferred
+   - **需求文档(PRD)**：首选双语格式
+   - **User Stories**: Write in the language of the target users
+   - **用户故事**：使用目标用户的语言编写
+   - **Acceptance Criteria**: Bilingual when possible for clarity
+   - **验收标准**：尽可能使用双语以确保清晰
+
+### Implementation Guidelines / 实现指南
+
+#### Backend / 后端
+```python
+# API Error Response (Bilingual Format)
+class ErrorResponse(BaseModel):
+    """Bilingual error response model / 双语错误响应模型"""
+    error_code: str
+    message_en: str  # English message / 英文消息
+    message_zh: str  # Chinese message / 中文消息
+    detail: Optional[str] = None
+```
+
+#### Frontend / 前端
+```dart
+// UI Labels (Bilingual Support)
+class AppLocalizations {
+  static const Map<String, Map<String, String>> _translations = {
+    'en': {
+      'search': 'Search',
+      'settings': 'Settings',
+    },
+    'zh': {
+      'search': '搜索',
+      'settings': '设置',
+    },
+  };
+}
+```
+
+### Agent-Specific Requirements / Agent 特定要求
+
+| Agent Role | Language Capability / 语言能力 | Notes / 备注 |
+|------------|-------------------------------|--------------|
+| Product Manager 📋 | **Bilingual Required** | Must analyze and document in user's preferred language / 必须使用用户首选语言分析和文档化 |
+| Architect 🏛️ | Bilingual | Technical docs primarily in English with Chinese summaries / 技术文档主要英文，中文摘要 |
+| Backend Dev ⚙️ | Bilingual | Code comments in team's language / 代码注释使用团队语言 |
+| Frontend Dev 🖥️ | Bilingual | UI must support i18n / UI 必须支持国际化 |
+| Mobile Dev 📱 | Bilingual | Same as Frontend / 与前端相同 |
+| Test Engineer 🧪 | Bilingual | Test reports bilingual when possible / 测试报告尽可能双语 |
+| DevOps ⚙️ | Bilingual | Logs and alerts bilingual preferred / 日志和告警首选双语 |
+
+### Validation Criteria / 验证标准
+
+When validating bilingual support:
+验证双语支持时：
+
+- [ ] User-facing UI supports language switching or detection
+- [ ] 面向用户的 UI 支持语言切换或检测
+- [ ] Error messages are provided in both languages
+- [ ] 错误消息提供双语版本
+- [ ] Documentation has appropriate language coverage
+- [ ] 文档有适当的语言覆盖
+- [ ] Agent responses match user's input language
+- [ ] Agent 回复与用户输入语言匹配
+
+---
+
 ## 🤖 Product-Driven Development Workflow
 
 **📅 基于产品经理驱动的完整开发流程**
