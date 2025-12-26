@@ -26,7 +26,7 @@ from app.core.database import async_session_factory
 
 # Import all models to ensure SQLAlchemy relationships are properly resolved
 # This is critical for Celery workers which don't call init_db()
-from app.domains.user.models import User, UserSession
+from app.domains.user.models import User, UserSession, UserStatus
 from app.domains.subscription.models import (
     Subscription, SubscriptionItem, SubscriptionCategory,
     SubscriptionCategoryMapping, SubscriptionType, SubscriptionStatus,
@@ -594,7 +594,7 @@ def generate_podcast_recommendations():
                 # 获取所有用户
                 from app.domains.user.models import User
 
-                stmt = select(User).where(User.is_active == True)
+                stmt = select(User).where(User.status == UserStatus.ACTIVE)
                 result = await db.execute(stmt)
                 users = list(result.scalars().all())
 
