@@ -24,7 +24,6 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       version_no_v: ${{ steps.version.outputs.version_no_v }}
-      changelog: ${{ steps.changelog.outputs.changelog }}
       is_prerelease: ${{ steps.version.outputs.is_prerelease }}
     steps:
       - name: Checkout code
@@ -50,34 +49,58 @@ jobs:
           echo "Prerelease: $(echo $is_prerelease)"
 
       - name: Generate changelog
-        id: changelog
         run: |
           # 获取上一个 tag
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
-          if [ -z "$PREV_TAG" ]; then
-            echo "changelog=### 📦 首次发布 / Initial Release
+          # 创建 changelog 文件
+          CHANGELOG_FILE="changelog.md"
 
-          这是 Personal AI Assistant 的首个正式版本。" > $GITHUB_OUTPUT
-          else
-            # 生成从上一个 tag 到当前 tag 的提交日志
-            echo "changelog=### 📝 更新日志 / Changelog
+          # 写入文件头
+          {
+            echo "### 📦 Release v${{ steps.version.outputs.version }}"
+            echo ""
+            if [ -z "$PREV_TAG" ]; then
+              echo "**首次发布 / Initial Release**"
+              echo ""
+              echo "这是 Personal AI Assistant 的首个正式版本。"
+              echo ""
+              echo "This is the first official release of Personal AI Assistant."
+            else
+              echo "**更新日志 / Changelog**"
+              echo ""
+              echo "**Changes since ${PREV_TAG}:**"
+              echo ""
+              # 获取提交日志
+              git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --reverse 2>/dev/null | head -100
+            fi
+            echo ""
+            echo "---"
+            echo ""
+            echo "**Version:** \`${{ steps.version.outputs.version }}\`"
+            echo "**Release Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          } > "$CHANGELOG_FILE"
 
-          **Changes since $PREV_TAG:**" > $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-            git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --reverse | head -100 >> $GITHUB_OUTPUT
+          # 显示生成的内容
+          echo "=== Generated Changelog ==="
+          cat "$CHANGELOG_FILE"
+          echo "=== End ==="
+
+      - name: Verify changelog file
+        run: |
+          # 验证 changelog.md 文件已生成
+          if [ ! -f "changelog.md" ]; then
+            echo "ERROR: changelog.md was not generated!"
+            exit 1
           fi
 
-          # 添加当前版本信息
-          echo "" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "**Full Version:** \`${{ steps.version.outputs.version }}\`" >> $GITHUB_OUTPUT
-          echo "**Release Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
-
-      - name: Upload changelog
-        run: |
-          echo "${{ steps.changelog.outputs.changelog }}" > changelog.md
+          echo "=== Final Changelog Content ==="
           cat changelog.md
+          echo ""
+          echo "File info:"
+          echo "- Size: $(wc -c < changelog.md) bytes"
+          echo "- Lines: $(wc -l < changelog.md) lines"
+          echo "=== End ==="
 
       - name: Upload changelog artifact
         uses: actions/upload-artifact@v4
