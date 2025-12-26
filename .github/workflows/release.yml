@@ -112,7 +112,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-cache-${{ hashFiles('frontend/**/pubspec.lock') }}
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('frontend/pubspec.lock') }}
           restore-keys: |
             ${{ runner.os }}-pub-cache-
 
@@ -121,7 +121,7 @@ jobs:
         with:
           channel: stable
           cache: true
-          cache-key: flutter-${{ hashFiles('**/pubspec.lock') }}
+          cache-key: flutter-android-${{ hashFiles('frontend/pubspec.lock') }}
 
       - name: Get dependencies
         working-directory: frontend
@@ -163,8 +163,8 @@ jobs:
       - name: Cache Pub cache
         uses: actions/cache@v4
         with:
-          path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-cache-${{ hashFiles('frontend/**/pubspec.lock') }}
+          path: ${{ env.USERPROFILE }}\.pub-cache
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('frontend/pubspec.lock') }}
           restore-keys: |
             ${{ runner.os }}-pub-cache-
 
@@ -173,7 +173,7 @@ jobs:
         with:
           channel: stable
           cache: true
-          cache-key: flutter-${{ hashFiles('frontend/**/pubspec.lock') }}
+          cache-key: flutter-windows-${{ hashFiles('frontend/pubspec.lock') }}
 
       - name: Enable Windows desktop
         shell: pwsh
@@ -228,7 +228,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-cache-${{ hashFiles('frontend/**/pubspec.lock') }}
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('frontend/pubspec.lock') }}
           restore-keys: |
             ${{ runner.os }}-pub-cache-
 
@@ -251,7 +251,7 @@ jobs:
         with:
           channel: stable
           cache: true
-          cache-key: flutter-${{ hashFiles('**/pubspec.lock') }}
+          cache-key: flutter-linux-${{ hashFiles('frontend/pubspec.lock') }}
 
       - name: Enable Linux desktop
         run: flutter config --enable-linux-desktop
@@ -301,7 +301,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.pub-cache
-          key: ${{ runner.os }}-pub-cache-${{ hashFiles('frontend/**/pubspec.lock') }}
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('frontend/pubspec.lock') }}
           restore-keys: |
             ${{ runner.os }}-pub-cache-
 
@@ -310,7 +310,7 @@ jobs:
         with:
           channel: stable
           cache: true
-          cache-key: flutter-${{ hashFiles('**/pubspec.lock') }}
+          cache-key: flutter-macos-${{ hashFiles('frontend/pubspec.lock') }}
 
       - name: Enable macOS desktop
         run: flutter config --enable-macos-desktop
@@ -328,12 +328,6 @@ jobs:
             --build-number=${{ needs.prepare-release.outputs.build_number }}
           echo "✅ macOS build completed"
 
-      - name: Install create-dmg
-        run: |
-          echo "📦 Installing create-dmg..."
-          brew install create-dmg
-          echo "✅ create-dmg installed"
-
       - name: Create release directory
         working-directory: frontend
         run: mkdir -p dist/macos
@@ -341,16 +335,30 @@ jobs:
       - name: Create DMG
         working-directory: frontend
         run: |
-          create-dmg \
-            --volname "Personal AI Assistant" \
-            --window-pos 200 120 \
-            --window-size 600 400 \
-            --icon-size 100 \
-            --app-drop-link 450 185 \
-            --icon "Personal AI Assistant" 150 185 \
-            --skip-jenkins \
-            "dist/macos/personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.dmg" \
-            "build/macos/Build/Products/Release/"*.app
+          APP_PATH="build/macos/Build/Products/Release/"*.app
+          DMG_PATH="dist/macos/personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.dmg"
+          TEMP_DIR="dist/macos/dmg-temp"
+
+          # Create temporary directory for DMG contents
+          mkdir -p "$TEMP_DIR"
+
+          # Copy app to temp directory
+          cp -R "$APP_PATH" "$TEMP_DIR/"
+
+          # Create Applications symlink
+          ln -s /Applications "$TEMP_DIR/Applications"
+
+          # Create DMG using hdiutil
+          hdiutil create -volname "Personal AI Assistant" \
+            -srcfolder "$TEMP_DIR" \
+            -ov \
+            -format UDZO \
+            "$DMG_PATH"
+
+          # Clean up temp directory
+          rm -rf "$TEMP_DIR"
+
+          echo "✅ DMG created at $DMG_PATH"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
