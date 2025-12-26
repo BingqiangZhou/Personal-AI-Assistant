@@ -126,24 +126,18 @@ jobs:
             --release \
             --target-platform android-arm64 \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
-          echo "✅ APK build completed"
 
-      - name: Build App Bundle (Release)
-        working-directory: frontend
-        run: |
-          echo "🔨 Building Android App Bundle..."
-          flutter build appbundle \
-            --release \
-            --build-number=${{ needs.prepare-release.outputs.build_number }}
-          echo "✅ App Bundle build completed"
+          # 重命名 APK 包含应用名和版本号
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/personal-ai-assistant-${{ needs.prepare-release.outputs.version }}-android-arm64.apk
+
+          echo "✅ APK build completed"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: android-artifacts
-          path: |
-            frontend/build/app/outputs/flutter-apk/**/*.apk
-            frontend/build/app/outputs/bundle/release/*.aab
+          path: frontend/build/app/outputs/flutter-apk/**/*.apk
           retention-days: 7
 
   # ============================================
@@ -349,7 +343,6 @@ jobs:
           prerelease: ${{ needs.prepare-release.outputs.is_prerelease }}
           files: |
             artifacts/android-artifacts/**/*.apk
-            artifacts/android-artifacts/**/*.aab
             artifacts/windows-artifact/*.zip
             artifacts/linux-artifact/*.tar.gz
             artifacts/macos-artifact/*.zip
@@ -365,7 +358,7 @@ jobs:
           echo "**Prerelease:** ${{ needs.prepare-release.outputs.is_prerelease }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### 📦 Released Artifacts:" >> $GITHUB_STEP_SUMMARY
-          echo "- 🤖 Android APK/AppBundle" >> $GITHUB_STEP_SUMMARY
+          echo "- 🤖 Android APK" >> $GITHUB_STEP_SUMMARY
           echo "- 🪟 Windows Executable" >> $GITHUB_STEP_SUMMARY
           echo "- 🐧 Linux Binary" >> $GITHUB_STEP_SUMMARY
           echo "- 🍎 macOS Application" >> $GITHUB_STEP_SUMMARY
