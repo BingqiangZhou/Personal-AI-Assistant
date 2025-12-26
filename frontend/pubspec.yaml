@@ -52,7 +52,7 @@ dependencies:
 
   # Audio Player
   audioplayers: ^6.1.0
-  audio_service: ^0.18.12
+  audio_service: ^0.18.18
 
   # HTML Rendering
   flutter_html: ^3.0.0
