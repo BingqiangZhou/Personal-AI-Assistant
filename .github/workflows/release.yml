@@ -175,6 +175,10 @@ jobs:
           cache: true
           cache-key: flutter-${{ hashFiles('frontend/**/pubspec.lock') }}
 
+      - name: Enable Windows desktop
+        shell: pwsh
+        run: flutter config --enable-windows-desktop
+
       - name: Get dependencies
         working-directory: frontend
         shell: pwsh
