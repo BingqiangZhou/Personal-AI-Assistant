@@ -5,7 +5,7 @@ from sqlalchemy import (
     ForeignKey, Boolean, JSON, Index
 )
 from sqlalchemy.orm import relationship
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import enum
 
@@ -135,7 +135,7 @@ class Subscription(Base):
         Calculate next update time based on frequency and user settings.
         Aligns to the next scheduled interval based on CURRENT time.
         """
-        return self._get_next_scheduled_time(datetime.utcnow())
+        return self._get_next_scheduled_time(datetime.now(timezone.utc))
 
     def should_update_now(self) -> bool:
         """

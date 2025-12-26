@@ -189,7 +189,7 @@ def generate_pending_summaries(self):
     async def _do_generate():
         # 创建独立的数据库引擎和 session factory
         # 避免与主进程的连接池冲突
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
         worker_engine = create_async_engine(
             settings.DATABASE_URL,
