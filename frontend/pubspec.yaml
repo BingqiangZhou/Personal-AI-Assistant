@@ -59,15 +59,39 @@ dependencies:
 
   # File Handling
   file_selector: ^1.0.3
+  file_picker: ^10.3.8
+  desktop_drop: ^0.7.0
+  cross_file: ^0.3.5+1
+
+  # Desktop Window Management
+  window_manager: ^0.3.8
+
+  # Audio (Desktop compatible)
+  just_audio: ^0.9.34
+  audio_video_progress_bar: ^2.0.0
+
+  # Desktop Info
+  device_info_plus: ^9.1.2
+  package_info_plus: ^9.0.0
+  connectivity_plus: ^5.0.2
+
+  # Hive Storage (Desktop)
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+  # UI Components (Desktop)
+  google_fonts: ^6.1.0
+  lottie: ^3.0.0
+
+  # Form Validation
+  formz: ^0.6.1
+  email_validator: ^2.1.17
 
   # Logging
   logger: ^2.5.0
   equatable: ^2.0.7
   url_launcher: ^6.3.2
   meta: ^1.17.0
-  file_picker: ^10.3.8
-  desktop_drop: ^0.7.0
-  cross_file: ^0.3.5+1
 
 dev_dependencies:
   flutter_test:
@@ -83,6 +107,9 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   very_good_analysis: ^10.0.0
   mockito: ^5.6.1
+
+  # Hive Generation (for desktop)
+  hive_generator: ^2.0.1
 
 flutter:
   uses-material-design: true

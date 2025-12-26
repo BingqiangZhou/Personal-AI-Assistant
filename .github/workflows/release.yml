@@ -10,7 +10,6 @@ on:
       - 'v*.*.*'  # 匹配语义化版本号，如 v1.0.0, v2.1.3, etc.
 
 env:
-  FLUTTER_VERSION: '3.24.0'  # 指定 Flutter 版本
   JAVA_VERSION: '17'
   JAVA_DISTRIBUTION: 'temurin'
 
@@ -128,10 +127,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
-          cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+          cache-key: flutter-${{ hashFiles('**/pubspec.lock') }}
 
       - name: Download changelog
         uses: actions/download-artifact@v4
@@ -183,7 +181,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
@@ -237,7 +234,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
@@ -280,7 +276,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
