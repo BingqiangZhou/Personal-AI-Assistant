@@ -145,8 +145,7 @@ jobs:
         run: |
           flutter build apk \
             --release \
-            --target-platform android-arm64,android-arm \
-            --split-per-abi
+            --target-platform android-arm64
 
       - name: Build App Bundle (Release)
         working-directory: frontend
