@@ -1,4 +1,4 @@
-# Personal AI Assistant - Release Workflow
+# Personal AI Assistant - Multi-Platform Release Workflow
 # 多平台自动构建并发布到 GitHub Release
 # Triggered by pushing tags matching pattern v*.*.* (e.g., v1.0.0)
 
@@ -7,7 +7,11 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'  # 匹配语义化版本号，如 v1.0.0, v2.1.3, etc.
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 env:
   JAVA_VERSION: '17'
@@ -22,11 +26,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-      version_no_v: ${{ steps.version.outputs.version_no_v }}
       build_number: ${{ steps.version.outputs.build_number }}
       is_prerelease: ${{ steps.version.outputs.is_prerelease }}
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -35,49 +38,33 @@ jobs:
         id: version
         run: |
           TAG=${{ github.ref_name }}
-          VERSION=${TAG#v}  # 移除 v 前缀
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "version_no_v=$VERSION" >> $GITHUB_OUTPUT
-
-          # Extract build number from version (use patch number)
-          # e.g., 0.0.1 → 1, 1.2.3 → 3
+          VERSION=${TAG#v}
           BUILD_NUMBER=$(echo $VERSION | grep -oE '[0-9]+$' || echo "1")
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
 
-          # 检查是否为预发布版本（包含 alpha, beta, rc, etc.）
           if [[ $VERSION =~ -(alpha|beta|rc|preview)\.? ]]; then
             echo "is_prerelease=true" >> $GITHUB_OUTPUT
           else
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
           fi
-          echo "Version: $VERSION"
-          echo "Build Number: $BUILD_NUMBER"
-          echo "Prerelease: $(echo $is_prerelease)"
+
+          echo "📦 Version: $VERSION"
+          echo "🔢 Build Number: $BUILD_NUMBER"
 
       - name: Generate changelog
         run: |
-          # 获取上一个 tag
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
-          # 创建 changelog 文件
-          CHANGELOG_FILE="changelog.md"
-
-          # 写入文件头
           {
-            echo "### 📦 Release v${{ steps.version.outputs.version }}"
+            echo "## 📦 Release v${{ steps.version.outputs.version }}"
             echo ""
             if [ -z "$PREV_TAG" ]; then
               echo "**首次发布 / Initial Release**"
-              echo ""
-              echo "这是 Personal AI Assistant 的首个正式版本。"
-              echo ""
-              echo "This is the first official release of Personal AI Assistant."
             else
-              echo "**更新日志 / Changelog**"
-              echo ""
               echo "**Changes since ${PREV_TAG}:**"
               echo ""
-              # 获取提交日志
               git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --reverse 2>/dev/null | head -100
             fi
             echo ""
@@ -85,28 +72,7 @@ jobs:
             echo ""
             echo "**Version:** \`${{ steps.version.outputs.version }}\`"
             echo "**Release Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-          } > "$CHANGELOG_FILE"
-
-          # 显示生成的内容
-          echo "=== Generated Changelog ==="
-          cat "$CHANGELOG_FILE"
-          echo "=== End ==="
-
-      - name: Verify changelog file
-        run: |
-          # 验证 changelog.md 文件已生成
-          if [ ! -f "changelog.md" ]; then
-            echo "ERROR: changelog.md was not generated!"
-            exit 1
-          fi
-
-          echo "=== Final Changelog Content ==="
-          cat changelog.md
-          echo ""
-          echo "File info:"
-          echo "- Size: $(wc -c < changelog.md) bytes"
-          echo "- Lines: $(wc -l < changelog.md) lines"
-          echo "=== End ==="
+          } > changelog.md
 
       - name: Upload changelog artifact
         uses: actions/upload-artifact@v4
@@ -122,7 +88,7 @@ jobs:
     needs: prepare-release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Java
@@ -131,6 +97,16 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -138,54 +114,37 @@ jobs:
           cache: true
           cache-key: flutter-${{ hashFiles('**/pubspec.lock') }}
 
-      - name: Setup Gradle cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-
-
-      - name: Download changelog
-        uses: actions/download-artifact@v4
-        with:
-          name: changelog
-
-      - name: Install dependencies
+      - name: Get dependencies
         working-directory: frontend
         run: flutter pub get
 
       - name: Build APK (Release)
         working-directory: frontend
         run: |
+          echo "🔨 Building Android APK..."
           flutter build apk \
             --release \
             --target-platform android-arm64 \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
+          echo "✅ APK build completed"
 
       - name: Build App Bundle (Release)
         working-directory: frontend
         run: |
+          echo "🔨 Building Android App Bundle..."
           flutter build appbundle \
             --release \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
+          echo "✅ App Bundle build completed"
 
-      # 如果有配置签名密钥，可以添加以下步骤
-      # - name: Sign APK
-      #   working-directory: frontend
-      #   run: |
-      #     # 使用签名密钥对 APK 进行签名
-      #     jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA256 -keystore ${{ secrets.KEYSTORE_PATH }} -storepass ${{ secrets.KEYSTORE_PASSWORD }} -keypass ${{ secrets.KEY_PASSWORD }} build/app/outputs/flutter-apk/app-release.apk ${{ secrets.KEY_ALIAS }}
-
-      - name: Upload Android artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: android-artifacts
           path: |
             frontend/build/app/outputs/flutter-apk/**/*.apk
             frontend/build/app/outputs/bundle/release/*.aab
+          retention-days: 7
 
   # ============================================
   # Job 3: 构建 Windows
@@ -195,7 +154,7 @@ jobs:
     needs: prepare-release
     runs-on: windows-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Flutter
@@ -204,30 +163,20 @@ jobs:
           channel: stable
           cache: false
 
-      - name: Enable Windows desktop
-        run: flutter config --enable-windows-desktop
-
-      - name: Install dependencies
+      - name: Get dependencies
         working-directory: frontend
         run: flutter pub get
 
-      - name: Clean build cache
-        working-directory: frontend
-        shell: bash
-        run: |
-          rm -rf build/
-          rm -f .flutter-plugins-dependencies
-          flutter clean
-
       - name: Build Windows
         working-directory: frontend
-        shell: bash
         run: |
+          echo "🔨 Building Windows application..."
           flutter build windows \
             --release \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
+          echo "✅ Windows build completed"
 
-      - name: Create Windows ZIP archive
+      - name: Archive Windows release
         working-directory: frontend
         run: |
           $version = "${{ needs.prepare-release.outputs.version }}"
@@ -235,11 +184,12 @@ jobs:
           $destPath = "build\windows\x64\runner\Release\personal-ai-assistant-windows-$version.zip"
           Compress-Archive -Path $sourcePath -DestinationPath $destPath -Force
 
-      - name: Upload Windows artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifact
           path: frontend/build/windows/x64/runner/Release/*.zip
+          retention-days: 7
 
   # ============================================
   # Job 4: 构建 Linux
@@ -249,60 +199,60 @@ jobs:
     needs: prepare-release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install Linux dependencies
         run: |
+          echo "📦 Installing Linux dependencies..."
           sudo apt-get update
           sudo apt-get install -y \
-            clang \
-            cmake \
-            ninja-build \
-            libgtk-3-dev \
-            liblzma-dev \
-            libstdc++-12-dev \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev libglib2.0-dev libpango1.0-dev \
+            libatk1.0-dev libcairo-gobject2 libgdk-pixbuf2.0-dev \
+            libgraphene-1.0-dev libharfbuzz-dev \
+            liblzma-dev libstdc++-12-dev \
             libsecret-1-dev \
-            libgstreamer1.0-dev \
-            libgstreamer-plugins-base1.0-dev \
-            gstreamer1.0-plugins-base \
-            gstreamer1.0-plugins-good \
-            gstreamer1.0-plugins-bad \
-            gstreamer1.0-plugins-ugly \
-            gstreamer1.0-libav \
-            libgstreamer1.0-0 \
-            gstreamer1.0-tools
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
+            gstreamer1.0-libav libgstreamer1.0-0 gstreamer1.0-tools
+          echo "✅ Dependencies installed"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
+          cache-key: flutter-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: Get dependencies
+        working-directory: frontend
+        run: flutter pub get
 
       - name: Enable Linux desktop
         run: flutter config --enable-linux-desktop
 
-      - name: Install dependencies
-        working-directory: frontend
-        run: flutter pub get
-
       - name: Build Linux
         working-directory: frontend
         run: |
+          echo "🔨 Building Linux application..."
           flutter build linux \
             --release \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
+          echo "✅ Linux build completed"
 
-      - name: Create Linux TAR archive
+      - name: Archive Linux release
         working-directory: frontend/build/linux/x64/release/bundle
         run: |
           tar czf "personal-ai-assistant-linux-${{ needs.prepare-release.outputs.version }}.tar.gz" *
 
-      - name: Upload Linux artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: linux-artifact
           path: frontend/build/linux/x64/release/bundle/*.tar.gz
+          retention-days: 7
 
   # ============================================
   # Job 5: 构建 macOS
@@ -312,7 +262,7 @@ jobs:
     needs: prepare-release
     runs-on: macos-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Flutter
@@ -320,37 +270,41 @@ jobs:
         with:
           channel: stable
           cache: true
+          cache-key: flutter-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: Get dependencies
+        working-directory: frontend
+        run: flutter pub get
 
       - name: Enable macOS desktop
         run: flutter config --enable-macos-desktop
 
-      - name: Install dependencies
-        working-directory: frontend
-        run: flutter pub get
-
       - name: Build macOS
         working-directory: frontend
         run: |
+          echo "🔨 Building macOS application..."
           flutter build macos \
             --release \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
+          echo "✅ macOS build completed"
 
-      - name: Create macOS ZIP archive
+      - name: Archive macOS release
         working-directory: frontend/build/macos/Build/Products/Release
         run: |
           zip -r "personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.zip" *.app
 
-      - name: Upload macOS artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-artifact
           path: frontend/build/macos/Build/Products/Release/*.zip
+          retention-days: 7
 
   # ============================================
   # Job 6: 发布到 GitHub Release
   # ============================================
-  release:
-    name: Create GitHub Release
+  create-release:
+    name: Create Release
     needs:
       - prepare-release
       - build-android
@@ -358,45 +312,32 @@ jobs:
       - build-linux
       - build-macos
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    if: always() &&
+        needs.prepare-release.result == 'success' &&
+        needs.build-android.result == 'success' &&
+        needs.build-windows.result == 'success' &&
+        needs.build-linux.result == 'success' &&
+        needs.build-macos.result == 'success'
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Download changelog
         uses: actions/download-artifact@v4
         with:
           name: changelog
+          path: .
 
-      - name: Download Android artifacts
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          name: android-artifacts
-          path: artifacts/android
-
-      - name: Download Windows artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: windows-artifact
-          path: artifacts/windows
-
-      - name: Download Linux artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-artifact
-          path: artifacts/linux
-
-      - name: Download macOS artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: macos-artifact
-          path: artifacts/macos
+          path: artifacts
 
       - name: Display artifacts structure
         run: |
-          echo "Artifacts structure:"
-          ls -laR artifacts/
+          echo "📁 Downloaded artifacts:"
+          find artifacts -type f | sort
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -407,11 +348,11 @@ jobs:
           draft: false
           prerelease: ${{ needs.prepare-release.outputs.is_prerelease }}
           files: |
-            artifacts/android/**/*.apk
-            artifacts/android/**/*.aab
-            artifacts/windows/*.zip
-            artifacts/linux/*.tar.gz
-            artifacts/macos/*.zip
+            artifacts/android-artifacts/**/*.apk
+            artifacts/android-artifacts/**/*.aab
+            artifacts/windows-artifact/*.zip
+            artifacts/linux-artifact/*.tar.gz
+            artifacts/macos-artifact/*.zip
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
