@@ -23,6 +23,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
       version_no_v: ${{ steps.version.outputs.version_no_v }}
+      build_number: ${{ steps.version.outputs.build_number }}
       is_prerelease: ${{ steps.version.outputs.is_prerelease }}
     steps:
       - name: Checkout code
@@ -38,6 +39,11 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "version_no_v=$VERSION" >> $GITHUB_OUTPUT
 
+          # Extract build number from version (use patch number)
+          # e.g., 0.0.1 → 1, 1.2.3 → 3
+          BUILD_NUMBER=$(echo $VERSION | grep -oE '[0-9]+$' || echo "1")
+          echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+
           # 检查是否为预发布版本（包含 alpha, beta, rc, etc.）
           if [[ $VERSION =~ -(alpha|beta|rc|preview)\.? ]]; then
             echo "is_prerelease=true" >> $GITHUB_OUTPUT
@@ -45,6 +51,7 @@ jobs:
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
           fi
           echo "Version: $VERSION"
+          echo "Build Number: $BUILD_NUMBER"
           echo "Prerelease: $(echo $is_prerelease)"
 
       - name: Generate changelog
@@ -204,7 +211,7 @@ jobs:
         run: |
           flutter build windows \
             --release \
-            --build-number=${{ needs.prepare-release.outputs.version_no_v }}
+            --build-number=${{ needs.prepare-release.outputs.build_number }}
 
       - name: Create Windows ZIP archive
         working-directory: frontend
@@ -269,7 +276,7 @@ jobs:
         run: |
           flutter build linux \
             --release \
-            --build-number=${{ needs.prepare-release.outputs.version_no_v }}
+            --build-number=${{ needs.prepare-release.outputs.build_number }}
 
       - name: Create Linux TAR archive
         working-directory: frontend/build/linux/x64/release/bundle
@@ -311,7 +318,7 @@ jobs:
         run: |
           flutter build macos \
             --release \
-            --build-number=${{ needs.prepare-release.outputs.version_no_v }}
+            --build-number=${{ needs.prepare-release.outputs.build_number }}
 
       - name: Create macOS ZIP archive
         working-directory: frontend/build/macos/Build/Products/Release
