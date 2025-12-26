@@ -191,18 +191,18 @@ jobs:
         run: flutter config --enable-windows-desktop
 
       - name: Install dependencies
-        working-directory: frontend/desktop
+        working-directory: frontend
         run: flutter pub get
 
       - name: Build Windows
-        working-directory: frontend/desktop
+        working-directory: frontend
         run: |
           flutter build windows \
             --release \
             --build-number=${{ needs.prepare-release.outputs.version_no_v }}
 
       - name: Create Windows ZIP archive
-        working-directory: frontend/desktop/build/windows/runner/Release
+        working-directory: frontend/build/windows/runner/Release
         run: |
           Compress-Archive -Path * -DestinationPath "personal-ai-assistant-windows-${{ needs.prepare-release.outputs.version }}.zip"
 
@@ -210,7 +210,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-artifact
-          path: frontend/desktop/build/windows/runner/Release/*.zip
+          path: frontend/build/windows/runner/Release/*.zip
 
   # ============================================
   # Job 4: 构建 Linux
@@ -245,18 +245,18 @@ jobs:
         run: flutter config --enable-linux-desktop
 
       - name: Install dependencies
-        working-directory: frontend/desktop
+        working-directory: frontend
         run: flutter pub get
 
       - name: Build Linux
-        working-directory: frontend/desktop
+        working-directory: frontend
         run: |
           flutter build linux \
             --release \
             --build-number=${{ needs.prepare-release.outputs.version_no_v }}
 
       - name: Create Linux TAR archive
-        working-directory: frontend/desktop/build/linux/x64/release/bundle
+        working-directory: frontend/build/linux/x64/release/bundle
         run: |
           tar czf "personal-ai-assistant-linux-${{ needs.prepare-release.outputs.version }}.tar.gz" -C . .
 
@@ -264,7 +264,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-artifact
-          path: frontend/desktop/build/linux/x64/release/bundle/*.tar.gz
+          path: frontend/build/linux/x64/release/bundle/*.tar.gz
 
   # ============================================
   # Job 5: 构建 macOS
@@ -288,18 +288,18 @@ jobs:
         run: flutter config --enable-macos-desktop
 
       - name: Install dependencies
-        working-directory: frontend/desktop
+        working-directory: frontend
         run: flutter pub get
 
       - name: Build macOS
-        working-directory: frontend/desktop
+        working-directory: frontend
         run: |
           flutter build macos \
             --release \
             --build-number=${{ needs.prepare-release.outputs.version_no_v }}
 
       - name: Create macOS ZIP archive
-        working-directory: frontend/desktop/build/macos/Build/Products/Release
+        working-directory: frontend/build/macos/Build/Products/Release
         run: |
           zip -r "personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.zip" *.app
 
@@ -307,7 +307,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: macos-artifact
-          path: frontend/desktop/build/macos/Build/Products/Release/*.zip
+          path: frontend/build/macos/Build/Products/Release/*.zip
 
   # ============================================
   # Job 6: 发布到 GitHub Release
