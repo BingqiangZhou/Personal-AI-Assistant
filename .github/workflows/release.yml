@@ -1,0 +1,370 @@
+# Personal AI Assistant - Release Workflow
+# 多平台自动构建并发布到 GitHub Release
+# Triggered by pushing tags matching pattern v*.*.* (e.g., v1.0.0)
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # 匹配语义化版本号，如 v1.0.0, v2.1.3, etc.
+
+env:
+  FLUTTER_VERSION: '3.24.0'  # 指定 Flutter 版本
+  JAVA_VERSION: '17'
+  JAVA_DISTRIBUTION: 'temurin'
+
+jobs:
+  # ============================================
+  # Job 1: 提取版本信息和生成更新日志
+  # ============================================
+  prepare-release:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      version_no_v: ${{ steps.version.outputs.version_no_v }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG=${{ github.ref_name }}
+          VERSION=${TAG#v}  # 移除 v 前缀
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_no_v=$VERSION" >> $GITHUB_OUTPUT
+
+          # 检查是否为预发布版本（包含 alpha, beta, rc, etc.）
+          if [[ $VERSION =~ -(alpha|beta|rc|preview)\.? ]]; then
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+          echo "Version: $VERSION"
+          echo "Prerelease: $(echo $is_prerelease)"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # 获取上一个 tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "changelog=### 📦 首次发布 / Initial Release
+
+          这是 Personal AI Assistant 的首个正式版本。" > $GITHUB_OUTPUT
+          else
+            # 生成从上一个 tag 到当前 tag 的提交日志
+            echo "changelog=### 📝 更新日志 / Changelog
+
+          **Changes since $PREV_TAG:**" > $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --reverse | head -100 >> $GITHUB_OUTPUT
+          fi
+
+          # 添加当前版本信息
+          echo "" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "**Full Version:** \`${{ steps.version.outputs.version }}\`" >> $GITHUB_OUTPUT
+          echo "**Release Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+
+      - name: Upload changelog
+        run: |
+          echo "${{ steps.changelog.outputs.changelog }}" > changelog.md
+          cat changelog.md
+
+      - name: Upload changelog artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: changelog
+          path: changelog.md
+
+  # ============================================
+  # Job 2: 构建 Android APK/AAB
+  # ============================================
+  build-android:
+    name: Build Android
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: Download changelog
+        uses: actions/download-artifact@v4
+        with:
+          name: changelog
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Build APK (Release)
+        working-directory: frontend
+        run: |
+          flutter build apk \
+            --release \
+            --target-platform android-arm64,android-arm \
+            --split-per-abi
+
+      - name: Build App Bundle (Release)
+        working-directory: frontend
+        run: flutter build appbundle --release
+
+      # 如果有配置签名密钥，可以添加以下步骤
+      # - name: Sign APK
+      #   working-directory: frontend
+      #   run: |
+      #     # 使用签名密钥对 APK 进行签名
+      #     jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA256 -keystore ${{ secrets.KEYSTORE_PATH }} -storepass ${{ secrets.KEYSTORE_PASSWORD }} -keypass ${{ secrets.KEY_PASSWORD }} build/app/outputs/flutter-apk/app-release.apk ${{ secrets.KEY_ALIAS }}
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-artifacts
+          path: |
+            frontend/build/app/outputs/flutter-apk/**/*.apk
+            frontend/build/app/outputs/bundle/release/*.aab
+
+  # ============================================
+  # Job 3: 构建 Windows
+  # ============================================
+  build-windows:
+    name: Build Windows
+    needs: prepare-release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable Windows desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Install dependencies
+        working-directory: frontend/desktop
+        run: flutter pub get
+
+      - name: Build Windows
+        working-directory: frontend/desktop
+        run: |
+          flutter build windows \
+            --release \
+            --build-number=${{ needs.prepare-release.outputs.version_no_v }}
+
+      - name: Create Windows ZIP archive
+        working-directory: frontend/desktop/build/windows/runner/Release
+        run: |
+          Compress-Archive -Path * -DestinationPath "personal-ai-assistant-windows-${{ needs.prepare-release.outputs.version }}.zip"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifact
+          path: frontend/desktop/build/windows/runner/Release/*.zip
+
+  # ============================================
+  # Job 4: 构建 Linux
+  # ============================================
+  build-linux:
+    name: Build Linux
+    needs: prepare-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            ninja-build \
+            libgtk-3-dev \
+            liblzma-dev \
+            libstdc++-12-dev
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable Linux desktop
+        run: flutter config --enable-linux-desktop
+
+      - name: Install dependencies
+        working-directory: frontend/desktop
+        run: flutter pub get
+
+      - name: Build Linux
+        working-directory: frontend/desktop
+        run: |
+          flutter build linux \
+            --release \
+            --build-number=${{ needs.prepare-release.outputs.version_no_v }}
+
+      - name: Create Linux TAR archive
+        working-directory: frontend/desktop/build/linux/x64/release/bundle
+        run: |
+          tar czf "personal-ai-assistant-linux-${{ needs.prepare-release.outputs.version }}.tar.gz" -C . .
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifact
+          path: frontend/desktop/build/linux/x64/release/bundle/*.tar.gz
+
+  # ============================================
+  # Job 5: 构建 macOS
+  # ============================================
+  build-macos:
+    name: Build macOS
+    needs: prepare-release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
+      - name: Install dependencies
+        working-directory: frontend/desktop
+        run: flutter pub get
+
+      - name: Build macOS
+        working-directory: frontend/desktop
+        run: |
+          flutter build macos \
+            --release \
+            --build-number=${{ needs.prepare-release.outputs.version_no_v }}
+
+      - name: Create macOS ZIP archive
+        working-directory: frontend/desktop/build/macos/Build/Products/Release
+        run: |
+          zip -r "personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.zip" *.app
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-artifact
+          path: frontend/desktop/build/macos/Build/Products/Release/*.zip
+
+  # ============================================
+  # Job 6: 发布到 GitHub Release
+  # ============================================
+  release:
+    name: Create GitHub Release
+    needs:
+      - prepare-release
+      - build-android
+      - build-windows
+      - build-linux
+      - build-macos
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download changelog
+        uses: actions/download-artifact@v4
+        with:
+          name: changelog
+
+      - name: Download Android artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-artifacts
+          path: artifacts/android
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-artifact
+          path: artifacts/windows
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-artifact
+          path: artifacts/linux
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-artifact
+          path: artifacts/macos
+
+      - name: Display artifacts structure
+        run: |
+          echo "Artifacts structure:"
+          ls -laR artifacts/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.prepare-release.outputs.version }}
+          name: Personal AI Assistant v${{ needs.prepare-release.outputs.version }}
+          body_path: changelog.md
+          draft: false
+          prerelease: ${{ needs.prepare-release.outputs.is_prerelease }}
+          files: |
+            artifacts/android/**/*.apk
+            artifacts/android/**/*.aab
+            artifacts/windows/*.zip
+            artifacts/linux/*.tar.gz
+            artifacts/macos/*.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release Summary
+        run: |
+          echo "### ✅ Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** v${{ needs.prepare-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Prerelease:** ${{ needs.prepare-release.outputs.is_prerelease }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 📦 Released Artifacts:" >> $GITHUB_STEP_SUMMARY
+          echo "- 🤖 Android APK/AppBundle" >> $GITHUB_STEP_SUMMARY
+          echo "- 🪟 Windows Executable" >> $GITHUB_STEP_SUMMARY
+          echo "- 🐧 Linux Binary" >> $GITHUB_STEP_SUMMARY
+          echo "- 🍎 macOS Application" >> $GITHUB_STEP_SUMMARY
