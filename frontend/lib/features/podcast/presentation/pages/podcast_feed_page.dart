@@ -442,7 +442,9 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    // 确保使用本地时间，而不是 UTC 时间
+    final localDate = date.isUtc ? date.toLocal() : date;
+    return '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
   }
 
   /// 构建桌面端卡片（使用小图标布局）

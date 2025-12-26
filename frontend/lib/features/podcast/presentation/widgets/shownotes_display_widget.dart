@@ -325,9 +325,11 @@ class ShownotesDisplayWidget extends ConsumerWidget {
   }
 
   String _formatDate(DateTime date) {
-    final year = date.year;
-    final month = date.month.toString().padLeft(2, '0');
-    final day = date.day.toString().padLeft(2, '0');
+    // 确保使用本地时间，而不是 UTC 时间
+    final localDate = date.isUtc ? date.toLocal() : date;
+    final year = localDate.year;
+    final month = localDate.month.toString().padLeft(2, '0');
+    final day = localDate.day.toString().padLeft(2, '0');
     return '$year年$month月$day日';
   }
 

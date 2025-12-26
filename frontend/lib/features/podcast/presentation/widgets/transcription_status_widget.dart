@@ -1047,11 +1047,13 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   }
 
   String _formatDateTime(DateTime dateTime) {
-    final year = dateTime.year;
-    final month = dateTime.month.toString().padLeft(2, '0');
-    final day = dateTime.day.toString().padLeft(2, '0');
-    final hour = dateTime.hour.toString().padLeft(2, '0');
-    final minute = dateTime.minute.toString().padLeft(2, '0');
+    // 确保使用本地时间，而不是 UTC 时间
+    final localDate = dateTime.isUtc ? dateTime.toLocal() : dateTime;
+    final year = localDate.year;
+    final month = localDate.month.toString().padLeft(2, '0');
+    final day = localDate.day.toString().padLeft(2, '0');
+    final hour = localDate.hour.toString().padLeft(2, '0');
+    final minute = localDate.minute.toString().padLeft(2, '0');
     return '$year-$month-$day $hour:$minute';
   }
 }

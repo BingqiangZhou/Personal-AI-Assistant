@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../models/ai_model_config_model.dart';
 import '../providers/ai_model_provider.dart';
 
@@ -105,8 +106,9 @@ class _ModelEditDialogState extends ConsumerState<ModelEditDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('Edit Config'),
+      title: Text(l10n.settings_edit_config),
       content: SizedBox(
         width: double.maxFinite,
         child: Form(
@@ -182,7 +184,7 @@ class _ModelEditDialogState extends ConsumerState<ModelEditDialog> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _updateModel,
@@ -192,7 +194,7 @@ class _ModelEditDialogState extends ConsumerState<ModelEditDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
-              : const Text('Save'),
+              : Text(l10n.save),
         ),
       ],
     );

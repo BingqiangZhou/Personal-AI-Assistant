@@ -1061,4 +1061,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invalid_episode_id => 'Invalid episode ID';
+
+  @override
+  String get backend_api_server_config => 'Backend API Server Configuration';
+
+  @override
+  String get backend_api_url_label => 'Backend API URL';
+
+  @override
+  String get backend_api_url_hint =>
+      'https://api.example.com\\nor http://192.168.1.10:8080';
+
+  @override
+  String get backend_api_description =>
+      'Note: This is the backend API server, not related to AI model API';
+
+  @override
+  String get use_local_url => 'Local';
+
+  @override
+  String get connection_error_hint => 'Connection error';
+
+  @override
+  String get connected_successfully => 'Connected Successfully';
+
+  @override
+  String save_failed(Object error) {
+    return 'Save failed: $error';
+  }
+
+  @override
+  String get message_copied => 'Message copied to clipboard';
+
+  @override
+  String get regenerating_response => 'Regenerating response...';
+
+  @override
+  String get chat_mode_coming_soon => 'Chat mode selector coming soon!';
+
+  @override
+  String get voice_input_coming_soon => 'Voice input coming soon!';
+
+  @override
+  String get drop_files_here => 'Drop files here!';
+
+  @override
+  String get set_as_default => 'Set as default';
+
+  @override
+  String get test_content => 'Test Content';
+
+  @override
+  String get enter_test_content => 'Enter test content...';
 }

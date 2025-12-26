@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import asyncio
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.llm_privacy import ContentSanitizer
@@ -818,13 +819,120 @@ class PodcastService:
     # === 私有辅助方法 ===
 
     async def _generate_summary_task(self, episode: PodcastEpisode):
-        """后台任务：异步生成AI总结"""
+        """
+        后台任务：异步生成AI总结
+
+        注意：此方法运行在独立的后台任务中，需要创建自己的数据库 session，
+        避免与主请求共享 session 导致 SQLAlchemy 并发错误。
+        """
+        from app.core.database import async_session_factory
+        from app.domains.podcast.repositories import PodcastRepository
+        from app.core.redis import PodcastRedis
+        from app.core.config import settings
+        from app.core.llm_privacy import ContentSanitizer
+
+        # 创建独立的数据库 session 和服务实例
+        async with async_session_factory() as session:
+            try:
+                # 创建独立的 repository 和 redis 实例
+                repo = PodcastRepository(session, PodcastRedis())
+                sanitizer = ContentSanitizer(mode=settings.LLM_CONTENT_SANITIZE_MODE)
+
+                # 检查是否需要生成总结（使用独立的 session）
+                await session.rollback()  # 确保干净状态
+                stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode.id)
+                result = await session.execute(stmt)
+                fresh_episode = result.scalar_one_or_none()
+
+                if not fresh_episode:
+                    logger.warning(f"Episode {episode.id} 不存在，跳过总结生成")
+                    return
+
+                if fresh_episode.ai_summary:
+                    logger.info(f"Episode {episode.id} 已有总结，跳过")
+                    return
+
+                # 使用独立 session 生成总结
+                await self._generate_summary_with_session(
+                    fresh_episode, session, repo, sanitizer
+                )
+
+            except Exception as e:
+                logger.error(f"异步总结失败 episode:{episode.id}: {e}", exc_info=True)
+                try:
+                    await repo.mark_summary_failed(episode.id, str(e))
+                except Exception as db_error:
+                    logger.error(f"标记总结失败时出错 episode:{episode.id}: {db_error}")
+
+    async def _generate_summary_with_session(
+        self,
+        episode: PodcastEpisode,
+        session: AsyncSession,
+        repo: PodcastRepository,
+        sanitizer: 'ContentSanitizer'
+    ) -> str:
+        """使用指定 session 生成 AI 总结"""
+        import asyncio
+        from sqlalchemy import select
+
+        # 检查锁，防止重复处理
+        lock_key = f"summary:{episode.id}"
+        if not await self.redis.acquire_lock(lock_key, expire=300):
+            logger.info(f"总结任务已在进行中: episode_id={episode.id}")
+            # 等待
+            current_try = 0
+            while current_try < 5:
+                await asyncio.sleep(2)
+                stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode.id)
+                result = await session.execute(stmt)
+                episode_check = result.scalar_one_or_none()
+                if episode_check and episode_check.ai_summary:
+                    return episode_check.ai_summary
+                current_try += 1
+
         try:
-            if not episode.ai_summary:
-                await self._generate_summary(episode)
+            # 准备内容（优先使用转录文本）
+            if episode.transcript_content:
+                raw_content = episode.transcript_content
+                content_type = "transcript"
+                has_transcript = True
+            else:
+                raw_content = episode.description
+                content_type = "description"
+                has_transcript = False
+
+            # 使用隐私净化器加工内容
+            sanitized_prompt = sanitizer.sanitize(
+                raw_content, self.user_id, f"podcast_{content_type}"
+            )
+
+            if not sanitized_prompt or len(sanitized_prompt.strip()) < 10:
+                raise ValueError("内容太短或已被完全过滤")
+
+            # 调用AI生成总结
+            summary = await self._call_llm_for_summary(
+                episode_title=episode.title,
+                content=sanitized_prompt,
+                content_type=content_type
+            )
+
+            # 保存到数据库和缓存
+            await repo.update_ai_summary(
+                episode.id,
+                summary,
+                version="v1",
+                transcript_used=has_transcript
+            )
+
+            logger.info(f"AI总结完成 episode:{episode.id} ({content_type})")
+            return summary
+
         except Exception as e:
-            logger.error(f"异步总结失败 episode:{episode.id}: {e}")
-            await self.repo.mark_summary_failed(episode.id, str(e))
+            logger.error(f"生成AI总结失败 episode:{episode.id}: {e}")
+            await repo.mark_summary_failed(episode.id, str(e))
+            raise
+        finally:
+            await self.redis.release_lock(lock_key)
 
     async def _generate_summary(self, episode: PodcastEpisode, version: str = "v1") -> str:
         """核心AI总结生成逻辑"""

@@ -1707,5 +1707,85 @@
   "invalid_episode_id": "剧集ID无效",
   "@invalid_episode_id": {
     "description": "剧集ID无效错误"
+  },
+
+  "backend_api_server_config": "后端 API 服务器配置",
+  "@backend_api_server_config": {
+    "description": "后端 API 服务器配置对话框标题"
+  },
+
+  "backend_api_url_label": "后端 API URL",
+  "@backend_api_url_label": {
+    "description": "后端 API URL 标签"
+  },
+
+  "backend_api_url_hint": "https://api.example.com\\n或 http://192.168.1.10:8080",
+  "@backend_api_url_hint": {
+    "description": "后端 API URL 提示文本"
+  },
+
+  "backend_api_description": "说明：此为后端 API 服务器，与 AI 模型 API 无关",
+  "@backend_api_description": {
+    "description": "后端 API 说明"
+  },
+
+  "use_local_url": "本地",
+  "@use_local_url": {
+    "description": "使用本地链接按钮标签"
+  },
+
+  "connection_error_hint": "连接错误",
+  "@connection_error_hint": {
+    "description": "连接错误提示文本"
+  },
+
+  "connected_successfully": "连接成功",
+  "@connected_successfully": {
+    "description": "连接成功消息"
+  },
+
+  "save_failed": "保存失败: {error}",
+  "@save_failed": {
+    "description": "保存失败错误消息"
+  },
+
+  "message_copied": "消息已复制到剪贴板",
+  "@message_copied": {
+    "description": "消息已复制确认"
+  },
+
+  "regenerating_response": "正在重新生成响应...",
+  "@regenerating_response": {
+    "description": "正在重新生成响应消息"
+  },
+
+  "chat_mode_coming_soon": "聊天模式选择器即将推出！",
+  "@chat_mode_coming_soon": {
+    "description": "聊天模式即将推出消息"
+  },
+
+  "voice_input_coming_soon": "语音输入即将推出！",
+  "@voice_input_coming_soon": {
+    "description": "语音输入即将推出消息"
+  },
+
+  "drop_files_here": "拖放文件到这里！",
+  "@drop_files_here": {
+    "description": "拖放文件提示"
+  },
+
+  "set_as_default": "设为默认",
+  "@set_as_default": {
+    "description": "设为默认按钮标签"
+  },
+
+  "test_content": "测试内容",
+  "@test_content": {
+    "description": "测试内容标签"
+  },
+
+  "enter_test_content": "输入测试内容...",
+  "@enter_test_content": {
+    "description": "输入测试内容提示"
   }
 }

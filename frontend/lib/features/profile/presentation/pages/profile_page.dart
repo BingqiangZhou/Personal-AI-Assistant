@@ -679,16 +679,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   void _showSettingsDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Settings'),
-        content: const Text('Advanced settings coming soon!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(l10n.settings),
+          content: Text(l10n.podcast_coming_soon),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.close),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -788,7 +791,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.languageFollowSystem == 'Cancel' ? 'Cancel' : '关闭'),
+                child: Text(l10n.close),
               ),
             ],
           );
@@ -836,13 +839,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 显示关于对话框
   void _showAboutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showAboutDialog(
       context: context,
-      applicationName: 'Personal AI Assistant',
+      applicationName: l10n.appTitle,
       applicationVersion: '1.0.0',
       applicationIcon: const Icon(Icons.psychology, size: 48),
-      children: const [
-        Text('A comprehensive personal AI assistant for knowledge management and productivity.'),
+      children: [
+        Text(l10n.profile_about_subtitle),
       ],
     );
   }

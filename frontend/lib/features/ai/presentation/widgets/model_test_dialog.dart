@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../models/ai_model_config_model.dart';
 import '../providers/ai_model_provider.dart';
 
@@ -82,8 +83,9 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('测试模型连接'),
+      title: Text(l10n.settings_test_connection),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
@@ -95,16 +97,16 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
             const SizedBox(height: 16),
 
             // 测试输入
-            const Text(
-              '测试内容',
-              style: TextStyle(fontWeight: FontWeight.bold),
+            Text(
+              l10n.settings_test_connection,
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _testPromptController,
-              decoration: const InputDecoration(
-                hintText: '输入测试内容...',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: l10n.settings_test_connection,
+                border: const OutlineInputBorder(),
               ),
               maxLines: widget.model.modelType == AIModelType.transcription ? 1 : 3,
             ),
@@ -112,12 +114,12 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
 
             // 测试结果
             if (_isTesting) ...[
-              const Center(
+              Center(
                 child: Column(
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 8),
-                    Text('正在测试...'),
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 8),
+                    Text(l10n.settings_testing_connection),
                   ],
                 ),
               ),
@@ -130,11 +132,11 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('关闭'),
+          child: Text(l10n.close),
         ),
         ElevatedButton(
           onPressed: _isTesting ? null : _testModel,
-          child: const Text('开始测试'),
+          child: Text(l10n.settings_test_connection),
         ),
       ],
     );

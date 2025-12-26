@@ -1044,4 +1044,55 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get invalid_episode_id => '剧集ID无效';
+
+  @override
+  String get backend_api_server_config => '后端 API 服务器配置';
+
+  @override
+  String get backend_api_url_label => '后端 API URL';
+
+  @override
+  String get backend_api_url_hint =>
+      'https://api.example.com\\n或 http://192.168.1.10:8080';
+
+  @override
+  String get backend_api_description => '说明：此为后端 API 服务器，与 AI 模型 API 无关';
+
+  @override
+  String get use_local_url => '本地';
+
+  @override
+  String get connection_error_hint => '连接错误';
+
+  @override
+  String get connected_successfully => '连接成功';
+
+  @override
+  String save_failed(Object error) {
+    return '保存失败: $error';
+  }
+
+  @override
+  String get message_copied => '消息已复制到剪贴板';
+
+  @override
+  String get regenerating_response => '正在重新生成响应...';
+
+  @override
+  String get chat_mode_coming_soon => '聊天模式选择器即将推出！';
+
+  @override
+  String get voice_input_coming_soon => '语音输入即将推出！';
+
+  @override
+  String get drop_files_here => '拖放文件到这里！';
+
+  @override
+  String get set_as_default => '设为默认';
+
+  @override
+  String get test_content => '测试内容';
+
+  @override
+  String get enter_test_content => '输入测试内容...';
 }

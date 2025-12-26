@@ -154,8 +154,13 @@ def refresh_all_podcast_feeds(self):
         asyncio.set_event_loop(loop)
         try:
             result = loop.run_until_complete(_do_refresh())
+            # Allow pending cleanup tasks to complete (e.g., asyncpg connection cleanup)
+            loop.run_until_complete(asyncio.sleep(0))
         finally:
-            loop.close()
+            # Don't close the loop - let the worker process handle cleanup
+            # Closing the loop here causes "Event loop is closed" errors
+            # when asyncpg tries to terminate connections asynchronously
+            pass
 
         return result
 
@@ -174,70 +179,103 @@ def generate_pending_summaries(self):
     """
     定时任务：生成待处理的AI摘要
     每30分钟执行一次
+
+    重要：在 Celery worker 中正确处理 asyncio 事件循环
+    - 使用 asyncio.run() 创建独立的事件循环
+    - 确保 session 正确关闭后再关闭事件循环
     """
     logger.info("开始生成待处理的AI摘要")
 
     async def _do_generate():
-        async with async_session_factory() as db:
-            try:
-                repo = PodcastRepository(db)
+        # 创建独立的数据库引擎和 session factory
+        # 避免与主进程的连接池冲突
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-                # 获取所有待总结的单集
-                pending_episodes = await repo.get_unsummarized_episodes()
+        worker_engine = create_async_engine(
+            settings.DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=3600,
+            connect_args={
+                "server_settings": {
+                    "application_name": "celery-summary-worker",
+                    "client_encoding": "utf8"
+                },
+                "timeout": settings.DATABASE_CONNECT_TIMEOUT
+            }
+        )
 
-                processed_count = 0
-                failed_count = 0
+        worker_session_factory = async_sessionmaker(
+            worker_engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
 
-                for episode in pending_episodes:
-                    try:
-                        # 获取订阅信息以获取user_id
-                        from app.domains.subscription.models import Subscription
-                        stmt = select(Subscription).where(Subscription.id == episode.subscription_id)
-                        result = await db.execute(stmt)
-                        subscription = result.scalar_one_or_none()
+        # 使用 try-finally 确保引擎被正确关闭
+        try:
+            async with worker_session_factory() as db:
+                try:
+                    repo = PodcastRepository(db)
 
-                        if not subscription:
-                            logger.error(f"找不到订阅 {episode.subscription_id}")
+                    # 获取所有待总结的单集
+                    pending_episodes = await repo.get_unsummarized_episodes()
+
+                    processed_count = 0
+                    failed_count = 0
+
+                    for episode in pending_episodes:
+                        try:
+                            # 获取订阅信息以获取user_id
+                            from app.domains.subscription.models import Subscription
+                            stmt = select(Subscription).where(Subscription.id == episode.subscription_id)
+                            result = await db.execute(stmt)
+                            subscription = result.scalar_one_or_none()
+
+                            if not subscription:
+                                logger.error(f"找不到订阅 {episode.subscription_id}")
+                                continue
+
+                            # 创建服务实例
+                            service = PodcastService(db, subscription.user_id)
+
+                            # 生成摘要
+                            summary = await service._generate_summary(episode)
+
+                            processed_count += 1
+                            logger.info(f"生成摘要成功: {episode.title}")
+
+                        except Exception as e:
+                            failed_count += 1
+                            logger.error(f"生成摘要失败 {episode.id}: {e}")
+                            # 标记为失败
+                            await repo.mark_summary_failed(episode.id, str(e))
                             continue
 
-                        # 创建服务实例
-                        service = PodcastService(db, subscription.user_id)
+                    logger.info(f"AI摘要生成完成: {processed_count} 成功, {failed_count} 失败")
 
-                        # 生成摘要
-                        summary = await service._generate_summary(episode)
+                    return {
+                        "status": "success",
+                        "processed": processed_count,
+                        "failed": failed_count,
+                        "processed_at": datetime.utcnow().isoformat()
+                    }
 
-                        processed_count += 1
-                        logger.info(f"生成摘要成功: {episode.title}")
-
-                    except Exception as e:
-                        failed_count += 1
-                        logger.error(f"生成摘要失败 {episode.id}: {e}")
-                        # 标记为失败
-                        await repo.mark_summary_failed(episode.id, str(e))
-                        continue
-
-                logger.info(f"AI摘要生成完成: {processed_count} 成功, {failed_count} 失败")
-
-                return {
-                    "status": "success",
-                    "processed": processed_count,
-                    "failed": failed_count,
-                    "processed_at": datetime.utcnow().isoformat()
-                }
-
-            except Exception as e:
-                logger.error(f"生成AI摘要失败: {e}")
-                raise
+                except Exception as e:
+                    logger.error(f"生成AI摘要失败: {e}")
+                    raise
+        finally:
+            # 确保引擎被正确关闭，释放所有连接
+            await worker_engine.dispose()
 
     try:
-        # Run async code in sync Celery worker
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(_do_generate())
-        finally:
-            loop.close()
-
+        # 使用 asyncio.run() 自动管理事件循环生命周期
+        # 这会：
+        # 1. 创建新的事件循环
+        # 2. 运行 async 函数
+        # 3. 关闭所有待处理的任务
+        # 4. 关闭事件循环
+        result = asyncio.run(_do_generate())
         return result
 
     except Exception as e:
@@ -384,8 +422,13 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
         asyncio.set_event_loop(loop)
         try:
             loop.run_until_complete(_do_transcription())
+            # Allow pending cleanup tasks to complete (e.g., asyncpg connection cleanup)
+            loop.run_until_complete(asyncio.sleep(0))
         finally:
-            loop.close()
+            # Don't close the loop - let the worker process handle cleanup
+            # Closing the loop here causes "Event loop is closed" errors
+            # when asyncpg tries to terminate connections asynchronously
+            pass
 
         return {
             "status": "success",
@@ -421,8 +464,11 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
             asyncio.set_event_loop(loop)
             try:
                 loop.run_until_complete(_mark_failed())
+                # Allow pending cleanup tasks to complete
+                loop.run_until_complete(asyncio.sleep(0))
             finally:
-                loop.close()
+                # Don't close the loop - let the worker process handle cleanup
+                pass
         except Exception as cleanup_error:
             logger.error(f"Failed to mark task as failed in Redis: {cleanup_error}")
 
@@ -463,8 +509,13 @@ def generate_summary_for_episode(episode_id: int, user_id: int):
         asyncio.set_event_loop(loop)
         try:
             result = loop.run_until_complete(_do_generate())
+            # Allow pending cleanup tasks to complete (e.g., asyncpg connection cleanup)
+            loop.run_until_complete(asyncio.sleep(0))
         finally:
-            loop.close()
+            # Don't close the loop - let the worker process handle cleanup
+            # Closing the loop here causes "Event loop is closed" errors
+            # when asyncpg tries to terminate connections asynchronously
+            pass
 
         return result
 
@@ -514,8 +565,13 @@ def cleanup_old_playback_states():
         asyncio.set_event_loop(loop)
         try:
             result = loop.run_until_complete(_do_cleanup())
+            # Allow pending cleanup tasks to complete (e.g., asyncpg connection cleanup)
+            loop.run_until_complete(asyncio.sleep(0))
         finally:
-            loop.close()
+            # Don't close the loop - let the worker process handle cleanup
+            # Closing the loop here causes "Event loop is closed" errors
+            # when asyncpg tries to terminate connections asynchronously
+            pass
 
         return result
 
@@ -574,8 +630,13 @@ def generate_podcast_recommendations():
         asyncio.set_event_loop(loop)
         try:
             result = loop.run_until_complete(_do_generate())
+            # Allow pending cleanup tasks to complete (e.g., asyncpg connection cleanup)
+            loop.run_until_complete(asyncio.sleep(0))
         finally:
-            loop.close()
+            # Don't close the loop - let the worker process handle cleanup
+            # Closing the loop here causes "Event loop is closed" errors
+            # when asyncpg tries to terminate connections asynchronously
+            pass
 
         return result
 
@@ -618,8 +679,13 @@ def cleanup_old_transcription_temp_files(days: int = 7):
         asyncio.set_event_loop(loop)
         try:
             result = loop.run_until_complete(_do_cleanup())
+            # Allow pending cleanup tasks to complete (e.g., asyncpg connection cleanup)
+            loop.run_until_complete(asyncio.sleep(0))
         finally:
-            loop.close()
+            # Don't close the loop - let the worker process handle cleanup
+            # Closing the loop here causes "Event loop is closed" errors
+            # when asyncpg tries to terminate connections asynchronously
+            pass
 
         return result
 

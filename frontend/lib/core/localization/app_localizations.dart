@@ -2119,6 +2119,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid episode ID'**
   String get invalid_episode_id;
+
+  /// Backend API server configuration dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Backend API Server Configuration'**
+  String get backend_api_server_config;
+
+  /// Backend API URL label
+  ///
+  /// In en, this message translates to:
+  /// **'Backend API URL'**
+  String get backend_api_url_label;
+
+  /// Backend API URL hint text
+  ///
+  /// In en, this message translates to:
+  /// **'https://api.example.com\\nor http://192.168.1.10:8080'**
+  String get backend_api_url_hint;
+
+  /// Backend API description
+  ///
+  /// In en, this message translates to:
+  /// **'Note: This is the backend API server, not related to AI model API'**
+  String get backend_api_description;
+
+  /// Use local URL button label
+  ///
+  /// In en, this message translates to:
+  /// **'Local'**
+  String get use_local_url;
+
+  /// Connection error hint text
+  ///
+  /// In en, this message translates to:
+  /// **'Connection error'**
+  String get connection_error_hint;
+
+  /// Connection success message
+  ///
+  /// In en, this message translates to:
+  /// **'Connected Successfully'**
+  String get connected_successfully;
+
+  /// Save failed error message
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed: {error}'**
+  String save_failed(Object error);
+
+  /// Message copied confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'Message copied to clipboard'**
+  String get message_copied;
+
+  /// Regenerating response message
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerating response...'**
+  String get regenerating_response;
+
+  /// Chat mode coming soon message
+  ///
+  /// In en, this message translates to:
+  /// **'Chat mode selector coming soon!'**
+  String get chat_mode_coming_soon;
+
+  /// Voice input coming soon message
+  ///
+  /// In en, this message translates to:
+  /// **'Voice input coming soon!'**
+  String get voice_input_coming_soon;
+
+  /// Drop files hint
+  ///
+  /// In en, this message translates to:
+  /// **'Drop files here!'**
+  String get drop_files_here;
+
+  /// Set as default button label
+  ///
+  /// In en, this message translates to:
+  /// **'Set as default'**
+  String get set_as_default;
+
+  /// Test content label
+  ///
+  /// In en, this message translates to:
+  /// **'Test Content'**
+  String get test_content;
+
+  /// Enter test content hint
+  ///
+  /// In en, this message translates to:
+  /// **'Enter test content...'**
+  String get enter_test_content;
 }
 
 class _AppLocalizationsDelegate

@@ -1707,5 +1707,85 @@
   "invalid_episode_id": "Invalid episode ID",
   "@invalid_episode_id": {
     "description": "Invalid episode ID error"
+  },
+
+  "backend_api_server_config": "Backend API Server Configuration",
+  "@backend_api_server_config": {
+    "description": "Backend API server configuration dialog title"
+  },
+
+  "backend_api_url_label": "Backend API URL",
+  "@backend_api_url_label": {
+    "description": "Backend API URL label"
+  },
+
+  "backend_api_url_hint": "https://api.example.com\\nor http://192.168.1.10:8080",
+  "@backend_api_url_hint": {
+    "description": "Backend API URL hint text"
+  },
+
+  "backend_api_description": "Note: This is the backend API server, not related to AI model API",
+  "@backend_api_description": {
+    "description": "Backend API description"
+  },
+
+  "use_local_url": "Local",
+  "@use_local_url": {
+    "description": "Use local URL button label"
+  },
+
+  "connection_error_hint": "Connection error",
+  "@connection_error_hint": {
+    "description": "Connection error hint text"
+  },
+
+  "connected_successfully": "Connected Successfully",
+  "@connected_successfully": {
+    "description": "Connection success message"
+  },
+
+  "save_failed": "Save failed: {error}",
+  "@save_failed": {
+    "description": "Save failed error message"
+  },
+
+  "message_copied": "Message copied to clipboard",
+  "@message_copied": {
+    "description": "Message copied confirmation"
+  },
+
+  "regenerating_response": "Regenerating response...",
+  "@regenerating_response": {
+    "description": "Regenerating response message"
+  },
+
+  "chat_mode_coming_soon": "Chat mode selector coming soon!",
+  "@chat_mode_coming_soon": {
+    "description": "Chat mode coming soon message"
+  },
+
+  "voice_input_coming_soon": "Voice input coming soon!",
+  "@voice_input_coming_soon": {
+    "description": "Voice input coming soon message"
+  },
+
+  "drop_files_here": "Drop files here!",
+  "@drop_files_here": {
+    "description": "Drop files hint"
+  },
+
+  "set_as_default": "Set as default",
+  "@set_as_default": {
+    "description": "Set as default button label"
+  },
+
+  "test_content": "Test Content",
+  "@test_content": {
+    "description": "Test content label"
+  },
+
+  "enter_test_content": "Enter test content...",
+  "@enter_test_content": {
+    "description": "Enter test content hint"
   }
 }

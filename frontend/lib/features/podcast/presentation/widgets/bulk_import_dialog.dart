@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 
+import '../../../../core/localization/app_localizations.dart';
+
 class BulkImportDialog extends StatefulWidget {
   final Future<void> Function(List<String> urls) onImport;
 
@@ -130,6 +132,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // We put DropTarget at the very top of the Dialog's child tree
     return DropTarget(
       onDragEntered: (detail) {
@@ -198,7 +201,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                           color: Theme.of(context).colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text('Drop files here!', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: Text(l10n.drop_files_here, style: const TextStyle(fontWeight: FontWeight.bold)),
                       ),
                     ),
                   const SizedBox(height: 16),

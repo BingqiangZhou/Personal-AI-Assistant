@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../app/config/app_config.dart';
 import 'exceptions/network_exceptions.dart';
@@ -17,6 +18,9 @@ class DioClient {
   // Token refresh state
   bool _isRefreshing = false;
   final List<Function()> _queuedRequests = [];
+
+  // Storage key for custom backend API baseUrl
+  static const String _serverBaseUrlKey = 'server_base_url';
 
   DioClient() {
     _dio = Dio(BaseOptions(
@@ -35,9 +39,49 @@ class DioClient {
         onError: _onError,
       ),
     );
+
+    // Apply saved baseUrl asynchronously
+    _applySavedBaseUrl();
   }
 
   Dio get dio => _dio;
+
+  /// Update the base URL dynamically
+  /// This allows changing the API server at runtime without restarting the app
+  void updateBaseUrl(String newBaseUrl) {
+    _dio.options.baseUrl = newBaseUrl;
+    debugPrint('🔄 [DioClient] Base URL updated to: $newBaseUrl');
+  }
+
+  /// Get the current base URL
+  String get currentBaseUrl => _dio.options.baseUrl;
+
+  /// Apply saved baseUrl from local storage (called during initialization)
+  Future<void> _applySavedBaseUrl() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedUrl = prefs.getString(_serverBaseUrlKey);
+      if (savedUrl != null && savedUrl.isNotEmpty) {
+        // Normalize URL (remove trailing slashes, /api/v1 suffix)
+        var normalizedUrl = savedUrl.trim();
+        while (normalizedUrl.endsWith('/')) {
+          normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length - 1);
+        }
+        // Remove /api/v1 suffix if present
+        if (normalizedUrl.endsWith('/api/v1')) {
+          normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length - 8);
+        } else if (normalizedUrl.contains('/api/v1/')) {
+          normalizedUrl = normalizedUrl.replaceFirst('/api/v1/', '/');
+        }
+
+        // Apply with /api/v1 suffix
+        updateBaseUrl('$normalizedUrl/api/v1');
+        debugPrint('📥 [DioClient] Applied saved backend API baseUrl: $savedUrl');
+      }
+    } catch (e) {
+      debugPrint('⚠️ [DioClient] Failed to apply saved baseUrl: $e');
+    }
+  }
 
   Future<void> _onRequest(
     RequestOptions options,

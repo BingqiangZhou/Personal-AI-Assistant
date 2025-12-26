@@ -3,15 +3,20 @@ import 'package:intl/intl.dart';
 class TimeFormatter {
   /// 将 API 返回的 UTC 时间字符串转换为本地 DateTime
   /// API 返回的时间通常是 ISO 8601 格式（如 "2025-12-26T14:16:36+00:00"）
+  ///
+  /// 重要：DateTime.parse() 对于带时区信息的字符串（如 +00:00 或 Z）会返回 UTC 时间（isUtc=true）
+  /// 我们必须显式调用 toLocal() 来获取本地时间，否则后续比较会出现错误
   static DateTime parseUtcTime(String utcTimeString) {
     final dateTime = DateTime.parse(utcTimeString);
-    // DateTime.parse() 会自动处理带时区信息的字符串
-    // 如果字符串有时区信息（如 +00:00），解析后自动转换为本地时间
-    // 如果字符串没有时区信息，假设它是本地时间
+    // 无论输入是什么，都转换为本地时间
+    // 如果是 UTC 时间（isUtc=true），toLocal() 会正确转换
+    // 如果已经是本地时间，toLocal() 返回自身
     return dateTime.toLocal();
   }
 
   /// 将 DateTime 转换为本地时间的 DateTime（如果是 UTC 时间）
+  ///
+  /// 这个方法确保 DateTime 对象是本地时间，可以安全地与 DateTime.now() 进行比较
   static DateTime toLocalTime(DateTime dateTime) {
     if (dateTime.isUtc) {
       return dateTime.toLocal();

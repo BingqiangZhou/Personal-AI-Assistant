@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import 'platform_badge.dart';
 
@@ -307,17 +308,18 @@ class PodcastSubscriptionCard extends ConsumerWidget {
   }
 
   void _showDeleteConfirmation(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Podcast'),
+        title: Text(l10n.settings_delete_confirm_title),
         content: Text(
           'Are you sure you want to delete "${subscription.title}"? This will also delete all episodes associated with this podcast.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -325,7 +327,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
               onDelete?.call();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),

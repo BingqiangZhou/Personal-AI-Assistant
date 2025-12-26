@@ -428,17 +428,19 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
   /// 复制消息
   void _copyMessage(String content) {
+    final l10n = AppLocalizations.of(context)!;
     // TODO: 实现复制功能
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Message copied to clipboard')),
+      SnackBar(content: Text(l10n.message_copied)),
     );
   }
 
   /// 重新生成响应
   void _regenerateResponse() {
+    final l10n = AppLocalizations.of(context)!;
     // TODO: 实现重新生成逻辑
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Regenerating response...')),
+      SnackBar(content: Text(l10n.regenerating_response)),
     );
   }
 
@@ -522,9 +524,10 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
   /// 显示模式选择器
   void _showModeSelector(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // TODO: 实现模式选择器
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Chat mode selector coming soon!')),
+      SnackBar(content: Text(l10n.chat_mode_coming_soon)),
     );
   }
 
@@ -578,9 +581,10 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
   /// 开始语音输入
   void _startVoiceInput() {
+    final l10n = AppLocalizations.of(context)!;
     // TODO: 实现语音输入
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Voice input coming soon!')),
+      SnackBar(content: Text(l10n.voice_input_coming_soon)),
     );
   }
 }
