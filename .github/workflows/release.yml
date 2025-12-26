@@ -328,21 +328,34 @@ jobs:
             --build-number=${{ needs.prepare-release.outputs.build_number }}
           echo "✅ macOS build completed"
 
+      - name: Install create-dmg
+        run: |
+          echo "📦 Installing create-dmg..."
+          brew install create-dmg
+          echo "✅ create-dmg installed"
+
       - name: Create release directory
         working-directory: frontend
         run: mkdir -p dist/macos
 
-      - name: Archive macOS release
+      - name: Create DMG
         working-directory: frontend
         run: |
-          zip -r "dist/macos/personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.zip" \
-            -C build/macos/Build/Products/Release *.app
+          create-dmg \
+            --volname "Personal AI Assistant" \
+            --window-pos 200 120 \
+            --window-size 600 400 \
+            --icon-size 100 \
+            --app-drop-link 450 185 \
+            --icon "Personal AI Assistant" 150 185 \
+            "dist/macos/personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.dmg" \
+            "build/macos/Build/Products/Release/"*.app
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-artifact
-          path: frontend/dist/macos/*.zip
+          path: frontend/dist/macos/*.dmg
           retention-days: 7
 
   # ============================================
@@ -396,7 +409,7 @@ jobs:
             artifacts/android-artifacts/**/*.apk
             artifacts/windows-artifact/**/*.zip
             artifacts/linux-artifact/**/*.tar.gz
-            artifacts/macos-artifact/**/*.zip
+            artifacts/macos-artifact/**/*.dmg
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -410,6 +423,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### 📦 Released Artifacts:" >> $GITHUB_STEP_SUMMARY
           echo "- 🤖 Android APK" >> $GITHUB_STEP_SUMMARY
-          echo "- 🪟 Windows Executable" >> $GITHUB_STEP_SUMMARY
-          echo "- 🐧 Linux Binary" >> $GITHUB_STEP_SUMMARY
-          echo "- 🍎 macOS Application" >> $GITHUB_STEP_SUMMARY
+          echo "- 🪟 Windows Executable (ZIP)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🐧 Linux Binary (TAR.GZ)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🍎 macOS Application (DMG)" >> $GITHUB_STEP_SUMMARY
