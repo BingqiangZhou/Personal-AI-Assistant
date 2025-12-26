@@ -11,9 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🎉 首次公开版本 / Initial Public Release
 
-这是 Personal AI Assistant 的首个公开版本，提供了完整的播客订阅、AI 转录、知识库管理和 AI 助手对话功能。
+这是 Personal AI Assistant 的首个公开版本，前端应用提供了完整的播客订阅、播放、AI 转录、知识库管理和用户认证功能。
 
-This is the first public release of Personal AI Assistant, providing complete podcast subscription, AI transcription, knowledge base management, and AI assistant conversation features.
+This is the first public release of Personal AI Assistant frontend application, providing complete podcast subscription, playback, AI transcription, knowledge base management, and user authentication features.
 
 ---
 
@@ -21,261 +21,323 @@ This is the first public release of Personal AI Assistant, providing complete po
 
 ### 🎙️ Podcast Management / 播客管理
 
-- **RSS 订阅管理**
-  - 订阅/取消订阅播客 RSS Feed
-  - 批量导入播客订阅
-  - 自动刷新获取最新单集
-  - 支持分类管理播客订阅
+**完整的播客管理功能 / Complete Podcast Management Features**
 
-- **音频播放**
-  - 内置音频播放器，支持播放/暂停/进度控制
-  - 播放状态持久化（记录播放进度、播放次数）
-  - 支持倍速播放
+- **订阅管理 / Subscription Management**
+  - 添加单个播客订阅（RSS Feed URL）
+  - 批量导入播客订阅
+  - 查看播客订阅列表
+  - 删除播客订阅
+  - 刷新订阅内容
+  - 播客分类管理
+
+- **单集管理 / Episode Management**
+  - 查看播客单集列表
+  - 单集详情页面（包含简介、发布时间等）
+  - 单集搜索和筛选
+  - 响应式网格/列表视图切换
+
+- **音频播放 / Audio Playback**
+  - 内置音频播放器
+  - 播放/暂停控制
+  - 进度条拖动
+  - 播放速度调节
+  - 播放状态持久化（记录播放进度）
   - 后台播放支持
 
-- **AI 转录 (AI Transcription)**
-  - 集成 OpenAI Whisper 和 Azure Speech Services
-  - 支持音频分块转录大文件
+- **AI 转录 / AI Transcription**
+  - 查看播客单集的 AI 转录文本
   - 转录状态实时跟踪
-  - 批量转录播客单集
-  - 定时自动转录新单集
+  - 转录进度显示
+  - 启动/取消转录任务
+  - 批量转录配置
+  - 定时自动转录设置
 
-- **AI 摘要 (AI Summary)**
-  - 使用 LLM (GPT-4, Claude 等) 自动生成单集摘要
-  - 提取关键点和亮点
-  - 支持多种 AI 模型配置
+- **AI 摘要 / AI Summary**
+  - 查看播客单集的 AI 摘要
+  - 启动 AI 摘要生成
+  - 摘要生成状态跟踪
+  - 支持多种 AI 模型
 
-- **内容搜索**
-  - 对转录内容进行全文搜索
-  - 快速定位感兴趣的内容片段
-
-- **AI 对话 (AI Conversation)**
-  - 与单集内容进行 AI 对话
+- **AI 对话 / AI Conversation**
+  - 与播客单集内容进行 AI 对话
   - 基于转录内容的智能问答
-
-### 🤖 AI Integration / AI 集成
-
-- **多模型支持**
-  - OpenAI GPT 系列 (GPT-3.5, GPT-4)
-  - Anthropic Claude 系列
-  - 自定义 API 端点支持
-
-- **模型管理**
-  - 动态配置 AI 模型参数
-  - API Key 加密存储（RSA + Fernet）
-  - 模型测试和验证
-  - 默认模型设置
-  - 使用统计跟踪
-
-### 🧠 AI Assistant / AI 助手
-
-- **对话管理**
-  - 创建和管理多个对话会话
   - 对话历史记录
-  - 归档和删除对话
+  - 清除对话历史
 
-- **消息处理**
-  - 发送消息并获取 AI 回复
-  - 上下文保持的对话
-  - 消息 CRUD 操作
+- **RSS 调度设置 / RSS Schedule Settings**
+  - 全局 RSS 获取调度配置
+  - 单个订阅的调度设置
+  - 批量更新调度配置
+  - 查看所有调度状态
 
-- **提示词模板**
-  - 创建可复用的提示词模板
-  - 模板管理
+### 🔐 Authentication / 用户认证
+
+**完整的用户认证流程 / Complete User Authentication Flow**
+
+- **用户注册 / User Registration**
+  - 邮箱注册
+  - 用户名注册
+  - 密码强度验证
+  - 注册表单验证
+
+- **用户登录 / User Login**
+  - 邮箱登录
+  - 用户名登录
+  - 记住我功能
+  - 自动登录
+
+- **密码管理 / Password Management**
+  - 忘记密码（通过邮件重置）
+  - 重置密码（使用 Token）
+  - 密码要求提示
+  - 密码可见性切换
+
+- **邮箱验证 / Email Verification**
+  - 邮箱验证页面
 
 ### 📚 Knowledge Base / 知识库
 
-- **知识库管理**
-  - 创建多个知识库
-  - 知识库 CRUD 操作
+**知识库管理 / Knowledge Base Management**
 
-- **文档管理**
-  - 上传文档到知识库
-  - 文档内容存储和检索
-  - 跨知识库搜索
+- **知识库操作 / Knowledge Base Operations**
+  - 创建知识库
+  - 查看知识库列表
+  - 删除知识库
+  - 知识库详情
 
-### 📰 Subscription Management / 订阅管理
+- **文档管理 / Document Management**
+  - 上传文档（支持 PDF、DOCX、TXT、Markdown）
+  - 查看文档列表
+  - 搜索文档内容
+  - 删除文档
 
-- **Feed 订阅**
-  - RSS/API Feed 订阅
-  - 批量创建订阅
+### 🤖 AI Configuration / AI 配置
 
-- **内容管理**
-  - 获取订阅内容
-  - 已读/未读状态跟踪
-  - 收藏/书签功能
+**AI 模型管理 / AI Model Management**
 
-- **分类管理**
-  - 创建和管理分类
-  - 将订阅添加到分类
+- **模型配置 / Model Configuration**
+  - 创建 AI 模型配置
+  - 编辑 AI 模型配置
+  - 删除 AI 模型配置
+  - 设置默认模型
+  - 测试 API 连接
 
-### 🎬 Multimedia Processing / 多媒体处理
+- **模型类型 / Model Types**
+  - 文本生成模型（Text Generation）
+  - 转录模型（Transcription）
 
-- **文件上传**
-  - 支持图片、音频、视频、文档上传
-  - 文件元数据提取
+- **安全功能 / Security Features**
+  - API Key 加密存储显示
+  - API Key 可见性切换
+  - 连接测试验证
 
-- **音频处理**
-  - 音频转录任务
-  - 后台异步处理
+### ⚙️ Settings / 设置
 
-- **图片分析**
-  - 物体检测
-  - 人脸识别
-  - 文字提取 (OCR)
-  - 情绪识别
+**应用设置 / Application Settings**
 
-- **视频处理**
-  - 关键帧提取
-  - 音频提取
+- **AI 设置 / AI Settings**
+  - 文本生成模型选择
+  - 转录模型选择
+  - 音频分块大小配置（5-25MB）
+  - 最大线程数配置（1-16）
+  - AI 模型管理入口
 
-### 🔐 Authentication & User Management / 认证与用户管理
+- **处理设置 / Processing Settings**
+  - 音频处理参数配置
 
-- **用户认证**
-  - 邮箱/用户名注册
-  - 邮箱/用户名登录
-  - JWT Token 认证（Access + Refresh Token）
-  - Token 自动刷新
+- **隐藏设置 / Hidden Settings**
+  - 服务器配置（点击版本号 5 次激活）
 
-- **会话管理**
-  - 多设备会话支持
-  - 登出单个设备或所有设备
+### 👤 Profile / 用户资料
 
-- **密码管理**
-  - 忘记密码流程
-  - 邮件重置密码
+**用户资料页面 / User Profile Page**
 
-### ⚙️ Settings & Configuration / 设置与配置
+- **用户信息 / User Information**
+  - 显示用户头像
+  - 显示用户名
+  - 显示邮箱
 
-- **应用设置**
-  - 语言切换（中文/英文）
-  - 主题配置
+- **活动统计 / Activity Statistics**
+  - 播客订阅数量
+  - 知识库条目数量
+  - AI 对话数量
 
-- **全局配置**
-  - AI 模型全局默认设置
-  - 转录调度配置
+- **账户设置 / Account Settings**
+  - 编辑个人资料
+  - 账户安全
+  - 通知设置
 
-### 🏗️ Architecture & Infrastructure / 架构与基础设施
+- **偏好设置 / Preferences**
+  - 语言选择（英语/中文/系统默认）
+  - 深色模式
+  - 自动同步
 
-- **后端 (Backend)**
-  - FastAPI 框架
-  - 异步支持 (Async/Await)
-  - SQLAlchemy 2.0 ORM
-  - PostgreSQL 数据库
-  - Redis 缓存
-  - Celery 异步任务队列
-  - Alembic 数据库迁移
-  - 双语错误消息（中文/英文）
+- **支持 / Support**
+  - 帮助中心
+  - 关于页面
 
-- **前端 (Frontend)**
-  - Flutter 3.x 框架
-  - Riverpod 状态管理
-  - GoRouter 路由
-  - Material 3 设计系统
-  - 自适应布局（桌面/Web/移动端）
-  - 双语支持（中文/英文）
+- **退出登录 / Logout**
+  - 退出登录确认对话框
 
-- **DevOps**
-  - Docker 容器化部署
-  - GitHub Actions CI/CD
-  - 多平台自动构建（Windows/Linux/macOS/Android）
+### 🏠 Home / 主页
+
+**主导航中心 / Main Navigation Hub**
+
+- **底部导航 / Bottom Navigation**
+  - Feed 信息流（播客单集）
+  - 播客订阅
+  - AI 助手
+  - 知识库
+  - 个人资料
+
+- **响应式布局 / Responsive Layout**
+  - Material 3 设计
+  - 自适应导航栏（移动端/桌面端）
+  - 横屏/竖屏支持
+
+### 🎨 UI/UX Features / 界面体验
+
+**Material 3 设计 / Material 3 Design**
+
+- **组件库 / Component Library**
+  - Material 3 卡片
+  - Material 3 按钮
+  - Material 3 输入框
+  - Material 3 对话框
+  - Material 3 底部表单
+
+- **自适应布局 / Adaptive Layout**
+  - 桌面端布局
+  - 移动端布局
+  - Web 布局支持
+
+- **动画效果 / Animations**
+  - 页面过渡动画
+  - 加载骨架屏
+  - 淡入淡出效果
+
+- **加载状态 / Loading States**
+  - Shimmer 加载效果
+  - 空状态页面
+  - 错误状态页面
+
+### 🌐 Localization / 本地化
+
+**双语支持 / Bilingual Support**
+
+- 支持语言 / Supported Languages:
+  - English（英语）
+  - 中文（简体）
+
+### 🧪 AI Assistant (Demo) / AI 助手（演示版）
+
+**基础对话界面 / Basic Chat Interface**
+
+- 聊天消息列表
+- 消息输入框
+- AI 模型选择器
+- 附件按钮（占位符）
+- 语音输入按钮（占位符）
+- 清除聊天历史
+
+> **注意 / Note**: AI 助手目前使用模拟响应，尚未连接真实 AI API。
+> The AI assistant currently uses mock responses and is not connected to a real AI API yet.
 
 ---
 
-## 🎯 API Endpoints / API 端点
+## 🏗️ Technical Architecture / 技术架构
 
-### 认证 (`/api/v1/auth`)
-- `POST /register` - 用户注册
-- `POST /login` - 用户登录
-- `POST /refresh` - 刷新 Token
-- `POST /logout` - 登出
-- `POST /logout-all` - 登出所有设备
-- `GET /me` - 获取当前用户信息
-- `POST /forgot-password` - 请求重置密码
-- `POST /reset-password` - 重置密码
+### Frontend Stack / 前端技术栈
 
-### 播客 (`/api/v1/podcasts`)
-- `POST /subscriptions` - 添加播客订阅
-- `POST /subscriptions/bulk` - 批量添加订阅
-- `GET /subscriptions` - 获取订阅列表
-- `GET /episodes` - 获取单集列表
-- `GET /episodes/{id}` - 获取单集详情
-- `POST /episodes/{id}/transcribe` - 开始转录
-- `GET /episodes/{id}/transcript` - 获取转录文本
-- `POST /episodes/{id}/summary` - 生成 AI 摘要
-- `POST /episodes/{id}/conversations` - 与单集对话
-- `PUT /episodes/{id}/playback` - 更新播放进度
-- `GET /search` - 搜索播客内容
-- `GET /stats` - 获取统计信息
+| 组件 / Component | 技术 / Technology |
+|------------------|-------------------|
+| 框架 / Framework | Flutter 3.x |
+| 状态管理 / State Management | Riverpod 2.x - 3.x |
+| 路由 / Routing | GoRouter |
+| 网络 / Networking | Dio + Retrofit |
+| 本地存储 / Local Storage | Hive + SharedPreferences |
+| 安全存储 / Secure Storage | flutter_secure_storage |
+| 设计系统 / Design System | Material 3 |
+| 响应式布局 / Adaptive Layout | flutter_adaptive_scaffold |
 
-### AI 模型 (`/api/v1/ai`)
-- `POST /models` - 创建模型配置
-- `GET /models` - 获取模型列表
-- `POST /models/{id}/test` - 测试模型连接
-- `POST /models/{id}/set-default` - 设置默认模型
-- `GET /models/default/{type}` - 获取默认模型
+### Features Structure / 功能结构
 
-### AI 助手 (`/api/v1/assistant`)
-- `GET /conversations` - 获取对话列表
-- `POST /conversations` - 创建对话
-- `POST /chat` - 发送消息并获取 AI 回复
-- `GET /prompts` - 获取提示词模板
-- `POST /prompts` - 创建提示词模板
-
-### 知识库 (`/api/v1/knowledge`)
-- `GET /bases/` - 获取知识库列表
-- `POST /bases/` - 创建知识库
-- `POST /bases/{id}/documents/` - 创建文档
-- `POST /bases/{id}/documents/upload` - 上传文档
-- `POST /search` - 搜索知识库
-
-### 订阅 (`/api/v1/subscriptions`)
-- `GET /subscriptions/` - 获取订阅列表
-- `POST /subscriptions/` - 创建订阅
-- `POST /subscriptions/batch` - 批量创建订阅
-- `GET /subscriptions/{id}/items/` - 获取订阅内容
-- `POST /subscriptions/items/{id}/read` - 标记为已读
-- `GET /categories/` - 获取分类列表
-
-### 多媒体 (`/api/v1/multimedia`)
-- `POST /files/upload` - 上传媒体文件
-- `POST /files/{id}/transcribe` - 转录音频
-- `POST /files/{id}/analyze` - 分析图片
-- `GET /jobs/{id}` - 获取处理任务状态
+```
+lib/features/
+├── splash/          # 启动页 / Splash Screen
+├── auth/            # 认证 / Authentication
+├── home/            # 主页 / Home
+├── podcast/         # 播客 / Podcast (Most Complete)
+├── knowledge/       # 知识库 / Knowledge Base
+├── assistant/       # AI 助手 / AI Assistant (Demo)
+├── settings/        # 设置 / Settings
+├── profile/         # 用户资料 / Profile
+├── ai/              # AI 配置 / AI Configuration
+└── user/            # 用户数据 / User Data
+```
 
 ---
 
 ## 📊 Statistics / 统计数据
 
-| 指标 | 数量 |
-|------|------|
-| 后端业务领域 | 7 |
-| 前端功能模块 | 13 |
-| API 端点组 | 7 |
-| 总 API 端点 | 100+ |
-| 数据库模型 | 20+ |
-| 前端页面 | 30+ |
-| 前端组件 | 15+ |
+| 指标 / Metric | 数量 / Count |
+|---------------|--------------|
+| 前端功能模块 / Frontend Features | 8 |
+| 已实现页面 / Implemented Pages | 20+ |
+| UI 组件 / UI Widgets | 15+ |
+| 状态管理提供者 / State Providers | 10+ |
+| 数据模型 / Data Models | 15+ |
+| 配置路由 / Configured Routes | 15+ |
 
 ---
 
-## 🙏 Acknowledgments / 致谢
+## 🎯 Implemented Pages / 已实现页面
 
-感谢所有为本项目做出贡献的开发者和用户。
+| 页面 / Page | 路由 / Route | 状态 / Status |
+|-------------|--------------|---------------|
+| 启动页 / Splash | `/splash` | ✅ 完整实现 |
+| 登录页 / Login | `/login` | ✅ 完整实现 |
+| 注册页 / Register | `/register` | ✅ 完整实现 |
+| 忘记密码 / Forgot Password | `/forgot-password` | ✅ 完整实现 |
+| 重置密码 / Reset Password | `/reset-password` | ✅ 完整实现 |
+| 主页 / Home | `/home` | ✅ 完整实现 |
+| 播客列表 / Podcast List | `/podcast` | ✅ 完整实现 |
+| 播客单集 / Podcast Episodes | `/podcast/episodes/:id` | ✅ 完整实现 |
+| 单集详情 / Episode Detail | `/podcast/episodes/:sub/:ep` | ✅ 完整实现 |
+| 播放器 / Player | `/podcast/player/:id` | ✅ 完整实现 |
+| 知识库 / Knowledge | `/knowledge` | ✅ 完整实现 |
+| AI 助手 / AI Assistant | `/home/assistant` | ⚠️ Demo 版本 |
+| 用户资料 / Profile | `/profile` | ✅ 完整实现 |
+| 设置 / Settings | `/profile/settings` | ✅ 完整实现 |
+| AI 模型管理 / AI Models | `/profile/settings/ai-models` | ✅ 完整实现 |
+| RSS 调度 / RSS Schedule | `/profile/settings/rss-schedule` | ✅ 完整实现 |
 
-Thanks to all developers and users who contributed to this project.
+---
+
+## 🔮 Known Limitations / 已知限制
+
+1. **AI Assistant** - 目前使用模拟响应，尚未连接真实 AI API
+   / AI Assistant currently uses mock responses, not connected to real AI API
+
+2. **Multimedia Processing** - 前端暂无独立的多媒体处理页面
+   / No dedicated multimedia processing UI page yet
+
+3. **Subscription Feed** - Feed 订阅功能已整合到播客模块中
+   / Feed subscription is integrated into Podcast module
 
 ---
 
 ## 📝 Notes / 说明
 
-- 这是一个功能完整的 MVP 版本
+- 这是一个功能完整的前端 MVP 版本
+  / This is a fully functional frontend MVP version
+- 后端 API 提供数据支持
+  / Backend API provides data support
 - 部分功能仍在持续改进中
+  / Some features are still being improved
 - 欢迎提交 Issue 和 Pull Request
-
-This is a fully functional MVP version.
-Some features are still being improved.
-Issues and Pull Requests are welcome.
+  / Issues and Pull Requests are welcome
 
 ---
 
