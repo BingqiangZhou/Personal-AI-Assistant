@@ -138,6 +138,16 @@ jobs:
           cache: true
           cache-key: flutter-${{ hashFiles('**/pubspec.lock') }}
 
+      - name: Setup Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-
+
       - name: Download changelog
         uses: actions/download-artifact@v4
         with:
@@ -152,11 +162,15 @@ jobs:
         run: |
           flutter build apk \
             --release \
-            --target-platform android-arm64
+            --target-platform android-arm64 \
+            --build-number=${{ needs.prepare-release.outputs.build_number }}
 
       - name: Build App Bundle (Release)
         working-directory: frontend
-        run: flutter build appbundle --release
+        run: |
+          flutter build appbundle \
+            --release \
+            --build-number=${{ needs.prepare-release.outputs.build_number }}
 
       # 如果有配置签名密钥，可以添加以下步骤
       # - name: Sign APK
