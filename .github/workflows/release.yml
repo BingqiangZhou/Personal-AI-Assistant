@@ -193,6 +193,7 @@ jobs:
 
       - name: Build Windows
         working-directory: frontend
+        shell: bash
         run: |
           flutter build windows \
             --release \
