@@ -207,9 +207,11 @@ jobs:
             --build-number=${{ needs.prepare-release.outputs.version_no_v }}
 
       - name: Create Windows ZIP archive
-        working-directory: frontend/build/windows/runner/Release
+        working-directory: frontend
+        shell: bash
         run: |
-          Compress-Archive -Path * -DestinationPath "personal-ai-assistant-windows-${{ needs.prepare-release.outputs.version }}.zip"
+          cd build/windows/runner/Release
+          zip -r "personal-ai-assistant-windows-${{ needs.prepare-release.outputs.version }}.zip" *
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
