@@ -348,6 +348,7 @@ jobs:
             --icon-size 100 \
             --app-drop-link 450 185 \
             --icon "Personal AI Assistant" 150 185 \
+            --skip-jenkins \
             "dist/macos/personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.dmg" \
             "build/macos/Build/Products/Release/"*.app
 
