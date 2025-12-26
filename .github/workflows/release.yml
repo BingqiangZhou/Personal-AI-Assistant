@@ -108,6 +108,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
+      - name: Cache Pub cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-cache-
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -151,6 +159,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Cache Pub cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('frontend/**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-cache-
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
