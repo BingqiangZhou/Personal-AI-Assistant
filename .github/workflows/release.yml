@@ -229,10 +229,11 @@ jobs:
 
       - name: Create Windows ZIP archive
         working-directory: frontend
-        shell: bash
         run: |
-          cd build/windows/x64/runner/Release
-          zip -r "personal-ai-assistant-windows-${{ needs.prepare-release.outputs.version }}.zip" *
+          $version = "${{ needs.prepare-release.outputs.version }}"
+          $sourcePath = "build\windows\x64\runner\Release\*"
+          $destPath = "build\windows\x64\runner\Release\personal-ai-assistant-windows-$version.zip"
+          Compress-Archive -Path $sourcePath -DestinationPath $destPath -Force
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
