@@ -11,6 +11,10 @@ from celery.schedules import crontab
 from celery.signals import after_setup_logger
 from sqlalchemy import select, delete
 
+# 初始化日志系统
+from app.core.logging_config import setup_logging_from_env
+setup_logging_from_env()
+
 from app.core.config import settings
 from app.domains.podcast.services import PodcastService
 from app.domains.podcast.repositories import PodcastRepository
@@ -44,7 +48,6 @@ from app.domains.ai.models import AIModelConfig
 import asyncio
 
 logger = logging.getLogger(__name__)
-logger.propagate = False # Prevent duplicate logs from propagation to root
 
 # 创建Celery实例
 celery_app = Celery(

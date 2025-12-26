@@ -6,29 +6,39 @@ import uvicorn
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.exceptions import setup_exception_handlers
+from app.core.logging_config import setup_logging_from_env
+from app.core.logging_middleware import setup_logging_middleware
+import logging
+
+# 初始化日志系统
+setup_logging_from_env()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    logger.info(f"启动 {settings.PROJECT_NAME} v{settings.VERSION} - 环境: {settings.ENVIRONMENT}")
     await init_db()
-    
+
     # Reset stale transcription tasks
     try:
         from app.core.database import async_session_factory
         from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
-        
+
         async with async_session_factory() as session:
             service = DatabaseBackedTranscriptionService(session)
             await service.reset_stale_tasks()
+            logger.info("重置过期转录任务完成")
     except Exception as e:
-        import logging
-        logging.getLogger("app.main").error(f"Failed to reset stale tasks on startup: {e}")
+        logger.error(f"启动时重置过期任务失败: {e}")
 
+    logger.info("服务启动完成")
     yield
     # Shutdown
     from app.core.database import close_db
     await close_db()
+    logger.info("服务已关闭")
 
 
 def create_application() -> FastAPI:
@@ -50,6 +60,9 @@ def create_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Set up logging middleware
+    setup_logging_middleware(app, slow_threshold=5.0)
 
     # Set up exception handlers
     setup_exception_handlers(app)

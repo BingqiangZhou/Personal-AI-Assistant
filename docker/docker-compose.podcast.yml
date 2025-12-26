@@ -4,9 +4,10 @@ services:
     image: postgres:15-alpine
     container_name: podcast_postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-personal_ai}
-      POSTGRES_USER: ${POSTGRES_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-MySecurePass2024!}
+      - POSTGRES_DB=${POSTGRES_DB:-personal_ai}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-MySecurePass2024!}
+      - TZ=Asia/Shanghai
     ports:
       - "5432:5432"
     volumes:
@@ -23,6 +24,8 @@ services:
   redis:
     image: redis:7-alpine
     container_name: podcast_redis
+    environment:
+      - TZ=Asia/Shanghai
     ports:
       - "6379:6379"
     volumes:
@@ -53,12 +56,18 @@ services:
       # 使用绝对路径确保在Docker环境中路径一致
       - TRANSCRIPTION_TEMP_DIR=/app/temp/transcription
       - TRANSCRIPTION_STORAGE_DIR=/app/storage/podcasts
+      # 日志配置
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - LOG_RETENTION_DAYS=30
+      - TZ=Asia/Shanghai
 
     volumes:
       - ../backend:/app
       - backend_uploads:/app/uploads
       - ../backend/storage/podcasts:/app/storage/podcasts
       - ../backend/temp/transcription:/app/temp/transcription
+      - ../backend/logs:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
@@ -85,11 +94,17 @@ services:
       # 使用绝对路径确保在Docker环境中路径一致（与backend相同）
       - TRANSCRIPTION_TEMP_DIR=/app/temp/transcription
       - TRANSCRIPTION_STORAGE_DIR=/app/storage/podcasts
+      # 日志配置
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - LOG_RETENTION_DAYS=30
+      - TZ=Asia/Shanghai
     volumes:
       - ../backend:/app
       - backend_uploads:/app/uploads
       - ../backend/storage/podcasts:/app/storage/podcasts
       - ../backend/temp/transcription:/app/temp/transcription
+      - ../backend/logs:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
@@ -108,8 +123,15 @@ services:
     container_name: podcast_celery_beat
     env_file:
       - ../backend/.env
+    environment:
+      # 日志配置
+      - LOG_LEVEL=INFO
+      - LOG_DIR=/app/logs
+      - LOG_RETENTION_DAYS=30
+      - TZ=Asia/Shanghai
     volumes:
       - ../backend:/app
+      - ../backend/logs:/app/logs
     depends_on:
       postgres:
         condition: service_healthy

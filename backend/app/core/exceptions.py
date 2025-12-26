@@ -6,6 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from typing import Union
 import logging
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,13 @@ class DatabaseError(BaseCustomException):
 
 async def custom_exception_handler(request: Request, exc: BaseCustomException) -> JSONResponse:
     """Handle custom exceptions."""
-    logger.error(f"Custom exception: {exc.message} - Status: {exc.status_code}")
+    logger.error(
+        f"自定义异常: {exc.__class__.__name__} | "
+        f"路径: {request.url.path} | "
+        f"方法: {request.method} | "
+        f"消息: {exc.message} | "
+        f"状态码: {exc.status_code}"
+    )
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.message, "type": exc.__class__.__name__}
@@ -79,7 +86,12 @@ async def custom_exception_handler(request: Request, exc: BaseCustomException) -
 
 async def http_exception_handler(request: Request, exc: Union[HTTPException, StarletteHTTPException]) -> JSONResponse:
     """Handle HTTP exceptions."""
-    logger.error(f"HTTP exception: {exc.detail} - Status: {exc.status_code}")
+    logger.error(
+        f"HTTP异常: {exc.status_code} | "
+        f"路径: {request.url.path} | "
+        f"方法: {request.method} | "
+        f"详情: {exc.detail}"
+    )
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail, "type": "HTTPException"}
@@ -96,7 +108,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "type": error["type"]
         })
 
-    logger.error(f"Validation error: {errors}")
+    logger.error(
+        f"请求验证失败: {request.url.path} | "
+        f"方法: {request.method} | "
+        f"错误字段: {len(errors)}个 | "
+        f"错误详情: {errors}"
+    )
     return JSONResponse(
         status_code=422,
         content={"detail": "Validation failed", "errors": errors}
@@ -105,7 +122,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle general exceptions."""
-    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    logger.error(
+        f"未处理异常: {exc.__class__.__name__} | "
+        f"路径: {request.url.path} | "
+        f"方法: {request.method} | "
+        f"消息: {str(exc)}",
+        exc_info=True
+    )
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error", "type": "InternalServerError"}

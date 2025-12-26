@@ -120,7 +120,7 @@ class PodcastService:
         subscriptions_data: List[PodcastSubscriptionCreate]
     ) -> List[Dict[str, Any]]:
         """批量添加播客订阅"""
-        logger.info(f"DEBUG: Entering add_subscriptions_batch with {len(subscriptions_data)} items")
+        logger.info(f"开始批量添加订阅: {len(subscriptions_data)}个")
         results = []
         for sub_data in subscriptions_data:
             try:
@@ -831,7 +831,7 @@ class PodcastService:
         # 检查锁，防止重复处理
         lock_key = f"summary:{episode.id}"
         if not await self.redis.acquire_lock(lock_key, expire=300):
-            logger.info(f"已有人在处理 episode:{episode.id}")
+            logger.info(f"总结任务已在进行中: episode_id={episode.id}")
             # 等待
             current_try = 0
             while current_try < 5:
