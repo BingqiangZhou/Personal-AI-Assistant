@@ -277,6 +277,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Cache Pub cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-cache-
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -284,12 +292,12 @@ jobs:
           cache: true
           cache-key: flutter-${{ hashFiles('**/pubspec.lock') }}
 
+      - name: Enable macOS desktop
+        run: flutter config --enable-macos-desktop
+
       - name: Get dependencies
         working-directory: frontend
         run: flutter pub get
-
-      - name: Enable macOS desktop
-        run: flutter config --enable-macos-desktop
 
       - name: Build macOS
         working-directory: frontend
@@ -300,16 +308,21 @@ jobs:
             --build-number=${{ needs.prepare-release.outputs.build_number }}
           echo "✅ macOS build completed"
 
+      - name: Create release directory
+        working-directory: frontend
+        run: mkdir -p dist/macos
+
       - name: Archive macOS release
-        working-directory: frontend/build/macos/Build/Products/Release
+        working-directory: frontend
         run: |
-          zip -r "personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.zip" *.app
+          cd build/macos/Build/Products/Release
+          zip -r "../../../dist/macos/personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.zip" *.app
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-artifact
-          path: frontend/build/macos/Build/Products/Release/*.zip
+          path: frontend/dist/macos/*.zip
           retention-days: 7
 
   # ============================================
