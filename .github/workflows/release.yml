@@ -103,7 +103,8 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+            ~/.gradle/build-cache
+          key: ${{ runner.os }}-gradle-${{ hashFiles('frontend/android/**/*.gradle*', 'frontend/android/**/gradle-wrapper.properties', 'frontend/android/**/gradle.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
