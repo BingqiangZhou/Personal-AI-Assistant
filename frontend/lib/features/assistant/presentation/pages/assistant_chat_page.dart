@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 
 /// Material Design 3自适应AI Assistant页面
@@ -30,6 +31,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,7 +43,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
               children: [
                 Expanded(
                   child: Text(
-                    'AI Assistant',
+                    l10n.nav_assistant,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -55,12 +57,12 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                       onPressed: () {
                         _showClearChatDialog(context);
                       },
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.clear, size: 16),
-                          SizedBox(width: 4),
-                          Text('Clear'),
+                          const Icon(Icons.clear, size: 16),
+                          const SizedBox(width: 4),
+                          Text(l10n.chat_clear_history),
                         ],
                       ),
                     ),
@@ -71,7 +73,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                         _showSettingsDialog(context);
                       },
                       icon: const Icon(Icons.settings),
-                      tooltip: 'Settings',
+                      tooltip: l10n.nav_settings,
                     ),
                   ],
                 ),
@@ -94,7 +96,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                   child: DropdownButtonFormField<String>(
                     value: 'claude-3-5-sonnet',
                     decoration: InputDecoration(
-                      labelText: 'AI Model',
+                      labelText: l10n.assistant_model,
                       prefixIcon: const Icon(Icons.psychology),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -194,7 +196,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                           child: TextField(
                             controller: _controller,
                             decoration: InputDecoration(
-                              hintText: 'Type your message...',
+                              hintText: l10n.chat_type_message_hint,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(24),
                               ),
@@ -442,32 +444,33 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
   /// 显示清除对话对话框
   void _showClearChatDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear Chat History'),
-        content: const Text('Are you sure you want to clear all chat history? This action cannot be undone.'),
+        title: Text(l10n.chat_clear_history),
+        content: Text(l10n.chat_confirm_clear),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               setState(() {
                 _messages.clear();
                 _messages.add(ChatMessage(
-                  content: '你好！我是你的AI助手。我可以帮助你回答问题、提供建议、生成内容等。有什么我可以帮助你的吗？',
+                  content: l10n.welcome,
                   isUser: false,
                   timestamp: DateTime.now(),
                 ));
               });
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Chat history cleared')),
+                SnackBar(content: Text(l10n.action_completed)),
               );
             },
-            child: const Text('Clear'),
+            child: Text(l10n.chat_clear_history),
           ),
         ],
       ),
@@ -476,10 +479,11 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
   /// 显示设置对话框
   void _showSettingsDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('AI Assistant Settings'),
+        title: Text(l10n.assistant_settings),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -499,7 +503,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
             ),
             ListTile(
               leading: const Icon(Icons.language),
-              title: const Text('Language'),
+              title: Text(l10n.language),
               subtitle: const Text('Auto-detect'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {},
@@ -509,7 +513,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: Text(l10n.close),
           ),
         ],
       ),
@@ -526,6 +530,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
   /// 显示附件选项
   void _showAttachmentOptions(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -533,7 +538,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               'Attach File',
               style: TextStyle(
                 fontSize: 18,
@@ -573,6 +578,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
   /// 开始语音输入
   void _startVoiceInput() {
+    // TODO: 实现语音输入
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Voice input coming soon!')),
     );

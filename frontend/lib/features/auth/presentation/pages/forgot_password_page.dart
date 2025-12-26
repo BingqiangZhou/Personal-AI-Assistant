@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../../../../shared/widgets/custom_button.dart';
@@ -35,6 +36,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final isLoading = authState.isLoading;
 
@@ -57,7 +59,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Forgot Password'),
+        title: Text(l10n.auth_reset_password),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -97,7 +99,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Forgot Password?',
+                            l10n.auth_forgot_password,
                             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).colorScheme.primary,
@@ -105,7 +107,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Enter your email address and we\'ll send you a link to reset your password',
+                            l10n.auth_reset_password_subtitle,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
@@ -120,15 +122,15 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     // Email field
                     CustomTextField(
                       controller: _emailController,
-                      label: 'Email',
+                      label: l10n.auth_email,
                       keyboardType: TextInputType.emailAddress,
                       prefixIcon: const Icon(Icons.email_outlined),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
+                          return l10n.auth_enter_email;
                         }
                         if (!value.contains('@')) {
-                          return 'Please enter a valid email';
+                          return l10n.auth_enter_valid_email;
                         }
                         return null;
                       },
@@ -139,7 +141,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     // Submit button
                     CustomButton(
                       key: const Key('forgot_password_submit_button'),
-                      text: 'Send Reset Link',
+                      text: l10n.auth_send_reset_link,
                       onPressed: _submitForgotPassword,
                       isLoading: isLoading,
                     ),
@@ -163,7 +165,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Email Sent!',
+                            l10n.auth_reset_email_sent,
                             style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Colors.green,
@@ -194,7 +196,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     // Back to login button
                     CustomButton(
                       key: const Key('back_to_login_button'),
-                      text: 'Back to Login',
+                      text: l10n.auth_back_to_login,
                       onPressed: () => context.go('/login'),
                       isOutlined: true,
                     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 
 import '../../../ai/models/ai_model_config_model.dart';
 import '../../../ai/presentation/widgets/model_create_dialog.dart';
@@ -77,20 +78,21 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final settingsState = ref.watch(aiSettingsControllerProvider);
 
     // Removed state-variable driven dialog logic, now handled directly in event handlers
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(l10n.settings),
         actions: [
           TextButton.icon(
             onPressed: settingsState.isLoading ? null : _saveSettings,
-            icon: settingsState.isLoading 
-                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) 
+            icon: settingsState.isLoading
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Icon(Icons.save),
-            label: const Text('Save'),
+            label: Text(l10n.save),
           ),
           const SizedBox(width: 8),
         ],
@@ -102,17 +104,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           children: [
             // AI Text Generation Section
             _buildSection(
-              title: 'AI Text Generation Model',
+              title: l10n.settings_ai_text_generation,
               icon: Icons.auto_awesome,
               headerAction: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: _buildDropdown(
-                      label: 'Config',
+                      label: l10n.settings_config,
                       value: _selectedTextGenerationConfig?.id.toString() ?? '',
                       items: ['', ..._textGenerationConfigs.map((model) => model.id.toString())],
-                      displayItems: ['Add New...', ..._textGenerationConfigs.map((model) => model.displayName)],
+                      displayItems: [l10n.settings_add_new, ..._textGenerationConfigs.map((model) => model.displayName)],
                       onChanged: (value) async {
                         if (value == null || value.isEmpty) {
                           showDialog(
@@ -132,7 +134,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             _textGenerationApiKeyController.text = selectedConfig.apiKey ?? '';
                             _textModelController.text = selectedConfig.modelId;
                           });
-                          
+
                           // Fetch full details
                           await _fetchFullModelDetails(selectedConfig.id, (fullModel) {
                              _textGenerationApiKeyController.text = fullModel.apiKey ?? '';
@@ -144,7 +146,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   if (_selectedTextGenerationConfig != null) ...[
                     IconButton(
                       icon: const Icon(Icons.edit, size: 20),
-                      tooltip: 'Edit Config',
+                      tooltip: l10n.settings_edit_config,
                       onPressed: () {
                         showDialog(
                           context: context,
@@ -159,7 +161,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                      tooltip: 'Delete Config',
+                      tooltip: l10n.settings_delete_config,
                       onPressed: () => _showDeleteConfirmDialog(_selectedTextGenerationConfig!),
                     ),
                   ],
@@ -168,19 +170,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               titleSuffix: TextButton.icon(
                 onPressed: _testConnection,
                 icon: const Icon(Icons.network_check, size: 20),
-                label: const Text('Test Connection'),
+                label: Text(l10n.settings_test_connection),
               ),
               children: [
                 _buildTextField(
                   controller: _textGenerationUrlController,
-                  label: 'API Base URL',
+                  label: l10n.settings_api_base_url,
                   hint: 'https://...',
                   prefixIcon: Icons.link,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: _textGenerationApiKeyController,
-                  label: 'API Key',
+                  label: l10n.ai_api_key,
                   hint: 'sk-...',
                   prefixIcon: Icons.key,
                   obscureText: _isTextKeyObscured,
@@ -193,13 +195,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: _textModelController,
-                  label: 'Model Name',
+                  label: l10n.ai_model_name_field,
                   hint: 'e.g. model-id',
                   prefixIcon: Icons.psychology,
                 ),
                 const SizedBox(height: 8),
                 _buildInfoCard(
-                  'This model will be used for AI tasks. Select or create a configuration above.',
+                  l10n.settings_model_info_ai_tasks,
                 ),
               ],
             ),
@@ -208,17 +210,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
             // Transcription Section
             _buildSection(
-              title: 'Audio Transcription Model',
+              title: l10n.settings_audio_transcription,
               icon: Icons.mic,
               headerAction: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: _buildDropdown(
-                      label: 'Config',
+                      label: l10n.settings_config,
                       value: _selectedTranscriptionConfig?.id.toString() ?? '',
                       items: ['', ..._transcriptionConfigs.map((model) => model.id.toString())],
-                      displayItems: ['Add New...', ..._transcriptionConfigs.map((model) => model.displayName)],
+                      displayItems: [l10n.settings_add_new, ..._transcriptionConfigs.map((model) => model.displayName)],
                       onChanged: (value) async {
                         if (value == null || value.isEmpty) {
                           showDialog(
@@ -238,7 +240,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                             _transcriptionApiKeyController.text = selectedConfig.apiKey ?? '';
                             _transcriptionModelController.text = selectedConfig.modelId;
                           });
-                          
+
                           // Fetch full details
                           await _fetchFullModelDetails(selectedConfig.id, (fullModel) {
                              _transcriptionApiKeyController.text = fullModel.apiKey ?? '';
@@ -251,7 +253,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(Icons.edit, size: 20),
-                      tooltip: 'Edit Config',
+                      tooltip: l10n.settings_edit_config,
                       onPressed: () {
                         showDialog(
                           context: context,
@@ -266,7 +268,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                      tooltip: 'Delete Config',
+                      tooltip: l10n.settings_delete_config,
                       onPressed: () => _showDeleteConfirmDialog(_selectedTranscriptionConfig!),
                     ),
                   ],
@@ -275,15 +277,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               children: [
                 _buildTextField(
                   controller: _transcriptionUrlController,
-                  label: 'API URL',
+                  label: l10n.settings_api_url,
                   hint: 'https://...',
                   prefixIcon: Icons.link,
                 ),
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: _transcriptionApiKeyController,
-                  label: 'API Key',
-                  hint: 'Enter your transcription API key',
+                  label: l10n.ai_api_key,
+                  hint: l10n.settings_transcription_api_key_hint,
                   prefixIcon: Icons.key,
                   obscureText: _isTranscriptionKeyObscured,
                   onToggleObscure: () {
@@ -295,13 +297,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 const SizedBox(height: 16),
                 _buildTextField(
                   controller: _transcriptionModelController,
-                  label: 'Model Name',
+                  label: l10n.ai_model_name_field,
                   hint: 'e.g. whisper-1',
                   prefixIcon: Icons.psychology,
                 ),
                 const SizedBox(height: 8),
                 _buildInfoCard(
-                  'This model will be used for transcribing podcast audio to text.',
+                  l10n.settings_model_info_transcription,
                 ),
               ],
             ),
@@ -310,12 +312,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
             // Processing Settings
             _buildSection(
-              title: 'Processing Settings',
+              title: l10n.settings_processing,
               icon: Icons.settings_applications,
               children: [
                 ListTile(
-                  title: const Text('Audio Chunk Size'),
-                  subtitle: Text('${_chunkSizeMB}MB per chunk'),
+                  title: Text(l10n.settings_audio_chunk_size),
+                  subtitle: Text(l10n.settings_mb_per_chunk(_chunkSizeMB)),
                   trailing: SizedBox(
                     width: 200,
                     child: Slider(
@@ -334,8 +336,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ),
                 const Divider(),
                 ListTile(
-                  title: const Text('Max Concurrent Threads'),
-                  subtitle: Text('$_maxThreads threads'),
+                  title: Text(l10n.settings_max_threads),
+                  subtitle: Text(l10n.settings_threads(_maxThreads)),
                   trailing: SizedBox(
                     width: 200,
                     child: Slider(
@@ -357,34 +359,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
             const SizedBox(height: 24),
 
-            // App Preferences
-            _buildSection(
-              title: 'App Preferences',
-              icon: Icons.palette,
-              children: [
-                SwitchListTile(
-                  title: const Text('Dark Mode'),
-                  subtitle: const Text('Enable dark theme'),
-                  value: _darkModeEnabled,
-                  onChanged: (value) {
-                    setState(() {
-                      _darkModeEnabled = value;
-                    });
-                  },
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
             // RSS Subscription Settings
             _buildSection(
-              title: 'RSS Subscription Settings',
+              title: l10n.settings_rss_subscription,
               icon: Icons.rss_feed,
               children: [
                 ListTile(
-                  title: const Text('RSS Schedule Configuration'),
-                  subtitle: const Text('Manage update frequency and schedule for all RSS subscriptions'),
+                  title: Text(l10n.settings_rss_schedule_config),
+                  subtitle: Text(l10n.settings_rss_schedule_subtitle),
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
                     context.push('/profile/settings/rss-schedule');
@@ -396,17 +378,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             const SizedBox(height: 24),
             // About Section
             _buildSection(
-              title: 'About',
+              title: l10n.about,
               icon: Icons.info_outline,
               children: [
                 ListTile(
-                  title: const Text('App Version'),
+                  title: Text(l10n.version),
                   subtitle: const Text('1.0.0'),
                 ),
                 const Divider(),
                 ListTile(
-                  title: const Text('Backend API Documentation'),
-                  subtitle: const Text('View API docs and endpoints'),
+                  title: Text(l10n.settings_backend_api_docs),
+                  subtitle: Text(l10n.settings_backend_api_docs_subtitle),
                   trailing: const Icon(Icons.open_in_new),
                   onTap: () {
                     _showApiDocsDialog();
@@ -627,14 +609,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     if (mounted) {
        final state = ref.read(aiSettingsControllerProvider);
+       final l10n = AppLocalizations.of(context)!;
        if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: ${state.error}'), backgroundColor: Colors.red),
+            SnackBar(content: Text('${l10n.error}: ${state.error}'), backgroundColor: Colors.red),
           );
        } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Settings saved successfully!'),
+              content: Text(l10n.settings_saved_successfully),
               backgroundColor: Theme.of(context).colorScheme.primary,
             ),
           );
@@ -643,19 +626,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _showDeleteConfirmDialog(AIModelConfigModel model) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除模型 "${model.displayName}" 吗？这将影响所有使用该模型的功能。'),
+        title: Text(l10n.settings_delete_confirm_title),
+        content: Text(l10n.settings_delete_confirm_message(model.displayName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('删除', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -668,15 +652,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('模型 "${model.displayName}" 已删除'),
+              content: Text(l10n.settings_model_deleted(model.displayName)),
               backgroundColor: Colors.green,
             ),
           );
           _loadModels();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('删除失败'),
+            SnackBar(
+              content: Text(l10n.settings_delete_failed_msg),
               backgroundColor: Colors.red,
             ),
           );
@@ -686,6 +670,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _toggleModelActive(AIModelConfigModel model) async {
+    final l10n = AppLocalizations.of(context)!;
     final notifier = ref.read(modelNotifierProvider(model.id).notifier);
     final success = await notifier.updateModel({
       'is_active': !model.isActive,
@@ -693,17 +678,18 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     if (mounted) {
       if (success) {
+        final status = model.isActive ? l10n.ai_model_disabled : l10n.ai_model_enabled;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('模型已${model.isActive ? "禁用" : "启用"}'),
+            content: Text(l10n.settings_model_enabled_disabled(status)),
             backgroundColor: Colors.green,
           ),
         );
         _refreshModels();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('操作失败'),
+          SnackBar(
+            content: Text(l10n.settings_operation_failed_msg),
             backgroundColor: Colors.red,
           ),
         );
@@ -712,6 +698,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _setAsDefault(AIModelConfigModel model) async {
+    final l10n = AppLocalizations.of(context)!;
     final success = await ref
         .read(modelNotifierProvider(model.id).notifier)
         .setAsDefault(model.modelType.toString().split('.').last);
@@ -720,15 +707,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('已将 "${model.displayName}" 设为默认模型'),
+            content: Text(l10n.settings_set_default_success(model.displayName)),
             backgroundColor: Colors.green,
           ),
         );
         _refreshModels();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('设置默认模型失败'),
+          SnackBar(
+            content: Text(l10n.settings_set_default_failed_msg),
             backgroundColor: Colors.red,
           ),
         );
@@ -827,12 +814,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         setState(() {
           _isLoadingModels = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('加载模型失败: $e'),
+            content: Text(l10n.settings_load_models_failed(e.toString())),
             backgroundColor: Colors.red,
           ),
         );
@@ -845,39 +833,40 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   void _showApiDocsDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('API Documentation'),
+        title: Text(l10n.settings_api_documentation),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildApiEndpoint('Text Generation', '/api/v1/ai/chat'),
+              _buildApiEndpoint(l10n.settings_text_generation, '/api/v1/ai/chat'),
               const Divider(),
-              _buildApiEndpoint('Transcription', '/api/v1/podcast/transcribe'),
+              _buildApiEndpoint(l10n.settings_transcription_endpoint, '/api/v1/podcast/transcribe'),
               const Divider(),
-              _buildApiEndpoint('Settings', '/api/v1/user/settings'),
+              _buildApiEndpoint(l10n.settings_user_settings_endpoint, '/api/v1/user/settings'),
               const SizedBox(height: 16),
-              const Text(
-                'Configuration Environment Variables:',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              Text(
+                l10n.settings_config_env_vars,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              _buildEnvVar('OPENAI_API_KEY', 'OpenAI API key'),
-              _buildEnvVar('OPENAI_API_BASE_URL', 'API base URL'),
-              _buildEnvVar('TRANSCRIPTION_API_URL', 'Transcription API URL'),
-              _buildEnvVar('TRANSCRIPTION_API_KEY', 'Transcription API key'),
-              _buildEnvVar('TRANSCRIPTION_MODEL', 'Transcription model name'),
-              _buildEnvVar('SUMMARY_MODEL', 'AI summary model name'),
+              _buildEnvVar('OPENAI_API_KEY', l10n.settings_openai_api_key),
+              _buildEnvVar('OPENAI_API_BASE_URL', l10n.settings_openai_api_base_url),
+              _buildEnvVar('TRANSCRIPTION_API_URL', l10n.settings_transcription_api_url),
+              _buildEnvVar('TRANSCRIPTION_API_KEY', l10n.settings_transcription_api_key_env),
+              _buildEnvVar('TRANSCRIPTION_MODEL', l10n.settings_transcription_model_name),
+              _buildEnvVar('SUMMARY_MODEL', l10n.settings_summary_model),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: Text(l10n.close),
           ),
         ],
       ),
@@ -914,34 +903,35 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Future<void> _testConnection() async {
+    final l10n = AppLocalizations.of(context)!;
     final url = _textGenerationUrlController.text.trim();
     final key = _textGenerationApiKeyController.text.trim();
     final modelId = _textModelController.text.trim();
 
     if (url.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter API URL')),
+        SnackBar(content: Text(l10n.settings_enter_api_url)),
       );
       return;
     }
     if (key.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter API Key')),
+        SnackBar(content: Text(l10n.settings_enter_api_key)),
       );
       return;
     }
 
     if (modelId.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter Model Name')),
+        SnackBar(content: Text(l10n.settings_enter_model_name_validation)),
       );
       return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Testing connection...'),
-        duration: Duration(seconds: 1), 
+      SnackBar(
+        content: Text(l10n.settings_testing_connection),
+        duration: const Duration(seconds: 1),
       ),
     );
 
@@ -956,7 +946,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         showDialog(
-          context: context, 
+          context: context,
           builder: (context) => AlertDialog(
             title: Row(children: [
               Icon(
@@ -964,35 +954,35 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 color: result.valid ? Colors.green : Colors.red,
               ),
               const SizedBox(width: 8),
-              Text(result.valid ? "Connection Successful" : "Connection Failed")
+              Text(result.valid ? l10n.settings_connection_successful : l10n.settings_connection_failed)
             ]),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text("Response Time: ${result.responseTimeMs.toInt()}ms"),
+                   Text(l10n.settings_response_time(result.responseTimeMs.toInt())),
                    const SizedBox(height: 8),
                    if (result.valid) ...[
-                     const Text("Test Response:", style: TextStyle(fontWeight: FontWeight.bold)),
+                     Text(l10n.settings_test_response, style: const TextStyle(fontWeight: FontWeight.bold)),
                      Container(
                        padding: const EdgeInsets.all(8),
                        color: Colors.grey.shade800,
-                       child: Text(result.testResult ?? "No content")
+                       child: Text(result.testResult ?? l10n.no_data)
                      )
                    ] else ...[
-                     const Text("Error Message:", style: TextStyle(fontWeight: FontWeight.bold)),
+                     Text(l10n.settings_error_message, style: const TextStyle(fontWeight: FontWeight.bold)),
                      Container(
                        padding: const EdgeInsets.all(8),
                        color: Colors.red.shade900,
-                       child: Text(result.errorMessage ?? "Unknown error occurred")
+                       child: Text(result.errorMessage ?? l10n.settings_unknown_error)
                      )
                    ]
                 ],
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.ok))
             ]
           )
         );
@@ -1001,19 +991,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         showDialog(
-          context: context, 
+          context: context,
           builder: (context) => AlertDialog(
-            title: const Row(children: [
-              Icon(Icons.error, color: Colors.red),
-              SizedBox(width: 8),
-              Text("Connection Error")
+            title: Row(children: [
+              const Icon(Icons.error, color: Colors.red),
+              const SizedBox(width: 8),
+              Text(l10n.settings_connection_error)
             ]),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   const Text("An unexpected error occurred:", style: TextStyle(fontWeight: FontWeight.bold)),
+                   Text(l10n.settings_unexpected_error, style: const TextStyle(fontWeight: FontWeight.bold)),
                    Container(
                      padding: const EdgeInsets.all(8),
                      color: Colors.red.shade50,
@@ -1023,7 +1013,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))
+              TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.ok))
             ]
           )
         );

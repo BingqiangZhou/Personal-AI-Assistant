@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 
 import '../network/dio_client.dart';
 import '../network/api_services.dart';
+import '../localization/locale_provider.dart';
 
 // Dio Client Provider
 final dioClientProvider = Provider<DioClient>((ref) {

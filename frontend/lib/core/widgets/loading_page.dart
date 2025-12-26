@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../localization/app_localizations.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -49,6 +50,12 @@ class _LoadingPageState extends State<LoadingPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Handle case where localization is not available yet (during initial loading)
+    final l10n = AppLocalizations.of(context);
+
+    // Fallback text values if localization is not available
+    final appTitle = l10n?.appTitle ?? 'Personal AI Assistant';
+    final loadingText = l10n?.loading ?? 'Loading...';
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -97,7 +104,7 @@ class _LoadingPageState extends State<LoadingPage>
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Text(
-                    'Personal AI Assistant',
+                    appTitle,
                     style: theme.textTheme.headlineMedium?.copyWith(
                       color: theme.colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
@@ -128,7 +135,7 @@ class _LoadingPageState extends State<LoadingPage>
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Text(
-                    'Initializing...',
+                    loadingText,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

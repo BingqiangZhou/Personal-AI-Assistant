@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../../../../shared/widgets/custom_button.dart';
@@ -31,7 +32,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
     // Check if token is provided
     if (widget.token == null || widget.token!.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showErrorDialog('Invalid reset link. Please request a new password reset.');
+        _showErrorDialog('Invalid reset link. Please request a new password reset.', context);
       });
     }
   }
@@ -43,11 +44,12 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
     super.dispose();
   }
 
-  void _showErrorDialog(String message) {
+  void _showErrorDialog(String message, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Error'),
+        title: Text(l10n.error),
         content: Text(message),
         actions: [
           TextButton(
@@ -55,7 +57,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
               Navigator.of(context).pop();
               context.go('/forgot-password');
             },
-            child: const Text('OK'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -63,9 +65,10 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   }
 
   void _submitResetPassword() {
+    final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       if (widget.token == null || widget.token!.isEmpty) {
-        _showErrorDialog('Invalid reset link. Please request a new password reset.');
+        _showErrorDialog('Invalid reset link. Please request a new password reset.', context);
         return;
       }
 
@@ -83,6 +86,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final isLoading = authState.isLoading;
 
@@ -127,7 +131,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Password Reset Successful!',
+                    l10n.action_completed,
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Colors.green,
@@ -145,7 +149,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   const SizedBox(height: 32),
                   CustomButton(
                     key: const Key('go_to_login_button'),
-                    text: 'Go to Login',
+                    text: l10n.auth_back_to_login,
                     onPressed: () => context.go('/login'),
                   ),
                 ],
@@ -158,7 +162,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Reset Password'),
+        title: Text(l10n.auth_reset_password),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -235,10 +239,10 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your new password';
+                        return l10n.auth_enter_password;
                       }
                       if (value.length < 8) {
-                        return 'Password must be at least 8 characters';
+                        return l10n.auth_password_too_short;
                       }
                       return null;
                     },
@@ -249,7 +253,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   // Confirm Password field
                   CustomTextField(
                     controller: _confirmPasswordController,
-                    label: 'Confirm New Password',
+                    label: l10n.auth_confirm_password,
                     obscureText: _obscureConfirmPassword,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
@@ -264,10 +268,10 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please confirm your new password';
+                        return l10n.auth_enter_password;
                       }
                       if (value != _passwordController.text) {
-                        return 'Passwords do not match';
+                        return l10n.auth_passwords_not_match;
                       }
                       return null;
                     },
@@ -315,7 +319,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   // Reset button
                   CustomButton(
                     key: const Key('reset_password_button'),
-                    text: 'Reset Password',
+                    text: l10n.auth_reset_password,
                     onPressed: _submitResetPassword,
                     isLoading: isLoading,
                   ),

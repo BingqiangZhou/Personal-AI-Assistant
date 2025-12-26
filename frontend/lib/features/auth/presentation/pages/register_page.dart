@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
@@ -40,6 +41,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
   void _register() {
+    final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate() && _agreeToTerms) {
       ref.read(authProvider.notifier).register(
         email: _emailController.text.trim(),
@@ -48,8 +50,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       );
     } else if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to the terms and conditions'),
+        SnackBar(
+          content: Text(l10n.auth_agree_terms),
           backgroundColor: AppTheme.warningColor,
         ),
       );
@@ -58,6 +60,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final isLoading = authState.isLoading;
 
@@ -107,7 +110,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Create Account',
+                          l10n.auth_create_account,
                           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.primary,
@@ -115,7 +118,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Join us to start your AI journey',
+                          l10n.auth_sign_up_subtitle,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
@@ -129,7 +132,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   // Username field
                   CustomTextField(
                     controller: _usernameController,
-                    label: 'Username',
+                    label: l10n.auth_full_name,
                     prefixIcon: const Icon(Icons.person_outline),
                     onChanged: (value) {
                       _clearFieldErrors();
@@ -137,10 +140,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your username';
+                        return l10n.auth_enter_name;
                       }
                       if (value.length < 3) {
-                        return 'Username must be at least 3 characters';
+                        return l10n.validation_too_short;
                       }
                       return null;
                     },
@@ -152,7 +155,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   // Email field
                   CustomTextField(
                     controller: _emailController,
-                    label: 'Email',
+                    label: l10n.auth_email,
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: const Icon(Icons.email_outlined),
                     onChanged: (value) {
@@ -161,10 +164,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
+                        return l10n.auth_enter_email;
                       }
                       if (!value.contains('@')) {
-                        return 'Please enter a valid email';
+                        return l10n.auth_enter_valid_email;
                       }
                       return null;
                     },
@@ -179,7 +182,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     children: [
                       CustomTextField(
                         controller: _passwordController,
-                        label: 'Password',
+                        label: l10n.auth_password,
                         obscureText: _obscurePassword,
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
@@ -196,19 +199,19 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         onChanged: (value) => _clearFieldErrors(),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
+                            return l10n.auth_enter_password;
                           }
                           if (value.length < 8) {
-                            return 'Password must be at least 8 characters';
+                            return l10n.auth_password_too_short;
                           }
                           if (!value.contains(RegExp(r'[A-Z]'))) {
-                            return 'Password must contain at least one uppercase letter (A-Z)';
+                            return l10n.validation_too_short;
                           }
                           if (!value.contains(RegExp(r'[a-z]'))) {
-                            return 'Password must contain at least one lowercase letter (a-z)';
+                            return l10n.validation_too_short;
                           }
                           if (!value.contains(RegExp(r'[0-9]'))) {
-                            return 'Password must contain at least one number (0-9)';
+                            return l10n.validation_too_short;
                           }
                           return null;
                         },
@@ -228,7 +231,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Password Requirements:',
+                              '${l10n.auth_password}:',
                               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -236,7 +239,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                             ),
                             const SizedBox(height: 8),
                             PasswordRequirementItem(
-                              text: 'At least 8 characters',
+                              text: l10n.auth_password_too_short,
                               isValid: _passwordController.text.length >= 8,
                             ),
                             PasswordRequirementItem(
@@ -262,7 +265,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   // Confirm password field
                   CustomTextField(
                     controller: _confirmPasswordController,
-                    label: 'Confirm Password',
+                    label: l10n.auth_confirm_password,
                     obscureText: _obscureConfirmPassword,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
@@ -277,10 +280,10 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
+                        return l10n.auth_enter_password;
                       }
                       if (value != _passwordController.text) {
-                        return 'Passwords do not match';
+                        return l10n.auth_passwords_not_match;
                       }
                       return null;
                     },
@@ -346,7 +349,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   // Register button
                   CustomButton(
                     key: const Key('register_button'),
-                    text: 'Create Account',
+                    text: l10n.auth_create_account,
                     onPressed: _register,
                     isLoading: isLoading,
                   ),
@@ -358,13 +361,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account? ',
+                        l10n.auth_already_have_account,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       GestureDetector(
                         onTap: () => context.go('/login'),
                         child: Text(
-                          'Sign In',
+                          l10n.auth_sign_in_link,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w600,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../navigation/podcast_navigation.dart';
+import '../../../../core/utils/time_formatter.dart';
 
 class FeedStyleEpisodeCard extends ConsumerWidget {
   final PodcastEpisodeModel episode;
@@ -130,7 +131,7 @@ class FeedStyleEpisodeCard extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  _formatDate(episode.publishedAt),
+                                  TimeFormatter.formatRelativeTime(episode.publishedAt),
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                                       ),
@@ -169,9 +170,5 @@ class FeedStyleEpisodeCard extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 }

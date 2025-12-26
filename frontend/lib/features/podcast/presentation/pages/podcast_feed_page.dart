@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../navigation/podcast_navigation.dart';
@@ -27,6 +28,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,7 +40,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
               children: [
                 Expanded(
                   child: Text(
-                    'Feed',
+                    l10n.podcast_feed_page_title,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -49,7 +51,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     ref.read(podcastFeedProvider.notifier).refreshFeed();
                   },
                   icon: const Icon(Icons.refresh),
-                  tooltip: 'Refresh Feed',
+                  tooltip: l10n.podcast_refresh_feed,
                 ),
                 IconButton(
                   onPressed: () {
@@ -59,7 +61,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     );
                   },
                   icon: const Icon(Icons.add),
-                  tooltip: 'Add Podcast',
+                  tooltip: l10n.podcast_add_podcast,
                 ),
                 IconButton(
                   onPressed: () {
@@ -75,7 +77,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     );
                   },
                   icon: const Icon(Icons.playlist_add),
-                  tooltip: 'Bulk Import',
+                  tooltip: l10n.podcast_bulk_import,
                 ),
               ],
             ),
@@ -91,6 +93,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 
   /// 构建Feed内容
   Widget _buildFeedContent(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final feedState = ref.watch(podcastFeedProvider);
 
     if (feedState.isLoading && feedState.episodes.isEmpty) {
@@ -104,13 +107,13 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           children: [
             const Icon(Icons.error_outline, size: 48, color: Colors.orange),
             const SizedBox(height: 16),
-            Text('Failed to load feed: ${feedState.error}'),
+            Text('${l10n.podcast_failed_to_load_feed}: ${feedState.error}'),
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () {
                 ref.read(podcastFeedProvider.notifier).loadInitialFeed();
               },
-              child: const Text('Retry'),
+              child: Text(l10n.podcast_retry),
             ),
           ],
         ),
@@ -125,7 +128,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
             const Icon(Icons.rss_feed, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
             Text(
-              'No episodes found',
+              l10n.podcast_no_episodes_found,
               style: Theme.of(context).textTheme.titleLarge,
             ),
           ],
@@ -214,6 +217,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 
   /// 构建移动端卡片
   Widget _buildMobileCard(BuildContext context, PodcastEpisodeModel episode) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: InkWell(
@@ -303,7 +307,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                episode.subscriptionTitle ?? 'Podcast',
+                                episode.subscriptionTitle ?? l10n.podcast_default_podcast,
                                 style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(
                                       color: Theme.of(
@@ -388,7 +392,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                       // TODO: 实现收藏功能
                     },
                     icon: const Icon(Icons.bookmark_border),
-                    tooltip: 'Bookmark',
+                    tooltip: l10n.podcast_bookmark,
                     style: IconButton.styleFrom(
                       backgroundColor: Theme.of(
                         context,
@@ -405,7 +409,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                       // TODO: 实现分享功能
                     },
                     icon: const Icon(Icons.share),
-                    tooltip: 'Share',
+                    tooltip: l10n.podcast_share,
                     style: IconButton.styleFrom(
                       backgroundColor: Theme.of(
                         context,
@@ -426,7 +430,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                         episodeTitle: episode.title,
                       );
                     },
-                    child: const Text('Play'),
+                    child: Text(l10n.podcast_play),
                   ),
                 ],
               ),
@@ -443,6 +447,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 
   /// 构建桌面端卡片（使用小图标布局）
   Widget _buildDesktopCard(BuildContext context, PodcastEpisodeModel episode) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       child: InkWell(
         onTap: () {
@@ -551,7 +556,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            episode.subscriptionTitle ?? 'Podcast',
+                            episode.subscriptionTitle ?? l10n.podcast_default_podcast,
                             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               color: Theme.of(context).colorScheme.onPrimary,
                               fontWeight: FontWeight.bold,
@@ -615,7 +620,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                         vertical: 8,
                       ),
                     ),
-                    child: const Text('Play'),
+                    child: Text(l10n.podcast_play),
                   ),
                 ],
               ),

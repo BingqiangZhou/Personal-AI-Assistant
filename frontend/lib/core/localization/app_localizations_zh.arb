@@ -1,0 +1,1711 @@
+{
+  "@@locale": "zh",
+
+  "appTitle": "个人AI助手",
+  "@appTitle": {
+    "description": "应用程序标题"
+  },
+
+  "settings": "设置",
+  "@settings": {
+    "description": "设置页面标题"
+  },
+
+  "language": "语言",
+  "@language": {
+    "description": "语言设置标签"
+  },
+
+  "languageFollowSystem": "跟随系统",
+  "@languageFollowSystem": {
+    "description": "跟随系统语言选项"
+  },
+
+  "languageEnglish": "English",
+  "@languageEnglish": {
+    "description": "英文语言选项"
+  },
+
+  "languageChinese": "简体中文",
+  "@languageChinese": {
+    "description": "简体中文语言选项"
+  },
+
+  "appPreferences": "应用偏好",
+  "@appPreferences": {
+    "description": "应用偏好设置分组标题"
+  },
+
+  "about": "关于",
+  "@about": {
+    "description": "关于部分标题"
+  },
+
+  "version": "版本",
+  "@version": {
+    "description": "应用版本标签"
+  },
+
+  "apiDocs": "API 文档",
+  "@apiDocs": {
+    "description": "API文档链接标签"
+  },
+
+  "profile": "个人资料",
+  "@profile": {
+    "description": "个人资料页面标题"
+  },
+
+  "preferences": "偏好设置",
+  "@preferences": {
+    "description": "偏好设置部分标题"
+  },
+
+  "logout": "退出登录",
+  "@logout": {
+    "description": "退出登录按钮标签"
+  },
+
+  "confirmLogout": "确定要退出登录吗？",
+  "@confirmLogout": {
+    "description": "退出登录确认消息"
+  },
+
+  "cancel": "取消",
+  "@cancel": {
+    "description": "取消按钮标签"
+  },
+
+  "confirm": "确认",
+  "@confirm": {
+    "description": "确认按钮标签"
+  },
+
+  "save": "保存",
+  "@save": {
+    "description": "保存按钮标签"
+  },
+
+  "delete": "删除",
+  "@delete": {
+    "description": "删除按钮标签"
+  },
+
+  "edit": "编辑",
+  "@edit": {
+    "description": "编辑按钮标签"
+  },
+
+  "add": "添加",
+  "@add": {
+    "description": "添加按钮标签"
+  },
+
+  "update": "更新",
+  "@update": {
+    "description": "更新按钮标签"
+  },
+
+  "create": "创建",
+  "@create": {
+    "description": "创建按钮标签"
+  },
+
+  "search": "搜索",
+  "@search": {
+    "description": "搜索按钮标签"
+  },
+
+  "filter": "筛选",
+  "@filter": {
+    "description": "筛选按钮标签"
+  },
+
+  "refresh": "刷新",
+  "@refresh": {
+    "description": "刷新按钮标签"
+  },
+
+  "loading": "加载中...",
+  "@loading": {
+    "description": "加载消息"
+  },
+
+  "error": "错误",
+  "@error": {
+    "description": "错误标签"
+  },
+
+  "success": "成功",
+  "@success": {
+    "description": "成功标签"
+  },
+
+  "retry": "重试",
+  "@retry": {
+    "description": "重试按钮标签"
+  },
+
+  "close": "关闭",
+  "@close": {
+    "description": "关闭按钮标签"
+  },
+
+  "ok": "确定",
+  "@ok": {
+    "description": "确定按钮标签"
+  },
+
+  "yes": "是",
+  "@yes": {
+    "description": "是按钮标签"
+  },
+
+  "no": "否",
+  "@no": {
+    "description": "否按钮标签"
+  },
+
+  "welcome": "欢迎",
+  "@welcome": {
+    "description": "欢迎消息"
+  },
+
+  "auth_welcome_back": "欢迎回来",
+  "@auth_welcome_back": {
+    "description": "登录页面欢迎标题"
+  },
+
+  "auth_sign_in_subtitle": "登录以继续",
+  "@auth_sign_in_subtitle": {
+    "description": "登录页面副标题"
+  },
+
+  "auth_enter_email": "请输入您的邮箱",
+  "@auth_enter_email": {
+    "description": "邮箱字段验证消息"
+  },
+
+  "auth_enter_valid_email": "请输入有效的邮箱地址",
+  "@auth_enter_valid_email": {
+    "description": "邮箱验证错误"
+  },
+
+  "auth_enter_password": "请输入您的密码",
+  "@auth_enter_password": {
+    "description": "密码字段验证消息"
+  },
+
+  "auth_password_too_short": "密码至少需要6个字符",
+  "@auth_password_too_short": {
+    "description": "密码长度验证"
+  },
+
+  "auth_email": "邮箱",
+  "@auth_email": {
+    "description": "邮箱字段标签"
+  },
+
+  "auth_password": "密码",
+  "@auth_password": {
+    "description": "密码字段标签"
+  },
+
+  "auth_remember_me": "记住我",
+  "@auth_remember_me": {
+    "description": "记住我复选框标签"
+  },
+
+  "auth_forgot_password": "忘记密码？",
+  "@auth_forgot_password": {
+    "description": "忘记密码链接"
+  },
+
+  "auth_login": "登录",
+  "@auth_login": {
+    "description": "登录按钮标签"
+  },
+
+  "auth_no_account": "还没有账号？",
+  "@auth_no_account": {
+    "description": "无账号提示"
+  },
+
+  "auth_sign_up": "注册",
+  "@auth_sign_up": {
+    "description": "注册按钮标签"
+  },
+
+  "auth_create_account": "创建账号",
+  "@auth_create_account": {
+    "description": "创建账号页面标题"
+  },
+
+  "auth_sign_up_subtitle": "加入我们开始使用",
+  "@auth_sign_up_subtitle": {
+    "description": "注册页面副标题"
+  },
+
+  "auth_full_name": "姓名",
+  "@auth_full_name": {
+    "description": "全名字段标签"
+  },
+
+  "auth_enter_name": "请输入您的姓名",
+  "@auth_enter_name": {
+    "description": "姓名字段验证"
+  },
+
+  "auth_confirm_password": "确认密码",
+  "@auth_confirm_password": {
+    "description": "确认密码字段标签"
+  },
+
+  "auth_passwords_not_match": "两次输入的密码不一致",
+  "@auth_passwords_not_match": {
+    "description": "密码不匹配错误"
+  },
+
+  "auth_agree_terms": "我同意条款和条件",
+  "@auth_agree_terms": {
+    "description": "条款同意复选框"
+  },
+
+  "auth_already_have_account": "已有账号？",
+  "@auth_already_have_account": {
+    "description": "已有账号提示"
+  },
+
+  "auth_sign_in_link": "登录",
+  "@auth_sign_in_link": {
+    "description": "登录链接标签"
+  },
+
+  "auth_reset_password": "重置密码",
+  "@auth_reset_password": {
+    "description": "重置密码页面标题"
+  },
+
+  "auth_reset_password_subtitle": "输入您的邮箱以接收重置说明",
+  "@auth_reset_password_subtitle": {
+    "description": "重置密码副标题"
+  },
+
+  "auth_send_reset_link": "发送重置链接",
+  "@auth_send_reset_link": {
+    "description": "发送重置链接按钮"
+  },
+
+  "auth_back_to_login": "返回登录",
+  "@auth_back_to_login": {
+    "description": "返回登录链接"
+  },
+
+  "auth_reset_email_sent": "密码重置邮件已发送",
+  "@auth_reset_email_sent": {
+    "description": "重置邮件已发送消息"
+  },
+
+  "login_failed": "登录失败",
+  "@login_failed": {
+    "description": "登录失败消息"
+  },
+
+  "register_failed": "注册失败",
+  "@register_failed": {
+    "description": "注册失败消息"
+  },
+
+  "logout_failed": "退出登录失败",
+  "@logout_failed": {
+    "description": "退出登录失败消息"
+  },
+
+  "chat_new_chat": "新对话",
+  "@chat_new_chat": {
+    "description": "新对话按钮标签"
+  },
+
+  "chat_type_message_hint": "输入您的消息...",
+  "@chat_type_message_hint": {
+    "description": "聊天输入占位符"
+  },
+
+  "chat_ai_thinking": "AI 正在思考...",
+  "@chat_ai_thinking": {
+    "description": "AI 思考指示器"
+  },
+
+  "chat_send_message": "发送",
+  "@chat_send_message": {
+    "description": "发送消息按钮"
+  },
+
+  "chat_clear_history": "清空历史",
+  "@chat_clear_history": {
+    "description": "清空聊天历史按钮"
+  },
+
+  "chat_confirm_clear": "确定要清空所有聊天历史吗？",
+  "@chat_confirm_clear": {
+    "description": "清空历史确认"
+  },
+
+  "chat_no_messages": "暂无消息",
+  "@chat_no_messages": {
+    "description": "空聊天状态"
+  },
+
+  "chat_conversation_history": "对话历史",
+  "@chat_conversation_history": {
+    "description": "对话历史部分"
+  },
+
+  "chat_today": "今天",
+  "@chat_today": {
+    "description": "历史的今天标签"
+  },
+
+  "chat_yesterday": "昨天",
+  "@chat_yesterday": {
+    "description": "历史的昨天标签"
+  },
+
+  "chat_this_week": "本周",
+  "@chat_this_week": {
+    "description": "历史的本周标签"
+  },
+
+  "chat_older": "更早",
+  "@chat_older": {
+    "description": "历史的更早标签"
+  },
+
+  "assistant_settings": "助手设置",
+  "@assistant_settings": {
+    "description": "助手设置标题"
+  },
+
+  "assistant_model": "AI 模型",
+  "@assistant_model": {
+    "description": "AI 模型设置标签"
+  },
+
+  "assistant_temperature": "温度",
+  "@assistant_temperature": {
+    "description": "温度设置标签"
+  },
+
+  "assistant_max_tokens": "最大令牌数",
+  "@assistant_max_tokens": {
+    "description": "最大令牌设置标签"
+  },
+
+  "assistant_system_prompt": "系统提示词",
+  "@assistant_system_prompt": {
+    "description": "系统提示词设置标签"
+  },
+
+  "assistant_temperature_desc": "控制响应的随机性",
+  "@assistant_temperature_desc": {
+    "description": "温度描述"
+  },
+
+  "assistant_max_tokens_desc": "响应的最大长度",
+  "@assistant_max_tokens_desc": {
+    "description": "最大令牌描述"
+  },
+
+  "knowledge_base": "知识库",
+  "@knowledge_base": {
+    "description": "知识库页面标题"
+  },
+
+  "knowledge_my_bases": "我的知识库",
+  "@knowledge_my_bases": {
+    "description": "我的知识库部分"
+  },
+
+  "knowledge_create_base": "创建知识库",
+  "@knowledge_create_base": {
+    "description": "创建知识库按钮"
+  },
+
+  "knowledge_base_name": "知识库名称",
+  "@knowledge_base_name": {
+    "description": "知识库名称字段"
+  },
+
+  "knowledge_enter_name": "输入知识库名称",
+  "@knowledge_enter_name": {
+    "description": "知识库名称占位符"
+  },
+
+  "knowledge_description": "描述",
+  "@knowledge_description": {
+    "description": "描述字段标签"
+  },
+
+  "knowledge_enter_description": "输入描述",
+  "@knowledge_enter_description": {
+    "description": "描述占位符"
+  },
+
+  "knowledge_upload_document": "上传文档",
+  "@knowledge_upload_document": {
+    "description": "上传文档按钮"
+  },
+
+  "knowledge_no_bases": "还没有知识库",
+  "@knowledge_no_bases": {
+    "description": "空知识库状态"
+  },
+
+  "knowledge_create_first": "创建您的第一个知识库",
+  "@knowledge_create_first": {
+    "description": "创建第一个知识库提示"
+  },
+
+  "knowledge_documents": "文档",
+  "@knowledge_documents": {
+    "description": "文档部分标签"
+  },
+
+  "knowledge_no_documents": "未上传文档",
+  "@knowledge_no_documents": {
+    "description": "无文档状态"
+  },
+
+  "knowledge_upload_first": "上传您的第一个文档",
+  "@knowledge_upload_first": {
+    "description": "上传第一个文档提示"
+  },
+
+  "podcast_subscriptions": "播客订阅",
+  "@podcast_subscriptions": {
+    "description": "播客订阅页面标题"
+  },
+
+  "podcast_my_subscriptions": "我的订阅",
+  "@podcast_my_subscriptions": {
+    "description": "我的订阅部分"
+  },
+
+  "podcast_add_subscription": "添加订阅",
+  "@podcast_add_subscription": {
+    "description": "添加订阅按钮"
+  },
+
+  "podcast_feed_url": "订阅源 URL",
+  "@podcast_feed_url": {
+    "description": "订阅源 URL 字段标签"
+  },
+
+  "podcast_enter_feed_url": "输入播客订阅源 URL",
+  "@podcast_enter_feed_url": {
+    "description": "订阅源 URL 占位符"
+  },
+
+  "podcast_invalid_url": "请输入有效的 URL",
+  "@podcast_invalid_url": {
+    "description": "无效 URL 错误"
+  },
+
+  "podcast_episodes": "剧集",
+  "@podcast_episodes": {
+    "description": "剧集标签"
+  },
+
+  "podcast_latest_episodes": "最新剧集",
+  "@podcast_latest_episodes": {
+    "description": "最新剧集部分"
+  },
+
+  "podcast_no_subscriptions": "还没有订阅",
+  "@podcast_no_subscriptions": {
+    "description": "无订阅状态"
+  },
+
+  "podcast_add_first": "添加您的第一个播客订阅",
+  "@podcast_add_first": {
+    "description": "添加第一个订阅提示"
+  },
+
+  "podcast_play": "播放",
+  "@podcast_play": {
+    "description": "播放按钮标签"
+  },
+
+  "podcast_pause": "暂停",
+  "@podcast_pause": {
+    "description": "暂停按钮标签"
+  },
+
+  "podcast_duration": "时长",
+  "@podcast_duration": {
+    "description": "时长标签"
+  },
+
+  "podcast_published": "发布时间",
+  "@podcast_published": {
+    "description": "发布日期标签"
+  },
+
+  "ai_models": "AI 模型",
+  "@ai_models": {
+    "description": "AI 模型页面标题"
+  },
+
+  "ai_available_models": "可用模型",
+  "@ai_available_models": {
+    "description": "可用模型部分"
+  },
+
+  "ai_model_name": "模型名称",
+  "@ai_model_name": {
+    "description": "模型名称标签"
+  },
+
+  "ai_provider": "提供商",
+  "@ai_provider": {
+    "description": "提供商标签"
+  },
+
+  "ai_model_type": "模型类型",
+  "@ai_model_type": {
+    "description": "模型类型标签"
+  },
+
+  "ai_model_details": "模型详情",
+  "@ai_model_details": {
+    "description": "模型详情部分"
+  },
+
+  "ai_select_model": "选择模型",
+  "@ai_select_model": {
+    "description": "选择模型按钮"
+  },
+
+  "ai_model_selected": "模型已选择",
+  "@ai_model_selected": {
+    "description": "模型已选择消息"
+  },
+
+  "ai_no_models": "没有可用模型",
+  "@ai_no_models": {
+    "description": "无模型状态"
+  },
+
+  "home": "首页",
+  "@home": {
+    "description": "首页标题"
+  },
+
+  "nav_assistant": "助手",
+  "@nav_assistant": {
+    "description": "导航项：助手"
+  },
+
+  "nav_knowledge": "知识库",
+  "@nav_knowledge": {
+    "description": "导航项：知识库"
+  },
+
+  "nav_feed": "信息流",
+  "@nav_feed": {
+    "description": "导航项：信息流"
+  },
+
+  "nav_podcast": "播客",
+  "@nav_podcast": {
+    "description": "导航项：播客"
+  },
+
+  "nav_chat": "对话",
+  "@nav_chat": {
+    "description": "导航项：对话"
+  },
+
+  "nav_knowledge": "知识库",
+  "@nav_knowledge": {
+    "description": "导航项：知识库"
+  },
+
+  "nav_profile": "个人资料",
+  "@nav_profile": {
+    "description": "导航项：个人资料"
+  },
+
+  "podcast_feed_page_title": "信息流",
+  "@podcast_feed_page_title": {
+    "description": "播客信息流页面标题"
+  },
+
+  "podcast_refresh_feed": "刷新信息流",
+  "@podcast_refresh_feed": {
+    "description": "刷新信息流按钮提示"
+  },
+
+  "podcast_add_podcast": "添加播客",
+  "@podcast_add_podcast": {
+    "description": "添加播客按钮提示"
+  },
+
+  "podcast_bulk_import": "批量导入",
+  "@podcast_bulk_import": {
+    "description": "批量导入按钮提示"
+  },
+
+  "podcast_failed_to_load_feed": "加载信息流失败",
+  "@podcast_failed_to_load_feed": {
+    "description": "加载信息流失败错误消息"
+  },
+
+  "podcast_retry": "重试",
+  "@podcast_retry": {
+    "description": "重试按钮"
+  },
+
+  "podcast_no_episodes_found": "未找到剧集",
+  "@podcast_no_episodes_found": {
+    "description": "无剧集状态"
+  },
+
+  "podcast_play": "播放",
+  "@podcast_play": {
+    "description": "播放按钮"
+  },
+
+  "podcast_bookmark": "收藏",
+  "@podcast_bookmark": {
+    "description": "收藏按钮"
+  },
+
+  "podcast_share": "分享",
+  "@podcast_share": {
+    "description": "分享按钮"
+  },
+
+  "podcast_default_podcast": "播客",
+  "@podcast_default_podcast": {
+    "description": "默认播客名称"
+  },
+
+  "nav_ai_models": "AI 模型",
+  "@nav_ai_models": {
+    "description": "导航项：AI 模型"
+  },
+
+  "nav_settings": "设置",
+  "@nav_settings": {
+    "description": "导航项：设置"
+  },
+
+  "validation_required": "此字段为必填项",
+  "@validation_required": {
+    "description": "必填字段验证"
+  },
+
+  "validation_invalid_email": "无效的邮箱格式",
+  "@validation_invalid_email": {
+    "description": "无效邮箱验证"
+  },
+
+  "validation_invalid_url": "无效的 URL 格式",
+  "@validation_invalid_url": {
+    "description": "无效 URL 验证"
+  },
+
+  "validation_too_short": "太短",
+  "@validation_too_short": {
+    "description": "太短验证"
+  },
+
+  "validation_too_long": "太长",
+  "@validation_too_long": {
+    "description": "太长验证"
+  },
+
+  "network_error": "网络错误。请检查您的连接。",
+  "@network_error": {
+    "description": "网络错误消息"
+  },
+
+  "server_error": "服务器错误。请稍后重试。",
+  "@server_error": {
+    "description": "服务器错误消息"
+  },
+
+  "unknown_error": "发生未知错误",
+  "@unknown_error": {
+    "description": "未知错误消息"
+  },
+
+  "request_timeout": "请求超时。请重试。",
+  "@request_timeout": {
+    "description": "请求超时消息"
+  },
+
+  "unauthorized": "未授权。请重新登录。",
+  "@unauthorized": {
+    "description": "未授权错误消息"
+  },
+
+  "forbidden": "访问被拒绝",
+  "@forbidden": {
+    "description": "禁止错误消息"
+  },
+
+  "not_found": "未找到资源",
+  "@not_found": {
+    "description": "未找到错误消息"
+  },
+
+  "session_expired": "会话已过期。请重新登录。",
+  "@session_expired": {
+    "description": "会话过期消息"
+  },
+
+  "action_completed": "操作成功完成",
+  "@action_completed": {
+    "description": "通用成功消息"
+  },
+
+  "action_failed": "操作失败",
+  "@action_failed": {
+    "description": "通用失败消息"
+  },
+
+  "delete_confirm_title": "删除项目",
+  "@delete_confirm_title": {
+    "description": "删除确认标题"
+  },
+
+  "delete_confirm_message": "确定要删除此项目吗？此操作无法撤销。",
+  "@delete_confirm_message": {
+    "description": "删除确认消息"
+  },
+
+  "no_data": "没有可用数据",
+  "@no_data": {
+    "description": "无数据状态消息"
+  },
+
+  "pull_to_refresh": "下拉刷新",
+  "@pull_to_refresh": {
+    "description": "下拉刷新提示"
+  },
+
+  "release_to_refresh": "释放以刷新",
+  "@release_to_refresh": {
+    "description": "释放刷新提示"
+  },
+
+  "refreshing": "刷新中...",
+  "@refreshing": {
+    "description": "刷新中消息"
+  },
+
+  "empty_list": "没有可显示的项目",
+  "@empty_list": {
+    "description": "空列表消息"
+  },
+
+  "no_results": "未找到结果",
+  "@no_results": {
+    "description": "无搜索结果消息"
+  },
+
+  "try_different_search": "尝试不同的搜索词",
+  "@try_different_search": {
+    "description": "不同搜索建议"
+  },
+
+  "podcast_title": "播客",
+  "@podcast_title": {
+    "description": "播客页面标题"
+  },
+
+  "podcast_add_podcast": "添加播客",
+  "@podcast_add_podcast": {
+    "description": "添加播客按钮"
+  },
+
+  "podcast_bulk_import": "批量导入",
+  "@podcast_bulk_import": {
+    "description": "批量导入按钮"
+  },
+
+  "podcast_no_podcasts": "还没有播客",
+  "@podcast_no_podcasts": {
+    "description": "无播客状态"
+  },
+
+  "podcast_add_first": "添加您的第一个播客",
+  "@podcast_add_first": {
+    "description": "添加第一个播客提示"
+  },
+
+  "podcast_description": "无描述",
+  "@podcast_description": {
+    "description": "无描述标签"
+  },
+
+  "podcast_updated": "更新：",
+  "@podcast_updated": {
+    "description": "更新日期前缀"
+  },
+
+  "podcast_failed_load_subscriptions": "加载订阅失败",
+  "@podcast_failed_load_subscriptions": {
+    "description": "加载订阅失败错误"
+  },
+
+  "podcast_player_unknown_episode": "未知剧集",
+  "@podcast_player_unknown_episode": {
+    "description": "未知剧集标题"
+  },
+
+  "podcast_player_no_audio": "无音频链接",
+  "@podcast_player_no_audio": {
+    "description": "无音频链接消息"
+  },
+
+  "podcast_coming_soon": "即将推出",
+  "@podcast_coming_soon": {
+    "description": "即将推出标签"
+  },
+
+  "podcast_filter_all": "全部",
+  "@podcast_filter_all": {
+    "description": "筛选全部剧集"
+  },
+
+  "podcast_filter_unplayed": "未播放",
+  "@podcast_filter_unplayed": {
+    "description": "筛选未播放剧集"
+  },
+
+  "podcast_filter_played": "已播放",
+  "@podcast_filter_played": {
+    "description": "筛选已播放剧集"
+  },
+
+  "podcast_filter_with_summary": "有 AI 摘要",
+  "@podcast_filter_with_summary": {
+    "description": "筛选有 AI 摘要的剧集"
+  },
+
+  "podcast_mark_all_played": "全部标记为已播放",
+  "@podcast_mark_all_played": {
+    "description": "全部标记为已播放选项"
+  },
+
+  "podcast_mark_all_unplayed": "全部标记为未播放",
+  "@podcast_mark_all_unplayed": {
+    "description": "全部标记为未播放选项"
+  },
+
+  "podcast_no_episodes": "未找到剧集",
+  "@podcast_no_episodes": {
+    "description": "无剧集状态"
+  },
+
+  "podcast_no_episodes_with_summary": "没有带 AI 摘要的剧集",
+  "@podcast_no_episodes_with_summary": {
+    "description": "无带摘要剧集状态"
+  },
+
+  "podcast_try_adjusting_filters": "尝试调整您的筛选条件",
+  "@podcast_try_adjusting_filters": {
+    "description": "尝试调整筛选提示"
+  },
+
+  "podcast_no_episodes_yet": "该播客可能还没有任何剧集",
+  "@podcast_no_episodes_yet": {
+    "description": "还没有剧集消息"
+  },
+
+  "podcast_failed_load_episodes": "加载剧集失败",
+  "@podcast_failed_load_episodes": {
+    "description": "加载剧集失败错误"
+  },
+
+  "podcast_filter_episodes": "筛选剧集",
+  "@podcast_filter_episodes": {
+    "description": "筛选剧集对话框标题"
+  },
+
+  "podcast_playback_status": "播放状态：",
+  "@podcast_playback_status": {
+    "description": "播放状态标签"
+  },
+
+  "podcast_all_episodes": "全部剧集",
+  "@podcast_all_episodes": {
+    "description": "全部剧集筛选选项"
+  },
+
+  "podcast_unplayed_only": "仅未播放",
+  "@podcast_unplayed_only": {
+    "description": "仅未播放筛选选项"
+  },
+
+  "podcast_played_only": "仅已播放",
+  "@podcast_played_only": {
+    "description": "仅已播放筛选选项"
+  },
+
+  "podcast_only_with_summary": "仅显示有 AI 摘要的剧集",
+  "@podcast_only_with_summary": {
+    "description": "仅显示有摘要筛选选项"
+  },
+
+  "podcast_apply": "应用",
+  "@podcast_apply": {
+    "description": "应用按钮标签"
+  },
+
+  "podcast_add_dialog_title": "添加播客",
+  "@podcast_add_dialog_title": {
+    "description": "添加播客对话框标题"
+  },
+
+  "podcast_rss_feed_url": "RSS 订阅源 URL",
+  "@podcast_rss_feed_url": {
+    "description": "RSS 订阅源 URL 字段标签"
+  },
+
+  "podcast_feed_url_hint": "https://example.com/feed.xml",
+  "@podcast_feed_url_hint": {
+    "description": "订阅源 URL 提示"
+  },
+
+  "podcast_enter_url": "请输入 URL",
+  "@podcast_enter_url": {
+    "description": "输入 URL 验证"
+  },
+
+  "podcast_added_successfully": "播客添加成功！",
+  "@podcast_added_successfully": {
+    "description": "播客添加成功消息"
+  },
+
+  "podcast_failed_add": "添加播客失败：",
+  "@podcast_failed_add": {
+    "description": "添加播客失败错误"
+  },
+
+  "podcast_need_many": "需要添加多个？",
+  "@podcast_need_many": {
+    "description": "需要添加多个提示"
+  },
+
+  "podcast_adding": "添加中...",
+  "@podcast_adding": {
+    "description": "添加播客加载文本"
+  },
+
+  "ai_model_management": "AI 模型管理",
+  "@ai_model_management": {
+    "description": "AI 模型管理页面标题"
+  },
+
+  "ai_add_model": "添加模型",
+  "@ai_add_model": {
+    "description": "添加模型按钮"
+  },
+
+  "ai_edit_model": "编辑模型",
+  "@ai_edit_model": {
+    "description": "编辑模型按钮"
+  },
+
+  "ai_delete_model": "删除模型",
+  "@ai_delete_model": {
+    "description": "删除模型按钮"
+  },
+
+  "ai_test_model": "测试模型",
+  "@ai_test_model": {
+    "description": "测试模型按钮"
+  },
+
+  "ai_model_name_placeholder": "例如：GPT-4",
+  "@ai_model_name_placeholder": {
+    "description": "模型名称占位符"
+  },
+
+  "ai_provider_name": "提供商名称",
+  "@ai_provider_name": {
+    "description": "提供商名称字段"
+  },
+
+  "ai_api_key": "API 密钥",
+  "@ai_api_key": {
+    "description": "API 密钥字段"
+  },
+
+  "ai_api_base": "API 基础 URL",
+  "@ai_api_base": {
+    "description": "API 基础 URL 字段"
+  },
+
+  "ai_enter_model_name": "请输入模型名称",
+  "@ai_enter_model_name": {
+    "description": "输入模型名称验证"
+  },
+
+  "ai_enter_provider": "请输入提供商名称",
+  "@ai_enter_provider": {
+    "description": "输入提供商验证"
+  },
+
+  "ai_enter_api_key": "请输入 API 密钥",
+  "@ai_enter_api_key": {
+    "description": "输入 API 密钥验证"
+  },
+
+  "ai_no_models_configured": "未配置 AI 模型",
+  "@ai_no_models_configured": {
+    "description": "无模型状态"
+  },
+
+  "ai_add_first_model": "添加您的第一个 AI 模型",
+  "@ai_add_first_model": {
+    "description": "添加第一个模型提示"
+  },
+
+  "ai_model_added": "模型添加成功",
+  "@ai_model_added": {
+    "description": "模型添加成功"
+  },
+
+  "ai_model_updated": "模型更新成功",
+  "@ai_model_updated": {
+    "description": "模型更新成功"
+  },
+
+  "ai_model_deleted": "模型删除成功",
+  "@ai_model_deleted": {
+    "description": "模型删除成功"
+  },
+
+  "ai_confirm_delete_model": "确定要删除此模型吗？",
+  "@ai_confirm_delete_model": {
+    "description": "确认删除模型"
+  },
+
+  "ai_test_prompt": "测试提示词",
+  "@ai_test_prompt": {
+    "description": "测试提示词占位符"
+  },
+
+  "ai_send_test": "发送测试",
+  "@ai_send_test": {
+    "description": "发送测试按钮"
+  },
+
+  "ai_test_response": "测试响应",
+  "@ai_test_response": {
+    "description": "测试响应标签"
+  },
+
+  "ai_create_model_config": "创建 AI 模型配置",
+  "@ai_create_model_config": {
+    "description": "创建模型对话框标题"
+  },
+
+  "ai_config_name": "配置名称",
+  "@ai_config_name": {
+    "description": "配置名称字段"
+  },
+
+  "ai_base_url": "基础 URL",
+  "@ai_base_url": {
+    "description": "基础 URL 字段"
+  },
+
+  "ai_base_url_hint": "https://api.openai.com/v1",
+  "@ai_base_url_hint": {
+    "description": "基础 URL 提示"
+  },
+
+  "ai_model_name_field": "模型名称",
+  "@ai_model_name_field": {
+    "description": "模型名称字段"
+  },
+
+  "ai_model_id_hint": "例如：gpt-4o",
+  "@ai_model_id_hint": {
+    "description": "模型 ID 提示"
+  },
+
+  "ai_config_name_hint": "例如：我的 GPT-4o",
+  "@ai_config_name_hint": {
+    "description": "配置名称提示"
+  },
+
+  "ai_enter_config_name": "请输入配置名称",
+  "@ai_enter_config_name": {
+    "description": "输入配置名称验证"
+  },
+
+  "ai_enter_base_url": "请输入基础 URL",
+  "@ai_enter_base_url": {
+    "description": "输入基础 URL 验证"
+  },
+
+  "ai_enter_model_id": "请输入模型名称",
+  "@ai_enter_model_id": {
+    "description": "输入模型 ID 验证"
+  },
+
+  "ai_transcription_model": "转录模型",
+  "@ai_transcription_model": {
+    "description": "转录模型类型"
+  },
+
+  "ai_text_generation_model": "文本生成模型",
+  "@ai_text_generation_model": {
+    "description": "文本生成模型类型"
+  },
+
+  "ai_model_type_label": "模型类型：",
+  "@ai_model_type_label": {
+    "description": "模型类型标签"
+  },
+
+  "ai_only_show_active": "仅显示活跃",
+  "@ai_only_show_active": {
+    "description": "仅显示活跃开关"
+  },
+
+  "ai_search_models": "搜索模型名称、描述...",
+  "@ai_search_models": {
+    "description": "搜索模型占位符"
+  },
+
+  "ai_model_created": "模型 '{name}' 创建成功",
+  "@ai_model_created": {
+    "description": "模型创建成功"
+  },
+
+  "ai_model_updated_msg": "模型 '{name}' 更新成功",
+  "@ai_model_updated_msg": {
+    "description": "模型更新成功"
+  },
+
+  "ai_model_deleted_msg": "模型 '{name}' 已删除",
+  "@ai_model_deleted_msg": {
+    "description": "模型删除成功"
+  },
+
+  "ai_set_as_default": "已将 '{name}' 设为默认模型",
+  "@ai_set_as_default": {
+    "description": "设为默认成功"
+  },
+
+  "ai_model_enabled": "模型已启用",
+  "@ai_model_enabled": {
+    "description": "模型已启用消息"
+  },
+
+  "ai_model_disabled": "模型已禁用",
+  "@ai_model_disabled": {
+    "description": "模型已禁用消息"
+  },
+
+  "ai_operation_failed": "操作失败",
+  "@ai_operation_failed": {
+    "description": "操作失败消息"
+  },
+
+  "ai_set_default_failed": "设置默认模型失败",
+  "@ai_set_default_failed": {
+    "description": "设置默认失败"
+  },
+
+  "ai_delete_failed": "删除失败",
+  "@ai_delete_failed": {
+    "description": "删除失败"
+  },
+
+  "ai_load_failed": "加载失败：{error}",
+  "@ai_load_failed": {
+    "description": "加载失败错误"
+  },
+
+  "ai_no_models_configured_yet": "暂无模型配置",
+  "@ai_no_models_configured_yet": {
+    "description": "无模型状态"
+  },
+
+  "ai_add_first_model_btn": "添加第一个模型",
+  "@ai_add_first_model_btn": {
+    "description": "添加第一个模型按钮"
+  },
+
+  "profile_guest_user": "访客用户",
+  "@profile_guest_user": {
+    "description": "未登录时显示的访客用户标签"
+  },
+
+  "profile_please_login": "请先登录",
+  "@profile_please_login": {
+    "description": "请登录消息"
+  },
+
+  "profile_premium": "高级会员",
+  "@profile_premium": {
+    "description": "高级会员徽章标签"
+  },
+
+  "profile_verified": "已认证",
+  "@profile_verified": {
+    "description": "已认证徽章标签"
+  },
+
+  "profile_account_settings": "账号设置",
+  "@profile_account_settings": {
+    "description": "账号设置分组"
+  },
+
+  "profile_edit_profile": "编辑个人资料",
+  "@profile_edit_profile": {
+    "description": "编辑个人资料按钮/标题"
+  },
+
+  "profile_edit_profile_subtitle": "更新您的个人信息",
+  "@profile_edit_profile_subtitle": {
+    "description": "编辑个人资料副标题"
+  },
+
+  "profile_security": "安全设置",
+  "@profile_security": {
+    "description": "安全设置"
+  },
+
+  "profile_security_subtitle": "密码、身份验证和隐私",
+  "@profile_security_subtitle": {
+    "description": "安全设置副标题"
+  },
+
+  "profile_notifications": "通知设置",
+  "@profile_notifications": {
+    "description": "通知设置"
+  },
+
+  "profile_notifications_subtitle": "推送通知和邮件提醒",
+  "@profile_notifications_subtitle": {
+    "description": "通知副标题"
+  },
+
+  "profile_dark_mode": "深色模式",
+  "@profile_dark_mode": {
+    "description": "深色模式开关"
+  },
+
+  "profile_dark_mode_subtitle": "切换深色主题",
+  "@profile_dark_mode_subtitle": {
+    "description": "深色模式副标题"
+  },
+
+  "profile_auto_sync": "自动同步",
+  "@profile_auto_sync": {
+    "description": "自动同步开关"
+  },
+
+  "profile_auto_sync_subtitle": "跨设备自动同步数据",
+  "@profile_auto_sync_subtitle": {
+    "description": "自动同步副标题"
+  },
+
+  "profile_help_center": "帮助中心",
+  "@profile_help_center": {
+    "description": "帮助中心标题"
+  },
+
+  "profile_help_center_subtitle": "获取帮助和支持",
+  "@profile_help_center_subtitle": {
+    "description": "帮助中心副标题"
+  },
+
+  "profile_about_subtitle": "应用版本和信息",
+  "@profile_about_subtitle": {
+    "description": "关于副标题"
+  },
+
+  "profile_name": "姓名",
+  "@profile_name": {
+    "description": "姓名字段标签"
+  },
+
+  "profile_email_field": "邮箱",
+  "@profile_email_field": {
+    "description": "个人资料中的邮箱字段标签"
+  },
+
+  "profile_bio": "个人简介",
+  "@profile_bio": {
+    "description": "个人简介字段标签"
+  },
+
+  "profile_updated_successfully": "个人资料更新成功",
+  "@profile_updated_successfully": {
+    "description": "个人资料更新成功消息"
+  },
+
+  "profile_change_password": "修改密码",
+  "@profile_change_password": {
+    "description": "修改密码选项"
+  },
+
+  "profile_biometric_auth": "生物识别认证",
+  "@profile_biometric_auth": {
+    "description": "生物识别认证选项"
+  },
+
+  "profile_two_factor_auth": "双因素认证",
+  "@profile_two_factor_auth": {
+    "description": "双因素认证选项"
+  },
+
+  "profile_user_guide": "用户指南",
+  "@profile_user_guide": {
+    "description": "用户指南选项"
+  },
+
+  "profile_user_guide_subtitle": "了解如何使用应用",
+  "@profile_user_guide_subtitle": {
+    "description": "用户指南副标题"
+  },
+
+  "profile_video_tutorials": "视频教程",
+  "@profile_video_tutorials": {
+    "description": "视频教程选项"
+  },
+
+  "profile_video_tutorials_subtitle": "观看分步指南",
+  "@profile_video_tutorials_subtitle": {
+    "description": "视频教程副标题"
+  },
+
+  "profile_contact_support": "联系客服",
+  "@profile_contact_support": {
+    "description": "联系客服选项"
+  },
+
+  "profile_contact_support_subtitle": "获取我们团队的帮助",
+  "@profile_contact_support_subtitle": {
+    "description": "联系客服副标题"
+  },
+
+  "profile_logout_title": "退出登录",
+  "@profile_logout_title": {
+    "description": "退出登录对话框标题"
+  },
+
+  "profile_logout_message": "确定要退出登录吗？",
+  "@profile_logout_message": {
+    "description": "退出登录确认消息"
+  },
+
+  "profile_logged_out": "已成功退出登录",
+  "@profile_logged_out": {
+    "description": "退出登录成功消息"
+  },
+
+  "profile_error_loading": "加载个人资料失败",
+  "@profile_error_loading": {
+    "description": "加载个人资料错误消息"
+  },
+
+  "settings_saved_successfully": "设置保存成功！",
+  "@settings_saved_successfully": {
+    "description": "设置保存成功消息"
+  },
+
+  "settings_ai_text_generation": "AI 文本生成模型",
+  "@settings_ai_text_generation": {
+    "description": "AI 文本生成模型分组"
+  },
+
+  "settings_config": "配置",
+  "@settings_config": {
+    "description": "配置标签"
+  },
+
+  "settings_add_new": "添加新配置...",
+  "@settings_add_new": {
+    "description": "添加新配置选项"
+  },
+
+  "settings_edit_config": "编辑配置",
+  "@settings_edit_config": {
+    "description": "编辑配置提示"
+  },
+
+  "settings_delete_config": "删除配置",
+  "@settings_delete_config": {
+    "description": "删除配置提示"
+  },
+
+  "settings_test_connection": "测试连接",
+  "@settings_test_connection": {
+    "description": "测试连接按钮"
+  },
+
+  "settings_api_base_url": "API 基础 URL",
+  "@settings_api_base_url": {
+    "description": "API 基础 URL 标签"
+  },
+
+  "settings_model_info_ai_tasks": "此模型将用于 AI 任务。请在上方选择或创建配置。",
+  "@settings_model_info_ai_tasks": {
+    "description": "AI 模型信息消息"
+  },
+
+  "settings_audio_transcription": "音频转录模型",
+  "@settings_audio_transcription": {
+    "description": "音频转录模型分组"
+  },
+
+  "settings_api_url": "API URL",
+  "@settings_api_url": {
+    "description": "API URL 标签"
+  },
+
+  "settings_transcription_api_key_hint": "输入您的转录 API 密钥",
+  "@settings_transcription_api_key_hint": {
+    "description": "转录 API 密钥提示"
+  },
+
+  "settings_model_info_transcription": "此模型将用于将播客音频转录为文本。",
+  "@settings_model_info_transcription": {
+    "description": "转录模型信息消息"
+  },
+
+  "settings_processing": "处理设置",
+  "@settings_processing": {
+    "description": "处理设置分组"
+  },
+
+  "settings_audio_chunk_size": "音频分块大小",
+  "@settings_audio_chunk_size": {
+    "description": "音频分块大小标签"
+  },
+
+  "settings_mb_per_chunk": "每块 {mb}MB",
+  "@settings_mb_per_chunk": {
+    "description": "每块 MB 标签"
+  },
+
+  "settings_max_threads": "最大并发线程数",
+  "@settings_max_threads": {
+    "description": "最大并发线程数标签"
+  },
+
+  "settings_threads": "{threads} 个线程",
+  "@settings_threads": {
+    "description": "线程数标签"
+  },
+
+  "settings_rss_subscription": "RSS 订阅设置",
+  "@settings_rss_subscription": {
+    "description": "RSS 订阅设置分组"
+  },
+
+  "settings_rss_schedule_config": "RSS 计划配置",
+  "@settings_rss_schedule_config": {
+    "description": "RSS 计划配置选项"
+  },
+
+  "settings_rss_schedule_subtitle": "管理所有 RSS 订阅的更新频率和计划",
+  "@settings_rss_schedule_subtitle": {
+    "description": "RSS 计划副标题"
+  },
+
+  "settings_app_version": "应用版本",
+  "@settings_app_version": {
+    "description": "应用版本标签"
+  },
+
+  "settings_backend_api_docs": "后端 API 文档",
+  "@settings_backend_api_docs": {
+    "description": "后端 API 文档选项"
+  },
+
+  "settings_backend_api_docs_subtitle": "查看 API 文档和端点",
+  "@settings_backend_api_docs_subtitle": {
+    "description": "后端 API 文档副标题"
+  },
+
+  "settings_api_documentation": "API 文档",
+  "@settings_api_documentation": {
+    "description": "API 文档对话框标题"
+  },
+
+  "settings_text_generation": "文本生成",
+  "@settings_text_generation": {
+    "description": "文本生成端点名称"
+  },
+
+  "settings_transcription_endpoint": "转录",
+  "@settings_transcription_endpoint": {
+    "description": "转录端点名称"
+  },
+
+  "settings_user_settings_endpoint": "设置",
+  "@settings_user_settings_endpoint": {
+    "description": "设置端点名称"
+  },
+
+  "settings_config_env_vars": "配置环境变量：",
+  "@settings_config_env_vars": {
+    "description": "配置环境变量标签"
+  },
+
+  "settings_openai_api_key": "OpenAI API 密钥",
+  "@settings_openai_api_key": {
+    "description": "OpenAI API 密钥环境变量"
+  },
+
+  "settings_openai_api_base_url": "API 基础 URL",
+  "@settings_openai_api_base_url": {
+    "description": "API 基础 URL 环境变量"
+  },
+
+  "settings_transcription_api_url": "转录 API URL",
+  "@settings_transcription_api_url": {
+    "description": "转录 API URL 环境变量"
+  },
+
+  "settings_transcription_api_key_env": "转录 API 密钥",
+  "@settings_transcription_api_key_env": {
+    "description": "转录 API 密钥环境变量"
+  },
+
+  "settings_transcription_model_name": "转录模型名称",
+  "@settings_transcription_model_name": {
+    "description": "转录模型名称环境变量"
+  },
+
+  "settings_summary_model": "AI 摘要模型名称",
+  "@settings_summary_model": {
+    "description": "摘要模型名称环境变量"
+  },
+
+  "settings_enter_api_url": "请输入 API URL",
+  "@settings_enter_api_url": {
+    "description": "输入 API URL 验证"
+  },
+
+  "settings_enter_api_key": "请输入 API 密钥",
+  "@settings_enter_api_key": {
+    "description": "输入 API 密钥验证"
+  },
+
+  "settings_enter_model_name_validation": "请输入模型名称",
+  "@settings_enter_model_name_validation": {
+    "description": "输入模型名称验证"
+  },
+
+  "settings_testing_connection": "正在测试连接...",
+  "@settings_testing_connection": {
+    "description": "测试连接消息"
+  },
+
+  "settings_connection_successful": "连接成功",
+  "@settings_connection_successful": {
+    "description": "连接成功标题"
+  },
+
+  "settings_connection_failed": "连接失败",
+  "@settings_connection_failed": {
+    "description": "连接失败标题"
+  },
+
+  "settings_response_time": "响应时间：{ms}毫秒",
+  "@settings_response_time": {
+    "description": "响应时间标签"
+  },
+
+  "settings_test_response": "测试响应：",
+  "@settings_test_response": {
+    "description": "测试响应标签"
+  },
+
+  "settings_error_message": "错误消息：",
+  "@settings_error_message": {
+    "description": "错误消息标签"
+  },
+
+  "settings_unknown_error": "发生未知错误",
+  "@settings_unknown_error": {
+    "description": "未知错误消息"
+  },
+
+  "settings_connection_error": "连接错误",
+  "@settings_connection_error": {
+    "description": "连接错误标题"
+  },
+
+  "settings_unexpected_error": "发生意外错误：",
+  "@settings_unexpected_error": {
+    "description": "意外错误消息"
+  },
+
+  "settings_delete_confirm_title": "确认删除",
+  "@settings_delete_confirm_title": {
+    "description": "删除确认标题"
+  },
+
+  "settings_delete_confirm_message": "确定要删除模型 \"{name}\" 吗？这将影响所有使用该模型的功能。",
+  "@settings_delete_confirm_message": {
+    "description": "删除确认消息"
+  },
+
+  "settings_model_deleted": "模型 \"{name}\" 已删除",
+  "@settings_model_deleted": {
+    "description": "模型删除消息"
+  },
+
+  "settings_delete_failed_msg": "删除失败",
+  "@settings_delete_failed_msg": {
+    "description": "删除失败消息"
+  },
+
+  "settings_model_enabled_disabled": "模型已{status}",
+  "@settings_model_enabled_disabled": {
+    "description": "模型启用/禁用消息"
+  },
+
+  "settings_operation_failed_msg": "操作失败",
+  "@settings_operation_failed_msg": {
+    "description": "操作失败消息"
+  },
+
+  "settings_set_default_success": "已将 \"{name}\" 设为默认模型",
+  "@settings_set_default_success": {
+    "description": "设置默认成功消息"
+  },
+
+  "settings_set_default_failed_msg": "设置默认模型失败",
+  "@settings_set_default_failed_msg": {
+    "description": "设置默认失败消息"
+  },
+
+  "settings_load_models_failed": "加载模型失败：{error}",
+  "@settings_load_models_failed": {
+    "description": "加载模型失败消息"
+  },
+  "invalid_navigation_arguments": "导航参数无效",
+  "@invalid_navigation_arguments": {
+    "description": "导航参数无效错误"
+  },
+  "invalid_episode_id": "剧集ID无效",
+  "@invalid_episode_id": {
+    "description": "剧集ID无效错误"
+  }
+}

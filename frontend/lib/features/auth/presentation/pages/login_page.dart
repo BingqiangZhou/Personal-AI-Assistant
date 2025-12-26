@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
@@ -41,6 +42,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final isLoading = authState.isLoading;
 
@@ -89,7 +91,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Welcome Back',
+                          l10n.auth_welcome_back,
                           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.primary,
@@ -97,7 +99,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Sign in to continue to your AI assistant',
+                          l10n.auth_sign_in_subtitle,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
@@ -111,15 +113,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   // Email field
                   CustomTextField(
                     controller: _emailController,
-                    label: 'Email',
+                    label: l10n.auth_email,
                     keyboardType: TextInputType.emailAddress,
                     prefixIcon: const Icon(Icons.email_outlined),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
+                        return l10n.auth_enter_email;
                       }
                       if (!value.contains('@')) {
-                        return 'Please enter a valid email';
+                        return l10n.auth_enter_valid_email;
                       }
                       return null;
                     },
@@ -130,7 +132,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   // Password field
                   CustomTextField(
                     controller: _passwordController,
-                    label: 'Password',
+                    label: l10n.auth_password,
                     obscureText: _obscurePassword,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
@@ -145,10 +147,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
+                        return l10n.auth_enter_password;
                       }
                       if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
+                        return l10n.auth_password_too_short;
                       }
                       return null;
                     },
@@ -167,14 +169,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           });
                         },
                       ),
-                      const Text('Remember me'),
+                      Text(l10n.auth_remember_me),
                       const Spacer(),
                       TextButton(
                         onPressed: () {
                           context.go('/forgot-password');
                         },
                         child: Text(
-                          'Forgot Password?',
+                          l10n.auth_forgot_password,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,
                           ),
@@ -188,7 +190,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   // Login button
                   CustomButton(
                     key: const Key('login_button'),
-                    text: 'Sign In',
+                    text: l10n.auth_login,
                     onPressed: _login,
                     isLoading: isLoading,
                   ),
@@ -200,13 +202,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
+                        l10n.auth_no_account,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       GestureDetector(
                         onTap: () => context.go('/register'),
                         child: Text(
-                          'Sign Up',
+                          l10n.auth_sign_up,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.w600,

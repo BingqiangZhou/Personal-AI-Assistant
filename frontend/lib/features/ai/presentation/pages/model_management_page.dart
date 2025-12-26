@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../providers/ai_model_provider.dart';
 import '../widgets/model_list_item.dart';
 import '../widgets/model_create_dialog.dart';
@@ -43,6 +44,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
   }
 
   void _showCreateModelDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => ModelCreateDialog(
@@ -51,7 +53,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('模型 "${model.displayName}" 创建成功'),
+                content: Text(l10n.ai_model_created(model.displayName)),
                 backgroundColor: Colors.green,
               ),
             );
@@ -63,6 +65,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
   }
 
   void _showEditModelDialog(AIModelConfigModel model) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => ModelEditDialog(
@@ -71,7 +74,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('模型 "${updatedModel.displayName}" 更新成功'),
+                content: Text(l10n.ai_model_updated_msg(updatedModel.displayName)),
                 backgroundColor: Colors.green,
               ),
             );
@@ -90,19 +93,20 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
   }
 
   void _deleteModel(AIModelConfigModel model) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认删除'),
-        content: Text('确定要删除模型 "${model.displayName}" 吗？'),
+        title: Text(l10n.delete_confirm_title),
+        content: Text(l10n.ai_confirm_delete_model),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('删除', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -115,15 +119,15 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('模型 "${model.displayName}" 已删除'),
+              content: Text(l10n.ai_model_deleted_msg(model.displayName)),
               backgroundColor: Colors.green,
             ),
           );
           _refreshModels();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('删除失败'),
+            SnackBar(
+              content: Text(l10n.ai_delete_failed),
               backgroundColor: Colors.red,
             ),
           );
@@ -133,6 +137,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
   }
 
   void _setAsDefault(AIModelConfigModel model) async {
+    final l10n = AppLocalizations.of(context)!;
     final success = await ref
         .read(modelNotifierProvider(model.id).notifier)
         .setAsDefault(_selectedType.toString().split('.').last);
@@ -141,15 +146,15 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('已将 "${model.displayName}" 设为默认模型'),
+            content: Text(l10n.ai_set_as_default(model.displayName)),
             backgroundColor: Colors.green,
           ),
         );
         _refreshModels();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('设置默认模型失败'),
+          SnackBar(
+            content: Text(l10n.ai_set_default_failed),
             backgroundColor: Colors.red,
           ),
         );
@@ -158,6 +163,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
   }
 
   void _toggleModelActive(AIModelConfigModel model) async {
+    final l10n = AppLocalizations.of(context)!;
     final notifier = ref.read(modelNotifierProvider(model.id).notifier);
     final success = await notifier.updateModel({
       'is_active': !model.isActive,
@@ -167,15 +173,15 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('模型已${model.isActive ? "禁用" : "启用"}'),
+            content: Text(model.isActive ? l10n.ai_model_disabled : l10n.ai_model_enabled),
             backgroundColor: Colors.green,
           ),
         );
         _refreshModels();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('操作失败'),
+          SnackBar(
+            content: Text(l10n.ai_operation_failed),
             backgroundColor: Colors.red,
           ),
         );
@@ -185,21 +191,22 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final modelListState = ref.watch(modelListProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('AI模型管理'),
+        title: Text(l10n.ai_model_management),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _refreshModels,
-            tooltip: '刷新',
+            tooltip: l10n.refresh,
           ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: _showCreateModelDialog,
-            tooltip: '添加模型',
+            tooltip: l10n.ai_add_model,
           ),
         ],
       ),
@@ -218,6 +225,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
   }
 
   Widget _buildFilterBar() {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -225,14 +233,14 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
           // 模型类型选择
           DropdownButton<AIModelType>(
             value: _selectedType,
-            items: const [
+            items: [
               DropdownMenuItem(
                 value: AIModelType.transcription,
-                child: Text('转录模型'),
+                child: Text(l10n.ai_transcription_model),
               ),
               DropdownMenuItem(
                 value: AIModelType.textGeneration,
-                child: Text('文本生成模型'),
+                child: Text(l10n.ai_text_generation_model),
               ),
             ],
             onChanged: (value) {
@@ -248,11 +256,11 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
           // 搜索框
           Expanded(
             child: TextField(
-              decoration: const InputDecoration(
-                hintText: '搜索模型名称、描述...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: InputDecoration(
+                hintText: l10n.ai_search_models,
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
               onChanged: (value) {
                 setState(() {
@@ -269,7 +277,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
           // 活跃状态切换
           Row(
             children: [
-              const Text('仅显示活跃'),
+              Text(l10n.ai_only_show_active),
               Switch(
                 value: _showOnlyActive,
                 onChanged: (value) {
@@ -287,6 +295,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
   }
 
   Widget _buildContent(ModelListState state) {
+    final l10n = AppLocalizations.of(context)!;
     if (state.isLoading && state.models.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -299,14 +308,14 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              '加载失败: ${state.error}',
+              l10n.ai_load_failed(state.error.toString()),
               style: const TextStyle(color: Colors.red),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _refreshModels,
-              child: const Text('重试'),
+              child: Text(l10n.retry),
             ),
           ],
         ),
@@ -320,15 +329,15 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
           children: [
             const Icon(Icons.model_training, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            const Text(
-              '暂无模型配置',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
+            Text(
+              l10n.ai_no_models_configured_yet,
+              style: const TextStyle(fontSize: 18, color: Colors.grey),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _showCreateModelDialog,
               icon: const Icon(Icons.add),
-              label: const Text('添加第一个模型'),
+              label: Text(l10n.ai_add_first_model_btn),
             ),
           ],
         ),

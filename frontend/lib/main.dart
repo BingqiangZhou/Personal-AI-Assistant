@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/app/app.dart';
+import 'core/localization/locale_provider.dart';
 import 'core/services/service_locator.dart';
+import 'core/storage/local_storage_service.dart';
 
 void main() async {
   // Ensure Flutter binding is initialized
@@ -32,10 +35,17 @@ void main() async {
   // Initialize services
   await ServiceLocator.init();
 
-  // Run app with custom splash screen wrapper
+  // Initialize SharedPreferences for LocalStorageService
+  final prefs = await SharedPreferences.getInstance();
+  final storageService = LocalStorageServiceImpl(prefs);
+
+  // Run app with custom splash screen wrapper and providers
   runApp(
-    const ProviderScope(
-      child: _AppWithSplashScreen(),
+    ProviderScope(
+      overrides: [
+        localStorageServiceProvider.overrideWithValue(storageService),
+      ],
+      child: const _AppWithSplashScreen(),
     ),
   );
 }

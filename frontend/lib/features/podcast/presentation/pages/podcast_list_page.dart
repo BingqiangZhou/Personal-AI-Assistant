@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../widgets/add_podcast_dialog.dart';
@@ -26,6 +27,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return ResponsiveContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -40,7 +43,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Podcasts',
+                        l10n.podcast_title,
                         style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -59,7 +62,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                           foregroundColor: Theme.of(context).colorScheme.onSecondary,
                         ),
                         icon: const Icon(Icons.add),
-                        label: const Text('Add Podcast'),
+                        label: Text(l10n.podcast_add_podcast),
                       ),
                       const SizedBox(width: 8),
                       FilledButton.icon(
@@ -80,7 +83,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                           foregroundColor: Theme.of(context).colorScheme.onTertiary,
                         ),
                         icon: const Icon(Icons.playlist_add),
-                        label: const Text('Bulk Import'),
+                        label: Text(l10n.podcast_bulk_import),
                       ),
                     ],
                   ],
@@ -102,7 +105,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                             foregroundColor: Theme.of(context).colorScheme.onSecondary,
                           ),
                           icon: const Icon(Icons.add),
-                          label: const Text('Add'),
+                          label: Text(l10n.add),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -125,7 +128,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                             foregroundColor: Theme.of(context).colorScheme.onTertiary,
                           ),
                           icon: const Icon(Icons.playlist_add),
-                          label: const Text('Bulk Import'),
+                          label: Text(l10n.podcast_bulk_import),
                         ),
                       ),
                     ],
@@ -146,6 +149,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   }
 
   Widget _buildSubscriptionContent(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     // Note: using podcastSubscriptionProvider instead of podcastSubscriptionProvider
     final subscriptionsState = ref.watch(podcastSubscriptionProvider);
     final screenWidth = MediaQuery.of(context).size.width;
@@ -165,7 +169,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'No podcasts yet',
+                  l10n.podcast_no_podcasts,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
@@ -178,7 +182,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                       builder: (context) => const AddPodcastDialog(),
                     );
                   },
-                  child: const Text('Add your first podcast'),
+                  child: Text(l10n.podcast_add_first),
                 ),
               ],
             ),
@@ -210,7 +214,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 ),
                 title: Text(subscription.title),
                 subtitle: Text(
-                  subscription.description ?? 'No description',
+                  subscription.description ?? l10n.podcast_description,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -279,7 +283,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                             const SizedBox(height: 4),
                             Expanded(
                               child: Text(
-                                subscription.description ?? 'No description',
+                                subscription.description ?? l10n.podcast_description,
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 ),
@@ -294,7 +298,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
-                                  '${subscription.episodeCount} episodes',
+                                  '${subscription.episodeCount} ${l10n.podcast_episodes}',
                                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                     color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                                     fontWeight: FontWeight.w500,
@@ -302,7 +306,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                                 ),
                                 if (subscription.lastFetchedAt != null)
                                   Text(
-                                    'Updated: ${_formatDate(subscription.lastFetchedAt!)}',
+                                    '${l10n.podcast_updated} ${_formatDate(subscription.lastFetchedAt!)}',
                                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                       color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                                     ),
@@ -327,7 +331,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           children: [
             const Icon(Icons.error_outline, size: 48, color: Colors.orange),
             const SizedBox(height: 16),
-            Text('Failed to load subscriptions'),
+            Text(l10n.podcast_failed_load_subscriptions),
             Text(error.toString(), style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 16),
             FilledButton.icon(
@@ -335,7 +339,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 ref.read(podcastSubscriptionProvider.notifier).loadSubscriptions();
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(l10n.retry),
             ),
           ],
         ),

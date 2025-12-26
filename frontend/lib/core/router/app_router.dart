@@ -19,6 +19,7 @@ import '../../features/podcast/presentation/pages/global_rss_settings_page.dart'
 import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/ai/presentation/pages/model_management_page.dart';
+import '../../core/localization/app_localizations.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -94,8 +95,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final args = PodcastEpisodesPageArgs.extractFromState(state);
               if (args == null) {
-                return const Scaffold(
-                  body: Center(child: Text('Invalid navigation arguments')),
+                final l10n = AppLocalizations.of(context)!;
+                return Scaffold(
+                  body: Center(child: Text(l10n.invalid_navigation_arguments)),
                 );
               }
               return PodcastEpisodesPage(
@@ -112,8 +114,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final args = PodcastEpisodeDetailPageArgs.extractFromState(state);
               if (args == null) {
-                return const Scaffold(
-                  body: Center(child: Text('Invalid navigation arguments')),
+                final l10n = AppLocalizations.of(context)!;
+                return Scaffold(
+                  body: Center(child: Text(l10n.invalid_navigation_arguments)),
                 );
               }
               return PodcastEpisodeDetailPage(episodeId: args.episodeId);
@@ -126,8 +129,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final episodeId = int.tryParse(state.pathParameters['episodeId'] ?? '');
               if (episodeId == null) {
-                return const Scaffold(
-                  body: Center(child: Text('Invalid episode ID')),
+                final l10n = AppLocalizations.of(context)!;
+                return Scaffold(
+                  body: Center(child: Text(l10n.invalid_episode_id)),
                 );
               }
               return PodcastEpisodeDetailPage(episodeId: episodeId);
@@ -140,8 +144,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final args = PodcastPlayerPageArgs.extractFromState(state);
               if (args == null) {
-                return const Scaffold(
-                  body: Center(child: Text('Invalid navigation arguments')),
+                final l10n = AppLocalizations.of(context)!;
+                return Scaffold(
+                  body: Center(child: Text(l10n.invalid_navigation_arguments)),
                 );
               }
               return PodcastPlayerPage(args: args);
@@ -203,9 +208,10 @@ class ErrorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Error'),
+        title: Text(l10n.error),
       ),
       body: Center(
         child: Column(
@@ -217,23 +223,23 @@ class ErrorPage extends StatelessWidget {
               color: Colors.red,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'An error occurred',
-              style: TextStyle(
+            Text(
+              l10n.unknown_error,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              error?.toString() ?? 'Unknown error',
+              error?.toString() ?? l10n.unknown_error,
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () => context.go('/splash'),
-              child: const Text('Go to Home'),
+              child: Text(l10n.home),
             ),
           ],
         ),

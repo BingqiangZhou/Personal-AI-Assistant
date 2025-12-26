@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../navigation/podcast_navigation.dart';
 
 class PodcastPlayerPage extends StatelessWidget {
@@ -11,8 +12,9 @@ class PodcastPlayerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final episodeTitle = args?.episodeTitle ?? '未知单集';
-    final audioUrl = args?.audioUrl ?? '无音频链接';
+    final l10n = AppLocalizations.of(context)!;
+    final episodeTitle = args?.episodeTitle ?? l10n.podcast_player_unknown_episode;
+    final audioUrl = args?.audioUrl ?? l10n.podcast_player_no_audio;
 
     return Scaffold(
       appBar: AppBar(
@@ -99,8 +101,8 @@ class PodcastPlayerPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 32),
-            const Text(
-              'Coming Soon',
+            Text(
+              l10n.podcast_coming_soon,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
@@ -25,38 +26,41 @@ class _HomePageState extends ConsumerState<HomePage> {
   late int _currentIndex;
 
   /// 导航目的地配置
-  final List<NavigationDestination> _destinations = const [
-    NavigationDestination(
-      icon: Icon(Icons.home_outlined),
-      selectedIcon: Icon(Icons.home),
-      label: 'Feed',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.podcasts_outlined),
-      selectedIcon: Icon(Icons.podcasts),
-      label: 'Podcasts',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.chat_outlined),
-      selectedIcon: Icon(Icons.chat),
-      label: 'Chat',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.folder_outlined),
-      selectedIcon: Icon(Icons.folder),
-      label: 'Knowledge',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.person_outline),
-      selectedIcon: Icon(Icons.person),
-      label: 'Profile',
-    ),
-  ];
+  List<NavigationDestination> _buildDestinations(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      NavigationDestination(
+        icon: Icon(Icons.home_outlined),
+        selectedIcon: Icon(Icons.home),
+        label: l10n.nav_feed,
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.podcasts_outlined),
+        selectedIcon: Icon(Icons.podcasts),
+        label: l10n.nav_podcast,
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.chat_outlined),
+        selectedIcon: Icon(Icons.chat),
+        label: l10n.nav_chat,
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.folder_outlined),
+        selectedIcon: Icon(Icons.folder),
+        label: l10n.nav_knowledge,
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.person_outline),
+        selectedIcon: Icon(Icons.person),
+        label: l10n.nav_profile,
+      ),
+    ];
+  }
 
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialTab ?? 0; // Default to Feed (index 0)
+    _currentIndex = widget.initialTab ?? 0; // Default to Feed/信息流 (index 0)
   }
 
   @override
@@ -73,7 +77,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     // 主导航布局 - 使用自定义的Material Design 3自适应导航
     return CustomAdaptiveNavigation(
       key: const ValueKey('home_custom_adaptive_navigation'),
-      destinations: _destinations,
+      destinations: _buildDestinations(context),
       selectedIndex: _currentIndex,
       onDestinationSelected: _handleNavigation,
       appBar: null, // 移除顶部标题栏

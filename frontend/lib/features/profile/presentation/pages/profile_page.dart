@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
 
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../auth/domain/models/user.dart';
@@ -18,10 +20,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
   bool _autoSyncEnabled = true;
-  String _language = 'English';
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return ResponsiveContainer(
       child: SingleChildScrollView(
         child: Column(
@@ -34,7 +36,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               children: [
                 Expanded(
                   child: Text(
-                    'Profile',
+                    l10n.profile,
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -48,12 +50,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       onPressed: () {
                         context.push('/profile/settings');
                       },
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.settings, size: 16),
-                          SizedBox(width: 4),
-                          Text('Settings'),
+                          const Icon(Icons.settings, size: 16),
+                          const SizedBox(width: 4),
+                          Text(l10n.settings),
                         ],
                       ),
                     ),
@@ -64,7 +66,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         _showEditProfileDialog(context);
                       },
                       icon: const Icon(Icons.edit),
-                      label: const Text('Edit'),
+                      label: Text(l10n.edit),
                     ),
                   ],
                 ),
@@ -93,6 +95,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 构建用户信息卡片
   Widget _buildUserProfileCard(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final userState = ref.watch(userProvider);
@@ -135,14 +138,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          user?.displayName ?? 'Guest User',
+                          user?.displayName ?? l10n.profile_guest_user,
                           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          user?.email ?? 'Please log in',
+                          user?.email ?? l10n.profile_please_login,
                           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
@@ -150,7 +153,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ],
                     ),
                     loading: () => const CircularProgressIndicator(),
-                    error: (e, s) => Text('Error loading profile'),
+                    error: (e, s) => Text(l10n.profile_error_loading),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -161,7 +164,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           size: 16,
                           color: Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
-                        label: const Text('Premium'),
+                        label: Text(l10n.profile_premium),
                         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                         labelStyle: TextStyle(
                           color: Theme.of(context).colorScheme.onPrimaryContainer,
@@ -174,7 +177,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           size: 16,
                           color: Theme.of(context).colorScheme.onSecondaryContainer,
                         ),
-                        label: const Text('Verified'),
+                        label: Text(l10n.profile_verified),
                         backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
                         labelStyle: TextStyle(
                           color: Theme.of(context).colorScheme.onSecondaryContainer,
@@ -193,6 +196,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 构建活动统计卡片
   Widget _buildActivityCards(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
@@ -203,7 +207,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildActivityCard(
             context,
             Icons.podcasts,
-            'Podcasts',
+            l10n.nav_podcast,
             '42',
             Theme.of(context).colorScheme.primary,
           ),
@@ -211,7 +215,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildActivityCard(
             context,
             Icons.article,
-            'Knowledge',
+            l10n.nav_knowledge,
             '128',
             Theme.of(context).colorScheme.secondary,
           ),
@@ -219,7 +223,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildActivityCard(
             context,
             Icons.chat,
-            'AI Chats',
+            l10n.nav_assistant,
             '1,024',
             Theme.of(context).colorScheme.tertiary,
           ),
@@ -234,7 +238,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           child: _buildActivityCard(
             context,
             Icons.podcasts,
-            'Podcasts',
+            l10n.nav_podcast,
             '42',
             Theme.of(context).colorScheme.primary,
           ),
@@ -244,7 +248,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           child: _buildActivityCard(
             context,
             Icons.article,
-            'Knowledge',
+            l10n.nav_knowledge,
             '128',
             Theme.of(context).colorScheme.secondary,
           ),
@@ -254,7 +258,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           child: _buildActivityCard(
             context,
             Icons.chat,
-            'AI Chats',
+            l10n.nav_assistant,
             '1,024',
             Theme.of(context).colorScheme.tertiary,
           ),
@@ -299,32 +303,33 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 构建设置内容
   Widget _buildSettingsContent(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
     if (isMobile) {
       return Column(
         children: [
-          _buildSettingsSection(context, 'Account Settings', [
+          _buildSettingsSection(context, l10n.profile_account_settings, [
             _buildSettingsItem(
               context,
               icon: Icons.person,
-              title: 'Edit Profile',
-              subtitle: 'Update your personal information',
+              title: l10n.profile_edit_profile,
+              subtitle: l10n.profile_edit_profile_subtitle,
               onTap: () => _showEditProfileDialog(context),
             ),
             _buildSettingsItem(
               context,
               icon: Icons.security,
-              title: 'Security',
-              subtitle: 'Password, authentication, and privacy',
+              title: l10n.profile_security,
+              subtitle: l10n.profile_security_subtitle,
               onTap: () => _showSecurityDialog(context),
             ),
             _buildSettingsItem(
               context,
               icon: Icons.notifications,
-              title: 'Notifications',
-              subtitle: 'Push notifications and email alerts',
+              title: l10n.profile_notifications,
+              subtitle: l10n.profile_notifications_subtitle,
               trailing: Switch(
                 value: _notificationsEnabled,
                 onChanged: (value) {
@@ -336,19 +341,36 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ),
           ]),
           const SizedBox(height: 24),
-          _buildSettingsSection(context, 'Preferences', [
-            _buildSettingsItem(
-              context,
-              icon: Icons.language,
-              title: 'Language',
-              subtitle: _language,
-              onTap: () => _showLanguageDialog(context),
+          _buildSettingsSection(context, l10n.preferences, [
+            Consumer(
+              builder: (context, ref, _) {
+                final localeNotifier = ref.watch(localeProvider.notifier);
+                final currentCode = localeNotifier.languageCode;
+                final l10n = AppLocalizations.of(context)!;
+
+                String languageName;
+                if (currentCode == kLanguageSystem) {
+                  languageName = l10n.languageFollowSystem;
+                } else if (currentCode == kLanguageChinese) {
+                  languageName = l10n.languageChinese;
+                } else {
+                  languageName = l10n.languageEnglish;
+                }
+
+                return _buildSettingsItem(
+                  context,
+                  icon: Icons.language,
+                  title: l10n.language,
+                  subtitle: languageName,
+                  onTap: () => _showLanguageDialog(context),
+                );
+              },
             ),
             _buildSettingsItem(
               context,
               icon: Icons.dark_mode,
-              title: 'Dark Mode',
-              subtitle: 'Toggle dark theme',
+              title: l10n.profile_dark_mode,
+              subtitle: l10n.profile_dark_mode_subtitle,
               trailing: Switch(
                 value: _darkModeEnabled,
                 onChanged: (value) {
@@ -361,8 +383,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             _buildSettingsItem(
               context,
               icon: Icons.sync,
-              title: 'Auto Sync',
-              subtitle: 'Automatically sync data across devices',
+              title: l10n.profile_auto_sync,
+              subtitle: l10n.profile_auto_sync_subtitle,
               trailing: Switch(
                 value: _autoSyncEnabled,
                 onChanged: (value) {
@@ -378,15 +400,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             _buildSettingsItem(
               context,
               icon: Icons.help,
-              title: 'Help Center',
-              subtitle: 'Get help and support',
+              title: l10n.profile_help_center,
+              subtitle: l10n.profile_help_center_subtitle,
               onTap: () => _showHelpDialog(context),
             ),
             _buildSettingsItem(
               context,
               icon: Icons.info,
-              title: 'About',
-              subtitle: 'App version and information',
+              title: l10n.about,
+              subtitle: l10n.profile_about_subtitle,
               onTap: () => _showAboutDialog(context),
             ),
           ]),
@@ -400,12 +422,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 backgroundColor: Theme.of(context).colorScheme.errorContainer,
                 foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.logout),
-                  SizedBox(width: 8),
-                  Text('Logout'),
+                  const Icon(Icons.logout),
+                  const SizedBox(width: 8),
+                  Text(l10n.logout),
                 ],
               ),
             ),
@@ -421,26 +443,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           Expanded(
             child: Column(
               children: [
-                _buildSettingsSection(context, 'Account Settings', [
+                _buildSettingsSection(context, l10n.profile_account_settings, [
                   _buildSettingsItem(
                     context,
                     icon: Icons.person,
-                    title: 'Edit Profile',
-                    subtitle: 'Update your personal information',
+                    title: l10n.profile_edit_profile,
+                    subtitle: l10n.profile_edit_profile_subtitle,
                     onTap: () => _showEditProfileDialog(context),
                   ),
                   _buildSettingsItem(
                     context,
                     icon: Icons.security,
-                    title: 'Security',
-                    subtitle: 'Password, authentication, and privacy',
+                    title: l10n.profile_security,
+                    subtitle: l10n.profile_security_subtitle,
                     onTap: () => _showSecurityDialog(context),
                   ),
                   _buildSettingsItem(
                     context,
                     icon: Icons.notifications,
-                    title: 'Notifications',
-                    subtitle: 'Push notifications and email alerts',
+                    title: l10n.profile_notifications,
+                    subtitle: l10n.profile_notifications_subtitle,
                     trailing: Switch(
                       value: _notificationsEnabled,
                       onChanged: (value) {
@@ -458,19 +480,36 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           Expanded(
             child: Column(
               children: [
-                _buildSettingsSection(context, 'Preferences', [
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.language,
-                    title: 'Language',
-                    subtitle: _language,
-                    onTap: () => _showLanguageDialog(context),
+                _buildSettingsSection(context, l10n.preferences, [
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final localeNotifier = ref.watch(localeProvider.notifier);
+                      final currentCode = localeNotifier.languageCode;
+                      final l10n = AppLocalizations.of(context)!;
+
+                      String languageName;
+                      if (currentCode == kLanguageSystem) {
+                        languageName = l10n.languageFollowSystem;
+                      } else if (currentCode == kLanguageChinese) {
+                        languageName = l10n.languageChinese;
+                      } else {
+                        languageName = l10n.languageEnglish;
+                      }
+
+                      return _buildSettingsItem(
+                        context,
+                        icon: Icons.language,
+                        title: l10n.language,
+                        subtitle: languageName,
+                        onTap: () => _showLanguageDialog(context),
+                      );
+                    },
                   ),
                   _buildSettingsItem(
                     context,
                     icon: Icons.dark_mode,
-                    title: 'Dark Mode',
-                    subtitle: 'Toggle dark theme',
+                    title: l10n.profile_dark_mode,
+                    subtitle: l10n.profile_dark_mode_subtitle,
                     trailing: Switch(
                       value: _darkModeEnabled,
                       onChanged: (value) {
@@ -483,8 +522,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   _buildSettingsItem(
                     context,
                     icon: Icons.sync,
-                    title: 'Auto Sync',
-                    subtitle: 'Automatically sync data across devices',
+                    title: l10n.profile_auto_sync,
+                    subtitle: l10n.profile_auto_sync_subtitle,
                     trailing: Switch(
                       value: _autoSyncEnabled,
                       onChanged: (value) {
@@ -505,15 +544,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildSettingsItem(
             context,
             icon: Icons.help,
-            title: 'Help Center',
-            subtitle: 'Get help and support',
+            title: l10n.profile_help_center,
+            subtitle: l10n.profile_help_center_subtitle,
             onTap: () => _showHelpDialog(context),
           ),
           _buildSettingsItem(
             context,
             icon: Icons.info,
-            title: 'About',
-            subtitle: 'App version and information',
+            title: l10n.about,
+            subtitle: l10n.profile_about_subtitle,
             onTap: () => _showAboutDialog(context),
           ),
         ]),
@@ -528,12 +567,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
               minimumSize: const Size(double.infinity, 48),
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.logout),
-                SizedBox(width: 8),
-                Text('Logout'),
+                const Icon(Icons.logout),
+                const SizedBox(width: 8),
+                Text(l10n.logout),
               ],
             ),
           ),
@@ -586,31 +625,32 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 显示编辑个人资料对话框
   void _showEditProfileDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Edit Profile'),
+        title: Text(l10n.profile_edit_profile),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const TextField(
+            TextField(
               decoration: InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+                labelText: l10n.profile_name,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
-            const TextField(
+            TextField(
               decoration: InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
+                labelText: l10n.profile_email_field,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
-            const TextField(
+            TextField(
               decoration: InputDecoration(
-                labelText: 'Bio',
-                border: OutlineInputBorder(),
+                labelText: l10n.profile_bio,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
@@ -619,16 +659,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile updated successfully')),
+                SnackBar(content: Text(l10n.profile_updated_successfully)),
               );
             },
-            child: const Text('Save'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -654,34 +694,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 显示安全对话框
   void _showSecurityDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Security'),
-        content: const Column(
+        title: Text(l10n.profile_security),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.password),
-              title: Text('Change Password'),
-              trailing: Icon(Icons.chevron_right),
+              leading: const Icon(Icons.password),
+              title: Text(l10n.profile_change_password),
+              trailing: const Icon(Icons.chevron_right),
             ),
             ListTile(
-              leading: Icon(Icons.fingerprint),
-              title: Text('Biometric Authentication'),
+              leading: const Icon(Icons.fingerprint),
+              title: Text(l10n.profile_biometric_auth),
               trailing: Switch(value: true, onChanged: null),
             ),
             ListTile(
-              leading: Icon(Icons.phone_android),
-              title: Text('Two-Factor Authentication'),
-              trailing: Icon(Icons.chevron_right),
+              leading: const Icon(Icons.phone_android),
+              title: Text(l10n.profile_two_factor_auth),
+              trailing: const Icon(Icons.chevron_right),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: Text(l10n.close),
           ),
         ],
       ),
@@ -692,86 +733,101 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   void _showLanguageDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Language'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RadioListTile<String>(
-              title: const Text('English'),
-              value: 'English',
-              groupValue: _language,
-              onChanged: (value) {
-                setState(() {
-                  _language = value!;
-                });
-                Navigator.of(context).pop();
-              },
+      builder: (context) => Consumer(
+        builder: (context, ref, _) {
+          final localeNotifier = ref.watch(localeProvider.notifier);
+          final currentCode = localeNotifier.languageCode;
+          final l10n = AppLocalizations.of(context)!;
+
+          return AlertDialog(
+            title: Text(l10n.language),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioListTile<String>(
+                  title: Text(l10n.languageFollowSystem),
+                  value: kLanguageSystem,
+                  groupValue: currentCode,
+                  onChanged: (value) async {
+                    if (value != null) {
+                      await ref.read(localeProvider.notifier).setLanguageCode(value);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    }
+                  },
+                ),
+                RadioListTile<String>(
+                  title: Text(l10n.languageEnglish),
+                  value: kLanguageEnglish,
+                  groupValue: currentCode,
+                  onChanged: (value) async {
+                    if (value != null) {
+                      await ref.read(localeProvider.notifier).setLanguageCode(value);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    }
+                  },
+                ),
+                RadioListTile<String>(
+                  title: Text(l10n.languageChinese),
+                  value: kLanguageChinese,
+                  groupValue: currentCode,
+                  onChanged: (value) async {
+                    if (value != null) {
+                      await ref.read(localeProvider.notifier).setLanguageCode(value);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    }
+                  },
+                ),
+              ],
             ),
-            RadioListTile<String>(
-              title: const Text('中文'),
-              value: '中文',
-              groupValue: _language,
-              onChanged: (value) {
-                setState(() {
-                  _language = value!;
-                });
-                Navigator.of(context).pop();
-              },
-            ),
-            RadioListTile<String>(
-              title: const Text('Español'),
-              value: 'Español',
-              groupValue: _language,
-              onChanged: (value) {
-                setState(() {
-                  _language = value!;
-                });
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.languageFollowSystem == 'Cancel' ? 'Cancel' : '关闭'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
   /// 显示帮助对话框
   void _showHelpDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Help Center'),
-        content: const Column(
+        title: Text(l10n.profile_help_center),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: Icon(Icons.book),
-              title: Text('User Guide'),
-              subtitle: Text('Learn how to use the app'),
+              leading: const Icon(Icons.book),
+              title: Text(l10n.profile_user_guide),
+              subtitle: Text(l10n.profile_user_guide_subtitle),
             ),
             ListTile(
-              leading: Icon(Icons.video_library),
-              title: Text('Video Tutorials'),
-              subtitle: Text('Watch step-by-step guides'),
+              leading: const Icon(Icons.video_library),
+              title: Text(l10n.profile_video_tutorials),
+              subtitle: Text(l10n.profile_video_tutorials_subtitle),
             ),
             ListTile(
-              leading: Icon(Icons.contact_support),
-              title: Text('Contact Support'),
-              subtitle: Text('Get help from our team'),
+              leading: const Icon(Icons.contact_support),
+              title: Text(l10n.profile_contact_support),
+              subtitle: Text(l10n.profile_contact_support_subtitle),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: Text(l10n.close),
           ),
         ],
       ),
@@ -793,24 +849,25 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// 显示登出对话框
   void _showLogoutDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: Text(l10n.profile_logout_title),
+        content: Text(l10n.profile_logout_message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Logged out successfully')),
+                SnackBar(content: Text(l10n.profile_logged_out)),
               );
             },
-            child: const Text('Logout'),
+            child: Text(l10n.logout),
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../providers/podcast_providers.dart';
 import 'bulk_import_dialog.dart';
 
@@ -38,17 +39,18 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Podcast added successfully!'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.podcast_added_successfully),
             backgroundColor: Colors.green,
           ),
         );
       }
     } catch (error) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to add podcast: $error'),
+            content: Text('${l10n.podcast_failed_add} $error'),
             backgroundColor: Colors.red,
           ),
         );
@@ -64,6 +66,7 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Dialog(
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500),
@@ -73,7 +76,7 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Add Podcast',
+              l10n.podcast_add_dialog_title,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 24),
@@ -83,18 +86,18 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
                 children: [
                   TextFormField(
                     controller: _feedUrlController,
-                    decoration: const InputDecoration(
-                      labelText: 'RSS Feed URL',
-                      hintText: 'https://example.com/feed.xml',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.rss_feed),
+                    decoration: InputDecoration(
+                      labelText: l10n.podcast_rss_feed_url,
+                      hintText: l10n.podcast_feed_url_hint,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.rss_feed),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a URL';
+                        return l10n.podcast_enter_url;
                       }
                       if (!value.startsWith('http')) {
-                        return 'Please enter a valid URL';
+                        return l10n.validation_invalid_url;
                       }
                       return null;
                     },
@@ -103,7 +106,7 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
                   const SizedBox(height: 24),
                   Row(
                     children: [
-                      const Text('Need to add many?'),
+                      Text(l10n.podcast_need_many),
                       TextButton(
                         onPressed: () {
                           Navigator.of(context).pop();
@@ -118,7 +121,7 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
                             ),
                           );
                         },
-                        child: const Text('Bulk Import'),
+                        child: Text(l10n.podcast_bulk_import),
                       ),
                     ],
                   ),
@@ -131,7 +134,7 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
               children: [
                 TextButton(
                   onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(l10n.cancel),
                 ),
                 const SizedBox(width: 16),
                 ElevatedButton.icon(
@@ -143,7 +146,7 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.add),
-                  label: Text(_isLoading ? 'Adding...' : 'Add Podcast'),
+                  label: Text(_isLoading ? l10n.podcast_adding : l10n.podcast_add_dialog_title),
                 ),
               ],
             ),

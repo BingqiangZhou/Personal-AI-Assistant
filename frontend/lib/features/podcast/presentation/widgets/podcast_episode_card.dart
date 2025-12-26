@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../data/models/podcast_episode_model.dart';
+import '../../../../core/utils/time_formatter.dart';
 
 class PodcastEpisodeCard extends ConsumerWidget {
   final PodcastEpisodeModel episode;
@@ -233,7 +233,7 @@ class PodcastEpisodeCard extends ConsumerWidget {
                         const SizedBox(height: 4),
                         // Published date
                         Text(
-                          DateFormat('MMM d, yyyy').format(episode.publishedAt),
+                          TimeFormatter.formatRelativeTime(episode.publishedAt),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: Colors.grey[600],
                           ),

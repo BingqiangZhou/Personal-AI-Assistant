@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../models/ai_model_config_model.dart';
 import '../providers/ai_model_provider.dart';
 
@@ -102,8 +103,9 @@ class _ModelCreateDialogState extends ConsumerState<ModelCreateDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('Create AI Model Config'),
+      title: Text(l10n.ai_create_model_config),
       content: SizedBox(
         width: double.maxFinite,
         child: Form(
@@ -118,34 +120,34 @@ class _ModelCreateDialogState extends ConsumerState<ModelCreateDialog> {
 
                 _buildTextFormField(
                   controller: _displayNameController,
-                  label: 'Config Name *',
-                  hint: 'e.g. My GPT-4o',
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter a config name' : null,
+                  label: '${l10n.ai_config_name} *',
+                  hint: l10n.ai_config_name_hint,
+                  validator: (value) => value?.isEmpty ?? true ? l10n.ai_enter_config_name : null,
                 ),
                 const SizedBox(height: 12),
 
                 _buildTextFormField(
                   controller: _apiUrlController,
-                  label: 'Base URL *',
-                  hint: 'https://api.openai.com/v1',
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter Base URL' : null,
+                  label: '${l10n.ai_base_url} *',
+                  hint: l10n.ai_base_url_hint,
+                  validator: (value) => value?.isEmpty ?? true ? l10n.ai_enter_base_url : null,
                 ),
                 const SizedBox(height: 12),
 
                 _buildTextFormField(
                   controller: _modelIdController,
-                  label: 'Model Name *',
-                  hint: 'e.g. gpt-4o',
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter Model Name' : null,
+                  label: '${l10n.ai_model_name_field} *',
+                  hint: l10n.ai_model_id_hint,
+                  validator: (value) => value?.isEmpty ?? true ? l10n.ai_enter_model_id : null,
                 ),
                 const SizedBox(height: 12),
 
                 _buildTextFormField(
                   controller: _apiKeyController,
-                  label: 'API Key *',
+                  label: '${l10n.ai_api_key} *',
                   hint: 'sk-...',
                   isPassword: true,
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter API Key' : null,
+                  validator: (value) => value?.isEmpty ?? true ? l10n.ai_enter_api_key : null,
                 ),
 
                 if (_error != null) ...[
@@ -179,7 +181,7 @@ class _ModelCreateDialogState extends ConsumerState<ModelCreateDialog> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: const Text('Cancel'),
+          child: Text(l10n.cancel),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _createModel,
@@ -189,13 +191,14 @@ class _ModelCreateDialogState extends ConsumerState<ModelCreateDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
-              : const Text('Create'),
+              : Text(l10n.create),
         ),
       ],
     );
   }
 
   Widget _buildModelTypeSelector() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -206,20 +209,20 @@ class _ModelCreateDialogState extends ConsumerState<ModelCreateDialog> {
         children: [
           const Icon(Icons.category, size: 20),
           const SizedBox(width: 8),
-          const Text('Model Type:', style: TextStyle(fontWeight: FontWeight.bold)),
+          Text(l10n.ai_model_type_label, style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(width: 12),
           Expanded(
             child: SegmentedButton<AIModelType>(
-              segments: const [
+              segments: [
                 ButtonSegment<AIModelType>(
                   value: AIModelType.transcription,
-                  label: Text('Transcription'),
-                  icon: Icon(Icons.record_voice_over),
+                  label: Text(l10n.ai_transcription_model),
+                  icon: const Icon(Icons.record_voice_over),
                 ),
                 ButtonSegment<AIModelType>(
                   value: AIModelType.textGeneration,
                   label: Text('Text Gen'),
-                  icon: Icon(Icons.auto_awesome),
+                  icon: const Icon(Icons.auto_awesome),
                 ),
               ],
               selected: {_modelType},

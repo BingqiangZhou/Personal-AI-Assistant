@@ -1,18 +1,37 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
+from starlette.responses import Response
+from typing import Any
 
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.exceptions import setup_exception_handlers
 from app.core.logging_config import setup_logging_from_env
 from app.core.logging_middleware import setup_logging_middleware
+from app.core.json_encoder import CustomJSONEncoder
 import logging
+import json
 
 # 初始化日志系统
 setup_logging_from_env()
 logger = logging.getLogger(__name__)
+
+
+class CustomJSONResponse(JSONResponse):
+    """自定义 JSON 响应类，使用自定义编码器处理 datetime"""
+
+    def render(self, content: Any) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=None,
+            separators=(",", ":"),
+            cls=CustomJSONEncoder,
+        ).encode("utf-8")
 
 
 @asynccontextmanager
@@ -49,7 +68,8 @@ def create_application() -> FastAPI:
         description="Personal AI Assistant API",
         version="1.0.0",
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
-        lifespan=lifespan
+        lifespan=lifespan,
+        default_response_class=CustomJSONResponse  # 使用自定义 JSON 响应类
     )
 
     # Set up CORS

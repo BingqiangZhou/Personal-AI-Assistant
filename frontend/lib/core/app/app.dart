@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 
+import '../localization/locale_provider.dart';
 import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 import '../widgets/loading_page.dart';
@@ -23,6 +25,9 @@ class _PersonalAIAssistantAppState extends ConsumerState<PersonalAIAssistantApp>
   }
 
   Future<void> _initializeApp() async {
+    // Load saved locale from storage
+    await ref.read(localeProvider.notifier).loadSavedLocale();
+
     // Simulate app initialization time - longer to prevent any flash
     await Future.delayed(const Duration(milliseconds: 1200));
 
@@ -61,14 +66,16 @@ class _PersonalAIAssistantAppState extends ConsumerState<PersonalAIAssistantApp>
       routerConfig: ref.watch(appRouterProvider),
 
       // Localization
+      locale: ref.watch(localeProvider),
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en', 'US'),
-        Locale('zh', 'CN'),
+        Locale('en'),
+        Locale('zh'),
       ],
 
       // Simple builder without flash prevention

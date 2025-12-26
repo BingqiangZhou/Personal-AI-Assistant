@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:file_selector/file_selector.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
+import '../../../../core/utils/time_formatter.dart';
 import '../providers/knowledge_providers.dart';
 import '../../data/models/knowledge_model.dart';
 
@@ -52,6 +53,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       height: 56,
       child: Row(
@@ -63,7 +65,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
             ),
           Expanded(
             child: Text(
-              _selectedBase?.name ?? 'Knowledge Base',
+              _selectedBase?.name ?? l10n.knowledge_base,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -74,12 +76,12 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
             children: [
               FilledButton.tonal(
                 onPressed: () => _showImportDialog(context),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.upload, size: 16),
-                    SizedBox(width: 4),
-                    Text('Import'),
+                    const Icon(Icons.upload, size: 16),
+                    const SizedBox(width: 4),
+                    Text(l10n.knowledge_upload_document),
                   ],
                 ),
               ),
@@ -87,7 +89,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
               FilledButton.icon(
                 onPressed: () => _showCreateDialog(context),
                 icon: const Icon(Icons.add),
-                label: const Text('Create'),
+                label: Text(l10n.create),
               ),
             ],
           ),
@@ -97,6 +99,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
   }
 
   Widget _buildSearchAndFilter(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -109,7 +112,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
             controller: _searchController,
             onFieldSubmitted: (value) => setState(() {}),
             decoration: InputDecoration(
-              hintText: 'Search across all knowledge bases...',
+              hintText: l10n.search,
               prefixIcon: const Icon(Icons.search),
               suffixIcon: IconButton(
                 onPressed: () {
@@ -128,6 +131,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
   }
 
   Widget _buildSearchResults(BuildContext context, String query) {
+    final l10n = AppLocalizations.of(context)!;
     final searchAsync = ref.watch(searchDocumentsProvider(query));
 
     return Column(
@@ -135,12 +139,12 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: Text('Search Results for "$query"', style: Theme.of(context).textTheme.titleMedium),
+          child: Text('${l10n.search} Results for "$query"', style: Theme.of(context).textTheme.titleMedium),
         ),
         Expanded(
           child: searchAsync.when(
             data: (docs) {
-              if (docs.isEmpty) return const Center(child: Text('No results found.'));
+              if (docs.isEmpty) return Center(child: Text(l10n.no_results));
               return ListView.builder(
                 itemCount: docs.length,
                 itemBuilder: (context, index) {
@@ -155,7 +159,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error: $err')),
+            error: (err, stack) => Center(child: Text('${l10n.error}: $err')),
           ),
         ),
       ],
@@ -163,12 +167,13 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
   }
 
   Widget _buildBasesList(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final basesAsync = ref.watch(knowledgeBasesProvider);
 
     return basesAsync.when(
       data: (bases) {
         if (bases.isEmpty) {
-          return const Center(child: Text('No knowledge bases found. Create one to get started!'));
+          return Center(child: Text(l10n.knowledge_no_bases));
         }
 
         final isMobile = MediaQuery.of(context).size.width < 600;
@@ -192,17 +197,18 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Center(child: Text('Error: $err')),
+      error: (err, stack) => Center(child: Text('${l10n.error}: $err')),
     );
   }
 
   Widget _buildBaseTile(BuildContext context, KnowledgeBaseModel base) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       child: ListTile(
         leading: const CircleAvatar(child: Icon(Icons.folder)),
         title: Text(base.name),
-        subtitle: Text('${base.documentCount} documents'),
+        subtitle: Text('${base.documentCount} ${l10n.knowledge_documents}'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => setState(() => _selectedBase = base),
       ),
@@ -210,6 +216,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
   }
 
   Widget _buildBaseCard(BuildContext context, KnowledgeBaseModel base) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       child: InkWell(
         onTap: () => setState(() => _selectedBase = base),
@@ -228,13 +235,13 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
               ),
               const SizedBox(height: 4),
               Text(
-                base.description ?? 'No description',
+                base.description ?? l10n.knowledge_description,
                 style: Theme.of(context).textTheme.bodySmall,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
               const Spacer(),
-              Text('${base.documentCount} documents', style: Theme.of(context).textTheme.labelSmall),
+              Text('${base.documentCount} ${l10n.knowledge_documents}', style: Theme.of(context).textTheme.labelSmall),
             ],
           ),
         ),
@@ -243,12 +250,13 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
   }
 
   Widget _buildDocumentsList(BuildContext context, KnowledgeBaseModel base) {
+    final l10n = AppLocalizations.of(context)!;
     final docsAsync = ref.watch(documentsProvider(base.id));
 
     return docsAsync.when(
       data: (docs) {
         if (docs.isEmpty) {
-          return const Center(child: Text('No documents in this knowledge base.'));
+          return Center(child: Text(l10n.knowledge_no_documents));
         }
 
         return ListView.builder(
@@ -258,14 +266,14 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
             return ListTile(
               leading: Icon(_getDocIcon(doc.contentType)),
               title: Text(doc.title),
-              subtitle: Text('Added ${DateFormat.yMMMd().format(doc.createdAt)}'),
+              subtitle: Text('Added ${TimeFormatter.formatRelativeTime(doc.createdAt)}'),
               onTap: () => _openDocument(doc),
             );
           },
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (err, stack) => Center(child: Text('Error: $err')),
+      error: (err, stack) => Center(child: Text('${l10n.error}: $err')),
     );
   }
 
@@ -287,9 +295,10 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
   }
 
   void _showImportDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_selectedBase == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a knowledge base first')),
+        SnackBar(content: Text(l10n.knowledge_enter_name)),
       );
       return;
     }
@@ -297,7 +306,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Import Knowledge'),
+        title: Text(l10n.knowledge_upload_document),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -312,7 +321,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
         ],
       ),
     );
@@ -324,7 +333,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
       extensions: <String>['pdf', 'docx', 'txt', 'md'],
     );
     final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
-    
+
     if (file != null && _selectedBase != null) {
       final bytes = await file.readAsBytes();
       await ref.read(documentsProvider(_selectedBase!.id).notifier).uploadDocument(
@@ -340,17 +349,18 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
   }
 
   void _showCreateDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Create Knowledge Base'),
+        title: Text(l10n.knowledge_create_base),
         content: TextField(
           controller: nameController,
-          decoration: const InputDecoration(labelText: 'Name'),
+          decoration: InputDecoration(labelText: l10n.knowledge_base_name),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
           TextButton(
             onPressed: () async {
               if (nameController.text.isNotEmpty) {
@@ -362,7 +372,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
                 }
               }
             },
-            child: const Text('Create'),
+            child: Text(l10n.create),
           ),
         ],
       ),

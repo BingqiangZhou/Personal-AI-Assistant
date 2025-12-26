@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
@@ -91,6 +92,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final episodesState = ref.watch(podcastEpisodesProvider);
     // Don't watch audioPlayerProvider to avoid initializing it on startup
     // final audioPlayerState = ref.watch(audioPlayerProvider);
@@ -177,7 +179,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      widget.podcastTitle ?? 'Episodes',
+                      widget.podcastTitle ?? l10n.podcast_episodes,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -190,7 +192,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                      IconButton(
                       icon: const Icon(Icons.filter_list),
                       onPressed: _showFilterDialog,
-                      tooltip: 'Filter',
+                      tooltip: l10n.filter,
                     ),
                     _buildMoreMenu(),
                   ] else ...[
@@ -312,6 +314,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   }
 
   Widget _buildEmptyState() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -326,8 +329,8 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           const SizedBox(height: 16),
           Text(
             _showOnlyWithSummary
-                ? 'No Episodes with AI Summary'
-                : 'No Episodes Found',
+                ? l10n.podcast_no_episodes_with_summary
+                : l10n.podcast_no_episodes,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
@@ -335,8 +338,8 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           const SizedBox(height: 8),
           Text(
             _showOnlyWithSummary
-                ? 'Try adjusting your filters'
-                : 'This podcast might not have any episodes yet',
+                ? l10n.podcast_try_adjusting_filters
+                : l10n.podcast_no_episodes_yet,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(
                 context,
@@ -349,12 +352,13 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   }
 
   Widget _buildFilterChips() {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         FilterChip(
-          label: const Text('All'),
+          label: Text(l10n.podcast_filter_all),
           selected: _selectedFilter == 'all',
           onSelected: (selected) {
             setState(() {
@@ -365,7 +369,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         ),
         const SizedBox(width: 8),
         FilterChip(
-          label: const Text('Unplayed'),
+          label: Text(l10n.podcast_filter_unplayed),
           selected: _selectedFilter == 'unplayed',
           onSelected: (selected) {
             setState(() {
@@ -376,7 +380,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         ),
         const SizedBox(width: 8),
         FilterChip(
-          label: const Text('Played'),
+          label: Text(l10n.podcast_filter_played),
           selected: _selectedFilter == 'played',
           onSelected: (selected) {
             setState(() {
@@ -387,7 +391,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         ),
         const SizedBox(width: 8),
         FilterChip(
-          label: const Text('With AI Summary'),
+          label: Text(l10n.podcast_filter_with_summary),
           selected: _showOnlyWithSummary,
           onSelected: (selected) {
             setState(() {
@@ -405,6 +409,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   }
 
   Widget _buildMoreMenu() {
+    final l10n = AppLocalizations.of(context)!;
     return PopupMenuButton<String>(
       icon: Icon(
         Icons.more_vert,
@@ -414,19 +419,20 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         // TODO: Implement
       },
       itemBuilder: (context) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'mark_all_played',
-          child: Text('Mark All as Played'),
+          child: Text(l10n.podcast_mark_all_played),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'mark_all_unplayed',
-          child: Text('Mark All as Unplayed'),
+          child: Text(l10n.podcast_mark_all_unplayed),
         ),
       ],
     );
   }
 
   Widget _buildErrorState(Object error) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -438,7 +444,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Failed to Load Episodes',
+            l10n.podcast_failed_load_episodes,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: Theme.of(context).colorScheme.error,
             ),
@@ -453,7 +459,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           ElevatedButton.icon(
             onPressed: _refreshEpisodes,
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(l10n.retry),
           ),
         ],
       ),
@@ -461,21 +467,22 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   }
 
   void _showFilterDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Filter Episodes'),
+          title: Text(l10n.podcast_filter_episodes),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Playback Status:'),
+              Text(l10n.podcast_playback_status),
               const SizedBox(height: 8),
               Column(
                 children: [
                   RadioListTile<String>(
-                    title: const Text('All Episodes'),
+                    title: Text(l10n.podcast_all_episodes),
                     value: 'all',
                     groupValue: _selectedFilter,
                     onChanged: (value) {
@@ -485,7 +492,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                     },
                   ),
                   RadioListTile<String>(
-                    title: const Text('Unplayed Only'),
+                    title: Text(l10n.podcast_unplayed_only),
                     value: 'unplayed',
                     groupValue: _selectedFilter,
                     onChanged: (value) {
@@ -495,7 +502,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                     },
                   ),
                   RadioListTile<String>(
-                    title: const Text('Played Only'),
+                    title: Text(l10n.podcast_played_only),
                     value: 'played',
                     groupValue: _selectedFilter,
                     onChanged: (value) {
@@ -508,7 +515,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
               ),
               const SizedBox(height: 16),
               CheckboxListTile(
-                title: const Text('Only episodes with AI Summary'),
+                title: Text(l10n.podcast_only_with_summary),
                 value: _showOnlyWithSummary,
                 onChanged: (value) {
                   setDialogState(() {
@@ -521,7 +528,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             TextButton(
               onPressed: () {
@@ -529,7 +536,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                 setState(() {});
                 _refreshEpisodes();
               },
-              child: const Text('Apply'),
+              child: Text(l10n.podcast_apply),
             ),
           ],
         ),
