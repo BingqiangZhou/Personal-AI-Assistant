@@ -335,8 +335,8 @@ jobs:
       - name: Archive macOS release
         working-directory: frontend
         run: |
-          cd build/macos/Build/Products/Release
-          zip -r "../../../dist/macos/personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.zip" *.app
+          zip -r "dist/macos/personal-ai-assistant-macos-${{ needs.prepare-release.outputs.version }}.zip" \
+            -C build/macos/Build/Products/Release *.app
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
