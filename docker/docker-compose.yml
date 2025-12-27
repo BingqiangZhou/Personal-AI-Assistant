@@ -20,11 +20,6 @@ services:
     container_name: ${PROJECT_NAME:-personal_ai}_postgres
     env_file:
       - .env
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - TZ=Asia/Shanghai
     # 生产环境不暴露端口到宿主机，仅内部访问
     # expose:
     #   - "5432"
@@ -45,8 +40,6 @@ services:
     container_name: ${PROJECT_NAME:-personal_ai}_redis
     env_file:
       - .env
-    environment:
-      - TZ=Asia/Shanghai
     # 生产环境不暴露端口到宿主机
     # expose:
     #   - "6379"
@@ -73,26 +66,11 @@ services:
     # 生产环境: 不暴露端口，仅通过Nginx代理访问
     expose:
       - "8000"
-    environment:
-      # 数据库配置
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
-      # 存储路径
-      - TRANSCRIPTION_TEMP_DIR=/app/temp/transcription
-      - TRANSCRIPTION_STORAGE_DIR=/app/storage/podcasts
-      # 日志配置
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - LOG_DIR=/app/logs
-      - LOG_RETENTION_DAYS=${LOG_RETENTION_DAYS:-30}
-      - TZ=Asia/Shanghai
-      # 生产环境配置
-      - ENVIRONMENT=production
-      - WORKERS=${BACKEND_WORKERS:-4}
     volumes:
       - backend_uploads:/app/uploads
-      - backend_storage:/app/storage/podcasts
-      - backend_temp:/app/temp/transcription
-      - backend_logs:/app/logs
+      - ${TRANSCRIPTION_STORAGE_DIR:-./storage/podcasts}:/app/storage/podcasts
+      - ${TRANSCRIPTION_TEMP_DIR:-./temp/transcription}:/app/temp/transcription
+      - ${LOG_DIR:-./logs}:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
@@ -114,18 +92,10 @@ services:
     container_name: ${PROJECT_NAME:-personal_ai}_celery_worker
     env_file:
       - .env
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
-      - TRANSCRIPTION_TEMP_DIR=/app/temp/transcription
-      - TRANSCRIPTION_STORAGE_DIR=/app/storage/podcasts
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - LOG_DIR=/app/logs
-      - TZ=Asia/Shanghai
     volumes:
-      - backend_storage:/app/storage/podcasts
-      - backend_temp:/app/temp/transcription
-      - backend_logs:/app/logs
+      - ${TRANSCRIPTION_STORAGE_DIR:-./storage/podcasts}:/app/storage/podcasts
+      - ${TRANSCRIPTION_TEMP_DIR:-./temp/transcription}:/app/temp/transcription
+      - ${LOG_DIR:-./logs}:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
@@ -144,13 +114,8 @@ services:
     container_name: ${PROJECT_NAME:-personal_ai}_celery_beat
     env_file:
       - .env
-    environment:
-      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - LOG_DIR=/app/logs
-      - TZ=Asia/Shanghai
     volumes:
-      - backend_logs:/app/logs
+      - ${LOG_DIR:-./logs}:/app/logs
     depends_on:
       postgres:
         condition: service_healthy
@@ -173,20 +138,15 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    environment:
-      # Nginx 配置环境变量 / Nginx Configuration Environment Variables
-      - DOMAIN=${DOMAIN:-localhost}
-      - SSL_CERT_PATH=${SSL_CERT_PATH:-/etc/nginx/cert/fullchain.pem}
-      - SSL_KEY_PATH=${SSL_KEY_PATH:-/etc/nginx/cert/privkey.pem}
     volumes:
       # Nginx主配置文件
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${NGINX_CONF_DIR:-./nginx}/nginx.conf:/etc/nginx/nginx.conf:ro
       # 站点配置模板 (使用 envsubst 替换变量)
-      - ./nginx/conf.d:/etc/nginx/templates:ro
+      - ${NGINX_CONF_DIR:-./nginx}/conf.d:/etc/nginx/templates:ro
       # SSL证书目录 (HTTPS必需)
-      - ./nginx/cert:/etc/nginx/cert:ro
+      - ${NGINX_CERT_DIR:-./nginx/cert}:/etc/nginx/cert:ro
       # Nginx日志目录
-      - nginx_logs:/var/log/nginx
+      - ${NGINX_LOG_DIR:-./nginx/logs}:/var/log/nginx
       # 时区同步
       - /etc/localtime:/etc/localtime:ro
     depends_on:
@@ -205,14 +165,6 @@ volumes:
   redis_data:
     driver: local
   backend_uploads:
-    driver: local
-  backend_storage:
-    driver: local
-  backend_temp:
-    driver: local
-  backend_logs:
-    driver: local
-  nginx_logs:
     driver: local
 
 networks:
