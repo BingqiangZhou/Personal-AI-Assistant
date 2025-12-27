@@ -341,13 +341,24 @@ class ResponsiveContainer extends StatelessWidget {
           bottom: 0.0,
         );
 
+    // 移动端添加SafeArea，解决顶部标题栏被状态栏遮挡的问题
+    Widget content = ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: safeMaxWidth, minHeight: 0),
+      child: child,
+    );
+
+    if (screenWidth < 600) {
+      content = SafeArea(
+        top: true,
+        bottom: false,
+        child: content,
+      );
+    }
+
     return Container(
       alignment: alignment,
       padding: safePadding,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: safeMaxWidth, minHeight: 0),
-        child: child,
-      ),
+      child: content,
     );
   }
 }

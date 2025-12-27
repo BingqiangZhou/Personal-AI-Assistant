@@ -159,27 +159,33 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   Row(
                     children: [
                       Chip(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        labelPadding: const EdgeInsets.only(left: 2, right: 8),
                         avatar: Icon(
                           Icons.workspace_premium,
-                          size: 16,
+                          size: 14,
                           color: Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                         label: Text(l10n.profile_premium),
                         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                        labelStyle: TextStyle(
+                        labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: Theme.of(context).colorScheme.onPrimaryContainer,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       Chip(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        labelPadding: const EdgeInsets.only(left: 2, right: 8),
                         avatar: Icon(
                           Icons.verified,
-                          size: 16,
+                          size: 14,
                           color: Theme.of(context).colorScheme.onSecondaryContainer,
                         ),
                         label: Text(l10n.profile_verified),
                         backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                        labelStyle: TextStyle(
+                        labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSecondaryContainer,
                         ),
                       ),

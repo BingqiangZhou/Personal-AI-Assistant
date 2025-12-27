@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_feed_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 
 void main() {
   group('PodcastFeedPage Widget Tests', () {
@@ -24,6 +26,8 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
           ),
         ),
@@ -38,7 +42,7 @@ void main() {
       // Arrange - Override provider to return empty state
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedProvider.overrideWith((ref) => MockPodcastFeedNotifier(
+          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
             const PodcastFeedState(
               episodes: [],
               isLoading: false,
@@ -53,6 +57,8 @@ void main() {
         UncontrolledProviderScope(
           container: testContainer,
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
           ),
         ),
@@ -92,7 +98,7 @@ void main() {
       // Override provider with mock data
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedProvider.overrideWith((ref) => MockPodcastFeedNotifier(
+          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
             PodcastFeedState(
               episodes: mockEpisodes,
               isLoading: false,
@@ -107,6 +113,8 @@ void main() {
         UncontrolledProviderScope(
           container: testContainer,
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
           ),
         ),
@@ -126,7 +134,7 @@ void main() {
       // Arrange - Override provider to return error state
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedProvider.overrideWith((ref) => MockPodcastFeedNotifier(
+          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
             const PodcastFeedState(
               episodes: [],
               isLoading: false,
@@ -142,6 +150,8 @@ void main() {
         UncontrolledProviderScope(
           container: testContainer,
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
           ),
         ),
@@ -173,7 +183,7 @@ void main() {
       // Override provider with mock data and loading more state
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedProvider.overrideWith((ref) => MockPodcastFeedNotifier(
+          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
             PodcastFeedState(
               episodes: mockEpisodes,
               isLoading: false,
@@ -189,6 +199,8 @@ void main() {
         UncontrolledProviderScope(
           container: testContainer,
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
           ),
         ),
@@ -219,7 +231,7 @@ void main() {
       // Override provider with mock data and no more content
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedProvider.overrideWith((ref) => MockPodcastFeedNotifier(
+          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
             PodcastFeedState(
               episodes: mockEpisodes,
               isLoading: false,
@@ -234,6 +246,8 @@ void main() {
         UncontrolledProviderScope(
           container: testContainer,
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: PodcastFeedPage(),
           ),
         ),
@@ -247,11 +261,63 @@ void main() {
 
       testContainer.dispose();
     });
+
+    testWidgets('respects top safe area padding', (WidgetTester tester) async {
+      // Arrange
+      const double topPadding = 50.0;
+      
+      final testContainer = ProviderContainer(
+        overrides: [
+          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
+            const PodcastFeedState(
+              episodes: [],
+              isLoading: false,
+              hasMore: false,
+              total: 0,
+            ),
+          )),
+        ],
+      );
+      
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: testContainer,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: MediaQuery(
+              data: const MediaQueryData(
+                padding: EdgeInsets.only(top: topPadding),
+                size: Size(400, 800), // Mobile size
+              ),
+              child: PodcastFeedPage(),
+            ),
+          ),
+        ),
+      );
+      
+      await tester.pumpAndSettle();
+
+      // Assert
+      final titleFinder = find.text('信息流');
+      expect(titleFinder, findsOneWidget);
+
+      // Verify SafeArea is present
+      expect(find.byType(SafeArea), findsOneWidget);
+      
+      final titlePosition = tester.getTopLeft(titleFinder);
+      debugPrint('Title Y: ${titlePosition.dy}, TopPadding: $topPadding');
+      
+      // The Y position should be greater than the top padding because of SafeArea
+      expect(titlePosition.dy, greaterThan(topPadding));
+      
+      testContainer.dispose();
+    });
   });
 }
 
 // Test helper classes
-class MockPodcastFeedNotifier extends _$PodcastFeedNotifier {
+class MockPodcastFeedNotifier extends PodcastFeedNotifier {
   MockPodcastFeedNotifier(this._initialState);
 
   final PodcastFeedState _initialState;
