@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../core/app/config/app_config.dart';
 
 class CustomButton extends StatelessWidget {
@@ -31,13 +30,16 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final child = isLoading
-        ? const SizedBox(
+        ? SizedBox(
             width: 20,
             height: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isOutlined ? colorScheme.primary : colorScheme.onPrimary,
+              ),
             ),
           )
         : Row(
@@ -51,7 +53,7 @@ class CustomButton extends StatelessWidget {
               Text(
                 text,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: textColor ?? (isOutlined ? Theme.of(context).colorScheme.primary : Colors.white),
+                  color: textColor ?? (isOutlined ? colorScheme.primary : colorScheme.onPrimary),
                   fontWeight: FontWeight.w600,
                 ),
               ),

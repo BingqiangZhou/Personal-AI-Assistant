@@ -798,7 +798,7 @@ class _M3UserProfileTileExpanded extends StatelessWidget {
               Text(
                 'Online',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.green,
+                      color: Theme.of(context).colorScheme.tertiary,
                     ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -833,13 +833,13 @@ class _M3UserProfileTileExpanded extends StatelessWidget {
               ),
             ),
             const PopupMenuDivider(),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'logout',
               child: Row(
                 children: [
-                  Icon(Icons.logout_outlined, color: Colors.red),
+                  Icon(Icons.logout_outlined, color: Theme.of(context).colorScheme.error),
                   SizedBox(width: 8),
-                  Text('Logout', style: TextStyle(color: Colors.red)),
+                  Text('Logout', style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 ],
               ),
             ),
@@ -905,13 +905,13 @@ class _M3UserProfileTileCompact extends StatelessWidget {
             ),
           ),
           const PopupMenuDivider(),
-          const PopupMenuItem(
+          PopupMenuItem(
             value: 'logout',
             child: Row(
               children: [
-                Icon(Icons.logout_outlined, color: Colors.red),
+                Icon(Icons.logout_outlined, color: Theme.of(context).colorScheme.error),
                 SizedBox(width: 8),
-                Text('Logout', style: TextStyle(color: Colors.red)),
+                Text('Logout', style: TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
             ),
           ),
