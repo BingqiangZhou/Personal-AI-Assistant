@@ -43,13 +43,18 @@ services:
     # 生产环境不暴露端口到宿主机
     # expose:
     #   - "6379"
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    command: >
+      sh -c 'if [ -z "$REDIS_PASSWORD" ]; then
+               redis-server --appendonly yes;
+             else
+               redis-server --appendonly yes --requirepass "$REDIS_PASSWORD";
+             fi'
     volumes:
       - redis_data:/data
     networks:
       - production_network
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5

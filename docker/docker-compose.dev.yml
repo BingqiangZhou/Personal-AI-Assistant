@@ -40,7 +40,12 @@ services:
       - redis_data:/data
     networks:
       - dev_network
-    command: redis-server --appendonly yes
+    command: >
+      sh -c 'if [ -z "$REDIS_PASSWORD" ]; then
+               redis-server --appendonly yes;
+             else
+               redis-server --appendonly yes --requirepass "$REDIS_PASSWORD";
+             fi'
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
