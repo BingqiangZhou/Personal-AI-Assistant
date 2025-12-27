@@ -80,7 +80,6 @@ class _SplashPageState extends ConsumerState<SplashPage>
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
@@ -89,11 +88,10 @@ class _SplashPageState extends ConsumerState<SplashPage>
                       offset: const Offset(0, 10),
                     ),
                   ],
-                ),
-                child: Icon(
-                  Icons.psychology,
-                  size: 60,
-                  color: Theme.of(context).colorScheme.onPrimary,
+                  image: const DecorationImage(
+                    image: AssetImage('assets/icons/appLogo.png'),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
 

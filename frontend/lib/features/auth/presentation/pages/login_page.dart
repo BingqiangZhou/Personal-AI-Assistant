@@ -136,14 +136,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           decoration: BoxDecoration(
                             color: AppTheme.primaryColor,
                             borderRadius: BorderRadius.circular(20),
+                            image: const DecorationImage(
+                              image: AssetImage('assets/icons/appLogo.png'),
+                              fit: BoxFit.cover,
+                            ),
                           ),
                           child: GestureDetector(
-                            onLongPress: _showServerConfigDialog, // Hidden gesture
-                            child: const Icon(
-                              Icons.psychology,
-                              size: 40,
-                              color: Colors.white,
-                            ),
+                            onLongPress: _showServerConfigDialog,
+                            child: const SizedBox.expand(),
                           ),
                         ),
                         const SizedBox(height: 16),
