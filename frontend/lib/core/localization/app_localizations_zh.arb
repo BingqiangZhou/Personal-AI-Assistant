@@ -1787,5 +1787,25 @@
   "enter_test_content": "输入测试内容...",
   "@enter_test_content": {
     "description": "输入测试内容提示"
+  },
+
+  "server_config_title": "服务器配置",
+  "@server_config_title": {
+    "description": "服务器配置对话框标题"
+  },
+
+  "server_config_description": "输入 API 基础 URL：",
+  "@server_config_description": {
+    "description": "服务器配置说明"
+  },
+
+  "server_config_hint": "http://localhost:8000",
+  "@server_config_hint": {
+    "description": "服务器 URL 提示文本"
+  },
+
+  "server_config_saved": "服务器 URL 已更新。如果问题持续，请重启应用。",
+  "@server_config_saved": {
+    "description": "服务器配置已保存消息"
   }
 }

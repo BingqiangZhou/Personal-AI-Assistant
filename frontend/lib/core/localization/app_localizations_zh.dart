@@ -1095,4 +1095,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get enter_test_content => '输入测试内容...';
+
+  @override
+  String get server_config_title => '服务器配置';
+
+  @override
+  String get server_config_description => '输入 API 基础 URL：';
+
+  @override
+  String get server_config_hint => 'http://localhost:8000';
+
+  @override
+  String get server_config_saved => '服务器 URL 已更新。如果问题持续，请重启应用。';
 }

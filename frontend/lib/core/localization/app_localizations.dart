@@ -2215,6 +2215,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter test content...'**
   String get enter_test_content;
+
+  /// Server configuration dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Server Configuration'**
+  String get server_config_title;
+
+  /// Server config description
+  ///
+  /// In en, this message translates to:
+  /// **'Enter API Base URL:'**
+  String get server_config_description;
+
+  /// Server URL hint text
+  ///
+  /// In en, this message translates to:
+  /// **'http://localhost:8000'**
+  String get server_config_hint;
+
+  /// Server config saved message
+  ///
+  /// In en, this message translates to:
+  /// **'Server URL updated. Please restart app if issues persist.'**
+  String get server_config_saved;
 }
 
 class _AppLocalizationsDelegate

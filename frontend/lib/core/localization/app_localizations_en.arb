@@ -1787,5 +1787,25 @@
   "enter_test_content": "Enter test content...",
   "@enter_test_content": {
     "description": "Enter test content hint"
+  },
+
+  "server_config_title": "Server Configuration",
+  "@server_config_title": {
+    "description": "Server configuration dialog title"
+  },
+
+  "server_config_description": "Enter API Base URL:",
+  "@server_config_description": {
+    "description": "Server config description"
+  },
+
+  "server_config_hint": "http://localhost:8000",
+  "@server_config_hint": {
+    "description": "Server URL hint text"
+  },
+
+  "server_config_saved": "Server URL updated. Please restart app if issues persist.",
+  "@server_config_saved": {
+    "description": "Server config saved message"
   }
 }

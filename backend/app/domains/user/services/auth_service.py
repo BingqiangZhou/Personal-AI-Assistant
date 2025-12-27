@@ -137,7 +137,8 @@ class AuthenticationService:
         user: User,
         device_info: Optional[Dict[str, Any]] = None,
         ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None
+        user_agent: Optional[str] = None,
+        remember_me: bool = False
     ) -> Dict[str, Any]:
         """
         Create user session with tokens.
@@ -147,6 +148,7 @@ class AuthenticationService:
             device_info: Optional device information
             ip_address: Optional IP address
             user_agent: Optional user agent string
+            remember_me: If True, refresh token expires in 30 days; otherwise 7 days
 
         Returns:
             Dictionary containing access and refresh tokens
@@ -156,8 +158,11 @@ class AuthenticationService:
             data={"sub": str(user.id), "email": user.email}
         )
 
+        # Set refresh token expiry based on remember_me
+        refresh_expiry_days = 30 if remember_me else settings.REFRESH_TOKEN_EXPIRE_DAYS
         refresh_token = create_refresh_token(
-            data={"sub": str(user.id), "email": user.email}
+            data={"sub": str(user.id), "email": user.email},
+            expires_delta=timedelta(days=refresh_expiry_days)
         )
 
         # Calculate expiry times
@@ -165,7 +170,7 @@ class AuthenticationService:
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
         refresh_expires_at = datetime.utcnow() + timedelta(
-            days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+            days=refresh_expiry_days
         )
 
         # Create session record
@@ -224,7 +229,7 @@ class AuthenticationService:
             raise NotFoundError("Invalid session")
 
         # Check if session is still active
-        if not session.is_active or session.expires_at < datetime.utcnow():
+        if not session.is_active:
             raise UnauthorizedError("Session expired")
 
         # Get user

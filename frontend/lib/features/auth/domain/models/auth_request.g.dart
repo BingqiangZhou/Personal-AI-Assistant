@@ -9,12 +9,14 @@ part of 'auth_request.dart';
 LoginRequest _$LoginRequestFromJson(Map<String, dynamic> json) => LoginRequest(
   username: json['email_or_username'] as String,
   password: json['password'] as String,
+  rememberMe: json['remember_me'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$LoginRequestToJson(LoginRequest instance) =>
     <String, dynamic>{
       'email_or_username': instance.username,
       'password': instance.password,
+      'remember_me': instance.rememberMe,
     };
 
 RegisterRequest _$RegisterRequestFromJson(Map<String, dynamic> json) =>
@@ -22,6 +24,7 @@ RegisterRequest _$RegisterRequestFromJson(Map<String, dynamic> json) =>
       email: json['email'] as String,
       password: json['password'] as String,
       username: json['username'] as String?,
+      rememberMe: json['remember_me'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
@@ -29,6 +32,7 @@ Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
       'email': instance.email,
       'password': instance.password,
       'username': instance.username,
+      'remember_me': instance.rememberMe,
     };
 
 RefreshTokenRequest _$RefreshTokenRequestFromJson(Map<String, dynamic> json) =>

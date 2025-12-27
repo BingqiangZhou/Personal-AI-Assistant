@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -15,9 +17,8 @@ class DioClient {
   late final Dio _dio;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  // Token refresh state
-  bool _isRefreshing = false;
-  final List<Function()> _queuedRequests = [];
+  // Token refresh state - use Completer for proper synchronization
+  Completer<bool>? _refreshCompleter;
 
   // Storage key for custom backend API baseUrl
   static const String _serverBaseUrlKey = 'server_base_url';
@@ -87,10 +88,12 @@ class DioClient {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Add authentication token if available
-    final token = await _secureStorage.read(key: AppConstants.accessTokenKey);
-    if (token != null) {
-      options.headers['Authorization'] = 'Bearer $token';
+    // Only add token if not already set (e.g., by retry logic)
+    if (!options.headers.containsKey('Authorization')) {
+      final token = await _secureStorage.read(key: AppConstants.accessTokenKey);
+      if (token != null) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
     }
 
     handler.next(options);
@@ -130,17 +133,21 @@ class DioClient {
         final statusCode = error.response?.statusCode;
         if (statusCode != null) {
           if (statusCode == 401) {
+            // Log 401 error details
+            debugPrint('❌ 401 Error: ${error.requestOptions.method} ${error.requestOptions.path}');
+            debugPrint('   Response: ${error.response?.data}');
+
             // Check if this is a refresh token request to avoid infinite loop
             final isRefreshRequest = error.requestOptions.path.contains('/auth/refresh');
 
             if (!isRefreshRequest) {
               // Try to refresh the token
-              final success = await _refreshToken();
+              final newToken = await _refreshToken();
 
-              if (success) {
+              if (newToken != null) {
                 // Retry the original request with new token
                 try {
-                  final response = await _retryRequest(error.requestOptions);
+                  final response = await _retryRequest(error.requestOptions, newToken);
                   handler.resolve(response);
                   return;
                 } catch (e) {
@@ -244,18 +251,30 @@ class DioClient {
   }
 
   // Token refresh methods
-  Future<bool> _refreshToken() async {
-    if (_isRefreshing) {
-      // If already refreshing, wait for it to complete
-      return await _waitForRefresh();
+  Future<String?> _refreshToken() async {
+    // Store completer in local variable to avoid race condition
+    final completer = _refreshCompleter;
+    if (completer != null && !completer.isCompleted) {
+      debugPrint('🔄 Token refresh already in progress, waiting...');
+      final success = await completer.future;
+      if (success) {
+        // Return the token from storage for waiting requests
+        return await _secureStorage.read(key: AppConstants.accessTokenKey);
+      }
+      return null;
     }
 
-    _isRefreshing = true;
+    // Start new refresh
+    debugPrint('🔄 Starting new token refresh...');
+    _refreshCompleter = Completer<bool>();
+    final currentCompleter = _refreshCompleter!;
 
     try {
       final refreshToken = await _secureStorage.read(key: AppConstants.refreshTokenKey);
       if (refreshToken == null) {
-        return false;
+        debugPrint('❌ No refresh token found');
+        currentCompleter.complete(false);
+        return null;
       }
 
       final response = await _dio.post(
@@ -275,46 +294,42 @@ class DioClient {
           await _secureStorage.write(key: AppConstants.refreshTokenKey, value: newRefreshToken);
         }
 
-        // Retry queued requests
-        _retryQueuedRequests();
-
-        return true;
+        debugPrint('✅ Token refresh successful - New token: ${newAccessToken.substring(0, 20)}...');
+        currentCompleter.complete(true);
+        return newAccessToken;  // Return new token directly
       }
-      return false;
+
+      debugPrint('❌ Token refresh failed: invalid response');
+      currentCompleter.complete(false);
+      return null;
     } catch (e) {
-      debugPrint('Token refresh failed: $e');
-      return false;
+      if (e is DioException) {
+        debugPrint('❌ Token refresh failed: ${e.message}');
+        if (e.response != null) {
+          debugPrint('Response data: ${e.response?.data}');
+        }
+      } else {
+        debugPrint('❌ Token refresh failed: $e');
+      }
+      currentCompleter.complete(false);
+      return null;
     } finally {
-      _isRefreshing = false;
+      // Reset completer immediately
+      _refreshCompleter = null;
     }
   }
 
-  Future<bool> _waitForRefresh() async {
-    int attempts = 0;
-    const maxAttempts = 50; // 5 seconds max wait
-
-    while (_isRefreshing && attempts < maxAttempts) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      attempts++;
+  Future<Response> _retryRequest(RequestOptions options, String token) async {
+    options.headers['Authorization'] = 'Bearer $token';
+    debugPrint('🔄 Retrying ${options.method} ${options.path} with token: ${token.substring(0, 20)}...');
+    try {
+      final response = await _dio.fetch(options);
+      debugPrint('✅ Retry successful: ${response.statusCode}');
+      return response;
+    } catch (e) {
+      debugPrint('❌ Retry failed: $e');
+      rethrow;
     }
-
-    return !_isRefreshing; // Return true if refresh completed (not failed)
-  }
-
-  void _retryQueuedRequests() {
-    for (final request in _queuedRequests) {
-      request();
-    }
-    _queuedRequests.clear();
-  }
-
-  Future<Response> _retryRequest(RequestOptions options) async {
-    final token = await _secureStorage.read(key: AppConstants.accessTokenKey);
-    if (token != null) {
-      options.headers['Authorization'] = 'Bearer $token';
-    }
-
-    return _dio.fetch(options);
   }
 
   Future<void> _clearTokens() async {

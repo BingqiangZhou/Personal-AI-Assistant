@@ -5,8 +5,7 @@ import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
 
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
-import '../../../auth/domain/models/user.dart';
-import '../../../user/presentation/providers/user_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Material Design 3自适应Profile页面
 class ProfilePage extends ConsumerStatefulWidget {
@@ -98,7 +97,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final userState = ref.watch(userProvider);
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
 
     return Card(
       child: Padding(
@@ -112,14 +112,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primaryContainer,
                 shape: BoxShape.circle,
-                image: userState.value?.avatarUrl != null
+                image: user?.avatarUrl != null
                     ? DecorationImage(
-                        image: NetworkImage(userState.value!.avatarUrl!),
+                        image: NetworkImage(user!.avatarUrl!),
                         fit: BoxFit.cover,
                       )
                     : null,
               ),
-              child: userState.value?.avatarUrl == null
+              child: user?.avatarUrl == null
                   ? Icon(
                       Icons.person,
                       size: isMobile ? 40 : 50,
@@ -133,27 +133,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  userState.when(
-                    data: (user) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user?.displayName ?? l10n.profile_guest_user,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                  Text(
+                    user?.displayName ?? l10n.profile_guest_user,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          user?.email ?? l10n.profile_please_login,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    user?.email ?? l10n.profile_please_login,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
-                      ],
-                    ),
-                    loading: () => const CircularProgressIndicator(),
-                    error: (e, s) => Text(l10n.profile_error_loading),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -862,20 +853,30 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(l10n.profile_logout_title),
         content: Text(l10n.profile_logout_message),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(l10n.cancel),
           ),
           FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.profile_logged_out)),
-              );
+            onPressed: () async {
+              // Close dialog first
+              Navigator.of(dialogContext).pop();
+
+              // Perform logout
+              await ref.read(authProvider.notifier).logout();
+
+              // Show success message
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.profile_logged_out)),
+                );
+              }
+
+              // Navigation will be handled by GoRouter redirect
             },
             child: Text(l10n.logout),
           ),

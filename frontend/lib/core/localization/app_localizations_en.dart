@@ -1113,4 +1113,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enter_test_content => 'Enter test content...';
+
+  @override
+  String get server_config_title => 'Server Configuration';
+
+  @override
+  String get server_config_description => 'Enter API Base URL:';
+
+  @override
+  String get server_config_hint => 'http://localhost:8000';
+
+  @override
+  String get server_config_saved =>
+      'Server URL updated. Please restart app if issues persist.';
 }

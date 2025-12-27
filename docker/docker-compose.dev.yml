@@ -65,7 +65,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ../backend:/app  # 挂载代码目录支持热重载
+      - ../backend:/app  # 挂载代码目录支持热重载 (includes /app/data for SECRET_KEY persistence)
       - backend_uploads:/app/uploads
       - ${TRANSCRIPTION_STORAGE_DIR:-../backend/storage/podcasts}:/app/storage/podcasts
       - ${TRANSCRIPTION_TEMP_DIR:-../backend/temp/transcription}:/app/temp/transcription
@@ -92,7 +92,7 @@ services:
     env_file:
       - .env.dev
     volumes:
-      - ../backend:/app  # 挂载代码目录支持热重载
+      - ../backend:/app  # 挂载代码目录支持热重载 (includes /app/data for SECRET_KEY persistence)
       - backend_uploads:/app/uploads
       - ${TRANSCRIPTION_STORAGE_DIR:-../backend/storage/podcasts}:/app/storage/podcasts
       - ${TRANSCRIPTION_TEMP_DIR:-../backend/temp/transcription}:/app/temp/transcription
@@ -116,7 +116,7 @@ services:
     env_file:
       - .env.dev
     volumes:
-      - ../backend:/app  # 挂载代码目录支持热重载
+      - ../backend:/app  # 挂载代码目录支持热重载 (includes /app/data for SECRET_KEY persistence)
       - ${LOG_DIR:-../backend/logs}:/app/logs
     depends_on:
       postgres:

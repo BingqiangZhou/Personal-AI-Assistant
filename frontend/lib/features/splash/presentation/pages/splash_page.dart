@@ -44,19 +44,17 @@ class _SplashPageState extends ConsumerState<SplashPage>
   }
 
   void _navigateToNextScreen() async {
-    // TODO: Re-enable authentication check after testing
     // Check authentication status
-    // await ref.read(authProvider.notifier).checkAuthStatus();
+    await ref.read(authProvider.notifier).checkAuthStatus();
 
-    // final authState = ref.read(authProvider);
-    // if (authState.isAuthenticated) {
-    //   context.go('/home');
-    // } else {
-    //   context.go('/login');
-    // }
+    if (!mounted) return;
 
-    // Skip authentication for testing - go directly to home
-    context.go('/home');
+    final authState = ref.read(authProvider);
+    if (authState.isAuthenticated) {
+      context.go('/home');
+    } else {
+      context.go('/login');
+    }
   }
 
   @override

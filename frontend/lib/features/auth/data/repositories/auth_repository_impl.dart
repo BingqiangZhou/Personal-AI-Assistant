@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../domain/models/auth_request.dart';
@@ -28,6 +29,11 @@ class AuthRepositoryImpl implements AuthRepository {
       await _secureStorage.saveRefreshToken(authResponse.refreshToken);
 
       return Right(authResponse);
+    } on DioException catch (e) {
+      if (e.error is AppException) {
+        return Left(e.error as AppException);
+      }
+      return Left(UnknownException(e.message ?? 'Unknown Dio error'));
     } on AppException catch (e) {
       return Left(e);
     } catch (e) {
@@ -45,6 +51,11 @@ class AuthRepositoryImpl implements AuthRepository {
       await _secureStorage.saveRefreshToken(authResponse.refreshToken);
 
       return Right(authResponse);
+    } on DioException catch (e) {
+      if (e.error is AppException) {
+        return Left(e.error as AppException);
+      }
+      return Left(UnknownException(e.message ?? 'Unknown Dio error'));
     } on AppException catch (e) {
       debugPrint('=== Repository Accepts AppException ===');
       debugPrint('Exception type: ${e.runtimeType}');
@@ -75,6 +86,11 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       return Right(refreshResponse);
+    } on DioException catch (e) {
+      if (e.error is AppException) {
+        return Left(e.error as AppException);
+      }
+      return Left(UnknownException(e.message ?? 'Unknown Dio error'));
     } on AppException catch (e) {
       return Left(e);
     } catch (e) {
@@ -97,6 +113,12 @@ class AuthRepositoryImpl implements AuthRepository {
       await _secureStorage.clearTokens();
 
       return const Right(null);
+    } on DioException catch (e) {
+      await _secureStorage.clearTokens();
+      if (e.error is AppException) {
+        return Left(e.error as AppException);
+      }
+      return Left(UnknownException(e.message ?? 'Unknown Dio error'));
     } on AppException catch (e) {
       // Even if logout fails, clear local tokens
       await _secureStorage.clearTokens();
@@ -113,6 +135,11 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = await _remoteDatasource.getCurrentUser();
       return Right(user);
+    } on DioException catch (e) {
+      if (e.error is AppException) {
+        return Left(e.error as AppException);
+      }
+      return Left(UnknownException(e.message ?? 'Unknown Dio error'));
     } on AppException catch (e) {
       return Left(e);
     } catch (e) {
@@ -125,6 +152,11 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDatasource.forgotPassword(request);
       return const Right(null);
+    } on DioException catch (e) {
+      if (e.error is AppException) {
+        return Left(e.error as AppException);
+      }
+      return Left(UnknownException(e.message ?? 'Unknown Dio error'));
     } on AppException catch (e) {
       return Left(e);
     } catch (e) {
@@ -137,6 +169,11 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDatasource.resetPassword(request);
       return const Right(null);
+    } on DioException catch (e) {
+      if (e.error is AppException) {
+        return Left(e.error as AppException);
+      }
+      return Left(UnknownException(e.message ?? 'Unknown Dio error'));
     } on AppException catch (e) {
       return Left(e);
     } catch (e) {
@@ -149,6 +186,11 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDatasource.verifyEmail(token);
       return const Right(null);
+    } on DioException catch (e) {
+      if (e.error is AppException) {
+        return Left(e.error as AppException);
+      }
+      return Left(UnknownException(e.message ?? 'Unknown Dio error'));
     } on AppException catch (e) {
       return Left(e);
     } catch (e) {
@@ -161,6 +203,11 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _remoteDatasource.resendVerificationEmail();
       return const Right(null);
+    } on DioException catch (e) {
+      if (e.error is AppException) {
+        return Left(e.error as AppException);
+      }
+      return Left(UnknownException(e.message ?? 'Unknown Dio error'));
     } on AppException catch (e) {
       return Left(e);
     } catch (e) {

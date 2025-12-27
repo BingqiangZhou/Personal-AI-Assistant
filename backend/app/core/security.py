@@ -50,14 +50,14 @@ class TokenOptimizer:
     ) -> Dict[str, Any]:
         """Fast claim builder optimized for 500+ req/s throughput."""
 
-        now = datetime.utcnow()
-        expires = now + timedelta(
-            minutes=expire_minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+        # Use time.time() directly to avoid timezone issues with datetime.utcnow().timestamp()
+        now_timestamp = int(time.time())
+        expire_seconds = (expire_minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES) * 60
+        exp_timestamp = now_timestamp + expire_seconds
 
         claims = {
-            "exp": int(expires.timestamp()),
-            "iat": int(now.timestamp()),
+            "exp": exp_timestamp,
+            "iat": now_timestamp,
         }
 
         if is_refresh:
@@ -102,11 +102,15 @@ def create_refresh_token(
     expires_delta: Optional[timedelta] = None
 ) -> str:
     """Create JWT refresh token - optimized performance version."""
-    custom_days = expires_delta.total_seconds() / (24 * 60 * 60) if expires_delta else None
+    # Use REFRESH_TOKEN_EXPIRE_DAYS as default if no expires_delta provided
+    if expires_delta is None:
+        expires_delta = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+
+    custom_days = expires_delta.total_seconds() / (24 * 60 * 60)
 
     claims = token_optimizer.build_standard_claims(
         extra_claims=data,
-        expire_minutes=(custom_days * 24 * 60) if custom_days else None,
+        expire_minutes=custom_days * 24 * 60,
         is_refresh=True
     )
 
@@ -120,12 +124,20 @@ def create_refresh_token(
 
 def verify_token(token: str, token_type: str = "access") -> dict:
     """Verify and decode JWT token."""
+    import logging
+    logger = logging.getLogger(__name__)
+
     try:
+        logger.error(f"[DEBUG] Verifying token (first 30 chars): {token[:30]}...")
+        logger.error(f"[DEBUG] SECRET_KEY (first 10 chars): {settings.SECRET_KEY[:10]}...")
+
         payload = jwt.decode(
             token,
             settings.SECRET_KEY,
             algorithms=[settings.ALGORITHM]
         )
+
+        logger.error(f"[DEBUG] Token decoded successfully, payload: {payload}")
 
         # Check token type if present
         if "type" in payload and payload["type"] != token_type:
@@ -144,7 +156,8 @@ def verify_token(token: str, token_type: str = "access") -> dict:
 
         return payload
 
-    except JWTError:
+    except JWTError as e:
+        logger.error(f"[DEBUG] JWTError during token decode: {type(e).__name__}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials"

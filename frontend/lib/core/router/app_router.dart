@@ -23,10 +23,8 @@ import '../../core/localization/app_localizations.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
-
   return GoRouter(
-    initialLocation: '/home',
+    initialLocation: '/splash',
     debugLogDiagnostics: true,
     refreshListenable: AuthStateListenable(ref), // Trigger refresh on auth state change
     routes: [
@@ -195,17 +193,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
     // Redirect logic
     redirect: (context, state) {
+      // Read latest auth state every time
+      final authState = ref.read(authProvider);
       final isAuthenticated = authState.isAuthenticated;
-      final isLoggingIn = state.uri.toString() == '/login';
-      final isRegistering = state.uri.toString() == '/register';
-      final isSplash = state.uri.toString() == '/splash';
-      final isAuthTest = state.uri.toString().startsWith('/auth-test');
-      
+      final isLoggingIn = state.matchedLocation == '/login';
+      final isRegistering = state.matchedLocation == '/register';
+      final isSplash = state.matchedLocation == '/splash';
+      final isAuthTest = state.matchedLocation.startsWith('/auth-test');
+      final isForgotPassword = state.matchedLocation.startsWith('/forgot-password');
+      final isResetPassword = state.matchedLocation.startsWith('/reset-password');
+
       // Allow Splash
       if (isSplash) return null;
 
       // Allow Auth Test page for debugging
       if (isAuthTest) return null;
+
+      // Allow password reset pages
+      if (isForgotPassword || isResetPassword) return null;
 
       if (!isAuthenticated) {
         // Not authenticated

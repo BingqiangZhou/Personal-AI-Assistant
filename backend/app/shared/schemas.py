@@ -73,6 +73,7 @@ class UserResponse(UserBase):
     id: int
     is_verified: bool
     avatar_url: Optional[str] = None
+    full_name: Optional[str] = None
     created_at: datetime
 
 

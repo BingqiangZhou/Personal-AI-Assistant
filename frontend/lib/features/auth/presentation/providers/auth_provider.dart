@@ -11,15 +11,16 @@ import '../../data/datasources/auth_remote_datasource.dart';
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../core/network/dio_client.dart';
+import '../../../../core/providers/core_providers.dart';
 
 // Storage provider
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageServiceImpl(const FlutterSecureStorage());
 });
 
-// Remote datasource provider
+// Remote datasource provider - use shared DioClient
 final authRemoteDatasourceProvider = Provider<AuthRemoteDatasource>((ref) {
-  final dioClient = DioClient();
+  final dioClient = ref.watch(dioClientProvider);
   return AuthRemoteDatasourceImpl(dioClient);
 });
 
@@ -169,6 +170,7 @@ class AuthNotifier extends Notifier<AuthState> {
     final request = LoginRequest(
       username: email, // Backend expects username field
       password: password,
+      rememberMe: rememberMe,
     );
 
     final result = await _authRepository.login(request);
@@ -221,6 +223,7 @@ class AuthNotifier extends Notifier<AuthState> {
     required String email,
     required String password,
     String? username,
+    bool rememberMe = false,
   }) async {
     state = state.copyWith(
       isLoading: true,
@@ -233,6 +236,7 @@ class AuthNotifier extends Notifier<AuthState> {
       email: email,
       password: password,
       username: username,
+      rememberMe: rememberMe,
     );
 
     final result = await _authRepository.register(request);

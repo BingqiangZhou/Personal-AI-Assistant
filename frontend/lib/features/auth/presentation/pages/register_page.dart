@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/app/config/app_config.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/loading_widget.dart';
@@ -23,9 +25,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _usernameController = TextEditingController();
+  final _secureStorage = const FlutterSecureStorage();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
+  bool _rememberMe = false;
 
   @override
   void dispose() {
@@ -40,13 +44,22 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     ref.read(authProvider.notifier).clearFieldErrors();
   }
 
-  void _register() {
+  Future<void> _register() async {
     final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate() && _agreeToTerms) {
+      if (_rememberMe) {
+        await _secureStorage.write(key: AppConstants.savedUsernameKey, value: _emailController.text.trim());
+        await _secureStorage.write(key: AppConstants.savedPasswordKey, value: _passwordController.text);
+      } else {
+        await _secureStorage.delete(key: AppConstants.savedUsernameKey);
+        await _secureStorage.delete(key: AppConstants.savedPasswordKey);
+      }
+
       ref.read(authProvider.notifier).register(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         username: _usernameController.text.trim(),
+        rememberMe: _rememberMe,
       );
     } else if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -64,17 +77,26 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final authState = ref.watch(authProvider);
     final isLoading = authState.isLoading;
 
+    // Listen for auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.user != null) {
+      // Only navigate if user just became authenticated
+      final wasAuthenticated = previous?.isAuthenticated ?? false;
+      final isAuthenticated = next.isAuthenticated;
+
+      if (isAuthenticated && !wasAuthenticated) {
         context.go('/home');
-      } else if (next.error != null && next.fieldErrors == null) {
-        // Only show snackbar if there are no field errors
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+      } else if (next.error != null &&
+                 next.error != previous?.error &&
+                 next.fieldErrors == null) {
+        // Only show snackbar for new errors without field errors
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(next.error!),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+        }
       }
     });
 
@@ -290,6 +312,27 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   ),
 
                   const SizedBox(height: 16),
+
+                  // Remember me checkbox
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _rememberMe,
+                        onChanged: (value) async {
+                          setState(() {
+                            _rememberMe = value ?? false;
+                          });
+                          if (!_rememberMe) {
+                            await _secureStorage.delete(key: AppConstants.savedUsernameKey);
+                            await _secureStorage.delete(key: AppConstants.savedPasswordKey);
+                          }
+                        },
+                      ),
+                      Text(l10n.auth_remember_me),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
 
                   // Terms and conditions
                   Row(

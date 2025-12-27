@@ -86,6 +86,8 @@ class AppConstants {
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
   static const String userProfileKey = 'user_profile';
+  static const String savedUsernameKey = 'saved_username';
+  static const String savedPasswordKey = 'saved_password';
 
   // App Configuration
   static const String environment = AppConfig.environment;

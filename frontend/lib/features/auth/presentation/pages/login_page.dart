@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/app/config/app_config.dart';
@@ -22,8 +23,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _secureStorage = const FlutterSecureStorage();
   bool _obscurePassword = true;
   bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedCredentials();
+  }
 
   @override
   void dispose() {
@@ -32,8 +40,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _loadSavedCredentials() async {
+    final savedUsername = await _secureStorage.read(key: AppConstants.savedUsernameKey);
+    final savedPassword = await _secureStorage.read(key: AppConstants.savedPasswordKey);
+
+    if (savedUsername != null && savedPassword != null) {
+      setState(() {
+        _emailController.text = savedUsername;
+        _passwordController.text = savedPassword;
+        _rememberMe = true;
+      });
+    }
+  }
+
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
+      if (_rememberMe) {
+        await _secureStorage.write(key: AppConstants.savedUsernameKey, value: _emailController.text.trim());
+        await _secureStorage.write(key: AppConstants.savedPasswordKey, value: _passwordController.text);
+      } else {
+        await _secureStorage.delete(key: AppConstants.savedUsernameKey);
+        await _secureStorage.delete(key: AppConstants.savedPasswordKey);
+      }
+
       ref.read(authProvider.notifier).login(
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -43,6 +72,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _showServerConfigDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final storageService = ref.read(localStorageServiceProvider);
     final currentUrl = await storageService.getApiBaseUrl() ?? AppConfig.apiBaseUrl;
     final urlController = TextEditingController(text: currentUrl);
@@ -52,17 +82,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Server Configuration'),
+        title: Text(l10n.server_config_title),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Enter API Base URL:'),
+            Text(l10n.server_config_description),
             const SizedBox(height: 8),
             TextField(
               controller: urlController,
-              decoration: const InputDecoration(
-                hintText: 'http://localhost:8000',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: l10n.server_config_hint,
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
@@ -70,24 +100,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
               final newUrl = urlController.text.trim();
               if (newUrl.isNotEmpty) {
+                // Capture context before async operation
+                final ctx = context;
                 await storageService.saveApiBaseUrl(newUrl);
                 AppConfig.setApiBaseUrl(newUrl);
-                
+
                 if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Server URL updated. Please restart app if issues persist.')),
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(content: Text(l10n.server_config_saved)),
                   );
                 }
               }
             },
-            child: const Text('Save'),
+            child: Text(l10n.save),
           ),
         ],
       ),
@@ -100,16 +132,24 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final authState = ref.watch(authProvider);
     final isLoading = authState.isLoading;
 
+    // Listen for auth state changes
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.user != null) {
+      // Only navigate if user just became authenticated
+      final wasAuthenticated = previous?.isAuthenticated ?? false;
+      final isAuthenticated = next.isAuthenticated;
+
+      if (isAuthenticated && !wasAuthenticated) {
         context.go('/home');
-      } else if (next.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: AppTheme.errorColor,
-          ),
-        );
+      } else if (next.error != null && next.error != previous?.error) {
+        // Only show snackbar for new errors
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(next.error!),
+              backgroundColor: AppTheme.errorColor,
+            ),
+          );
+        }
       }
     });
 
@@ -130,20 +170,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   Center(
                     child: Column(
                       children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
-                            borderRadius: BorderRadius.circular(20),
-                            image: const DecorationImage(
-                              image: AssetImage('assets/icons/appLogo.png'),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          child: GestureDetector(
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
                             onLongPress: _showServerConfigDialog,
-                            child: const SizedBox.expand(),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Image.asset(
+                              'assets/icons/appLogo.png',
+                              width: 80,
+                              height: 80,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -220,10 +256,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     children: [
                       Checkbox(
                         value: _rememberMe,
-                        onChanged: (value) {
+                        onChanged: (value) async {
                           setState(() {
                             _rememberMe = value ?? false;
                           });
+                          if (!_rememberMe) {
+                            await _secureStorage.delete(key: AppConstants.savedUsernameKey);
+                            await _secureStorage.delete(key: AppConstants.savedPasswordKey);
+                          }
                         },
                       ),
                       Text(l10n.auth_remember_me),

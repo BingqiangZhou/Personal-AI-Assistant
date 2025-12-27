@@ -73,6 +73,7 @@ services:
       - "8000"
     volumes:
       - backend_uploads:/app/uploads
+      - backend_data:/app/data
       - ${TRANSCRIPTION_STORAGE_DIR:-./storage/podcasts}:/app/storage/podcasts
       - ${TRANSCRIPTION_TEMP_DIR:-./temp/transcription}:/app/temp/transcription
       - ${LOG_DIR:-./logs}:/app/logs
@@ -98,6 +99,7 @@ services:
     env_file:
       - .env
     volumes:
+      - backend_data:/app/data
       - ${TRANSCRIPTION_STORAGE_DIR:-./storage/podcasts}:/app/storage/podcasts
       - ${TRANSCRIPTION_TEMP_DIR:-./temp/transcription}:/app/temp/transcription
       - ${LOG_DIR:-./logs}:/app/logs
@@ -120,6 +122,7 @@ services:
     env_file:
       - .env
     volumes:
+      - backend_data:/app/data
       - ${LOG_DIR:-./logs}:/app/logs
     depends_on:
       postgres:
@@ -170,6 +173,8 @@ volumes:
   redis_data:
     driver: local
   backend_uploads:
+    driver: local
+  backend_data:
     driver: local
 
 networks:

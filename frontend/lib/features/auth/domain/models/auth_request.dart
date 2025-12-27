@@ -10,9 +10,13 @@ class LoginRequest {
 
   final String password;
 
+  @JsonKey(name: 'remember_me')
+  final bool rememberMe;
+
   const LoginRequest({
     required this.username,
     required this.password,
+    this.rememberMe = false,
   });
 
   factory LoginRequest.fromJson(Map<String, dynamic> json) => _$LoginRequestFromJson(json);
@@ -25,10 +29,14 @@ class RegisterRequest {
   final String password;
   final String? username;
 
+  @JsonKey(name: 'remember_me')
+  final bool rememberMe;
+
   const RegisterRequest({
     required this.email,
     required this.password,
     this.username,
+    this.rememberMe = false,
   });
 
   factory RegisterRequest.fromJson(Map<String, dynamic> json) => _$RegisterRequestFromJson(json);

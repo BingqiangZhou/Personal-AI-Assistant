@@ -1,5 +1,6 @@
 """Authentication dependencies."""
 
+import logging
 from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -11,6 +12,8 @@ from app.core.database import get_db_session
 from app.core.security import verify_token
 from app.domains.user.models import User
 from app.domains.user.repositories import UserRepository
+
+logger = logging.getLogger(__name__)
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(
@@ -25,21 +28,33 @@ async def get_current_user(
     """Get current authenticated user."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="[DEPS] Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
     try:
+        logger.error(f"[DEBUG] Starting token verification")
         payload = verify_token(token)
-        username: str = payload.get("sub")
-        if username is None:
+        logger.error(f"[DEBUG] Token payload: {payload}")
+        user_id_str: str = payload.get("sub")
+        logger.error(f"[DEBUG] user_id_str: {user_id_str}")
+        if user_id_str is None:
+            logger.error("[DEBUG] user_id_str is None")
             raise credentials_exception
-    except JWTError:
+        user_id = int(user_id_str)
+        logger.error(f"[DEBUG] user_id: {user_id}")
+    except HTTPException as e:
+        logger.error(f"[DEBUG] HTTPException from verify_token: {e.detail}")
+        raise
+    except (JWTError, ValueError) as e:
+        logger.error(f"[DEBUG] Exception in token verification: {e}")
         raise credentials_exception
 
     user_repo = UserRepository(db)
-    user = await user_repo.get_by_username(username)
+    user = await user_repo.get_by_id(user_id)
+    logger.error(f"[DEBUG] User found: {user is not None}")
     if user is None:
+        logger.error("[DEBUG] User is None")
         raise credentials_exception
 
     if not user.is_active:

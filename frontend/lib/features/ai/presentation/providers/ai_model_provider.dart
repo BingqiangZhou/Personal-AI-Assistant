@@ -5,6 +5,8 @@ import '../../data/services/ai_model_api_service.dart';
 import '../../data/repositories/ai_model_repository.dart';
 import '../../models/ai_model_config_model.dart';
 import '../../../../core/providers/core_providers.dart';
+import '../../../../core/network/exceptions/network_exceptions.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 // API Service Provider
 final aiModelApiServiceProvider = Provider<AIModelApiService>((ref) {
@@ -97,7 +99,11 @@ class ModelListNotifier extends Notifier<ModelListState> {
         totalPages: response.pages,
         total: response.total,
       );
+
     } catch (e) {
+      if (e is AuthenticationException) {
+        ref.read(authProvider.notifier).logout();
+      }
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -237,7 +243,11 @@ class ModelNotifier extends Notifier<ModelState> {
         model: model,
         isLoading: false,
       );
+
     } catch (e) {
+      if (e is AuthenticationException) {
+        ref.read(authProvider.notifier).logout();
+      }
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -261,6 +271,9 @@ class ModelNotifier extends Notifier<ModelState> {
 
       return true;
     } catch (e) {
+      if (e is AuthenticationException) {
+        ref.read(authProvider.notifier).logout();
+      }
       state = state.copyWith(
         isSaving: false,
         error: e.toString(),

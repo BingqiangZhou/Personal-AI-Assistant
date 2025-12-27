@@ -30,6 +30,7 @@ class LoginRequest(BaseModel):
     username: Optional[str] = Field(None, description="Username for login (alternative to email_or_username)")
     email_or_username: Optional[str] = Field(None, description="Email or username for login (alternative to username)")
     password: str
+    remember_me: bool = False
 
     @model_validator(mode='before')
     @classmethod
@@ -51,9 +52,17 @@ class LogoutRequest(BaseModel):
     refresh_token: Optional[str] = None
 
 
+class RegisterRequest(BaseModel):
+    """Register request schema."""
+    email: str
+    password: str
+    username: Optional[str] = None
+    remember_me: bool = False
+
+
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(
-    user_data: UserCreate,
+    register_data: RegisterRequest,
     request: Request,
     db: AsyncSession = Depends(get_db_session)
 ) -> Any:
@@ -69,9 +78,9 @@ async def register(
 
         # Create user
         user = await auth_service.register_user(
-            email=user_data.email,
-            password=user_data.password,
-            username=user_data.username
+            email=register_data.email,
+            password=register_data.password,
+            username=register_data.username
         )
 
         # Create session with tokens (like login)
@@ -79,7 +88,8 @@ async def register(
             user=user,
             device_info=device_info,
             ip_address=request.client.host,
-            user_agent=request.headers.get("user-agent")
+            user_agent=request.headers.get("user-agent"),
+            remember_me=register_data.remember_me
         )
 
         return Token(
@@ -132,7 +142,8 @@ async def login(
             user=user,
             device_info=device_info,
             ip_address=request.client.host,
-            user_agent=request.headers.get("user-agent")
+            user_agent=request.headers.get("user-agent"),
+            remember_me=login_data.remember_me
         )
 
         return Token(
@@ -221,6 +232,7 @@ async def get_current_user_info(
         is_superuser=current_user.is_superuser,
         is_verified=current_user.is_verified,
         avatar_url=current_user.avatar_url,
+        full_name=current_user.account_name,
         created_at=current_user.created_at
     )
 
