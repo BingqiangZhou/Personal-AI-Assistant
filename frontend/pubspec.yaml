@@ -111,3 +111,22 @@ flutter:
   generate: true
   assets:
     - assets/icons/
+
+# flutter_launcher_icons configuration
+flutter_launcher_icons:
+  image_path: "assets/icons/appLogo.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/icons/appLogo.png"
+    background_color: "#ffffff"
+    theme_color: "#ffffff"
+  windows:
+    generate: true
+    image_path: "assets/icons/appLogo.png"
+    icon_size: 256
+  macos:
+    generate: true
+    image_path: "assets/icons/appLogo.png"
