@@ -10,13 +10,16 @@
 #   3. 启动服务
 #
 # 使用方法:
-#   docker-compose --env-file ../backend/.env up -d
+#   cd docker && docker-compose up -d
+# 环境变量会自动从 backend/.env 加载
 
 services:
   # PostgreSQL Database (生产环境优化)
   postgres:
     image: postgres:15-alpine
     container_name: ${PROJECT_NAME:-personal_ai}_postgres
+    env_file:
+      - ../backend/.env
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -40,6 +43,8 @@ services:
   redis:
     image: redis:7-alpine
     container_name: ${PROJECT_NAME:-personal_ai}_redis
+    env_file:
+      - ../backend/.env
     environment:
       - TZ=Asia/Shanghai
     # 生产环境不暴露端口到宿主机
@@ -162,6 +167,8 @@ services:
   nginx:
     image: nginx:stable-alpine
     container_name: ${PROJECT_NAME:-personal_ai}_nginx
+    env_file:
+      - ../backend/.env
     restart: always
     ports:
       - "80:80"

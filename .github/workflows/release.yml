@@ -138,7 +138,7 @@ jobs:
 
           # 重命名 APK 包含应用名和版本号
           mv build/app/outputs/flutter-apk/app-release.apk \
-             build/app/outputs/flutter-apk/personal-ai-assistant-${{ needs.prepare-release.outputs.version }}-android-arm64.apk
+             build/app/outputs/flutter-apk/personal-ai-assistant-android-arm64-${{ needs.prepare-release.outputs.version }}.apk
 
           echo "✅ APK build completed"
 
