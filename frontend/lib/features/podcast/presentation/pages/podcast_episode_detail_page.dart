@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import '../providers/podcast_providers.dart';
 import '../providers/transcription_providers.dart';
@@ -418,7 +418,7 @@ class _PodcastEpisodeDetailPageState
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 600;
+          final isWide = constraints.maxWidth > 800;
 
           final timeWidget = episodeDetailAsync.when(
             data: (episode) {
