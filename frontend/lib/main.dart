@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/app/app.dart';
+import 'core/app/config/app_config.dart';
 import 'core/localization/locale_provider.dart';
 import 'core/services/service_locator.dart';
 import 'core/storage/local_storage_service.dart';
@@ -38,6 +39,12 @@ void main() async {
   // Initialize SharedPreferences for LocalStorageService
   final prefs = await SharedPreferences.getInstance();
   final storageService = LocalStorageServiceImpl(prefs);
+
+  // Load API Base URL
+  final customBaseUrl = await storageService.getApiBaseUrl();
+  if (customBaseUrl != null && customBaseUrl.isNotEmpty) {
+    AppConfig.setApiBaseUrl(customBaseUrl);
+  }
 
   // Run app with custom splash screen wrapper and providers
   runApp(

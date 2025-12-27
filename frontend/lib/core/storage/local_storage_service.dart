@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class LocalStorageService {
@@ -28,7 +29,15 @@ abstract class LocalStorageService {
   Future<void> cacheData(String key, dynamic data, {Duration? expiration});
   Future<T?> getCachedData<T>(String key);
   Future<void> clearExpiredCache();
+  
+  // App Config
+  Future<void> saveApiBaseUrl(String url);
+  Future<String?> getApiBaseUrl(); 
 }
+
+final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
+  throw UnimplementedError('localStorageServiceProvider must be overridden');
+});
 
 class LocalStorageServiceImpl implements LocalStorageService {
   late SharedPreferences _prefs;
@@ -173,5 +182,15 @@ class LocalStorageServiceImpl implements LocalStorageService {
         }
       }
     }
+  }
+
+  @override
+  Future<void> saveApiBaseUrl(String url) async {
+    await _prefs.setString('api_base_url', url);
+  }
+
+  @override
+  Future<String?> getApiBaseUrl() async {
+    return _prefs.getString('api_base_url');
   }
 }

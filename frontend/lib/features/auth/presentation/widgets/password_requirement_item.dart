@@ -13,7 +13,7 @@ class PasswordRequirementItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: EdgeInsets.zero,
       child: Row(
         children: [
           Icon(

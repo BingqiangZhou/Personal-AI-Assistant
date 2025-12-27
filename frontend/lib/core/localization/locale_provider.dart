@@ -72,7 +72,4 @@ class LocaleNotifier extends Notifier<Locale> {
   }
 }
 
-/// Local storage service provider
-final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
-  throw UnimplementedError('LocalStorageService must be overridden in main.dart');
-});
+

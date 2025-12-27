@@ -89,34 +89,34 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 12),
 
                   // Logo and title
                   Center(
                     child: Column(
                       children: [
                         Container(
-                          width: 80,
-                          height: 80,
+                          width: 60,
+                          height: 60,
                           decoration: BoxDecoration(
                             color: AppTheme.primaryColor,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Icon(
                             Icons.person_add,
-                            size: 40,
+                            size: 30,
                             color: Colors.white,
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         Text(
                           l10n.auth_create_account,
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         Text(
                           l10n.auth_sign_up_subtitle,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -127,7 +127,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
 
                   // Username field
                   CustomTextField(
@@ -150,7 +150,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     errorText: authState.fieldErrors?['username'],
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
                   // Email field
                   CustomTextField(
@@ -174,7 +174,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     errorText: authState.fieldErrors?['email'],
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
                   // Password field
                   Column(
@@ -217,9 +217,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         },
                         errorText: authState.fieldErrors?['password'],
                       ),
-                      const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(8),
@@ -237,7 +237,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 4),
                             PasswordRequirementItem(
                               text: l10n.auth_password_too_short,
                               isValid: _passwordController.text.length >= 8,
@@ -260,7 +260,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     ],
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
                   // Confirm password field
                   CustomTextField(
@@ -289,7 +289,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     },
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
 
                   // Terms and conditions
                   Row(
@@ -344,7 +344,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     ],
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
 
                   // Register button
                   CustomButton(
@@ -354,7 +354,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     isLoading: isLoading,
                   ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 16),
 
                   // Sign in link
                   Row(

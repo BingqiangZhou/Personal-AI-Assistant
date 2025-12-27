@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/app/config/app_config.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/storage/local_storage_service.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../../../../shared/widgets/custom_button.dart';
@@ -38,6 +40,58 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         rememberMe: _rememberMe,
       );
     }
+  }
+
+  Future<void> _showServerConfigDialog() async {
+    final storageService = ref.read(localStorageServiceProvider);
+    final currentUrl = await storageService.getApiBaseUrl() ?? AppConfig.apiBaseUrl;
+    final urlController = TextEditingController(text: currentUrl);
+
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Server Configuration'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter API Base URL:'),
+            const SizedBox(height: 8),
+            TextField(
+              controller: urlController,
+              decoration: const InputDecoration(
+                hintText: 'http://localhost:8000',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newUrl = urlController.text.trim();
+              if (newUrl.isNotEmpty) {
+                await storageService.saveApiBaseUrl(newUrl);
+                AppConfig.setApiBaseUrl(newUrl);
+                
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Server URL updated. Please restart app if issues persist.')),
+                  );
+                }
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -83,10 +137,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             color: AppTheme.primaryColor,
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Icon(
-                            Icons.psychology,
-                            size: 40,
-                            color: Colors.white,
+                          child: GestureDetector(
+                            onLongPress: _showServerConfigDialog, // Hidden gesture
+                            child: const Icon(
+                              Icons.psychology,
+                              size: 40,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),

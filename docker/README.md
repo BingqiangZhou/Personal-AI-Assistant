@@ -1,64 +1,152 @@
-#  Docker 部署目录
+# Docker 部署目录
 
 这里包含了个人AI助手播客功能的所有 Docker 部署配置文件。
 
 ---
 
-##  目录结构
+## 🚀 快速开始
+
+### 开发环境 (3 步搞定)
+
+#### 1️⃣ 配置环境
+
+```bash
+# 复制并编辑开发环境配置
+cd backend
+cp .env.dev.example .env.dev
+nano .env.dev  # 或使用 notepad .env.dev (Windows)
+```
+
+#### 2️⃣ 启动服务
+
+```bash
+cd docker
+docker-compose -f docker-compose.dev.yml up -d
+```
+
+#### 3️⃣ 访问服务
+
+- Backend: http://localhost:8000
+- API文档: http://localhost:8000/docs
+
+### 生产环境部署
+
+#### 1️⃣ 配置环境
+
+```bash
+# 配置后端环境
+cd backend
+cp .env.example .env
+nano .env  # 修改密码、密钥、域名等
+
+# 必须修改的配置:
+# - SECRET_KEY: 生成强密钥
+# - POSTGRES_PASSWORD: 数据库密码
+# - DOMAIN: 你的域名
+```
+
+#### 2️⃣ 准备 SSL 证书
+
+将 SSL 证书放到 `docker/nginx/cert/` 目录：
+- `fullchain.pem` - 证书链
+- `privkey.pem` - 私钥
+
+#### 3️⃣ 创建环境变量链接
+
+```bash
+cd docker
+
+# Linux/Mac
+ln -s ../backend/.env .env
+
+# Windows (需要管理员权限)
+mklink .env ..\backend\.env
+
+# 或使用 --env-file 参数（无需链接）
+docker-compose --env-file ../backend/.env up -d
+```
+
+#### 4️⃣ 启动服务
+
+```bash
+cd docker
+docker-compose up -d
+```
+
+#### 5️⃣ 访问服务
+
+- https://your-domain.com
+
+---
+
+## 环境选择 / Environment Selection
+
+**重要**: 请根据使用场景选择正确的配置文件
+
+| 场景 | 配置文件 | 环境变量文件 | Nginx | 用途 |
+|------|----------|-------------|-------|------|
+| **本地开发** | `docker-compose.dev.yml` | `backend/.env.dev` | ❌ 无 | 开发调试，直接访问后端 |
+| **服务器部署** | `docker-compose.yml` | `backend/.env` | ✅ 有 | 生产环境，通过 Nginx 代理 |
+
+### 开发环境特点
+
+- 热重载 (代码修改自动生效)
+- DEBUG 日志级别
+- 暴露数据库和 Redis 端口 (方便调试)
+- 单 worker 进程
+- 使用 `.env.dev` 配置文件
+
+### 生产环境特点
+
+- 多 worker 进程 (高并发)
+- INFO 日志级别
+- 不暴露内部服务端口
+- Nginx 反向代理 + HTTPS
+- 使用 `.env` 配置文件
+
+---
+
+## 目录结构
 
 ```
-docker/
-├── docker-compose.podcast.yml          # 核心配置文件 (⭐ 使用这个)
-├── README.md                            # 本文件
-├── DEPLOY_DOCKER.md                     # 详细部署指南
-├── DOCKER_ANALYSIS.md                   # 技术分析文档
-├── QUICK_DEPLOY.txt                     # 快速参考
-├── README_DOCKER_DEPLOY.md              # 完整说明
-├── 部署说明.txt                         # 中文快速指南
-└── scripts/
-    └── start.bat                        # Windows 一键启动
+.
+├── backend/                              # 后端目录
+│   ├── .env.example                      # 生产环境配置模板 ⭐
+│   ├── .env.dev.example                  # 开发环境配置模板 ⭐
+│   ├── .env                              # 实际生产环境配置
+│   └── .env.dev                          # 实际开发环境配置
+├── docker/                               # Docker 目录
+│   ├── docker-compose.yml                # 生产环境配置 ⭐
+│   ├── docker-compose.dev.yml            # 开发环境配置 ⭐
+│   ├── .env -> ../backend/.env           # 符号链接 (生产环境) ⭐
+│   ├── nginx/                            # Nginx 配置
+│   │   ├── nginx.conf
+│   │   ├── conf.d/
+│   │   │   ├── default.conf.template     # HTTPS 模板 (自动读取环境变量)
+│   │   │   └── default.conf              # HTTP 配置 (备用)
+│   │   ├── cert/                         # SSL 证书目录
+│   │   ├── logs/                         # Nginx 日志
+│   │   ├── README.md
+│   │   └── SSL_SETUP.md
+│   └── README.md                         # 本文件
+├── README.md                           # 本文件
+├── DEPLOY_DOCKER.md                    # 详细部署指南
+├── DOCKER_ANALYSIS.md                  # 技术分析文档
+├── QUICK_DEPLOY.txt                    # 快速参考
+├── README_DOCKER_DEPLOY.md             # 完整说明
+└── 部署说明.txt                         # 中文快速指南
 ```
 
 ---
 
-##  快速开始 (3步搞定)
-
-### 1️⃣ 配置环境
-```powershell
-cd E:\Projects\AI\PersonalKnowledgeLibrary\Claude\personal-ai-assistant\docker
-
-# 复制配置到父级的 backend 目录
-copy ..\backend\.env.example ..\backend\.env
-
-# 编辑配置文件
-notepad ..\backend\.env
-
-# 至少设置以下两项:
-# SECRET_KEY=生成一个强密钥: python -c "import secrets; print(secrets.token_urlsafe(48))"
-# DATABASE_URL=postgresql+asyncpg://admin:你的密码@postgres:5432/personal_ai
-```
-
-### 2️⃣ Windows 用户 (最简单)
-```powershell
-# 在 docker 目录下双击运行
-scripts\start.bat
-```
-
-### 3️⃣ 或者命令行启动
-```powershell
-# 从项目根目录运行
-docker compose -f docker/docker-compose.podcast.yml up -d --build
-```
-
----
-
-## 📊 验证部署
+## 验证部署
 
 启动成功后，检查以下服务：
 
+### 开发环境
 ```bash
 # 1. 查看服务状态
-docker compose -f docker/docker-compose.podcast.yml ps
+docker-compose -f docker-compose.dev.yml ps
 
 # 2. 健康检查
 curl http://localhost:8000/health
@@ -68,99 +156,133 @@ curl http://localhost:8000/health
 # 浏览器打开: http://localhost:8000/docs
 ```
 
+### 生产环境
+```bash
+# 1. 查看服务状态
+docker-compose ps
+
+# 2. 检查 Nginx
+curl https://your-domain.com/health
+
+# 3. 检查 SSL
+curl https://your-domain.com/api/v1/health
+```
+
 ---
 
-## 📝 资源文件说明
+## 资源文件说明
 
 ### 核心配置
-| 文件 | 用途 | 优先级 |
-|------|------|--------|
-| `docker-compose.podcast.yml` | Docker Compose 配置 | ⭐ 必须使用 |
-| `scripts/start.bat` | Windows 一键启动脚本 | ⭐ 推荐 |
-| `部署说明.txt` | 中文快速指南 | ⭐ 推荐 |
+| 文件 | 用途 | 环境 |
+|------|------|------|
+| `backend/.env.dev.example` | 开发环境配置模板 | 开发 |
+| `backend/.env.example` | 生产环境配置模板 | 生产 |
+| `docker/.env` | 符号链接 → `../backend/.env` | 生产 |
+| `docker-compose.dev.yml` | 开发环境 Docker 配置 | 开发 |
+| `docker-compose.yml` | 生产环境 Docker 配置 | 生产 |
+| `nginx/` | Nginx 反向代理配置 | 生产 |
 
 ### 详细文档
 | 文件 | 内容 |
 |------|------|
-| `README_DOCKER_DEPLOY.md` | 完整部署手册 (两种方式对比) |
+| `nginx/README.md` | Nginx 使用指南 |
+| `nginx/SSL_SETUP.md` | SSL 证书配置指南 |
+| `README_DOCKER_DEPLOY.md` | 完整部署手册 |
 | `DEPLOY_DOCKER.md` | Docker 问题排查和高级配置 |
-| `DOCKER_ANALYSIS.md` | 技术分析 (为什么推荐此配置) |
-| `QUICK_DEPLOY.txt` | 极简命令清单 |
+| `DOCKER_ANALYSIS.md` | 技术分析 |
 
 ---
 
-##  🚫 如果不使用 Docker？
+## 常用命令
 
-手动运行 (开发模式):
-```powershell
-# 1. 启动数据库 (需要单独安装 Postgres 和 Redis)
-# 2. 编辑 backend/.env，修改为 localhost
-# 3. 后台运行:
-cd backend
-uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+### 开发环境
 
----
-
-##  🛑 常用命令
-
-### 启动/停止
-```powershell
+#### 启动/停止
+```bash
 # 启动
-docker compose -f docker/docker-compose.podcast.yml up -d
+docker-compose -f docker-compose.dev.yml up -d
 
 # 停止
-docker compose -f docker/docker-compose.podcast.yml down
+docker-compose -f docker-compose.dev.yml down
 
 # 重启后端
-docker compose -f docker/docker-compose.podcast.yml restart backend
+docker-compose -f docker-compose.dev.yml restart backend
 ```
 
-### 查看日志
-```powershell
+#### 查看日志
+```bash
 # 所有服务日志
-docker compose -f docker/docker-compose.podcast.yml logs -f
+docker-compose -f docker-compose.dev.yml logs -f
 
 # 仅后端日志
-docker compose -f docker/docker-compose.podcast.yml logs -f backend
+docker-compose -f docker-compose.dev.yml logs -f backend
 
 # 最近20行 (用于错误排查)
-docker compose -f docker/docker-compose.podcast.yml logs --tail=20 backend
+docker-compose -f docker-compose.dev.yml logs --tail=20 backend
 ```
 
-### 数据管理
-```powershell
+#### 数据管理
+```bash
 # 删除所有数据并重新开始
-docker compose -f docker/docker-compose.podcast.yml down -v
+docker-compose -f docker-compose.dev.yml down -v
 
 # 查看数据库数据
-docker exec -it podcast_postgres psql -U admin -d personal_ai
+docker exec -it personal_ai_dev_postgres psql -U admin -d personal_ai_dev
+```
+
+### 生产环境
+
+#### 启动/停止
+```bash
+# 首次使用：创建符号链接
+cd docker
+ln -s ../backend/.env .env     # Linux/Mac
+mklink .env ..\backend\.env    # Windows (需要管理员权限)
+
+# 或每次使用 --env-file 参数（无需链接）
+docker-compose --env-file ../backend/.env up -d
+
+# 启动
+docker-compose up -d
+
+# 停止
+docker-compose down
+
+# 重启 Nginx
+docker-compose restart nginx
+```
+
+#### Nginx 管理
+```bash
+# 测试配置
+docker-compose exec nginx nginx -t
+
+# 重新加载配置
+docker-compose exec nginx nginx -s reload
+
+# 查看 Nginx 日志
+tail -f nginx/logs/access.log
+tail -f nginx/logs/error.log
 ```
 
 ---
 
-##  ⚙️ docker-compose.podcast.yml 优化说明
+## 环境对比
 
-为什么比原版 `docker-compose.yml` 更好:
-
-### ✅ 修复的问题
-1. **数据库名称**：`personal_ai` (匹配代码)
-2. **用户密码**：`admin` / 自定义 (匹配 .env.example)
-3. **环境变量**：使用 Docker 网络名称 (非 localhost)
-4. **Celery**：已移除 (当前代码未实现)
-5. **健康检查**：自动等待数据库就绪
-6. **自动迁移**：启动时自动运行数据库迁移
-
-### ✅ 特性
-- **服务数量**：3个 (PostgreSQL, Redis, Backend) → 快速启动
-- **数据持久化**：所有数据自动保存
-- **自动重启**：容器崩溃自动恢复
-- **健康检查**：确保启动顺序正确
-- **单Redis DB**：适合个人使用
+| 特性 | 开发环境 | 生产环境 |
+|------|----------|----------|
+| **访问方式** | 直接访问后端 | Nginx 反向代理 |
+| **端口** | 8000 | 80/443 |
+| **Workers** | 1 (热重载) | 4 (无热重载) |
+| **日志级别** | DEBUG | INFO |
+| **数据库端口** | 暴露 5432 | 不暴露 |
+| **Redis 端口** | 暴露 6379 | 不暴露 |
+| **SSL/HTTPS** | 无 | 有 |
+| **适用场景** | 本地开发 | 服务器部署 |
 
 ---
 
-##  🧪 测试部署
+## 测试部署
 
 部署完成后，运行测试验证：
 
@@ -174,46 +296,58 @@ docker exec -it podcast_backend uv run python run_all_tests.py
 
 ---
 
-##  🆘 问题求助
+## 问题求助
 
 如果部署失败，请准备以下信息：
 
-```powershell
+```bash
 # 1. 环境检查
 docker --version
-docker compose version
+docker-compose version
 
-# 2. 服务状态
-docker compose -f docker/docker-compose.podcast.yml ps -a
+# 2. 服务状态 (开发环境)
+docker-compose -f docker-compose.dev.yml ps -a
 
 # 3. 错误日志
-docker compose -f docker/docker-compose.podcast.yml logs backend
+docker-compose -f docker-compose.dev.yml logs backend
 
-# 4. 父级 .env 配置
-cat ../backend/.env | grep -v "SECRET_KEY"
+# 4. 配置检查
+cat ../backend/.env.dev | grep -v "SECRET_KEY"
 ```
 
 ---
 
-## 📞 需要更多帮助？
+## 需要更多帮助？
 
-- **详细部署**: 查看 `README_DOCKER_DEPLOY.md`
-- **问题排查**: 查看 `DEPLOY_DOCKER.md`
-- **技术原理**: 查看 `DOCKER_ANALYSIS.md`
-- **快速命令**: 查看 `QUICK_DEPLOY.txt`
-- **中文指南**: 查看 `部署说明.txt`
+- **开发环境**: 本文档
+- **生产环境部署**: `nginx/README.md`
+- **SSL 配置**: `nginx/SSL_SETUP.md`
+- **详细部署**: `README_DOCKER_DEPLOY.md`
+- **问题排查**: `DEPLOY_DOCKER.md`
+- **技术原理**: `DOCKER_ANALYSIS.md`
+- **快速命令**: `QUICK_DEPLOY.txt`
+- **中文指南**: `部署说明.txt`
 
 ---
 
-## ✅ 部署成功检查清单
+## 部署成功检查清单
 
-- [ ] 服务启动: `docker compose ... ps` 显示3个服务 **Up**
+### 开发环境
+- [ ] 配置 `backend/.env.dev`
+- [ ] 服务启动: `docker-compose -f docker-compose.dev.yml ps` 显示4个服务 **Up**
 - [ ] 健康检查: `curl http://localhost:8000/health` 返回健康
 - [ ] 文档可访问: `http://localhost:8000/docs` 正常显示
 - [ ] 功能测试: 能添加播客订阅
+- [ ] 热重载测试: 修改代码后自动重启
+
+### 生产环境
+- [ ] 配置 `backend/.env` 并修改密码、域名
+- [ ] 配置 SSL 证书到 `docker/nginx/cert/`
+- [ ] 创建 `docker/.env` 符号链接 → `../backend/.env`
+- [ ] Nginx 配置测试通过
+- [ ] HTTPS 访问正常
+- [ ] HTTP 自动重定向到 HTTPS
 
 ---
 
 **祝部署顺利！🎉**
-
-需要更详细的帮助，查看对应文档即可。

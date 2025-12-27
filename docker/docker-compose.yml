@@ -1,0 +1,213 @@
+# Docker Compose - 生产环境配置
+# Production Environment Configuration
+#
+# 用途: 生产部署，通过Nginx反向代理访问
+# Usage: Production deployment with Nginx reverse proxy
+#
+# 使用前准备:
+#   1. 在 backend 目录配置 .env 文件
+#   2. 配置 SSL 证书 (参考 nginx/SSL_SETUP.md)
+#   3. 启动服务
+#
+# 使用方法:
+#   docker-compose --env-file ../backend/.env up -d
+
+services:
+  # PostgreSQL Database (生产环境优化)
+  postgres:
+    image: postgres:15-alpine
+    container_name: ${PROJECT_NAME:-personal_ai}_postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - TZ=Asia/Shanghai
+    # 生产环境不暴露端口到宿主机，仅内部访问
+    # expose:
+    #   - "5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - production_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  # Redis Cache (生产环境优化)
+  redis:
+    image: redis:7-alpine
+    container_name: ${PROJECT_NAME:-personal_ai}_redis
+    environment:
+      - TZ=Asia/Shanghai
+    # 生产环境不暴露端口到宿主机
+    # expose:
+    #   - "6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    networks:
+      - production_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: always
+
+  # Backend API (生产环境配置)
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME:-personal_ai}_backend
+    env_file:
+      - ../backend/.env
+    # 生产环境: 不暴露端口，仅通过Nginx代理访问
+    expose:
+      - "8000"
+    environment:
+      # 数据库配置
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
+      # 存储路径
+      - TRANSCRIPTION_TEMP_DIR=/app/temp/transcription
+      - TRANSCRIPTION_STORAGE_DIR=/app/storage/podcasts
+      # 日志配置
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_DIR=/app/logs
+      - LOG_RETENTION_DAYS=${LOG_RETENTION_DAYS:-30}
+      - TZ=Asia/Shanghai
+      # 生产环境配置
+      - ENVIRONMENT=production
+      - WORKERS=${BACKEND_WORKERS:-4}
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_storage:/app/storage/podcasts
+      - backend_temp:/app/temp/transcription
+      - backend_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - production_network
+    restart: always
+    # 生产环境: 多worker，无热重载
+    command: >
+      sh -c "sleep 5 &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${BACKEND_WORKERS:-4} --log-level info"
+
+  # Celery Worker - 后台任务处理
+  celery_worker:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME:-personal_ai}_celery_worker
+    env_file:
+      - ../backend/.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
+      - TRANSCRIPTION_TEMP_DIR=/app/temp/transcription
+      - TRANSCRIPTION_STORAGE_DIR=/app/storage/podcasts
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_DIR=/app/logs
+      - TZ=Asia/Shanghai
+    volumes:
+      - backend_storage:/app/storage/podcasts
+      - backend_temp:/app/temp/transcription
+      - backend_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - production_network
+    restart: always
+    command: celery -A app.domains.podcast.tasks.celery_app worker --loglevel=info --concurrency=${CELERY_WORKERS:-2} -Q celery,podcast,ai,transcription,cleanup,recommendation
+
+  # Celery Beat - 定时任务调度器
+  celery_beat:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME:-personal_ai}_celery_beat
+    env_file:
+      - ../backend/.env
+    environment:
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_DIR=/app/logs
+      - TZ=Asia/Shanghai
+    volumes:
+      - backend_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      celery_worker:
+        condition: service_started
+    networks:
+      - production_network
+    restart: always
+    command: celery -A app.domains.podcast.tasks.celery_app beat --loglevel=info
+
+  # Nginx Reverse Proxy - 反向代理服务器
+  nginx:
+    image: nginx:stable-alpine
+    container_name: ${PROJECT_NAME:-personal_ai}_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Nginx 配置环境变量 / Nginx Configuration Environment Variables
+      - DOMAIN=${DOMAIN:-localhost}
+      - SSL_CERT_PATH=${SSL_CERT_PATH:-/etc/nginx/cert/fullchain.pem}
+      - SSL_KEY_PATH=${SSL_KEY_PATH:-/etc/nginx/cert/privkey.pem}
+    volumes:
+      # Nginx主配置文件
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # 站点配置模板 (使用 envsubst 替换变量)
+      - ./nginx/conf.d:/etc/nginx/templates:ro
+      # SSL证书目录 (HTTPS必需)
+      - ./nginx/cert:/etc/nginx/cert:ro
+      # Nginx日志目录
+      - nginx_logs:/var/log/nginx
+      # 时区同步
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - backend
+    networks:
+      - production_network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_storage:
+    driver: local
+  backend_temp:
+    driver: local
+  backend_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+
+networks:
+  production_network:
+    driver: bridge

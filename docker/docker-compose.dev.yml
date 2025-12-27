@@ -1,69 +1,82 @@
+# Docker Compose - 开发环境配置
+# Development Environment Configuration
+#
+# 用途: 本地开发，直接访问后端服务
+# Usage: Local development, direct backend access
+#
+# 使用方法:
+#   1. cd backend && cp .env.dev.example .env.dev
+#   2. cd ../docker && docker-compose -f docker-compose.dev.yml up -d
+
 services:
-  # PostgreSQL Database (优化版本 - 适合个人使用)
+  # PostgreSQL Database (开发环境)
   postgres:
     image: postgres:15-alpine
-    container_name: podcast_postgres
+    container_name: personal_ai_dev_postgres
     environment:
-      - POSTGRES_DB=${POSTGRES_DB:-personal_ai}
-      - POSTGRES_USER=${POSTGRES_USER:-admin}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-MySecurePass2024!}
+      - POSTGRES_DB=personal_ai
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=MySecurePass2024!
       - TZ=Asia/Shanghai
     ports:
-      - "5432:5432"
+      - "5432:5432"  # 开发环境暴露端口用于调试
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - podcast_network
+      - dev_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-personal_ai}"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d personal_ai"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  # Redis Cache (单DB，适合个人使用)
+  # Redis Cache (开发环境)
   redis:
     image: redis:7-alpine
-    container_name: podcast_redis
+    container_name: ${PROJECT_NAME:-personal_ai_dev}_redis
     environment:
       - TZ=Asia/Shanghai
     ports:
-      - "6379:6379"
+      - "6379:6379"  # 开发环境暴露端口用于调试
     volumes:
       - redis_data:/data
     networks:
-      - podcast_network
+      - dev_network
     command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
 
-  # Backend API (Podcast Feature Optimized)
+  # Backend API (开发环境)
   backend:
     build:
       context: ../backend
       dockerfile: Dockerfile
-    container_name: podcast_backend
+    container_name: personal_ai_dev_backend
     env_file:
-      - ../backend/.env
+      - ../backend/.env.dev
+    # 开发环境: 暴露8000端口用于直接访问
     ports:
       - "8000:8000"
     environment:
-      # 数据库配置 - 覆盖.env中的localhost为Docker服务名
+      # 数据库配置 - 使用固定值确保与 PostgreSQL 容器一致
       - DATABASE_URL=postgresql+asyncpg://admin:MySecurePass2024!@postgres:5432/personal_ai
       - REDIS_URL=redis://redis:6379
       # 使用绝对路径确保在Docker环境中路径一致
       - TRANSCRIPTION_TEMP_DIR=/app/temp/transcription
       - TRANSCRIPTION_STORAGE_DIR=/app/storage/podcasts
-      # 日志配置
-      - LOG_LEVEL=INFO
+      # 日志配置 - 开发环境使用 DEBUG
+      - LOG_LEVEL=DEBUG
       - LOG_DIR=/app/logs
-      - LOG_RETENTION_DAYS=30
+      - LOG_RETENTION_DAYS=7
       - TZ=Asia/Shanghai
-
+      - ENVIRONMENT=development
     volumes:
-      - ../backend:/app
+      - ../backend:/app  # 挂载代码目录支持热重载
       - backend_uploads:/app/uploads
       - ../backend/storage/podcasts:/app/storage/podcasts
       - ../backend/temp/transcription:/app/temp/transcription
@@ -74,33 +87,31 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - podcast_network
+      - dev_network
     restart: unless-stopped
-    # 使用生产环境的uvicorn配置
-    # 如果首次启动失败，volumes可能需要等待Docker Desktop就绪后再重启
+    # 开发环境: 单worker，支持热重载
     command: >
       sh -c "sleep 5 &&
-             uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --log-level info"
+             uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug"
 
-  # 可选: Celery Worker - 如果需要后台任务才启用
+  # Celery Worker - 后台任务处理 (开发环境)
   celery_worker:
     build:
       context: ../backend
       dockerfile: Dockerfile
-    container_name: podcast_celery_worker
+    container_name: personal_ai_dev_celery_worker
     env_file:
-      - ../backend/.env
+      - ../backend/.env.dev
     environment:
-      # 使用绝对路径确保在Docker环境中路径一致（与backend相同）
+      - DATABASE_URL=postgresql+asyncpg://admin:MySecurePass2024!@postgres:5432/personal_ai
+      - REDIS_URL=redis://redis:6379
       - TRANSCRIPTION_TEMP_DIR=/app/temp/transcription
       - TRANSCRIPTION_STORAGE_DIR=/app/storage/podcasts
-      # 日志配置
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=DEBUG
       - LOG_DIR=/app/logs
-      - LOG_RETENTION_DAYS=30
       - TZ=Asia/Shanghai
     volumes:
-      - ../backend:/app
+      - ../backend:/app  # 挂载代码目录支持热重载
       - backend_uploads:/app/uploads
       - ../backend/storage/podcasts:/app/storage/podcasts
       - ../backend/temp/transcription:/app/temp/transcription
@@ -111,26 +122,25 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - podcast_network
+      - dev_network
     restart: unless-stopped
-    command: celery -A app.domains.podcast.tasks.celery_app worker --loglevel=info --concurrency=2 -Q celery,podcast,ai,transcription,cleanup,recommendation
+    command: celery -A app.domains.podcast.tasks.celery_app worker --loglevel=debug --concurrency=1 -Q celery,podcast,ai,transcription,cleanup,recommendation
 
-  # Celery Beat - 调度器，负责定时触发任务
+  # Celery Beat - 定时任务调度器 (开发环境)
   celery_beat:
     build:
       context: ../backend
       dockerfile: Dockerfile
-    container_name: podcast_celery_beat
+    container_name: personal_ai_dev_celery_beat
     env_file:
-      - ../backend/.env
+      - ../backend/.env.dev
     environment:
-      # 日志配置
-      - LOG_LEVEL=INFO
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=DEBUG
       - LOG_DIR=/app/logs
-      - LOG_RETENTION_DAYS=30
       - TZ=Asia/Shanghai
     volumes:
-      - ../backend:/app
+      - ../backend:/app  # 挂载代码目录支持热重载
       - ../backend/logs:/app/logs
     depends_on:
       postgres:
@@ -140,9 +150,9 @@ services:
       celery_worker:
         condition: service_started
     networks:
-      - podcast_network
+      - dev_network
     restart: unless-stopped
-    command: celery -A app.domains.podcast.tasks.celery_app beat --loglevel=info
+    command: celery -A app.domains.podcast.tasks.celery_app beat --loglevel=debug
 
 volumes:
   postgres_data:
@@ -150,5 +160,5 @@ volumes:
   backend_uploads:
 
 networks:
-  podcast_network:
+  dev_network:
     driver: bridge

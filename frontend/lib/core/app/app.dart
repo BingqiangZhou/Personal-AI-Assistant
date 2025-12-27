@@ -7,6 +7,7 @@ import '../localization/locale_provider.dart';
 import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 import '../widgets/loading_page.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
 
 class PersonalAIAssistantApp extends ConsumerStatefulWidget {
   const PersonalAIAssistantApp({super.key});
@@ -27,6 +28,9 @@ class _PersonalAIAssistantAppState extends ConsumerState<PersonalAIAssistantApp>
   Future<void> _initializeApp() async {
     // Load saved locale from storage
     await ref.read(localeProvider.notifier).loadSavedLocale();
+
+    // Check authentication status
+    await ref.read(authProvider.notifier).checkAuthStatus();
 
     // Simulate app initialization time - longer to prevent any flash
     await Future.delayed(const Duration(milliseconds: 1200));

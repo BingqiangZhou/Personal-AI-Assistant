@@ -20,11 +20,15 @@ import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/ai/presentation/pages/model_management_page.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authProvider);
+
   return GoRouter(
     initialLocation: '/home',
     debugLogDiagnostics: true,
+    refreshListenable: AuthStateListenable(ref), // Trigger refresh on auth state change
     routes: [
       // Splash
       GoRoute(
@@ -191,15 +195,52 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
     // Redirect logic
     redirect: (context, state) {
-      // TODO: Implement auth state checking
-      // For now, always allow access
-      return null;
+      final isAuthenticated = authState.isAuthenticated;
+      final isLoggingIn = state.uri.toString() == '/login';
+      final isRegistering = state.uri.toString() == '/register';
+      final isSplash = state.uri.toString() == '/splash';
+      final isAuthTest = state.uri.toString().startsWith('/auth-test');
+      
+      // Allow Splash
+      if (isSplash) return null;
+
+      // Allow Auth Test page for debugging
+      if (isAuthTest) return null;
+
+      if (!isAuthenticated) {
+        // Not authenticated
+        if (isLoggingIn || isRegistering) {
+          // Allowed to be on login/register pages
+          return null;
+        }
+        // Redirect to login
+        return '/login';
+      } else {
+        // Authenticated
+        if (isLoggingIn || isRegistering) {
+          // If trying to login/register while authenticated, go home
+          return '/home';
+        }
+        // Allowed to proceed
+        return null;
+      }
     },
 
     // Error handling
     errorBuilder: (context, state) => ErrorPage(error: state.error),
   );
 });
+
+// Helper for refreshListenable
+class AuthStateListenable extends ChangeNotifier {
+  final Ref ref;
+  
+  AuthStateListenable(this.ref) {
+    ref.listen(authProvider, (previous, next) {
+      notifyListeners();
+    });
+  }
+}
 
 class ErrorPage extends StatelessWidget {
   final Exception? error;

@@ -8,7 +8,14 @@ class AppConfig {
   );
 
   // API Configuration
+  // API Configuration
+  static String _apiBaseUrl = '';
+
   static String get apiBaseUrl {
+    if (_apiBaseUrl.isNotEmpty) {
+      return _apiBaseUrl;
+    }
+    
     switch (environment) {
       case 'production':
         return 'https://api.personalai.app';
@@ -22,6 +29,11 @@ class AppConfig {
         return 'http://localhost:8000';
     }
   }
+
+  static void setApiBaseUrl(String url) {
+    _apiBaseUrl = url;
+  }
+
 
   // App Configuration
   static const String appName = 'Personal AI Assistant';
