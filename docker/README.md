@@ -11,8 +11,10 @@
 #### 1️⃣ 配置环境
 
 ```bash
+# 进入 docker 目录
+cd docker
+
 # 复制并编辑开发环境配置
-cd backend
 cp .env.dev.example .env.dev
 nano .env.dev  # 或使用 notepad .env.dev (Windows)
 ```
@@ -20,7 +22,7 @@ nano .env.dev  # 或使用 notepad .env.dev (Windows)
 #### 2️⃣ 启动服务
 
 ```bash
-cd docker
+# 当前已在 docker 目录
 docker-compose -f docker-compose.dev.yml up -d
 ```
 
@@ -34,15 +36,18 @@ docker-compose -f docker-compose.dev.yml up -d
 #### 1️⃣ 配置环境
 
 ```bash
-# 配置后端环境
-cd backend
+# 进入 docker 目录
+cd docker
+
+# 复制并编辑配置文件
 cp .env.example .env
-nano .env  # 修改密码、密钥、域名等
+nano .env  # 或使用 notepad .env (Windows)
 
 # 必须修改的配置:
-# - SECRET_KEY: 生成强密钥
 # - POSTGRES_PASSWORD: 数据库密码
-# - DOMAIN: 你的域名
+# - JWT_SECRET_KEY: JWT 密钥 (用 openssl rand -hex 32 生成)
+# - OPENAI_API_KEY: OpenAI API 密钥
+# - DOMAIN: 你的域名 (如果有)
 ```
 
 #### 2️⃣ 准备 SSL 证书
@@ -51,29 +56,14 @@ nano .env  # 修改密码、密钥、域名等
 - `fullchain.pem` - 证书链
 - `privkey.pem` - 私钥
 
-#### 3️⃣ 创建环境变量链接
-
-```bash
-cd docker
-
-# Linux/Mac
-ln -s ../backend/.env .env
-
-# Windows (需要管理员权限)
-mklink .env ..\backend\.env
-
-# 或使用 --env-file 参数（无需链接）
-docker-compose --env-file ../backend/.env up -d
-```
-
-#### 4️⃣ 启动服务
+#### 3️⃣ 启动服务
 
 ```bash
 cd docker
 docker-compose up -d
 ```
 
-#### 5️⃣ 访问服务
+#### 4️⃣ 访问服务
 
 - https://your-domain.com
 
@@ -85,8 +75,8 @@ docker-compose up -d
 
 | 场景 | 配置文件 | 环境变量文件 | Nginx | 用途 |
 |------|----------|-------------|-------|------|
-| **本地开发** | `docker-compose.dev.yml` | `backend/.env.dev` | ❌ 无 | 开发调试，直接访问后端 |
-| **服务器部署** | `docker-compose.yml` | `backend/.env` | ✅ 有 | 生产环境，通过 Nginx 代理 |
+| **本地开发** | `docker-compose.dev.yml` | `docker/.env.dev` | ❌ 无 | 开发调试，直接访问后端 |
+| **服务器部署** | `docker-compose.yml` | `docker/.env` | ✅ 有 | 生产环境，通过 Nginx 代理 |
 
 ### 开发环境特点
 
@@ -110,15 +100,13 @@ docker-compose up -d
 
 ```
 .
-├── backend/                              # 后端目录
-│   ├── .env.example                      # 生产环境配置模板 ⭐
-│   ├── .env.dev.example                  # 开发环境配置模板 ⭐
-│   ├── .env                              # 实际生产环境配置
-│   └── .env.dev                          # 实际开发环境配置
 ├── docker/                               # Docker 目录
 │   ├── docker-compose.yml                # 生产环境配置 ⭐
 │   ├── docker-compose.dev.yml            # 开发环境配置 ⭐
-│   ├── .env -> ../backend/.env           # 符号链接 (生产环境) ⭐
+│   ├── .env.example                      # 生产环境配置模板 ⭐
+│   ├── .env                              # 实际生产环境配置
+│   ├── .env.dev.example                  # 开发环境配置模板 ⭐
+│   ├── .env.dev                          # 实际开发环境配置
 │   ├── nginx/                            # Nginx 配置
 │   │   ├── nginx.conf
 │   │   ├── conf.d/
@@ -175,9 +163,10 @@ curl https://your-domain.com/api/v1/health
 ### 核心配置
 | 文件 | 用途 | 环境 |
 |------|------|------|
-| `backend/.env.dev.example` | 开发环境配置模板 | 开发 |
-| `backend/.env.example` | 生产环境配置模板 | 生产 |
-| `docker/.env` | 符号链接 → `../backend/.env` | 生产 |
+| `docker/.env.dev.example` | 开发环境配置模板 | 开发 |
+| `docker/.env.dev` | 开发环境实际配置 | 开发 |
+| `docker/.env.example` | 生产环境配置模板 | 生产 |
+| `docker/.env` | 生产环境实际配置 | 生产 |
 | `docker-compose.dev.yml` | 开发环境 Docker 配置 | 开发 |
 | `docker-compose.yml` | 生产环境 Docker 配置 | 生产 |
 | `nginx/` | Nginx 反向代理配置 | 生产 |
@@ -234,15 +223,8 @@ docker exec -it personal_ai_dev_postgres psql -U admin -d personal_ai_dev
 
 #### 启动/停止
 ```bash
-# 首次使用：创建符号链接
-cd docker
-ln -s ../backend/.env .env     # Linux/Mac
-mklink .env ..\backend\.env    # Windows (需要管理员权限)
-
-# 或每次使用 --env-file 参数（无需链接）
-docker-compose --env-file ../backend/.env up -d
-
 # 启动
+cd docker
 docker-compose up -d
 
 # 停止
@@ -312,7 +294,7 @@ docker-compose -f docker-compose.dev.yml ps -a
 docker-compose -f docker-compose.dev.yml logs backend
 
 # 4. 配置检查
-cat ../backend/.env.dev | grep -v "SECRET_KEY"
+cat .env.dev | grep -v "SECRET_KEY"
 ```
 
 ---
@@ -333,7 +315,7 @@ cat ../backend/.env.dev | grep -v "SECRET_KEY"
 ## 部署成功检查清单
 
 ### 开发环境
-- [ ] 配置 `backend/.env.dev`
+- [ ] 配置 `docker/.env.dev`
 - [ ] 服务启动: `docker-compose -f docker-compose.dev.yml ps` 显示4个服务 **Up**
 - [ ] 健康检查: `curl http://localhost:8000/health` 返回健康
 - [ ] 文档可访问: `http://localhost:8000/docs` 正常显示
@@ -341,9 +323,8 @@ cat ../backend/.env.dev | grep -v "SECRET_KEY"
 - [ ] 热重载测试: 修改代码后自动重启
 
 ### 生产环境
-- [ ] 配置 `backend/.env` 并修改密码、域名
+- [ ] 配置 `docker/.env` 并修改密码、域名
 - [ ] 配置 SSL 证书到 `docker/nginx/cert/`
-- [ ] 创建 `docker/.env` 符号链接 → `../backend/.env`
 - [ ] Nginx 配置测试通过
 - [ ] HTTPS 访问正常
 - [ ] HTTP 自动重定向到 HTTPS

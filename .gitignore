@@ -139,3 +139,4 @@ backend/data/.rsa_keys
 .trae/
 backend/celerybeat-schedule
 backend/.env.dev
+docker/.env.dev

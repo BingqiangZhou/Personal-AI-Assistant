@@ -5,8 +5,8 @@
 # Usage: Local development, direct backend access
 #
 # 使用方法:
-#   1. cd backend && cp .env.dev.example .env.dev
-#   2. cd ../docker && docker-compose -f docker-compose.dev.yml up -d
+#   1. cd docker && cp .env.dev.example .env.dev
+#   2. docker-compose -f docker-compose.dev.yml up -d
 
 services:
   # PostgreSQL Database (开发环境)
@@ -58,7 +58,7 @@ services:
       dockerfile: Dockerfile
     container_name: personal_ai_dev_backend
     env_file:
-      - ../backend/.env.dev
+      - .env.dev
     # 开发环境: 暴露8000端口用于直接访问
     ports:
       - "8000:8000"
@@ -101,7 +101,7 @@ services:
       dockerfile: Dockerfile
     container_name: personal_ai_dev_celery_worker
     env_file:
-      - ../backend/.env.dev
+      - .env.dev
     environment:
       - DATABASE_URL=postgresql+asyncpg://admin:MySecurePass2024!@postgres:5432/personal_ai
       - REDIS_URL=redis://redis:6379
@@ -133,7 +133,7 @@ services:
       dockerfile: Dockerfile
     container_name: personal_ai_dev_celery_beat
     env_file:
-      - ../backend/.env.dev
+      - .env.dev
     environment:
       - REDIS_URL=redis://redis:6379
       - LOG_LEVEL=DEBUG

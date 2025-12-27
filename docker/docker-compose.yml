@@ -5,13 +5,13 @@
 # Usage: Production deployment with Nginx reverse proxy
 #
 # 使用前准备:
-#   1. 在 backend 目录配置 .env 文件
+#   1. 在 docker 目录配置 .env 文件 (复制 .env.example 为 .env)
 #   2. 配置 SSL 证书 (参考 nginx/SSL_SETUP.md)
 #   3. 启动服务
 #
 # 使用方法:
 #   cd docker && docker-compose up -d
-# 环境变量会自动从 backend/.env 加载
+# 环境变量会自动从当前目录的 .env 加载
 
 services:
   # PostgreSQL Database (生产环境优化)
@@ -19,7 +19,7 @@ services:
     image: postgres:15-alpine
     container_name: ${PROJECT_NAME:-personal_ai}_postgres
     env_file:
-      - ../backend/.env
+      - .env
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -44,7 +44,7 @@ services:
     image: redis:7-alpine
     container_name: ${PROJECT_NAME:-personal_ai}_redis
     env_file:
-      - ../backend/.env
+      - .env
     environment:
       - TZ=Asia/Shanghai
     # 生产环境不暴露端口到宿主机
@@ -69,7 +69,7 @@ services:
       dockerfile: Dockerfile
     container_name: ${PROJECT_NAME:-personal_ai}_backend
     env_file:
-      - ../backend/.env
+      - .env
     # 生产环境: 不暴露端口，仅通过Nginx代理访问
     expose:
       - "8000"
@@ -113,7 +113,7 @@ services:
       dockerfile: Dockerfile
     container_name: ${PROJECT_NAME:-personal_ai}_celery_worker
     env_file:
-      - ../backend/.env
+      - .env
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
@@ -143,7 +143,7 @@ services:
       dockerfile: Dockerfile
     container_name: ${PROJECT_NAME:-personal_ai}_celery_beat
     env_file:
-      - ../backend/.env
+      - .env
     environment:
       - REDIS_URL=redis://:${REDIS_PASSWORD:-}@redis:6379
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -168,7 +168,7 @@ services:
     image: nginx:stable-alpine
     container_name: ${PROJECT_NAME:-personal_ai}_nginx
     env_file:
-      - ../backend/.env
+      - .env
     restart: always
     ports:
       - "80:80"
