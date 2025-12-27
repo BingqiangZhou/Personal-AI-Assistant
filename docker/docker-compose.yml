@@ -1,58 +1,61 @@
-# Docker Compose - 生产环境配置
-# Production Environment Configuration
+# =============================================================================
+# Docker Compose - 统一配置 / Unified Configuration
+# =============================================================================
+# 此配置通过环境变量控制本地开发和云端部署的差异
+# This config uses environment variables to control differences between local and cloud
 #
-# 用途: 生产部署，通过Nginx反向代理访问
-# Usage: Production deployment with Nginx reverse proxy
+# 使用方法 / Usage:
 #
-# 使用前准备:
-#   1. 在 docker 目录配置 .env 文件 (复制 .env.example 为 .env)
-#   2. 配置 SSL 证书 (参考 nginx/SSL_SETUP.md)
-#   3. 启动服务
+#   方式1 - 复制 env 文件 / Method 1 - Copy env file:
+#     本地开发 / Local:   cp .env.dev.example .env && docker-compose up -d
+#     云端部署 / Cloud:    cp .env.example .env && docker-compose up -d
 #
-# 使用方法:
-#   cd docker && docker-compose up -d
-# 环境变量会自动从当前目录的 .env 加载
+#   方式2 - 直接指定 env 文件 / Method 2 - Specify env file directly:
+#     本地开发 / Local:   docker-compose --env-file .env.dev.example up -d
+#     云端部署 / Cloud:    docker-compose --env-file .env.example up -d
 
 services:
-  # PostgreSQL Database (生产环境优化)
+  # =============================================================================
+  # PostgreSQL Database
+  # =============================================================================
   postgres:
     image: postgres:15-alpine
     container_name: ${PROJECT_NAME:-personal_ai}_postgres
-    env_file:
-      - .env
-    # 生产环境不暴露端口到宿主机，仅内部访问
-    # expose:
-    #   - "5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-personal_ai}
+      - POSTGRES_USER=${POSTGRES_USER:-admin}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "${DB_PORT:-127.0.0.1:5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - production_network
+      - app_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-personal_ai}"]
       interval: 10s
       timeout: 5s
       retries: 5
     restart: always
 
-  # Redis Cache (生产环境优化)
+  # =============================================================================
+  # Redis Cache
+  # =============================================================================
   redis:
     image: redis:7-alpine
     container_name: ${PROJECT_NAME:-personal_ai}_redis
-    env_file:
-      - .env
-    # 生产环境不暴露端口到宿主机
-    # expose:
-    #   - "6379"
     command: >
       sh -c 'if [ -z "$REDIS_PASSWORD" ]; then
                redis-server --appendonly yes;
              else
                redis-server --appendonly yes --requirepass "$REDIS_PASSWORD";
              fi'
+    ports:
+      - "${REDIS_PORT:-127.0.0.1:6379}:6379"
     volumes:
       - redis_data:/data
     networks:
-      - production_network
+      - app_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -60,17 +63,23 @@ services:
       retries: 5
     restart: always
 
-  # Backend API (生产环境配置)
+  # =============================================================================
+  # Backend API
+  # =============================================================================
   backend:
     build:
-      context: ../backend
+      context: ${BACKEND_SRC_DIR:-../backend}
       dockerfile: Dockerfile
     container_name: ${PROJECT_NAME:-personal_ai}_backend
     env_file:
-      - .env
-    # 生产环境: 不暴露端口，仅通过Nginx代理访问
-    expose:
-      - "8000"
+      - ../backend/.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-personal_ai}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
+    ports:
+      - "${BACKEND_PUBLISH_PORT:-8000}:8000"
     volumes:
       - backend_uploads:/app/uploads
       - backend_data:/app/data
@@ -83,21 +92,26 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - production_network
+      - app_network
     restart: always
-    # 生产环境: 多worker，无热重载
-    command: >
-      sh -c "sleep 5 &&
-             uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers ${BACKEND_WORKERS:-4} --log-level info"
+    # 使用环境变量控制启动命令
+    command: ${BACKEND_CMD:-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4 --log-level info}
 
-  # Celery Worker - 后台任务处理
+  # =============================================================================
+  # Celery Worker
+  # =============================================================================
   celery_worker:
     build:
-      context: ../backend
+      context: ${BACKEND_SRC_DIR:-../backend}
       dockerfile: Dockerfile
     container_name: ${PROJECT_NAME:-personal_ai}_celery_worker
     env_file:
-      - .env
+      - ../backend/.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-personal_ai}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
     volumes:
       - backend_data:/app/data
       - ${TRANSCRIPTION_STORAGE_DIR:-./storage/podcasts}:/app/storage/podcasts
@@ -109,18 +123,25 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - production_network
+      - app_network
     restart: always
-    command: celery -A app.domains.podcast.tasks.celery_app worker --loglevel=info --concurrency=${CELERY_WORKERS:-2} -Q celery,podcast,ai,transcription,cleanup,recommendation
+    command: celery -A app.domains.podcast.tasks.celery_app worker --loglevel=${CELERY_LOG_LEVEL:-info} --concurrency=${CELERY_WORKERS:-2} -Q celery,podcast,ai,transcription,cleanup,recommendation
 
-  # Celery Beat - 定时任务调度器
+  # =============================================================================
+  # Celery Beat
+  # =============================================================================
   celery_beat:
     build:
-      context: ../backend
+      context: ${BACKEND_SRC_DIR:-../backend}
       dockerfile: Dockerfile
     container_name: ${PROJECT_NAME:-personal_ai}_celery_beat
     env_file:
-      - .env
+      - ../backend/.env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-personal_ai}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
     volumes:
       - backend_data:/app/data
       - ${LOG_DIR:-./logs}:/app/logs
@@ -132,40 +153,40 @@ services:
       celery_worker:
         condition: service_started
     networks:
-      - production_network
+      - app_network
     restart: always
-    command: celery -A app.domains.podcast.tasks.celery_app beat --loglevel=info
+    command: celery -A app.domains.podcast.tasks.celery_app beat --loglevel=${CELERY_LOG_LEVEL:-info}
 
-  # Nginx Reverse Proxy - 反向代理服务器
+  # =============================================================================
+  # Nginx Reverse Proxy
+  # =============================================================================
   nginx:
     image: nginx:stable-alpine
     container_name: ${PROJECT_NAME:-personal_ai}_nginx
-    env_file:
-      - .env
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     volumes:
-      # Nginx主配置文件
       - ${NGINX_CONF_DIR:-./nginx}/nginx.conf:/etc/nginx/nginx.conf:ro
-      # 站点配置模板 (使用 envsubst 替换变量)
       - ${NGINX_CONF_DIR:-./nginx}/conf.d:/etc/nginx/templates:ro
-      # SSL证书目录 (HTTPS必需)
       - ${NGINX_CERT_DIR:-./nginx/cert}:/etc/nginx/cert:ro
-      # Nginx日志目录
       - ${NGINX_LOG_DIR:-./nginx/logs}:/var/log/nginx
-      # 时区同步
       - /etc/localtime:/etc/localtime:ro
     depends_on:
       - backend
     networks:
-      - production_network
+      - app_network
     healthcheck:
       test: ["CMD", "nginx", "-t"]
       interval: 30s
       timeout: 10s
       retries: 3
+    # 使用 profile 控制是否启动 / Use profile to control startup
+    # 本地开发：COMPOSE_PROFILES=disabled，nginx 不会启动 / Dev: nginx won't start
+    # 云端部署：COMPOSE_PROFILES 为空，使用空字符串 profile（nginx 会启动）/ Cloud: nginx starts with empty profile
+    profiles:
+      - ${COMPOSE_PROFILES:-""}
 
 volumes:
   postgres_data:
@@ -178,5 +199,5 @@ volumes:
     driver: local
 
 networks:
-  production_network:
+  app_network:
     driver: bridge

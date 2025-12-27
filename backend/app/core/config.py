@@ -47,9 +47,14 @@ class SecretKeyManager:
 
     def save_secret_key(self, secret_key: str):
         """Save SECRET_KEY to file"""
-        self.ensure_data_dir()
-        with open(self.secret_key_file, 'w') as f:
-            f.write(secret_key)
+        try:
+            self.ensure_data_dir()
+            with open(self.secret_key_file, 'w') as f:
+                f.write(secret_key)
+        except (IOError, OSError, PermissionError):
+            # Silently fail if we can't write to disk (e.g., in Docker with read-only volume)
+            # The secret key will still be available in memory for this session
+            pass
 
     def get_secret_key(self) -> str:
         """Get the current SECRET_KEY"""
