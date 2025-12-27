@@ -182,11 +182,12 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                           onPressed: () {
                             _showAttachmentOptions(context);
                           },
-                          icon: const Icon(Icons.attach_file),
+                          icon: const Icon(Icons.attach_file, size: 24),
                           tooltip: 'Attach File',
                           style: IconButton.styleFrom(
                             backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                             foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                            padding: const EdgeInsets.all(12),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -197,6 +198,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                             controller: _controller,
                             decoration: InputDecoration(
                               hintText: l10n.chat_type_message_hint,
+                              hintMaxLines: 1,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(24),
                               ),
@@ -228,11 +230,12 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                           onPressed: () {
                             _startVoiceInput();
                           },
-                          icon: const Icon(Icons.mic),
+                          icon: const Icon(Icons.mic, size: 24),
                           tooltip: 'Voice Input',
                           style: IconButton.styleFrom(
                             backgroundColor: Theme.of(context).colorScheme.primaryContainer,
                             foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                            padding: const EdgeInsets.all(12),
                           ),
                         ),
                       ],

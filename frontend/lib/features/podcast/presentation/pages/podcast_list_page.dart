@@ -34,109 +34,47 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 页面标题和操作区域
-          LayoutBuilder(builder: (context, constraints) {
-            final isNarrow = constraints.maxWidth < 500;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          SizedBox(
+            height: 56,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.podcast_title,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                    ),
-                    if (!isNarrow) ...[
-                      FilledButton.icon(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => const AddPodcastDialog(),
-                          );
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.secondary,
-                          foregroundColor: Theme.of(context).colorScheme.onSecondary,
+                Expanded(
+                  child: Text(
+                    l10n.podcast_title,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                        icon: const Icon(Icons.add),
-                        label: Text(l10n.podcast_add_podcast),
-                      ),
-                      const SizedBox(width: 8),
-                      FilledButton.icon(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => BulkImportDialog(
-                              onImport: (urls) async {
-                                await ref
-                                    .read(podcastSubscriptionProvider.notifier)
-                                    .addSubscriptionsBatch(feedUrls: urls);
-                              },
-                            ),
-                          );
-                        },
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.tertiary,
-                          foregroundColor: Theme.of(context).colorScheme.onTertiary,
-                        ),
-                        icon: const Icon(Icons.playlist_add),
-                        label: Text(l10n.podcast_bulk_import),
-                      ),
-                    ],
-                  ],
-                ),
-                if (isNarrow) ...[
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => const AddPodcastDialog(),
-                            );
-                          },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.secondary,
-                            foregroundColor: Theme.of(context).colorScheme.onSecondary,
-                          ),
-                          icon: const Icon(Icons.add),
-                          label: Text(l10n.add),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => BulkImportDialog(
-                                onImport: (urls) async {
-                                  await ref
-                                      .read(podcastSubscriptionProvider.notifier)
-                                      .addSubscriptionsBatch(feedUrls: urls);
-                                },
-                              ),
-                            );
-                          },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.tertiary,
-                            foregroundColor: Theme.of(context).colorScheme.onTertiary,
-                          ),
-                          icon: const Icon(Icons.playlist_add),
-                          label: Text(l10n.podcast_bulk_import),
-                        ),
-                      ),
-                    ],
                   ),
-                ],
+                ),
+                IconButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const AddPodcastDialog(),
+                    );
+                  },
+                  icon: const Icon(Icons.add),
+                  tooltip: l10n.podcast_add_podcast,
+                ),
+                IconButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => BulkImportDialog(
+                        onImport: (urls) async {
+                          await ref
+                              .read(podcastSubscriptionProvider.notifier)
+                              .addSubscriptionsBatch(feedUrls: urls);
+                        },
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.playlist_add),
+                  tooltip: l10n.podcast_bulk_import,
+                ),
               ],
-            );
-          }),
+            ),
+          ),
           const SizedBox(height: 24),
 
           // 订阅列表

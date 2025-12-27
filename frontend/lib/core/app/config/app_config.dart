@@ -1,3 +1,5 @@
+import 'dart:io';
+
 class AppConfig {
   // Environment
   static const String environment = String.fromEnvironment(
@@ -13,6 +15,10 @@ class AppConfig {
       case 'staging':
         return 'https://api-staging.personalai.app';
       default:
+        // Android emulator needs 10.0.2.2 to access host localhost
+        if (Platform.isAndroid) {
+          return 'http://10.0.2.2:8000';
+        }
         return 'http://localhost:8000';
     }
   }
