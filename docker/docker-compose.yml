@@ -171,6 +171,7 @@ services:
       - ${NGINX_CERT_DIR:-./nginx/cert}:/etc/nginx/cert:ro
       - ${NGINX_LOG_DIR:-./nginx/logs}:/var/log/nginx
       - /etc/localtime:/etc/localtime:ro
+      - ${NGINX_CONF_DIR:-./nginx}/docker-entrypoint.sh:/docker-entrypoint.d/10-auto-config.sh:ro
     environment:
       # 域名配置 / Domain configuration
       - DOMAIN=${DOMAIN:-localhost}
