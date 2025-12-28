@@ -10,11 +10,11 @@ part of 'global_schedule_provider.dart';
 // ignore_for_file: type=lint, type=warning
 
 @ProviderFor(GlobalSchedule)
-final globalScheduleProvider = GlobalScheduleProvider._();
+const globalScheduleProvider = GlobalScheduleProvider._();
 
 final class GlobalScheduleProvider
     extends $NotifierProvider<GlobalSchedule, GlobalScheduleState> {
-  GlobalScheduleProvider._()
+  const GlobalScheduleProvider._()
     : super(
         from: null,
         argument: null,
@@ -48,6 +48,7 @@ abstract class _$GlobalSchedule extends $Notifier<GlobalScheduleState> {
   @$mustCallSuper
   @override
   void runBuild() {
+    final created = build();
     final ref = this.ref as $Ref<GlobalScheduleState, GlobalScheduleState>;
     final element =
         ref.element
@@ -57,6 +58,6 @@ abstract class _$GlobalSchedule extends $Notifier<GlobalScheduleState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    element.handleValue(ref, created);
   }
 }

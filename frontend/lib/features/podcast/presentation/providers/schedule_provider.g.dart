@@ -11,13 +11,13 @@ part of 'schedule_provider.dart';
 /// Schedule configuration notifier
 
 @ProviderFor(ScheduleConfig)
-final scheduleConfigProvider = ScheduleConfigProvider._();
+const scheduleConfigProvider = ScheduleConfigProvider._();
 
 /// Schedule configuration notifier
 final class ScheduleConfigProvider
     extends $NotifierProvider<ScheduleConfig, ScheduleConfigState> {
   /// Schedule configuration notifier
-  ScheduleConfigProvider._()
+  const ScheduleConfigProvider._()
     : super(
         from: null,
         argument: null,
@@ -53,6 +53,7 @@ abstract class _$ScheduleConfig extends $Notifier<ScheduleConfigState> {
   @$mustCallSuper
   @override
   void runBuild() {
+    final created = build();
     final ref = this.ref as $Ref<ScheduleConfigState, ScheduleConfigState>;
     final element =
         ref.element
@@ -62,6 +63,6 @@ abstract class _$ScheduleConfig extends $Notifier<ScheduleConfigState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    element.handleValue(ref, created);
   }
 }
