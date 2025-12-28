@@ -41,7 +41,7 @@ class _AIModelApiService implements AIModelApiService {
     try {
       _value = AIModelConfigModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -83,7 +83,7 @@ class _AIModelApiService implements AIModelApiService {
     try {
       _value = AIModelConfigListResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -111,7 +111,7 @@ class _AIModelApiService implements AIModelApiService {
     try {
       _value = AIModelConfigModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -142,7 +142,7 @@ class _AIModelApiService implements AIModelApiService {
     try {
       _value = AIModelConfigModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -191,7 +191,7 @@ class _AIModelApiService implements AIModelApiService {
     try {
       _value = AIModelConfigModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -218,7 +218,7 @@ class _AIModelApiService implements AIModelApiService {
     try {
       _value = AIModelConfigModel.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -250,7 +250,7 @@ class _AIModelApiService implements AIModelApiService {
           )
           .toList();
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -281,7 +281,7 @@ class _AIModelApiService implements AIModelApiService {
     try {
       _value = ModelTestResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -308,7 +308,7 @@ class _AIModelApiService implements AIModelApiService {
     try {
       _value = ModelUsageStats.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -343,7 +343,7 @@ class _AIModelApiService implements AIModelApiService {
           )
           .toList();
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -375,7 +375,7 @@ class _AIModelApiService implements AIModelApiService {
           )
           .toList();
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -405,7 +405,7 @@ class _AIModelApiService implements AIModelApiService {
     try {
       _value = APIKeyValidationResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
@@ -432,7 +432,7 @@ class _AIModelApiService implements AIModelApiService {
     try {
       _value = RSAPublicKeyResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, _result);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
