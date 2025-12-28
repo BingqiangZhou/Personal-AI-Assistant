@@ -7,6 +7,14 @@ set -e
 
 echo "=== Nginx Auto-Configuration ==="
 
+# 清理镜像自带的默认配置文件，避免冲突
+# Clean up default config files from the base image to avoid conflicts
+echo "🧹 Cleaning up default configurations..."
+if [ -f "/etc/nginx/conf.d/default.conf" ]; then
+    rm -f /etc/nginx/conf.d/default.conf
+    echo "  ✓ Removed: /etc/nginx/conf.d/default.conf"
+fi
+
 # 获取环境变量 / Get environment variables
 DOMAIN="${DOMAIN:-localhost}"
 SSL_CERT_PATH="${SSL_CERT_PATH:-/etc/nginx/cert/fullchain.pem}"
