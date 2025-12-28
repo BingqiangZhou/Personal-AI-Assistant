@@ -171,15 +171,11 @@ services:
       - ${NGINX_CERT_DIR:-./nginx/cert}:/etc/nginx/cert:ro
       - ${NGINX_LOG_DIR:-./nginx/logs}:/var/log/nginx
       - /etc/localtime:/etc/localtime:ro
-      - ${NGINX_CONF_DIR:-./nginx}/docker-entrypoint.sh:/docker-entrypoint.d/99-auto-https.sh:ro
     environment:
-      # HTTPS 模式配置 / HTTPS Mode Configuration
-      - HTTPS_MODE=${HTTPS_MODE:-http}
+      # 域名配置 / Domain configuration
       - DOMAIN=${DOMAIN:-localhost}
       - SSL_CERT_PATH=${SSL_CERT_PATH:-/etc/nginx/cert/fullchain.pem}
       - SSL_KEY_PATH=${SSL_KEY_PATH:-/etc/nginx/cert/privkey.pem}
-      # 调试模式（可选）/ Debug mode (optional)
-      - DEBUG_CONFIG=${DEBUG_CONFIG:-false}
     depends_on:
       - backend
     networks:
