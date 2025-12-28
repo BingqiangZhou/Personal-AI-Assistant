@@ -6,10 +6,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../app/config/app_config.dart';
+// Import the new AppConfig with dynamic baseUrl support
+import '../../core/app/config/app_config.dart' as config;
+import '../constants/app_constants.dart' as constants;
 import 'exceptions/network_exceptions.dart';
-import '../storage/secure_storage_service.dart';
-import '../utils/logger.dart';
 
 final sl = GetIt.instance;
 
@@ -20,16 +20,19 @@ class DioClient {
   // Token refresh state - use Completer for proper synchronization
   Completer<bool>? _refreshCompleter;
 
-  // Storage key for custom backend API baseUrl
+  // Storage key for custom backend server base URL
   static const String _serverBaseUrlKey = 'server_base_url';
 
   DioClient() {
+    // Use dynamic AppConfig.serverBaseUrl + /api/v1
+    final apiBaseUrl = '${config.AppConfig.serverBaseUrl}/api/v1';
+
     _dio = Dio(BaseOptions(
-      baseUrl: AppConstants.baseUrl,
-      headers: ApiConstants.headers,
-      connectTimeout: Duration(milliseconds: AppConstants.connectTimeout),
-      receiveTimeout: Duration(milliseconds: AppConstants.receiveTimeout),
-      sendTimeout: Duration(milliseconds: AppConstants.sendTimeout),
+      baseUrl: apiBaseUrl,
+      headers: constants.ApiConstants.headers,
+      connectTimeout: Duration(milliseconds: constants.ApiConstants.connectTimeout.inMilliseconds),
+      receiveTimeout: Duration(milliseconds: constants.ApiConstants.receiveTimeout.inMilliseconds),
+      sendTimeout: Duration(milliseconds: constants.ApiConstants.sendTimeout.inMilliseconds),
     ));
 
     // Add interceptors
@@ -90,7 +93,7 @@ class DioClient {
   ) async {
     // Only add token if not already set (e.g., by retry logic)
     if (!options.headers.containsKey('Authorization')) {
-      final token = await _secureStorage.read(key: AppConstants.accessTokenKey);
+      final token = await _secureStorage.read(key: config.AppConstants.accessTokenKey);
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
       }
@@ -259,7 +262,7 @@ class DioClient {
       final success = await completer.future;
       if (success) {
         // Return the token from storage for waiting requests
-        return await _secureStorage.read(key: AppConstants.accessTokenKey);
+        return await _secureStorage.read(key: config.AppConstants.accessTokenKey);
       }
       return null;
     }
@@ -270,7 +273,7 @@ class DioClient {
     final currentCompleter = _refreshCompleter!;
 
     try {
-      final refreshToken = await _secureStorage.read(key: AppConstants.refreshTokenKey);
+      final refreshToken = await _secureStorage.read(key: config.AppConstants.refreshTokenKey);
       if (refreshToken == null) {
         debugPrint('❌ No refresh token found');
         currentCompleter.complete(false);
@@ -289,9 +292,9 @@ class DioClient {
         final newAccessToken = response.data['access_token'];
         final newRefreshToken = response.data['refresh_token'];
 
-        await _secureStorage.write(key: AppConstants.accessTokenKey, value: newAccessToken);
+        await _secureStorage.write(key: config.AppConstants.accessTokenKey, value: newAccessToken);
         if (newRefreshToken != null) {
-          await _secureStorage.write(key: AppConstants.refreshTokenKey, value: newRefreshToken);
+          await _secureStorage.write(key: config.AppConstants.refreshTokenKey, value: newRefreshToken);
         }
 
         debugPrint('✅ Token refresh successful - New token: ${newAccessToken.substring(0, 20)}...');
@@ -333,9 +336,9 @@ class DioClient {
   }
 
   Future<void> _clearTokens() async {
-    await _secureStorage.delete(key: AppConstants.accessTokenKey);
-    await _secureStorage.delete(key: AppConstants.refreshTokenKey);
-    await _secureStorage.delete(key: AppConstants.userProfileKey);
+    await _secureStorage.delete(key: config.AppConstants.accessTokenKey);
+    await _secureStorage.delete(key: config.AppConstants.refreshTokenKey);
+    await _secureStorage.delete(key: config.AppConstants.userProfileKey);
   }
 
   // HTTP methods

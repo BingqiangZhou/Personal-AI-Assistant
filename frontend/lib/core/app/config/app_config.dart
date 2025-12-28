@@ -8,14 +8,14 @@ class AppConfig {
   );
 
   // API Configuration
-  // API Configuration
-  static String _apiBaseUrl = '';
+  // Server Base URL (backend server address without /api/v1 suffix)
+  static String _serverBaseUrl = '';
 
-  static String get apiBaseUrl {
-    if (_apiBaseUrl.isNotEmpty) {
-      return _apiBaseUrl;
+  static String get serverBaseUrl {
+    if (_serverBaseUrl.isNotEmpty) {
+      return _serverBaseUrl;
     }
-    
+
     switch (environment) {
       case 'production':
         return 'https://api.personalai.app';
@@ -30,8 +30,16 @@ class AppConfig {
     }
   }
 
+  // API Base URL (for backward compatibility, uses serverBaseUrl)
+  static String get apiBaseUrl => serverBaseUrl;
+
+  static void setServerBaseUrl(String url) {
+    _serverBaseUrl = url;
+  }
+
+  // For backward compatibility
   static void setApiBaseUrl(String url) {
-    _apiBaseUrl = url;
+    setServerBaseUrl(url);
   }
 
 

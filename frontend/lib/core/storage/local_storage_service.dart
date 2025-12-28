@@ -32,7 +32,11 @@ abstract class LocalStorageService {
   
   // App Config
   Future<void> saveApiBaseUrl(String url);
-  Future<String?> getApiBaseUrl(); 
+  Future<String?> getApiBaseUrl();
+
+  // Server Config (backend server address)
+  Future<void> saveServerBaseUrl(String url);
+  Future<String?> getServerBaseUrl(); 
 }
 
 final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
@@ -192,5 +196,15 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<String?> getApiBaseUrl() async {
     return _prefs.getString('api_base_url');
+  }
+
+  @override
+  Future<void> saveServerBaseUrl(String url) async {
+    await _prefs.setString('server_base_url', url);
+  }
+
+  @override
+  Future<String?> getServerBaseUrl() async {
+    return _prefs.getString('server_base_url');
   }
 }

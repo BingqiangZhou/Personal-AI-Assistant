@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/app/config/app_config.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/providers/core_providers.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/storage/local_storage_service.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../../../../shared/widgets/custom_button.dart';
@@ -73,55 +73,104 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _showServerConfigDialog() async {
     final l10n = AppLocalizations.of(context)!;
-    final storageService = ref.read(localStorageServiceProvider);
-    final currentUrl = await storageService.getApiBaseUrl() ?? AppConfig.apiBaseUrl;
-    final urlController = TextEditingController(text: currentUrl);
+    final serverConfig = ref.read(serverConfigProvider);
+    final urlController = TextEditingController(text: serverConfig.serverUrl);
 
     if (!mounted) return;
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.server_config_title),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.server_config_description),
-            const SizedBox(height: 8),
-            TextField(
-              controller: urlController,
-              decoration: InputDecoration(
-                hintText: l10n.server_config_hint,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              final newUrl = urlController.text.trim();
-              if (newUrl.isNotEmpty) {
-                // Capture context before async operation
-                final ctx = context;
-                await storageService.saveApiBaseUrl(newUrl);
-                AppConfig.setApiBaseUrl(newUrl);
+      builder: (context) => Consumer(
+        builder: (context, ref, _) {
+          final configState = ref.watch(serverConfigProvider);
 
-                if (mounted) {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(ctx).showSnackBar(
-                    SnackBar(content: Text(l10n.server_config_saved)),
-                  );
-                }
-              }
-            },
-            child: Text(l10n.save),
-          ),
-        ],
+          return AlertDialog(
+            title: Text(l10n.server_config_title),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(l10n.server_config_description),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: urlController,
+                  decoration: InputDecoration(
+                    labelText: 'Server Address',
+                    hintText: 'http://localhost:8000',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: configState.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : null,
+                  ),
+                ),
+                if (configState.error != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    configState.error!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+                if (configState.testSuccess) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '✓ Connection successful!',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: configState.isLoading
+                    ? null
+                    : () async {
+                        final testUrl = urlController.text.trim();
+                        if (testUrl.isNotEmpty) {
+                          await ref.read(serverConfigProvider.notifier).testConnection(testUrl);
+                        }
+                      },
+                child: const Text('Test Connection'),
+              ),
+              TextButton(
+                onPressed: configState.isLoading
+                    ? null
+                    : () async {
+                        final newUrl = urlController.text.trim();
+                        if (newUrl.isNotEmpty) {
+                          // Capture context before async operation
+                          final ctx = context;
+                          await ref.read(serverConfigProvider.notifier).updateServerUrl(newUrl);
+
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              SnackBar(
+                                content: Text(l10n.server_config_saved),
+                                backgroundColor: AppTheme.successColor,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                child: Text(l10n.save),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
