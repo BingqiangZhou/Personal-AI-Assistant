@@ -138,6 +138,17 @@ def create_application() -> FastAPI:
         tags=["ai-models"]
     )
 
+    # Root endpoint - Welcome page
+    @app.get("/")
+    async def root():
+        return {
+            "message": "Personal AI Assistant API is running",
+            "status": "healthy",
+            "version": "1.0.0",
+            "docs": "/api/v1/docs",
+            "health": "/health"
+        }
+
     # Health check endpoint
     @app.get("/health")
     async def health_check():
