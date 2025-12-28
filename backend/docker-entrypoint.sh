@@ -43,8 +43,18 @@ done
 echo "✅ Permission setup complete"
 echo ""
 
-# Execute the main command as app user using su
-# 使用 su 切换到 app 用户执行命令
-# exec su - "$APP_USER" -c "$*"  # This doesn't work well with complex commands
-# Instead, pass the command directly to su using --
-exec su - "$APP_USER" -- "$@"
+# Get app user's home directory
+APP_HOME=$(getent passwd "$APP_USER" | cut -d: -f6)
+
+# Execute the main command as app user
+# Set HOME and other important environment variables
+# 使用 setpriv 或 su（不带 login shell）切换用户执行命令
+if command -v setpriv >/dev/null 2>&1; then
+    # setpriv is cleaner - it doesn't fork a shell
+    export HOME="$APP_HOME"
+    exec setpriv --reuid=$APP_USER --regid=$APP_USER --init-groups "$@"
+else
+    # su without - (no login shell) to avoid environment pollution
+    # Set HOME environment variable explicitly to avoid PostgreSQL client looking in /root
+    exec su -s /bin/bash - "$APP_USER" -c "export HOME=$APP_HOME; exec $*"
+fi
