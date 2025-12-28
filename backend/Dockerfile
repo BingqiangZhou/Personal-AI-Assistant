@@ -41,13 +41,20 @@ RUN uv pip install --system -e . \
 # Create directories with proper permissions
 RUN mkdir -p uploads logs data storage/podcasts temp/transcription
 
+# Copy entrypoint script (must be done before USER switch)
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash app \
     && chown -R app:app /app
-USER app
+
+# Set entrypoint to fix permissions at runtime (runs as root, then switches to app)
+# Entrypoint runs as root to fix permissions, then uses su-exec to run as app user
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 # Expose port
 EXPOSE 8000
 
-# Run the application
+# Default command (will be run as app user by entrypoint)
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
