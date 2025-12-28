@@ -38,8 +38,8 @@ RUN uv pip install --system -e . \
     --index-url https://pypi.tuna.tsinghua.edu.cn/simple \
     --trusted-host pypi.tuna.tsinghua.edu.cn
 
-# Create uploads directory
-RUN mkdir -p uploads
+# Create directories with proper permissions
+RUN mkdir -p uploads logs data storage/podcasts temp/transcription
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash app \

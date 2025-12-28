@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy.ext.declarative import declarative_base
 from typing import AsyncGenerator, Dict, Any
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError, ProgrammingError
 
 from app.core.config import settings
 
@@ -74,7 +75,11 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db() -> None:
-    """Initialize database tables."""
+    """Initialize database tables.
+
+    Note: PostgreSQL ENUM types may already exist from previous deployments.
+    We handle this by creating them manually first with existence checks.
+    """
     # Import all models here to ensure they are registered with Base
     from app.domains.user.models import User
     from app.domains.subscription.models import Subscription, SubscriptionItem
@@ -85,9 +90,63 @@ async def init_db() -> None:
     from app.domains.podcast.models import TranscriptionTask
     from app.domains.ai.models import AIModelConfig
 
-    # Create all tables with checkfirst=True
+    # Define ENUM types that need to be created if they don't exist
+    enum_definitions = [
+        ("transcriptionstatus", "pending", "in_progress", "completed", "failed", "cancelled"),
+        ("transcriptionstep", "not_started", "downloading", "converting", "splitting", "transcribing", "merging"),
+    ]
+
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all, checkfirst=True)
+        # First, ensure ENUM types exist (PostgreSQL specific workaround)
+        for enum_def in enum_definitions:
+            enum_name = enum_def[0]
+            enum_values = enum_def[1:]
+
+            try:
+                # Check if ENUM type exists
+                result = await conn.execute(
+                    text(f"SELECT 1 FROM pg_type WHERE typname = '{enum_name}'")
+                )
+                exists = result.first() is not None
+
+                if not exists:
+                    # Create ENUM type with quoted values
+                    values_str = ", ".join(f"'{v}'" for v in enum_values)
+                    await conn.execute(
+                        text(f"CREATE TYPE {enum_name} AS ENUM ({values_str})")
+                    )
+                    logger.info(f"Created ENUM type: {enum_name}")
+                else:
+                    logger.debug(f"ENUM type already exists: {enum_name}")
+            except Exception as e:
+                logger.warning(f"Could not create/check ENUM type {enum_name}: {e}")
+
+        # Now create all tables - SQLAlchemy may still try to create ENUM types
+        # even though we manually created them above, so we handle this gracefully
+        try:
+            await conn.run_sync(Base.metadata.create_all, checkfirst=True)
+            logger.info("Database tables initialized successfully")
+        except (IntegrityError, ProgrammingError) as e:
+            error_msg = str(e).lower()
+            # If it's just about duplicate ENUM types, it's non-critical
+            if 'duplicate key' in error_msg and ('enum' in error_msg or 'pg_type' in error_msg or 'typname' in error_msg):
+                logger.warning(f"ENUM type conflict detected (non-critical): {e}")
+                # Verify tables exist by checking if a key table exists
+                try:
+                    result = await conn.execute(text(
+                        "SELECT 1 FROM information_schema.tables WHERE table_name = 'users'"
+                    ))
+                    if result.first():
+                        logger.info("Database tables verified to exist (ignoring ENUM duplicate error)")
+                    else:
+                        raise ValueError("Tables do not exist after ENUM error") from e
+                except Exception as verify_error:
+                    logger.error(f"Could not verify tables after ENUM error: {verify_error}")
+                    raise e
+            else:
+                # Re-raise if it's a different error
+                logger.error(f"Failed to initialize database: {e}")
+                raise
 
 
 async def close_db() -> None:
