@@ -1,18 +1,12 @@
 # =============================================================================
 # Docker Compose - 统一配置 / Unified Configuration
 # =============================================================================
-# 此配置通过环境变量控制本地开发和云端部署的差异
-# This config uses environment variables to control differences between local and cloud
+# 此配置通过切换 env 文件控制本地开发和云端部署
+# Switch between .env.dev (local) and .env (cloud) to change environment
 #
 # 使用方法 / Usage:
-#
-#   方式1 - 复制 env 文件 / Method 1 - Copy env file:
-#     本地开发 / Local:   cp .env.dev.example .env && docker-compose up -d
-#     云端部署 / Cloud:    cp .env.example .env && docker-compose up -d
-#
-#   方式2 - 直接指定 env 文件 / Method 2 - Specify env file directly:
-#     本地开发 / Local:   docker-compose --env-file .env.dev.example up -d
-#     云端部署 / Cloud:    docker-compose --env-file .env.example up -d
+#   本地开发 (Local):  docker compose --env-file .env.dev up -d
+#   云端部署 (Cloud):   docker compose --env-file .env up -d
 
 services:
   # =============================================================================
@@ -72,7 +66,7 @@ services:
       dockerfile: Dockerfile
     container_name: ${PROJECT_NAME:-personal_ai}_backend
     env_file:
-      - ../backend/.env
+      - ${BACKEND_ENV_FILE:-../backend/.env}
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-personal_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
@@ -94,8 +88,9 @@ services:
     networks:
       - app_network
     restart: always
-    # 使用环境变量控制启动命令
-    command: ${BACKEND_CMD:-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4 --log-level info}
+    # 本地开发使用 uvicorn --reload，云端使用 gunicorn
+    # Local: uvicorn --reload, Cloud: gunicorn
+    command: ${BACKEND_CMD:-uvicorn app.main:app --host 0.0.0.0 --port 8000}
 
   # =============================================================================
   # Celery Worker
@@ -106,7 +101,7 @@ services:
       dockerfile: Dockerfile
     container_name: ${PROJECT_NAME:-personal_ai}_celery_worker
     env_file:
-      - ../backend/.env
+      - ${BACKEND_ENV_FILE:-../backend/.env}
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-personal_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
@@ -136,7 +131,7 @@ services:
       dockerfile: Dockerfile
     container_name: ${PROJECT_NAME:-personal_ai}_celery_beat
     env_file:
-      - ../backend/.env
+      - ${BACKEND_ENV_FILE:-../backend/.env}
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-personal_ai}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
@@ -158,8 +153,11 @@ services:
     command: celery -A app.domains.podcast.tasks.celery_app beat --loglevel=${CELERY_LOG_LEVEL:-info}
 
   # =============================================================================
-  # Nginx Reverse Proxy
+  # Nginx Reverse Proxy (仅云端 / Cloud Only)
   # =============================================================================
+  # profiles: ["prod"] - 需要通过 COMPOSE_PROFILES=prod 启用
+  # 本地开发: COMPOSE_PROFILES= 留空，nginx 不启动
+  # 云端部署: COMPOSE_PROFILES=prod，nginx 自动启动
   nginx:
     image: nginx:stable-alpine
     container_name: ${PROJECT_NAME:-personal_ai}_nginx
@@ -173,6 +171,15 @@ services:
       - ${NGINX_CERT_DIR:-./nginx/cert}:/etc/nginx/cert:ro
       - ${NGINX_LOG_DIR:-./nginx/logs}:/var/log/nginx
       - /etc/localtime:/etc/localtime:ro
+      - ${NGINX_CONF_DIR:-./nginx}/docker-entrypoint.sh:/docker-entrypoint.d/99-auto-https.sh:ro
+    environment:
+      # HTTPS 模式配置 / HTTPS Mode Configuration
+      - HTTPS_MODE=${HTTPS_MODE:-http}
+      - DOMAIN=${DOMAIN:-localhost}
+      - SSL_CERT_PATH=${SSL_CERT_PATH:-/etc/nginx/cert/fullchain.pem}
+      - SSL_KEY_PATH=${SSL_KEY_PATH:-/etc/nginx/cert/privkey.pem}
+      # 调试模式（可选）/ Debug mode (optional)
+      - DEBUG_CONFIG=${DEBUG_CONFIG:-false}
     depends_on:
       - backend
     networks:
@@ -182,11 +189,12 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    # 使用 profile 控制是否启动 / Use profile to control startup
-    # 本地开发：COMPOSE_PROFILES=disabled，nginx 不会启动 / Dev: nginx won't start
-    # 云端部署：COMPOSE_PROFILES 为空，使用空字符串 profile（nginx 会启动）/ Cloud: nginx starts with empty profile
+    # ========================================
+    # 关键配置：仅通过 COMPOSE_PROFILES=prod 启动
+    # 本地开发不设置 COMPOSE_PROFILES，nginx 不会启动
+    # ========================================
     profiles:
-      - ${COMPOSE_PROFILES:-""}
+      - prod
 
 volumes:
   postgres_data:
