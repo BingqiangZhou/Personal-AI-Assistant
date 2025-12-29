@@ -290,6 +290,8 @@ Use `exa` to search for coding solutions and implementation examples:
 specs/
 ├── active/          # 进行中的需求
 ├── completed/       # 已完成的需求
+├── completion/      # 完成验证文档
+├── verification/    # 验证报告
 ├── templates/       # 文档模板
 └── README.md       # 需求索引
 ```
@@ -480,6 +482,33 @@ Consensus → Decision based on research and requirements
 
 Personal AI Assistant - A scalable personal AI assistant tool supporting information feed subscriptions, knowledge base management, and multimedia processing capabilities.
 
+### 🎯 Current Feature Status
+
+**Implemented Features:**
+- ✅ User authentication and profile management
+- ✅ Podcast feed subscriptions and management
+- ✅ Podcast episode browsing and playback
+- ✅ Audio player with floating controls
+- ✅ RSS feed subscriptions
+- ✅ Material 3 adaptive UI design (desktop, web, mobile)
+- ✅ Bilingual support (Chinese/English)
+- ✅ Docker-based backend deployment
+- ✅ Celery background task processing
+
+**In Progress / Planned:**
+- 🔄 Podcast audio transcription and AI summary
+- 🔄 Knowledge base document management
+- 🔄 AI assistant chat functionality
+- 🔄 Multimedia processing features
+- 🔄 Enhanced search and filtering capabilities
+
+### 🚀 Recent Major Updates
+
+- **Podcast System**: Implemented complete podcast subscription, episode management, and audio playback features
+- **UI/UX Modernization**: Migrated to Material 3 design system with adaptive layouts
+- **Performance Optimization**: Implemented lazy loading for podcast feeds
+- **Developer Experience**: Enhanced product-driven development workflow with structured requirements management
+
 ## Development Commands
 
 ### ⚠️ IMPORTANT: Package Management with uv
@@ -586,12 +615,26 @@ The frontend Flutter application should be run separately using the commands in 
   - `knowledge/`: Document management and knowledge base
   - `assistant/`: AI interaction and chat functionality
   - `multimedia/`: Media processing and handling
+  - `podcast/`: Podcast feed subscriptions, episodes, and audio processing
+  - `ai/`: AI services integration and processing
 - **Integration Layer** (`app/integration/`): External service connectors, background workers, and event system
 
 ### Frontend Architecture (Clean Architecture)
 - **Core Layer** (`lib/core/`): Fundamental components including constants, error handling, network client, storage, and utilities
 - **Shared Layer** (`lib/shared/`): Reusable UI components, themes, and extension methods
-- **Feature Layer** (`lib/features/`): Feature modules organized by domain mirroring the backend structure
+- **Feature Layer** (`lib/features/`): Feature modules organized by domain mirroring the backend structure:
+  - `auth/`: Authentication and login flows
+  - `home/`: Home page and dashboard
+  - `user/`: User profile management
+  - `subscription/`: Feed subscription management
+  - `knowledge/`: Knowledge base features
+  - `assistant/`: AI assistant chat interface
+  - `multimedia/`: Media viewing and management
+  - `podcast/`: Podcast player, subscriptions, and episodes
+  - `ai/`: AI features and integrations
+  - `profile/`: User profile settings
+  - `settings/`: Application settings
+  - `splash/`: Initial loading screen
 - **UI Design System**: Material 3 design language with flutter_adaptive_scaffold for responsive layouts across desktop, web, and mobile
 
 ### Key Technologies & Patterns
@@ -602,6 +645,15 @@ The frontend Flutter application should be run separately using the commands in 
 - **Database**: PostgreSQL with Alembic migrations
 - **Background Tasks**: Celery with Redis broker
 - **Dependency Injection**: dependency-injector (backend) and Riverpod (frontend)
+- **Podcast Processing**:
+  - RSS feed parsing with feedparser
+  - Audio streaming and playback with just_audio
+  - Lazy loading pagination for efficient data handling
+  - Background episode downloads and updates
+- **AI Integration**:
+  - Audio transcription services (planned)
+  - AI-powered content summarization (planned)
+  - Natural language processing for chat features (planned)
 
 ### 🎨 UI/UX Design Guidelines (MANDATORY for Frontend Development)
 
@@ -634,6 +686,8 @@ All API endpoints are prefixed with `/api/v1/`:
 - `/knowledge`: Knowledge base operations
 - `/assistant`: AI assistant interactions
 - `/multimedia`: Media processing endpoints
+- `/podcast`: Podcast feed subscriptions, episodes, and audio management
+- `/ai`: AI service integration endpoints
 
 ### Database Schema
 Uses PostgreSQL with the following key entities:
@@ -642,6 +696,9 @@ Uses PostgreSQL with the following key entities:
 - Knowledge Items: Documents and knowledge base entries
 - Assistant Conversations: Chat history and context
 - Media Files: Uploaded multimedia content
+- Podcast Subscriptions: Podcast feed subscriptions and metadata
+- Podcast Episodes: Episode details, audio files, and playback status
+- Podcast Transcriptions: Audio transcriptions and AI-generated summaries
 
 ## Development Notes
 
@@ -713,10 +770,12 @@ Uses PostgreSQL with the following key entities:
 
 ### Background Processing
 Celery workers handle:
-- Feed content fetching and parsing
+- Feed content fetching and parsing (RSS feeds and podcast feeds)
 - Document vectorization and indexing
 - Media processing and transcoding
+- Podcast audio transcription and AI summary generation
 - Scheduled tasks and notifications
+- Podcast feed updates and episode downloads
 
 ### Security Considerations
 - JWT-based authentication with refresh tokens
@@ -873,3 +932,66 @@ This approach ensures:
 - ✅ Faster development with fewer errors
 
 The project uses clean architecture principles with clear separation of concerns, making it easy to extend with new features or modify existing functionality.
+
+## 💡 Development Best Practices
+
+### When Adding New Features
+
+1. **Start with Requirements**: Always create a requirement document in `specs/active/` before coding
+2. **Research First**: Use context7/exa to understand libraries and find implementation examples
+3. **Follow Patterns**: Review existing code in the same domain to maintain consistency
+4. **Test Thoroughly**: Write widget tests for UI, unit tests for logic, integration tests for workflows
+5. **Verify End-to-End**: Test both backend (via Docker) and frontend before marking complete
+
+### Common Patterns in This Project
+
+**Backend Patterns:**
+- Domain-Driven Design with clear separation of concerns
+- Async/await for all I/O operations
+- Repository pattern for data access
+- Dependency injection for loose coupling
+- Background tasks with Celery for long-running operations
+
+**Frontend Patterns:**
+- Feature-first architecture mirroring backend domains
+- Riverpod for state management (StateNotifier + AsyncValue)
+- Material 3 components with AdaptiveScaffold for responsive design
+- Repository pattern for data access
+- Localization support for bilingual UI
+
+### Current Development Focus
+
+**Priority 1: Podcast Features**
+- Audio transcription and AI summary generation
+- Enhanced playback controls and offline support
+- Improved search and discovery features
+
+**Priority 2: Knowledge Base**
+- Document upload and management
+- Vector search and semantic retrieval
+- Knowledge graph visualization
+
+**Priority 3: AI Assistant**
+- Chat interface with context awareness
+- Integration with knowledge base
+- Multi-modal input support
+
+### Troubleshooting Tips
+
+**Backend Issues:**
+- Always verify using Docker (`docker-compose -f docker-compose.podcast.yml up -d`)
+- Check logs: `docker-compose -f docker-compose.podcast.yml logs -f backend`
+- Run tests in container: `docker exec backend uv run pytest`
+- Database issues: Check migrations with `uv run alembic current`
+
+**Frontend Issues:**
+- Run `flutter analyze` to check for errors
+- Use `flutter clean` and `flutter pub get` if dependencies are stale
+- Check provider overrides in widget tests
+- Verify Material 3 theming: `useMaterial3: true` in ThemeData
+
+**Common Gotchas:**
+- Backend: Never use `pip install`, always use `uv add` or `uv sync`
+- Frontend: Material 3 components have different APIs than Material 2
+- Both: Always test bilingual support (Chinese and English)
+- Docker: Backend must be tested via Docker, not direct uvicorn
