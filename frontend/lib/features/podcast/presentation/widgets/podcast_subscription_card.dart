@@ -48,7 +48,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
     final lastFetched = subscription.lastFetchedAt;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: InkWell(
         onTap: onTap ?? () {
           context.push('/podcast/episodes/${subscription.id}');
@@ -125,6 +125,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                               subscription.description!,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                                fontSize: 12,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -273,7 +274,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
           Text(
             text,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               color: color,
               fontWeight: FontWeight.w600,
             ),
@@ -300,7 +301,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: const Color(0xFF64B5F6),
-            fontSize: 12,
+            fontSize: 13,
           ),
         ),
       ],

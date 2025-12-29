@@ -74,7 +74,7 @@ class MindriverTheme {
         ),
         titleTextStyle: const TextStyle(
           color: AppColors.lightTextPrimary,
-          fontSize: 18,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           letterSpacing: -0.5,
         ),
@@ -117,7 +117,7 @@ class MindriverTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           textStyle: const TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.2,
           ),
@@ -133,7 +133,7 @@ class MindriverTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           textStyle: const TextStyle(
-            fontSize: 15,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.2,
           ),
@@ -150,7 +150,7 @@ class MindriverTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           textStyle: const TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.2,
           ),
@@ -184,11 +184,11 @@ class MindriverTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         hintStyle: TextStyle(
           color: AppColors.lightTextTertiary,
-          fontSize: 16,
+          fontSize: 14,
         ),
         labelStyle: const TextStyle(
           color: AppColors.lightTextSecondary,
-          fontSize: 14,
+          fontSize: 12,
         ),
       ),
 
@@ -199,11 +199,11 @@ class MindriverTheme {
         disabledColor: AppColors.lightSurfaceVariant.withValues(alpha: 0.5),
         labelStyle: const TextStyle(
           color: AppColors.lightTextPrimary,
-          fontSize: 14,
+          fontSize: 12,
         ),
         secondaryLabelStyle: const TextStyle(
           color: AppColors.primary,
-          fontSize: 14,
+          fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -243,7 +243,7 @@ class MindriverTheme {
         backgroundColor: AppColors.darkSurface,
         contentTextStyle: const TextStyle(
           color: AppColors.darkTextPrimary,
-          fontSize: 14,
+          fontSize: 12,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -342,7 +342,7 @@ class MindriverTheme {
         ),
         titleTextStyle: const TextStyle(
           color: AppColors.darkTextPrimary,
-          fontSize: 18,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           letterSpacing: -0.5,
         ),
@@ -385,7 +385,7 @@ class MindriverTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           textStyle: const TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.2,
           ),
@@ -401,7 +401,7 @@ class MindriverTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           textStyle: const TextStyle(
-            fontSize: 15,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.2,
           ),
@@ -418,7 +418,7 @@ class MindriverTheme {
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           textStyle: const TextStyle(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.2,
           ),
@@ -452,11 +452,11 @@ class MindriverTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         hintStyle: TextStyle(
           color: AppColors.darkTextTertiary,
-          fontSize: 16,
+          fontSize: 14,
         ),
         labelStyle: const TextStyle(
           color: AppColors.darkTextSecondary,
-          fontSize: 14,
+          fontSize: 12,
         ),
       ),
 
@@ -467,11 +467,11 @@ class MindriverTheme {
         disabledColor: AppColors.darkSurfaceVariant.withValues(alpha: 0.3),
         labelStyle: const TextStyle(
           color: AppColors.darkTextPrimary,
-          fontSize: 14,
+          fontSize: 12,
         ),
         secondaryLabelStyle: const TextStyle(
           color: AppColors.riverAccent,
-          fontSize: 14,
+          fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -511,7 +511,7 @@ class MindriverTheme {
         backgroundColor: AppColors.darkSurfaceVariant,
         contentTextStyle: const TextStyle(
           color: AppColors.darkTextPrimary,
-          fontSize: 14,
+          fontSize: 12,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
@@ -555,19 +555,19 @@ class MindriverTheme {
       // Display styles - Largest text on screen
       displayLarge: TextStyle(
         color: primary,
-        fontSize: 57,
+        fontSize: 54,
         fontWeight: FontWeight.w400,
         letterSpacing: -0.25,
       ),
       displayMedium: TextStyle(
         color: primary,
-        fontSize: 45,
+        fontSize: 42,
         fontWeight: FontWeight.w400,
         letterSpacing: 0,
       ),
       displaySmall: TextStyle(
         color: primary,
-        fontSize: 36,
+        fontSize: 34,
         fontWeight: FontWeight.w400,
         letterSpacing: 0,
       ),
@@ -575,19 +575,19 @@ class MindriverTheme {
       // Headline styles - High-emphasis text
       headlineLarge: TextStyle(
         color: primary,
-        fontSize: 32,
+        fontSize: 29,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.5,
       ),
       headlineMedium: TextStyle(
         color: primary,
-        fontSize: 28,
+        fontSize: 26,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.25,
       ),
       headlineSmall: TextStyle(
         color: primary,
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: FontWeight.w600,
         letterSpacing: 0,
       ),
@@ -595,19 +595,19 @@ class MindriverTheme {
       // Title styles - Medium-emphasis text
       titleLarge: TextStyle(
         color: primary,
-        fontSize: 22,
+        fontSize: 19,
         fontWeight: FontWeight.w500,
         letterSpacing: 0,
       ),
       titleMedium: TextStyle(
         color: primary,
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.15,
       ),
       titleSmall: TextStyle(
         color: primary,
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.1,
       ),
@@ -615,19 +615,19 @@ class MindriverTheme {
       // Body styles - Body text and subtitles
       bodyLarge: TextStyle(
         color: primary,
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: FontWeight.w400,
         letterSpacing: 0.5,
       ),
       bodyMedium: TextStyle(
         color: primary,
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: FontWeight.w400,
         letterSpacing: 0.25,
       ),
       bodySmall: TextStyle(
         color: secondary,
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: FontWeight.w400,
         letterSpacing: 0.4,
       ),
@@ -635,19 +635,19 @@ class MindriverTheme {
       // Label styles - Smaller text like captions
       labelLarge: TextStyle(
         color: primary,
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.1,
       ),
       labelMedium: TextStyle(
         color: secondary,
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.5,
       ),
       labelSmall: TextStyle(
         color: tertiary,
-        fontSize: 11,
+        fontSize: 9,
         fontWeight: FontWeight.w500,
         letterSpacing: 0.5,
       ),

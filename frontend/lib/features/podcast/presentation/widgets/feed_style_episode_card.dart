@@ -19,7 +19,7 @@ class FeedStyleEpisodeCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: InkWell(
         onTap: onTap ?? () {
           PodcastNavigation.goToEpisodeDetail(
@@ -75,6 +75,7 @@ class FeedStyleEpisodeCard extends ConsumerWidget {
                           episode.title,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w600,
+                                fontSize: 13,
                               ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -98,7 +99,7 @@ class FeedStyleEpisodeCard extends ConsumerWidget {
                                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                         color: Theme.of(context).colorScheme.onPrimary,
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 10,
+                                        fontSize: 11,
                                       ),
                                 ),
                               ),

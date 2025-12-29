@@ -418,7 +418,7 @@ jobs:
           VERSION="${{ needs.prepare-release.outputs.version }}"
           # Device builds use iphoneos
           APP_PATH="build/ios/iphoneos/Runner.app"
-          IPA_NAME="personal-ai-assistant-ios-device-${VERSION}.ipa"
+          IPA_NAME="personal-ai-assistant-ios-${VERSION}.ipa"
           PAYLOAD_DIR="dist/ios/Payload"
           OUTPUT_DIR="dist/ios"
 

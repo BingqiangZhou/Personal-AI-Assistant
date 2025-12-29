@@ -167,8 +167,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         return GridView.builder(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: screenWidth < 900 ? 2 : (screenWidth < 1200 ? 3 : 4),
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
             childAspectRatio: 0.72,
           ),
           itemCount: response.subscriptions.length,

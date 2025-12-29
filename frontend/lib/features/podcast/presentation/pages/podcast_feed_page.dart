@@ -178,7 +178,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
             0.0; // ResponsiveContainer handles padding? Checking...
         // ResponsiveContainer has default padding, so we might not need extra.
         // But GridView needs spacing.
-        final spacing = 16.0;
+        final spacing = 8.0;
         final availableWidth =
             screenWidth - horizontalPadding - (crossAxisCount - 1) * spacing;
         final cardWidth = availableWidth / crossAxisCount;
@@ -286,7 +286,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                         Text(
                           episode.title,
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                              ?.copyWith(fontWeight: FontWeight.w600, fontSize: 13),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -314,7 +314,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                         context,
                                       ).colorScheme.onPrimary,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 10,
+                                      fontSize: 11,
                                     ),
                               ),
                             ),
@@ -336,6 +336,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                         color: Theme.of(
                                           context,
                                         ).colorScheme.onSurfaceVariant,
+                                        fontSize: 11,
                                       ),
                                 ),
                               ],
@@ -358,6 +359,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                         color: Theme.of(
                                           context,
                                         ).colorScheme.onSurfaceVariant,
+                                        fontSize: 11,
                                       ),
                                 ),
                               ],
@@ -511,7 +513,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                       episode.title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        fontSize: 16,
+                        fontSize: 13,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -562,7 +564,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               color: Theme.of(context).colorScheme.onPrimary,
                               fontWeight: FontWeight.bold,
-                              fontSize: 10,
+                              fontSize: 11,
                             ),
                           ),
                         ),
