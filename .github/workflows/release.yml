@@ -401,9 +401,10 @@ jobs:
         working-directory: frontend
         run: |
           echo "🔨 Building iOS Simulator application (no code signing)..."
+          # iOS Simulator builds only support debug mode, not release
           flutter build ios \
             --simulator \
-            --release \
+            --debug \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
 
           echo "✅ iOS Simulator build completed"
