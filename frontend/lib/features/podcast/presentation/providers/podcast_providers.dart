@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:async/async.dart';
 
 import '../../../../core/providers/core_providers.dart';
 import '../../data/models/podcast_episode_model.dart';
@@ -16,7 +14,6 @@ import '../../data/models/audio_player_state_model.dart';
 import '../../data/models/podcast_state_models.dart';
 import '../../data/repositories/podcast_repository.dart';
 import '../../data/services/podcast_api_service.dart';
-import 'package:json_annotation/json_annotation.dart';
 
 // === API Service & Repository Providers ===
 
@@ -340,24 +337,24 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }
 }
 
-final podcastSubscriptionProvider = AsyncNotifierProvider<PodcastSubscriptionNotifier, PodcastSubscriptionListResponse>(PodcastSubscriptionNotifier.new);
+final podcastSubscriptionProvider = NotifierProvider<PodcastSubscriptionNotifier, PodcastSubscriptionState>(PodcastSubscriptionNotifier.new);
 
-class PodcastSubscriptionNotifier extends AsyncNotifier<PodcastSubscriptionListResponse> {
+class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
   late PodcastRepository _repository;
 
   @override
-  FutureOr<PodcastSubscriptionListResponse> build() {
+  PodcastSubscriptionState build() {
     _repository = ref.read(podcastRepositoryProvider);
-    return loadSubscriptions();
+    return const PodcastSubscriptionState();
   }
 
-  Future<PodcastSubscriptionListResponse> loadSubscriptions({
+  Future<void> loadSubscriptions({
     int page = 1,
-    int size = 20,
+    int size = 10,
     int? categoryId,
     String? status,
   }) async {
-    state = const AsyncValue.loading();
+    state = state.copyWith(isLoading: true, error: null);
 
     try {
       final response = await _repository.listSubscriptions(
@@ -366,12 +363,67 @@ class PodcastSubscriptionNotifier extends AsyncNotifier<PodcastSubscriptionListR
         categoryId: categoryId,
         status: status,
       );
-      state = AsyncValue.data(response);
-      return response;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
+
+      state = state.copyWith(
+        subscriptions: response.subscriptions,
+        hasMore: page < response.pages,
+        nextPage: page < response.pages ? page + 1 : null,
+        currentPage: page,
+        total: response.total,
+        isLoading: false,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        isLoading: false,
+        error: error.toString(),
+      );
       rethrow;
     }
+  }
+
+  Future<void> loadMoreSubscriptions({
+    int? categoryId,
+    String? status,
+  }) async {
+    if (state.isLoadingMore || !state.hasMore) return;
+
+    state = state.copyWith(isLoadingMore: true);
+
+    try {
+      final response = await _repository.listSubscriptions(
+        page: state.nextPage ?? 1,
+        size: 10,
+        categoryId: categoryId,
+        status: status,
+      );
+
+      state = state.copyWith(
+        subscriptions: [...state.subscriptions, ...response.subscriptions],
+        hasMore: (state.nextPage ?? 1) < response.pages,
+        nextPage: (state.nextPage ?? 1) < response.pages ? (state.nextPage ?? 1) + 1 : null,
+        currentPage: state.nextPage ?? 1,
+        total: response.total,
+        isLoadingMore: false,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        isLoadingMore: false,
+        error: error.toString(),
+      );
+    }
+  }
+
+  Future<void> refreshSubscriptions({
+    int? categoryId,
+    String? status,
+  }) async {
+    state = const PodcastSubscriptionState();
+    await loadSubscriptions(
+      page: 1,
+      size: 10,
+      categoryId: categoryId,
+      status: status,
+    );
   }
 
   Future<PodcastSubscriptionModel> addSubscription({
@@ -385,7 +437,7 @@ class PodcastSubscriptionNotifier extends AsyncNotifier<PodcastSubscriptionListR
       );
 
       // Refresh the list
-      await loadSubscriptions();
+      await refreshSubscriptions();
 
       return subscription;
     } catch (error) {
@@ -404,7 +456,7 @@ class PodcastSubscriptionNotifier extends AsyncNotifier<PodcastSubscriptionListR
       );
 
       // Refresh the list
-      await loadSubscriptions();
+      await refreshSubscriptions();
     } catch (error) {
       rethrow;
     }
@@ -415,7 +467,7 @@ class PodcastSubscriptionNotifier extends AsyncNotifier<PodcastSubscriptionListR
       await _repository.deleteSubscription(subscriptionId);
 
       // Refresh the list
-      await loadSubscriptions();
+      await refreshSubscriptions();
     } catch (error) {
       rethrow;
     }
@@ -436,7 +488,7 @@ class PodcastSubscriptionNotifier extends AsyncNotifier<PodcastSubscriptionListR
       debugPrint('✅ Bulk delete success: ${response.successCount} deleted, ${response.failedCount} failed');
 
       // Refresh the list
-      await loadSubscriptions();
+      await refreshSubscriptions();
 
       return response;
     } catch (error) {
@@ -450,7 +502,7 @@ class PodcastSubscriptionNotifier extends AsyncNotifier<PodcastSubscriptionListR
       await _repository.refreshSubscription(subscriptionId);
 
       // Refresh the list
-      await loadSubscriptions();
+      await refreshSubscriptions();
     } catch (error) {
       rethrow;
     }
@@ -461,7 +513,7 @@ class PodcastSubscriptionNotifier extends AsyncNotifier<PodcastSubscriptionListR
       await _repository.reparseSubscription(subscriptionId, forceAll);
 
       // Refresh the list
-      await loadSubscriptions();
+      await refreshSubscriptions();
     } catch (error) {
       rethrow;
     }
@@ -495,7 +547,7 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
         total: response.total,
         isLoading: false,
       );
-    } catch (error, stackTrace) {
+    } catch (error) {
       debugPrint('❌ 加载最新内容失败: $error');
       state = state.copyWith(
         isLoading: false,
@@ -523,7 +575,7 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
         total: response.total,
         isLoadingMore: false,
       );
-    } catch (error, stackTrace) {
+    } catch (error) {
       debugPrint('❌ 加载更多内容失败: $error');
       state = state.copyWith(
         isLoadingMore: false,
