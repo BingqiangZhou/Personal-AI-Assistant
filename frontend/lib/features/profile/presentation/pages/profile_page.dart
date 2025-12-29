@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
 
@@ -45,7 +46,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 Row(
                   children: [
                     // 设置按钮
-                    FilledButton.tonal(
+                    FilledButton(
                       onPressed: () {
                         context.push('/profile/settings');
                       },
@@ -59,13 +60,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    // 编辑按钮
+                    // 登出按钮
                     FilledButton.icon(
                       onPressed: () {
-                        _showEditProfileDialog(context);
+                        _showLogoutDialog(context);
                       },
-                      icon: const Icon(Icons.edit),
-                      label: Text(l10n.edit),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.errorContainer,
+                        foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
+                      icon: const Icon(Icons.logout),
+                      label: Text(l10n.logout),
                     ),
                   ],
                 ),
@@ -86,6 +91,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
           // 设置选项
           _buildSettingsContent(context),
+
+          // 底部空间
+          const SizedBox(height: 32),
         ],
       ),
       ),
@@ -409,26 +417,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               onTap: () => _showAboutDialog(context),
             ),
           ]),
-          const SizedBox(height: 24),
-          // 登出按钮
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: FilledButton.tonal(
-              onPressed: () => _showLogoutDialog(context),
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.logout),
-                  const SizedBox(width: 8),
-                  Text(l10n.logout),
-                ],
-              ),
-            ),
-          ),
         ],
       );
     } else {
@@ -553,27 +541,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             onTap: () => _showAboutDialog(context),
           ),
         ]),
-        const SizedBox(height: 24),
-        // 登出按钮
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.tonal(
-            onPressed: () => _showLogoutDialog(context),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.errorContainer,
-              foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
-              minimumSize: const Size(double.infinity, 48),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.logout),
-                const SizedBox(width: 8),
-                Text(l10n.logout),
-              ],
-            ),
-          ),
-        ),
       ],
       );
     }
@@ -669,26 +636,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
         ],
       ),
-    );
-  }
-
-  /// 显示设置对话框
-  void _showSettingsDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final l10n = AppLocalizations.of(context)!;
-        return AlertDialog(
-          title: Text(l10n.settings),
-          content: Text(l10n.podcast_coming_soon),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.close),
-            ),
-          ],
-        );
-      },
     );
   }
 
@@ -835,15 +782,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   /// 显示关于对话框
-  void _showAboutDialog(BuildContext context) {
+  Future<void> _showAboutDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
+    final packageInfo = await PackageInfo.fromPlatform();
+
+    if (!context.mounted) return;
+
     showAboutDialog(
       context: context,
       applicationName: l10n.appTitle,
-      applicationVersion: '1.0.0',
+      applicationVersion: packageInfo.version,
       applicationIcon: const Icon(Icons.psychology, size: 48),
       children: [
         Text(l10n.profile_about_subtitle),
+        const SizedBox(height: 8),
+        Text('Build: ${packageInfo.buildNumber}'),
       ],
     );
   }
