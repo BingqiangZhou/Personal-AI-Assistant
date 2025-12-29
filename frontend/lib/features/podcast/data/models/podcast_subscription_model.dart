@@ -231,3 +231,47 @@ class SimpleResponse extends Equatable {
   @override
   List<Object?> get props => [data];
 }
+
+@JsonSerializable()
+class PodcastSubscriptionBulkDeleteRequest extends Equatable {
+  @JsonKey(name: 'subscription_ids')
+  final List<int> subscriptionIds;
+
+  const PodcastSubscriptionBulkDeleteRequest({
+    required this.subscriptionIds,
+  });
+
+  factory PodcastSubscriptionBulkDeleteRequest.fromJson(Map<String, dynamic> json) =>
+      _$PodcastSubscriptionBulkDeleteRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PodcastSubscriptionBulkDeleteRequestToJson(this);
+
+  @override
+  List<Object?> get props => [subscriptionIds];
+}
+
+@JsonSerializable()
+class PodcastSubscriptionBulkDeleteResponse extends Equatable {
+  @JsonKey(name: 'success_count')
+  final int successCount;
+  @JsonKey(name: 'failed_count')
+  final int failedCount;
+  final List<Map<String, dynamic>> errors;
+  @JsonKey(name: 'deleted_subscription_ids')
+  final List<int> deletedSubscriptionIds;
+
+  const PodcastSubscriptionBulkDeleteResponse({
+    required this.successCount,
+    required this.failedCount,
+    this.errors = const [],
+    this.deletedSubscriptionIds = const [],
+  });
+
+  factory PodcastSubscriptionBulkDeleteResponse.fromJson(Map<String, dynamic> json) =>
+      _$PodcastSubscriptionBulkDeleteResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PodcastSubscriptionBulkDeleteResponseToJson(this);
+
+  @override
+  List<Object?> get props => [successCount, failedCount, errors, deletedSubscriptionIds];
+}

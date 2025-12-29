@@ -1118,3 +1118,129 @@ class PodcastService:
                 break
 
         return streak
+
+    # === 批量删除订阅 ===
+
+    async def remove_subscriptions_bulk(
+        self,
+        subscription_ids: List[int]
+    ) -> Dict[str, Any]:
+        """
+        批量删除播客订阅
+
+        删除顺序（按外键依赖关系）:
+        1. conversations (通过 episode_id)
+        2. playback_progress (podcast_playback_states)
+        3. transcriptions (transcription_tasks)
+        4. episodes (podcast_episodes)
+        5. subscriptions
+
+        Args:
+            subscription_ids: 要删除的订阅ID列表
+
+        Returns:
+            dict: {
+                "success_count": int,
+                "failed_count": int,
+                "errors": List[Dict[str, Any]],
+                "deleted_subscription_ids": List[int]
+            }
+        """
+        from sqlalchemy import delete, and_
+        from app.domains.podcast.models import (
+            PodcastEpisode,
+            PodcastPlaybackState,
+            TranscriptionTask,
+            PodcastConversation
+        )
+        from app.domains.subscription.models import Subscription
+
+        success_count = 0
+        failed_count = 0
+        errors: List[Dict[str, Any]] = []
+        deleted_subscription_ids: List[int] = []
+
+        for subscription_id in subscription_ids:
+            try:
+                # 使用显式事务确保删除操作的原子性
+                async with self.db.begin():
+                    # 1. 验证订阅存在且属于当前用户
+                    stmt = select(Subscription).where(
+                        and_(
+                            Subscription.id == subscription_id,
+                            Subscription.user_id == self.user_id,
+                            Subscription.source_type == "podcast-rss"
+                        )
+                    )
+                    result = await self.db.execute(stmt)
+                    subscription = result.scalar_one_or_none()
+
+                    if not subscription:
+                        errors.append({
+                            "subscription_id": subscription_id,
+                            "error": f"订阅 {subscription_id} 不存在或无权访问"
+                        })
+                        failed_count += 1
+                        continue
+
+                    # 获取该订阅的所有 episode_id
+                    ep_stmt = select(PodcastEpisode.id).where(
+                        PodcastEpisode.subscription_id == subscription_id
+                    )
+                    ep_result = await self.db.execute(ep_stmt)
+                    episode_ids = [row[0] for row in ep_result.fetchall()]
+
+                    # 2. 删除 conversations (通过 episode_id)
+                    # 使用 synchronize_session=False 避免 SQLAlchemy 自引用关系递归问题
+                    if episode_ids:
+                        conv_delete = delete(PodcastConversation).where(
+                            PodcastConversation.episode_id.in_(episode_ids)
+                        ).execution_options(synchronize_session="fetch")
+                        await self.db.execute(conv_delete)
+
+                    # 3. 删除 playback_progress (podcast_playback_states)
+                    if episode_ids:
+                        playback_delete = delete(PodcastPlaybackState).where(
+                            PodcastPlaybackState.episode_id.in_(episode_ids)
+                        ).execution_options(synchronize_session="fetch")
+                        await self.db.execute(playback_delete)
+
+                    # 4. 删除 transcriptions (transcription_tasks)
+                    if episode_ids:
+                        trans_delete = delete(TranscriptionTask).where(
+                            TranscriptionTask.episode_id.in_(episode_ids)
+                        ).execution_options(synchronize_session="fetch")
+                        await self.db.execute(trans_delete)
+
+                    # 5. 删除 episodes (podcast_episodes)
+                    episode_delete = delete(PodcastEpisode).where(
+                        PodcastEpisode.subscription_id == subscription_id
+                    ).execution_options(synchronize_session="fetch")
+                    await self.db.execute(episode_delete)
+
+                    # 6. 删除 subscription
+                    sub_delete = delete(Subscription).where(
+                        Subscription.id == subscription_id
+                    ).execution_options(synchronize_session="fetch")
+                    await self.db.execute(sub_delete)
+
+                # 事务提交成功，记录成功
+                success_count += 1
+                deleted_subscription_ids.append(subscription_id)
+                logger.info(f"用户 {self.user_id} 批量删除订阅 {subscription_id} 成功")
+
+            except Exception as e:
+                # 事务会自动回滚
+                logger.error(f"批量删除订阅 {subscription_id} 失败: {e}")
+                errors.append({
+                    "subscription_id": subscription_id,
+                    "error": str(e)
+                })
+                failed_count += 1
+
+        return {
+            "success_count": success_count,
+            "failed_count": failed_count,
+            "errors": errors,
+            "deleted_subscription_ids": deleted_subscription_ids
+        }

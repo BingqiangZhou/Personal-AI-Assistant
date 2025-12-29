@@ -553,3 +553,33 @@ class ScheduleConfigResponse(PodcastBaseSchema):
     fetch_interval: Optional[int] = None
     next_update_at: Optional[datetime] = None
     last_updated_at: Optional[datetime] = None
+
+
+# === Bulk Delete Schemas ===
+
+class PodcastSubscriptionBulkDelete(PodcastBaseSchema):
+    """批量删除播客订阅请求"""
+    subscription_ids: List[int] = Field(..., description="订阅ID列表", min_length=1, max_length=100)
+
+    @field_validator('subscription_ids')
+    @classmethod
+    def validate_subscription_ids(cls, v):
+        """验证订阅ID列表"""
+        if not v:
+            raise ValueError('订阅ID列表不能为空')
+        if len(v) > 100:
+            raise ValueError('一次最多删除100个订阅')
+        # 去重
+        unique_ids = list(set(v))
+        if len(unique_ids) != len(v):
+            # 只警告，不抛出错误
+            pass
+        return unique_ids
+
+
+class PodcastSubscriptionBulkDeleteResponse(PodcastBaseSchema):
+    """批量删除播客订阅响应"""
+    success_count: int = Field(..., description="成功删除的订阅数量")
+    failed_count: int = Field(..., description="删除失败的订阅数量")
+    errors: List[Dict[str, Any]] = Field(default_factory=list, description="删除失败的错误信息列表")
+    deleted_subscription_ids: List[int] = Field(default_factory=list, description="成功删除的订阅ID列表")

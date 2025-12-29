@@ -1822,5 +1822,108 @@
   "floating_player_nav_hint": "Long-press to open player",
   "@floating_player_nav_hint": {
     "description": "Floating player navigation hint"
+  },
+
+  "podcast_bulk_select_mode": "Select Podcasts",
+  "@podcast_bulk_select_mode": {
+    "description": "Title for bulk selection mode"
+  },
+
+  "podcast_enter_select_mode": "Select Mode",
+  "@podcast_enter_select_mode": {
+    "description": "Tooltip to enter selection mode"
+  },
+
+  "podcast_deselect_all": "Deselect All",
+  "@podcast_deselect_all": {
+    "description": "Deselect all tooltip"
+  },
+
+  "podcast_bulk_delete": "Bulk Delete",
+  "@podcast_bulk_delete": {
+    "description": "Bulk delete action label"
+  },
+
+  "podcast_selected_count": "{count} selected",
+  "@podcast_selected_count": {
+    "description": "Selected count label",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_delete_title": "Delete Selected Podcasts",
+  "@podcast_bulk_delete_title": {
+    "description": "Bulk delete dialog title"
+  },
+
+  "podcast_bulk_delete_message": "Are you sure you want to delete {count} podcast{count, plural, =1{} other{s}}?",
+  "@podcast_bulk_delete_message": {
+    "description": "Bulk delete confirmation message",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_delete_warning": "This action will also delete all episodes associated with these podcasts. This cannot be undone.",
+  "@podcast_bulk_delete_warning": {
+    "description": "Bulk delete warning message"
+  },
+
+  "podcast_bulk_delete_confirm": "Delete",
+  "@podcast_bulk_delete_confirm": {
+    "description": "Bulk delete confirm button"
+  },
+
+  "podcast_bulk_delete_success": "{count, plural, =1{1 podcast} other{{count} podcasts}} deleted successfully",
+  "@podcast_bulk_delete_success": {
+    "description": "Bulk delete success message",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_delete_partial_success": "{successCount} deleted, {failedCount} failed",
+  "@podcast_bulk_delete_partial_success": {
+    "description": "Bulk delete partial success message",
+    "placeholders": {
+      "successCount": {
+        "type": "int"
+      },
+      "failedCount": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_delete_failed": "Delete failed: {error}",
+  "@podcast_bulk_delete_failed": {
+    "description": "Bulk delete failed message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_view_errors": "View Errors",
+  "@podcast_view_errors": {
+    "description": "View errors button label"
+  },
+
+  "podcast_bulk_delete_errors_title": "Delete Errors",
+  "@podcast_bulk_delete_errors_title": {
+    "description": "Bulk delete errors dialog title"
+  },
+
+  "dismiss": "Dismiss",
+  "@dismiss": {
+    "description": "Dismiss button label"
   }
 }

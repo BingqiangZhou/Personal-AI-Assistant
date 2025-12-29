@@ -1136,4 +1136,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get floating_player_nav_hint => 'Long-press to open player';
+
+  @override
+  String get podcast_bulk_select_mode => 'Select Podcasts';
+
+  @override
+  String get podcast_enter_select_mode => 'Select Mode';
+
+  @override
+  String get podcast_deselect_all => 'Deselect All';
+
+  @override
+  String get podcast_bulk_delete => 'Bulk Delete';
+
+  @override
+  String podcast_selected_count(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get podcast_bulk_delete_title => 'Delete Selected Podcasts';
+
+  @override
+  String podcast_bulk_delete_message(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 's',
+      one: '',
+    );
+    return 'Are you sure you want to delete $count podcast$_temp0?';
+  }
+
+  @override
+  String get podcast_bulk_delete_warning =>
+      'This action will also delete all episodes associated with these podcasts. This cannot be undone.';
+
+  @override
+  String get podcast_bulk_delete_confirm => 'Delete';
+
+  @override
+  String podcast_bulk_delete_success(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count podcasts',
+      one: '1 podcast',
+    );
+    return '$_temp0 deleted successfully';
+  }
+
+  @override
+  String podcast_bulk_delete_partial_success(
+    int successCount,
+    int failedCount,
+  ) {
+    return '$successCount deleted, $failedCount failed';
+  }
+
+  @override
+  String podcast_bulk_delete_failed(String error) {
+    return 'Delete failed: $error';
+  }
+
+  @override
+  String get podcast_view_errors => 'View Errors';
+
+  @override
+  String get podcast_bulk_delete_errors_title => 'Delete Errors';
+
+  @override
+  String get dismiss => 'Dismiss';
 }

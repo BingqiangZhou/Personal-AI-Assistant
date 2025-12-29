@@ -421,6 +421,30 @@ class PodcastSubscriptionNotifier extends AsyncNotifier<PodcastSubscriptionListR
     }
   }
 
+  Future<PodcastSubscriptionBulkDeleteResponse> bulkDeleteSubscriptions({
+    required List<int> subscriptionIds,
+  }) async {
+    try {
+      // Debug log
+      debugPrint('🗑️ Bulk delete request: subscriptionIds=$subscriptionIds');
+      debugPrint('🗑️ Subscription IDs type: ${subscriptionIds.runtimeType}');
+
+      final response = await _repository.bulkDeleteSubscriptions(
+        subscriptionIds: subscriptionIds,
+      );
+
+      debugPrint('✅ Bulk delete success: ${response.successCount} deleted, ${response.failedCount} failed');
+
+      // Refresh the list
+      await loadSubscriptions();
+
+      return response;
+    } catch (error) {
+      debugPrint('❌ Bulk delete failed: $error');
+      rethrow;
+    }
+  }
+
   Future<void> refreshSubscription(int subscriptionId) async {
     try {
       await _repository.refreshSubscription(subscriptionId);

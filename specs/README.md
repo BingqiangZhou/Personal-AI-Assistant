@@ -12,6 +12,8 @@ specs/
 │   ├── task-tracking-template.md # 任务跟踪模板
 │   └── verification-template.md # 验证报告模板
 ├── active/                      # 活跃需求
+│   ├── FEP-20241229-podcast-bulk-delete.md  # 播客订阅批量删除功能
+│   ├── FEP-20241229-podcast-bulk-delete-api-contract.md  # 批量删除API契约
 │   ├── user-management/        # 用户管理模块
 │   ├── knowledge-base/        # 知识库模块
 │   ├── assistant/             # AI助手模块
@@ -49,6 +51,7 @@ specs/
 
 | 需求ID | 需求名称 | 模块 | 负责人 | 创建日期 | 状态 | 预计完成 |
 |--------|----------|------|--------|----------|------|----------|
+| FEP-20241229-001 | 播客订阅批量删除功能 | podcast | Product Manager | 2024-12-29 | Active | 2025-01-17 |
 | REQ-20240101-001 | 用户认证系统优化 | user-management | [姓名] | 2024-01-01 | 开发中 | 2024-01-15 |
 | REQ-20240102-002 | 智能文档分类 | knowledge-base | [姓名] | 2024-01-02 | 测试中 | 2024-01-20 |
 | [添加更多需求...] |
@@ -86,6 +89,12 @@ specs/
 - 内容抓取
 - 推送通知
 - 订阅设置
+
+### Podcast (播客)
+- 播客订阅管理
+- 音频播放
+- AI转录和总结
+- 批量操作
 
 ### Multimedia (多媒体处理)
 - 文件上传

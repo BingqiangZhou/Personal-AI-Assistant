@@ -2257,6 +2257,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Long-press to open player'**
   String get floating_player_nav_hint;
+
+  /// Title for bulk selection mode
+  ///
+  /// In en, this message translates to:
+  /// **'Select Podcasts'**
+  String get podcast_bulk_select_mode;
+
+  /// Tooltip to enter selection mode
+  ///
+  /// In en, this message translates to:
+  /// **'Select Mode'**
+  String get podcast_enter_select_mode;
+
+  /// Deselect all tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect All'**
+  String get podcast_deselect_all;
+
+  /// Bulk delete action label
+  ///
+  /// In en, this message translates to:
+  /// **'Bulk Delete'**
+  String get podcast_bulk_delete;
+
+  /// Selected count label
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String podcast_selected_count(int count);
+
+  /// Bulk delete dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Selected Podcasts'**
+  String get podcast_bulk_delete_title;
+
+  /// Bulk delete confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {count} podcast{count, plural, =1{} other{s}}?'**
+  String podcast_bulk_delete_message(int count);
+
+  /// Bulk delete warning message
+  ///
+  /// In en, this message translates to:
+  /// **'This action will also delete all episodes associated with these podcasts. This cannot be undone.'**
+  String get podcast_bulk_delete_warning;
+
+  /// Bulk delete confirm button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get podcast_bulk_delete_confirm;
+
+  /// Bulk delete success message
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 podcast} other{{count} podcasts}} deleted successfully'**
+  String podcast_bulk_delete_success(int count);
+
+  /// Bulk delete partial success message
+  ///
+  /// In en, this message translates to:
+  /// **'{successCount} deleted, {failedCount} failed'**
+  String podcast_bulk_delete_partial_success(int successCount, int failedCount);
+
+  /// Bulk delete failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed: {error}'**
+  String podcast_bulk_delete_failed(String error);
+
+  /// View errors button label
+  ///
+  /// In en, this message translates to:
+  /// **'View Errors'**
+  String get podcast_view_errors;
+
+  /// Bulk delete errors dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Errors'**
+  String get podcast_bulk_delete_errors_title;
+
+  /// Dismiss button label
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get dismiss;
 }
 
 class _AppLocalizationsDelegate

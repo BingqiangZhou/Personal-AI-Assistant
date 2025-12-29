@@ -1116,4 +1116,62 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get floating_player_nav_hint => '长按打开播放器';
+
+  @override
+  String get podcast_bulk_select_mode => '选择播客';
+
+  @override
+  String get podcast_enter_select_mode => '选择模式';
+
+  @override
+  String get podcast_deselect_all => '取消全选';
+
+  @override
+  String get podcast_bulk_delete => '批量删除';
+
+  @override
+  String podcast_selected_count(int count) {
+    return '已选择 $count 个';
+  }
+
+  @override
+  String get podcast_bulk_delete_title => '删除选中的播客';
+
+  @override
+  String podcast_bulk_delete_message(int count) {
+    return '确定要删除 $count 个播客吗？';
+  }
+
+  @override
+  String get podcast_bulk_delete_warning => '此操作还将删除这些播客的所有关联单集。此操作无法撤销。';
+
+  @override
+  String get podcast_bulk_delete_confirm => '删除';
+
+  @override
+  String podcast_bulk_delete_success(int count) {
+    return '成功删除 $count 个播客';
+  }
+
+  @override
+  String podcast_bulk_delete_partial_success(
+    int successCount,
+    int failedCount,
+  ) {
+    return '成功删除 $successCount 个，失败 $failedCount 个';
+  }
+
+  @override
+  String podcast_bulk_delete_failed(String error) {
+    return '删除失败：$error';
+  }
+
+  @override
+  String get podcast_view_errors => '查看错误';
+
+  @override
+  String get podcast_bulk_delete_errors_title => '删除错误';
+
+  @override
+  String get dismiss => '关闭';
 }

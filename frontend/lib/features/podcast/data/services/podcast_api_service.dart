@@ -44,6 +44,11 @@ abstract class PodcastApiService {
     @Path('subscriptionId') int subscriptionId,
   );
 
+  @POST('/podcasts/subscriptions/bulk-delete')
+  Future<PodcastSubscriptionBulkDeleteResponse> bulkDeleteSubscriptions(
+    @Body() PodcastSubscriptionBulkDeleteRequest request,
+  );
+
   @POST('/podcasts/subscriptions/{subscriptionId}/refresh')
   Future<void> refreshSubscription(
     @Path('subscriptionId') int subscriptionId,

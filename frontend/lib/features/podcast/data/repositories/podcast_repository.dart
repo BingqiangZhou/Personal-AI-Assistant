@@ -80,6 +80,19 @@ class PodcastRepository {
     }
   }
 
+  Future<PodcastSubscriptionBulkDeleteResponse> bulkDeleteSubscriptions({
+    required List<int> subscriptionIds,
+  }) async {
+    try {
+      final request = PodcastSubscriptionBulkDeleteRequest(
+        subscriptionIds: subscriptionIds,
+      );
+      return await _apiService.bulkDeleteSubscriptions(request);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   Future<void> refreshSubscription(int subscriptionId) async {
     try {
       await _apiService.refreshSubscription(subscriptionId);

@@ -73,7 +73,9 @@ from app.domains.podcast.schemas import (
     PodcastConversationMessage,
     ScheduleConfigUpdate,
     ScheduleConfigResponse,
-    PodcastSubscriptionBatchResponse
+    PodcastSubscriptionBatchResponse,
+    PodcastSubscriptionBulkDelete,
+    PodcastSubscriptionBulkDeleteResponse
 )
 
 router = APIRouter(prefix="")
@@ -205,6 +207,52 @@ async def list_subscriptions(
         pages=pages
     )
 
+
+# === 批量操作路由 (必须在单个订阅路由之前，避免路径参数匹配冲突) ===
+
+@router.post(
+    "/subscriptions/bulk-delete",
+    response_model=PodcastSubscriptionBulkDeleteResponse,
+    summary="批量删除播客订阅",
+    description="批量删除多个播客订阅及其关联的单集、播放进度、转录和对话数据"
+)
+async def delete_subscriptions_bulk(
+    request: PodcastSubscriptionBulkDelete,
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    批量删除播客订阅
+
+    请求示例:
+    ```json
+    {
+        "subscription_ids": [1, 2, 3]
+    }
+    ```
+
+    删除顺序（按外键依赖关系）:
+    1. conversations (对话记录)
+    2. playback_progress (播放进度)
+    3. transcriptions (转录任务)
+    4. episodes (单集)
+    5. subscriptions (订阅)
+
+    权限验证：确保所有订阅都属于当前用户
+    """
+    service = PodcastService(db, int(user["sub"]))
+
+    result = await service.remove_subscriptions_bulk(request.subscription_ids)
+
+    return PodcastSubscriptionBulkDeleteResponse(
+        success_count=result["success_count"],
+        failed_count=result["failed_count"],
+        errors=result["errors"],
+        deleted_subscription_ids=result["deleted_subscription_ids"]
+    )
+
+
+# === 单个订阅路由 ===
 
 @router.get(
     "/subscriptions/{subscription_id}",

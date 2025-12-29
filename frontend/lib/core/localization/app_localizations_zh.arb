@@ -1822,5 +1822,108 @@
   "floating_player_nav_hint": "长按打开播放器",
   "@floating_player_nav_hint": {
     "description": "悬浮播放器导航提示"
+  },
+
+  "podcast_bulk_select_mode": "选择播客",
+  "@podcast_bulk_select_mode": {
+    "description": "批量选择模式标题"
+  },
+
+  "podcast_enter_select_mode": "选择模式",
+  "@podcast_enter_select_mode": {
+    "description": "进入选择模式提示"
+  },
+
+  "podcast_deselect_all": "取消全选",
+  "@podcast_deselect_all": {
+    "description": "取消全选提示"
+  },
+
+  "podcast_bulk_delete": "批量删除",
+  "@podcast_bulk_delete": {
+    "description": "批量删除操作标签"
+  },
+
+  "podcast_selected_count": "已选择 {count} 个",
+  "@podcast_selected_count": {
+    "description": "选中数量标签",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_delete_title": "删除选中的播客",
+  "@podcast_bulk_delete_title": {
+    "description": "批量删除对话框标题"
+  },
+
+  "podcast_bulk_delete_message": "确定要删除 {count} 个播客吗？",
+  "@podcast_bulk_delete_message": {
+    "description": "批量删除确认消息",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_delete_warning": "此操作还将删除这些播客的所有关联单集。此操作无法撤销。",
+  "@podcast_bulk_delete_warning": {
+    "description": "批量删除警告消息"
+  },
+
+  "podcast_bulk_delete_confirm": "删除",
+  "@podcast_bulk_delete_confirm": {
+    "description": "批量删除确认按钮"
+  },
+
+  "podcast_bulk_delete_success": "成功删除 {count} 个播客",
+  "@podcast_bulk_delete_success": {
+    "description": "批量删除成功消息",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_delete_partial_success": "成功删除 {successCount} 个，失败 {failedCount} 个",
+  "@podcast_bulk_delete_partial_success": {
+    "description": "批量删除部分成功消息",
+    "placeholders": {
+      "successCount": {
+        "type": "int"
+      },
+      "failedCount": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_delete_failed": "删除失败：{error}",
+  "@podcast_bulk_delete_failed": {
+    "description": "批量删除失败消息",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_view_errors": "查看错误",
+  "@podcast_view_errors": {
+    "description": "查看错误按钮标签"
+  },
+
+  "podcast_bulk_delete_errors_title": "删除错误",
+  "@podcast_bulk_delete_errors_title": {
+    "description": "批量删除错误对话框标题"
+  },
+
+  "dismiss": "关闭",
+  "@dismiss": {
+    "description": "关闭按钮标签"
   }
 }

@@ -120,3 +120,41 @@ SimpleResponse _$SimpleResponseFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$SimpleResponseToJson(SimpleResponse instance) =>
     <String, dynamic>{'data': instance.data};
+
+PodcastSubscriptionBulkDeleteRequest
+_$PodcastSubscriptionBulkDeleteRequestFromJson(Map<String, dynamic> json) =>
+    PodcastSubscriptionBulkDeleteRequest(
+      subscriptionIds: (json['subscription_ids'] as List<dynamic>)
+          .map((e) => (e as num).toInt())
+          .toList(),
+    );
+
+Map<String, dynamic> _$PodcastSubscriptionBulkDeleteRequestToJson(
+  PodcastSubscriptionBulkDeleteRequest instance,
+) => <String, dynamic>{'subscription_ids': instance.subscriptionIds};
+
+PodcastSubscriptionBulkDeleteResponse
+_$PodcastSubscriptionBulkDeleteResponseFromJson(Map<String, dynamic> json) =>
+    PodcastSubscriptionBulkDeleteResponse(
+      successCount: (json['success_count'] as num).toInt(),
+      failedCount: (json['failed_count'] as num).toInt(),
+      errors:
+          (json['errors'] as List<dynamic>?)
+              ?.map((e) => e as Map<String, dynamic>)
+              .toList() ??
+          const [],
+      deletedSubscriptionIds:
+          (json['deleted_subscription_ids'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const [],
+    );
+
+Map<String, dynamic> _$PodcastSubscriptionBulkDeleteResponseToJson(
+  PodcastSubscriptionBulkDeleteResponse instance,
+) => <String, dynamic>{
+  'success_count': instance.successCount,
+  'failed_count': instance.failedCount,
+  'errors': instance.errors,
+  'deleted_subscription_ids': instance.deletedSubscriptionIds,
+};
