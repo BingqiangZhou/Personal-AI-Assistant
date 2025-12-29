@@ -368,7 +368,88 @@ jobs:
           retention-days: 7
 
   # ============================================
-  # Job 6: 发布到 GitHub Release
+  # Job 6: 构建 iOS (模拟器版本)
+  # ============================================
+  build-ios:
+    name: Build iOS Simulator
+    needs: prepare-release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Cache Pub cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('frontend/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-cache-
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+          cache-key: flutter-ios-${{ hashFiles('frontend/pubspec.lock') }}
+
+      - name: Get dependencies
+        working-directory: frontend
+        run: flutter pub get
+
+      - name: Build iOS Simulator (No Codesign)
+        working-directory: frontend
+        run: |
+          echo "🔨 Building iOS Simulator application (no code signing)..."
+          flutter build ios \
+            --simulator \
+            --release \
+            --build-number=${{ needs.prepare-release.outputs.build_number }}
+
+          echo "✅ iOS Simulator build completed"
+
+      - name: Create release directory
+        working-directory: frontend
+        run: mkdir -p dist/ios
+
+      - name: Package IPA (Simulator)
+        working-directory: frontend
+        run: |
+          VERSION="${{ needs.prepare-release.outputs.version }}"
+          # Simulator builds use iphonesimulator, not iphoneos
+          APP_PATH="build/ios/iphonesimulator/Runner.app"
+          IPA_PATH="dist/ios/personal-ai-assistant-ios-simulator-${VERSION}.ipa"
+          PAYLOAD_DIR="dist/ios/Payload"
+
+          # Create Payload directory structure for IPA
+          mkdir -p "$PAYLOAD_DIR"
+
+          # Copy app bundle to Payload
+          if [ -d "$APP_PATH" ]; then
+            cp -R "$APP_PATH" "$PAYLOAD_DIR/"
+
+            # Create IPA by zipping the Payload directory
+            cd dist/ios
+            zip -r "../$IPA_PATH" Payload
+            cd ../..
+
+            echo "✅ IPA created for iOS Simulator at $IPA_PATH"
+          else
+            echo "⚠️ App bundle not found at expected path: $APP_PATH"
+            echo "📁 Looking for .app bundles in build/ios:"
+            find build/ios -name "*.app" -type d 2>/dev/null || echo "No .app bundles found"
+            exit 1
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-artifacts
+          path: frontend/dist/ios/*.ipa
+          retention-days: 7
+
+  # ============================================
+  # Job 7: 发布到 GitHub Release
   # ============================================
   create-release:
     name: Create Release
@@ -378,13 +459,15 @@ jobs:
       - build-windows
       - build-linux
       - build-macos
+      - build-ios
     runs-on: ubuntu-latest
     if: |
       needs.prepare-release.result == 'success' &&
       needs.build-android.result == 'success' &&
       needs.build-windows.result == 'success' &&
       needs.build-linux.result == 'success' &&
-      needs.build-macos.result == 'success'
+      needs.build-macos.result == 'success' &&
+      needs.build-ios.result == 'success'
 
     steps:
       - name: Checkout repository
@@ -419,6 +502,7 @@ jobs:
             artifacts/windows-artifact/**/*.zip
             artifacts/linux-artifact/**/*.tar.gz
             artifacts/macos-artifact/**/*.dmg
+            artifacts/ios-artifacts/**/*.ipa
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -435,3 +519,4 @@ jobs:
           echo "- 🪟 Windows Executable (ZIP)" >> $GITHUB_STEP_SUMMARY
           echo "- 🐧 Linux Binary (TAR.GZ)" >> $GITHUB_STEP_SUMMARY
           echo "- 🍎 macOS Application (DMG)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📱 iOS Simulator (IPA)" >> $GITHUB_STEP_SUMMARY
