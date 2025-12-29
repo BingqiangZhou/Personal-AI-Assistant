@@ -418,8 +418,9 @@ jobs:
           VERSION="${{ needs.prepare-release.outputs.version }}"
           # Device builds use iphoneos
           APP_PATH="build/ios/iphoneos/Runner.app"
-          IPA_PATH="dist/ios/personal-ai-assistant-ios-device-${VERSION}.ipa"
+          IPA_NAME="personal-ai-assistant-ios-device-${VERSION}.ipa"
           PAYLOAD_DIR="dist/ios/Payload"
+          OUTPUT_DIR="dist/ios"
 
           # Create Payload directory structure for IPA
           mkdir -p "$PAYLOAD_DIR"
@@ -429,11 +430,11 @@ jobs:
             cp -R "$APP_PATH" "$PAYLOAD_DIR/"
 
             # Create IPA by zipping the Payload directory
-            cd dist/ios
-            zip -r "../$IPA_PATH" Payload
+            cd "$OUTPUT_DIR"
+            zip -r "$IPA_NAME" Payload
             cd ../..
 
-            echo "✅ IPA created for iOS Device at $IPA_PATH"
+            echo "✅ IPA created for iOS Device at ${OUTPUT_DIR}/${IPA_NAME}"
           else
             echo "⚠️ App bundle not found at expected path: $APP_PATH"
             echo "📁 Looking for .app bundles in build/ios:"
