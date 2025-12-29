@@ -368,10 +368,10 @@ jobs:
           retention-days: 7
 
   # ============================================
-  # Job 6: 构建 iOS (模拟器版本)
+  # Job 6: 构建 iOS (真机版本，无签名)
   # ============================================
   build-ios:
-    name: Build iOS Simulator
+    name: Build iOS Device (No Codesign)
     needs: prepare-release
     runs-on: macos-latest
     steps:
@@ -397,29 +397,28 @@ jobs:
         working-directory: frontend
         run: flutter pub get
 
-      - name: Build iOS Simulator (No Codesign)
+      - name: Build iOS (Release, No Codesign)
         working-directory: frontend
         run: |
-          echo "🔨 Building iOS Simulator application (no code signing)..."
-          # iOS Simulator builds only support debug mode, not release
+          echo "🔨 Building iOS application (release, no code signing)..."
           flutter build ios \
-            --simulator \
-            --debug \
+            --release \
+            --no-codesign \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
 
-          echo "✅ iOS Simulator build completed"
+          echo "✅ iOS build completed"
 
       - name: Create release directory
         working-directory: frontend
         run: mkdir -p dist/ios
 
-      - name: Package IPA (Simulator)
+      - name: Package IPA (Device)
         working-directory: frontend
         run: |
           VERSION="${{ needs.prepare-release.outputs.version }}"
-          # Simulator builds use iphonesimulator, not iphoneos
-          APP_PATH="build/ios/iphonesimulator/Runner.app"
-          IPA_PATH="dist/ios/personal-ai-assistant-ios-simulator-${VERSION}.ipa"
+          # Device builds use iphoneos
+          APP_PATH="build/ios/iphoneos/Runner.app"
+          IPA_PATH="dist/ios/personal-ai-assistant-ios-device-${VERSION}.ipa"
           PAYLOAD_DIR="dist/ios/Payload"
 
           # Create Payload directory structure for IPA
@@ -434,7 +433,7 @@ jobs:
             zip -r "../$IPA_PATH" Payload
             cd ../..
 
-            echo "✅ IPA created for iOS Simulator at $IPA_PATH"
+            echo "✅ IPA created for iOS Device at $IPA_PATH"
           else
             echo "⚠️ App bundle not found at expected path: $APP_PATH"
             echo "📁 Looking for .app bundles in build/ios:"
@@ -520,4 +519,4 @@ jobs:
           echo "- 🪟 Windows Executable (ZIP)" >> $GITHUB_STEP_SUMMARY
           echo "- 🐧 Linux Binary (TAR.GZ)" >> $GITHUB_STEP_SUMMARY
           echo "- 🍎 macOS Application (DMG)" >> $GITHUB_STEP_SUMMARY
-          echo "- 📱 iOS Simulator (IPA)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📱 iOS Device (IPA, No Codesign)" >> $GITHUB_STEP_SUMMARY
