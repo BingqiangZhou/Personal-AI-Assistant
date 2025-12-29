@@ -93,7 +93,7 @@ class PodcastPlayerPageArgs {
   /// Extracts args from GoRouter state
   static PodcastPlayerPageArgs? extractFromState(GoRouterState state) {
     final episodeIdStr = state.pathParameters['episodeId'];
-    final subscriptionIdStr = state.pathParameters['subscriptionId'];
+    final subscriptionIdStr = state.uri.queryParameters['subscriptionId'];
 
     if (episodeIdStr == null || subscriptionIdStr == null) return null;
 
@@ -175,10 +175,10 @@ class PodcastNavigation {
     context.pushNamed(
       'episodePlayer',
       pathParameters: {
-        'subscriptionId': subscriptionId.toString(),
         'episodeId': episodeId.toString(),
       },
       queryParameters: {
+        'subscriptionId': subscriptionId.toString(),
         if (episodeTitle != null) 'title': episodeTitle,
         if (audioUrl != null) 'audioUrl': audioUrl,
         if (startPosition != null) 'position': startPosition.toString(),

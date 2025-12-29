@@ -2239,6 +2239,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Server URL updated. Please restart app if issues persist.'**
   String get server_config_saved;
+
+  /// Floating player accessibility label
+  ///
+  /// In en, this message translates to:
+  /// **'Podcast playback control'**
+  String get floating_player_label;
+
+  /// Floating player tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Play/Pause - Long-press to open player'**
+  String get floating_player_tooltip;
+
+  /// Floating player navigation hint
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press to open player'**
+  String get floating_player_nav_hint;
 }
 
 class _AppLocalizationsDelegate

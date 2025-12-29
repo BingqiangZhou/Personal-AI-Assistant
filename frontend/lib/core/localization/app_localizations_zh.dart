@@ -1107,4 +1107,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get server_config_saved => '服务器 URL 已更新。如果问题持续，请重启应用。';
+
+  @override
+  String get floating_player_label => '播客播放控制';
+
+  @override
+  String get floating_player_tooltip => '播放/暂停 - 长按打开播放器';
+
+  @override
+  String get floating_player_nav_hint => '长按打开播放器';
 }

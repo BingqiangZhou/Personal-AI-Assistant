@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../shared/widgets/loading_widget.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
+/// Minimal splash page that immediately redirects
+/// The native splash screen (with app icon) is shown during Flutter initialization
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
@@ -12,41 +13,17 @@ class SplashPage extends ConsumerStatefulWidget {
   ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends ConsumerState<SplashPage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-
+class _SplashPageState extends ConsumerState<SplashPage> {
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-
-    _animationController.forward();
-
-    // Navigate after animation
-    _animationController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _navigateToNextScreen();
-      }
+    // Navigate immediately without delay
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navigateToNextScreen();
     });
   }
 
   void _navigateToNextScreen() async {
-    // Check authentication status
-    await ref.read(authProvider.notifier).checkAuthStatus();
-
     if (!mounted) return;
 
     final authState = ref.read(authProvider);
@@ -58,70 +35,10 @@ class _SplashPageState extends ConsumerState<SplashPage>
   }
 
   @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // App logo/icon
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                  image: const DecorationImage(
-                    image: AssetImage('assets/icons/appLogo.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // App name
-              Text(
-                'Personal AI Assistant',
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              // Tagline
-              Text(
-                'Your intelligent companion',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                ),
-              ),
-
-              const SizedBox(height: 48),
-
-              // Loading indicator
-              const LoadingWidget(),
-            ],
-          ),
-        ),
-      ),
+    // Return minimal placeholder while navigation happens
+    return const Scaffold(
+      body: SizedBox.shrink(),
     );
   }
 }

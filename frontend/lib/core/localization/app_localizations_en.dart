@@ -1126,4 +1126,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get server_config_saved =>
       'Server URL updated. Please restart app if issues persist.';
+
+  @override
+  String get floating_player_label => 'Podcast playback control';
+
+  @override
+  String get floating_player_tooltip =>
+      'Play/Pause - Long-press to open player';
+
+  @override
+  String get floating_player_nav_hint => 'Long-press to open player';
 }

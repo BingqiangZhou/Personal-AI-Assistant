@@ -24,11 +24,11 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/splash', // Will be redirected by redirect logic
     debugLogDiagnostics: true,
     refreshListenable: AuthStateListenable(ref), // Trigger refresh on auth state change
     routes: [
-      // Splash
+      // Splash (minimal, will auto-redirect via redirect logic)
       GoRoute(
         path: '/splash',
         name: 'splash',

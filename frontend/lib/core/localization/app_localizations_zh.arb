@@ -1807,5 +1807,20 @@
   "server_config_saved": "服务器 URL 已更新。如果问题持续，请重启应用。",
   "@server_config_saved": {
     "description": "服务器配置已保存消息"
+  },
+
+  "floating_player_label": "播客播放控制",
+  "@floating_player_label": {
+    "description": "悬浮播放器无障碍标签"
+  },
+
+  "floating_player_tooltip": "播放/暂停 - 长按打开播放器",
+  "@floating_player_tooltip": {
+    "description": "悬浮播放器工具提示"
+  },
+
+  "floating_player_nav_hint": "长按打开播放器",
+  "@floating_player_nav_hint": {
+    "description": "悬浮播放器导航提示"
   }
 }

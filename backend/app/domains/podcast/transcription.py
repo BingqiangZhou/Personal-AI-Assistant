@@ -1400,15 +1400,19 @@ class PodcastTranscriptionService:
                     logger.error(f"❌ [STEP 6 SAVE] Temp directory does not exist: {temp_episode_dir}")
                 raise FileNotFoundError(error_msg)
 
+            # Move audio file to permanent storage
+            # Use shutil.move instead of os.replace to handle cross-device moves (e.g., Docker volumes)
+            # 使用 shutil.move 而非 os.replace，以处理跨设备移动（如 Docker 卷）
+            import shutil
             try:
-                # Windows下os.replace不能跨驱动器移动，也不能覆盖使用中的文件
-                if os.path.exists(final_audio_path):
-                    os.remove(final_audio_path)
-                os.replace(converted_file, final_audio_path)
+                shutil.move(converted_file, final_audio_path)
             except OSError as e:
-                logger.warning(f"⚠️ [STEP 6 SAVE] os.replace failed ({e}), trying shutil.copy")
-                import shutil
+                logger.warning(f"⚠️ [STEP 6 SAVE] shutil.move failed ({e}), trying copy + delete")
                 shutil.copy2(converted_file, final_audio_path)
+                try:
+                    os.remove(converted_file)
+                except OSError:
+                    logger.warning(f"⚠️ [STEP 6 SAVE] Could not remove source file: {converted_file}")
 
             # 保存转录文本
             transcript_path = os.path.join(storage_path, "transcript.txt")
