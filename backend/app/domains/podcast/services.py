@@ -267,6 +267,9 @@ class PodcastService:
             if ep.subscription and ep.subscription.config:
                 subscription_image_url = ep.subscription.config.get("image_url")
 
+            # Use episode image_url if available, otherwise fallback to subscription image
+            image_url = ep.image_url or subscription_image_url
+
             results.append({
                 "id": ep.id,
                 "subscription_id": ep.subscription_id,
@@ -278,7 +281,9 @@ class PodcastService:
                 "audio_duration": ep.audio_duration,
                 "audio_file_size": ep.audio_file_size,
                 "published_at": ep.published_at,
+                "image_url": image_url,
                 "transcript_url": ep.transcript_url,
+                "transcript_content": ep.transcript_content,
                 "ai_summary": ep.ai_summary,
                 "summary_version": ep.summary_version,
                 "ai_confidence_score": ep.ai_confidence_score,
@@ -328,6 +333,9 @@ class PodcastService:
             if ep.subscription and ep.subscription.config:
                 subscription_image_url = ep.subscription.config.get("image_url")
 
+            # Use episode image_url if available, otherwise fallback to subscription image
+            image_url = ep.image_url or subscription_image_url
+
             results.append({
                 "id": ep.id,
                 "subscription_id": ep.subscription_id,
@@ -339,7 +347,9 @@ class PodcastService:
                 "audio_duration": ep.audio_duration,
                 "audio_file_size": ep.audio_file_size,
                 "published_at": ep.published_at,
+                "image_url": image_url,
                 "transcript_url": ep.transcript_url,
+                "transcript_content": ep.transcript_content,
                 "ai_summary": ep.ai_summary,
                 "summary_version": ep.summary_version,
                 "ai_confidence_score": ep.ai_confidence_score,
