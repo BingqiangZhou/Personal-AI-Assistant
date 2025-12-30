@@ -91,3 +91,10 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // StAX API for XML parsing (required by some plugins)
+    // StAX API 用于 XML 解析（某些插件需要）
+    implementation("javax.xml.stream:stax-api:1.0-2")
+    implementation("com.fasterxml.woodstox:woodstox-core:6.6.2")
+}

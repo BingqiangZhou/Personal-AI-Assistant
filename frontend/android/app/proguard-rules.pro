@@ -47,6 +47,10 @@
 # SQLite
 -keep class android.database.** { *; }
 
+# XML StAX API (added as dependency in build.gradle.kts)
+-keep class javax.xml.stream.** { *; }
+-keep class org.apache.tika.** { *; }
+
 # Keep native methods
 -keepclasseswithmembernames class * {
     native <methods>;
