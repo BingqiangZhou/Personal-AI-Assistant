@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from urllib.parse import urlparse
 import logging
 from datetime import datetime
+from collections import defaultdict
 
 import ffmpeg
 from fastapi import HTTPException, status
@@ -34,6 +35,46 @@ from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
 
 logger = logging.getLogger(__name__)
+
+
+# 全局进度日志节流器（用于减少重复日志）
+class _ProgressLogThrottle:
+    """进度日志节流器 - 减少频繁的进度日志输出"""
+    def __init__(self):
+        self._last_progress: Dict[int, Dict[str, float]] = defaultdict(lambda: {
+            'last_logged': 0.0,
+            'last_time': 0.0
+        })
+        self._log_interval = 5.0  # 进度每变化5%记录一次
+        self._time_interval = 10.0  # 或每10秒记录一次
+
+    def should_log(self, task_id: int, step: str, progress: float) -> bool:
+        """判断是否应该记录日志"""
+        key = f"{task_id}_{step}"
+        state = self._last_progress[key]
+
+        now = time.time()
+        progress_delta = abs(progress - state['last_logged'])
+        time_delta = now - state['last_time']
+
+        # 进度变化超过阈值 或 时间超过间隔
+        should_log = progress_delta >= self._log_interval or time_delta >= self._time_interval
+
+        if should_log:
+            state['last_logged'] = progress
+            state['last_time'] = now
+
+        return should_log
+
+    def reset(self, task_id: int, step: str):
+        """重置指定任务的进度跟踪"""
+        key = f"{task_id}_{step}"
+        if key in self._last_progress:
+            del self._last_progress[key]
+
+
+# 全局实例
+_progress_throttle = _ProgressLogThrottle()
 
 
 def log_with_timestamp(level: str, message: str, task_id: int = None):
@@ -754,7 +795,9 @@ class PodcastTranscriptionService:
         await self.db.execute(stmt)
         await self.db.commit()
 
-        logger.info(f"Updated task {task_id}: status={status}, progress={progress:.1f}%")
+        # 使用节流器减少日志输出
+        if _progress_throttle.should_log(task_id, str(status), progress):
+            logger.info(f"Updated task {task_id}: status={status}, progress={progress:.1f}%")
 
     async def _get_task_field(self, task_id: int, field: str):
         """获取任务的指定字段"""
@@ -813,7 +856,9 @@ class PodcastTranscriptionService:
         await session.execute(stmt)
         await session.commit()
 
-        logger.info(f"Updated task {task_id}: step={step}, progress={progress:.1f}%")
+        # 使用节流器减少日志输出
+        if _progress_throttle.should_log(task_id, step, progress):
+            logger.info(f"Updated task {task_id}: step={step}, progress={progress:.1f}%")
 
     async def _set_task_final_status(
         self,
@@ -1070,10 +1115,16 @@ class PodcastTranscriptionService:
                 logger.info(f"📥 [STEP 1 DOWNLOAD] Target path: {original_file}")
 
                 async with AudioDownloader() as downloader:
+                    # 使用节流器减少日志
+                    last_dl_progress = 0.0
+
                     async def download_progress(progress):
-                        # Reduce log frequency for progress updates
-                        if int(progress) % 10 == 0:
+                        nonlocal last_dl_progress
+
+                        # 每10%记录一次下载日志（而不是每10的倍数）
+                        if int(progress) // 10 > int(last_dl_progress) // 10:
                             logger.info(f"📥 [STEP 1 DOWNLOAD] Progress: {progress:.1f}%")
+                            last_dl_progress = progress
 
                         await self._update_task_progress_with_session(
                             session,
@@ -1316,9 +1367,16 @@ class PodcastTranscriptionService:
 
                 transcription_start = time.time()
 
+                # 使用节流器减少日志
+                last_trans_progress = 0.0
+
                 async def transcribe_progress(progress):
-                    if int(progress) % 10 == 0:
+                    nonlocal last_trans_progress
+
+                    # 每10%记录一次转录日志（而不是每10的倍数）
+                    if int(progress) // 10 > int(last_trans_progress) // 10:
                         logger.info(f"🤖 [STEP 4 TRANSCRIBE] Progress: {progress:.1f}%")
+                        last_trans_progress = progress
 
                     await self._update_task_progress_with_session(
                         session,

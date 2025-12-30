@@ -19,8 +19,9 @@ import re
 import hashlib
 import logging
 from typing import Dict, List, Optional, Set
-from datetime import datetime
+from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
+from collections import defaultdict
 
 from app.core.config import settings
 
@@ -37,6 +38,63 @@ class PrivacyAuditEntry:
     pii_types_detected: List[str]
     original_size: int
     sanitized_size: int
+
+
+# 全局批量日志统计器（用于减少重复日志）
+class _BatchLogStats:
+    """批量日志统计器 - 使用时间窗口聚合相似日志"""
+    def __init__(self):
+        self._stats: Dict[str, Dict] = defaultdict(lambda: {
+            'count': 0,
+            'pii_types': set(),
+            'first_time': None,
+            'last_time': None
+        })
+        self._window_seconds = 5  # 时间窗口：5秒内相同日志合并
+
+    def add(self, user_id: int, pii_types: List[str], mode: str, timestamp: str):
+        """添加日志记录"""
+        key = f"{user_id}_{mode}"
+        stats = self._stats[key]
+
+        if stats['first_time'] is None:
+            stats['first_time'] = timestamp
+        stats['last_time'] = timestamp
+        stats['count'] += 1
+        stats['pii_types'].update(pii_types)
+
+    def should_log(self, user_id: int, mode: str) -> bool:
+        """判断是否应该输出日志（每10条或时间窗口结束时）"""
+        key = f"{user_id}_{mode}"
+        stats = self._stats[key]
+
+        # 每10条记录输出一次
+        if stats['count'] >= 10:
+            return True
+
+        # 检查时间窗口是否结束
+        if stats['first_time'] and stats['last_time']:
+            first = datetime.fromisoformat(stats['first_time'])
+            last = datetime.fromisoformat(stats['last_time'])
+            if (last - first).total_seconds() >= self._window_seconds:
+                return True
+
+        return False
+
+    def get_and_reset(self, user_id: int, mode: str) -> Optional[Dict]:
+        """获取统计信息并重置"""
+        key = f"{user_id}_{mode}"
+        if key not in self._stats or self._stats[key]['count'] == 0:
+            return None
+
+        result = dict(self._stats[key])
+        result['pii_types'] = list(result['pii_types'])
+        # 重置统计
+        self._stats[key] = {'count': 0, 'pii_types': set(), 'first_time': None, 'last_time': None}
+        return result
+
+# 全局实例
+_batch_logger = _BatchLogStats()
 
 
 class ContentSanitizer:
@@ -222,13 +280,26 @@ Instructions:
         )
         self.audit_log.append(entry)
 
-        # Log for monitoring
+        # 使用批量日志记录（减少重复日志）
         if kwargs['pii_types_detected']:
-            logger.info(
-                f"PII Detection - User: {kwargs['user_id']}, "
-                f"Types: {kwargs['pii_types_detected']}, "
-                f"Mode: {kwargs['sanitize_mode']}"
+            _batch_logger.add(
+                user_id=kwargs['user_id'],
+                pii_types=kwargs['pii_types_detected'],
+                mode=kwargs['sanitize_mode'],
+                timestamp=entry.timestamp
             )
+
+            # 判断是否应该输出批量日志
+            if _batch_logger.should_log(kwargs['user_id'], kwargs['sanitize_mode']):
+                stats = _batch_logger.get_and_reset(kwargs['user_id'], kwargs['sanitize_mode'])
+                if stats:
+                    logger.info(
+                        f"PII Detection (Batch) - User: {kwargs['user_id']}, "
+                        f"Count: {stats['count']}, "
+                        f"Types: {sorted(stats['pii_types'])}, "
+                        f"Mode: {kwargs['sanitize_mode']}, "
+                        f"Duration: {(datetime.fromisoformat(stats['last_time']) - datetime.fromisoformat(stats['first_time'])).total_seconds():.1f}s"
+                    )
 
     def export_audit_log(self, user_id: int) -> List[Dict]:
         """Export user's audit trail for GDPR compliance"""
