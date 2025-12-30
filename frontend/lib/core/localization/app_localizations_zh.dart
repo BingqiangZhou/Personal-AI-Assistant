@@ -54,6 +54,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cancel => '取消';
 
   @override
+  String get clear => '清空';
+
+  @override
   String get confirm => '确认';
 
   @override
@@ -1059,10 +1062,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get backend_api_description => '说明：此为后端 API 服务器，与 AI 模型 API 无关';
 
   @override
-  String get use_local_url => '本地';
+  String get use_local_url => '本地服务器';
 
   @override
   String get connection_error_hint => '连接错误';
+
+  @override
+  String get connection_status_unverified => '未验证';
+
+  @override
+  String get connection_status_verifying => '验证中...';
+
+  @override
+  String get connection_status_success => '成功';
+
+  @override
+  String get connection_status_failed => '失败';
+
+  @override
+  String get server_history_title => '历史记录';
+
+  @override
+  String get server_history_empty => '暂无历史记录';
 
   @override
   String get connected_successfully => '连接成功';
@@ -1071,6 +1092,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String save_failed(Object error) {
     return '保存失败: $error';
   }
+
+  @override
+  String get restore_defaults => '恢复默认';
+
+  @override
+  String get restore_defaults_confirmation => '确定要恢复为默认服务器地址吗？';
+
+  @override
+  String get restore_defaults_success => '已恢复默认服务器地址';
+
+  @override
+  String get default_server_address => '默认服务器地址';
 
   @override
   String get message_copied => '消息已复制到剪贴板';

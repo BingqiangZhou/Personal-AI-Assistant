@@ -76,6 +76,11 @@
     "description": "Cancel button label"
   },
 
+  "clear": "Clear",
+  "@clear": {
+    "description": "Clear button label"
+  },
+
   "confirm": "Confirm",
   "@confirm": {
     "description": "Confirm button label"
@@ -1729,7 +1734,7 @@
     "description": "Backend API description"
   },
 
-  "use_local_url": "Local",
+  "use_local_url": "Local Server",
   "@use_local_url": {
     "description": "Use local URL button label"
   },
@@ -1737,6 +1742,36 @@
   "connection_error_hint": "Connection error",
   "@connection_error_hint": {
     "description": "Connection error hint text"
+  },
+
+  "connection_status_unverified": "Unverified",
+  "@connection_status_unverified": {
+    "description": "Connection status - not verified yet"
+  },
+
+  "connection_status_verifying": "Verifying...",
+  "@connection_status_verifying": {
+    "description": "Connection status - currently verifying"
+  },
+
+  "connection_status_success": "Success",
+  "@connection_status_success": {
+    "description": "Connection status - successful connection"
+  },
+
+  "connection_status_failed": "Failed",
+  "@connection_status_failed": {
+    "description": "Connection status - connection failed"
+  },
+
+  "server_history_title": "History",
+  "@server_history_title": {
+    "description": "Server history title"
+  },
+
+  "server_history_empty": "No history",
+  "@server_history_empty": {
+    "description": "No server history message"
   },
 
   "connected_successfully": "Connected Successfully",
@@ -1747,6 +1782,26 @@
   "save_failed": "Save failed: {error}",
   "@save_failed": {
     "description": "Save failed error message"
+  },
+
+  "restore_defaults": "Restore Defaults",
+  "@restore_defaults": {
+    "description": "Restore defaults button label"
+  },
+
+  "restore_defaults_confirmation": "Are you sure you want to restore the default server address?",
+  "@restore_defaults_confirmation": {
+    "description": "Restore defaults confirmation message"
+  },
+
+  "restore_defaults_success": "Restored default server address",
+  "@restore_defaults_success": {
+    "description": "Restore defaults success message"
+  },
+
+  "default_server_address": "Default server address",
+  "@default_server_address": {
+    "description": "Default server address label"
   },
 
   "message_copied": "Message copied to clipboard",

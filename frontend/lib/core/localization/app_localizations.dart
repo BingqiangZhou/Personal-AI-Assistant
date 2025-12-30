@@ -188,6 +188,12 @@ abstract class AppLocalizations {
   /// **'Cancel'**
   String get cancel;
 
+  /// Clear button label
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
   /// Confirm button label
   ///
   /// In en, this message translates to:
@@ -2147,7 +2153,7 @@ abstract class AppLocalizations {
   /// Use local URL button label
   ///
   /// In en, this message translates to:
-  /// **'Local'**
+  /// **'Local Server'**
   String get use_local_url;
 
   /// Connection error hint text
@@ -2155,6 +2161,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Connection error'**
   String get connection_error_hint;
+
+  /// Connection status - not verified yet
+  ///
+  /// In en, this message translates to:
+  /// **'Unverified'**
+  String get connection_status_unverified;
+
+  /// Connection status - currently verifying
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying...'**
+  String get connection_status_verifying;
+
+  /// Connection status - successful connection
+  ///
+  /// In en, this message translates to:
+  /// **'Success'**
+  String get connection_status_success;
+
+  /// Connection status - connection failed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get connection_status_failed;
+
+  /// Server history title
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get server_history_title;
+
+  /// No server history message
+  ///
+  /// In en, this message translates to:
+  /// **'No history'**
+  String get server_history_empty;
 
   /// Connection success message
   ///
@@ -2167,6 +2209,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save failed: {error}'**
   String save_failed(Object error);
+
+  /// Restore defaults button label
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Defaults'**
+  String get restore_defaults;
+
+  /// Restore defaults confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to restore the default server address?'**
+  String get restore_defaults_confirmation;
+
+  /// Restore defaults success message
+  ///
+  /// In en, this message translates to:
+  /// **'Restored default server address'**
+  String get restore_defaults_success;
+
+  /// Default server address label
+  ///
+  /// In en, this message translates to:
+  /// **'Default server address'**
+  String get default_server_address;
 
   /// Message copied confirmation
   ///

@@ -10,6 +10,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../../../../shared/widgets/custom_button.dart';
+import '../../../../shared/widgets/server_config_dialog.dart';
 import '../providers/auth_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -71,105 +72,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
-  Future<void> _showServerConfigDialog() async {
-    final l10n = AppLocalizations.of(context)!;
+  /// Show server configuration dialog (using shared dialog)
+  void _showServerConfigDialog() {
     final serverConfig = ref.read(serverConfigProvider);
-    final urlController = TextEditingController(text: serverConfig.serverUrl);
-
-    if (!mounted) return;
-
-    await showDialog(
+    showDialog(
       context: context,
-      builder: (context) => Consumer(
-        builder: (context, ref, _) {
-          final configState = ref.watch(serverConfigProvider);
-
-          return AlertDialog(
-            title: Text(l10n.server_config_title),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(l10n.server_config_description),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: urlController,
-                  decoration: InputDecoration(
-                    labelText: 'Server Address',
-                    hintText: 'http://localhost:8000',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: configState.isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : null,
-                  ),
-                ),
-                if (configState.error != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    configState.error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-                if (configState.testSuccess) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    '✓ Connection successful!',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(l10n.cancel),
-              ),
-              TextButton(
-                onPressed: configState.isLoading
-                    ? null
-                    : () async {
-                        final testUrl = urlController.text.trim();
-                        if (testUrl.isNotEmpty) {
-                          await ref.read(serverConfigProvider.notifier).testConnection(testUrl);
-                        }
-                      },
-                child: const Text('Test Connection'),
-              ),
-              TextButton(
-                onPressed: configState.isLoading
-                    ? null
-                    : () async {
-                        final newUrl = urlController.text.trim();
-                        if (newUrl.isNotEmpty) {
-                          // Capture context before async operation
-                          final ctx = context;
-                          await ref.read(serverConfigProvider.notifier).updateServerUrl(newUrl);
-
-                          if (ctx.mounted) {
-                            Navigator.pop(ctx);
-                            ScaffoldMessenger.of(ctx).showSnackBar(
-                              SnackBar(
-                                content: Text(l10n.server_config_saved),
-                                backgroundColor: AppTheme.successColor,
-                              ),
-                            );
-                          }
-                        }
-                      },
-                child: Text(l10n.save),
-              ),
-            ],
-          );
+      barrierDismissible: false,
+      builder: (context) => ServerConfigDialog(
+        initialUrl: serverConfig.serverUrl.isNotEmpty ? serverConfig.serverUrl : null,
+        onSave: () {
+          setState(() {});
         },
       ),
     );

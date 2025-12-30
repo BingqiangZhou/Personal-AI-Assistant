@@ -76,6 +76,11 @@
     "description": "取消按钮标签"
   },
 
+  "clear": "清空",
+  "@clear": {
+    "description": "清空按钮标签"
+  },
+
   "confirm": "确认",
   "@confirm": {
     "description": "确认按钮标签"
@@ -1729,7 +1734,7 @@
     "description": "后端 API 说明"
   },
 
-  "use_local_url": "本地",
+  "use_local_url": "本地服务器",
   "@use_local_url": {
     "description": "使用本地链接按钮标签"
   },
@@ -1737,6 +1742,36 @@
   "connection_error_hint": "连接错误",
   "@connection_error_hint": {
     "description": "连接错误提示文本"
+  },
+
+  "connection_status_unverified": "未验证",
+  "@connection_status_unverified": {
+    "description": "连接状态 - 尚未验证"
+  },
+
+  "connection_status_verifying": "验证中...",
+  "@connection_status_verifying": {
+    "description": "连接状态 - 正在验证"
+  },
+
+  "connection_status_success": "成功",
+  "@connection_status_success": {
+    "description": "连接状态 - 连接成功"
+  },
+
+  "connection_status_failed": "失败",
+  "@connection_status_failed": {
+    "description": "连接状态 - 连接失败"
+  },
+
+  "server_history_title": "历史记录",
+  "@server_history_title": {
+    "description": "服务器历史记录标题"
+  },
+
+  "server_history_empty": "暂无历史记录",
+  "@server_history_empty": {
+    "description": "没有历史记录消息"
   },
 
   "connected_successfully": "连接成功",
@@ -1747,6 +1782,26 @@
   "save_failed": "保存失败: {error}",
   "@save_failed": {
     "description": "保存失败错误消息"
+  },
+
+  "restore_defaults": "恢复默认",
+  "@restore_defaults": {
+    "description": "恢复默认按钮标签"
+  },
+
+  "restore_defaults_confirmation": "确定要恢复为默认服务器地址吗？",
+  "@restore_defaults_confirmation": {
+    "description": "恢复默认确认消息"
+  },
+
+  "restore_defaults_success": "已恢复默认服务器地址",
+  "@restore_defaults_success": {
+    "description": "恢复默认成功消息"
+  },
+
+  "default_server_address": "默认服务器地址",
+  "@default_server_address": {
+    "description": "默认服务器地址标签"
   },
 
   "message_copied": "消息已复制到剪贴板",

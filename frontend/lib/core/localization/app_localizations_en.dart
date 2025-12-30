@@ -54,6 +54,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
+  String get clear => 'Clear';
+
+  @override
   String get confirm => 'Confirm';
 
   @override
@@ -1077,10 +1080,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Note: This is the backend API server, not related to AI model API';
 
   @override
-  String get use_local_url => 'Local';
+  String get use_local_url => 'Local Server';
 
   @override
   String get connection_error_hint => 'Connection error';
+
+  @override
+  String get connection_status_unverified => 'Unverified';
+
+  @override
+  String get connection_status_verifying => 'Verifying...';
+
+  @override
+  String get connection_status_success => 'Success';
+
+  @override
+  String get connection_status_failed => 'Failed';
+
+  @override
+  String get server_history_title => 'History';
+
+  @override
+  String get server_history_empty => 'No history';
 
   @override
   String get connected_successfully => 'Connected Successfully';
@@ -1089,6 +1110,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String save_failed(Object error) {
     return 'Save failed: $error';
   }
+
+  @override
+  String get restore_defaults => 'Restore Defaults';
+
+  @override
+  String get restore_defaults_confirmation =>
+      'Are you sure you want to restore the default server address?';
+
+  @override
+  String get restore_defaults_success => 'Restored default server address';
+
+  @override
+  String get default_server_address => 'Default server address';
 
   @override
   String get message_copied => 'Message copied to clipboard';

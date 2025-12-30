@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +11,7 @@ import '../../../ai/models/ai_model_config_model.dart';
 import '../../../ai/presentation/widgets/model_create_dialog.dart';
 import '../../../ai/presentation/widgets/model_edit_dialog.dart';
 import '../../../ai/presentation/providers/ai_model_provider.dart' hide aiModelApiServiceProvider;
+import 'package:personal_ai_assistant/shared/widgets/server_config_dialog.dart';
 import '../providers/ai_settings_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -50,18 +50,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   // App Preferences
   bool _darkModeEnabled = true;
 
-  // Server Config (Hidden Feature)
-  int _versionTapCount = 0;
-  Timer? _versionTapResetTimer;
+  // Server Config
   final _serverUrlController = TextEditingController();
   ConnectionStatus _connectionStatus = ConnectionStatus.unverified;
-  String? _connectionMessage;
-  Timer? _debounceTimer;
-  final StreamController<HealthCheckResult> _healthCheckController = StreamController.broadcast();
-  StreamSubscription? _healthCheckSubscription;
-
-  // Storage key for custom server URL
-  static const String _serverBaseUrlKey = 'server_base_url';
 
   @override
   void initState() {
@@ -72,10 +63,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   void dispose() {
-    _versionTapResetTimer?.cancel();
-    _debounceTimer?.cancel();
-    _healthCheckSubscription?.cancel();
-    _healthCheckController.close();
     _serverUrlController.dispose();
 
     _textGenerationUrlController.dispose();
@@ -90,7 +77,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   /// Load saved server URL from local storage
   Future<void> _loadServerUrl() async {
     final prefs = await SharedPreferences.getInstance();
-    final savedUrl = prefs.getString(_serverBaseUrlKey);
+    final savedUrl = prefs.getString('server_base_url');
     if (savedUrl != null) {
       _serverUrlController.text = savedUrl;
     }
@@ -136,6 +123,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Server Configuration Section
+            _buildServerConfigCard(),
+            const SizedBox(height: 24),
+
             // AI Text Generation Section
             _buildSection(
               title: l10n.settings_ai_text_generation,
@@ -963,323 +954,105 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     }
   }
 
-  // ==================== Server Config (Hidden Feature) ====================
+  // ==================== Server Configuration ====================
 
-  /// Handle version tap - trigger dialog after 5 consecutive taps
-  void _onVersionTapped() {
-    setState(() {
-      _versionTapCount++;
-    });
-
-    // Reset tap count after 1.2 seconds of inactivity
-    _versionTapResetTimer?.cancel();
-    _versionTapResetTimer = Timer(const Duration(milliseconds: 1200), () {
-      setState(() {
-        _versionTapCount = 0;
-      });
-    });
-
-    // Trigger dialog after 5 taps
-    if (_versionTapCount == 5) {
-      setState(() {
-        _versionTapCount = 0;
-      });
-      _versionTapResetTimer?.cancel();
-      _showServerConfigDialog();
-    }
+  /// Build the server configuration card displayed at the top of settings
+  Widget _buildServerConfigCard() {
+    final l10n = AppLocalizations.of(context)!;
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.dns_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.server_config_title,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${l10n.backend_api_url_label}: ${_serverUrlController.text.isEmpty ? l10n.default_server_address : _serverUrlController.text}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Connection status indicator
+                _buildStatusIndicator(),
+                const SizedBox(width: 8),
+                // Configure button
+                FilledButton.icon(
+                  onPressed: _showServerConfigDialog,
+                  icon: const Icon(Icons.settings, size: 18),
+                  label: Text(l10n.settings),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
-  /// Show server configuration dialog
-  void _showServerConfigDialog() {
-    setState(() {
-      _connectionStatus = ConnectionStatus.unverified;
-      _connectionMessage = null;
-    });
+  /// Build a small connection status indicator
+  Widget _buildStatusIndicator() {
+    IconData icon;
+    Color color;
 
-    // Set default to local URL if empty
-    if (_serverUrlController.text.isEmpty) {
-      _serverUrlController.text = 'http://localhost:8000';
+    switch (_connectionStatus) {
+      case ConnectionStatus.unverified:
+        icon = Icons.help_outline;
+        color = Colors.grey;
+        break;
+      case ConnectionStatus.verifying:
+        icon = Icons.sync;
+        color = Colors.blue;
+        break;
+      case ConnectionStatus.success:
+        icon = Icons.check_circle;
+        color = Colors.green;
+        break;
+      case ConnectionStatus.failed:
+        icon = Icons.error;
+        color = Colors.red;
+        break;
     }
 
+    return Icon(icon, color: color, size: 20);
+  }
+
+  /// Show server configuration dialog (using shared dialog)
+  void _showServerConfigDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          final l10n = AppLocalizations.of(context)!;
-          return AlertDialog(
-            title: Text(l10n.backend_api_server_config),
-            content: SizedBox(
-              width: 500,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Left: Connection status panel
-                  Expanded(
-                    flex: 1,
-                    child: _buildConnectionStatusPanel(),
-                  ),
-                  const SizedBox(width: 16),
-                  // Right: Input field
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Quick select: Local server button
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            _serverUrlController.text = 'http://localhost:8000';
-                            _onServerUrlChanged('http://localhost:8000', setDialogState);
-                          },
-                          icon: const Icon(Icons.computer, size: 16),
-                          label: Text(l10n.use_local_url),
-                          style: OutlinedButton.styleFrom(
-                            minimumSize: const Size.fromHeight(32),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _serverUrlController,
-                          decoration: InputDecoration(
-                            labelText: l10n.backend_api_url_label,
-                            hintText: l10n.backend_api_url_hint,
-                            border: const OutlineInputBorder(),
-                            errorText: _connectionStatus == ConnectionStatus.failed
-                                ? _connectionMessage ?? l10n.connection_error_hint
-                                : null,
-                          ),
-                          onChanged: (value) => _onServerUrlChanged(value, setDialogState),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.backend_api_description,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.cancel),
-              ),
-              TextButton(
-                onPressed: _connectionStatus == ConnectionStatus.success
-                    ? () => _saveServerConfig(context)
-                    : null,
-                child: Text(l10n.save),
-              ),
-            ],
-          );
+      builder: (context) => ServerConfigDialog(
+        initialUrl: _serverUrlController.text.isNotEmpty
+            ? _serverUrlController.text
+            : null,
+        onSave: () {
+          // Refresh the server URL display after saving
+          setState(() {
+            _loadServerUrl();
+          });
         },
       ),
-    ).then((_) {
-      // Clean up when dialog closes
-      _debounceTimer?.cancel();
-      _healthCheckSubscription?.cancel();
-    });
-  }
-
-  /// Build connection status panel
-  Widget _buildConnectionStatusPanel() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: _getStatusColor().withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _getStatusColor()),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            _getStatusIcon(),
-            color: _getStatusColor(),
-            size: 32,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _getStatusText(),
-            style: TextStyle(
-              color: _getStatusColor(),
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          if (_connectionMessage != null && _connectionStatus != ConnectionStatus.failed) ...[
-            const SizedBox(height: 4),
-            Text(
-              _connectionMessage!,
-              style: TextStyle(
-                fontSize: 12,
-                color: _getStatusColor().withOpacity(0.8),
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ],
-      ),
     );
-  }
-
-  /// Get status icon based on connection status
-  IconData _getStatusIcon() {
-    switch (_connectionStatus) {
-      case ConnectionStatus.unverified:
-        return Icons.help_outline;
-      case ConnectionStatus.verifying:
-        return Icons.sync;
-      case ConnectionStatus.success:
-        return Icons.check_circle;
-      case ConnectionStatus.failed:
-        return Icons.error;
-    }
-  }
-
-  /// Get status color based on connection status
-  Color _getStatusColor() {
-    switch (_connectionStatus) {
-      case ConnectionStatus.unverified:
-        return Colors.grey;
-      case ConnectionStatus.verifying:
-        return Colors.blue;
-      case ConnectionStatus.success:
-        return Colors.green;
-      case ConnectionStatus.failed:
-        return Colors.red;
-    }
-  }
-
-  /// Get status text based on connection status
-  String _getStatusText() {
-    switch (_connectionStatus) {
-      case ConnectionStatus.unverified:
-        return '未验证\nUnverified';
-      case ConnectionStatus.verifying:
-        return '验证中\nVerifying';
-      case ConnectionStatus.success:
-        return '成功\nSuccess';
-      case ConnectionStatus.failed:
-        return '失败\nFailed';
-    }
-  }
-
-  /// Handle server URL input change with debounce
-  void _onServerUrlChanged(String value, StateSetter setDialogState) {
-    // Cancel previous debounce timer
-    _debounceTimer?.cancel();
-
-    // Cancel ongoing health check
-    _healthCheckSubscription?.cancel();
-
-    // Reset to unverified if empty
-    if (value.trim().isEmpty) {
-      setDialogState(() {
-        _connectionStatus = ConnectionStatus.unverified;
-        _connectionMessage = null;
-      });
-      return;
-    }
-
-    // Set to verifying state
-    setDialogState(() {
-      _connectionStatus = ConnectionStatus.verifying;
-      _connectionMessage = null;
-    });
-
-    // Debounce verification (500ms)
-    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
-      _verifyServerConnection(value, setDialogState);
-    });
-  }
-
-  /// Verify server connection using health check
-  void _verifyServerConnection(String baseUrl, StateSetter setDialogState) {
-    final healthService = ServerHealthService(Dio());
-
-    _healthCheckSubscription = healthService.verifyConnection(baseUrl).listen(
-      (result) {
-        if (mounted) {
-          setDialogState(() {
-            _connectionStatus = result.status;
-            _connectionMessage = result.message;
-            if (result.responseTimeMs != null) {
-              _connectionMessage = '${result.message} (${result.responseTimeMs}ms)';
-            }
-          });
-        }
-      },
-      onError: (e) {
-        if (mounted) {
-          setDialogState(() {
-            _connectionStatus = ConnectionStatus.failed;
-            _connectionMessage = '连接错误: $e';
-          });
-        }
-      },
-    );
-  }
-
-  /// Save server configuration and apply immediately
-  Future<void> _saveServerConfig(BuildContext dialogContext) async {
-    final l10n = AppLocalizations.of(context)!;
-    final baseUrl = _serverUrlController.text.trim();
-    if (baseUrl.isEmpty) return;
-
-    try {
-      // Normalize URL (remove trailing slashes, /api/v1 suffix)
-      var normalizedUrl = baseUrl.trim();
-      while (normalizedUrl.endsWith('/')) {
-        normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length - 1);
-      }
-      // Remove /api/v1 suffix if present
-      if (normalizedUrl.endsWith('/api/v1')) {
-        normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length - 8);
-      } else if (normalizedUrl.contains('/api/v1/')) {
-        normalizedUrl = normalizedUrl.replaceFirst('/api/v1/', '/');
-      }
-
-      // Save clean baseUrl to local storage (without /api/v1)
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_serverBaseUrlKey, normalizedUrl);
-      debugPrint('💾 Saved backend API baseUrl: $normalizedUrl');
-
-      // Update DioClient baseUrl immediately (runtime effect)
-      final dioClient = ref.read(dioClientProvider);
-      dioClient.updateBaseUrl('$normalizedUrl/api/v1');
-
-      // Close dialog
-      Navigator.of(dialogContext).pop();
-
-      // Show success toast at top
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.connected_successfully),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 80),
-            duration: const Duration(milliseconds: 1500),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.save_failed(e.toString())),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 }

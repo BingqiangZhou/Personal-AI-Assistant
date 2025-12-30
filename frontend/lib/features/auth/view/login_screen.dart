@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../auth/provider/auth_provider.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../desktop/widgets/components/desktop_menu_bar.dart';
+import '../../../shared/widgets/server_config_dialog.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -53,6 +54,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  void _showServerConfigDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => ServerConfigDialog(
+        onSave: () {
+          // Optionally refresh the login state or update UI
+          setState(() {});
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -74,11 +88,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // App Logo and Title
-                    Icon(
-                      Icons.smart_toy,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.primary,
+                    // App Logo and Title (with long press for server settings)
+                    GestureDetector(
+                      onLongPress: _showServerConfigDialog,
+                      child: Icon(
+                        Icons.smart_toy,
+                        size: 64,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(
