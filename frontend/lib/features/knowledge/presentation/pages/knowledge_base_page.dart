@@ -72,26 +72,15 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
             ),
           ),
           const SizedBox(width: 16),
-          Row(
-            children: [
-              FilledButton.tonal(
-                onPressed: () => _showImportDialog(context),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.upload, size: 16),
-                    const SizedBox(width: 4),
-                    Text(l10n.knowledge_upload_document),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              FilledButton.icon(
-                onPressed: () => _showCreateDialog(context),
-                icon: const Icon(Icons.add),
-                label: Text(l10n.create),
-              ),
-            ],
+          IconButton(
+            onPressed: () => _showImportDialog(context),
+            icon: const Icon(Icons.upload),
+            tooltip: l10n.knowledge_upload_document,
+          ),
+          IconButton(
+            onPressed: () => _showCreateDialog(context),
+            icon: const Icon(Icons.add),
+            tooltip: l10n.create,
           ),
         ],
       ),

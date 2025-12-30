@@ -50,32 +50,19 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Row(
-                  children: [
-                    // 清除对话按钮
-                    FilledButton.tonal(
-                      onPressed: () {
-                        _showClearChatDialog(context);
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.clear, size: 16),
-                          const SizedBox(width: 4),
-                          Text(l10n.chat_clear_history),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // 设置按钮
-                    IconButton.filled(
-                      onPressed: () {
-                        _showSettingsDialog(context);
-                      },
-                      icon: const Icon(Icons.settings),
-                      tooltip: l10n.nav_settings,
-                    ),
-                  ],
+                IconButton(
+                  onPressed: () {
+                    _showClearChatDialog(context);
+                  },
+                  icon: const Icon(Icons.clear),
+                  tooltip: l10n.chat_clear_history,
+                ),
+                IconButton(
+                  onPressed: () {
+                    _showSettingsDialog(context);
+                  },
+                  icon: const Icon(Icons.settings),
+                  tooltip: l10n.nav_settings,
                 ),
               ],
             ),

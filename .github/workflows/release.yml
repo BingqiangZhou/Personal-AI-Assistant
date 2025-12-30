@@ -71,7 +71,9 @@ jobs:
             echo "---"
             echo ""
             echo "**Version:** \`${{ steps.version.outputs.version }}\`"
-            echo "**Release Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+            echo "**Release Date:**"
+            echo "- $(date -u +'%Y-%m-%d %H:%M:%S %Z (%z)')"
+            echo "- $(TZ=Asia/Shanghai date +'%Y-%m-%d %H:%M:%S %Z (%z)')"
           } > changelog.md
 
       - name: Upload changelog artifact

@@ -48,6 +48,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return AlertDialog(
       title: Row(
@@ -92,50 +93,109 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           ),
         ),
       ),
-      actions: [
-        // Skip this version
-        TextButton.icon(
+      actions: isMobile ? _buildMobileActions(context, theme) : _buildDesktopActions(context, theme),
+    );
+  }
+
+  /// Desktop actions layout
+  List<Widget> _buildDesktopActions(BuildContext context, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      // Use Row to control alignment
+      Row(
+        children: [
+          // Skip this version (left)
+          TextButton.icon(
+            onPressed: () => _handleSkip(context),
+            icon: const Icon(Icons.skip_next, size: 18),
+            label: Text(l10n.update_skip_this_version),
+            style: TextButton.styleFrom(
+              foregroundColor: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+
+          const Spacer(),
+
+          // Later + Download (right)
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.update_later),
+          ),
+
+          const SizedBox(width: 8),
+
+          // Download button (primary action)
+          FilledButton.icon(
+            onPressed: _isDownloading ? null : () => _handleDownload(context),
+            icon: _isDownloading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.download, size: 18),
+            label: Text(l10n.update_download),
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
+  /// Mobile actions layout
+  List<Widget> _buildMobileActions(BuildContext context, ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
+    return [
+      // Skip this version (top row, right aligned)
+      Align(
+        alignment: Alignment.centerRight,
+        child: TextButton.icon(
           onPressed: () => _handleSkip(context),
           icon: const Icon(Icons.skip_next, size: 18),
           label: Text(l10n.update_skip_this_version),
           style: TextButton.styleFrom(
             foregroundColor: theme.colorScheme.onSurfaceVariant,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           ),
         ),
+      ),
 
-        const SizedBox(width: 8),
-
-        // Later
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.update_later),
-        ),
-
-        const SizedBox(width: 8),
-
-        // Download button (primary action)
-        FilledButton.icon(
-          onPressed: _isDownloading ? null : () => _handleDownload(context),
-          icon: _isDownloading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.download, size: 18),
-          label: Text(l10n.update_download),
-          style: FilledButton.styleFrom(
-            backgroundColor: theme.colorScheme.primary,
-            foregroundColor: theme.colorScheme.onPrimary,
+      // Bottom row: Later (left) + Download (right)
+      Row(
+        children: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.update_later),
           ),
-        ),
-      ],
-    );
+          const Spacer(),
+          // Download button (primary action)
+          FilledButton.icon(
+            onPressed: _isDownloading ? null : () => _handleDownload(context),
+            icon: _isDownloading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.download, size: 18),
+            label: Text(l10n.update_download),
+            style: FilledButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: theme.colorScheme.onPrimary,
+            ),
+          ),
+        ],
+      ),
+    ];
   }
 
   Widget _buildReleaseInfo(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -146,6 +206,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Version row
           Row(
             children: [
               Icon(
@@ -169,38 +230,87 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
             ],
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              const SizedBox(width: 26),
-              Icon(
-                Icons.calendar_today,
-                size: 14,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${l10n.update_published_at}: ${widget.release.formattedPublishedDate}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+          // Release date and file size - aligned with icon
+          if (isMobile) ...[
+            // Mobile: vertical layout
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today,
+                      size: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${l10n.update_published_at}: ${widget.release.formattedPublishedDate}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              if (widget.release.assets.isNotEmpty) ...[
-                const SizedBox(width: 16),
+                if (widget.release.assets.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.file_download,
+                        size: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${l10n.update_file_size}: ${widget.release.assets.first.formattedSize}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ] else ...[
+            // Desktop: horizontal layout
+            Row(
+              children: [
                 Icon(
-                  Icons.file_download,
+                  Icons.calendar_today,
                   size: 14,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${l10n.update_file_size}: ${widget.release.assets.first.formattedSize}',
+                  '${l10n.update_published_at}: ${widget.release.formattedPublishedDate}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
+                if (widget.release.assets.isNotEmpty) ...[
+                  const SizedBox(width: 16),
+                  Icon(
+                    Icons.file_download,
+                    size: 14,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${l10n.update_file_size}: ${widget.release.assets.first.formattedSize}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ],
-            ],
-          ),
+            ),
+          ],
         ],
       ),
     );

@@ -69,36 +69,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                Row(
-                  children: [
-                    // 设置按钮
-                    FilledButton(
-                      onPressed: () {
-                        context.push('/profile/settings');
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.settings, size: 16),
-                          const SizedBox(width: 4),
-                          Text(l10n.settings),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // 登出按钮
-                    FilledButton.icon(
-                      onPressed: () {
-                        _showLogoutDialog(context);
-                      },
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.errorContainer,
-                        foregroundColor: Theme.of(context).colorScheme.onErrorContainer,
-                      ),
-                      icon: const Icon(Icons.logout),
-                      label: Text(l10n.logout),
-                    ),
-                  ],
+                // 设置按钮
+                IconButton(
+                  onPressed: () {
+                    context.push('/profile/settings');
+                  },
+                  icon: const Icon(Icons.settings),
+                  tooltip: l10n.settings,
                 ),
               ],
             ),
@@ -167,11 +144,27 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    user?.displayName ?? l10n.profile_guest_user,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
+                  // 用户名 + Verified 图标
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          user?.displayName ?? l10n.profile_guest_user,
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
+                      ),
+                      const SizedBox(width: 8),
+                      Tooltip(
+                        message: l10n.profile_verified,
+                        child: Icon(
+                          Icons.verified,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -181,42 +174,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Chip(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        labelPadding: const EdgeInsets.only(left: 2, right: 8),
-                        avatar: Icon(
-                          Icons.workspace_premium,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
-                        label: Text(l10n.profile_premium),
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                        labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onPrimaryContainer,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Chip(
-                        visualDensity: VisualDensity.compact,
-                        padding: EdgeInsets.zero,
-                        labelPadding: const EdgeInsets.only(left: 2, right: 8),
-                        avatar: Icon(
-                          Icons.verified,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.onSecondaryContainer,
-                        ),
-                        label: Text(l10n.profile_verified),
-                        backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-                        labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSecondaryContainer,
-                        ),
-                      ),
-                    ],
+                  // Premium Chip
+                  Chip(
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    labelPadding: const EdgeInsets.only(left: 2, right: 8),
+                    avatar: Icon(
+                      Icons.workspace_premium,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
+                    label: Text(l10n.profile_premium),
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                    labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
+                    ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            // 登出按钮
+            IconButton(
+              onPressed: () {
+                _showLogoutDialog(context);
+              },
+              icon: const Icon(Icons.logout),
+              tooltip: l10n.logout,
+              style: IconButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
               ),
             ),
           ],

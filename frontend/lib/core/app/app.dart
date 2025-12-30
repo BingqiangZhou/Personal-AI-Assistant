@@ -105,10 +105,12 @@ class PersonalAIAssistantApp extends ConsumerStatefulWidget {
   const PersonalAIAssistantApp({super.key});
 
   @override
-  ConsumerState<PersonalAIAssistantApp> createState() => _PersonalAIAssistantAppState();
+  ConsumerState<PersonalAIAssistantApp> createState() =>
+      _PersonalAIAssistantAppState();
 }
 
-class _PersonalAIAssistantAppState extends ConsumerState<PersonalAIAssistantApp> {
+class _PersonalAIAssistantAppState
+    extends ConsumerState<PersonalAIAssistantApp> {
   bool _isInitialized = false;
 
   @override
@@ -160,6 +162,14 @@ class _PersonalAIAssistantAppState extends ConsumerState<PersonalAIAssistantApp>
         showUpdateAvailableSnackBar(
           context: context,
           release: updateState.latestRelease!,
+          onUpdate: () {
+            // Open dialog when user clicks download
+            AppUpdateDialog.show(
+              context: context,
+              release: updateState.latestRelease!,
+              currentVersion: updateState.currentVersion,
+            );
+          },
         );
       }
     } catch (e) {
@@ -176,7 +186,8 @@ class _PersonalAIAssistantAppState extends ConsumerState<PersonalAIAssistantApp>
         // Try to get current route from GoRouter
         try {
           final router = ref.read(appRouterProvider);
-          final RouteMatchList matchList = router.routerDelegate.currentConfiguration;
+          final RouteMatchList matchList =
+              router.routerDelegate.currentConfiguration;
           final uri = matchList.uri;
           ref.read(currentRouteProvider.notifier).setRoute(uri.toString());
         } catch (_) {
@@ -222,10 +233,7 @@ class _PersonalAIAssistantAppState extends ConsumerState<PersonalAIAssistantApp>
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en'),
-        Locale('zh'),
-      ],
+      supportedLocales: const [Locale('en'), Locale('zh')],
 
       // Simple builder without flash prevention
       builder: (context, child) {
