@@ -5,8 +5,6 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
-import feedparser
-import httpx
 
 from app.domains.subscription.repositories import SubscriptionRepository
 from app.domains.subscription.models import Subscription, SubscriptionItem, SubscriptionStatus
@@ -16,6 +14,8 @@ from app.shared.schemas import (
     SubscriptionResponse,
     PaginatedResponse
 )
+from app.core.feed_parser import FeedParser, FeedParserConfig, FeedParseOptions
+from app.core.feed_schemas import FeedParseResult, ParseErrorCode
 
 logger = logging.getLogger(__name__)
 
@@ -194,7 +194,14 @@ class SubscriptionService:
         self,
         sub_id: int
     ) -> Dict[str, Any]:
-        """Manually trigger subscription fetch (for RSS feeds)."""
+        """
+        Manually trigger subscription fetch (for RSS feeds).
+
+        手动触发订阅获取（RSS 订阅）。
+
+        Uses the enhanced FeedParser component for robust parsing.
+        使用增强的 FeedParser 组件进行健壮解析。
+        """
         sub = await self.repo.get_subscription_by_id(self.user_id, sub_id)
         if not sub:
             raise ValueError("Subscription not found")
@@ -202,55 +209,94 @@ class SubscriptionService:
         if sub.source_type != "rss":
             raise ValueError("Only RSS subscriptions support manual fetch")
 
-        # Fetch RSS feed
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(sub.source_url)
-                response.raise_for_status()
-                feed = feedparser.parse(response.content)
+        # Configure parser
+        config = FeedParserConfig(
+            max_entries=50,  # Limit to 50 items per fetch
+            strip_html=True,
+            strict_mode=False,  # Continue on entry errors
+            log_raw_feed=False
+        )
 
-            # Process feed items
+        options = FeedParseOptions(
+            strip_html_content=True,
+            include_raw_metadata=False
+        )
+
+        # Parse feed using new FeedParser
+        parser = FeedParser(config)
+        try:
+            result: FeedParseResult = await parser.parse_feed(
+                sub.source_url,
+                options=options
+            )
+
+            # Check for critical errors
+            if not result.success and result.has_errors():
+                critical_errors = [e for e in result.errors
+                                  if e.code in (ParseErrorCode.NETWORK_ERROR, ParseErrorCode.PARSE_ERROR)]
+                if critical_errors:
+                    error_msgs = "; ".join(e.message for e in critical_errors)
+                    await self.repo.update_fetch_status(
+                        sub.id,
+                        SubscriptionStatus.ERROR,
+                        error_msgs
+                    )
+                    raise ValueError(f"Feed parsing failed: {error_msgs}")
+
+            # Process feed entries
             new_items = 0
             updated_items = 0
 
-            for entry in feed.entries[:50]:  # Limit to 50 items
-                published_at = None
-                if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                    published_at = datetime(*entry.published_parsed[:6])
-                elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
-                    published_at = datetime(*entry.updated_parsed[:6])
+            for entry in result.entries:
+                try:
+                    # Create or update item using parsed entry data
+                    item = await self.repo.create_or_update_item(
+                        subscription_id=sub.id,
+                        external_id=entry.id or entry.link or "",
+                        title=entry.title,
+                        content=entry.content,
+                        summary=entry.summary,
+                        author=entry.author,
+                        source_url=entry.link,
+                        image_url=entry.image_url,
+                        tags=entry.tags,
+                        published_at=entry.published_at
+                    )
 
-                # Create or update item
-                item = await self.repo.create_or_update_item(
-                    subscription_id=sub.id,
-                    external_id=entry.get('id', entry.get('link', '')),
-                    title=entry.get('title', 'Untitled'),
-                    content=entry.get('content', [{}])[0].get('value') if hasattr(entry, 'content') else entry.get('description'),
-                    summary=entry.get('summary'),
-                    author=entry.get('author'),
-                    source_url=entry.get('link'),
-                    image_url=entry.get('image', {}).get('href') if hasattr(entry, 'image') else None,
-                    tags=[tag.term for tag in entry.get('tags', [])] if hasattr(entry, 'tags') else [],
-                    published_at=published_at
-                )
+                    # Check if this was a new item (simplified check)
+                    if item.created_at == item.updated_at:
+                        new_items += 1
+                    else:
+                        updated_items += 1
 
-                # Check if this was a new item (simplified check)
-                if item.created_at == item.updated_at:
-                    new_items += 1
-                else:
-                    updated_items += 1
+                except Exception as e:
+                    logger.warning(f"Error processing entry {entry.id}: {e}")
+                    if config.strict_mode:
+                        raise
 
             # Update subscription status
-            await self.repo.update_fetch_status(sub.id, SubscriptionStatus.ACTIVE)
+            status = SubscriptionStatus.ACTIVE
+            error_msg = None
+
+            # Include warnings in error message if any
+            if result.has_warnings():
+                logger.warning(f"Warnings parsing feed {sub.source_url}: {result.warnings}")
+                if result.warnings:
+                    error_msg = "; ".join(result.warnings)
+
+            await self.repo.update_fetch_status(sub.id, status, error_msg)
 
             return {
                 "subscription_id": sub.id,
                 "status": "success",
                 "new_items": new_items,
                 "updated_items": updated_items,
-                "total_items": new_items + updated_items
+                "total_items": new_items + updated_items,
+                "warnings": result.warnings if result.has_warnings() else None
             }
 
+        except ValueError:
+            raise
         except Exception as e:
             logger.error(f"Error fetching subscription {sub_id}: {e}")
             await self.repo.update_fetch_status(
@@ -259,6 +305,8 @@ class SubscriptionService:
                 str(e)
             )
             raise
+        finally:
+            await parser.close()
 
     async def fetch_all_subscriptions(
         self
