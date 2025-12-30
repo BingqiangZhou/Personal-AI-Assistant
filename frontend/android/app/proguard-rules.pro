@@ -50,6 +50,8 @@
 # XML StAX API (added as dependency in build.gradle.kts)
 -keep class javax.xml.stream.** { *; }
 -keep class org.apache.tika.** { *; }
+-keep class com.fasterxml.woodstox.** { *; }
+-keep class org.codehaus.stax2.** { *; }
 
 # Keep native methods
 -keepclasseswithmembernames class * {
