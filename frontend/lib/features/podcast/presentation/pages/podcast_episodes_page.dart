@@ -54,11 +54,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   void initState() {
     super.initState();
     // Load initial episodes
-    Future.microtask(() {
-      ref
-          .read(podcastEpisodesProvider.notifier)
-          .loadEpisodesForSubscription(subscriptionId: widget.subscriptionId);
-    });
+    _loadEpisodesForSubscription();
 
     // Setup scroll listener for infinite scroll
     _scrollController.addListener(() {
@@ -68,6 +64,36 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
             .read(podcastEpisodesProvider.notifier)
             .loadMoreEpisodesForSubscription(subscriptionId: widget.subscriptionId);
       }
+    });
+  }
+
+  @override
+  void didUpdateWidget(PodcastEpisodesPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Check if subscriptionId has changed
+    if (oldWidget.subscriptionId != widget.subscriptionId) {
+      debugPrint('🔄 ===== didUpdateWidget: Subscription ID changed =====');
+      debugPrint('🔄 Old Subscription ID: ${oldWidget.subscriptionId}');
+      debugPrint('🔄 New Subscription ID: ${widget.subscriptionId}');
+      debugPrint('🔄 Reloading episodes for new subscription');
+
+      // Reset filters
+      _selectedFilter = 'all';
+      _showOnlyWithSummary = false;
+
+      // Reload episodes for the new subscription
+      _loadEpisodesForSubscription();
+
+      debugPrint('🔄 ===== didUpdateWidget complete =====');
+    }
+  }
+
+  Future<void> _loadEpisodesForSubscription() {
+    return Future.microtask(() {
+      debugPrint('📋 Loading episodes for subscription: ${widget.subscriptionId}');
+      ref
+          .read(podcastEpisodesProvider.notifier)
+          .loadEpisodesForSubscription(subscriptionId: widget.subscriptionId);
     });
   }
 

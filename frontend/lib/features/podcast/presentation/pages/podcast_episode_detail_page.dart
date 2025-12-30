@@ -42,11 +42,16 @@ class _PodcastEpisodeDetailPageState
   }
 
   Future<void> _loadAndPlayEpisode() async {
+    debugPrint('🎵 ===== _loadAndPlayEpisode called =====');
+    debugPrint('🎵 widget.episodeId: ${widget.episodeId}');
+
     try {
       // Wait for episode detail to be loaded
       final episodeDetailAsync = await ref.read(
         episodeDetailProvider(widget.episodeId).future,
       );
+
+      debugPrint('🎵 Loaded episode detail: ID=${episodeDetailAsync?.id}, Title=${episodeDetailAsync?.title}');
 
       if (episodeDetailAsync != null) {
         // Convert PodcastEpisodeDetailResponse to PodcastEpisodeModel
@@ -101,9 +106,15 @@ class _PodcastEpisodeDetailPageState
 
   @override
   Widget build(BuildContext context) {
+    // Debug: Print current episode ID being loaded
+    debugPrint('🏗️ ===== Building PodcastEpisodeDetailPage =====');
+    debugPrint('🏗️ widget.episodeId: ${widget.episodeId}');
+
     final episodeDetailAsync = ref.watch(
       episodeDetailProvider(widget.episodeId),
     );
+
+    debugPrint('🏗️ episodeDetailAsync value: ${episodeDetailAsync.value?.id}');
 
     // Listen to transcription status changes to provide user feedback
     ref.listen(getTranscriptionProvider(widget.episodeId), (previous, next) {
@@ -1234,6 +1245,37 @@ class _PodcastEpisodeDetailPageState
         ],
       ),
     );
+  }
+
+  @override
+  void didUpdateWidget(PodcastEpisodeDetailPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Check if episodeId has changed
+    if (oldWidget.episodeId != widget.episodeId) {
+      debugPrint('🔄 ===== didUpdateWidget: Episode ID changed =====');
+      debugPrint('🔄 Old Episode ID: ${oldWidget.episodeId}');
+      debugPrint('🔄 New Episode ID: ${widget.episodeId}');
+      debugPrint('🔄 Reloading episode data and auto-playing new episode');
+
+      // Invalidate old episode detail provider to force refresh
+      debugPrint('🔄 Invalidating old episode detail provider');
+      ref.invalidate(episodeDetailProvider(oldWidget.episodeId));
+
+      // Reset tab selection
+      _selectedTabIndex = 0;
+
+      // Stop any ongoing polling
+      _summaryPollingTimer?.cancel();
+      _isPolling = false;
+
+      // Reload data for the new episode
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        debugPrint('🔄 Calling _loadAndPlayEpisode for new episode');
+        _loadAndPlayEpisode();
+        _loadTranscriptionStatus();
+      });
+      debugPrint('🔄 ===== didUpdateWidget complete =====');
+    }
   }
 
   @override

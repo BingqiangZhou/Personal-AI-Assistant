@@ -7,6 +7,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/providers/core_providers.dart';
+import '../../../../core/network/exceptions/network_exceptions.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_playback_model.dart';
 import '../../data/models/podcast_subscription_model.dart';
@@ -130,59 +132,109 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   Future<void> playEpisode(PodcastEpisodeModel episode) async {
     try {
       // Debug: Print audio URL
-      debugPrint('🎵 Playing episode: ${episode.title}');
+      debugPrint('🎵 ===== playEpisode called =====');
+      debugPrint('🎵 Episode ID: ${episode.id}');
+      debugPrint('🎵 Episode Title: ${episode.title}');
       debugPrint('🎵 Audio URL: ${episode.audioUrl}');
+      debugPrint('🎵 Subscription ID: ${episode.subscriptionId}');
 
       // Check if provider is still mounted
       if (!ref.mounted || _isDisposed) return;
 
-      // Ensure player is initialized
+      // Ensure player is initialized (only once, reused for all episodes)
       await _initializePlayer();
+
+      // Save current playback rate to restore later
+      final savedPlaybackRate = state.playbackRate;
+
+      // ===== STEP 1: Stop and clean up current state =====
+      debugPrint('🛑 Step 1: Stopping current playback and cleaning state');
+      if (_player != null) {
+        try {
+          await _player!.stop();
+          debugPrint('  ✅ Stopped');
+        } catch (e) {
+          debugPrint('  ⚠️ Stop error (ignorable): $e');
+        }
+      }
+
+      // Reset state to clean values
+      state = const AudioPlayerState().copyWith(
+        playbackRate: savedPlaybackRate, // Preserve user preference
+      );
 
       // Check again after async operation
       if (!ref.mounted || _isDisposed) return;
 
-      // Set current episode and loading state
+      // ===== STEP 2: Set new episode info =====
+      debugPrint('📝 Step 2: Setting new episode info');
       state = state.copyWith(
         currentEpisode: episode,
         isLoading: true,
         error: null,
       );
 
-      // Load audio with error handling
-      debugPrint('🎵 Loading audio from URL...');
+      // ===== STEP 3: Set new audio source =====
+      debugPrint('🔄 Step 3: Setting new audio source');
+      debugPrint('  📡 URL: ${episode.audioUrl}');
       try {
         await _player!.setSource(UrlSource(episode.audioUrl));
-        debugPrint('🎵 Audio loaded successfully');
+        debugPrint('  ✅ Source set successfully');
       } catch (loadError) {
-        debugPrint('❌ Failed to load audio: $loadError');
+        debugPrint('  ❌ Failed to set source: $loadError');
         throw Exception('Failed to load audio: $loadError');
       }
 
       // Check again after async operation
       if (!ref.mounted || _isDisposed) return;
 
-      // Seek to saved position if available
+      // ===== STEP 4: Restore playback position if available =====
       if (episode.playbackPosition != null && episode.playbackPosition! > 0) {
-        await _player!.seek(Duration(milliseconds: episode.playbackPosition!));
+        debugPrint('⏩ Step 4: Seeking to saved position: ${episode.playbackPosition}ms');
+        try {
+          await _player!.seek(Duration(milliseconds: episode.playbackPosition!));
+          debugPrint('  ✅ Seek completed');
+        } catch (e) {
+          debugPrint('  ⚠️ Seek error (will play from start): $e');
+        }
+      } else {
+        debugPrint('⏩ Step 4: No saved position, starting from beginning');
       }
 
-      // Start playback
-      debugPrint('🎵 Starting playback...');
+      // Check again after async operation
+      if (!ref.mounted || _isDisposed) return;
+
+      // ===== STEP 5: Restore user preferences (playback rate) =====
+      if (savedPlaybackRate != 1.0) {
+        debugPrint('⚙️ Step 5: Restoring playback rate: ${savedPlaybackRate}x');
+        try {
+          await _player!.setPlaybackRate(savedPlaybackRate);
+          debugPrint('  ✅ Playback rate restored');
+        } catch (e) {
+          debugPrint('  ⚠️ Failed to restore playback rate: $e');
+        }
+      }
+
+      // ===== STEP 6: Start playback =====
+      debugPrint('▶️ Step 6: Starting playback');
       try {
-        await _player!.play(UrlSource(episode.audioUrl));
-        debugPrint('🎵 Playback started successfully');
+        // Use resume() instead of play(UrlSource) since we already set the source
+        await _player!.resume();
+        debugPrint('  ✅ Playback started');
       } catch (playError) {
-        debugPrint('❌ Failed to start playback: $playError');
+        debugPrint('  ❌ Failed to start playback: $playError');
         throw Exception('Failed to start playback: $playError');
       }
 
-      // Update final state
+      // ===== STEP 7: Update final state =====
       state = state.copyWith(
         isPlaying: true,
         isLoading: false,
         position: episode.playbackPosition ?? 0,
+        playbackRate: savedPlaybackRate,
       );
+
+      debugPrint('🎵 ===== playEpisode completed =====');
 
       // Update playback state on server (non-blocking)
       if (ref.mounted && !_isDisposed) {
@@ -191,7 +243,10 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         });
       }
     } catch (error) {
-      debugPrint('❌ Failed to play episode: $error');
+      debugPrint('❌ ===== Failed to play episode =====');
+      debugPrint('❌ Episode ID: ${episode.id}');
+      debugPrint('❌ Audio URL: ${episode.audioUrl}');
+      debugPrint('❌ Error: $error');
 
       // Update error state
       if (ref.mounted && !_isDisposed) {
@@ -549,6 +604,14 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
       );
     } catch (error) {
       debugPrint('❌ 加载最新内容失败: $error');
+
+      // Check if this is an authentication error
+      if (error is AuthenticationException) {
+        debugPrint('🔓 认证失败，触发认证状态检查');
+        // Trigger auth status check to update state and redirect to login
+        ref.read(authProvider.notifier).checkAuthStatus();
+      }
+
       state = state.copyWith(
         isLoading: false,
         error: '加载最新内容失败: ${error.toString()}',
@@ -577,6 +640,14 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
       );
     } catch (error) {
       debugPrint('❌ 加载更多内容失败: $error');
+
+      // Check if this is an authentication error
+      if (error is AuthenticationException) {
+        debugPrint('🔓 认证失败，触发认证状态检查');
+        // Trigger auth status check to update state and redirect to login
+        ref.read(authProvider.notifier).checkAuthStatus();
+      }
+
       state = state.copyWith(
         isLoadingMore: false,
         error: '加载更多内容失败: ${error.toString()}',
@@ -692,7 +763,19 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
     int size = 20,
     String? status,
   }) async {
-    state = state.copyWith(isLoading: true);
+    debugPrint('📋 Loading episodes for subscription $subscriptionId, page $page');
+
+    // When loading first page, clear existing episodes immediately to avoid showing old data
+    if (page == 1) {
+      debugPrint('📋 Clearing old episodes and showing loading state');
+      state = state.copyWith(
+        isLoading: true,
+        episodes: [], // Clear immediately
+        error: null,
+      );
+    } else {
+      state = state.copyWith(isLoading: true);
+    }
 
     try {
       final response = await _repository.listEpisodes(
@@ -701,6 +784,8 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
         size: size,
         isPlayed: status == 'played' ? true : (status == 'unplayed' ? false : null),
       );
+
+      debugPrint('📋 Loaded ${response.episodes.length} episodes for subscription $subscriptionId');
 
       state = state.copyWith(
         episodes: page == 1 ? response.episodes : [...state.episodes, ...response.episodes],
@@ -711,6 +796,7 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
         isLoading: false,
       );
     } catch (error) {
+      debugPrint('❌ Failed to load episodes: $error');
       state = state.copyWith(
         isLoading: false,
         error: error.toString(),

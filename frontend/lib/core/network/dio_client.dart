@@ -275,10 +275,13 @@ class DioClient {
     try {
       final refreshToken = await _secureStorage.read(key: config.AppConstants.refreshTokenKey);
       if (refreshToken == null) {
-        debugPrint('❌ No refresh token found');
+        debugPrint('❌ No refresh token found in storage');
         currentCompleter.complete(false);
+        await _clearTokens();
         return null;
       }
+
+      debugPrint('📤 Sending refresh token request...');
 
       final response = await _dio.post(
         '/auth/refresh',
@@ -288,32 +291,49 @@ class DioClient {
         ),
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && response.data != null) {
         final newAccessToken = response.data['access_token'];
         final newRefreshToken = response.data['refresh_token'];
 
-        await _secureStorage.write(key: config.AppConstants.accessTokenKey, value: newAccessToken);
-        if (newRefreshToken != null) {
-          await _secureStorage.write(key: config.AppConstants.refreshTokenKey, value: newRefreshToken);
-        }
+        if (newAccessToken != null) {
+          await _secureStorage.write(key: config.AppConstants.accessTokenKey, value: newAccessToken);
+          if (newRefreshToken != null) {
+            await _secureStorage.write(key: config.AppConstants.refreshTokenKey, value: newRefreshToken);
+          }
 
-        debugPrint('✅ Token refresh successful - New token: ${newAccessToken.substring(0, 20)}...');
-        currentCompleter.complete(true);
-        return newAccessToken;  // Return new token directly
+          debugPrint('✅ Token refresh successful - New token: ${newAccessToken.substring(0, 20)}...');
+          currentCompleter.complete(true);
+          return newAccessToken;
+        }
       }
 
-      debugPrint('❌ Token refresh failed: invalid response');
+      debugPrint('❌ Token refresh failed: invalid response format');
       currentCompleter.complete(false);
+      await _clearTokens();
       return null;
     } catch (e) {
+      // Better error handling with detailed logging
       if (e is DioException) {
-        debugPrint('❌ Token refresh failed: ${e.message}');
-        if (e.response != null) {
-          debugPrint('Response data: ${e.response?.data}');
+        final statusCode = e.response?.statusCode;
+        final responseData = e.response?.data;
+
+        debugPrint('❌ Token refresh failed:');
+        debugPrint('   Status: $statusCode');
+        debugPrint('   Type: ${e.type}');
+        debugPrint('   Response: $responseData');
+
+        // If refresh token is invalid (404, 401, or specific error), clear tokens
+        if (statusCode == 404 || statusCode == 401 ||
+            (responseData is Map && responseData['detail']?.toString().toLowerCase().contains('invalid') == true)) {
+          debugPrint('🔓 Refresh token invalid, clearing all tokens');
+          await _clearTokens();
         }
       } else {
-        debugPrint('❌ Token refresh failed: $e');
+        debugPrint('❌ Token refresh failed with unexpected error: $e');
+        // Clear tokens on any unexpected error
+        await _clearTokens();
       }
+
       currentCompleter.complete(false);
       return null;
     } finally {
