@@ -127,13 +127,36 @@ jobs:
         working-directory: frontend
         run: flutter pub get
 
+      - name: Setup Android Keystore for Release Signing
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "🔐 Setting up Android keystore signing..."
+          cd frontend/android/app
+
+          # Decode keystore from base64
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+
+          # Create key.properties file
+          cat > key.properties << EOF
+          storeFile=release.keystore
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          EOF
+
+          echo "✅ Keystore setup completed"
+
       - name: Build APK (Release)
         working-directory: frontend
         run: |
           echo "🔨 Building Android APK..."
+          echo "Version: ${{ needs.prepare-release.outputs.version }}"
+          echo "Build Number: ${{ needs.prepare-release.outputs.build_number }}"
+
           flutter build apk \
             --release \
             --target-platform android-arm64 \
+            --build-name=${{ needs.prepare-release.outputs.version }} \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
 
           # 重命名 APK 包含应用名和版本号

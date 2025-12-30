@@ -10,6 +10,8 @@ import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_colors.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/settings/presentation/providers/app_update_provider.dart';
+import '../../features/settings/presentation/widgets/update_dialog.dart';
 
 /// Splash screen widget that matches the Mindriver brand style
 class _SplashScreenWidget extends StatelessWidget {
@@ -130,6 +132,39 @@ class _PersonalAIAssistantAppState extends ConsumerState<PersonalAIAssistantApp>
       setState(() {
         _isInitialized = true;
       });
+    }
+
+    // Auto-check for updates after app is fully initialized
+    if (mounted) {
+      _autoCheckForUpdates();
+    }
+  }
+
+  /// Automatically check for updates in background
+  /// Shows notification if update is available
+  Future<void> _autoCheckForUpdates() async {
+    // Wait a bit longer to ensure app is fully loaded
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
+    try {
+      // Get update state (will use cache if available)
+      final updateState = await ref.read(autoUpdateCheckProvider.future);
+
+      if (!mounted) return;
+
+      // Show update dialog if update is available
+      if (updateState.hasUpdate && updateState.latestRelease != null) {
+        // Show SnackBar first (less intrusive)
+        showUpdateAvailableSnackBar(
+          context: context,
+          release: updateState.latestRelease!,
+        );
+      }
+    } catch (e) {
+      // Silently fail on auto-check errors
+      debugPrint('Auto-check for updates failed: $e');
     }
   }
 

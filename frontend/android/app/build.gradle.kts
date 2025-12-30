@@ -19,6 +19,33 @@ android {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
+    // Signing configurations
+    // 签名配置
+    val keystorePropertiesFile = rootProject.file("app/key.properties")
+    val useKeystoreSigning = keystorePropertiesFile.exists()
+
+    if (useKeystoreSigning) {
+        println("📱 Using keystore signing configuration from key.properties")
+    } else {
+        println("🔧 Using debug signing configuration (for development)")
+    }
+
+    signingConfigs {
+        // Create release signing config from key.properties if available
+        // 如果 key.properties 可用，从文件创建 release 签名配置
+        if (useKeystoreSigning) {
+            val keystoreProperties = java.util.Properties()
+            keystoreProperties.load(keystorePropertiesFile.inputStream())
+
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.personal_ai_assistant"
@@ -32,8 +59,28 @@ android {
 
     buildTypes {
         release {
-            // Use debug signing config to allow overwrite installation
-            // This ensures consistent signature between builds
+            // Use keystore signing if key.properties exists, otherwise use debug signing
+            // 如果 key.properties 存在则使用 keystore 签名，否则使用 debug 签名
+            // This allows consistent signature for development builds
+            // 这样可以保证开发构建时签名一致
+            signingConfig = if (useKeystoreSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
+
+            // Minify and shrink code
+            // 混淆和压缩代码
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+
+        debug {
+            // Debug builds always use debug signing
+            // Debug 构建始终使用 debug 签名
             signingConfig = signingConfigs.getByName("debug")
         }
     }

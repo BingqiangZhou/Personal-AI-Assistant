@@ -13,6 +13,7 @@ import '../../../ai/presentation/widgets/model_create_dialog.dart';
 import '../../../ai/presentation/widgets/model_edit_dialog.dart';
 import '../../../ai/presentation/providers/ai_model_provider.dart' hide aiModelApiServiceProvider;
 import '../providers/ai_settings_provider.dart';
+import '../widgets/update_dialog.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -419,6 +420,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   title: Text(l10n.version),
                   subtitle: const Text('1.0.0'),
                   onTap: _onVersionTapped,
+                ),
+                const Divider(),
+                ListTile(
+                  title: Text(l10n.update_check_updates),
+                  subtitle: Text(l10n.update_auto_check),
+                  trailing: const Icon(Icons.system_update_alt),
+                  onTap: () {
+                    ManualUpdateCheckDialog.show(context);
+                  },
                 ),
                 const Divider(),
                 ListTile(
