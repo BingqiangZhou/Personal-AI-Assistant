@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/constants/app_constants.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
 
@@ -13,12 +14,26 @@ class AppUpdateService {
 
   /// Get current app version
   ///
-  /// Returns the version from pubspec.yaml
-  static String getCurrentVersion() {
-    // This should match the version in pubspec.yaml
-    // In production, you might want to use package_info_plus
-    const currentVersion = '1.0.0'; // TODO: Sync with pubspec.yaml
-    return currentVersion;
+  /// Returns the version from pubspec.yaml using package_info_plus
+  static Future<String> getCurrentVersion() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      return packageInfo.version;
+    } catch (e) {
+      debugPrint('Error getting package info: $e');
+      // Fallback to a default version if package_info fails
+      return '0.0.0';
+    }
+  }
+
+  /// Get current app version (synchronous fallback)
+  ///
+  /// This is a fallback method that returns a cached version or default
+  /// Use getCurrentVersion() for the actual version
+  static String getCurrentVersionSync() {
+    // Note: This is a fallback. The actual version should be fetched asynchronously
+    // This is kept for compatibility with existing code that needs sync access
+    return '0.0.2'; // Update this when publishing new releases
   }
 
   /// Get current platform name
@@ -48,13 +63,15 @@ class AppUpdateService {
     bool includePrerelease = false,
   }) async {
     try {
+      // Get current version once (async)
+      final currentVersion = await getCurrentVersion();
+
       // Check cache first (unless force refresh)
       if (!forceRefresh) {
         final isValid = await GitHubReleaseCache.isCacheValid();
         if (isValid) {
           final cached = await GitHubReleaseCache.get();
           if (cached != null) {
-            final currentVersion = getCurrentVersion();
             if (cached.isNewerThan(currentVersion)) {
               // Also check if this version was skipped
               final skippedVersion = await GitHubReleaseCache.getSkippedVersion();
@@ -95,7 +112,6 @@ class AppUpdateService {
         await GitHubReleaseCache.save(release);
 
         // Check if newer than current version
-        final currentVersion = getCurrentVersion();
         if (release.isNewerThan(currentVersion)) {
           // Also check if this version was skipped
           final skippedVersion = await GitHubReleaseCache.getSkippedVersion();
@@ -111,7 +127,7 @@ class AppUpdateService {
       debugPrint('Error checking for updates: ${e.message}');
       // If network error, return cached result if available
       final cached = await GitHubReleaseCache.get();
-      final currentVersion = getCurrentVersion();
+      final currentVersion = await getCurrentVersion();
       if (cached != null && cached.isNewerThan(currentVersion)) {
         return cached;
       }

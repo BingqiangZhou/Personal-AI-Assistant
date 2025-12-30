@@ -13,7 +13,6 @@ import '../../../ai/presentation/widgets/model_create_dialog.dart';
 import '../../../ai/presentation/widgets/model_edit_dialog.dart';
 import '../../../ai/presentation/providers/ai_model_provider.dart' hide aiModelApiServiceProvider;
 import '../providers/ai_settings_provider.dart';
-import '../widgets/update_dialog.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -405,38 +404,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   trailing: const Icon(Icons.arrow_forward_ios),
                   onTap: () {
                     context.push('/profile/settings/rss-schedule');
-                  },
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-            // About Section
-            _buildSection(
-              title: l10n.about,
-              icon: Icons.info_outline,
-              children: [
-                ListTile(
-                  title: Text(l10n.version),
-                  subtitle: const Text('1.0.0'),
-                  onTap: _onVersionTapped,
-                ),
-                const Divider(),
-                ListTile(
-                  title: Text(l10n.update_check_updates),
-                  subtitle: Text(l10n.update_auto_check),
-                  trailing: const Icon(Icons.system_update_alt),
-                  onTap: () {
-                    ManualUpdateCheckDialog.show(context);
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  title: Text(l10n.settings_backend_api_docs),
-                  subtitle: Text(l10n.settings_backend_api_docs_subtitle),
-                  trailing: const Icon(Icons.open_in_new),
-                  onTap: () {
-                    _showApiDocsDialog();
                   },
                 ),
               ],
@@ -875,76 +842,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   void _refreshModels() {
     _loadModels();
-  }
-
-  void _showApiDocsDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.settings_api_documentation),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildApiEndpoint(l10n.settings_text_generation, '/api/v1/ai/chat'),
-              const Divider(),
-              _buildApiEndpoint(l10n.settings_transcription_endpoint, '/api/v1/podcast/transcribe'),
-              const Divider(),
-              _buildApiEndpoint(l10n.settings_user_settings_endpoint, '/api/v1/user/settings'),
-              const SizedBox(height: 16),
-              Text(
-                l10n.settings_config_env_vars,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              _buildEnvVar('OPENAI_API_KEY', l10n.settings_openai_api_key),
-              _buildEnvVar('OPENAI_API_BASE_URL', l10n.settings_openai_api_base_url),
-              _buildEnvVar('TRANSCRIPTION_API_URL', l10n.settings_transcription_api_url),
-              _buildEnvVar('TRANSCRIPTION_API_KEY', l10n.settings_transcription_api_key_env),
-              _buildEnvVar('TRANSCRIPTION_MODEL', l10n.settings_transcription_model_name),
-              _buildEnvVar('SUMMARY_MODEL', l10n.settings_summary_model),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.close),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildApiEndpoint(String name, String endpoint) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        Text(endpoint),
-      ],
-    );
-  }
-
-  Widget _buildEnvVar(String name, String description) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            name,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Text(description),
-        ],
-      ),
-    );
   }
 
   Future<void> _testConnection() async {

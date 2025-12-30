@@ -33,7 +33,12 @@ class AppConstants {
   // File upload
   static const int maxFileSize = 10 * 1024 * 1024; // 10MB
   static const List<String> supportedImageTypes = ['jpg', 'jpeg', 'png', 'gif'];
-  static const List<String> supportedDocumentTypes = ['pdf', 'doc', 'docx', 'txt'];
+  static const List<String> supportedDocumentTypes = [
+    'pdf',
+    'doc',
+    'docx',
+    'txt',
+  ];
   static const List<String> supportedAudioTypes = ['mp3', 'wav', 'm4a'];
   static const List<String> supportedVideoTypes = ['mp4', 'mov', 'avi'];
 
@@ -57,8 +62,8 @@ class ApiConstants {
 // App Update Constants / 应用更新常量
 class AppUpdateConstants {
   // GitHub Configuration / GitHub 配置
-  static const String githubOwner = 'your-org';  // TODO: Replace with actual repository owner
-  static const String githubRepo = 'personal-ai-assistant';
+  static const String githubOwner = 'BingqiangZhou';
+  static const String githubRepo = 'Personal-AI-Assistant';
   static const String githubApiBaseUrl = 'https://api.github.com';
 
   // GitHub API Endpoints / GitHub API 端点

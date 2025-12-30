@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/services/app_update_service.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
@@ -547,7 +548,7 @@ void showUpdateAvailableSnackBar({
           AppUpdateDialog.show(
             context: context,
             release: release,
-            currentVersion: AppUpdateService.getCurrentVersion(),
+            currentVersion: AppUpdateService.getCurrentVersionSync(),
           );
         },
       ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
+import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
 
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -409,12 +410,32 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               subtitle: l10n.profile_help_center_subtitle,
               onTap: () => _showHelpDialog(context),
             ),
+          ]),
+          const SizedBox(height: 24),
+          _buildSettingsSection(context, l10n.about, [
             _buildSettingsItem(
               context,
-              icon: Icons.info,
-              title: l10n.about,
-              subtitle: l10n.profile_about_subtitle,
+              icon: Icons.info_outline,
+              title: l10n.version,
+              subtitle: _getVersionSubtitle(),
+              trailing: const Icon(Icons.chevron_right),
               onTap: () => _showAboutDialog(context),
+            ),
+            _buildSettingsItem(
+              context,
+              icon: Icons.system_update_alt,
+              title: l10n.update_check_updates,
+              subtitle: l10n.update_auto_check,
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _showUpdateCheckDialog(context),
+            ),
+            _buildSettingsItem(
+              context,
+              icon: Icons.api,
+              title: l10n.settings_backend_api_docs,
+              subtitle: l10n.settings_backend_api_docs_subtitle,
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _showApiDocsDialog(context),
             ),
           ]),
         ],
@@ -533,12 +554,32 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             subtitle: l10n.profile_help_center_subtitle,
             onTap: () => _showHelpDialog(context),
           ),
+        ]),
+        const SizedBox(height: 24),
+        _buildSettingsSection(context, l10n.about, [
           _buildSettingsItem(
             context,
-            icon: Icons.info,
-            title: l10n.about,
-            subtitle: l10n.profile_about_subtitle,
+            icon: Icons.info_outline,
+            title: l10n.version,
+            subtitle: _getVersionSubtitle(),
+            trailing: const Icon(Icons.chevron_right),
             onTap: () => _showAboutDialog(context),
+          ),
+          _buildSettingsItem(
+            context,
+            icon: Icons.system_update_alt,
+            title: l10n.update_check_updates,
+            subtitle: l10n.update_auto_check,
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showUpdateCheckDialog(context),
+          ),
+          _buildSettingsItem(
+            context,
+            icon: Icons.api,
+            title: l10n.settings_backend_api_docs,
+            subtitle: l10n.settings_backend_api_docs_subtitle,
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showApiDocsDialog(context),
           ),
         ]),
       ],
@@ -798,6 +839,88 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         const SizedBox(height: 8),
         Text('Build: ${packageInfo.buildNumber}'),
       ],
+    );
+  }
+
+  /// Get version subtitle for display
+  String _getVersionSubtitle() {
+    // Return a placeholder, will be updated asynchronously
+    return 'Loading...';
+  }
+
+  /// 显示更新检查对话框
+  void _showUpdateCheckDialog(BuildContext context) {
+    ManualUpdateCheckDialog.show(context);
+  }
+
+  /// 显示API文档对话框
+  void _showApiDocsDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.settings_api_documentation),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildApiEndpoint(l10n.settings_text_generation, '/api/v1/ai/chat'),
+              const Divider(),
+              _buildApiEndpoint(l10n.settings_transcription_endpoint, '/api/v1/podcast/transcribe'),
+              const Divider(),
+              _buildApiEndpoint(l10n.settings_user_settings_endpoint, '/api/v1/user/settings'),
+              const SizedBox(height: 16),
+              Text(
+                l10n.settings_config_env_vars,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              _buildEnvVar('OPENAI_API_KEY', l10n.settings_openai_api_key),
+              _buildEnvVar('OPENAI_API_BASE_URL', l10n.settings_openai_api_base_url),
+              _buildEnvVar('TRANSCRIPTION_API_URL', l10n.settings_transcription_api_url),
+              _buildEnvVar('TRANSCRIPTION_API_KEY', l10n.settings_transcription_api_key_env),
+              _buildEnvVar('TRANSCRIPTION_MODEL', l10n.settings_transcription_model_name),
+              _buildEnvVar('SUMMARY_MODEL', l10n.settings_summary_model),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.close),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildApiEndpoint(String name, String endpoint) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          name,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        Text(endpoint),
+      ],
+    );
+  }
+
+  Widget _buildEnvVar(String name, String description) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            name,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          Text(description),
+        ],
+      ),
     );
   }
 

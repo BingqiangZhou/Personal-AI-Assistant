@@ -26,7 +26,7 @@ class AppUpdateState {
     this.latestRelease,
     this.hasUpdate = false,
     this.error,
-    this.currentVersion = '1.0.0',
+    this.currentVersion = '0.0.0',
   });
 
   AppUpdateState copyWith({
@@ -54,9 +54,18 @@ class AppUpdate extends _$AppUpdate {
   @override
   AppUpdateState build() {
     _updateService = ref.watch(appUpdateServiceProvider);
-    return AppUpdateState(
-      currentVersion: AppUpdateService.getCurrentVersion(),
+    // Initialize with sync version, will be updated asynchronously
+    final state = AppUpdateState(
+      currentVersion: AppUpdateService.getCurrentVersionSync(),
     );
+    // Load actual version asynchronously
+    _loadActualVersion();
+    return state;
+  }
+
+  Future<void> _loadActualVersion() async {
+    final actualVersion = await AppUpdateService.getCurrentVersion();
+    state = state.copyWith(currentVersion: actualVersion);
   }
 
   /// Check for updates
@@ -157,7 +166,7 @@ AppUpdateService appUpdateService(Ref ref) {
 @riverpod
 Future<AppUpdateState> autoUpdateCheck(Ref ref) async {
   final service = ref.watch(appUpdateServiceProvider);
-  final currentVersion = AppUpdateService.getCurrentVersion();
+  final currentVersion = await AppUpdateService.getCurrentVersion();
 
   // Perform initial check
   final release = await service.checkForUpdates(
@@ -188,9 +197,18 @@ class ManualUpdateCheck extends _$ManualUpdateCheck {
   @override
   AppUpdateState build() {
     _updateService = ref.watch(appUpdateServiceProvider);
-    return AppUpdateState(
-      currentVersion: AppUpdateService.getCurrentVersion(),
+    // Initialize with sync version, will be updated asynchronously
+    final state = AppUpdateState(
+      currentVersion: AppUpdateService.getCurrentVersionSync(),
     );
+    // Load actual version asynchronously
+    _loadActualVersion();
+    return state;
+  }
+
+  Future<void> _loadActualVersion() async {
+    final actualVersion = await AppUpdateService.getCurrentVersion();
+    state = state.copyWith(currentVersion: actualVersion);
   }
 
   Future<void> check() async {
