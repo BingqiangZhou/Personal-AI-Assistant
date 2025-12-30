@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -15,8 +17,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+    kotlin {
+        jvmToolchain(17)
     }
 
     // Signing configurations
@@ -34,14 +36,14 @@ android {
         // Create release signing config from key.properties if available
         // 如果 key.properties 可用，从文件创建 release 签名配置
         if (useKeystoreSigning) {
-            val keystoreProperties = java.util.Properties()
+            val keystoreProperties = Properties()
             keystoreProperties.load(keystorePropertiesFile.inputStream())
 
             create("release") {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
+                keyAlias = keystoreProperties["keyAlias"] as? String ?: ""
+                keyPassword = keystoreProperties["keyPassword"] as? String ?: ""
+                storeFile = file(keystoreProperties["storeFile"] as? String ?: "")
+                storePassword = keystoreProperties["storePassword"] as? String ?: ""
             }
         }
     }
