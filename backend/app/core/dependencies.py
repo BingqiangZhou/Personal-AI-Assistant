@@ -33,28 +33,29 @@ async def get_current_user(
     )
 
     try:
-        logger.error(f"[DEBUG] Starting token verification")
+        logger.debug(f"[DEBUG] Starting token verification")
         payload = verify_token(token)
-        logger.error(f"[DEBUG] Token payload: {payload}")
+        logger.debug(f"[DEBUG] Token payload: {payload}")
         user_id_str: str = payload.get("sub")
-        logger.error(f"[DEBUG] user_id_str: {user_id_str}")
+        logger.debug(f"[DEBUG] user_id_str: {user_id_str}")
         if user_id_str is None:
-            logger.error("[DEBUG] user_id_str is None")
+            logger.debug("[DEBUG] user_id_str is None")
             raise credentials_exception
         user_id = int(user_id_str)
-        logger.error(f"[DEBUG] user_id: {user_id}")
+        logger.debug(f"[DEBUG] user_id: {user_id}")
     except HTTPException as e:
-        logger.error(f"[DEBUG] HTTPException from verify_token: {e.detail}")
+        # This is already handled by verify_token, just re-raise
         raise
     except (JWTError, ValueError) as e:
-        logger.error(f"[DEBUG] Exception in token verification: {e}")
+        # This is an actual error
+        logger.error(f"[ERROR] Exception in token verification: {e}")
         raise credentials_exception
 
     user_repo = UserRepository(db)
     user = await user_repo.get_by_id(user_id)
-    logger.error(f"[DEBUG] User found: {user is not None}")
+    logger.debug(f"[DEBUG] User found: {user is not None}")
     if user is None:
-        logger.error("[DEBUG] User is None")
+        logger.debug("[DEBUG] User is None")
         raise credentials_exception
 
     if not user.is_active:

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../data/models/podcast_episode_model.dart';
 import '../../../../core/utils/time_formatter.dart';
+import 'podcast_image_widget.dart';
 
 class PodcastEpisodeCard extends ConsumerWidget {
   final PodcastEpisodeModel episode;
@@ -54,84 +55,14 @@ class PodcastEpisodeCard extends ConsumerWidget {
                         // Episode image with fallback to subscription image
                         ClipRRect(
                           borderRadius: BorderRadius.circular(7),
-                          child: episode.imageUrl != null
-                              ? Image.network(
-                                  episode.imageUrl!,
-                                  width: 60,
-                                  height: 60,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    debugPrint('❌ Failed to load episode image in card: $error');
-                                    // Fallback to subscription image
-                                    if (episode.subscriptionImageUrl != null) {
-                                      return ClipRRect(
-                                        borderRadius: BorderRadius.circular(7),
-                                        child: Image.network(
-                                          episode.subscriptionImageUrl!,
-                                          width: 60,
-                                          height: 60,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            debugPrint('❌ Failed to load subscription image in card: $error');
-                                            return Container(
-                                              color: theme.primaryColor.withValues(alpha: 0.15),
-                                              child: Center(
-                                                child: Icon(
-                                                  Icons.podcasts,
-                                                  size: 30,
-                                                  color: theme.primaryColor.withValues(alpha: 0.9),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      );
-                                    }
-                                    return Container(
-                                      color: theme.primaryColor.withValues(alpha: 0.15),
-                                      child: Center(
-                                        child: Icon(
-                                          Icons.podcasts,
-                                          size: 30,
-                                          color: theme.primaryColor.withValues(alpha: 0.9),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                )
-                              : episode.subscriptionImageUrl != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(7),
-                                      child: Image.network(
-                                        episode.subscriptionImageUrl!,
-                                        width: 60,
-                                        height: 60,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          debugPrint('❌ Failed to load subscription image in card: $error');
-                                          return Container(
-                                            color: theme.primaryColor.withValues(alpha: 0.15),
-                                            child: Center(
-                                              child: Icon(
-                                                Icons.podcasts,
-                                                size: 30,
-                                                color: theme.primaryColor.withValues(alpha: 0.9),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    )
-                                  : Container(
-                                      color: theme.primaryColor.withValues(alpha: 0.15),
-                                      child: Center(
-                                        child: Icon(
-                                          Icons.podcasts,
-                                          size: 30,
-                                          color: theme.primaryColor.withValues(alpha: 0.9),
-                                        ),
-                                      ),
-                                    ),
+                          child: PodcastImageWidget(
+                            imageUrl: episode.imageUrl,
+                            fallbackImageUrl: episode.subscriptionImageUrl,
+                            width: 60,
+                            height: 60,
+                            iconSize: 30,
+                            iconColor: theme.primaryColor.withValues(alpha: 0.9),
+                          ),
                         ),
                       ],
                     ),

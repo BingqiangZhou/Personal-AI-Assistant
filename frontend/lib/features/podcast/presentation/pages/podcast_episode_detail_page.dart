@@ -7,14 +7,13 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import '../providers/podcast_providers.dart';
 import '../providers/transcription_providers.dart';
 import '../providers/summary_providers.dart';
-import '../providers/conversation_providers.dart';
 import '../../data/models/podcast_episode_model.dart';
-import '../../data/models/podcast_transcription_model.dart';
 import '../widgets/transcript_display_widget.dart';
 import '../widgets/shownotes_display_widget.dart';
 import '../widgets/transcription_status_widget.dart';
 import '../widgets/ai_summary_control_widget.dart';
 import '../widgets/conversation_chat_widget.dart';
+import '../widgets/podcast_image_widget.dart';
 
 class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
   final int episodeId;
@@ -119,8 +118,8 @@ class _PodcastEpisodeDetailPageState
               content: Row(
                 children: [
                   const SizedBox(
-                    width: 16, 
-                    height: 16, 
+                    width: 16,
+                    height: 16,
                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                   ),
                   const SizedBox(width: 12),
@@ -139,8 +138,8 @@ class _PodcastEpisodeDetailPageState
               content: Row(
                 children: [
                   const SizedBox(
-                    width: 16, 
-                    height: 16, 
+                    width: 16,
+                    height: 16,
                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                   ),
                   const SizedBox(width: 12),
@@ -185,14 +184,6 @@ class _PodcastEpisodeDetailPageState
 
   // A. 顶部元数据区 (Header) - 无底部分割线
   Widget _buildHeader(dynamic episode) {
-    // Debug: 输出分集图像链接信息（已注释）
-    // debugPrint('📺 PodcastEpisodeDetailPage - Episode image debug:');
-    // debugPrint('  Episode ID: ${episode.id}');
-    // debugPrint('  Episode Title: ${episode.title}');
-    // debugPrint('  Image URL: ${episode.imageUrl}');
-    // debugPrint('  Subscription Image URL: ${episode.subscriptionImageUrl}');
-    // debugPrint('  Has episode image: ${episode.imageUrl != null}');
-    // debugPrint('  Has subscription image: ${episode.subscriptionImageUrl != null}');
 
     return Padding(
       padding: const EdgeInsets.only(top: 16),
@@ -250,96 +241,13 @@ class _PodcastEpisodeDetailPageState
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(7),
-                      child: episode.imageUrl != null
-                          ? Image.network(
-                              episode.imageUrl!,
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                debugPrint(
-                                  '❌ Failed to load episode image: $error',
-                                );
-                                // Fallback to subscription image
-                                if (episode.subscriptionImageUrl != null) {
-                                  return ClipRRect(
-                                    borderRadius: BorderRadius.circular(7),
-                                    child: Image.network(
-                                      episode.subscriptionImageUrl!,
-                                      width: 50,
-                                      height: 50,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        debugPrint(
-                                          '❌ Failed to load subscription image: $error',
-                                        );
-                                        return Container(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                              .withValues(alpha: 0.1),
-                                          child: Icon(
-                                            Icons.headphones_outlined,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                            size: 28,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  );
-                                }
-                                return Container(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.1),
-                                  child: Icon(
-                                    Icons.headphones_outlined,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.primary,
-                                    size: 28,
-                                  ),
-                                );
-                              },
-                            )
-                          : episode.subscriptionImageUrl != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(7),
-                              child: Image.network(
-                                episode.subscriptionImageUrl!,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  debugPrint(
-                                    '❌ Failed to load subscription image: $error',
-                                  );
-                                  return Container(
-                                    color: Theme.of(context).colorScheme.primary
-                                        .withValues(alpha: 0.1),
-                                    child: Icon(
-                                      Icons.podcasts,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      size: 28,
-                                    ),
-                                  );
-                                },
-                              ),
-                            )
-                          : Container(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.1),
-                              child: Icon(
-                                Icons.headphones_outlined,
-                                color: Theme.of(context).colorScheme.primary,
-                                size: 28,
-                              ),
-                            ),
+                      child: PodcastImageWidget(
+                        imageUrl: episode.imageUrl,
+                        fallbackImageUrl: episode.subscriptionImageUrl,
+                        width: 50,
+                        height: 50,
+                        iconSize: 28,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -470,7 +378,7 @@ class _PodcastEpisodeDetailPageState
               );
             },
             loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (error, stack) => const SizedBox.shrink(),
           );
 
           final buttonsWidget = Row(
@@ -616,56 +524,6 @@ class _PodcastEpisodeDetailPageState
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => _buildTranscriptErrorState(context, error),
-    );
-  }
-
-  // 转录状态内容
-  Widget _buildTranscriptionStatusContent(dynamic episode) {
-    final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
-    final transcriptionState = ref.watch(transcriptionProvider);
-
-    return transcriptionState.when(
-      data: (transcription) {
-        return TranscriptionStatusWidget(
-          episodeId: widget.episodeId,
-          transcription: transcription,
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => _buildTranscriptErrorState(context, error),
-    );
-  }
-
-  Widget _buildTranscriptEmptyState(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.transcribe,
-            size: 64,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No transcript content',
-            style: TextStyle(
-              fontSize: 16,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Please start transcription in the Transcript tab first',
-            style: TextStyle(
-              fontSize: 14,
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -977,39 +835,44 @@ class _PodcastEpisodeDetailPageState
 
   // C. 底部沉浸式播放条
   Widget _buildBottomPlayer(BuildContext context) {
-    final audioPlayerState = ref.watch(audioPlayerProvider);
+    // Use Consumer to isolate audio player state watching
+    return Consumer(
+      builder: (context, ref, child) {
+        final audioPlayerState = ref.watch(audioPlayerProvider);
 
-    // Only show the player if we have an episode loaded
-    if (audioPlayerState.currentEpisode == null) {
-      return const SizedBox.shrink();
-    }
+        // Only show the player if we have an episode loaded
+        if (audioPlayerState.currentEpisode == null) {
+          return const SizedBox.shrink();
+        }
 
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 1. 进度条 - 横跨整个宽度，细轨道
-          _buildProgressBar(audioPlayerState),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 1. 进度条 - 横跨整个宽度，细轨道
+              _buildProgressBar(audioPlayerState, ref),
 
-          // 2. 控制区
-          _buildControlArea(audioPlayerState),
-        ],
-      ),
+              // 2. 控制区
+              _buildControlArea(audioPlayerState, ref),
+            ],
+          ),
+        );
+      },
     );
   }
 
   // 进度条 - 轨道高度2px，主题色
-  Widget _buildProgressBar(dynamic audioPlayerState) {
+  Widget _buildProgressBar(dynamic audioPlayerState, WidgetRef ref) {
     final progress = audioPlayerState.duration > 0
         ? audioPlayerState.position / audioPlayerState.duration
         : 0.0;
@@ -1041,7 +904,7 @@ class _PodcastEpisodeDetailPageState
   }
 
   // 控制区
-  Widget _buildControlArea(dynamic audioPlayerState) {
+  Widget _buildControlArea(dynamic audioPlayerState, WidgetRef ref) {
     return LayoutBuilder(
       builder: (context, constraints) {
         // 判断是否宽屏 (大于800px为宽屏，以便在平板和桌面上横向显示)
@@ -1068,10 +931,10 @@ class _PodcastEpisodeDetailPageState
                 ),
 
                 // 中间:播放控制组
-                _buildPlaybackControls(audioPlayerState),
+                _buildPlaybackControls(audioPlayerState, ref),
 
                 // 右边:剩余时间 + 倍速按钮
-                _buildTimeAndSpeed(audioPlayerState),
+                _buildTimeAndSpeed(audioPlayerState, ref),
               ],
             ),
           );
@@ -1102,14 +965,14 @@ class _PodcastEpisodeDetailPageState
                     const SizedBox(width: 8),
 
                     // 剩余时间 + 倍速 - 使用Flexible防止溢出
-                    Flexible(child: _buildTimeAndSpeed(audioPlayerState)),
+                    Flexible(child: _buildTimeAndSpeed(audioPlayerState, ref)),
                   ],
                 ),
 
                 const SizedBox(height: 16),
 
                 // 第二行:播放控制按钮 (居中)
-                Center(child: _buildPlaybackControls(audioPlayerState)),
+                Center(child: _buildPlaybackControls(audioPlayerState, ref)),
               ],
             ),
           );
@@ -1119,7 +982,7 @@ class _PodcastEpisodeDetailPageState
   }
 
   // 播放控制按钮组
-  Widget _buildPlaybackControls(dynamic audioPlayerState) {
+  Widget _buildPlaybackControls(dynamic audioPlayerState, WidgetRef ref) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -1241,7 +1104,7 @@ class _PodcastEpisodeDetailPageState
   }
 
   // 时间和倍速控件
-  Widget _buildTimeAndSpeed(dynamic audioPlayerState) {
+  Widget _buildTimeAndSpeed(dynamic audioPlayerState, WidgetRef ref) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

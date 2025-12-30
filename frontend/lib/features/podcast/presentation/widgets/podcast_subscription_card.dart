@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import 'platform_badge.dart';
+import 'podcast_image_widget.dart';
 
 class PodcastSubscriptionCard extends ConsumerWidget {
   final PodcastSubscriptionModel subscription;
@@ -78,31 +79,13 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: subscription.imageUrl != null
-                          ? Image.network(
-                              subscription.imageUrl!,
-                              width: 80,
-                              height: 80,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: theme.primaryColor.withValues(alpha: 0.1),
-                                  child: Icon(
-                                    Icons.podcasts,
-                                    size: 40,
-                                    color: theme.primaryColor,
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
-                              color: theme.primaryColor.withValues(alpha: 0.1),
-                              child: Icon(
-                                Icons.podcasts,
-                                size: 40,
-                                color: theme.primaryColor,
-                              ),
-                            ),
+                      child: PodcastImageWidget(
+                        imageUrl: subscription.imageUrl,
+                        width: 80,
+                        height: 80,
+                        iconSize: 40,
+                        iconColor: theme.primaryColor,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),

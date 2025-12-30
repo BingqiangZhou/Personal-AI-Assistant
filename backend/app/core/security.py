@@ -128,8 +128,8 @@ def verify_token(token: str, token_type: str = "access") -> dict:
     logger = logging.getLogger(__name__)
 
     try:
-        logger.error(f"[DEBUG] Verifying token (first 30 chars): {token[:30]}...")
-        logger.error(f"[DEBUG] SECRET_KEY (first 10 chars): {settings.SECRET_KEY[:10]}...")
+        logger.debug(f"[DEBUG] Verifying token (first 30 chars): {token[:30]}...")
+        logger.debug(f"[DEBUG] SECRET_KEY (first 10 chars): {settings.SECRET_KEY[:10]}...")
 
         payload = jwt.decode(
             token,
@@ -137,7 +137,7 @@ def verify_token(token: str, token_type: str = "access") -> dict:
             algorithms=[settings.ALGORITHM]
         )
 
-        logger.error(f"[DEBUG] Token decoded successfully, payload: {payload}")
+        logger.debug(f"[DEBUG] Token decoded successfully, payload: {payload}")
 
         # Check token type if present
         if "type" in payload and payload["type"] != token_type:
@@ -157,7 +157,8 @@ def verify_token(token: str, token_type: str = "access") -> dict:
         return payload
 
     except JWTError as e:
-        logger.error(f"[DEBUG] JWTError during token decode: {type(e).__name__}: {str(e)}")
+        # This is an actual error condition
+        logger.error(f"[ERROR] JWTError during token decode: {type(e).__name__}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials"

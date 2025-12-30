@@ -24,9 +24,18 @@ class NetworkException extends AppException {
       case DioExceptionType.connectionError:
         return const NetworkException('No internet connection');
       case DioExceptionType.badResponse:
-        return NetworkException(
-          error.response?.data?['message'] ?? 'Server error',
-        );
+        final data = error.response?.data;
+        String message = 'Server error';
+
+        if (data is Map) {
+          message = data['detail']?.toString() ??
+                    data['message']?.toString() ??
+                    'Server error';
+        } else if (data is String) {
+          message = data;
+        }
+
+        return NetworkException(message);
       default:
         return NetworkException(
           error.message ?? 'Network error occurred',
@@ -39,10 +48,22 @@ class ServerException extends AppException {
   const ServerException(String message, {int? statusCode}) : super(message, statusCode: statusCode);
 
   static ServerException fromDioError(DioException error) {
-    return ServerException(
-      error.response?.data?['message'] ?? 'Server error',
-      statusCode: error.response?.statusCode,
-    );
+    // Handle different response data formats
+    String message = 'Server error';
+    int? statusCode = error.response?.statusCode;
+
+    final data = error.response?.data;
+    if (data is Map) {
+      // Try common field names: detail, message, error
+      message = data['detail']?.toString() ??
+                data['message']?.toString() ??
+                data['error']?.toString() ??
+                'Server error';
+    } else if (data is String) {
+      message = data;
+    }
+
+    return ServerException(message, statusCode: statusCode);
   }
 }
 
@@ -50,9 +71,18 @@ class AuthenticationException extends AppException {
   const AuthenticationException(String message) : super(message, statusCode: 401);
 
   static AuthenticationException fromDioError(DioException error) {
-    return AuthenticationException(
-      error.response?.data?['message'] ?? 'Authentication failed',
-    );
+    final data = error.response?.data;
+    String message = 'Authentication failed';
+
+    if (data is Map) {
+      message = data['detail']?.toString() ??
+                data['message']?.toString() ??
+                'Authentication failed';
+    } else if (data is String) {
+      message = data;
+    }
+
+    return AuthenticationException(message);
   }
 }
 
@@ -60,9 +90,18 @@ class AuthorizationException extends AppException {
   const AuthorizationException(String message) : super(message, statusCode: 403);
 
   static AuthorizationException fromDioError(DioException error) {
-    return AuthorizationException(
-      error.response?.data?['message'] ?? 'Access denied',
-    );
+    final data = error.response?.data;
+    String message = 'Access denied';
+
+    if (data is Map) {
+      message = data['detail']?.toString() ??
+                data['message']?.toString() ??
+                'Access denied';
+    } else if (data is String) {
+      message = data;
+    }
+
+    return AuthorizationException(message);
   }
 }
 
@@ -70,9 +109,18 @@ class NotFoundException extends AppException {
   const NotFoundException(String message) : super(message, statusCode: 404);
 
   static NotFoundException fromDioError(DioException error) {
-    return NotFoundException(
-      error.response?.data?['message'] ?? 'Resource not found',
-    );
+    final data = error.response?.data;
+    String message = 'Resource not found';
+
+    if (data is Map) {
+      message = data['detail']?.toString() ??
+                data['message']?.toString() ??
+                'Resource not found';
+    } else if (data is String) {
+      message = data;
+    }
+
+    return NotFoundException(message);
   }
 }
 
@@ -80,9 +128,18 @@ class ConflictException extends AppException {
   const ConflictException(String message) : super(message, statusCode: 409);
 
   static ConflictException fromDioError(DioException error) {
-    return ConflictException(
-      error.response?.data?['detail'] ?? error.response?.data?['message'] ?? 'Resource conflict',
-    );
+    final data = error.response?.data;
+    String message = 'Resource conflict';
+
+    if (data is Map) {
+      message = data['detail']?.toString() ??
+                data['message']?.toString() ??
+                'Resource conflict';
+    } else if (data is String) {
+      message = data;
+    }
+
+    return ConflictException(message);
   }
 }
 
@@ -94,26 +151,34 @@ class ValidationException extends AppException {
 
   static ValidationException fromDioError(DioException error) {
     final data = error.response?.data;
-    final message = data?['message'] ?? data?['detail'] ?? 'Validation failed';
+    String message = 'Validation failed';
+
+    if (data is Map) {
+      message = data['message']?.toString() ?? data['detail']?.toString() ?? 'Validation failed';
+    } else if (data is String) {
+      message = data;
+    }
 
     // Parse field errors from the errors array
     Map<String, String> fieldErrors = {};
-    if (data?['errors'] != null) {
+    if (data is Map && data['errors'] != null && data['errors'] is List) {
       final errors = data['errors'] as List;
       for (var error in errors) {
+        if (error is! Map) continue;
+
         // Extract field name (remove "body -> " prefix)
-        String field = error['field'] ?? '';
+        String field = error['field']?.toString() ?? '';
         if (field.startsWith('body -> ')) {
           field = field.substring(7); // Remove "body -> "
         }
 
         // Clean up the message (remove "Value error, " prefix)
-        String message = error['message'] ?? '';
-        if (message.startsWith('Value error, ')) {
-          message = message.substring(13); // Remove "Value error, "
+        String errorMsg = error['message']?.toString() ?? '';
+        if (errorMsg.startsWith('Value error, ')) {
+          errorMsg = errorMsg.substring(13); // Remove "Value error, "
         }
 
-        fieldErrors[field] = message;
+        fieldErrors[field] = errorMsg;
       }
     }
 

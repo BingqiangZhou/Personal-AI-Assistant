@@ -375,6 +375,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
       audioDuration: audioDuration,
       audioFileSize: audioFileSize,
       publishedAt: publishedAt,
+      imageUrl: imageUrl,  // ✅ 修复：添加缺失的 imageUrl 字段
       transcriptUrl: transcriptUrl,
       transcriptContent: transcriptContent,
       aiSummary: aiSummary,
