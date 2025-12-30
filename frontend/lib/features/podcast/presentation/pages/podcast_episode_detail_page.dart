@@ -529,9 +529,13 @@ class _PodcastEpisodeDetailPageState
               children: [
                 Row(children: [timeWidget]),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [buttonsWidget],
+                // 使用 SingleChildScrollView 让按钮在窄屏上可以滚动
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [buttonsWidget],
+                  ),
                 ),
               ],
             );

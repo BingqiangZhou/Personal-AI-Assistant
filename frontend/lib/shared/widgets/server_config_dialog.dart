@@ -185,34 +185,29 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
               ),
               const SizedBox(height: 12),
             ],
-            // Action buttons row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // Action buttons
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                IntrinsicWidth(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      _serverUrlController.text = _localServerUrl;
-                      _onServerUrlChanged(_localServerUrl, setState);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(36),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.computer, size: 16),
-                        const SizedBox(width: 8),
-                        Text(l10n.use_local_url),
-                      ],
+                // Local server button
+                OutlinedButton.icon(
+                  onPressed: () {
+                    _serverUrlController.text = _localServerUrl;
+                    _onServerUrlChanged(_localServerUrl, setState);
+                  },
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(36),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
+                  icon: const Icon(Icons.computer, size: 16),
+                  label: Text(l10n.use_local_url),
                 ),
+                const SizedBox(height: 8),
+                // Cancel and Save buttons
                 Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),

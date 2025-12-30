@@ -169,8 +169,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     ),
                   ),
                   if (_selectedTextGenerationConfig != null) ...[
+                    const SizedBox(width: 4),
                     IconButton(
-                      icon: const Icon(Icons.edit, size: 20),
+                      icon: const Icon(Icons.edit, size: 18),
                       tooltip: l10n.settings_edit_config,
                       onPressed: () {
                         showDialog(
@@ -185,7 +186,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       },
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                      icon: const Icon(Icons.delete, color: Colors.red, size: 18),
                       tooltip: l10n.settings_delete_config,
                       onPressed: () => _showDeleteConfirmDialog(_selectedTextGenerationConfig!),
                     ),
@@ -194,8 +195,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
               titleSuffix: TextButton.icon(
                 onPressed: _testConnection,
-                icon: const Icon(Icons.network_check, size: 20),
+                icon: const Icon(Icons.network_check, size: 18),
                 label: Text(l10n.settings_test_connection),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  minimumSize: const Size(0, 32),
+                ),
               ),
               children: [
                 _buildTextField(
@@ -275,9 +280,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     ),
                   ),
                   if (_selectedTranscriptionConfig != null) ...[
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
                     IconButton(
-                      icon: const Icon(Icons.edit, size: 20),
+                      icon: const Icon(Icons.edit, size: 18),
                       tooltip: l10n.settings_edit_config,
                       onPressed: () {
                         showDialog(
@@ -292,7 +297,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                       },
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                      icon: const Icon(Icons.delete, color: Colors.red, size: 18),
                       tooltip: l10n.settings_delete_config,
                       onPressed: () => _showDeleteConfirmDialog(_selectedTranscriptionConfig!),
                     ),
@@ -423,22 +428,30 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 标题行
                 Row(
                   children: [
                     Icon(icon, color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 12),
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    if (titleSuffix != null) ...[
-                      const SizedBox(width: 12),
-                      titleSuffix,
-                    ],
                   ],
                 ),
+                // 测试链接按钮在下一行
+                if (titleSuffix != null) ...[
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: titleSuffix,
+                  ),
+                ],
                 if (headerAction != null) ...[
                   const SizedBox(height: 12),
                   headerAction,
@@ -508,14 +521,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         isDense: true,
       ),
+      isExpanded: true,
       items: List.generate(items.length, (index) {
         final item = items[index];
-        final displayText = displayItems != null && displayItems.length > index 
-            ? displayItems[index] 
+        final displayText = displayItems != null && displayItems.length > index
+            ? displayItems[index]
             : item;
         return DropdownMenuItem(
           value: item,
-          child: Text(displayText),
+          child: Text(
+            displayText,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
         );
       }),
       onChanged: onChanged,
@@ -898,17 +916,21 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                    const SizedBox(height: 8),
                    if (result.valid) ...[
                      Text(l10n.settings_test_response, style: const TextStyle(fontWeight: FontWeight.bold)),
-                     Container(
+                     Padding(
                        padding: const EdgeInsets.all(8),
-                       color: Colors.grey.shade800,
-                       child: Text(result.testResult ?? l10n.no_data)
+                       child: Text(
+                         result.testResult ?? l10n.no_data,
+                         style: const TextStyle(color: Colors.green),
+                       ),
                      )
                    ] else ...[
                      Text(l10n.settings_error_message, style: const TextStyle(fontWeight: FontWeight.bold)),
-                     Container(
+                     Padding(
                        padding: const EdgeInsets.all(8),
-                       color: Colors.red.shade900,
-                       child: Text(result.errorMessage ?? l10n.settings_unknown_error)
+                       child: Text(
+                         result.errorMessage ?? l10n.settings_unknown_error,
+                         style: const TextStyle(color: Colors.red),
+                       ),
                      )
                    ]
                 ],
@@ -937,10 +959,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                    Text(l10n.settings_unexpected_error, style: const TextStyle(fontWeight: FontWeight.bold)),
-                   Container(
+                   Padding(
                      padding: const EdgeInsets.all(8),
-                     color: Colors.red.shade50,
-                     child: Text(e.toString())
+                     child: Text(
+                       e.toString(),
+                       style: const TextStyle(color: Colors.red),
+                     ),
                    )
                 ],
               ),
@@ -962,10 +986,11 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return Card(
       elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 标题行，与其他section保持一致的风格
             Row(
               children: [
                 Icon(
@@ -974,35 +999,36 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.server_config_title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${l10n.backend_api_url_label}: ${_serverUrlController.text.isEmpty ? l10n.default_server_address : _serverUrlController.text}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    l10n.server_config_title,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // Connection status indicator
-                _buildStatusIndicator(),
-                const SizedBox(width: 8),
-                // Configure button
-                FilledButton.icon(
-                  onPressed: _showServerConfigDialog,
-                  icon: const Icon(Icons.settings, size: 18),
-                  label: Text(l10n.settings),
-                ),
               ],
+            ),
+            const SizedBox(height: 16),
+            // 可点击的内容区域
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                '${l10n.backend_api_url_label}: ${_serverUrlController.text.isEmpty ? l10n.default_server_address : _serverUrlController.text}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Connection status indicator
+                  _buildStatusIndicator(),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.chevron_right),
+                ],
+              ),
+              onTap: _showServerConfigDialog,
             ),
           ],
         ),
