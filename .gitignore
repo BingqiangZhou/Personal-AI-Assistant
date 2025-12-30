@@ -140,3 +140,4 @@ backend/data/.rsa_keys
 backend/celerybeat-schedule
 backend/.env.dev
 docker/.env.dev
+frontend/android/release.keystore.b64
