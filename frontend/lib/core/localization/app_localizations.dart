@@ -2348,13 +2348,17 @@ abstract class AppLocalizations {
   /// **'Dismiss'**
   String get dismiss;
 
-  // ========== App Update / 应用更新 ==========
-
-  /// Check for updates button
+  /// Check for updates button/label
   ///
   /// In en, this message translates to:
   /// **'Check for Updates'**
   String get update_check_updates;
+
+  /// Auto check for updates description
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically check for updates'**
+  String get update_auto_check;
 
   /// New version available title
   ///
@@ -2362,77 +2366,29 @@ abstract class AppLocalizations {
   /// **'New Version Available'**
   String get update_new_version_available;
 
-  /// Current version label
+  /// Skip this version button label
   ///
   /// In en, this message translates to:
-  /// **'Current Version'**
-  String get update_current_version;
+  /// **'Skip This Version'**
+  String get update_skip_this_version;
+
+  /// Remind me later button label
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get update_later;
+
+  /// Download update button label
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get update_download;
 
   /// Latest version label
   ///
   /// In en, this message translates to:
   /// **'Latest Version'**
   String get update_latest_version;
-
-  /// Release notes section title
-  ///
-  /// In en, this message translates to:
-  /// **'Release Notes'**
-  String get update_release_notes;
-
-  /// Download button
-  ///
-  /// In en, this message translates to:
-  /// **'Download'**
-  String get update_download;
-
-  /// Later button (remind me later)
-  ///
-  /// In en, this message translates to:
-  /// **'Later'**
-  String get update_later;
-
-  /// Skip this version button
-  ///
-  /// In en, this message translates to:
-  /// **'Skip This Version'**
-  String get update_skip_this_version;
-
-  /// Checking for updates message
-  ///
-  /// In en, this message translates to:
-  /// **'Checking for updates...'**
-  String get update_checking;
-
-  /// Up to date message
-  ///
-  /// In en, this message translates to:
-  /// **'You're up to date!'**
-  String get update_up_to_date;
-
-  /// No update available message
-  ///
-  /// In en, this message translates to:
-  /// **'No update available'**
-  String get update_no_update_available;
-
-  /// Check failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to check for updates'**
-  String get update_check_failed;
-
-  /// Try again button
-  ///
-  /// In en, this message translates to:
-  /// **'Try Again'**
-  String get update_try_again;
-
-  /// Update available description
-  ///
-  /// In en, this message translates to:
-  /// **'A new version of the app is available. Would you like to update now?'**
-  String get update_available_description;
 
   /// Published date label
   ///
@@ -2446,23 +2402,53 @@ abstract class AppLocalizations {
   /// **'Size'**
   String get update_file_size;
 
-  /// Download failed message
+  /// Release notes section label
+  ///
+  /// In en, this message translates to:
+  /// **'Release Notes'**
+  String get update_release_notes;
+
+  /// Download failed error message
   ///
   /// In en, this message translates to:
   /// **'Download failed'**
   String get update_download_failed;
 
-  /// Open in browser button
+  /// Checking for updates message
   ///
   /// In en, this message translates to:
-  /// **'Open in Browser'**
-  String get update_open_in_browser;
+  /// **'Checking for updates...'**
+  String get update_checking;
 
-  /// Auto check for updates toggle
+  /// Update check failed title
   ///
   /// In en, this message translates to:
-  /// **'Auto Check for Updates'**
-  String get update_auto_check;
+  /// **'Check Failed'**
+  String get update_check_failed;
+
+  /// Current version label
+  ///
+  /// In en, this message translates to:
+  /// **'Current Version'**
+  String get update_current_version;
+
+  /// Update available description message
+  ///
+  /// In en, this message translates to:
+  /// **'A new version is available. Would you like to update now?'**
+  String get update_available_description;
+
+  /// App is up to date message
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re up to date'**
+  String get update_up_to_date;
+
+  /// Try again button label
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get update_try_again;
 }
 
 class _AppLocalizationsDelegate

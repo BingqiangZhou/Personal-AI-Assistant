@@ -1925,5 +1925,90 @@
   "dismiss": "关闭",
   "@dismiss": {
     "description": "关闭按钮标签"
+  },
+
+  "update_check_updates": "检查更新",
+  "@update_check_updates": {
+    "description": "检查更新按钮/标签"
+  },
+
+  "update_auto_check": "自动检查更新",
+  "@update_auto_check": {
+    "description": "自动检查更新描述"
+  },
+
+  "update_new_version_available": "发现新版本",
+  "@update_new_version_available": {
+    "description": "新版本可用标题"
+  },
+
+  "update_skip_this_version": "跳过此版本",
+  "@update_skip_this_version": {
+    "description": "跳过此版本按钮标签"
+  },
+
+  "update_later": "稍后提醒",
+  "@update_later": {
+    "description": "稍后提醒按钮标签"
+  },
+
+  "update_download": "下载",
+  "@update_download": {
+    "description": "下载更新按钮标签"
+  },
+
+  "update_latest_version": "最新版本",
+  "@update_latest_version": {
+    "description": "最新版本标签"
+  },
+
+  "update_published_at": "发布时间",
+  "@update_published_at": {
+    "description": "发布日期标签"
+  },
+
+  "update_file_size": "大小",
+  "@update_file_size": {
+    "description": "文件大小标签"
+  },
+
+  "update_release_notes": "更新说明",
+  "@update_release_notes": {
+    "description": "更新说明部分标签"
+  },
+
+  "update_download_failed": "下载失败",
+  "@update_download_failed": {
+    "description": "下载失败错误消息"
+  },
+
+  "update_checking": "正在检查更新...",
+  "@update_checking": {
+    "description": "正在检查更新消息"
+  },
+
+  "update_check_failed": "检查失败",
+  "@update_check_failed": {
+    "description": "更新检查失败标题"
+  },
+
+  "update_current_version": "当前版本",
+  "@update_current_version": {
+    "description": "当前版本标签"
+  },
+
+  "update_available_description": "发现新版本，是否立即更新？",
+  "@update_available_description": {
+    "description": "更新可用描述消息"
+  },
+
+  "update_up_to_date": "已是最新版本",
+  "@update_up_to_date": {
+    "description": "应用已是最新版本消息"
+  },
+
+  "update_try_again": "重试",
+  "@update_try_again": {
+    "description": "重试按钮标签"
   }
 }

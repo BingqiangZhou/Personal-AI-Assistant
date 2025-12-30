@@ -1925,5 +1925,90 @@
   "dismiss": "Dismiss",
   "@dismiss": {
     "description": "Dismiss button label"
+  },
+
+  "update_check_updates": "Check for Updates",
+  "@update_check_updates": {
+    "description": "Check for updates button/label"
+  },
+
+  "update_auto_check": "Automatically check for updates",
+  "@update_auto_check": {
+    "description": "Auto check for updates description"
+  },
+
+  "update_new_version_available": "New Version Available",
+  "@update_new_version_available": {
+    "description": "New version available title"
+  },
+
+  "update_skip_this_version": "Skip This Version",
+  "@update_skip_this_version": {
+    "description": "Skip this version button label"
+  },
+
+  "update_later": "Later",
+  "@update_later": {
+    "description": "Remind me later button label"
+  },
+
+  "update_download": "Download",
+  "@update_download": {
+    "description": "Download update button label"
+  },
+
+  "update_latest_version": "Latest Version",
+  "@update_latest_version": {
+    "description": "Latest version label"
+  },
+
+  "update_published_at": "Published",
+  "@update_published_at": {
+    "description": "Published date label"
+  },
+
+  "update_file_size": "Size",
+  "@update_file_size": {
+    "description": "File size label"
+  },
+
+  "update_release_notes": "Release Notes",
+  "@update_release_notes": {
+    "description": "Release notes section label"
+  },
+
+  "update_download_failed": "Download failed",
+  "@update_download_failed": {
+    "description": "Download failed error message"
+  },
+
+  "update_checking": "Checking for updates...",
+  "@update_checking": {
+    "description": "Checking for updates message"
+  },
+
+  "update_check_failed": "Check Failed",
+  "@update_check_failed": {
+    "description": "Update check failed title"
+  },
+
+  "update_current_version": "Current Version",
+  "@update_current_version": {
+    "description": "Current version label"
+  },
+
+  "update_available_description": "A new version is available. Would you like to update now?",
+  "@update_available_description": {
+    "description": "Update available description message"
+  },
+
+  "update_up_to_date": "You're up to date",
+  "@update_up_to_date": {
+    "description": "App is up to date message"
+  },
+
+  "update_try_again": "Try Again",
+  "@update_try_again": {
+    "description": "Try again button label"
   }
 }

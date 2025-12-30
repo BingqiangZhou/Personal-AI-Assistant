@@ -210,16 +210,6 @@ jobs:
         shell: pwsh
         run: flutter pub get
 
-      - name: Clean Flutter build cache
-        working-directory: frontend
-        shell: pwsh
-        run: flutter clean
-
-      - name: Get dependencies after clean
-        working-directory: frontend
-        shell: pwsh
-        run: flutter pub get
-
       - name: Build Windows
         working-directory: frontend
         shell: pwsh

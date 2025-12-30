@@ -1175,49 +1175,26 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get dismiss => '关闭';
 
-  // ========== App Update / 应用更新 ==========
-
   @override
   String get update_check_updates => '检查更新';
 
   @override
-  String get update_new_version_available => '新版本可用';
+  String get update_auto_check => '自动检查更新';
 
   @override
-  String get update_current_version => '当前版本';
-
-  @override
-  String get update_latest_version => '最新版本';
-
-  @override
-  String get update_release_notes => '更新说明';
-
-  @override
-  String get update_download => '下载';
-
-  @override
-  String get update_later => '稍后';
+  String get update_new_version_available => '发现新版本';
 
   @override
   String get update_skip_this_version => '跳过此版本';
 
   @override
-  String get update_checking => '正在检查更新...';
+  String get update_later => '稍后提醒';
 
   @override
-  String get update_up_to_date => '已是最新版本！';
+  String get update_download => '下载';
 
   @override
-  String get update_no_update_available => '暂无可用更新';
-
-  @override
-  String get update_check_failed => '检查更新失败';
-
-  @override
-  String get update_try_again => '重试';
-
-  @override
-  String get update_available_description => '应用有新版本可用。是否现在更新？';
+  String get update_latest_version => '最新版本';
 
   @override
   String get update_published_at => '发布时间';
@@ -1226,11 +1203,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get update_file_size => '大小';
 
   @override
+  String get update_release_notes => '更新说明';
+
+  @override
   String get update_download_failed => '下载失败';
 
   @override
-  String get update_open_in_browser => '在浏览器中打开';
+  String get update_checking => '正在检查更新...';
 
   @override
-  String get update_auto_check => '自动检查更新';
+  String get update_check_failed => '检查失败';
+
+  @override
+  String get update_current_version => '当前版本';
+
+  @override
+  String get update_available_description => '发现新版本，是否立即更新？';
+
+  @override
+  String get update_up_to_date => '已是最新版本';
+
+  @override
+  String get update_try_again => '重试';
 }

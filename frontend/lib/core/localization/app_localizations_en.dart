@@ -1208,49 +1208,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dismiss => 'Dismiss';
 
-  // ========== App Update / 应用更新 ==========
-
   @override
   String get update_check_updates => 'Check for Updates';
+
+  @override
+  String get update_auto_check => 'Automatically check for updates';
 
   @override
   String get update_new_version_available => 'New Version Available';
 
   @override
-  String get update_current_version => 'Current Version';
-
-  @override
-  String get update_latest_version => 'Latest Version';
-
-  @override
-  String get update_release_notes => 'Release Notes';
-
-  @override
-  String get update_download => 'Download';
+  String get update_skip_this_version => 'Skip This Version';
 
   @override
   String get update_later => 'Later';
 
   @override
-  String get update_skip_this_version => 'Skip This Version';
+  String get update_download => 'Download';
 
   @override
-  String get update_checking => 'Checking for updates...';
-
-  @override
-  String get update_up_to_date => 'You\'re up to date!';
-
-  @override
-  String get update_no_update_available => 'No update available';
-
-  @override
-  String get update_check_failed => 'Failed to check for updates';
-
-  @override
-  String get update_try_again => 'Try Again';
-
-  @override
-  String get update_available_description => 'A new version of the app is available. Would you like to update now?';
+  String get update_latest_version => 'Latest Version';
 
   @override
   String get update_published_at => 'Published';
@@ -1259,11 +1236,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get update_file_size => 'Size';
 
   @override
+  String get update_release_notes => 'Release Notes';
+
+  @override
   String get update_download_failed => 'Download failed';
 
   @override
-  String get update_open_in_browser => 'Open in Browser';
+  String get update_checking => 'Checking for updates...';
 
   @override
-  String get update_auto_check => 'Auto Check for Updates';
+  String get update_check_failed => 'Check Failed';
+
+  @override
+  String get update_current_version => 'Current Version';
+
+  @override
+  String get update_available_description =>
+      'A new version is available. Would you like to update now?';
+
+  @override
+  String get update_up_to_date => 'You\'re up to date';
+
+  @override
+  String get update_try_again => 'Try Again';
 }
