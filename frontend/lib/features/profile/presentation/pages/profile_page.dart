@@ -21,6 +21,31 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
   bool _autoSyncEnabled = true;
+  String _appVersion = 'Loading...';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _appVersion = 'v${packageInfo.version} (${packageInfo.buildNumber})';
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading version: $e');
+      if (mounted) {
+        setState(() {
+          _appVersion = 'Unknown';
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -415,14 +440,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildSettingsSection(context, l10n.about, [
             _buildSettingsItem(
               context,
-              icon: Icons.info_outline,
-              title: l10n.version,
-              subtitle: _getVersionSubtitle(),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showAboutDialog(context),
-            ),
-            _buildSettingsItem(
-              context,
               icon: Icons.system_update_alt,
               title: l10n.update_check_updates,
               subtitle: l10n.update_auto_check,
@@ -431,11 +448,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ),
             _buildSettingsItem(
               context,
-              icon: Icons.api,
-              title: l10n.settings_backend_api_docs,
-              subtitle: l10n.settings_backend_api_docs_subtitle,
+              icon: Icons.info_outline,
+              title: l10n.version,
+              subtitle: _getVersionSubtitle(),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showApiDocsDialog(context),
+              onTap: () => _showAboutDialog(context),
             ),
           ]),
         ],
@@ -559,14 +576,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         _buildSettingsSection(context, l10n.about, [
           _buildSettingsItem(
             context,
-            icon: Icons.info_outline,
-            title: l10n.version,
-            subtitle: _getVersionSubtitle(),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showAboutDialog(context),
-          ),
-          _buildSettingsItem(
-            context,
             icon: Icons.system_update_alt,
             title: l10n.update_check_updates,
             subtitle: l10n.update_auto_check,
@@ -575,11 +584,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
           _buildSettingsItem(
             context,
-            icon: Icons.api,
-            title: l10n.settings_backend_api_docs,
-            subtitle: l10n.settings_backend_api_docs_subtitle,
+            icon: Icons.info_outline,
+            title: l10n.version,
+            subtitle: _getVersionSubtitle(),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showApiDocsDialog(context),
+            onTap: () => _showAboutDialog(context),
           ),
         ]),
       ],
@@ -844,84 +853,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// Get version subtitle for display
   String _getVersionSubtitle() {
-    // Return a placeholder, will be updated asynchronously
-    return 'Loading...';
+    return _appVersion;
   }
 
   /// 显示更新检查对话框
   void _showUpdateCheckDialog(BuildContext context) {
     ManualUpdateCheckDialog.show(context);
-  }
-
-  /// 显示API文档对话框
-  void _showApiDocsDialog(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.settings_api_documentation),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildApiEndpoint(l10n.settings_text_generation, '/api/v1/ai/chat'),
-              const Divider(),
-              _buildApiEndpoint(l10n.settings_transcription_endpoint, '/api/v1/podcast/transcribe'),
-              const Divider(),
-              _buildApiEndpoint(l10n.settings_user_settings_endpoint, '/api/v1/user/settings'),
-              const SizedBox(height: 16),
-              Text(
-                l10n.settings_config_env_vars,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              _buildEnvVar('OPENAI_API_KEY', l10n.settings_openai_api_key),
-              _buildEnvVar('OPENAI_API_BASE_URL', l10n.settings_openai_api_base_url),
-              _buildEnvVar('TRANSCRIPTION_API_URL', l10n.settings_transcription_api_url),
-              _buildEnvVar('TRANSCRIPTION_API_KEY', l10n.settings_transcription_api_key_env),
-              _buildEnvVar('TRANSCRIPTION_MODEL', l10n.settings_transcription_model_name),
-              _buildEnvVar('SUMMARY_MODEL', l10n.settings_summary_model),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.close),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildApiEndpoint(String name, String endpoint) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        Text(endpoint),
-      ],
-    );
-  }
-
-  Widget _buildEnvVar(String name, String description) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            name,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          Text(description),
-        ],
-      ),
-    );
   }
 
   /// 显示登出对话框
