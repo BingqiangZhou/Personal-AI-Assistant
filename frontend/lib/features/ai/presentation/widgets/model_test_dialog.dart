@@ -27,18 +27,26 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
   @override
   void initState() {
     super.initState();
-    // 设置默认测试内容
-    if (widget.model.modelType == AIModelType.transcription) {
-      _testPromptController.text = '测试音频转录功能';
-    } else {
-      _testPromptController.text = '请用中文简单介绍一下人工智能';
-    }
+    // 设置默认测试内容 - 将在 build 中获取 l10n
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final l10n = AppLocalizations.of(context);
+      if (l10n != null && mounted) {
+        setState(() {
+          if (widget.model.modelType == AIModelType.transcription) {
+            _testPromptController.text = l10n.ai_test_prompt_transcription;
+          } else {
+            _testPromptController.text = l10n.ai_test_prompt_generation;
+          }
+        });
+      }
+    });
   }
 
   Future<void> _testModel() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_testPromptController.text.trim().isEmpty) {
       setState(() {
-        _error = '请输入测试内容';
+        _error = l10n.ai_enter_test_content;
       });
       return;
     }
@@ -124,7 +132,7 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
                 ),
               ),
             ] else if (_result != null || _error != null) ...[
-              _buildResult(),
+              _buildResult(l10n),
             ],
           ],
         ),
@@ -146,7 +154,7 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.1),
+        color: Colors.grey.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -176,7 +184,7 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
     );
   }
 
-  Widget _buildResult() {
+  Widget _buildResult(AppLocalizations l10n) {
     final hasError = _error != null;
     final color = hasError ? Colors.red : Colors.green;
     final icon = hasError ? Icons.error : Icons.check_circle;
@@ -184,7 +192,7 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color),
       ),
@@ -196,7 +204,7 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
               Icon(icon, color: color, size: 20),
               const SizedBox(width: 8),
               Text(
-                hasError ? '测试失败' : '测试成功',
+                hasError ? l10n.ai_test_failed : l10n.ai_test_success,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: color,
@@ -238,10 +246,10 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
           if (!hasError && _responseTime != null)
             Text(
               _responseTime! < 1000
-                  ? '响应速度: 非常快'
+                  ? '${l10n.settings_response_speed}: ${l10n.settings_response_very_fast}'
                   : _responseTime! < 3000
-                      ? '响应速度: 正常'
-                      : '响应速度: 较慢',
+                      ? '${l10n.settings_response_speed}: ${l10n.settings_response_normal}'
+                      : '${l10n.settings_response_speed}: ${l10n.settings_response_slow}',
               style: TextStyle(
                 fontSize: 12,
                 color: _responseTime! < 1000 ? Colors.green : _responseTime! < 3000 ? Colors.orange : Colors.red,

@@ -235,9 +235,9 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: _getStatusColor().withOpacity(0.08),
+        color: _getStatusColor().withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _getStatusColor().withOpacity(0.3)),
+        border: Border.all(color: _getStatusColor().withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -260,7 +260,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
                 _connectionMessage!,
                 style: TextStyle(
                   fontSize: 12,
-                  color: _getStatusColor().withOpacity(0.8),
+                  color: _getStatusColor().withValues(alpha: 0.8),
                 ),
                 overflow: TextOverflow.ellipsis,
               ),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class EmptyFeedWidget extends StatelessWidget {
   const EmptyFeedWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -18,7 +20,7 @@ class EmptyFeedWidget extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              '还没有订阅内容',
+              l10n.feed_no_subscriptions,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w500,
@@ -26,7 +28,7 @@ class EmptyFeedWidget extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              '去订阅一些你感兴趣的播客吧！',
+              l10n.feed_no_subscriptions_hint,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[500],
               ),
@@ -39,7 +41,7 @@ class EmptyFeedWidget extends StatelessWidget {
                 // TODO: Implement navigation
               },
               icon: const Icon(Icons.add),
-              label: const Text('订阅播客'),
+              label: Text(l10n.feed_subscribe_podcast),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 import '../../models/ai_model_config_model.dart';
 
@@ -23,28 +24,29 @@ class ModelListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     // Note: We're not watching individual model state here since the callbacks handle updates
     // The list state is managed by modelListProvider which is updated by the callbacks
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
-        leading: _buildLeading(),
-        title: _buildTitle(),
+        leading: _buildLeading(l10n),
+        title: _buildTitle(l10n),
         subtitle: _buildSubtitle(),
-        trailing: _buildTrailing(context, false), // No loading state shown in list item
+        trailing: _buildTrailing(context, l10n, false), // No loading state shown in list item
         onTap: onEdit,
         enabled: true,
       ),
     );
   }
 
-  Widget _buildLeading() {
+  Widget _buildLeading(AppLocalizations l10n) {
     return Container(
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: model.isActive ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+        color: model.isActive ? Colors.green.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
         shape: BoxShape.circle,
         border: Border.all(
           color: model.isDefault ? Colors.blue : Colors.transparent,
@@ -61,7 +63,7 @@ class ModelListItem extends ConsumerWidget {
     );
   }
 
-  Widget _buildTitle() {
+  Widget _buildTitle(AppLocalizations l10n) {
     return Row(
       children: [
         Text(
@@ -77,12 +79,12 @@ class ModelListItem extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
+              color: Colors.blue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(color: Colors.blue),
             ),
-            child: const Text(
-              '默认',
+            child: Text(
+              l10n.ai_model_default,
               style: TextStyle(
                 color: Colors.blue,
                 fontSize: 10,
@@ -96,12 +98,12 @@ class ModelListItem extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.1),
+              color: Colors.purple.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(color: Colors.purple),
             ),
-            child: const Text(
-              '系统',
+            child: Text(
+              l10n.ai_model_system,
               style: TextStyle(
                 color: Colors.purple,
                 fontSize: 10,
@@ -132,7 +134,7 @@ class ModelListItem extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -147,7 +149,7 @@ class ModelListItem extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -192,7 +194,7 @@ class ModelListItem extends ConsumerWidget {
     );
   }
 
-  Widget _buildTrailing(BuildContext context, bool isSaving) {
+  Widget _buildTrailing(BuildContext context, AppLocalizations l10n, bool isSaving) {
     if (isSaving) {
       return const SizedBox(
         width: 24,
@@ -212,7 +214,7 @@ class ModelListItem extends ConsumerWidget {
             size: 28,
           ),
           onPressed: onToggleActive,
-          tooltip: model.isActive ? '禁用模型' : '启用模型',
+          tooltip: model.isActive ? l10n.ai_model_disable : l10n.ai_model_enable,
         ),
         // 更多菜单
         PopupMenuButton<String>(
@@ -234,16 +236,16 @@ class ModelListItem extends ConsumerWidget {
             }
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'edit', child: Text('编辑配置')),
-            const PopupMenuItem(value: 'test', child: Text('测试连接')),
+            PopupMenuItem(value: 'edit', child: Text(l10n.ai_edit_config)),
+            PopupMenuItem(value: 'test', child: Text(l10n.ai_test_connection)),
             PopupMenuItem(
               enabled: !model.isDefault,
-              value: 'set_default', 
-              child: const Text('设为默认')
+              value: 'set_default',
+              child: Text(l10n.ai_set_as_default)
             ),
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'delete',
-              child: Text('删除', style: TextStyle(color: Colors.red)),
+              child: Text(l10n.delete, style: TextStyle(color: Colors.red)),
             ),
           ],
         ),

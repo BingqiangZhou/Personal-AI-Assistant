@@ -133,7 +133,7 @@ class _FloatingPlayerButton extends StatelessWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -172,7 +172,7 @@ class _FloatingPlayerButton extends StatelessWidget {
                 // Semi-transparent overlay for icon contrast
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -219,7 +219,7 @@ class _FloatingPlayerButton extends StatelessWidget {
         child: Icon(
           Icons.podcasts,
           size: 28,
-          color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.7),
+          color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.7),
         ),
       ),
     );

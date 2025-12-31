@@ -57,6 +57,11 @@ class User(Base):
         Index('idx_username_status', 'username', 'status'),
     )
 
+    @property
+    def is_active(self) -> bool:
+        """Check if user is active based on status."""
+        return self.status == UserStatus.ACTIVE
+
 
 class UserSession(Base):
     """User session model for tracking active sessions."""

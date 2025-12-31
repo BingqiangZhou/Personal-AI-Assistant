@@ -1206,9 +1206,9 @@
     "description": "模型删除成功"
   },
 
-  "ai_set_as_default": "已将 '{name}' 设为默认模型",
-  "@ai_set_as_default": {
-    "description": "设为默认成功"
+  "ai_set_as_default_success": "已将 '{name}' 设为默认模型",
+  "@ai_set_as_default_success": {
+    "description": "设为默认成功消息"
   },
 
   "ai_model_enabled": "模型已启用",
@@ -2065,5 +2065,310 @@
   "update_try_again": "重试",
   "@update_try_again": {
     "description": "重试按钮标签"
+  },
+
+  "back_button": "返回",
+  "@back_button": {
+    "description": "返回按钮工具提示标签"
+  },
+
+  "ai_model_default": "默认",
+  "@ai_model_default": {
+    "description": "默认模型徽章"
+  },
+
+  "ai_model_system": "系统",
+  "@ai_model_system": {
+    "description": "系统模型徽章"
+  },
+
+  "ai_model_enable": "启用模型",
+  "@ai_model_enable": {
+    "description": "启用模型工具提示"
+  },
+
+  "ai_model_disable": "禁用模型",
+  "@ai_model_disable": {
+    "description": "禁用模型工具提示"
+  },
+
+  "ai_edit_config": "编辑配置",
+  "@ai_edit_config": {
+    "description": "编辑配置菜单项"
+  },
+
+  "ai_test_connection": "测试连接",
+  "@ai_test_connection": {
+    "description": "测试连接菜单项"
+  },
+
+  "ai_set_as_default": "设为默认",
+  "@ai_set_as_default": {
+    "description": "设为默认菜单项"
+  },
+
+  "ai_test_prompt_transcription": "测试音频转录功能",
+  "@ai_test_prompt_transcription": {
+    "description": "转录测试默认提示词"
+  },
+
+  "ai_test_prompt_generation": "请用中文简单介绍一下人工智能",
+  "@ai_test_prompt_generation": {
+    "description": "文本生成测试默认提示词"
+  },
+
+  "ai_enter_test_content": "请输入测试内容",
+  "@ai_enter_test_content": {
+    "description": "测试内容验证"
+  },
+
+  "ai_test_success": "测试成功",
+  "@ai_test_success": {
+    "description": "测试成功消息"
+  },
+
+  "ai_test_failed": "测试失败",
+  "@ai_test_failed": {
+    "description": "测试失败消息"
+  },
+
+  "settings_response_speed": "响应速度",
+  "@settings_response_speed": {
+    "description": "响应速度标签"
+  },
+
+  "settings_response_very_fast": "非常快",
+  "@settings_response_very_fast": {
+    "description": "非常快响应"
+  },
+
+  "settings_response_normal": "正常",
+  "@settings_response_normal": {
+    "description": "正常响应"
+  },
+
+  "settings_response_slow": "较慢",
+  "@settings_response_slow": {
+    "description": "较慢响应"
+  },
+
+  "schedule_load_failed": "加载失败",
+  "@schedule_load_failed": {
+    "description": "计划加载失败消息"
+  },
+
+  "schedule_no_config": "没有找到配置信息",
+  "@schedule_no_config": {
+    "description": "无计划配置消息"
+  },
+
+  "schedule_saving": "保存中...",
+  "@schedule_saving": {
+    "description": "保存计划状态"
+  },
+
+  "schedule_save_settings": "保存设置",
+  "@schedule_save_settings": {
+    "description": "保存设置按钮"
+  },
+
+  "schedule_current_config": "当前配置",
+  "@schedule_current_config": {
+    "description": "当前配置部分"
+  },
+
+  "schedule_update_frequency": "更新频率",
+  "@schedule_update_frequency": {
+    "description": "更新频率标签"
+  },
+
+  "schedule_update_time": "更新时间",
+  "@schedule_update_time": {
+    "description": "更新时间标签"
+  },
+
+  "schedule_update_day": "更新星期",
+  "@schedule_update_day": {
+    "description": "更新星期标签"
+  },
+
+  "schedule_next_update": "下次更新",
+  "@schedule_next_update": {
+    "description": "下次更新标签"
+  },
+
+  "schedule_hourly": "每小时",
+  "@schedule_hourly": {
+    "description": "每小时频率选项"
+  },
+
+  "schedule_daily": "每天",
+  "@schedule_daily": {
+    "description": "每天频率选项"
+  },
+
+  "schedule_weekly": "每周",
+  "@schedule_weekly": {
+    "description": "每周频率选项"
+  },
+
+  "schedule_settings": "更新设置",
+  "@schedule_settings": {
+    "description": "计划设置页面标题"
+  },
+
+  "schedule_week_short": "周",
+  "@schedule_week_short": {
+    "description": "周简称"
+  },
+
+  "schedule_day_mon": "一",
+  "@schedule_day_mon": {
+    "description": "周一简称"
+  },
+
+  "schedule_day_tue": "二",
+  "@schedule_day_tue": {
+    "description": "周二简称"
+  },
+
+  "schedule_day_wed": "三",
+  "@schedule_day_wed": {
+    "description": "周三简称"
+  },
+
+  "schedule_day_thu": "四",
+  "@schedule_day_thu": {
+    "description": "周四简称"
+  },
+
+  "schedule_day_fri": "五",
+  "@schedule_day_fri": {
+    "description": "周五简称"
+  },
+
+  "schedule_day_sat": "六",
+  "@schedule_day_sat": {
+    "description": "周六简称"
+  },
+
+  "schedule_day_sun": "日",
+  "@schedule_day_sun": {
+    "description": "周日简称"
+  },
+
+  "schedule_select_time": "选择时间",
+  "@schedule_select_time": {
+    "description": "选择时间占位符"
+  },
+
+  "schedule_select_update_time": "请选择更新时间",
+  "@schedule_select_update_time": {
+    "description": "验证：选择时间"
+  },
+
+  "schedule_select_time_and_day": "请选择更新时间和星期",
+  "@schedule_select_time_and_day": {
+    "description": "验证：选择时间和星期"
+  },
+
+  "schedule_settings_saved": "设置已保存",
+  "@schedule_settings_saved": {
+    "description": "设置已保存消息"
+  },
+
+  "schedule_save_failed": "保存失败",
+  "@schedule_save_failed": {
+    "description": "保存失败消息"
+  },
+
+  "schedule_unknown_error": "未知错误",
+  "@schedule_unknown_error": {
+    "description": "未知错误消息"
+  },
+
+  "feed_no_subscriptions": "还没有订阅内容",
+  "@feed_no_subscriptions": {
+    "description": "无订阅消息"
+  },
+
+  "feed_no_subscriptions_hint": "去订阅一些你感兴趣的播客吧！",
+  "@feed_no_subscriptions_hint": {
+    "description": "提示订阅播客"
+  },
+
+  "feed_subscribe_podcast": "订阅播客",
+  "@feed_subscribe_podcast": {
+    "description": "订阅播客按钮"
+  },
+
+  "podcast_platform_xiaoyuzhou": "小宇宙",
+  "@podcast_platform_xiaoyuzhou": {
+    "description": "小宇宙平台名称"
+  },
+
+  "podcast_platform_ximalaya": "喜马拉雅",
+  "@podcast_platform_ximalaya": {
+    "description": "喜马拉雅平台名称"
+  },
+
+  "podcast_no_shownotes": "暂无节目简介",
+  "@podcast_no_shownotes": {
+    "description": "无节目简介消息"
+  },
+
+  "podcast_unknown_error": "未知错误",
+  "@podcast_unknown_error": {
+    "description": "未知错误消息"
+  },
+
+  "podcast_no_match_found": "未找到匹配内容",
+  "@podcast_no_match_found": {
+    "description": "无搜索匹配消息"
+  },
+
+  "podcast_no_transcript": "暂无转录内容",
+  "@podcast_no_transcript": {
+    "description": "无转录消息"
+  },
+
+  "podcast_click_to_transcribe": "点击\\\"开始转录\\\"按钮生成转录文本",
+  "@podcast_click_to_transcribe": {
+    "description": "点击转录提示"
+  },
+
+  "podcast_conversation": "对话",
+  "@podcast_conversation": {
+    "description": "对话标签页标签"
+  },
+
+  "podcast_transcription_waiting": "等待开始",
+  "@podcast_transcription_waiting": {
+    "description": "转录等待状态"
+  },
+
+  "podcast_transcription_completed": "转录完成",
+  "@podcast_transcription_completed": {
+    "description": "转录完成状态"
+  },
+
+  "podcast_transcription_failed": "转录失败",
+  "@podcast_transcription_failed": {
+    "description": "转录失败状态"
+  },
+
+  "podcast_unknown_status": "未知状态",
+  "@podcast_unknown_status": {
+    "description": "未知转录状态"
+  },
+
+  "date_format": "{year}年{month}月{day}日",
+  "@date_format": {
+    "description": "日期格式模式",
+    "placeholders": {
+      "year": {"type": "int"},
+      "month": {"type": "String"},
+      "day": {"type": "String"}
+    }
   }
 }

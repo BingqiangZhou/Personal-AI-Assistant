@@ -306,8 +306,8 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isUser
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                : Theme.of(context).colorScheme.outlineVariant.withOpacity(0.3),
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
+                : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
         ),
         child: Column(

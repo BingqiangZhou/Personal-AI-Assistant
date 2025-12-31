@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/schedule_config_model.dart';
 import '../providers/schedule_provider.dart';
 
@@ -39,10 +40,11 @@ class _SubscriptionScheduleSettingsPageState
   Widget build(BuildContext context) {
     final configState = ref.watch(scheduleConfigProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.subscriptionTitle} - 更新设置'),
+        title: Text('${widget.subscriptionTitle} - ${l10n.schedule_settings}'),
         actions: [
           if (configState.config != null)
             IconButton(
@@ -53,11 +55,11 @@ class _SubscriptionScheduleSettingsPageState
             ),
         ],
       ),
-      body: _buildBody(configState, theme),
+      body: _buildBody(configState, theme, l10n),
     );
   }
 
-  Widget _buildBody(ScheduleConfigState configState, ThemeData theme) {
+  Widget _buildBody(ScheduleConfigState configState, ThemeData theme, AppLocalizations l10n) {
     if (configState.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -70,7 +72,7 @@ class _SubscriptionScheduleSettingsPageState
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              '加载失败',
+              l10n.schedule_load_failed,
               style: theme.textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
@@ -84,7 +86,7 @@ class _SubscriptionScheduleSettingsPageState
               onPressed: () {
                 ref.read(scheduleConfigProvider.notifier).loadConfig(widget.subscriptionId);
               },
-              child: const Text('重试'),
+              child: Text(l10n.retry),
             ),
           ],
         ),
@@ -93,7 +95,7 @@ class _SubscriptionScheduleSettingsPageState
 
     final config = configState.config;
     if (config == null) {
-      return const Center(child: Text('没有找到配置信息'));
+      return Center(child: Text(l10n.schedule_no_config));
     }
 
     // Initialize form fields from config
@@ -117,23 +119,23 @@ class _SubscriptionScheduleSettingsPageState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Current schedule info card
-            _buildCurrentScheduleCard(config, theme),
+            _buildCurrentScheduleCard(config, theme, l10n),
             const SizedBox(height: 24),
 
             // Update frequency selector
-            _buildFrequencySelector(theme),
+            _buildFrequencySelector(theme, l10n),
             const SizedBox(height: 24),
 
             // Time selector (for DAILY/WEEKLY)
             if (_selectedFrequency == UpdateFrequency.daily ||
                 _selectedFrequency == UpdateFrequency.weekly)
-              _buildTimeSelector(theme),
+              _buildTimeSelector(theme, l10n),
 
             const SizedBox(height: 24),
 
             // Day of week selector (for WEEKLY)
             if (_selectedFrequency == UpdateFrequency.weekly)
-              _buildDaySelector(theme),
+              _buildDaySelector(theme, l10n),
 
             const SizedBox(height: 32),
 
@@ -141,7 +143,7 @@ class _SubscriptionScheduleSettingsPageState
             SizedBox(
               width: double.infinity,
               child: FilledButton.tonalIcon(
-                onPressed: configState.isSaving ? null : _saveConfig,
+                onPressed: configState.isSaving ? null : () => _saveConfig(l10n),
                 icon: configState.isSaving
                     ? const SizedBox(
                         width: 20,
@@ -149,7 +151,7 @@ class _SubscriptionScheduleSettingsPageState
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save),
-                label: Text(configState.isSaving ? '保存中...' : '保存设置'),
+                label: Text(configState.isSaving ? l10n.schedule_saving : l10n.schedule_save_settings),
               ),
             ),
           ],
@@ -158,7 +160,7 @@ class _SubscriptionScheduleSettingsPageState
     );
   }
 
-  Widget _buildCurrentScheduleCard(ScheduleConfigResponse config, ThemeData theme) {
+  Widget _buildCurrentScheduleCard(ScheduleConfigResponse config, ThemeData theme, AppLocalizations l10n) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -170,20 +172,20 @@ class _SubscriptionScheduleSettingsPageState
                 Icon(Icons.schedule, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
                 Text(
-                  '当前配置',
+                  l10n.schedule_current_config,
                   style: theme.textTheme.titleMedium,
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            _buildScheduleInfoRow('更新频率', config.frequency?.displayName ?? '-'),
+            _buildScheduleInfoRow(l10n.schedule_update_frequency, config.frequency?.displayName ?? '-'),
             if (config.updateTime != null)
-              _buildScheduleInfoRow('更新时间', config.updateTime!),
+              _buildScheduleInfoRow(l10n.schedule_update_time, config.updateTime!),
             if (config.updateDayOfWeek != null)
-              _buildScheduleInfoRow('更新星期', '周${_dayOfWeekToString(config.updateDayOfWeek!)}'),
+              _buildScheduleInfoRow(l10n.schedule_update_day, '${l10n.schedule_week_short} ${_dayOfWeekToString(config.updateDayOfWeek!, l10n)}'),
             if (config.nextUpdateAt != null)
               _buildScheduleInfoRow(
-                '下次更新',
+                l10n.schedule_next_update,
                 config.nextUpdateDisplay ?? '-',
               ),
           ],
@@ -205,27 +207,27 @@ class _SubscriptionScheduleSettingsPageState
     );
   }
 
-  Widget _buildFrequencySelector(ThemeData theme) {
+  Widget _buildFrequencySelector(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('更新频率', style: theme.textTheme.titleMedium),
+        Text(l10n.schedule_update_frequency, style: theme.textTheme.titleMedium),
         const SizedBox(height: 12),
         SegmentedButton<UpdateFrequency>(
-          segments: const [
+          segments: [
             ButtonSegment(
               value: UpdateFrequency.hourly,
-              label: Text('每小时'),
+              label: Text(l10n.schedule_hourly),
               icon: Icon(Icons.schedule),
             ),
             ButtonSegment(
               value: UpdateFrequency.daily,
-              label: Text('每天'),
+              label: Text(l10n.schedule_daily),
               icon: Icon(Icons.today),
             ),
             ButtonSegment(
               value: UpdateFrequency.weekly,
-              label: Text('每周'),
+              label: Text(l10n.schedule_weekly),
               icon: Icon(Icons.calendar_view_week),
             ),
           ],
@@ -245,11 +247,11 @@ class _SubscriptionScheduleSettingsPageState
     );
   }
 
-  Widget _buildTimeSelector(ThemeData theme) {
+  Widget _buildTimeSelector(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('更新时间', style: theme.textTheme.titleMedium),
+        Text(l10n.schedule_update_time, style: theme.textTheme.titleMedium),
         const SizedBox(height: 12),
         InkWell(
           onTap: _pickTime,
@@ -260,7 +262,7 @@ class _SubscriptionScheduleSettingsPageState
               suffixIcon: const Icon(Icons.access_time),
             ),
             child: Text(
-              _selectedTime?.format(context) ?? '选择时间',
+              _selectedTime?.format(context) ?? l10n.schedule_select_time,
               style: TextStyle(
                 color: _selectedTime != null ? null : Colors.grey,
               ),
@@ -271,17 +273,17 @@ class _SubscriptionScheduleSettingsPageState
     );
   }
 
-  Widget _buildDaySelector(ThemeData theme) {
+  Widget _buildDaySelector(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('更新星期', style: theme.textTheme.titleMedium),
+        Text(l10n.schedule_update_day, style: theme.textTheme.titleMedium),
         const SizedBox(height: 12),
         SegmentedButton<int>(
           segments: List.generate(7, (index) {
             return ButtonSegment(
               value: index + 1,
-              label: Text('周${_dayOfWeekToString(index + 1)}'),
+              label: Text('${l10n.schedule_week_short} ${_dayOfWeekToString(index + 1, l10n)}'),
             );
           }),
           selected: {_selectedDayOfWeek ?? 1},
@@ -313,13 +315,13 @@ class _SubscriptionScheduleSettingsPageState
     }
   }
 
-  Future<void> _saveConfig() async {
+  Future<void> _saveConfig(AppLocalizations l10n) async {
     if (_selectedFrequency == null) return;
 
     // Validate based on frequency
     if (_selectedFrequency == UpdateFrequency.daily && _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('请选择更新时间')),
+        SnackBar(content: Text(l10n.schedule_select_update_time)),
       );
       return;
     }
@@ -327,7 +329,7 @@ class _SubscriptionScheduleSettingsPageState
     if (_selectedFrequency == UpdateFrequency.weekly) {
       if (_selectedTime == null || _selectedDayOfWeek == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('请选择更新时间和星期')),
+          SnackBar(content: Text(l10n.schedule_select_time_and_day)),
         );
         return;
       }
@@ -351,19 +353,21 @@ class _SubscriptionScheduleSettingsPageState
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('设置已保存')),
+        SnackBar(content: Text(l10n.schedule_settings_saved)),
       );
       Navigator.of(context).pop();
     } else if (mounted) {
       final error = ref.read(scheduleConfigProvider).error;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('保存失败: ${error ?? "未知错误"}')),
+        SnackBar(content: Text('${l10n.schedule_save_failed}: ${error ?? l10n.schedule_unknown_error}')),
       );
     }
   }
 
-  String _dayOfWeekToString(int day) {
-    const days = ['一', '二', '三', '四', '五', '六', '日'];
+  String _dayOfWeekToString(int day, AppLocalizations l10n) {
+    // Use localized day names
+    final days = [l10n.schedule_day_mon, l10n.schedule_day_tue, l10n.schedule_day_wed,
+                   l10n.schedule_day_thu, l10n.schedule_day_fri, l10n.schedule_day_sat, l10n.schedule_day_sun];
     return days[day - 1];
   }
 }

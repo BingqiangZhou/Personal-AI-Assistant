@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
 
-from app.domains.user.models import User, UserSession
+from app.domains.user.models import User, UserSession, UserStatus
 from app.shared.schemas import UserCreate, UserUpdate
 
 
@@ -20,12 +20,14 @@ class UserRepository:
         from app.core.security import get_password_hash
 
         hashed_password = get_password_hash(user_data.password)
+        # Map is_active to status
+        user_status = UserStatus.ACTIVE if user_data.is_active else UserStatus.INACTIVE
         db_user = User(
             email=user_data.email,
             username=user_data.username,
             full_name=user_data.full_name,
             hashed_password=hashed_password,
-            is_active=user_data.is_active,
+            status=user_status,
             is_superuser=user_data.is_superuser
         )
 
@@ -96,7 +98,7 @@ class UserRepository:
         query = select(User)
 
         if active_only:
-            query = query.filter(User.is_active == True)
+            query = query.filter(User.status == UserStatus.ACTIVE)
 
         query = query.offset(skip).limit(limit).order_by(User.created_at.desc())
 

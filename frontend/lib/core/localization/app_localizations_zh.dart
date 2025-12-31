@@ -723,7 +723,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String ai_set_as_default(Object name) {
+  String ai_set_as_default_success(Object name) {
     return '已将 \'$name\' 设为默认模型';
   }
 
@@ -1258,4 +1258,186 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get update_try_again => '重试';
+
+  @override
+  String get back_button => '返回';
+
+  @override
+  String get ai_model_default => '默认';
+
+  @override
+  String get ai_model_system => '系统';
+
+  @override
+  String get ai_model_enable => '启用模型';
+
+  @override
+  String get ai_model_disable => '禁用模型';
+
+  @override
+  String get ai_edit_config => '编辑配置';
+
+  @override
+  String get ai_test_connection => '测试连接';
+
+  @override
+  String get ai_set_as_default => '设为默认';
+
+  @override
+  String get ai_test_prompt_transcription => '测试音频转录功能';
+
+  @override
+  String get ai_test_prompt_generation => '请用中文简单介绍一下人工智能';
+
+  @override
+  String get ai_enter_test_content => '请输入测试内容';
+
+  @override
+  String get ai_test_success => '测试成功';
+
+  @override
+  String get ai_test_failed => '测试失败';
+
+  @override
+  String get settings_response_speed => '响应速度';
+
+  @override
+  String get settings_response_very_fast => '非常快';
+
+  @override
+  String get settings_response_normal => '正常';
+
+  @override
+  String get settings_response_slow => '较慢';
+
+  @override
+  String get schedule_load_failed => '加载失败';
+
+  @override
+  String get schedule_no_config => '没有找到配置信息';
+
+  @override
+  String get schedule_saving => '保存中...';
+
+  @override
+  String get schedule_save_settings => '保存设置';
+
+  @override
+  String get schedule_current_config => '当前配置';
+
+  @override
+  String get schedule_update_frequency => '更新频率';
+
+  @override
+  String get schedule_update_time => '更新时间';
+
+  @override
+  String get schedule_update_day => '更新星期';
+
+  @override
+  String get schedule_next_update => '下次更新';
+
+  @override
+  String get schedule_hourly => '每小时';
+
+  @override
+  String get schedule_daily => '每天';
+
+  @override
+  String get schedule_weekly => '每周';
+
+  @override
+  String get schedule_settings => '更新设置';
+
+  @override
+  String get schedule_week_short => '周';
+
+  @override
+  String get schedule_day_mon => '一';
+
+  @override
+  String get schedule_day_tue => '二';
+
+  @override
+  String get schedule_day_wed => '三';
+
+  @override
+  String get schedule_day_thu => '四';
+
+  @override
+  String get schedule_day_fri => '五';
+
+  @override
+  String get schedule_day_sat => '六';
+
+  @override
+  String get schedule_day_sun => '日';
+
+  @override
+  String get schedule_select_time => '选择时间';
+
+  @override
+  String get schedule_select_update_time => '请选择更新时间';
+
+  @override
+  String get schedule_select_time_and_day => '请选择更新时间和星期';
+
+  @override
+  String get schedule_settings_saved => '设置已保存';
+
+  @override
+  String get schedule_save_failed => '保存失败';
+
+  @override
+  String get schedule_unknown_error => '未知错误';
+
+  @override
+  String get feed_no_subscriptions => '还没有订阅内容';
+
+  @override
+  String get feed_no_subscriptions_hint => '去订阅一些你感兴趣的播客吧！';
+
+  @override
+  String get feed_subscribe_podcast => '订阅播客';
+
+  @override
+  String get podcast_platform_xiaoyuzhou => '小宇宙';
+
+  @override
+  String get podcast_platform_ximalaya => '喜马拉雅';
+
+  @override
+  String get podcast_no_shownotes => '暂无节目简介';
+
+  @override
+  String get podcast_unknown_error => '未知错误';
+
+  @override
+  String get podcast_no_match_found => '未找到匹配内容';
+
+  @override
+  String get podcast_no_transcript => '暂无转录内容';
+
+  @override
+  String get podcast_click_to_transcribe => '点击\\\"开始转录\\\"按钮生成转录文本';
+
+  @override
+  String get podcast_conversation => '对话';
+
+  @override
+  String get podcast_transcription_waiting => '等待开始';
+
+  @override
+  String get podcast_transcription_completed => '转录完成';
+
+  @override
+  String get podcast_transcription_failed => '转录失败';
+
+  @override
+  String get podcast_unknown_status => '未知状态';
+
+  @override
+  String date_format(int year, String month, String day) {
+    return '$year年$month月$day日';
+  }
 }

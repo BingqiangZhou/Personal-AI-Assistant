@@ -1514,11 +1514,11 @@ abstract class AppLocalizations {
   /// **'Model \'{name}\' deleted'**
   String ai_model_deleted_msg(Object name);
 
-  /// Set as default success
+  /// Set as default success message
   ///
   /// In en, this message translates to:
   /// **'Set \'{name}\' as default model'**
-  String ai_set_as_default(Object name);
+  String ai_set_as_default_success(Object name);
 
   /// Model enabled message
   ///
@@ -2515,6 +2515,366 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try Again'**
   String get update_try_again;
+
+  /// Back button tooltip label
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back_button;
+
+  /// Default model badge
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get ai_model_default;
+
+  /// System model badge
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get ai_model_system;
+
+  /// Enable model tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Enable model'**
+  String get ai_model_enable;
+
+  /// Disable model tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Disable model'**
+  String get ai_model_disable;
+
+  /// Edit config menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Config'**
+  String get ai_edit_config;
+
+  /// Test connection menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Test Connection'**
+  String get ai_test_connection;
+
+  /// Set as default menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Set as Default'**
+  String get ai_set_as_default;
+
+  /// Default test prompt for transcription
+  ///
+  /// In en, this message translates to:
+  /// **'Test audio transcription'**
+  String get ai_test_prompt_transcription;
+
+  /// Default test prompt for text generation
+  ///
+  /// In en, this message translates to:
+  /// **'Please briefly introduce AI'**
+  String get ai_test_prompt_generation;
+
+  /// Test content validation
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter test content'**
+  String get ai_enter_test_content;
+
+  /// Test success message
+  ///
+  /// In en, this message translates to:
+  /// **'Test Successful'**
+  String get ai_test_success;
+
+  /// Test failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Test Failed'**
+  String get ai_test_failed;
+
+  /// Response speed label
+  ///
+  /// In en, this message translates to:
+  /// **'Response Speed'**
+  String get settings_response_speed;
+
+  /// Very fast response
+  ///
+  /// In en, this message translates to:
+  /// **'Very Fast'**
+  String get settings_response_very_fast;
+
+  /// Normal response
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get settings_response_normal;
+
+  /// Slow response
+  ///
+  /// In en, this message translates to:
+  /// **'Slow'**
+  String get settings_response_slow;
+
+  /// Schedule load failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Load Failed'**
+  String get schedule_load_failed;
+
+  /// No schedule configuration message
+  ///
+  /// In en, this message translates to:
+  /// **'No configuration found'**
+  String get schedule_no_config;
+
+  /// Saving schedule state
+  ///
+  /// In en, this message translates to:
+  /// **'Saving...'**
+  String get schedule_saving;
+
+  /// Save settings button
+  ///
+  /// In en, this message translates to:
+  /// **'Save Settings'**
+  String get schedule_save_settings;
+
+  /// Current configuration section
+  ///
+  /// In en, this message translates to:
+  /// **'Current Configuration'**
+  String get schedule_current_config;
+
+  /// Update frequency label
+  ///
+  /// In en, this message translates to:
+  /// **'Update Frequency'**
+  String get schedule_update_frequency;
+
+  /// Update time label
+  ///
+  /// In en, this message translates to:
+  /// **'Update Time'**
+  String get schedule_update_time;
+
+  /// Update day label
+  ///
+  /// In en, this message translates to:
+  /// **'Update Day'**
+  String get schedule_update_day;
+
+  /// Next update label
+  ///
+  /// In en, this message translates to:
+  /// **'Next Update'**
+  String get schedule_next_update;
+
+  /// Hourly frequency option
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly'**
+  String get schedule_hourly;
+
+  /// Daily frequency option
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get schedule_daily;
+
+  /// Weekly frequency option
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get schedule_weekly;
+
+  /// Schedule settings page title
+  ///
+  /// In en, this message translates to:
+  /// **'Update Settings'**
+  String get schedule_settings;
+
+  /// Week short label
+  ///
+  /// In en, this message translates to:
+  /// **'Wk'**
+  String get schedule_week_short;
+
+  /// Monday short
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get schedule_day_mon;
+
+  /// Tuesday short
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get schedule_day_tue;
+
+  /// Wednesday short
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get schedule_day_wed;
+
+  /// Thursday short
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get schedule_day_thu;
+
+  /// Friday short
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get schedule_day_fri;
+
+  /// Saturday short
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get schedule_day_sat;
+
+  /// Sunday short
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get schedule_day_sun;
+
+  /// Select time placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Select Time'**
+  String get schedule_select_time;
+
+  /// Validation: select time
+  ///
+  /// In en, this message translates to:
+  /// **'Please select update time'**
+  String get schedule_select_update_time;
+
+  /// Validation: select time and day
+  ///
+  /// In en, this message translates to:
+  /// **'Please select update time and day'**
+  String get schedule_select_time_and_day;
+
+  /// Settings saved message
+  ///
+  /// In en, this message translates to:
+  /// **'Settings saved'**
+  String get schedule_settings_saved;
+
+  /// Save failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed'**
+  String get schedule_save_failed;
+
+  /// Unknown error message
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error'**
+  String get schedule_unknown_error;
+
+  /// No subscriptions message
+  ///
+  /// In en, this message translates to:
+  /// **'No subscriptions yet'**
+  String get feed_no_subscriptions;
+
+  /// Hint to subscribe to podcasts
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe to podcasts you\'re interested in!'**
+  String get feed_no_subscriptions_hint;
+
+  /// Subscribe podcast button
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe Podcast'**
+  String get feed_subscribe_podcast;
+
+  /// Xiaoyuzhou platform name
+  ///
+  /// In en, this message translates to:
+  /// **'Xiaoyuzhou'**
+  String get podcast_platform_xiaoyuzhou;
+
+  /// Ximalaya platform name
+  ///
+  /// In en, this message translates to:
+  /// **'Ximalaya'**
+  String get podcast_platform_ximalaya;
+
+  /// No show notes message
+  ///
+  /// In en, this message translates to:
+  /// **'No show notes available'**
+  String get podcast_no_shownotes;
+
+  /// Unknown error message
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error'**
+  String get podcast_unknown_error;
+
+  /// No search match message
+  ///
+  /// In en, this message translates to:
+  /// **'No matching content found'**
+  String get podcast_no_match_found;
+
+  /// No transcript message
+  ///
+  /// In en, this message translates to:
+  /// **'No transcript available'**
+  String get podcast_no_transcript;
+
+  /// Click to transcribe hint
+  ///
+  /// In en, this message translates to:
+  /// **'Click \"Start Transcription\" to generate transcript'**
+  String get podcast_click_to_transcribe;
+
+  /// Conversation tab label
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation'**
+  String get podcast_conversation;
+
+  /// Transcription waiting status
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting to start'**
+  String get podcast_transcription_waiting;
+
+  /// Transcription completed status
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get podcast_transcription_completed;
+
+  /// Transcription failed status
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get podcast_transcription_failed;
+
+  /// Unknown transcription status
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown status'**
+  String get podcast_unknown_status;
+
+  /// Date format pattern
+  ///
+  /// In en, this message translates to:
+  /// **'{year}-{month}-{day}'**
+  String date_format(int year, String month, String day);
 }
 
 class _AppLocalizationsDelegate

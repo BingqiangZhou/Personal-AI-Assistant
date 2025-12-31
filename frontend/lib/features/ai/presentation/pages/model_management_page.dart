@@ -146,7 +146,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(l10n.ai_set_as_default(model.displayName)),
+            content: Text(l10n.ai_set_as_default_success(model.displayName)),
             backgroundColor: Colors.green,
           ),
         );

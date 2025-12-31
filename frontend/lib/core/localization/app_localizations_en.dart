@@ -730,7 +730,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String ai_set_as_default(Object name) {
+  String ai_set_as_default_success(Object name) {
     return 'Set \'$name\' as default model';
   }
 
@@ -1293,4 +1293,189 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get update_try_again => 'Try Again';
+
+  @override
+  String get back_button => 'Back';
+
+  @override
+  String get ai_model_default => 'Default';
+
+  @override
+  String get ai_model_system => 'System';
+
+  @override
+  String get ai_model_enable => 'Enable model';
+
+  @override
+  String get ai_model_disable => 'Disable model';
+
+  @override
+  String get ai_edit_config => 'Edit Config';
+
+  @override
+  String get ai_test_connection => 'Test Connection';
+
+  @override
+  String get ai_set_as_default => 'Set as Default';
+
+  @override
+  String get ai_test_prompt_transcription => 'Test audio transcription';
+
+  @override
+  String get ai_test_prompt_generation => 'Please briefly introduce AI';
+
+  @override
+  String get ai_enter_test_content => 'Please enter test content';
+
+  @override
+  String get ai_test_success => 'Test Successful';
+
+  @override
+  String get ai_test_failed => 'Test Failed';
+
+  @override
+  String get settings_response_speed => 'Response Speed';
+
+  @override
+  String get settings_response_very_fast => 'Very Fast';
+
+  @override
+  String get settings_response_normal => 'Normal';
+
+  @override
+  String get settings_response_slow => 'Slow';
+
+  @override
+  String get schedule_load_failed => 'Load Failed';
+
+  @override
+  String get schedule_no_config => 'No configuration found';
+
+  @override
+  String get schedule_saving => 'Saving...';
+
+  @override
+  String get schedule_save_settings => 'Save Settings';
+
+  @override
+  String get schedule_current_config => 'Current Configuration';
+
+  @override
+  String get schedule_update_frequency => 'Update Frequency';
+
+  @override
+  String get schedule_update_time => 'Update Time';
+
+  @override
+  String get schedule_update_day => 'Update Day';
+
+  @override
+  String get schedule_next_update => 'Next Update';
+
+  @override
+  String get schedule_hourly => 'Hourly';
+
+  @override
+  String get schedule_daily => 'Daily';
+
+  @override
+  String get schedule_weekly => 'Weekly';
+
+  @override
+  String get schedule_settings => 'Update Settings';
+
+  @override
+  String get schedule_week_short => 'Wk';
+
+  @override
+  String get schedule_day_mon => 'Mon';
+
+  @override
+  String get schedule_day_tue => 'Tue';
+
+  @override
+  String get schedule_day_wed => 'Wed';
+
+  @override
+  String get schedule_day_thu => 'Thu';
+
+  @override
+  String get schedule_day_fri => 'Fri';
+
+  @override
+  String get schedule_day_sat => 'Sat';
+
+  @override
+  String get schedule_day_sun => 'Sun';
+
+  @override
+  String get schedule_select_time => 'Select Time';
+
+  @override
+  String get schedule_select_update_time => 'Please select update time';
+
+  @override
+  String get schedule_select_time_and_day =>
+      'Please select update time and day';
+
+  @override
+  String get schedule_settings_saved => 'Settings saved';
+
+  @override
+  String get schedule_save_failed => 'Save failed';
+
+  @override
+  String get schedule_unknown_error => 'Unknown error';
+
+  @override
+  String get feed_no_subscriptions => 'No subscriptions yet';
+
+  @override
+  String get feed_no_subscriptions_hint =>
+      'Subscribe to podcasts you\'re interested in!';
+
+  @override
+  String get feed_subscribe_podcast => 'Subscribe Podcast';
+
+  @override
+  String get podcast_platform_xiaoyuzhou => 'Xiaoyuzhou';
+
+  @override
+  String get podcast_platform_ximalaya => 'Ximalaya';
+
+  @override
+  String get podcast_no_shownotes => 'No show notes available';
+
+  @override
+  String get podcast_unknown_error => 'Unknown error';
+
+  @override
+  String get podcast_no_match_found => 'No matching content found';
+
+  @override
+  String get podcast_no_transcript => 'No transcript available';
+
+  @override
+  String get podcast_click_to_transcribe =>
+      'Click \"Start Transcription\" to generate transcript';
+
+  @override
+  String get podcast_conversation => 'Conversation';
+
+  @override
+  String get podcast_transcription_waiting => 'Waiting to start';
+
+  @override
+  String get podcast_transcription_completed => 'Completed';
+
+  @override
+  String get podcast_transcription_failed => 'Failed';
+
+  @override
+  String get podcast_unknown_status => 'Unknown status';
+
+  @override
+  String date_format(int year, String month, String day) {
+    return '$year-$month-$day';
+  }
 }

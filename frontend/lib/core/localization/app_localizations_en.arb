@@ -1206,9 +1206,9 @@
     "description": "Model deleted success"
   },
 
-  "ai_set_as_default": "Set '{name}' as default model",
-  "@ai_set_as_default": {
-    "description": "Set as default success"
+  "ai_set_as_default_success": "Set '{name}' as default model",
+  "@ai_set_as_default_success": {
+    "description": "Set as default success message"
   },
 
   "ai_model_enabled": "Model enabled",
@@ -2065,5 +2065,310 @@
   "update_try_again": "Try Again",
   "@update_try_again": {
     "description": "Try again button label"
+  },
+
+  "back_button": "Back",
+  "@back_button": {
+    "description": "Back button tooltip label"
+  },
+
+  "ai_model_default": "Default",
+  "@ai_model_default": {
+    "description": "Default model badge"
+  },
+
+  "ai_model_system": "System",
+  "@ai_model_system": {
+    "description": "System model badge"
+  },
+
+  "ai_model_enable": "Enable model",
+  "@ai_model_enable": {
+    "description": "Enable model tooltip"
+  },
+
+  "ai_model_disable": "Disable model",
+  "@ai_model_disable": {
+    "description": "Disable model tooltip"
+  },
+
+  "ai_edit_config": "Edit Config",
+  "@ai_edit_config": {
+    "description": "Edit config menu item"
+  },
+
+  "ai_test_connection": "Test Connection",
+  "@ai_test_connection": {
+    "description": "Test connection menu item"
+  },
+
+  "ai_set_as_default": "Set as Default",
+  "@ai_set_as_default": {
+    "description": "Set as default menu item"
+  },
+
+  "ai_test_prompt_transcription": "Test audio transcription",
+  "@ai_test_prompt_transcription": {
+    "description": "Default test prompt for transcription"
+  },
+
+  "ai_test_prompt_generation": "Please briefly introduce AI",
+  "@ai_test_prompt_generation": {
+    "description": "Default test prompt for text generation"
+  },
+
+  "ai_enter_test_content": "Please enter test content",
+  "@ai_enter_test_content": {
+    "description": "Test content validation"
+  },
+
+  "ai_test_success": "Test Successful",
+  "@ai_test_success": {
+    "description": "Test success message"
+  },
+
+  "ai_test_failed": "Test Failed",
+  "@ai_test_failed": {
+    "description": "Test failed message"
+  },
+
+  "settings_response_speed": "Response Speed",
+  "@settings_response_speed": {
+    "description": "Response speed label"
+  },
+
+  "settings_response_very_fast": "Very Fast",
+  "@settings_response_very_fast": {
+    "description": "Very fast response"
+  },
+
+  "settings_response_normal": "Normal",
+  "@settings_response_normal": {
+    "description": "Normal response"
+  },
+
+  "settings_response_slow": "Slow",
+  "@settings_response_slow": {
+    "description": "Slow response"
+  },
+
+  "schedule_load_failed": "Load Failed",
+  "@schedule_load_failed": {
+    "description": "Schedule load failed message"
+  },
+
+  "schedule_no_config": "No configuration found",
+  "@schedule_no_config": {
+    "description": "No schedule configuration message"
+  },
+
+  "schedule_saving": "Saving...",
+  "@schedule_saving": {
+    "description": "Saving schedule state"
+  },
+
+  "schedule_save_settings": "Save Settings",
+  "@schedule_save_settings": {
+    "description": "Save settings button"
+  },
+
+  "schedule_current_config": "Current Configuration",
+  "@schedule_current_config": {
+    "description": "Current configuration section"
+  },
+
+  "schedule_update_frequency": "Update Frequency",
+  "@schedule_update_frequency": {
+    "description": "Update frequency label"
+  },
+
+  "schedule_update_time": "Update Time",
+  "@schedule_update_time": {
+    "description": "Update time label"
+  },
+
+  "schedule_update_day": "Update Day",
+  "@schedule_update_day": {
+    "description": "Update day label"
+  },
+
+  "schedule_next_update": "Next Update",
+  "@schedule_next_update": {
+    "description": "Next update label"
+  },
+
+  "schedule_hourly": "Hourly",
+  "@schedule_hourly": {
+    "description": "Hourly frequency option"
+  },
+
+  "schedule_daily": "Daily",
+  "@schedule_daily": {
+    "description": "Daily frequency option"
+  },
+
+  "schedule_weekly": "Weekly",
+  "@schedule_weekly": {
+    "description": "Weekly frequency option"
+  },
+
+  "schedule_settings": "Update Settings",
+  "@schedule_settings": {
+    "description": "Schedule settings page title"
+  },
+
+  "schedule_week_short": "Wk",
+  "@schedule_week_short": {
+    "description": "Week short label"
+  },
+
+  "schedule_day_mon": "Mon",
+  "@schedule_day_mon": {
+    "description": "Monday short"
+  },
+
+  "schedule_day_tue": "Tue",
+  "@schedule_day_tue": {
+    "description": "Tuesday short"
+  },
+
+  "schedule_day_wed": "Wed",
+  "@schedule_day_wed": {
+    "description": "Wednesday short"
+  },
+
+  "schedule_day_thu": "Thu",
+  "@schedule_day_thu": {
+    "description": "Thursday short"
+  },
+
+  "schedule_day_fri": "Fri",
+  "@schedule_day_fri": {
+    "description": "Friday short"
+  },
+
+  "schedule_day_sat": "Sat",
+  "@schedule_day_sat": {
+    "description": "Saturday short"
+  },
+
+  "schedule_day_sun": "Sun",
+  "@schedule_day_sun": {
+    "description": "Sunday short"
+  },
+
+  "schedule_select_time": "Select Time",
+  "@schedule_select_time": {
+    "description": "Select time placeholder"
+  },
+
+  "schedule_select_update_time": "Please select update time",
+  "@schedule_select_update_time": {
+    "description": "Validation: select time"
+  },
+
+  "schedule_select_time_and_day": "Please select update time and day",
+  "@schedule_select_time_and_day": {
+    "description": "Validation: select time and day"
+  },
+
+  "schedule_settings_saved": "Settings saved",
+  "@schedule_settings_saved": {
+    "description": "Settings saved message"
+  },
+
+  "schedule_save_failed": "Save failed",
+  "@schedule_save_failed": {
+    "description": "Save failed message"
+  },
+
+  "schedule_unknown_error": "Unknown error",
+  "@schedule_unknown_error": {
+    "description": "Unknown error message"
+  },
+
+  "feed_no_subscriptions": "No subscriptions yet",
+  "@feed_no_subscriptions": {
+    "description": "No subscriptions message"
+  },
+
+  "feed_no_subscriptions_hint": "Subscribe to podcasts you're interested in!",
+  "@feed_no_subscriptions_hint": {
+    "description": "Hint to subscribe to podcasts"
+  },
+
+  "feed_subscribe_podcast": "Subscribe Podcast",
+  "@feed_subscribe_podcast": {
+    "description": "Subscribe podcast button"
+  },
+
+  "podcast_platform_xiaoyuzhou": "Xiaoyuzhou",
+  "@podcast_platform_xiaoyuzhou": {
+    "description": "Xiaoyuzhou platform name"
+  },
+
+  "podcast_platform_ximalaya": "Ximalaya",
+  "@podcast_platform_ximalaya": {
+    "description": "Ximalaya platform name"
+  },
+
+  "podcast_no_shownotes": "No show notes available",
+  "@podcast_no_shownotes": {
+    "description": "No show notes message"
+  },
+
+  "podcast_unknown_error": "Unknown error",
+  "@podcast_unknown_error": {
+    "description": "Unknown error message"
+  },
+
+  "podcast_no_match_found": "No matching content found",
+  "@podcast_no_match_found": {
+    "description": "No search match message"
+  },
+
+  "podcast_no_transcript": "No transcript available",
+  "@podcast_no_transcript": {
+    "description": "No transcript message"
+  },
+
+  "podcast_click_to_transcribe": "Click \"Start Transcription\" to generate transcript",
+  "@podcast_click_to_transcribe": {
+    "description": "Click to transcribe hint"
+  },
+
+  "podcast_conversation": "Conversation",
+  "@podcast_conversation": {
+    "description": "Conversation tab label"
+  },
+
+  "podcast_transcription_waiting": "Waiting to start",
+  "@podcast_transcription_waiting": {
+    "description": "Transcription waiting status"
+  },
+
+  "podcast_transcription_completed": "Completed",
+  "@podcast_transcription_completed": {
+    "description": "Transcription completed status"
+  },
+
+  "podcast_transcription_failed": "Failed",
+  "@podcast_transcription_failed": {
+    "description": "Transcription failed status"
+  },
+
+  "podcast_unknown_status": "Unknown status",
+  "@podcast_unknown_status": {
+    "description": "Unknown transcription status"
+  },
+
+  "date_format": "{year}-{month}-{day}",
+  "@date_format": {
+    "description": "Date format pattern",
+    "placeholders": {
+      "year": {"type": "int"},
+      "month": {"type": "String"},
+      "day": {"type": "String"}
+    }
   }
 }

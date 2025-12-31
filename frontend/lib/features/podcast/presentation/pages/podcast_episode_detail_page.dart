@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 import '../providers/podcast_providers.dart';
 import '../providers/transcription_providers.dart';
@@ -228,7 +229,7 @@ class _PodcastEpisodeDetailPageState
                         size: 20,
                       ),
                       onPressed: () => context.pop(),
-                      tooltip: '返回',
+                      tooltip: AppLocalizations.of(context)!.back_button,
                       constraints: const BoxConstraints(
                         minWidth: 36,
                         minHeight: 36,

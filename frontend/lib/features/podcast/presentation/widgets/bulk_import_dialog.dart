@@ -158,8 +158,8 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
             width: 600,
             height: 700,
             decoration: BoxDecoration(
-              color: _isDragging 
-                  ? Theme.of(context).primaryColor.withOpacity(0.15)
+              color: _isDragging
+                  ? Theme.of(context).primaryColor.withValues(alpha: 0.15)
                   : Theme.of(context).dialogBackgroundColor,
               border: Border.all(
                 color: _isDragging ? Theme.of(context).primaryColor : Colors.transparent,

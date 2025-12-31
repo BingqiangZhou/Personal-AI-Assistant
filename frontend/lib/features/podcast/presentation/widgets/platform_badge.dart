@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class PlatformBadge extends StatelessWidget {
   final String? platform;
@@ -10,11 +11,12 @@ class PlatformBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (platform == null || platform!.isEmpty || platform == 'generic') {
       return const SizedBox.shrink();
     }
 
-    final config = _getPlatformConfig(platform!);
+    final config = _getPlatformConfig(platform!, l10n);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -37,16 +39,16 @@ class PlatformBadge extends StatelessWidget {
     );
   }
 
-  _PlatformConfig _getPlatformConfig(String platform) {
+  _PlatformConfig _getPlatformConfig(String platform, AppLocalizations l10n) {
     switch (platform.toLowerCase()) {
       case 'xiaoyuzhou':
         return _PlatformConfig(
-          label: '小宇宙',
+          label: l10n.podcast_platform_xiaoyuzhou,
           color: const Color(0xFFFF6B35),
         );
       case 'ximalaya':
         return _PlatformConfig(
-          label: '喜马拉雅',
+          label: l10n.podcast_platform_ximalaya,
           color: const Color(0xFFE53935),
         );
       default:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 import '../../data/models/podcast_episode_model.dart';
 
@@ -302,6 +303,7 @@ class ShownotesDisplayWidget extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -313,7 +315,7 @@ class ShownotesDisplayWidget extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无节目简介',
+            l10n.podcast_no_shownotes,
             style: TextStyle(
               fontSize: 16,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -324,13 +326,14 @@ class ShownotesDisplayWidget extends ConsumerWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context)!;
     // 确保使用本地时间，而不是 UTC 时间
     final localDate = date.isUtc ? date.toLocal() : date;
     final year = localDate.year;
     final month = localDate.month.toString().padLeft(2, '0');
     final day = localDate.day.toString().padLeft(2, '0');
-    return '$year年$month月$day日';
+    return l10n.date_format(year, month, day);
   }
 
   Future<void> _launchUrl(String url) async {
