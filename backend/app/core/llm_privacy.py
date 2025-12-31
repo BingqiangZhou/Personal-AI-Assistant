@@ -48,9 +48,10 @@ class _BatchLogStats:
             'count': 0,
             'pii_types': set(),
             'first_time': None,
-            'last_time': None
+            'last_time': None,
+            'has_started': False  # 标记是否已开始（用于首次日志）
         })
-        self._window_seconds = 5  # 时间窗口：5秒内相同日志合并
+        self._window_seconds = 30  # 时间窗口：30秒内相同日志合并
 
     def add(self, user_id: int, pii_types: List[str], mode: str, timestamp: str):
         """添加日志记录"""
@@ -59,17 +60,24 @@ class _BatchLogStats:
 
         if stats['first_time'] is None:
             stats['first_time'] = timestamp
+            # 首次启动时输出INFO日志
+            if pii_types:
+                logger.info(
+                    f"PII Detection started - User: {user_id}, "
+                    f"Types detected: {sorted(set(pii_types))}, "
+                    f"Mode: {mode}"
+                )
         stats['last_time'] = timestamp
         stats['count'] += 1
         stats['pii_types'].update(pii_types)
 
     def should_log(self, user_id: int, mode: str) -> bool:
-        """判断是否应该输出日志（每10条或时间窗口结束时）"""
+        """判断是否应该输出日志（每50条或时间窗口结束时）"""
         key = f"{user_id}_{mode}"
         stats = self._stats[key]
 
-        # 每10条记录输出一次
-        if stats['count'] >= 10:
+        # 每50条记录输出一次
+        if stats['count'] >= 50:
             return True
 
         # 检查时间窗口是否结束
@@ -293,7 +301,7 @@ Instructions:
             if _batch_logger.should_log(kwargs['user_id'], kwargs['sanitize_mode']):
                 stats = _batch_logger.get_and_reset(kwargs['user_id'], kwargs['sanitize_mode'])
                 if stats:
-                    logger.info(
+                    logger.debug(
                         f"PII Detection (Batch) - User: {kwargs['user_id']}, "
                         f"Count: {stats['count']}, "
                         f"Types: {sorted(stats['pii_types'])}, "
