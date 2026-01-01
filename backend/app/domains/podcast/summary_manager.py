@@ -107,6 +107,21 @@ class SummaryModelManager:
         episode_info: Dict[str, Any]
     ) -> str:
         """调用AI API生成摘要"""
+        # 检查并处理过长的转录文本
+        max_prompt_length = 100000  # 约 25k tokens
+        if len(prompt) > max_prompt_length:
+            logger.warning(f"Prompt too long ({len(prompt)} chars), truncating to {max_prompt_length} chars")
+            prompt = prompt[:max_prompt_length] + "\n\n[内容过长，已截断]"
+
+        # 构建 API URL - 避免路径重复
+        api_url = model_config.api_url
+        if not api_url.endswith('/chat/completions'):
+            # 如果 URL 不包含完整路径，则添加
+            if api_url.endswith('/'):
+                api_url = f"{api_url}chat/completions"
+            else:
+                api_url = f"{api_url}/chat/completions"
+
         timeout = aiohttp.ClientTimeout(total=model_config.timeout_seconds)
 
         headers = {
@@ -134,19 +149,45 @@ class SummaryModelManager:
         if model_config.extra_config:
             data.update(model_config.extra_config)
 
+        # 详细日志记录
+        logger.info(f"🤖 [AI API] Calling {model_config.provider} API:")
+        logger.info(f"  - URL: {api_url}")
+        logger.info(f"  - Model: {model_config.model_id}")
+        logger.info(f"  - Prompt length: {len(prompt)} chars")
+        logger.info(f"  - Max tokens: {model_config.max_tokens}")
+        logger.info(f"  - Temperature: {data.get('temperature')}")
+
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(f"{model_config.api_url}/chat/completions", headers=headers, json=data) as response:
+            async with session.post(api_url, headers=headers, json=data) as response:
                 if response.status != 200:
                     error_text = await response.text()
-                    logger.error(f"AI API error: {response.status} - {error_text}")
-                    raise HTTPException(
-                        status_code=500,
-                        detail=f"AI summary API error: {response.status}"
-                    )
+                    logger.error(f"❌ [AI API] Request failed:")
+                    logger.error(f"  - Status: {response.status}")
+                    logger.error(f"  - Error: {error_text}")
+                    logger.error(f"  - Request data keys: {list(data.keys())}")
+                    logger.error(f"  - Headers: {headers}")
+
+                    # 提供更具体的错误信息
+                    if response.status == 400:
+                        raise HTTPException(
+                            status_code=500,
+                            detail=f"AI API bad request (400). Possible causes: invalid model ID, malformed request, or prompt too long. Error: {error_text[:200]}"
+                        )
+                    elif response.status == 401:
+                        raise HTTPException(
+                            status_code=500,
+                            detail=f"AI API authentication failed (401). Check API key configuration."
+                        )
+                    else:
+                        raise HTTPException(
+                            status_code=500,
+                            detail=f"AI summary API error: {response.status} - {error_text[:200]}"
+                        )
 
                 result = await response.json()
 
                 if 'choices' not in result or not result['choices']:
+                    logger.error(f"❌ [AI API] Invalid response structure: {result}")
                     raise HTTPException(
                         status_code=500,
                         detail="Invalid response from AI API"
@@ -154,12 +195,13 @@ class SummaryModelManager:
 
                 content = result['choices'][0].get('message', {}).get('content')
                 if not content or not isinstance(content, str):
-                    logger.error(f"AI API returned invalid content: {result}")
+                    logger.error(f"❌ [AI API] Returned invalid content: {result}")
                     raise HTTPException(
                         status_code=500,
                         detail="AI API returned empty or invalid content"
                     )
 
+                logger.info(f"✅ [AI API] Summary generated successfully: {len(content)} chars")
                 return content.strip()
 
     def _build_default_prompt(self, episode_info: Dict[str, Any], transcript: str) -> str:

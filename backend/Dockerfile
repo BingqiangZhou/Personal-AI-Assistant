@@ -1,12 +1,18 @@
-# 使用国内基础镜像
-FROM docker.m.daocloud.io/library/python:3.11-slim
+# 使用官方基础镜像
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app
 
-# Note: Python slim image already uses optimal package mirrors
+# 配置国内 Debian 镜像源（清华大学）
+RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list.d/debian.sources \
+    && sed -i 's/security.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list.d/debian.sources
+
+# Configure apt to use mirrors and retry on failure
+RUN echo "Acquire::Retries \"3\";" > /etc/apt/apt.conf.d/80-retries \
+    && echo "Acquire::http::Timeout \"30\";" > /etc/apt/apt.conf.d/80-timeout
 
 # Install system dependencies
 RUN apt-get update \

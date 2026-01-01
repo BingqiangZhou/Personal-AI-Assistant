@@ -37,46 +37,6 @@ from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 logger = logging.getLogger(__name__)
 
 
-# 全局进度日志节流器（用于减少重复日志）
-class _ProgressLogThrottle:
-    """进度日志节流器 - 减少频繁的进度日志输出"""
-    def __init__(self):
-        self._last_progress: Dict[int, Dict[str, float]] = defaultdict(lambda: {
-            'last_logged': 0.0,
-            'last_time': 0.0
-        })
-        self._log_interval = 5.0  # 进度每变化5%记录一次
-        self._time_interval = 10.0  # 或每10秒记录一次
-
-    def should_log(self, task_id: int, step: str, progress: float) -> bool:
-        """判断是否应该记录日志"""
-        key = f"{task_id}_{step}"
-        state = self._last_progress[key]
-
-        now = time.time()
-        progress_delta = abs(progress - state['last_logged'])
-        time_delta = now - state['last_time']
-
-        # 进度变化超过阈值 或 时间超过间隔
-        should_log = progress_delta >= self._log_interval or time_delta >= self._time_interval
-
-        if should_log:
-            state['last_logged'] = progress
-            state['last_time'] = now
-
-        return should_log
-
-    def reset(self, task_id: int, step: str):
-        """重置指定任务的进度跟踪"""
-        key = f"{task_id}_{step}"
-        if key in self._last_progress:
-            del self._last_progress[key]
-
-
-# 全局实例
-_progress_throttle = _ProgressLogThrottle()
-
-
 def log_with_timestamp(level: str, message: str, task_id: int = None):
     """
     输出带时间戳的日志
@@ -711,6 +671,9 @@ class PodcastTranscriptionService:
 
     def __init__(self, db: AsyncSession):
         self.db = db
+        # 进度缓存，减少数据库操作频率
+        self._progress_cache: Dict[str, Dict[str, float]] = {}
+
         # Get path from settings - use absolute path if configured, otherwise resolve relative path
         temp_dir_config = getattr(settings, 'TRANSCRIPTION_TEMP_DIR', './temp/transcription')
         storage_dir_config = getattr(settings, 'TRANSCRIPTION_STORAGE_DIR', './storage/podcasts')
@@ -817,6 +780,19 @@ class PodcastTranscriptionService:
         """使用指定的数据库会话更新任务进度和步骤"""
         from app.domains.podcast.models import TranscriptionStatus
 
+        # 使用内存缓存减少数据库读取频率
+        # 只有当进度变化超过1%时才真正更新数据库
+        cache_key = f"{task_id}_{step}"
+        if cache_key not in self._progress_cache:
+            self._progress_cache[cache_key] = {'last_db_update': 0.0, 'last_log': 0.0}
+
+        cached = self._progress_cache[cache_key]
+        progress_delta = abs(progress - cached['last_db_update'])
+
+        # 只在进度变化超过1%时才更新数据库
+        if progress_delta < 1.0 and int(progress) != 100:
+            return  # 跳过此次更新
+
         update_data = {
             'current_step': step,
             'progress_percentage': progress,
@@ -856,9 +832,14 @@ class PodcastTranscriptionService:
         await session.execute(stmt)
         await session.commit()
 
-        # 使用节流器减少日志输出
-        if _progress_throttle.should_log(task_id, step, progress):
+        # 更新缓存
+        cached['last_db_update'] = progress
+
+        # 基于进度变化判断是否需要记录日志
+        log_delta = abs(progress - cached['last_log'])
+        if log_delta >= 5.0 or int(progress) == 100:
             logger.info(f"Updated task {task_id}: step={step}, progress={progress:.1f}%")
+            cached['last_log'] = progress
 
     async def _set_task_final_status(
         self,
@@ -1121,7 +1102,7 @@ class PodcastTranscriptionService:
                     async def download_progress(progress):
                         nonlocal last_dl_progress
 
-                        # 每10%记录一次下载日志（而不是每10的倍数）
+                        # 每10%记录一次下载日志
                         if int(progress) // 10 > int(last_dl_progress) // 10:
                             logger.info(f"📥 [STEP 1 DOWNLOAD] Progress: {progress:.1f}%")
                             last_dl_progress = progress
@@ -1373,7 +1354,7 @@ class PodcastTranscriptionService:
                 async def transcribe_progress(progress):
                     nonlocal last_trans_progress
 
-                    # 每10%记录一次转录日志（而不是每10的倍数）
+                    # 每10%记录一次转录日志
                     if int(progress) // 10 > int(last_trans_progress) // 10:
                         logger.info(f"🤖 [STEP 4 TRANSCRIBE] Progress: {progress:.1f}%")
                         last_trans_progress = progress
