@@ -39,47 +39,18 @@ class PodcastSearchResultCard extends StatelessWidget {
           padding: const EdgeInsets.all(8),
           child: Row(
             children: [
-              // 播客封面（带国旗标识）
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: SizedBox(
-                      width: 56,
-                      height: 56,
-                      child: result.artworkUrl100 != null
-                          ? Image.network(
-                              result.artworkUrl100!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: theme.colorScheme.primaryContainer,
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.podcasts,
-                                      size: 24,
-                                      color: theme.colorScheme.onPrimaryContainer,
-                                    ),
-                                  ),
-                                );
-                              },
-                              loadingBuilder: (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Container(
-                                  color: theme.colorScheme.primaryContainer,
-                                  child: Center(
-                                    child: CircularProgressIndicator(
-                                      value: loadingProgress.expectedTotalBytes != null
-                                          ? loadingProgress.cumulativeBytesLoaded /
-                                              loadingProgress.expectedTotalBytes!
-                                          : null,
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
+              // 播客封面
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: SizedBox(
+                  width: 56,
+                  height: 56,
+                  child: result.artworkUrl100 != null
+                      ? Image.network(
+                          result.artworkUrl100!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
                               color: theme.colorScheme.primaryContainer,
                               child: Center(
                                 child: Icon(
@@ -88,33 +59,35 @@ class PodcastSearchResultCard extends StatelessWidget {
                                   color: theme.colorScheme.onPrimaryContainer,
                                 ),
                               ),
+                            );
+                          },
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: theme.colorScheme.primaryContainer,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                          loadingProgress.expectedTotalBytes!
+                                      : null,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: theme.colorScheme.primaryContainer,
+                          child: Center(
+                            child: Icon(
+                              Icons.podcasts,
+                              size: 24,
+                              color: theme.colorScheme.onPrimaryContainer,
                             ),
-                    ),
-                  ),
-                  // 国旗标识（左上角）
-                  Positioned(
-                    top: 2,
-                    left: 2,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1),
                           ),
-                        ],
-                      ),
-                      child: Text(
-                        searchCountry.flag,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ),
-                ],
+                        ),
+                ),
               ),
 
               const SizedBox(width: 10),

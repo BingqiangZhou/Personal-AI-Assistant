@@ -136,6 +136,9 @@ class AudioDownloader:
 
         try:
             async with self.session.get(url) as response:
+                # ℹ️ 输出响应头信息
+                logger.info(f"ℹ️ [Response Headers] {dict(response.headers)}")
+
                 if response.status != 200:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
@@ -148,8 +151,15 @@ class AudioDownloader:
 
                 # 下载文件
                 downloaded = 0
+                first_chunk_logged = False
                 async with aiofiles.open(destination, 'wb') as f:
                     async for chunk in response.content.iter_chunked(self.chunk_size):
+                        # ℹ️ 输出第一个chunk的前200字节
+                        if not first_chunk_logged:
+                            preview = chunk[:200]
+                            logger.info(f"ℹ️ [Response Body Preview] First 200 bytes: {preview}")
+                            first_chunk_logged = True
+
                         await f.write(chunk)
                         downloaded += len(chunk)
 
