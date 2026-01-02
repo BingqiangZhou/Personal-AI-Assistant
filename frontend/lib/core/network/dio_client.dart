@@ -24,11 +24,10 @@ class DioClient {
   static const String _serverBaseUrlKey = 'server_base_url';
 
   DioClient() {
-    // Use dynamic AppConfig.serverBaseUrl + /api/v1
-    final apiBaseUrl = '${config.AppConfig.serverBaseUrl}/api/v1';
-
+    // Initialize with default/empty baseUrl first
+    // The actual baseUrl will be applied by _applySavedBaseUrl()
     _dio = Dio(BaseOptions(
-      baseUrl: apiBaseUrl,
+      baseUrl: '',  // Will be set by _applySavedBaseUrl
       headers: constants.ApiConstants.headers,
       connectTimeout: Duration(milliseconds: constants.ApiConstants.connectTimeout.inMilliseconds),
       receiveTimeout: Duration(milliseconds: constants.ApiConstants.receiveTimeout.inMilliseconds),
@@ -44,7 +43,24 @@ class DioClient {
       ),
     );
 
-    // Apply saved baseUrl asynchronously
+    // Apply saved baseUrl synchronously before returning
+    _initializeBaseUrl();
+  }
+
+  /// Initialize baseUrl from saved storage or default config
+  /// This must be called synchronously during construction
+  void _initializeBaseUrl() {
+    // Try to get saved URL synchronously from AppConfig first
+    // AppConfig.setServerBaseUrl() should have been called during app init
+    final savedBaseUrl = config.AppConfig.serverBaseUrl;
+    final apiBaseUrl = savedBaseUrl.isNotEmpty
+        ? '$savedBaseUrl/api/v1'
+        : '${config.AppConfig.serverBaseUrl}/api/v1';
+
+    _dio.options.baseUrl = apiBaseUrl;
+    debugPrint('🔧 [DioClient] Initialized with baseUrl: $apiBaseUrl');
+
+    // Apply any saved URL from storage asynchronously to ensure it's up to date
     _applySavedBaseUrl();
   }
 
@@ -71,9 +87,9 @@ class DioClient {
         while (normalizedUrl.endsWith('/')) {
           normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length - 1);
         }
-        // Remove /api/v1 suffix if present
+        // Remove /api/v1 suffix if present (7 characters)
         if (normalizedUrl.endsWith('/api/v1')) {
-          normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length - 8);
+          normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length - 7);
         } else if (normalizedUrl.contains('/api/v1/')) {
           normalizedUrl = normalizedUrl.replaceFirst('/api/v1/', '/');
         }

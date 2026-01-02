@@ -40,10 +40,20 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final storageService = LocalStorageServiceImpl(prefs);
 
-  // Load API Base URL
-  final customBaseUrl = await storageService.getApiBaseUrl();
-  if (customBaseUrl != null && customBaseUrl.isNotEmpty) {
-    AppConfig.setApiBaseUrl(customBaseUrl);
+  // Load Server Base URL (backend server address without /api/v1 suffix)
+  final customServerUrl = await storageService.getServerBaseUrl();
+  if (customServerUrl != null && customServerUrl.isNotEmpty) {
+    AppConfig.setServerBaseUrl(customServerUrl);
+    debugPrint('📥 [AppInit] Loaded server URL: $customServerUrl');
+  }
+
+  // For backward compatibility, also check old api_base_url
+  final oldApiBaseUrl = await storageService.getApiBaseUrl();
+  if (oldApiBaseUrl != null && oldApiBaseUrl.isNotEmpty) {
+    // Migrate old api_base_url to new server_base_url
+    await storageService.saveServerBaseUrl(oldApiBaseUrl);
+    AppConfig.setServerBaseUrl(oldApiBaseUrl);
+    debugPrint('🔄 [AppInit] Migrated old API URL to server URL: $oldApiBaseUrl');
   }
 
   // Run app with custom splash screen wrapper and providers

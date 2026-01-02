@@ -837,8 +837,13 @@ class PodcastTranscriptionService:
 
         # 基于进度变化判断是否需要记录日志
         log_delta = abs(progress - cached['last_log'])
+        # 只在进度变化超过5%或完成时才记录日志
         if log_delta >= 5.0 or int(progress) == 100:
-            logger.info(f"Updated task {task_id}: step={step}, progress={progress:.1f}%")
+            # 使用简化的日志格式
+            if int(progress) == 100:
+                logger.info(f"✅ [PROGRESS] Task {task_id}: {step} - COMPLETED")
+            else:
+                logger.info(f"📊 [PROGRESS] Task {task_id}: {step} - {progress:.1f}%")
             cached['last_log'] = progress
 
     async def _set_task_final_status(

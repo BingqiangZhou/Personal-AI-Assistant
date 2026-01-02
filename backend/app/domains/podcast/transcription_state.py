@@ -9,6 +9,7 @@ Provides fast state management for podcast transcription tasks:
 
 import json
 import logging
+import time
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
 
@@ -16,6 +17,60 @@ from app.core.redis import PodcastRedis
 from app.domains.podcast.models import TranscriptionStatus
 
 logger = logging.getLogger(__name__)
+
+
+class ProgressLogThrottle:
+    """节流器，减少频繁的进度日志输出"""
+
+    def __init__(self, min_interval_seconds: int = 5):
+        """
+        Args:
+            min_interval_seconds: 最小日志间隔时间（秒）
+        """
+        self.min_interval = min_interval_seconds
+        self._last_log_time: Dict[str, float] = {}
+        self._last_log_progress: Dict[str, float] = {}
+
+    def should_log(self, task_id: int, status: str, progress: float) -> bool:
+        """
+        判断是否应该记录日志
+
+        Args:
+            task_id: 任务ID
+            status: 任务状态
+            progress: 进度百分比
+
+        Returns:
+            True 如果应该记录日志
+        """
+        key = f"{task_id}_{status}"
+        current_time = time.time()
+
+        # 获取上次日志记录的时间和进度
+        last_time = self._last_log_time.get(key, 0)
+        last_progress = self._last_log_progress.get(key, -1)
+
+        # 检查时间间隔（默认5秒）
+        time_elapsed = current_time - last_time
+        if time_elapsed < self.min_interval:
+            return False
+
+        # 检查进度变化（至少5%）
+        progress_changed = abs(progress - last_progress) >= 5.0
+
+        # 特殊进度点（0%, 50%, 100%）总是记录
+        milestone = (progress < 1) or (49 <= progress <= 51) or (progress >= 99)
+
+        if progress_changed or milestone:
+            self._last_log_time[key] = current_time
+            self._last_log_progress[key] = progress
+            return True
+
+        return False
+
+
+# 全节气流器实例
+_progress_throttle = ProgressLogThrottle(min_interval_seconds=5)
 
 
 class TranscriptionStateKeys:
@@ -244,7 +299,8 @@ class TranscriptionStateManager:
         # Also update lightweight status
         await self.set_task_status(task_id, status, progress, ttl_seconds)
 
-        if int(progress) % 10 == 0:  # Log every 10%
+        # Use throttle to reduce log frequency (log every 5% or every 5 seconds, whichever is longer)
+        if _progress_throttle.should_log(task_id, status, progress):
             logger.info(f"📊 [PROGRESS] Task {task_id}: {progress:.1f}% - {message}")
 
     async def get_task_progress(self, task_id: int) -> Optional[Dict[str, Any]]:
