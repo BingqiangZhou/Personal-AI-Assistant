@@ -372,6 +372,7 @@ class PodcastTranscriptionResponse(PodcastBaseSchema):
     original_file_size: Optional[int] = None
     transcript_word_count: Optional[int] = None
     transcript_duration: Optional[int] = None
+    transcript_content: Optional[str] = None  # ← 添加缺失的字段
     error_message: Optional[str] = None
     error_code: Optional[str] = None
     download_time: Optional[float] = None

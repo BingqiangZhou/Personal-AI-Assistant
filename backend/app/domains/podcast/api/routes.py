@@ -933,6 +933,7 @@ def _build_transcription_response(task, episode) -> PodcastTranscriptionResponse
         original_file_size=task.original_file_size,
         transcript_word_count=task.transcript_word_count,
         transcript_duration=task.transcript_duration,
+        transcript_content=task.transcript_content,  # ← 添加缺失的字段
         error_message=task.error_message,
         error_code=task.error_code,
         download_time=task.download_time,

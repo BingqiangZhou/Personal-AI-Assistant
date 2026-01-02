@@ -5,9 +5,8 @@ import 'package:dio/dio.dart';
 import '../app/config/app_config.dart';
 import '../network/dio_client.dart';
 import '../network/api_services.dart';
-import '../network/simple_auth_service.dart';
 import '../storage/local_storage_service.dart';
-import '../../features/user/presentation/providers/user_provider.dart';
+import '../../features/user/presentation/providers/user_provider.dart' show simpleAuthServiceProvider;
 
 // Dio Client Provider
 final dioClientProvider = Provider<DioClient>((ref) {
@@ -136,6 +135,9 @@ class ServerConfigNotifier extends Notifier<ServerConfigState> {
       // Update DioClient
       final dioClient = ref.read(dioClientProvider);
       dioClient.updateBaseUrl('$normalizedUrl/api/v1');
+
+      // Invalidate apiServiceProvider to force recreation with new baseUrl
+      ref.invalidate(apiServiceProvider);
 
       // Update SimpleAuthService baseUrl
       try {
