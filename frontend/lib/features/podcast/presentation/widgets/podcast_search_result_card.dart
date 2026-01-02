@@ -142,24 +142,30 @@ class PodcastSearchResultCard extends StatelessWidget {
 
               const SizedBox(width: 8),
 
-              // 订阅按钮（根据订阅状态显示不同样式）
+              // 订阅状态图标（根据订阅状态显示不同样式）
               isSubscribed
-                  ? FilledButton.tonalIcon(
-                      onPressed: null, // 已订阅，禁用按钮
-                      icon: const Icon(Icons.check),
-                      label: Text(l10n.podcast_subscribed),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        backgroundColor: theme.colorScheme.primaryContainer,
-                        foregroundColor: theme.colorScheme.onPrimaryContainer,
+                  ? Tooltip(
+                      message: l10n.podcast_subscribed,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.check_circle,
+                          color: theme.colorScheme.primary,
+                          size: 32,
+                        ),
                       ),
                     )
-                  : FilledButton.tonalIcon(
-                      onPressed: () => onSubscribe?.call(result),
-                      icon: const Icon(Icons.add),
-                      label: Text(l10n.podcast_subscribe),
-                      style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  : Tooltip(
+                      message: l10n.podcast_subscribe,
+                      child: IconButton(
+                        onPressed: () => onSubscribe?.call(result),
+                        icon: const Icon(Icons.add_circle_outline),
+                        iconSize: 32,
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
             ],

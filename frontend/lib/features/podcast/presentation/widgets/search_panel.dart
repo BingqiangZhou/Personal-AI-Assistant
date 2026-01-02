@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_search_model.dart';
+import '../../data/models/podcast_state_models.dart';
 import '../providers/podcast_search_provider.dart';
 import '../providers/podcast_providers.dart' as providers;
 import '../widgets/country_selector.dart';
@@ -226,7 +227,7 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
   Widget _buildSearchResults(
     BuildContext context,
     PodcastSearchState searchState,
-    providers.PodcastSubscriptionState subscriptionState,
+    PodcastSubscriptionState subscriptionState,
     AppLocalizations l10n,
   ) {
     // 未搜索时显示空状态
@@ -351,9 +352,9 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
         itemCount: searchState.results.length,
         itemBuilder: (context, index) {
           final result = searchState.results[index];
-          // 检查该播客是否已订阅（通过 feedUrl 匹配）
+          // 检查该播客是否已订阅（通过 feedUrl 匹配 sourceUrl）
           final isSubscribed = subscriptionState.subscriptions.any(
-            (sub) => sub.feedUrl == result.feedUrl,
+            (sub) => sub.sourceUrl == result.feedUrl,
           );
           return PodcastSearchResultCard(
             result: result,
