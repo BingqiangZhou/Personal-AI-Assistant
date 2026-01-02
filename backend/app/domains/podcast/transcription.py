@@ -130,6 +130,10 @@ class AudioDownloader:
         # 确保目录存在
         os.makedirs(os.path.dirname(destination), exist_ok=True)
 
+        # 输出请求头信息用于调试
+        logger.info(f"📤 [HTTP REQUEST] URL: {url}")
+        logger.info(f"📤 [HTTP REQUEST] Headers: {dict(self.session.headers)}")
+
         try:
             async with self.session.get(url) as response:
                 if response.status != 200:
