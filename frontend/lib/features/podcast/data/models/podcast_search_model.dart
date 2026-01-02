@@ -5,11 +5,11 @@ part 'podcast_search_model.g.dart';
 
 /// 国家/地区枚举
 enum PodcastCountry {
-  china('cn', 'podcast_country_china', '🇨🇳'),
-  usa('us', 'podcast_country_usa', '🇺🇸'),
-  japan('jp', 'podcast_country_japan', '🇯🇵'),
-  uk('gb', 'podcast_country_uk', '🇬🇧'),
-  germany('de', 'podcast_country_germany', '🇩🇪'),
+  china('cn', 'podcast_country_china', '🇨🇳', isPopular: true),
+  usa('us', 'podcast_country_usa', '🇺🇸', isPopular: true),
+  japan('jp', 'podcast_country_japan', '🇯🇵', isPopular: true),
+  uk('gb', 'podcast_country_uk', '🇬🇧', isPopular: true),
+  germany('de', 'podcast_country_germany', '🇩🇪', isPopular: true),
   france('fr', 'podcast_country_france', '🇫🇷'),
   canada('ca', 'podcast_country_canada', '🇨🇦'),
   australia('au', 'podcast_country_australia', '🇦🇺'),
@@ -25,8 +25,18 @@ enum PodcastCountry {
   final String code;
   final String localizationKey;
   final String flag;
+  final bool isPopular;
 
-  const PodcastCountry(this.code, this.localizationKey, this.flag);
+  const PodcastCountry(
+    this.code,
+    this.localizationKey,
+    this.flag, {
+    this.isPopular = false,
+  });
+
+  /// 获取常用地区列表
+  static List<PodcastCountry> get popularRegions =>
+      values.where((country) => country.isPopular).toList();
 }
 
 /// iTunes 搜索结果模型

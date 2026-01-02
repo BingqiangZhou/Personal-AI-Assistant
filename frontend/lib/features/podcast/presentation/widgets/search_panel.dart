@@ -8,6 +8,7 @@ import '../providers/podcast_search_provider.dart';
 import '../providers/podcast_providers.dart' as providers;
 import '../providers/country_selector_provider.dart';
 import 'podcast_search_result_card.dart';
+import 'country_selector_dropdown.dart';
 
 /// 播客搜索面板组件
 ///
@@ -34,6 +35,8 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
   late Animation<double> _expandAnimation;
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  final GlobalKey _countryButtonKey = GlobalKey();
+  OverlayEntry? _countrySelectorOverlay;
 
   @override
   void initState() {
@@ -79,10 +82,53 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
 
   @override
   void dispose() {
+    _countrySelectorOverlay?.remove();
     _animationController.dispose();
     _searchController.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _toggleCountrySelector() {
+    if (_countrySelectorOverlay == null) {
+      _showCountrySelector();
+    } else {
+      _hideCountrySelector();
+    }
+  }
+
+  void _showCountrySelector() {
+    _hideCountrySelector(); // 先关闭已存在的
+
+    final renderBox = _countryButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final offset = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+
+    _countrySelectorOverlay = OverlayEntry(
+      builder: (context) => _CountrySelectorOverlay(
+        buttonOffset: offset,
+        buttonSize: size,
+        onCountryChanged: (country) {
+          final countryNotifier = ref.read(countrySelectorProvider.notifier);
+          countryNotifier.selectCountry(country);
+          _hideCountrySelector();
+          // 国家变化时重新搜索
+          if (_searchController.text.isNotEmpty) {
+            _handleSearch(_searchController.text);
+          }
+        },
+        onDismiss: _hideCountrySelector,
+      ),
+    );
+
+    Overlay.of(context).insert(_countrySelectorOverlay!);
+  }
+
+  void _hideCountrySelector() {
+    _countrySelectorOverlay?.remove();
+    _countrySelectorOverlay = null;
   }
 
   void _handleSearch(String query) {
@@ -101,7 +147,6 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
     final searchState = ref.watch(podcastSearchProvider);
     final subscriptionState = ref.watch(providers.podcastSubscriptionProvider);
     final countryState = ref.watch(countrySelectorProvider);
-    final countryNotifier = ref.read(countrySelectorProvider.notifier);
 
     // 未展开时不显示任何内容
     if (!widget.expanded && !searchState.hasSearched) {
@@ -143,9 +188,12 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
                       maxWidth: double.infinity,
                     ),
                     // 国家选择器作为前置widget（显示国家代码）
-                    leading: PopupMenuButton<PodcastCountry>(
-                      icon: Container(
+                    leading: InkWell(
+                      key: _countryButtonKey,
+                      onTap: _toggleCountrySelector,
+                      child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        margin: const EdgeInsets.only(right: 8),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(8),
@@ -163,128 +211,13 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
                             ),
                             const SizedBox(width: 4),
                             Icon(
-                              Icons.arrow_drop_down,
+                              _countrySelectorOverlay != null ? Icons.arrow_drop_up : Icons.arrow_drop_down,
                               size: 18,
                               color: Theme.of(context).colorScheme.onPrimaryContainer,
                             ),
                           ],
                         ),
                       ),
-                      tooltip: l10n.podcast_country_label,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 8,
-                      onSelected: (country) {
-                        countryNotifier.selectCountry(country);
-                        // 国家变化时重新搜索
-                        if (_searchController.text.isNotEmpty) {
-                          _handleSearch(_searchController.text);
-                        }
-                      },
-                      itemBuilder: (context) {
-                        return PodcastCountry.values.map((country) {
-                          final isSelected = countryState.selectedCountry == country;
-                          // 根据本地化键获取国家名称
-                          String countryName;
-                          switch (country.localizationKey) {
-                            case 'podcast_country_china':
-                              countryName = l10n.podcast_country_china;
-                              break;
-                            case 'podcast_country_usa':
-                              countryName = l10n.podcast_country_usa;
-                              break;
-                            case 'podcast_country_japan':
-                              countryName = l10n.podcast_country_japan;
-                              break;
-                            case 'podcast_country_uk':
-                              countryName = l10n.podcast_country_uk;
-                              break;
-                            case 'podcast_country_germany':
-                              countryName = l10n.podcast_country_germany;
-                              break;
-                            case 'podcast_country_france':
-                              countryName = l10n.podcast_country_france;
-                              break;
-                            case 'podcast_country_canada':
-                              countryName = l10n.podcast_country_canada;
-                              break;
-                            case 'podcast_country_australia':
-                              countryName = l10n.podcast_country_australia;
-                              break;
-                            case 'podcast_country_korea':
-                              countryName = l10n.podcast_country_korea;
-                              break;
-                            case 'podcast_country_taiwan':
-                              countryName = l10n.podcast_country_taiwan;
-                              break;
-                            case 'podcast_country_hong_kong':
-                              countryName = l10n.podcast_country_hong_kong;
-                              break;
-                            case 'podcast_country_india':
-                              countryName = l10n.podcast_country_india;
-                              break;
-                            case 'podcast_country_brazil':
-                              countryName = l10n.podcast_country_brazil;
-                              break;
-                            case 'podcast_country_mexico':
-                              countryName = l10n.podcast_country_mexico;
-                              break;
-                            case 'podcast_country_spain':
-                              countryName = l10n.podcast_country_spain;
-                              break;
-                            case 'podcast_country_italy':
-                              countryName = l10n.podcast_country_italy;
-                              break;
-                            default:
-                              countryName = country.code.toUpperCase();
-                          }
-
-                          return PopupMenuItem(
-                            value: country,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
-                                    : null,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                              child: Row(
-                                children: [
-                                  // 国家代码文字
-                                  SizedBox(
-                                    width: 32,
-                                    child: Text(
-                                      country.code.toUpperCase(),
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).colorScheme.primary,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      countryName,
-                                      style: TextStyle(
-                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                      ),
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    Icon(
-                                      Icons.check_circle,
-                                      size: 20,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).toList();
-                      },
                     ),
                     trailing: [
                       if (_searchController.text.isNotEmpty)
@@ -455,6 +388,72 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
             searchCountry: searchState.searchCountry,
           );
         },
+      ),
+    );
+  }
+}
+
+/// 浮动国家选择器 Overlay
+class _CountrySelectorOverlay extends StatelessWidget {
+  const _CountrySelectorOverlay({
+    required this.buttonOffset,
+    required this.buttonSize,
+    required this.onCountryChanged,
+    required this.onDismiss,
+  });
+
+  final Offset buttonOffset;
+  final Size buttonSize;
+  final ValueChanged<PodcastCountry> onCountryChanged;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final maxHeight = MediaQuery.of(context).size.height * 0.6;
+
+    // 计算选择器位置
+    double left = buttonOffset.dx;
+    double top = buttonOffset.dy + buttonSize.height + 8;
+
+    // 确保不超出屏幕边界
+    final selectorWidth = 360.0;
+    if (left + selectorWidth > screenWidth) {
+      left = screenWidth - selectorWidth - 16;
+    }
+    if (left < 16) {
+      left = 16;
+    }
+
+    return GestureDetector(
+      onTap: onDismiss,
+      behavior: HitTestBehavior.translucent,
+      child: Stack(
+        children: [
+          // 透明背景层（用于点击外部关闭）
+          Container(color: Colors.transparent),
+          // 浮动选择器
+          Positioned(
+            left: left,
+            top: top,
+            child: GestureDetector(
+              onTap: () {}, // 阻止事件冒泡到背景层
+              child: Material(
+                elevation: 8,
+                borderRadius: BorderRadius.circular(12),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: selectorWidth,
+                    maxHeight: maxHeight,
+                  ),
+                  child: CountrySelectorDropdown(
+                    onCountryChanged: onCountryChanged,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
