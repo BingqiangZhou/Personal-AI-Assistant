@@ -260,20 +260,12 @@ class SummaryModelManager:
         return prompt
 
     async def _get_api_key(self, model_config) -> str:
-        """获取API密钥"""
+        """获取API密钥（统一从数据库读取）"""
         # 如果未加密，直接返回
         if not model_config.api_key_encrypted:
             return model_config.api_key if model_config.api_key else ""
 
-        # 对于系统预设模型，从环境变量获取
-        if model_config.is_system:
-            from app.core.config import settings
-            if model_config.provider == "openai":
-                return getattr(settings, 'OPENAI_API_KEY', '')
-            elif model_config.provider == "siliconflow":
-                return getattr(settings, 'TRANSCRIPTION_API_KEY', '')
-
-        # 对于用户自定义模型，使用Fernet解密
+        # 使用Fernet解密
         from app.core.security import decrypt_data
         try:
             decrypted = decrypt_data(model_config.api_key)

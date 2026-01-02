@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../providers/transcription_providers.dart';
 import '../../data/models/podcast_transcription_model.dart';
 
@@ -359,6 +360,7 @@ class _TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidge
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -370,7 +372,7 @@ class _TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidge
           ),
           const SizedBox(height: 16),
           Text(
-            '暂无转录内容',
+            l10n.podcast_no_transcript,
             style: TextStyle(
               fontSize: 16,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -378,7 +380,7 @@ class _TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidge
           ),
           const SizedBox(height: 8),
           Text(
-            '点击"开始转录"按钮生成转录文本',
+            l10n.podcast_click_to_transcribe,
             style: TextStyle(
               fontSize: 14,
               color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),

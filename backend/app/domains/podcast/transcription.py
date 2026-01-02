@@ -96,10 +96,14 @@ class AudioDownloader:
         """异步上下文管理器入口"""
         connector = aiohttp.TCPConnector(limit=10, limit_per_host=5)
         timeout = aiohttp.ClientTimeout(total=self.timeout)
+        # 使用浏览器 User-Agent 以绕过 CDN 防护
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+        }
         self.session = aiohttp.ClientSession(
             connector=connector,
             timeout=timeout,
-            headers={'User-Agent': 'Personal-AI-Assistant/1.0'}
+            headers=headers
         )
         return self
 
