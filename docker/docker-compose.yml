@@ -72,6 +72,8 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
+      # Playwright configuration
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
     ports:
       - "${BACKEND_PUBLISH_PORT:-8000}:8000"
     volumes:
@@ -88,9 +90,21 @@ services:
     networks:
       - app_network
     restart: always
+    # Resource limits for running Playwright Chromium
+    # Increase memory and CPU for browser operations
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     # 本地开发使用 uvicorn --reload，云端使用 gunicorn
     # Local: uvicorn --reload, Cloud: gunicorn
     command: ${BACKEND_CMD:-uvicorn app.main:app --host 0.0.0.0 --port 8000}
+    # Use shared memory for Chromium
+    shm_size: 2gb
 
   # =============================================================================
   # Celery Worker
@@ -107,6 +121,8 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
+      # Playwright configuration
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
     volumes:
       - backend_data:/app/data
       - ${TRANSCRIPTION_STORAGE_DIR:-./storage/podcasts}:/app/storage/podcasts
@@ -120,7 +136,19 @@ services:
     networks:
       - app_network
     restart: always
+    # Resource limits for running Playwright Chromium
+    # Worker needs more resources for transcription and browser operations
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
     command: celery -A app.domains.podcast.tasks.celery_app worker --loglevel=${CELERY_LOG_LEVEL:-info} --concurrency=${CELERY_WORKERS:-2} -Q celery,podcast,ai,transcription,cleanup,recommendation
+    # Use shared memory for Chromium
+    shm_size: 2gb
 
   # =============================================================================
   # Celery Beat

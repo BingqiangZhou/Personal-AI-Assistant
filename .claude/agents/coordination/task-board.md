@@ -365,6 +365,60 @@ Implement OCR functionality to extract text from images and PDFs, making them se
 
 ---
 
+#### [M-002] Podcast Audio Download Fallback Mechanism
+**Domain**: Multimedia (Podcast)
+**Assigned To**: Backend Developer
+**Priority**: High
+**Status**: Todo
+**Created**: 2026-01-03
+**Estimated**: 5 days
+**Related PRD**: [PRD-2026-001](../../../specs/active/podcast-audio-download-fallback.md)
+
+**Description**
+Implement browser-based fallback mechanism for podcast audio downloads when aiohttp fails due to CDN protections (403, 429, 503 errors). Uses Playwright to launch headless browser for downloading protected audio files.
+
+**Requirements**
+- [ ] Install and configure Playwright with Chromium
+- [ ] Implement `BrowserAudioDownloader` class
+- [ ] Modify `AudioDownloader` to support automatic fallback
+- [ ] Add error classification logic (trigger fallback on 403, 429, 503)
+- [ ] Add `download_method` field to TranscriptionTask model
+- [ ] Implement browser resource cleanup guarantees
+- [ ] Add comprehensive logging for both methods
+- [ ] Write unit and integration tests
+
+**Dependencies**
+- Depends on: None
+- Blocks: None
+
+**Acceptance Criteria**
+- [ ] When aiohttp fails with 403/429/503, browser download is automatically triggered
+- [ ] Download success rate increases from 85% to >95%
+- [ ] Transcription tasks complete successfully after browser fallback
+- [ ] Browser instances are properly cleaned up after download
+- [ ] Download method is tracked in database and visible in API responses
+- [ ] All tests pass (unit, integration, performance)
+- [ ] Memory usage per browser instance stays under 500MB
+- [ ] Average download overhead <10 seconds compared to aiohttp
+
+**Technical Implementation**
+- File: `backend/app/domains/podcast/transcription.py`
+- New class: `BrowserAudioDownloader`
+- Modified class: `AudioDownloader.download_file_with_fallback()`
+- Database migration: Add `download_method` column
+- Tests: `backend/app/domains/podcast/tests/test_audio_download_fallback.py`
+
+**Notes**
+- This feature is critical for improving podcast transcription reliability
+- Browser fallback should add minimal overhead to user experience
+- Must handle concurrent downloads with resource limits (max 3 browsers)
+- Requires Playwright and Chromium browser installation in Docker
+
+**Updates**
+- [2026-01-03 10:00] - [Product Manager]: PRD created, task ready for assignment
+
+---
+
 ## Coordination Guidelines
 
 ### Communication Channels

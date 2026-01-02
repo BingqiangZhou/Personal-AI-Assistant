@@ -13,6 +13,8 @@ import tempfile
 import hashlib
 import json
 import time
+import shutil
+import ssl
 from typing import List, Dict, Optional, Tuple, AsyncGenerator
 from dataclasses import dataclass
 from urllib.parse import urlparse
@@ -185,6 +187,311 @@ class AudioDownloader:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Download failed: {str(e)}"
             )
+
+    async def download_file_with_fallback(
+        self,
+        url: str,
+        destination: str,
+        progress_callback=None
+    ) -> Tuple[str, int, str]:
+        """
+        带自动回退机制的文件下载
+
+        先尝试使用 aiohttp 下载，失败时自动切换到浏览器下载
+
+        Args:
+            url: 下载URL
+            destination: 保存路径
+            progress_callback: 进度回调函数
+
+        Returns:
+            Tuple[str, int, str]: (文件路径, 文件大小, 下载方法)
+
+        Raises:
+            HTTPException: 如果两种方法都失败
+        """
+        # 步骤 1: 尝试 aiohttp 下载
+        try:
+            logger.info(f"🔄 [FALLBACK] Attempting aiohttp download for: {url[:100]}...")
+            file_path, file_size = await self.download_file(url, destination, progress_callback)
+            logger.info(f"✅ [FALLBACK] aiohttp download succeeded")
+            return file_path, file_size, "aiohttp"
+
+        except Exception as aiohttp_error:
+            logger.warning(f"⚠️ [FALLBACK] aiohttp download failed: {type(aiohttp_error).__name__}")
+
+            # 步骤 2: 检查是否应该触发回退
+            if not should_trigger_fallback(aiohttp_error):
+                logger.error(f"❌ [FALLBACK] Error type does not trigger fallback, aborting")
+                # 如果不是可回退的错误，直接抛出原始异常
+                if isinstance(aiohttp_error, HTTPException):
+                    raise
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"Download failed: {str(aiohttp_error)}"
+                    )
+
+            # 步骤 3: 执行浏览器回退下载
+            logger.info(f"🌐 [FALLBACK] Triggering browser fallback download...")
+            try:
+                browser_downloader = BrowserAudioDownloader(
+                    timeout=self.timeout,
+                    max_concurrent=3
+                )
+                file_path, file_size = await browser_downloader.download_with_playwright(
+                    url,
+                    destination,
+                    progress_callback
+                )
+                logger.info(f"✅ [FALLBACK] Browser fallback download succeeded")
+                return file_path, file_size, "browser"
+
+            except Exception as browser_error:
+                # 步骤 4: 两种方法都失败，抛出详细错误
+                logger.error(f"❌ [FALLBACK] Both aiohttp and browser downloads failed")
+                logger.error(f"❌ [FALLBACK] aiohttp error: {type(aiohttp_error).__name__}: {aiohttp_error}")
+                logger.error(f"❌ [FALLBACK] browser error: {type(browser_error).__name__}: {browser_error}")
+
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=(
+                        f"Audio download failed using both HTTP and browser methods. "
+                        f"aiohttp: {type(aiohttp_error).__name__}, "
+                        f"browser: {type(browser_error).__name__}"
+                    )
+                )
+
+
+def should_trigger_fallback(error: Exception) -> bool:
+    """
+    判断是否应该触发浏览器回退
+
+    仅在特定错误类型时触发浏览器回退：
+    - HTTP 403（禁止访问）
+    - HTTP 429（请求过多）
+    - HTTP 503（服务不可用）
+    - 连接超时错误
+    - SSL 证书错误
+
+    Args:
+        error: aiohttp 下载时的异常
+
+    Returns:
+        bool: True 表示应该触发浏览器回退
+    """
+    # 检查 HTTPException 的状态码
+    if isinstance(error, HTTPException):
+        status_code = error.status_code
+        # 对于 HTTPException，我们检查其 detail 字段中的状态码信息
+        if hasattr(error, 'detail'):
+            detail_str = str(error.detail)
+            # 从 detail 字符串中提取状态码
+            if 'HTTP 403' in detail_str or status_code == 403:
+                return True
+            if 'HTTP 429' in detail_str or status_code == 429:
+                return True
+            if 'HTTP 503' in detail_str or status_code == 503:
+                return True
+            if '408' in detail_str or status_code == 408:  # Request timeout
+                return True
+        # 直接检查状态码
+        if status_code in [403, 429, 503, 408]:
+            return True
+
+    # 检查超时错误
+    if isinstance(error, (asyncio.TimeoutError, TimeoutError)):
+        return True
+
+    # 检查 aiohttp 客户端错误
+    if isinstance(error, (aiohttp.ClientError, aiohttp.ClientResponseError)):
+        return True
+
+    # 检查 SSL 错误
+    if isinstance(error, (ssl.SSLError, aiohttp.ClientSSLError)):
+        return True
+
+    # 检查连接错误
+    if isinstance(error, (aiohttp.ClientConnectionError, aiohttp.ServerDisconnectedError)):
+        return True
+
+    return False
+
+
+class BrowserAudioDownloader:
+    """
+    基于浏览器的音频文件下载器
+
+    当 aiohttp 下载失败时（403/429/503 等错误），
+    使用 Playwright 启动无头浏览器来下载文件
+    """
+
+    def __init__(self, timeout: int = 300, max_concurrent: int = 3):
+        """
+        初始化浏览器下载器
+
+        Args:
+            timeout: 下载超时时间（秒）
+            max_concurrent: 最大并发浏览器实例数
+        """
+        self.timeout = timeout
+        self.max_concurrent = max_concurrent
+        self._semaphore = asyncio.Semaphore(max_concurrent)
+
+    async def download_with_playwright(
+        self,
+        url: str,
+        destination: str,
+        progress_callback=None
+    ) -> Tuple[str, int]:
+        """
+        使用 Playwright 浏览器下载文件
+
+        Args:
+            url: 音频文件 URL
+            destination: 保存路径
+            progress_callback: 进度回调函数
+
+        Returns:
+            Tuple[str, int]: (文件路径, 文件大小)
+
+        Raises:
+            HTTPException: 如果浏览器下载失败
+        """
+        async with self._semaphore:  # 限制并发浏览器数量
+            from playwright.async_api import async_playwright, Error as PlaywrightError
+
+            # 确保目录存在
+            os.makedirs(os.path.dirname(destination), exist_ok=True)
+
+            browser = None
+            context = None
+            download = None
+
+            try:
+                logger.info(f"🌐 [BROWSER DOWNLOAD] Starting browser download for: {url[:100]}...")
+
+                async with async_playwright() as p:
+                    # 启动 Chromium 浏览器（无头模式）
+                    browser = await p.chromium.launch(
+                        headless=True,
+                        args=[
+                            '--disable-dev-shm-usage',
+                            '--no-sandbox',
+                            '--disable-gpu'
+                        ]
+                    )
+
+                    # 创建浏览器上下文
+                    context = await browser.new_context(
+                        accept_downloads=True,
+                        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                        viewport={'width': 1920, 'height': 1080}
+                    )
+
+                    page = await context.new_page()
+
+                    # 设置下载超时
+                    page.set_default_timeout(self.timeout * 1000)
+
+                    # 监听下载事件
+                    download_started = asyncio.Event()
+                    download_info = {'download': None, 'error': None}
+
+                    async def handle_download(d):
+                        download_info['download'] = d
+                        download_started.set()
+
+                    page.on('download', handle_download)
+
+                    # 导航到音频 URL（触发下载）
+                    try:
+                        await page.goto(url, wait_until='domcontentloaded', timeout=self.timeout * 1000)
+                    except PlaywrightError as e:
+                        logger.error(f"🌐 [BROWSER DOWNLOAD] Failed to navigate to URL: {e}")
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"Browser navigation failed: {str(e)}"
+                        )
+
+                    # 等待下载开始
+                    try:
+                        await asyncio.wait_for(download_started.wait(), timeout=10.0)
+                    except asyncio.TimeoutError:
+                        logger.error("🌐 [BROWSER DOWNLOAD] Download did not start within 10 seconds")
+                        raise HTTPException(
+                            status_code=status.HTTP_408_REQUEST_TIMEOUT,
+                            detail="Browser download did not start"
+                        )
+
+                    download = download_info['download']
+                    if not download:
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Failed to capture download object"
+                        )
+
+                    logger.info(f"🌐 [BROWSER DOWNLOAD] Download started: {download.suggested_filename}")
+
+                    # 保存文件
+                    await download.save_as(destination)
+
+                    # 等待下载完成
+                    await asyncio.sleep(1)  # 给文件系统一点时间
+
+                    # 验证文件
+                    if not os.path.exists(destination):
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Browser download completed but file not found"
+                        )
+
+                    file_size = os.path.getsize(destination)
+                    if file_size == 0:
+                        os.remove(destination)
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Browser download created empty file"
+                        )
+
+                    logger.info(f"✅ [BROWSER DOWNLOAD] Successfully downloaded to {destination}, size: {file_size} bytes")
+
+                    if progress_callback:
+                        await progress_callback(100)
+
+                    return destination, file_size
+
+            except PlaywrightError as e:
+                logger.error(f"🌐 [BROWSER DOWNLOAD] Playwright error: {str(e)}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Browser download failed: {str(e)}"
+                )
+
+            except HTTPException:
+                # 直接重新抛出 HTTPException
+                raise
+
+            except Exception as e:
+                logger.error(f"🌐 [BROWSER DOWNLOAD] Unexpected error: {type(e).__name__}: {str(e)}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Browser download error: {str(e)}"
+                )
+
+            finally:
+                # 确保浏览器资源被清理
+                if context:
+                    try:
+                        await context.close()
+                    except Exception as e:
+                        logger.warning(f"⚠️ [BROWSER DOWNLOAD] Failed to close context: {e}")
+
+                if browser:
+                    try:
+                        await browser.close()
+                    except Exception as e:
+                        logger.warning(f"⚠️ [BROWSER DOWNLOAD] Failed to close browser: {e}")
 
 
 class AudioConverter:
@@ -1099,14 +1406,16 @@ class PodcastTranscriptionService:
             download_time = 0
             original_file = os.path.join(temp_episode_dir, f"original{os.path.splitext(task.original_audio_url)[-1]}")
             file_size = 0
+            download_method = "none"  # 跟踪下载方法
 
             # 检查是否已下载
             if os.path.exists(original_file) and os.path.getsize(original_file) > 0:
                 file_size = os.path.getsize(original_file)
+                download_method = "none"  # 使用现有文件，未下载
                 log_with_timestamp("INFO", f"⏭️ [STEP 1/6 DOWNLOAD] Skip! File already exists: {original_file} ({file_size/1024/1024:.2f} MB)", task_id)
                 log_with_timestamp("INFO", f"✅ [STEP 1/6 DOWNLOAD] Using existing downloaded file", task_id)
             else:
-                log_with_timestamp("INFO", f"📥 [STEP 1/6 DOWNLOAD] Starting audio download...", task_id)
+                log_with_timestamp("INFO", f"📥 [STEP 1/6 DOWNLOAD] Starting audio download with fallback...", task_id)
                 log_with_timestamp("INFO", f"📥 [STEP 1/6 DOWNLOAD] Source URL: {task.original_audio_url[:100]}...", task_id)
                 await self._update_task_progress_with_session(
                     session,
@@ -1138,13 +1447,17 @@ class PodcastTranscriptionService:
                             f"Downloading... {progress:.1f}%"
                         )
 
-                    file_path, file_size = await downloader.download_file(
+                    # 使用带回退机制的下载方法
+                    file_path, file_size, download_method = await downloader.download_file_with_fallback(
                         task.original_audio_url,
                         original_file,
                         download_progress
                     )
 
-                log_with_timestamp("INFO", f"✅ [STEP 1/6 DOWNLOAD] Download complete! Size: {file_size} bytes ({file_size/1024/1024:.2f} MB)", task_id)
+                    # 记录下载方法到数据库
+                    log_with_timestamp("INFO", f"📊 [STEP 1/6 DOWNLOAD] Download method: {download_method}", task_id)
+
+                log_with_timestamp("INFO", f"✅ [STEP 1/6 DOWNLOAD] Download complete! Size: {file_size} bytes ({file_size/1024/1024:.2f} MB), Method: {download_method}", task_id)
                 download_time = time.time() - download_start
                 log_with_timestamp("INFO", f"⏱️ [STEP 1/6 DOWNLOAD] Time taken: {download_time:.2f}s", task_id)
 
@@ -1495,6 +1808,7 @@ class PodcastTranscriptionService:
                 'download_time': download_time,
                 'conversion_time': conversion_time,
                 'transcription_time': transcription_time,
+                'download_method': download_method,  # 记录下载方法
                 'chunk_info': {
                     'total_chunks': len(chunks),
                     'chunks': [

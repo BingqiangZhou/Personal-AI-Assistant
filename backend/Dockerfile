@@ -15,12 +15,28 @@ RUN echo "Acquire::Retries \"3\";" > /etc/apt/apt.conf.d/80-retries \
     && echo "Acquire::http::Timeout \"30\";" > /etc/apt/apt.conf.d/80-timeout
 
 # Install system dependencies
+# Install Playwright dependencies and Chromium browser
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
         libpq-dev \
         curl \
         ffmpeg \
+        # Playwright and Chromium dependencies
+        libnss3 \
+        libnspr4 \
+        libatk1.0-0 \
+        libatk-bridge2.0-0 \
+        libcups2 \
+        libdrm2 \
+        libdbus-1-3 \
+        libxkbcommon0 \
+        libxcomposite1 \
+        libxdamage1 \
+        libxfixes3 \
+        libxrandr2 \
+        libgbm1 \
+        libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set work directory
@@ -43,6 +59,11 @@ COPY . .
 RUN uv pip install --system -e . \
     --index-url https://pypi.tuna.tsinghua.edu.cn/simple \
     --trusted-host pypi.tuna.tsinghua.edu.cn
+
+# Install Playwright Chromium browser
+# This is required for the browser fallback audio download feature
+RUN playwright install chromium
+RUN playwright install-deps chromium
 
 # Create directories with proper permissions
 RUN mkdir -p uploads logs data storage/podcasts temp/transcription
