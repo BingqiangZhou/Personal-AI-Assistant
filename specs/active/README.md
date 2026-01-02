@@ -1,12 +1,35 @@
 # Personal AI Assistant - 活跃需求文档索引 / Active Requirements Index
 
-**更新日期**: 2025-12-30
+**更新日期**: 2025-01-02
 
 ---
 
 ## 当前活跃功能 / Current Active Features
 
-### 1. 应用更新提醒功能 / App Update Notification Feature
+### 1. 播客搜索功能 / Podcast Search Feature
+| 文档名称 | 文件路径 | 描述 | 状态 |
+|---------|---------|------|------|
+| 播客搜索功能需求 | `podcast-itunes-search-feature.md` | iTunes Search API 集成，支持播客搜索和订阅 | Active |
+| **订阅状态指示器功能** | `podcast-subscription-status-indicator.md` | **搜索结果中显示订阅状态（NEW!）** | **Active** |
+
+**功能概述**:
+- 集成 iTunes Search API 实现播客搜索
+- Material 3 搜索 UI 组件（SearchBar/SearchAnchor）
+- 搜索结果展示和直接订阅
+- **搜索结果中显示订阅状态指示器（已订阅/未订阅）**
+- 缓存机制避免 API 限流
+- 中英文搜索支持
+- 完整的错误处理和用户反馈
+
+**快速导航**:
+- 📋 [播客搜索需求文档](./podcast-itunes-search-feature.md)
+- 📋 [订阅状态指示器需求](./podcast-subscription-status-indicator.md)
+
+**开发进度**: 搜索功能已完成 | 订阅状态指示器 0% (需求阶段完成，待审批和开发)
+
+---
+
+### 2. 应用更新提醒功能 / App Update Notification Feature
 | 文档名称 | 文件路径 | 描述 | 状态 |
 |---------|---------|------|------|
 | 应用更新提醒功能需求 | `app-update-notification-feature.md` | 完整的应用更新检查和提示功能 | Active |
@@ -28,7 +51,7 @@
 
 ---
 
-### 2. 播客转录功能 / Podcast Transcription Feature
+### 3. 播客转录功能 / Podcast Transcription Feature
 | 文档名称 | 文件路径 | 描述 | 状态 |
 |---------|---------|------|------|
 | 播客音频转录功能需求 | `podcast-audio-transcription-feature.md` | 后端音频转录完整功能需求 | Draft |
@@ -49,19 +72,19 @@
 
 ## 其他活跃需求 / Other Active Requirements
 
-### 3. 播客功能增强
+### 4. 播客功能增强
 | 文档名称 | 文件路径 | 描述 | 状态 |
 |---------|---------|------|------|
 | 播客批量删除功能 | `FEP-20241229-podcast-bulk-delete.md` | 播客订阅批量删除功能 | Completed |
 | 播客详情页面优化 | `podcast-detail-page-optimization.md` | 播客详情页面优化 | Active |
 
-### 4. UI/UX 相关
+### 5. UI/UX 相关
 | 文档名称 | 文件路径 | 描述 | 状态 |
 |---------|---------|------|------|
 | Material 3 UI 重构 | `material-design-3-adaptive-refactor.md` | Material 3 自适应布局重构 | Active |
 | Feed 懒加载优化 | `feed-lazy-load-and-navigation-fix-prd.md` | Feed 懒加载和导航修复 | Completed |
 
-### 5. 配置和部署
+### 6. 配置和部署
 | 文档名称 | 文件路径 | 描述 | 状态 |
 |---------|---------|------|------|
 | 服务器配置运行时更新 | `server-config-runtime-update.md` | 服务器配置动态更新 | Active |
@@ -72,6 +95,8 @@
 ## 按角色快速导航 / Role-Based Quick Navigation
 
 ### 📋 产品经理 / Product Manager
+- [播客搜索功能 - 需求概述](./podcast-itunes-search-feature.md#需求描述)
+- [订阅状态指示器 - 需求概述](./podcast-subscription-status-indicator.md#1-执行摘要--executive-summary)
 - [应用更新提醒功能 - 需求概述](./app-update-notification-feature.md#需求描述)
 - [播客转录功能 - 功能优先级](./podcast-transcription-development-plan.md#功能优先级矩阵)
 - [Material 3 重构 - 业务价值](./material-design-3-adaptive-refactor.md#业务价值)
@@ -82,11 +107,15 @@
 - [服务器配置 - 架构设计](./server-config-runtime-update.md#架构设计)
 
 ### ⚙️ 后端工程师 / Backend Developer
+- [播客搜索功能 - API接口设计](./podcast-itunes-search-feature.md#api-接口设计)
+- [订阅状态指示器 - 后端需求](./podcast-subscription-status-indicator.md#322-后端需求-backend-requirements)
 - [播客转录功能 - API接口](./podcast-audio-transcription-feature.md#api接口)
 - [RSS 定时更新 - 任务配置](./rss-scheduled-update-tasks.md#技术实现)
 - [播客批量删除 - API 设计](./FEP-20241229-podcast-bulk-delete-api-contract.md)
 
 ### 🖥️ 前端工程师 / Frontend Developer
+- [播客搜索功能 - UI/UX设计](./podcast-itunes-search-feature.md#uiux-设计要求)
+- [订阅状态指示器 - 前端需求](./podcast-subscription-status-indicator.md#321-前端需求-frontend-requirements)
 - [应用更新提醒功能 - 组件结构](./app-update-notification-feature.md#架构设计)
 - [Material 3 重构 - UI/UX设计](./material-design-3-adaptive-refactor.md#ui-ux设计要求)
 - [播客转录显示 - 实现计划](./podcast-frontend-transcription-display.md#实现计划)
@@ -97,6 +126,7 @@
 
 ### 🧪 测试工程师 / Test Engineer
 - [应用更新提醒功能 - 测试计划](./app-update-notification-task-tracking.md#testing-tasks)
+- [订阅状态指示器 - 测试计划](./podcast-subscription-status-indicator.md#52-验收测试计划--acceptance-testing-plan)
 - [播客转录功能 - 测试用例](./podcast-transcription-acceptance-criteria.md#测试用例)
 - [播客批量删除 - 验证报告](./FEP-20241229-podcast-bulk-delete-verification-report.md)
 
@@ -110,6 +140,8 @@
 
 | 日期 | 版本 | 更新内容 | 更新人 |
 |------|------|---------|--------|
+| 2026-01-02 | 3.1 | 添加播客订阅状态指示器功能需求 | Product Manager |
+| 2025-01-02 | 3.0 | 添加播客搜索功能需求（iTunes Search API集成） | Product Manager |
 | 2025-12-30 | 2.0 | 添加应用更新提醒功能需求 | Product Manager |
 | 2025-12-21 | 1.0 | 初始版本（播客转录功能） | Product Manager |
 

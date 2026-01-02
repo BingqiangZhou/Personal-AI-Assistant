@@ -50,87 +50,95 @@ class _FakePodcastSubscriptionListResponse_1 extends _i1.SmartFake
   ) : super(parent, parentInvocation);
 }
 
-class _FakeReparseResponse_2 extends _i1.SmartFake
+class _FakePodcastSubscriptionBulkDeleteResponse_2 extends _i1.SmartFake
+    implements _i2.PodcastSubscriptionBulkDeleteResponse {
+  _FakePodcastSubscriptionBulkDeleteResponse_2(
+    Object parent,
+    Invocation parentInvocation,
+  ) : super(parent, parentInvocation);
+}
+
+class _FakeReparseResponse_3 extends _i1.SmartFake
     implements _i2.ReparseResponse {
-  _FakeReparseResponse_2(Object parent, Invocation parentInvocation)
+  _FakeReparseResponse_3(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakePodcastFeedResponse_3 extends _i1.SmartFake
+class _FakePodcastFeedResponse_4 extends _i1.SmartFake
     implements _i3.PodcastFeedResponse {
-  _FakePodcastFeedResponse_3(Object parent, Invocation parentInvocation)
+  _FakePodcastFeedResponse_4(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakePodcastEpisodeListResponse_4 extends _i1.SmartFake
+class _FakePodcastEpisodeListResponse_5 extends _i1.SmartFake
     implements _i3.PodcastEpisodeListResponse {
-  _FakePodcastEpisodeListResponse_4(Object parent, Invocation parentInvocation)
+  _FakePodcastEpisodeListResponse_5(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakePodcastEpisodeDetailResponse_5 extends _i1.SmartFake
+class _FakePodcastEpisodeDetailResponse_6 extends _i1.SmartFake
     implements _i3.PodcastEpisodeDetailResponse {
-  _FakePodcastEpisodeDetailResponse_5(
+  _FakePodcastEpisodeDetailResponse_6(
     Object parent,
     Invocation parentInvocation,
   ) : super(parent, parentInvocation);
 }
 
-class _FakePodcastPlaybackStateResponse_6 extends _i1.SmartFake
+class _FakePodcastPlaybackStateResponse_7 extends _i1.SmartFake
     implements _i4.PodcastPlaybackStateResponse {
-  _FakePodcastPlaybackStateResponse_6(
+  _FakePodcastPlaybackStateResponse_7(
     Object parent,
     Invocation parentInvocation,
   ) : super(parent, parentInvocation);
 }
 
-class _FakePodcastSummaryResponse_7 extends _i1.SmartFake
+class _FakePodcastSummaryResponse_8 extends _i1.SmartFake
     implements _i4.PodcastSummaryResponse {
-  _FakePodcastSummaryResponse_7(Object parent, Invocation parentInvocation)
+  _FakePodcastSummaryResponse_8(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakePodcastStatsResponse_8 extends _i1.SmartFake
+class _FakePodcastStatsResponse_9 extends _i1.SmartFake
     implements _i4.PodcastStatsResponse {
-  _FakePodcastStatsResponse_8(Object parent, Invocation parentInvocation)
+  _FakePodcastStatsResponse_9(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
-class _FakePodcastTranscriptionResponse_9 extends _i1.SmartFake
+class _FakePodcastTranscriptionResponse_10 extends _i1.SmartFake
     implements _i5.PodcastTranscriptionResponse {
-  _FakePodcastTranscriptionResponse_9(
+  _FakePodcastTranscriptionResponse_10(
     Object parent,
     Invocation parentInvocation,
   ) : super(parent, parentInvocation);
 }
 
-class _FakePodcastConversationHistoryResponse_10 extends _i1.SmartFake
+class _FakePodcastConversationHistoryResponse_11 extends _i1.SmartFake
     implements _i6.PodcastConversationHistoryResponse {
-  _FakePodcastConversationHistoryResponse_10(
+  _FakePodcastConversationHistoryResponse_11(
     Object parent,
     Invocation parentInvocation,
   ) : super(parent, parentInvocation);
 }
 
-class _FakePodcastConversationSendResponse_11 extends _i1.SmartFake
+class _FakePodcastConversationSendResponse_12 extends _i1.SmartFake
     implements _i6.PodcastConversationSendResponse {
-  _FakePodcastConversationSendResponse_11(
+  _FakePodcastConversationSendResponse_12(
     Object parent,
     Invocation parentInvocation,
   ) : super(parent, parentInvocation);
 }
 
-class _FakePodcastConversationClearResponse_12 extends _i1.SmartFake
+class _FakePodcastConversationClearResponse_13 extends _i1.SmartFake
     implements _i6.PodcastConversationClearResponse {
-  _FakePodcastConversationClearResponse_12(
+  _FakePodcastConversationClearResponse_13(
     Object parent,
     Invocation parentInvocation,
   ) : super(parent, parentInvocation);
 }
 
-class _FakeScheduleConfigResponse_13 extends _i1.SmartFake
+class _FakeScheduleConfigResponse_14 extends _i1.SmartFake
     implements _i7.ScheduleConfigResponse {
-  _FakeScheduleConfigResponse_13(Object parent, Invocation parentInvocation)
+  _FakeScheduleConfigResponse_14(Object parent, Invocation parentInvocation)
     : super(parent, parentInvocation);
 }
 
@@ -232,6 +240,25 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
           as _i9.Future<void>);
 
   @override
+  _i9.Future<_i2.PodcastSubscriptionBulkDeleteResponse>
+  bulkDeleteSubscriptions({required List<int>? subscriptionIds}) =>
+      (super.noSuchMethod(
+            Invocation.method(#bulkDeleteSubscriptions, [], {
+              #subscriptionIds: subscriptionIds,
+            }),
+            returnValue:
+                _i9.Future<_i2.PodcastSubscriptionBulkDeleteResponse>.value(
+                  _FakePodcastSubscriptionBulkDeleteResponse_2(
+                    this,
+                    Invocation.method(#bulkDeleteSubscriptions, [], {
+                      #subscriptionIds: subscriptionIds,
+                    }),
+                  ),
+                ),
+          )
+          as _i9.Future<_i2.PodcastSubscriptionBulkDeleteResponse>);
+
+  @override
   _i9.Future<void> refreshSubscription(int? subscriptionId) =>
       (super.noSuchMethod(
             Invocation.method(#refreshSubscription, [subscriptionId]),
@@ -248,7 +275,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
       (super.noSuchMethod(
             Invocation.method(#reparseSubscription, [subscriptionId, forceAll]),
             returnValue: _i9.Future<_i2.ReparseResponse>.value(
-              _FakeReparseResponse_2(
+              _FakeReparseResponse_3(
                 this,
                 Invocation.method(#reparseSubscription, [
                   subscriptionId,
@@ -270,7 +297,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
               #pageSize: pageSize,
             }),
             returnValue: _i9.Future<_i3.PodcastFeedResponse>.value(
-              _FakePodcastFeedResponse_3(
+              _FakePodcastFeedResponse_4(
                 this,
                 Invocation.method(#getPodcastFeed, [], {
                   #page: page,
@@ -298,7 +325,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
               #isPlayed: isPlayed,
             }),
             returnValue: _i9.Future<_i3.PodcastEpisodeListResponse>.value(
-              _FakePodcastEpisodeListResponse_4(
+              _FakePodcastEpisodeListResponse_5(
                 this,
                 Invocation.method(#listEpisodes, [], {
                   #subscriptionId: subscriptionId,
@@ -317,7 +344,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
       (super.noSuchMethod(
             Invocation.method(#getEpisode, [episodeId]),
             returnValue: _i9.Future<_i3.PodcastEpisodeDetailResponse>.value(
-              _FakePodcastEpisodeDetailResponse_5(
+              _FakePodcastEpisodeDetailResponse_6(
                 this,
                 Invocation.method(#getEpisode, [episodeId]),
               ),
@@ -340,7 +367,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
               #playbackRate: playbackRate,
             }),
             returnValue: _i9.Future<_i4.PodcastPlaybackStateResponse>.value(
-              _FakePodcastPlaybackStateResponse_6(
+              _FakePodcastPlaybackStateResponse_7(
                 this,
                 Invocation.method(#updatePlaybackProgress, [], {
                   #episodeId: episodeId,
@@ -360,7 +387,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
       (super.noSuchMethod(
             Invocation.method(#getPlaybackState, [episodeId]),
             returnValue: _i9.Future<_i4.PodcastPlaybackStateResponse>.value(
-              _FakePodcastPlaybackStateResponse_6(
+              _FakePodcastPlaybackStateResponse_7(
                 this,
                 Invocation.method(#getPlaybackState, [episodeId]),
               ),
@@ -385,7 +412,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
               #customPrompt: customPrompt,
             }),
             returnValue: _i9.Future<_i4.PodcastSummaryResponse>.value(
-              _FakePodcastSummaryResponse_7(
+              _FakePodcastSummaryResponse_8(
                 this,
                 Invocation.method(#generateSummary, [], {
                   #episodeId: episodeId,
@@ -433,7 +460,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
               #size: size,
             }),
             returnValue: _i9.Future<_i3.PodcastEpisodeListResponse>.value(
-              _FakePodcastEpisodeListResponse_4(
+              _FakePodcastEpisodeListResponse_5(
                 this,
                 Invocation.method(#searchPodcasts, [], {
                   #query: query,
@@ -451,7 +478,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
       (super.noSuchMethod(
             Invocation.method(#getStats, []),
             returnValue: _i9.Future<_i4.PodcastStatsResponse>.value(
-              _FakePodcastStatsResponse_8(
+              _FakePodcastStatsResponse_9(
                 this,
                 Invocation.method(#getStats, []),
               ),
@@ -496,7 +523,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
               },
             ),
             returnValue: _i9.Future<_i5.PodcastTranscriptionResponse>.value(
-              _FakePodcastTranscriptionResponse_9(
+              _FakePodcastTranscriptionResponse_10(
                 this,
                 Invocation.method(
                   #startTranscription,
@@ -543,7 +570,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
             }),
             returnValue:
                 _i9.Future<_i6.PodcastConversationHistoryResponse>.value(
-                  _FakePodcastConversationHistoryResponse_10(
+                  _FakePodcastConversationHistoryResponse_11(
                     this,
                     Invocation.method(#getConversationHistory, [], {
                       #episodeId: episodeId,
@@ -565,7 +592,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
               #request: request,
             }),
             returnValue: _i9.Future<_i6.PodcastConversationSendResponse>.value(
-              _FakePodcastConversationSendResponse_11(
+              _FakePodcastConversationSendResponse_12(
                 this,
                 Invocation.method(#sendConversationMessage, [], {
                   #episodeId: episodeId,
@@ -585,7 +612,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
               #episodeId: episodeId,
             }),
             returnValue: _i9.Future<_i6.PodcastConversationClearResponse>.value(
-              _FakePodcastConversationClearResponse_12(
+              _FakePodcastConversationClearResponse_13(
                 this,
                 Invocation.method(#clearConversationHistory, [], {
                   #episodeId: episodeId,
@@ -602,7 +629,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
       (super.noSuchMethod(
             Invocation.method(#getSubscriptionSchedule, [subscriptionId]),
             returnValue: _i9.Future<_i7.ScheduleConfigResponse>.value(
-              _FakeScheduleConfigResponse_13(
+              _FakeScheduleConfigResponse_14(
                 this,
                 Invocation.method(#getSubscriptionSchedule, [subscriptionId]),
               ),
@@ -621,7 +648,7 @@ class MockPodcastRepository extends _i1.Mock implements _i8.PodcastRepository {
               request,
             ]),
             returnValue: _i9.Future<_i7.ScheduleConfigResponse>.value(
-              _FakeScheduleConfigResponse_13(
+              _FakeScheduleConfigResponse_14(
                 this,
                 Invocation.method(#updateSubscriptionSchedule, [
                   subscriptionId,

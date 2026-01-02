@@ -1478,4 +1478,52 @@ class AppLocalizationsEn extends AppLocalizations {
   String date_format(int year, String month, String day) {
     return '$year-$month-$day';
   }
+
+  @override
+  String get podcast_search_hint => 'Search podcasts...';
+
+  @override
+  String get podcast_country_label => 'Country';
+
+  @override
+  String get podcast_search_empty_hint => 'Enter a podcast name to search';
+
+  @override
+  String get podcast_search_loading => 'Searching...';
+
+  @override
+  String get podcast_search_error => 'Search failed';
+
+  @override
+  String get podcast_search_no_results => 'No podcasts found';
+
+  @override
+  String get podcast_subscribe => 'Subscribe';
+
+  @override
+  String get podcast_subscribed => 'Subscribed';
+
+  @override
+  String podcast_subscribe_success(String podcastName) {
+    return 'Subscribed to $podcastName';
+  }
+
+  @override
+  String podcast_subscribe_failed(String error) {
+    return 'Failed to subscribe: $error';
+  }
+
+  @override
+  String get podcast_network_hint =>
+      'Network access to iTunes API may be restricted in some regions. Try using a VPN if connection fails.';
+
+  @override
+  String get podcast_vpn_required =>
+      'Connection failed. iTunes API may be blocked in your region. Please try using a VPN.';
+
+  @override
+  String get podcast_country_china => 'China';
+
+  @override
+  String get podcast_country_usa => 'USA';
 }

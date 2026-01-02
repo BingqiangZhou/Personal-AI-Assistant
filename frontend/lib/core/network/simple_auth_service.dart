@@ -1,25 +1,31 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../features/auth/domain/models/auth_request.dart';
 import '../../../features/auth/domain/models/auth_response.dart';
 import '../../../features/auth/domain/models/user.dart';
+import '../app/config/app_config.dart';
 
 /// 简化版认证服务 - 绕过复杂的 Retrofit 代码生成
 /// 使用直接 Dio 调用实现所有认证功能
 class SimpleAuthService {
-  static const String _baseUrl = 'http://localhost:8000/api/v1/auth';
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   SimpleAuthService() {
     _dio.options = BaseOptions(
-      baseUrl: _baseUrl,
+      baseUrl: '${AppConfig.serverBaseUrl}/api/v1/auth',
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {'Content-Type': 'application/json'},
     );
+  }
+
+  /// 更新 baseUrl（用于后端服务器地址变更时）
+  void updateBaseUrl() {
+    _dio.options.baseUrl = '${AppConfig.serverBaseUrl}/api/v1/auth';
   }
 
   /// 注册新用户 - 注意: 后端只返回用户信息，需要额外登录获取token

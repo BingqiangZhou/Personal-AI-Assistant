@@ -2875,6 +2875,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{year}-{month}-{day}'**
   String date_format(int year, String month, String day);
+
+  /// Search input placeholder for podcasts
+  ///
+  /// In en, this message translates to:
+  /// **'Search podcasts...'**
+  String get podcast_search_hint;
+
+  /// Country selector label
+  ///
+  /// In en, this message translates to:
+  /// **'Country'**
+  String get podcast_country_label;
+
+  /// Empty search state hint message
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a podcast name to search'**
+  String get podcast_search_empty_hint;
+
+  /// Search loading message
+  ///
+  /// In en, this message translates to:
+  /// **'Searching...'**
+  String get podcast_search_loading;
+
+  /// Search error title
+  ///
+  /// In en, this message translates to:
+  /// **'Search failed'**
+  String get podcast_search_error;
+
+  /// No search results message
+  ///
+  /// In en, this message translates to:
+  /// **'No podcasts found'**
+  String get podcast_search_no_results;
+
+  /// Subscribe button label
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribe'**
+  String get podcast_subscribe;
+
+  /// Subscribed status label
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribed'**
+  String get podcast_subscribed;
+
+  /// Subscribe success message
+  ///
+  /// In en, this message translates to:
+  /// **'Subscribed to {podcastName}'**
+  String podcast_subscribe_success(String podcastName);
+
+  /// Subscribe failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to subscribe: {error}'**
+  String podcast_subscribe_failed(String error);
+
+  /// Hint about network restrictions and VPN
+  ///
+  /// In en, this message translates to:
+  /// **'Network access to iTunes API may be restricted in some regions. Try using a VPN if connection fails.'**
+  String get podcast_network_hint;
+
+  /// VPN required message for iTunes API access
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed. iTunes API may be blocked in your region. Please try using a VPN.'**
+  String get podcast_vpn_required;
+
+  /// Country name: China
+  ///
+  /// In en, this message translates to:
+  /// **'China'**
+  String get podcast_country_china;
+
+  /// Country name: USA
+  ///
+  /// In en, this message translates to:
+  /// **'USA'**
+  String get podcast_country_usa;
 }
 
 class _AppLocalizationsDelegate

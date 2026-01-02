@@ -92,12 +92,14 @@ class MockAuthNotifier extends _i1.Mock implements _i2.AuthNotifier {
     required String? email,
     required String? password,
     String? username,
+    bool? rememberMe = false,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#register, [], {
               #email: email,
               #password: password,
               #username: username,
+              #rememberMe: rememberMe,
             }),
             returnValue: _i5.Future<void>.value(),
             returnValueForMissingStub: _i5.Future<void>.value(),

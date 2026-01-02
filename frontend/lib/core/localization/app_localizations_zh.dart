@@ -1440,4 +1440,51 @@ class AppLocalizationsZh extends AppLocalizations {
   String date_format(int year, String month, String day) {
     return '$year年$month月$day日';
   }
+
+  @override
+  String get podcast_search_hint => '搜索播客...';
+
+  @override
+  String get podcast_country_label => '国家';
+
+  @override
+  String get podcast_search_empty_hint => '输入播客名称进行搜索';
+
+  @override
+  String get podcast_search_loading => '搜索中...';
+
+  @override
+  String get podcast_search_error => '搜索失败';
+
+  @override
+  String get podcast_search_no_results => '未找到播客';
+
+  @override
+  String get podcast_subscribe => '订阅';
+
+  @override
+  String get podcast_subscribed => '已订阅';
+
+  @override
+  String podcast_subscribe_success(String podcastName) {
+    return '已订阅 $podcastName';
+  }
+
+  @override
+  String podcast_subscribe_failed(String error) {
+    return '订阅失败：$error';
+  }
+
+  @override
+  String get podcast_network_hint =>
+      '某些地区可能无法直接访问 iTunes API。如果连接失败，请尝试使用 VPN。';
+
+  @override
+  String get podcast_vpn_required => '连接失败。iTunes API 在您所在的地区可能被屏蔽，请尝试使用 VPN。';
+
+  @override
+  String get podcast_country_china => '中国';
+
+  @override
+  String get podcast_country_usa => '美国';
 }

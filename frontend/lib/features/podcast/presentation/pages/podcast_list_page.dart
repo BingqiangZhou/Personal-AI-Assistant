@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../data/models/podcast_subscription_model.dart';
+import '../../data/models/podcast_search_model.dart';
 import '../providers/podcast_providers.dart';
 import '../providers/bulk_selection_provider.dart';
 import '../widgets/add_podcast_dialog.dart';
 import '../widgets/bulk_import_dialog.dart';
 import '../widgets/podcast_bulk_delete_dialog.dart';
+import '../widgets/search_panel.dart';
 
 /// Material Design 3自适应播客列表页面
 class PodcastListPage extends ConsumerStatefulWidget {
@@ -21,6 +23,7 @@ class PodcastListPage extends ConsumerStatefulWidget {
 
 class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   final ScrollController _scrollController = ScrollController();
+  bool _isSearchExpanded = false;
 
   @override
   void initState() {
@@ -46,6 +49,41 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       ref.read(podcastSubscriptionProvider.notifier).loadMoreSubscriptions();
+    }
+  }
+
+  /// 处理从搜索结果订阅播客
+  Future<void> _handleSubscribeFromSearch(PodcastSearchResult result) async {
+    final l10n = AppLocalizations.of(context)!;
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    try {
+      await ref.read(podcastSubscriptionProvider.notifier).addSubscription(
+        feedUrl: result.feedUrl,
+      );
+
+      if (mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(l10n.podcast_subscribe_success(result.collectionName)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        // 订阅成功后关闭搜索面板
+        setState(() {
+          _isSearchExpanded = false;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(l10n.podcast_subscribe_failed(error.toString())),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -75,6 +113,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   ),
                 ),
                 if (!isSelectionMode) ...[
+                  // 搜索按钮
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _isSearchExpanded = !_isSearchExpanded;
+                      });
+                    },
+                    icon: Icon(_isSearchExpanded ? Icons.search_off : Icons.search),
+                    tooltip: _isSearchExpanded ? l10n.close : l10n.podcast_search_hint,
+                  ),
                   IconButton(
                     onPressed: () {
                       showDialog(
@@ -140,7 +188,20 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+
+          // 搜索面板（展开时显示）
+          SearchPanel(
+            expanded: _isSearchExpanded,
+            onExpandChanged: (expanded) {
+              setState(() {
+                _isSearchExpanded = expanded;
+              });
+            },
+            onSubscribe: _handleSubscribeFromSearch,
+          ),
+
+          const SizedBox(height: 16),
 
           // 订阅列表
           Expanded(

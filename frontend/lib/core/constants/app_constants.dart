@@ -3,12 +3,11 @@ class AppConstants {
   static const String appName = 'Personal AI Assistant';
   static const String appVersion = '1.0.0';
 
-  // API
-  static const String baseUrl = 'http://localhost:8000';
+  // API - baseUrl is now dynamically configured via AppConfig
   static const String apiVersion = 'v1';
   static const String apiPath = '/api/$apiVersion';
 
-  // Endpoints
+  // Endpoints (use with configured baseUrl)
   static const String authPath = '$apiPath/auth';
   static const String subscriptionPath = '$apiPath/subscriptions';
   static const String knowledgePath = '$apiPath/knowledge';

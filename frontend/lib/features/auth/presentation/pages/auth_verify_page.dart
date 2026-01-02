@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import '../../../../core/app/config/app_config.dart';
+
 /// Authentication Verification Page - Direct API Testing
 /// This page bypasses complex build issues and tests backend connectivity directly
 class AuthVerifyPage extends StatefulWidget {
@@ -15,7 +17,8 @@ class AuthVerifyPage extends StatefulWidget {
 class _AuthVerifyPageState extends State<AuthVerifyPage> {
   String _status = 'Ready to test...';
   Color _statusColor = Colors.grey;
-  final String baseUrl = 'http://localhost:8000/api/v1/auth';
+
+  String get baseUrl => '${AppConfig.serverBaseUrl}/api/v1/auth';
 
   Future<void> _testBackendHealth() async {
     setState(() {

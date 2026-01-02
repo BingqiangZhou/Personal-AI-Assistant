@@ -2370,5 +2370,85 @@
       "month": {"type": "String"},
       "day": {"type": "String"}
     }
+  },
+
+  "podcast_search_hint": "Search podcasts...",
+  "@podcast_search_hint": {
+    "description": "Search input placeholder for podcasts"
+  },
+
+  "podcast_country_label": "Country",
+  "@podcast_country_label": {
+    "description": "Country selector label"
+  },
+
+  "podcast_search_empty_hint": "Enter a podcast name to search",
+  "@podcast_search_empty_hint": {
+    "description": "Empty search state hint message"
+  },
+
+  "podcast_search_loading": "Searching...",
+  "@podcast_search_loading": {
+    "description": "Search loading message"
+  },
+
+  "podcast_search_error": "Search failed",
+  "@podcast_search_error": {
+    "description": "Search error title"
+  },
+
+  "podcast_search_no_results": "No podcasts found",
+  "@podcast_search_no_results": {
+    "description": "No search results message"
+  },
+
+  "podcast_subscribe": "Subscribe",
+  "@podcast_subscribe": {
+    "description": "Subscribe button label"
+  },
+
+  "podcast_subscribed": "Subscribed",
+  "@podcast_subscribed": {
+    "description": "Subscribed status label"
+  },
+
+  "podcast_subscribe_success": "Subscribed to {podcastName}",
+  "@podcast_subscribe_success": {
+    "description": "Subscribe success message",
+    "placeholders": {
+      "podcastName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_subscribe_failed": "Failed to subscribe: {error}",
+  "@podcast_subscribe_failed": {
+    "description": "Subscribe failed message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_network_hint": "Network access to iTunes API may be restricted in some regions. Try using a VPN if connection fails.",
+  "@podcast_network_hint": {
+    "description": "Hint about network restrictions and VPN"
+  },
+
+  "podcast_vpn_required": "Connection failed. iTunes API may be blocked in your region. Please try using a VPN.",
+  "@podcast_vpn_required": {
+    "description": "VPN required message for iTunes API access"
+  },
+
+  "podcast_country_china": "China",
+  "@podcast_country_china": {
+    "description": "Country name: China"
+  },
+
+  "podcast_country_usa": "USA",
+  "@podcast_country_usa": {
+    "description": "Country name: USA"
   }
 }

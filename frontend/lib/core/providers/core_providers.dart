@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 
 import '../app/config/app_config.dart';
 import '../network/dio_client.dart';
 import '../network/api_services.dart';
+import '../network/simple_auth_service.dart';
 import '../storage/local_storage_service.dart';
+import '../../features/user/presentation/providers/user_provider.dart';
 
 // Dio Client Provider
 final dioClientProvider = Provider<DioClient>((ref) {
@@ -133,6 +136,15 @@ class ServerConfigNotifier extends Notifier<ServerConfigState> {
       // Update DioClient
       final dioClient = ref.read(dioClientProvider);
       dioClient.updateBaseUrl('$normalizedUrl/api/v1');
+
+      // Update SimpleAuthService baseUrl
+      try {
+        final simpleAuthService = ref.read(simpleAuthServiceProvider);
+        simpleAuthService.updateBaseUrl();
+        debugPrint('✅ Updated SimpleAuthService baseUrl to: $normalizedUrl');
+      } catch (e) {
+        debugPrint('⚠️ Failed to update SimpleAuthService: $e');
+      }
 
       state = state.copyWith(
         serverUrl: normalizedUrl,

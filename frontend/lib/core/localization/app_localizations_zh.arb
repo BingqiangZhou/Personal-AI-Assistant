@@ -2370,5 +2370,85 @@
       "month": {"type": "String"},
       "day": {"type": "String"}
     }
+  },
+
+  "podcast_search_hint": "搜索播客...",
+  "@podcast_search_hint": {
+    "description": "播客搜索输入占位符"
+  },
+
+  "podcast_country_label": "国家",
+  "@podcast_country_label": {
+    "description": "国家选择器标签"
+  },
+
+  "podcast_search_empty_hint": "输入播客名称进行搜索",
+  "@podcast_search_empty_hint": {
+    "description": "空搜索状态提示消息"
+  },
+
+  "podcast_search_loading": "搜索中...",
+  "@podcast_search_loading": {
+    "description": "搜索加载消息"
+  },
+
+  "podcast_search_error": "搜索失败",
+  "@podcast_search_error": {
+    "description": "搜索错误标题"
+  },
+
+  "podcast_search_no_results": "未找到播客",
+  "@podcast_search_no_results": {
+    "description": "无搜索结果消息"
+  },
+
+  "podcast_subscribe": "订阅",
+  "@podcast_subscribe": {
+    "description": "订阅按钮标签"
+  },
+
+  "podcast_subscribed": "已订阅",
+  "@podcast_subscribed": {
+    "description": "已订阅状态标签"
+  },
+
+  "podcast_subscribe_success": "已订阅 {podcastName}",
+  "@podcast_subscribe_success": {
+    "description": "订阅成功消息",
+    "placeholders": {
+      "podcastName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_subscribe_failed": "订阅失败：{error}",
+  "@podcast_subscribe_failed": {
+    "description": "订阅失败消息",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_network_hint": "某些地区可能无法直接访问 iTunes API。如果连接失败，请尝试使用 VPN。",
+  "@podcast_network_hint": {
+    "description": "关于网络限制和 VPN 的提示"
+  },
+
+  "podcast_vpn_required": "连接失败。iTunes API 在您所在的地区可能被屏蔽，请尝试使用 VPN。",
+  "@podcast_vpn_required": {
+    "description": "需要 VPN 才能访问 iTunes API 的消息"
+  },
+
+  "podcast_country_china": "中国",
+  "@podcast_country_china": {
+    "description": "国家名称：中国"
+  },
+
+  "podcast_country_usa": "美国",
+  "@podcast_country_usa": {
+    "description": "国家名称：美国"
   }
 }
