@@ -412,17 +412,27 @@ class _CountrySelectorOverlay extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final maxHeight = MediaQuery.of(context).size.height * 0.6;
 
-    // 计算选择器位置
-    double left = buttonOffset.dx;
+    // 计算搜索栏的实际宽度（考虑padding）
+    final searchBarWidth = screenWidth - 16; // 搜索栏的padding是8*2=16
+
+    // 下拉框宽度不超过搜索栏宽度，同时不超过360
+    final selectorWidth = searchBarWidth.clamp(200.0, 360.0);
+
+    // 计算搜索栏的左边界位置
+    // 按钮位置 - SearchBar的左padding(8) = 搜索栏左边界
+    final searchBarLeft = buttonOffset.dx - 8.0;
+
+    // 下拉框与搜索栏左对齐
+    double left = searchBarLeft;
     double top = buttonOffset.dy + buttonSize.height + 8;
 
-    // 确保不超出屏幕边界
-    final selectorWidth = 360.0;
-    if (left + selectorWidth > screenWidth) {
-      left = screenWidth - selectorWidth - 16;
+    // 确保下拉框不超出屏幕右边界
+    if (left + selectorWidth > screenWidth - 8) {
+      left = screenWidth - selectorWidth - 8;
     }
-    if (left < 16) {
-      left = 16;
+    // 确保下拉框不超出屏幕左边界
+    if (left < 8) {
+      left = 8;
     }
 
     return GestureDetector(
