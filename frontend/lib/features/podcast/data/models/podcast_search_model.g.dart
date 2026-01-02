@@ -8,15 +8,15 @@ part of 'podcast_search_model.dart';
 
 PodcastSearchResult _$PodcastSearchResultFromJson(Map<String, dynamic> json) =>
     PodcastSearchResult(
-      collectionId: (json['collectionId'] as num).toInt(),
-      collectionName: json['collectionName'] as String,
-      artistName: json['artistName'] as String,
-      artworkUrl100: json['artworkUrl100'] as String,
+      collectionId: (json['collectionId'] as num?)?.toInt(),
+      collectionName: json['collectionName'] as String?,
+      artistName: json['artistName'] as String?,
+      artworkUrl100: json['artworkUrl100'] as String?,
       artworkUrl600: json['artworkUrl600'] as String?,
-      feedUrl: json['feedUrl'] as String,
+      feedUrl: json['feedUrl'] as String?,
       collectionViewUrl: json['collectionViewUrl'] as String?,
       primaryGenreName: json['primaryGenreName'] as String?,
-      trackCount: (json['trackCount'] as num).toInt(),
+      trackCount: (json['trackCount'] as num?)?.toInt(),
       releaseDate: json['releaseDate'] as String?,
     );
 

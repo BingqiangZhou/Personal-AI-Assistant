@@ -45,7 +45,7 @@ final class PodcastSearchNotifierProvider
 }
 
 String _$podcastSearchNotifierHash() =>
-    r'4b71dac33c6c7dd27da325766f75a36af3ea708a';
+    r'428eb0269f753958495ec57977bd1b36bf3be586';
 
 /// 播客搜索 Notifier
 

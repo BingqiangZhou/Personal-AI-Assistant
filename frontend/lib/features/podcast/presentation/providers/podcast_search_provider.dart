@@ -15,6 +15,7 @@ class PodcastSearchState {
   final bool hasSearched;
   final String? error;
   final String currentQuery;
+  final PodcastCountry searchCountry;
 
   const PodcastSearchState({
     this.results = const [],
@@ -22,6 +23,7 @@ class PodcastSearchState {
     this.hasSearched = false,
     this.error,
     this.currentQuery = '',
+    this.searchCountry = PodcastCountry.china,
   });
 
   PodcastSearchState copyWith({
@@ -30,6 +32,7 @@ class PodcastSearchState {
     bool? hasSearched,
     String? error,
     String? currentQuery,
+    PodcastCountry? searchCountry,
   }) {
     return PodcastSearchState(
       results: results ?? this.results,
@@ -37,6 +40,7 @@ class PodcastSearchState {
       hasSearched: hasSearched ?? this.hasSearched,
       error: error,
       currentQuery: currentQuery ?? this.currentQuery,
+      searchCountry: searchCountry ?? this.searchCountry,
     );
   }
 }
@@ -98,6 +102,7 @@ class PodcastSearchNotifier extends _$PodcastSearchNotifier {
       state = state.copyWith(
         results: response.results,
         isLoading: false,
+        searchCountry: country,
       );
     } catch (error) {
       state = state.copyWith(

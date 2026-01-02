@@ -321,6 +321,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_episodes => '剧集';
 
   @override
+  String get podcast_unknown_author => '未知作者';
+
+  @override
   String get podcast_latest_episodes => '最新剧集';
 
   @override
@@ -1487,4 +1490,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get podcast_country_usa => '美国';
+
+  @override
+  String get podcast_country_japan => '日本';
+
+  @override
+  String get podcast_country_uk => '英国';
+
+  @override
+  String get podcast_country_germany => '德国';
+
+  @override
+  String get podcast_country_france => '法国';
+
+  @override
+  String get podcast_country_canada => '加拿大';
+
+  @override
+  String get podcast_country_australia => '澳大利亚';
+
+  @override
+  String get podcast_country_korea => '韩国';
+
+  @override
+  String get podcast_country_taiwan => '台湾';
+
+  @override
+  String get podcast_country_hong_kong => '香港';
+
+  @override
+  String get podcast_country_india => '印度';
+
+  @override
+  String get podcast_country_brazil => '巴西';
+
+  @override
+  String get podcast_country_mexico => '墨西哥';
+
+  @override
+  String get podcast_country_spain => '西班牙';
+
+  @override
+  String get podcast_country_italy => '意大利';
 }

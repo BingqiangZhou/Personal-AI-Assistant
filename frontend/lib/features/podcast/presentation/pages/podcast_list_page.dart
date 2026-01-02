@@ -7,6 +7,7 @@ import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import '../../data/models/podcast_search_model.dart';
 import '../providers/podcast_providers.dart';
+import '../providers/podcast_search_provider.dart' as search;
 import '../providers/bulk_selection_provider.dart';
 import '../widgets/add_podcast_dialog.dart';
 import '../widgets/bulk_import_dialog.dart';
@@ -23,7 +24,6 @@ class PodcastListPage extends ConsumerStatefulWidget {
 
 class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   final ScrollController _scrollController = ScrollController();
-  bool _isSearchExpanded = false;
 
   @override
   void initState() {
@@ -57,22 +57,30 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final l10n = AppLocalizations.of(context)!;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
+    // 验证必要字段
+    if (result.feedUrl == null || result.collectionName == null) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.podcast_subscribe_failed('Invalid podcast data')),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
     try {
       await ref.read(podcastSubscriptionProvider.notifier).addSubscription(
-        feedUrl: result.feedUrl,
+        feedUrl: result.feedUrl!,
       );
 
       if (mounted) {
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text(l10n.podcast_subscribe_success(result.collectionName)),
+            content: Text(l10n.podcast_subscribe_success(result.collectionName!)),
             duration: const Duration(seconds: 2),
           ),
         );
-        // 订阅成功后关闭搜索面板
-        setState(() {
-          _isSearchExpanded = false;
-        });
       }
     } catch (error) {
       if (mounted) {
@@ -92,6 +100,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final l10n = AppLocalizations.of(context)!;
     final bulkSelectionState = ref.watch(bulkSelectionProvider);
     final isSelectionMode = bulkSelectionState.isSelectionMode;
+    final searchState = ref.watch(search.podcastSearchProvider);
 
     return ResponsiveContainer(
       child: Column(
@@ -113,16 +122,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   ),
                 ),
                 if (!isSelectionMode) ...[
-                  // 搜索按钮
-                  IconButton(
-                    onPressed: () {
-                      setState(() {
-                        _isSearchExpanded = !_isSearchExpanded;
-                      });
-                    },
-                    icon: Icon(_isSearchExpanded ? Icons.search_off : Icons.search),
-                    tooltip: _isSearchExpanded ? l10n.close : l10n.podcast_search_hint,
-                  ),
+                  // 添加播客按钮
                   IconButton(
                     onPressed: () {
                       showDialog(
@@ -133,6 +133,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                     icon: const Icon(Icons.add),
                     tooltip: l10n.podcast_add_podcast,
                   ),
+                  // 批量导入按钮
                   IconButton(
                     onPressed: () {
                       showDialog(
@@ -149,6 +150,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                     icon: const Icon(Icons.playlist_add),
                     tooltip: l10n.podcast_bulk_import,
                   ),
+                  // 批量选择按钮
                   IconButton(
                     onPressed: () {
                       ref.read(bulkSelectionProvider.notifier).toggleSelectionMode();
@@ -190,23 +192,19 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           ),
           const SizedBox(height: 16),
 
-          // 搜索面板（展开时显示）
+          // 搜索面板（始终显示）
           SearchPanel(
-            expanded: _isSearchExpanded,
-            onExpandChanged: (expanded) {
-              setState(() {
-                _isSearchExpanded = expanded;
-              });
-            },
+            expanded: true,
             onSubscribe: _handleSubscribeFromSearch,
           ),
 
           const SizedBox(height: 16),
 
-          // 订阅列表
-          Expanded(
-            child: _buildSubscriptionContent(context),
-          ),
+          // 订阅列表（仅在没有搜索结果时显示）
+          if (!searchState.hasSearched)
+            Expanded(
+              child: _buildSubscriptionContent(context),
+            ),
 
           // Bottom action bar for selection mode
           if (isSelectionMode && bulkSelectionState.selectedIds.isNotEmpty)

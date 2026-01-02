@@ -722,6 +722,12 @@ abstract class AppLocalizations {
   /// **'Episodes'**
   String get podcast_episodes;
 
+  /// Unknown author label for podcasts
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Author'**
+  String get podcast_unknown_author;
+
   /// Latest episodes section
   ///
   /// In en, this message translates to:
@@ -2959,6 +2965,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'USA'**
   String get podcast_country_usa;
+
+  /// Country name: Japan
+  ///
+  /// In en, this message translates to:
+  /// **'Japan'**
+  String get podcast_country_japan;
+
+  /// Country name: United Kingdom
+  ///
+  /// In en, this message translates to:
+  /// **'United Kingdom'**
+  String get podcast_country_uk;
+
+  /// Country name: Germany
+  ///
+  /// In en, this message translates to:
+  /// **'Germany'**
+  String get podcast_country_germany;
+
+  /// Country name: France
+  ///
+  /// In en, this message translates to:
+  /// **'France'**
+  String get podcast_country_france;
+
+  /// Country name: Canada
+  ///
+  /// In en, this message translates to:
+  /// **'Canada'**
+  String get podcast_country_canada;
+
+  /// Country name: Australia
+  ///
+  /// In en, this message translates to:
+  /// **'Australia'**
+  String get podcast_country_australia;
+
+  /// Country name: South Korea
+  ///
+  /// In en, this message translates to:
+  /// **'South Korea'**
+  String get podcast_country_korea;
+
+  /// Country name: Taiwan
+  ///
+  /// In en, this message translates to:
+  /// **'Taiwan'**
+  String get podcast_country_taiwan;
+
+  /// Country name: Hong Kong
+  ///
+  /// In en, this message translates to:
+  /// **'Hong Kong'**
+  String get podcast_country_hong_kong;
+
+  /// Country name: India
+  ///
+  /// In en, this message translates to:
+  /// **'India'**
+  String get podcast_country_india;
+
+  /// Country name: Brazil
+  ///
+  /// In en, this message translates to:
+  /// **'Brazil'**
+  String get podcast_country_brazil;
+
+  /// Country name: Mexico
+  ///
+  /// In en, this message translates to:
+  /// **'Mexico'**
+  String get podcast_country_mexico;
+
+  /// Country name: Spain
+  ///
+  /// In en, this message translates to:
+  /// **'Spain'**
+  String get podcast_country_spain;
+
+  /// Country name: Italy
+  ///
+  /// In en, this message translates to:
+  /// **'Italy'**
+  String get podcast_country_italy;
 }
 
 class _AppLocalizationsDelegate

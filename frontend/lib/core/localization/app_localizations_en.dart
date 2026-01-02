@@ -324,6 +324,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_episodes => 'Episodes';
 
   @override
+  String get podcast_unknown_author => 'Unknown Author';
+
+  @override
   String get podcast_latest_episodes => 'Latest Episodes';
 
   @override
@@ -1526,4 +1529,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcast_country_usa => 'USA';
+
+  @override
+  String get podcast_country_japan => 'Japan';
+
+  @override
+  String get podcast_country_uk => 'United Kingdom';
+
+  @override
+  String get podcast_country_germany => 'Germany';
+
+  @override
+  String get podcast_country_france => 'France';
+
+  @override
+  String get podcast_country_canada => 'Canada';
+
+  @override
+  String get podcast_country_australia => 'Australia';
+
+  @override
+  String get podcast_country_korea => 'South Korea';
+
+  @override
+  String get podcast_country_taiwan => 'Taiwan';
+
+  @override
+  String get podcast_country_hong_kong => 'Hong Kong';
+
+  @override
+  String get podcast_country_india => 'India';
+
+  @override
+  String get podcast_country_brazil => 'Brazil';
+
+  @override
+  String get podcast_country_mexico => 'Mexico';
+
+  @override
+  String get podcast_country_spain => 'Spain';
+
+  @override
+  String get podcast_country_italy => 'Italy';
 }

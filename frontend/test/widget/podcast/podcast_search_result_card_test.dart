@@ -140,8 +140,8 @@ void main() {
       // 获取图标widget
       final Icon icon = tester.widget(iconFinder);
 
-      // 验证图标大小
-      expect(icon.size, 32);
+      // 验证图标大小（已更新为24）
+      expect(icon.size, 24);
 
       // 验证图标颜色使用了主题色（不是null）
       expect(icon.color, isNotNull);
@@ -157,8 +157,8 @@ void main() {
       // 获取IconButton widget
       final IconButton iconButton = tester.widget(iconButtonFinder);
 
-      // 验证图标大小
-      expect(iconButton.iconSize, 32);
+      // 验证图标大小（已更新为24）
+      expect(iconButton.iconSize, 24);
 
       // 验证图标颜色设置了
       expect(iconButton.color, isNotNull);

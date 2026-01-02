@@ -521,6 +521,11 @@
     "description": "Episodes label"
   },
 
+  "podcast_unknown_author": "Unknown Author",
+  "@podcast_unknown_author": {
+    "description": "Unknown author label for podcasts"
+  },
+
   "podcast_latest_episodes": "Latest Episodes",
   "@podcast_latest_episodes": {
     "description": "Latest episodes section"
@@ -2450,5 +2455,75 @@
   "podcast_country_usa": "USA",
   "@podcast_country_usa": {
     "description": "Country name: USA"
+  },
+
+  "podcast_country_japan": "Japan",
+  "@podcast_country_japan": {
+    "description": "Country name: Japan"
+  },
+
+  "podcast_country_uk": "United Kingdom",
+  "@podcast_country_uk": {
+    "description": "Country name: United Kingdom"
+  },
+
+  "podcast_country_germany": "Germany",
+  "@podcast_country_germany": {
+    "description": "Country name: Germany"
+  },
+
+  "podcast_country_france": "France",
+  "@podcast_country_france": {
+    "description": "Country name: France"
+  },
+
+  "podcast_country_canada": "Canada",
+  "@podcast_country_canada": {
+    "description": "Country name: Canada"
+  },
+
+  "podcast_country_australia": "Australia",
+  "@podcast_country_australia": {
+    "description": "Country name: Australia"
+  },
+
+  "podcast_country_korea": "South Korea",
+  "@podcast_country_korea": {
+    "description": "Country name: South Korea"
+  },
+
+  "podcast_country_taiwan": "Taiwan",
+  "@podcast_country_taiwan": {
+    "description": "Country name: Taiwan"
+  },
+
+  "podcast_country_hong_kong": "Hong Kong",
+  "@podcast_country_hong_kong": {
+    "description": "Country name: Hong Kong"
+  },
+
+  "podcast_country_india": "India",
+  "@podcast_country_india": {
+    "description": "Country name: India"
+  },
+
+  "podcast_country_brazil": "Brazil",
+  "@podcast_country_brazil": {
+    "description": "Country name: Brazil"
+  },
+
+  "podcast_country_mexico": "Mexico",
+  "@podcast_country_mexico": {
+    "description": "Country name: Mexico"
+  },
+
+  "podcast_country_spain": "Spain",
+  "@podcast_country_spain": {
+    "description": "Country name: Spain"
+  },
+
+  "podcast_country_italy": "Italy",
+  "@podcast_country_italy": {
+    "description": "Country name: Italy"
   }
 }

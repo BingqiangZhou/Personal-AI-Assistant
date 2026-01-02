@@ -5,48 +5,64 @@ part 'podcast_search_model.g.dart';
 
 /// 国家/地区枚举
 enum PodcastCountry {
-  china('cn', '中国'),
-  usa('us', '美国');
+  china('cn', 'podcast_country_china', '🇨🇳'),
+  usa('us', 'podcast_country_usa', '🇺🇸'),
+  japan('jp', 'podcast_country_japan', '🇯🇵'),
+  uk('gb', 'podcast_country_uk', '🇬🇧'),
+  germany('de', 'podcast_country_germany', '🇩🇪'),
+  france('fr', 'podcast_country_france', '🇫🇷'),
+  canada('ca', 'podcast_country_canada', '🇨🇦'),
+  australia('au', 'podcast_country_australia', '🇦🇺'),
+  korea('kr', 'podcast_country_korea', '🇰🇷'),
+  taiwan('tw', 'podcast_country_taiwan', '🇹🇼'),
+  hongKong('hk', 'podcast_country_hong_kong', '🇭🇰'),
+  india('in', 'podcast_country_india', '🇮🇳'),
+  brazil('br', 'podcast_country_brazil', '🇧🇷'),
+  mexico('mx', 'podcast_country_mexico', '🇲🇽'),
+  spain('es', 'podcast_country_spain', '🇪🇸'),
+  italy('it', 'podcast_country_italy', '🇮🇹');
 
   final String code;
-  final String displayName;
+  final String localizationKey;
+  final String flag;
 
-  const PodcastCountry(this.code, this.displayName);
+  const PodcastCountry(this.code, this.localizationKey, this.flag);
 }
 
 /// iTunes 搜索结果模型
 @JsonSerializable()
 class PodcastSearchResult extends Equatable {
-  final int collectionId;
+  @JsonKey(name: 'collectionId')
+  final int? collectionId;
   @JsonKey(name: 'collectionName')
-  final String collectionName;
+  final String? collectionName;
   @JsonKey(name: 'artistName')
-  final String artistName;
+  final String? artistName;
   @JsonKey(name: 'artworkUrl100')
-  final String artworkUrl100;
+  final String? artworkUrl100;
   @JsonKey(name: 'artworkUrl600')
   final String? artworkUrl600;
   @JsonKey(name: 'feedUrl')
-  final String feedUrl;
+  final String? feedUrl;
   @JsonKey(name: 'collectionViewUrl')
   final String? collectionViewUrl;
   @JsonKey(name: 'primaryGenreName')
   final String? primaryGenreName;
   @JsonKey(name: 'trackCount')
-  final int trackCount;
+  final int? trackCount;
   @JsonKey(name: 'releaseDate')
   final String? releaseDate;
 
   const PodcastSearchResult({
-    required this.collectionId,
-    required this.collectionName,
-    required this.artistName,
-    required this.artworkUrl100,
+    this.collectionId,
+    this.collectionName,
+    this.artistName,
+    this.artworkUrl100,
     this.artworkUrl600,
-    required this.feedUrl,
+    this.feedUrl,
     this.collectionViewUrl,
     this.primaryGenreName,
-    required this.trackCount,
+    this.trackCount,
     this.releaseDate,
   });
 

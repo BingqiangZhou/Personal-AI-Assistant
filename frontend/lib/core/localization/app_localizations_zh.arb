@@ -521,6 +521,11 @@
     "description": "剧集标签"
   },
 
+  "podcast_unknown_author": "未知作者",
+  "@podcast_unknown_author": {
+    "description": "播客未知作者标签"
+  },
+
   "podcast_latest_episodes": "最新剧集",
   "@podcast_latest_episodes": {
     "description": "最新剧集部分"
@@ -2450,5 +2455,75 @@
   "podcast_country_usa": "美国",
   "@podcast_country_usa": {
     "description": "国家名称：美国"
+  },
+
+  "podcast_country_japan": "日本",
+  "@podcast_country_japan": {
+    "description": "国家名称：日本"
+  },
+
+  "podcast_country_uk": "英国",
+  "@podcast_country_uk": {
+    "description": "国家名称：英国"
+  },
+
+  "podcast_country_germany": "德国",
+  "@podcast_country_germany": {
+    "description": "国家名称：德国"
+  },
+
+  "podcast_country_france": "法国",
+  "@podcast_country_france": {
+    "description": "国家名称：法国"
+  },
+
+  "podcast_country_canada": "加拿大",
+  "@podcast_country_canada": {
+    "description": "国家名称：加拿大"
+  },
+
+  "podcast_country_australia": "澳大利亚",
+  "@podcast_country_australia": {
+    "description": "国家名称：澳大利亚"
+  },
+
+  "podcast_country_korea": "韩国",
+  "@podcast_country_korea": {
+    "description": "国家名称：韩国"
+  },
+
+  "podcast_country_taiwan": "台湾",
+  "@podcast_country_taiwan": {
+    "description": "国家名称：台湾"
+  },
+
+  "podcast_country_hong_kong": "香港",
+  "@podcast_country_hong_kong": {
+    "description": "国家名称：香港"
+  },
+
+  "podcast_country_india": "印度",
+  "@podcast_country_india": {
+    "description": "国家名称：印度"
+  },
+
+  "podcast_country_brazil": "巴西",
+  "@podcast_country_brazil": {
+    "description": "国家名称：巴西"
+  },
+
+  "podcast_country_mexico": "墨西哥",
+  "@podcast_country_mexico": {
+    "description": "国家名称：墨西哥"
+  },
+
+  "podcast_country_spain": "西班牙",
+  "@podcast_country_spain": {
+    "description": "国家名称：西班牙"
+  },
+
+  "podcast_country_italy": "意大利",
+  "@podcast_country_italy": {
+    "description": "国家名称：意大利"
   }
 }
