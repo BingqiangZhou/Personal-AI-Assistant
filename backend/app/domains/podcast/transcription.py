@@ -232,7 +232,19 @@ class AudioDownloader:
                         detail=f"Download failed: {str(aiohttp_error)}"
                     )
 
-            # 步骤 3: 执行浏览器回退下载
+            # 步骤 3: 检查 Playwright 是否可用，然后执行浏览器回退下载
+            if not is_playwright_available():
+                logger.error(f"❌ [FALLBACK] Playwright not available, cannot use browser fallback")
+                logger.error(f"❌ [FALLBACK] aiohttp error: {type(aiohttp_error).__name__}: {aiohttp_error}")
+                # Playwright 不可用，直接抛出原始 aiohttp 错误
+                if isinstance(aiohttp_error, HTTPException):
+                    raise
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"Download failed and Playwright browser fallback not available: {str(aiohttp_error)}"
+                    )
+
             logger.info(f"🌐 [FALLBACK] Triggering browser fallback download...")
             try:
                 browser_downloader = BrowserAudioDownloader(
@@ -261,6 +273,21 @@ class AudioDownloader:
                         f"browser: {type(browser_error).__name__}"
                     )
                 )
+
+
+def is_playwright_available() -> bool:
+    """
+    检查 Playwright 是否可用
+
+    Returns:
+        bool: True 表示 Playwright 已安装且可用
+    """
+    try:
+        from playwright.async_api import async_playwright
+        return True
+    except ImportError:
+        logger.warning("🌐 [FALLBACK] Playwright not installed, browser fallback disabled")
+        return False
 
 
 def should_trigger_fallback(error: Exception) -> bool:
