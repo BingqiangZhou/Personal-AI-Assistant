@@ -98,9 +98,19 @@ class AudioDownloader:
         """异步上下文管理器入口"""
         connector = aiohttp.TCPConnector(limit=10, limit_per_host=5)
         timeout = aiohttp.ClientTimeout(total=self.timeout)
-        # 使用浏览器 User-Agent 以绕过 CDN 防护
+        # 使用完整的浏览器头部以绕过 CDN 防护（Cloudflare等）
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1',
+            'Cache-Control': 'max-age=0'
         }
         self.session = aiohttp.ClientSession(
             connector=connector,
@@ -421,47 +431,76 @@ class BrowserAudioDownloader:
                     # 设置下载超时
                     page.set_default_timeout(self.timeout * 1000)
 
-                    # 监听下载事件
-                    download_started = asyncio.Event()
-                    download_info = {'download': None, 'error': None}
+                    # 使用 fetch API 直接获取音频文件（绕过 CDN）
+                    logger.info(f"🌐 [BROWSER DOWNLOAD] Fetching audio file via browser context...")
 
-                    async def handle_download(d):
-                        download_info['download'] = d
-                        download_started.set()
+                    # 在浏览器中执行 fetch 获取文件
+                    fetch_script = f'''
+                    async function fetchAudio() {{
+                        try {{
+                            const response = await fetch("{url}", {{
+                                headers: {{
+                                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                                    'Accept': '*/*',
+                                    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                                    'Accept-Encoding': 'gzip, deflate, br',
+                                    'Connection': 'keep-alive',
+                                    'Referer': 'https://lizhi.fm/'
+                                }}
+                            }});
 
-                    page.on('download', handle_download)
+                            if (!response.ok) {{
+                                return {{ error: `HTTP ${{response.status}}` }};
+                            }}
 
-                    # 导航到音频 URL（触发下载）
+                            const blob = await response.blob();
+                            const arrayBuffer = await blob.arrayBuffer();
+                            const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+                            return {{
+                                success: true,
+                                base64: base64,
+                                size: blob.size,
+                                type: blob.type
+                            }};
+                        }} catch (error) {{
+                            return {{ error: error.toString() }};
+                        }}
+                    }}
+                    fetchAudio();
+                    '''
+
                     try:
-                        await page.goto(url, wait_until='domcontentloaded', timeout=self.timeout * 1000)
-                    except PlaywrightError as e:
-                        logger.error(f"🌐 [BROWSER DOWNLOAD] Failed to navigate to URL: {e}")
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f"Browser navigation failed: {str(e)}"
-                        )
+                        result = await page.evaluate(fetch_script)
 
-                    # 等待下载开始
-                    try:
-                        await asyncio.wait_for(download_started.wait(), timeout=10.0)
-                    except asyncio.TimeoutError:
-                        logger.error("🌐 [BROWSER DOWNLOAD] Download did not start within 10 seconds")
-                        raise HTTPException(
-                            status_code=status.HTTP_408_REQUEST_TIMEOUT,
-                            detail="Browser download did not start"
-                        )
+                        if result.get('error'):
+                            raise HTTPException(
+                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail=f"Browser fetch failed: {result['error']}"
+                            )
 
-                    download = download_info['download']
-                    if not download:
+                        if not result.get('success'):
+                            raise HTTPException(
+                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                                detail=f"Browser fetch returned error: {result.get('error', 'Unknown error')}"
+                            )
+
+                        # 解码 base64 数据并写入文件
+                        import base64
+                        audio_data = base64.b64decode(result['base64'])
+
+                        with open(destination, 'wb') as f:
+                            f.write(audio_data)
+
+                        file_size = len(audio_data)
+                        logger.info(f"🌐 [BROWSER DOWNLOAD] Successfully downloaded {file_size} bytes via fetch")
+
+                    except Exception as e:
+                        logger.error(f"🌐 [BROWSER DOWNLOAD] Fetch failed: {e}")
                         raise HTTPException(
                             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Failed to capture download object"
+                            detail=f"Browser download via fetch failed: {str(e)}"
                         )
-
-                    logger.info(f"🌐 [BROWSER DOWNLOAD] Download started: {download.suggested_filename}")
-
-                    # 保存文件
-                    await download.save_as(destination)
 
                     # 等待下载完成
                     await asyncio.sleep(1)  # 给文件系统一点时间
