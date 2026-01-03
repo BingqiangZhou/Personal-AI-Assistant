@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +16,7 @@ import '../widgets/transcription_status_widget.dart';
 import '../widgets/ai_summary_control_widget.dart';
 import '../widgets/conversation_chat_widget.dart';
 import '../widgets/podcast_image_widget.dart';
+import '../widgets/side_floating_player_widget.dart';
 
 class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
   final int episodeId;
@@ -175,17 +175,24 @@ class _PodcastEpisodeDetailPageState
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: episodeDetailAsync.when(
-        data: (episodeDetail) {
-          if (episodeDetail == null) {
-            return _buildErrorState(context, 'Episode not found');
-          }
-          return _buildNewLayout(context, episodeDetail);
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => _buildErrorState(context, error),
+      body: Stack(
+        children: [
+          // Main content
+          episodeDetailAsync.when(
+            data: (episodeDetail) {
+              if (episodeDetail == null) {
+                return _buildErrorState(context, 'Episode not found');
+              }
+              return _buildNewLayout(context, episodeDetail);
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) => _buildErrorState(context, error),
+          ),
+
+          // Side floating player
+          const SideFloatingPlayerWidget(),
+        ],
       ),
-      bottomNavigationBar: _buildBottomPlayer(context),
     );
   }
 
@@ -206,79 +213,33 @@ class _PodcastEpisodeDetailPageState
   Widget _buildHeader(dynamic episode) {
 
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: 8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         color: Theme.of(context).colorScheme.surface,
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 左侧：返回按钮 + Logo + 文本
+            // 左侧：Logo（独占两行）
+            PodcastImageWidget(
+              imageUrl: episode.imageUrl,
+              fallbackImageUrl: episode.subscriptionImageUrl,
+              width: 60,
+              height: 60,
+              iconSize: 32,
+            ),
+            const SizedBox(width: 16),
+            // 右侧：标题和发布时间
             Expanded(
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // 返回按钮
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        Icons.arrow_back,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 20,
-                      ),
-                      onPressed: () => context.pop(),
-                      tooltip: AppLocalizations.of(context)!.back_button,
-                      constraints: const BoxConstraints(
-                        minWidth: 36,
-                        minHeight: 36,
-                      ),
-                      padding: EdgeInsets.zero,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Episode icon: 50x50px, rounded 8px - prioritize episode image over subscription image
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(7),
-                      child: PodcastImageWidget(
-                        imageUrl: episode.imageUrl,
-                        fallbackImageUrl: episode.subscriptionImageUrl,
-                        width: 50,
-                        height: 50,
-                        iconSize: 28,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // 文本：垂直排列的Column
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // 标题: 16px, FontWeight.bold, 主题色 + 链接图标
-                        Wrap(
+                  // 第一行：标题 + 链接图标
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Wrap(
                           alignment: WrapAlignment.start,
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
@@ -292,98 +253,59 @@ class _PodcastEpisodeDetailPageState
                             ),
                             // 分集链接图标
                             if (episode.itemLink != null && episode.itemLink!.isNotEmpty)
-                              InkWell(
-                                onTap: () async {
-                                  final Uri linkUri = Uri.parse(episode.itemLink!);
-                                  if (await canLaunchUrl(linkUri)) {
-                                    await launchUrl(
-                                      linkUri,
-                                      mode: LaunchMode.externalApplication,
-                                    );
-                                  }
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 6, right: 4),
-                                  child: Icon(
-                                    Icons.link,
-                                    size: 16,
-                                    color: Theme.of(context).colorScheme.primary,
-                                  ),
-                                ),
-                              ),
+                                                              InkWell(
+                                                                onTap: () async {
+                                                                  final Uri linkUri = Uri.parse(episode.itemLink!);
+                                                                  if (await canLaunchUrl(linkUri)) {
+                                                                    await launchUrl(
+                                                                      linkUri,
+                                                                      mode: LaunchMode.externalApplication,
+                                                                    );
+                                                                  }
+                                                                },
+                                                                child: Padding(
+                                                                  padding: const EdgeInsets.only(left: 6, right: 4),
+                                                                  child: Icon(
+                                                                    Icons.link,
+                                                                    size: 16,
+                                                                    color: Theme.of(context).colorScheme.primary,
+                                                                  ),
+                                                                ),
+                                                              ),
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        // 副标题: 12px, 次要文字颜色, 支持多行显示
-                        Text(
-                          episode.description ?? 'No description',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+                      ),
+                      // 返回按钮
+                      Container(
+                                                        decoration: BoxDecoration(
+                                                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                                          borderRadius: BorderRadius.circular(8),
+                                                          border: Border.all(
+                                                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                                                            width: 1,
+                                                          ),
+                                                        ),
+                                                        child: IconButton(
+                                                          icon: Icon(
+                                                            Icons.arrow_back,
+                                                            color: Theme.of(context).colorScheme.primary,
+                                                            size: 20,
+                                                          ),
+                                                          onPressed: () => context.pop(),
+                                                          tooltip: AppLocalizations.of(context)!.back_button,
+                                                          constraints: const BoxConstraints(
+                                                            minWidth: 36,
+                                                            minHeight: 36,
+                                                          ),
+                                                          padding: EdgeInsets.zero,
+                                                        ),
+                                                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // B. 左侧主内容
-  Widget _buildMainContent(dynamic episode) {
-    return Container(
-      color: Theme.of(context).colorScheme.surface,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Tabs：节目简介 / 文字转录 / 转录状态
-          _buildTabs(),
-
-          // 内容区域
-          Expanded(child: _buildTabContent(episode)),
-        ],
-      ),
-    );
-  }
-
-  // Tabs 组件 - 胶囊状按钮，右侧显示发布时间和时长
-  Widget _buildTabs() {
-    final episodeDetailAsync = ref.watch(
-      episodeDetailProvider(widget.episodeId),
-    );
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 1,
-          ),
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth > 800;
-
-          final timeWidget = episodeDetailAsync.when(
-            data: (episode) {
-              if (episode == null) return const SizedBox.shrink();
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Published date
+                  // 第二行：发布时间和时长
                   Row(
                     children: [
+                      // Published date
                       Icon(
                         Icons.calendar_today_outlined,
                         size: 14,
@@ -397,13 +319,9 @@ class _PodcastEpisodeDetailPageState
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(width: 16),
-                  // Duration
-                  if (episode.audioDuration != null)
-                    Row(
-                      children: [
+                      const SizedBox(width: 16),
+                      // Duration
+                      if (episode.audioDuration != null) ...[
                         Icon(
                           Icons.schedule_outlined,
                           size: 14,
@@ -414,93 +332,218 @@ class _PodcastEpisodeDetailPageState
                           episode.formattedDuration,
                           style: TextStyle(
                             fontSize: 13,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
-                    ),
-                ],
-              );
-            },
-            loading: () => const SizedBox.shrink(),
-            error: (error, stack) => const SizedBox.shrink(),
-          );
-
-          final buttonsWidget = Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Shownotes Tab
-              _buildTabButton('Shownotes', _selectedTabIndex == 0, () {
-                if (_selectedTabIndex != 0) {
-                  setState(() {
-                    _selectedTabIndex = 0;
-                    _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
-                  });
-                }
-              }),
-              const SizedBox(width: 8),
-              // Transcript Tab
-              _buildTabButton('Transcript', _selectedTabIndex == 1, () {
-                if (_selectedTabIndex != 1) {
-                  setState(() {
-                    _selectedTabIndex = 1;
-                    _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
-                  });
-                }
-              }),
-              const SizedBox(width: 8),
-              // AI Summary Tab
-              _buildTabButton('AI Summary', _selectedTabIndex == 2, () {
-                if (_selectedTabIndex != 2) {
-                  setState(() {
-                    _selectedTabIndex = 2;
-                    _startSummaryPolling(); // 切换到AI Summary tab时启动轮询
-                  });
-                }
-              }),
-              const SizedBox(width: 8),
-              // Conversation Tab
-              _buildTabButton('Chat', _selectedTabIndex == 3, () {
-                if (_selectedTabIndex != 3) {
-                  setState(() {
-                    _selectedTabIndex = 3;
-                    _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
-                  });
-                }
-              }),
-            ],
-          );
-
-          if (isWide) {
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [timeWidget, buttonsWidget],
-            );
-          } else {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(children: [timeWidget]),
-                const SizedBox(height: 12),
-                // 使用 SingleChildScrollView 让按钮在窄屏上可以滚动
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [buttonsWidget],
+                    ],
                   ),
-                ),
-              ],
-            );
-          }
-        },
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // Tab 按钮组件 - 胶囊状
+  // B. 主内容区域 - 响应式布局
+  Widget _buildMainContent(dynamic episode) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 判断是否为宽屏（大于800px使用左侧边栏，否则使用顶部按钮）
+        final isWideScreen = constraints.maxWidth > 800;
+
+        if (isWideScreen) {
+          // 宽屏：左侧边栏布局
+          return Container(
+            color: Theme.of(context).colorScheme.surface,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 左侧：按钮列
+                _buildLeftSidebar(),
+
+                // 右侧：内容区域
+                Expanded(child: _buildTabContent(episode)),
+              ],
+            ),
+          );
+        } else {
+          // 窄屏：顶部按钮布局
+          return Container(
+            color: Theme.of(context).colorScheme.surface,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 顶部：按钮行
+                _buildTopButtonBar(),
+
+                // 下方：内容区域
+                Expanded(child: _buildTabContent(episode)),
+              ],
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  // 顶部按钮行（移动端）
+  Widget _buildTopButtonBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 1,
+          ),
+        ),
+      ),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            // Shownotes Tab
+            _buildTabButton('Shownotes', _selectedTabIndex == 0, () {
+              if (_selectedTabIndex != 0) {
+                setState(() {
+                  _selectedTabIndex = 0;
+                  _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
+                });
+              }
+            }),
+            const SizedBox(width: 8),
+            // Transcript Tab
+            _buildTabButton('Transcript', _selectedTabIndex == 1, () {
+              if (_selectedTabIndex != 1) {
+                setState(() {
+                  _selectedTabIndex = 1;
+                  _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
+                });
+              }
+            }),
+            const SizedBox(width: 8),
+            // AI Summary Tab
+            _buildTabButton('AI Summary', _selectedTabIndex == 2, () {
+              if (_selectedTabIndex != 2) {
+                setState(() {
+                  _selectedTabIndex = 2;
+                  _startSummaryPolling(); // 切换到AI Summary tab时启动轮询
+                });
+              }
+            }),
+            const SizedBox(width: 8),
+            // Conversation Tab
+            _buildTabButton('Chat', _selectedTabIndex == 3, () {
+              if (_selectedTabIndex != 3) {
+                setState(() {
+                  _selectedTabIndex = 3;
+                  _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
+                });
+              }
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 左侧按钮列（宽屏）
+  Widget _buildLeftSidebar() {
+    return Container(
+      width: 200,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          right: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Shownotes Tab
+          _buildSidebarTabButton('Shownotes', _selectedTabIndex == 0, () {
+            if (_selectedTabIndex != 0) {
+              setState(() {
+                _selectedTabIndex = 0;
+                _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
+              });
+            }
+          }),
+          const SizedBox(height: 8),
+          // Transcript Tab
+          _buildSidebarTabButton('Transcript', _selectedTabIndex == 1, () {
+            if (_selectedTabIndex != 1) {
+              setState(() {
+                _selectedTabIndex = 1;
+                _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
+              });
+            }
+          }),
+          const SizedBox(height: 8),
+          // AI Summary Tab
+          _buildSidebarTabButton('AI Summary', _selectedTabIndex == 2, () {
+            if (_selectedTabIndex != 2) {
+              setState(() {
+                _selectedTabIndex = 2;
+                _startSummaryPolling(); // 切换到AI Summary tab时启动轮询
+              });
+            }
+          }),
+          const SizedBox(height: 8),
+          // Conversation Tab
+          _buildSidebarTabButton('Chat', _selectedTabIndex == 3, () {
+            if (_selectedTabIndex != 3) {
+              setState(() {
+                _selectedTabIndex = 3;
+                _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
+              });
+            }
+          }),
+        ],
+      ),
+    );
+  }
+
+  // 左侧边栏按钮组件（宽屏）
+  Widget _buildSidebarTabButton(String text, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? Theme.of(context).colorScheme.primaryContainer
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Colors.transparent,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: isSelected
+                ? Theme.of(context).colorScheme.onPrimaryContainer
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 顶部胶囊状按钮组件
   Widget _buildTabButton(String text, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -880,361 +923,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // C. 底部沉浸式播放条
-  Widget _buildBottomPlayer(BuildContext context) {
-    // Use Consumer to isolate audio player state watching
-    return Consumer(
-      builder: (context, ref, child) {
-        final audioPlayerState = ref.watch(audioPlayerProvider);
-
-        // Only show the player if we have an episode loaded
-        if (audioPlayerState.currentEpisode == null) {
-          return const SizedBox.shrink();
-        }
-
-        return Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 8,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 1. 进度条 - 横跨整个宽度，细轨道
-              _buildProgressBar(audioPlayerState, ref),
-
-              // 2. 控制区
-              _buildControlArea(audioPlayerState, ref),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // 进度条 - 轨道高度2px，主题色
-  Widget _buildProgressBar(dynamic audioPlayerState, WidgetRef ref) {
-    final progress = audioPlayerState.duration > 0
-        ? audioPlayerState.position / audioPlayerState.duration
-        : 0.0;
-
-    return SliderTheme(
-      data: SliderTheme.of(context).copyWith(
-        trackHeight: 2,
-        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-        overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-      ),
-      child: Slider(
-        value: progress.clamp(0.0, 1.0),
-        onChanged: (value) async {
-          final newPosition = (value * audioPlayerState.duration).round();
-          await ref.read(audioPlayerProvider.notifier).seekTo(newPosition);
-        },
-        min: 0,
-        max: 1,
-        activeColor: Theme.of(context).colorScheme.primary,
-        inactiveColor: Theme.of(
-          context,
-        ).colorScheme.outline.withValues(alpha: 0.3),
-        thumbColor: Theme.of(context).colorScheme.primary,
-        overlayColor: WidgetStateProperty.all(
-          Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-        ),
-      ),
-    );
-  }
-
-  // 控制区
-  Widget _buildControlArea(dynamic audioPlayerState, WidgetRef ref) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // 判断是否宽屏 (大于800px为宽屏，以便在平板和桌面上横向显示)
-        final isWideScreen = constraints.maxWidth > 800;
-
-        if (isWideScreen) {
-          // 宽屏布局:横向排列
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // 左边:当前时间
-                SizedBox(
-                  width: 70,
-                  child: Text(
-                    audioPlayerState.formattedPosition,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-
-                // 中间:播放控制组
-                _buildPlaybackControls(audioPlayerState, ref),
-
-                // 右边:剩余时间 + 倍速按钮
-                _buildTimeAndSpeed(audioPlayerState, ref),
-              ],
-            ),
-          );
-        } else {
-          // 窄屏布局:按钮在时间下方 (手机模式)
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 第一行:时间信息
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    // 当前时间 - 使用Flexible防止溢出
-                    Flexible(
-                      child: Text(
-                        audioPlayerState.formattedPosition,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    // 剩余时间 + 倍速 - 使用Flexible防止溢出
-                    Flexible(child: _buildTimeAndSpeed(audioPlayerState, ref)),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-
-                // 第二行:播放控制按钮 (居中)
-                Center(child: _buildPlaybackControls(audioPlayerState, ref)),
-              ],
-            ),
-          );
-        }
-      },
-    );
-  }
-
-  // 播放控制按钮组
-  Widget _buildPlaybackControls(dynamic audioPlayerState, WidgetRef ref) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 回退10s
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outline.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
-          child: IconButton(
-            onPressed: () async {
-              final newPosition = (audioPlayerState.position - 10000).clamp(
-                0,
-                audioPlayerState.duration,
-              );
-              await ref.read(audioPlayerProvider.notifier).seekTo(newPosition);
-            },
-            icon: Icon(
-              Icons.replay_10,
-              size: 24,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            padding: EdgeInsets.zero,
-          ),
-        ),
-        const SizedBox(width: 16),
-
-        // 播放/暂停主按钮
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: IconButton(
-            onPressed: audioPlayerState.isLoading
-                ? null
-                : () async {
-                    if (audioPlayerState.isPlaying) {
-                      await ref.read(audioPlayerProvider.notifier).pause();
-                    } else {
-                      await ref.read(audioPlayerProvider.notifier).resume();
-                    }
-                  },
-            icon: audioPlayerState.isLoading
-                ? SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                  )
-                : Icon(
-                    audioPlayerState.isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: Theme.of(context).colorScheme.onPrimary,
-                    size: 32,
-                  ),
-            constraints: const BoxConstraints(minWidth: 56, minHeight: 56),
-            padding: EdgeInsets.zero,
-          ),
-        ),
-        const SizedBox(width: 16),
-
-        // 前进30s
-        Container(
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outline.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
-          child: IconButton(
-            onPressed: () async {
-              final newPosition = (audioPlayerState.position + 30000).clamp(
-                0,
-                audioPlayerState.duration,
-              );
-              await ref.read(audioPlayerProvider.notifier).seekTo(newPosition);
-            },
-            icon: Icon(
-              Icons.forward_30,
-              size: 24,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            padding: EdgeInsets.zero,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // 时间和倍速控件
-  Widget _buildTimeAndSpeed(dynamic audioPlayerState, WidgetRef ref) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Flexible(
-          child: Text(
-            _formatRemainingTime(audioPlayerState),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            textAlign: TextAlign.right,
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outline.withValues(alpha: 0.5),
-            ),
-            borderRadius: BorderRadius.circular(16),
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          ),
-          child: PopupMenuButton<double>(
-            padding: EdgeInsets.zero,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              child: Text(
-                '${audioPlayerState.playbackRate}x',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-            onSelected: (speed) async {
-              await ref
-                  .read(audioPlayerProvider.notifier)
-                  .setPlaybackRate(speed);
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 0.5, child: Text('0.5x')),
-              const PopupMenuItem(value: 0.75, child: Text('0.75x')),
-              const PopupMenuItem(value: 1.0, child: Text('1.0x')),
-              const PopupMenuItem(value: 1.25, child: Text('1.25x')),
-              const PopupMenuItem(value: 1.5, child: Text('1.5x')),
-              const PopupMenuItem(value: 1.75, child: Text('1.75x')),
-              const PopupMenuItem(value: 2.0, child: Text('2.0x')),
-              const PopupMenuItem(value: 2.5, child: Text('2.5x')),
-              const PopupMenuItem(value: 3.0, child: Text('3.0x')),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // 格式化剩余时长
-  String _formatRemainingTime(dynamic audioPlayerState) {
-    final remaining = audioPlayerState.duration - audioPlayerState.position;
-    if (remaining <= 0) {
-      return '00:00';
-    }
-
-    final seconds = (remaining / 1000).floor();
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final secs = seconds % 60;
-
-    if (hours > 0) {
-      return '-${hours.toString().padLeft(1, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-    } else {
-      return '-${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-    }
-  }
-
   // 格式化日期
   String _formatDate(DateTime date) {
     // 确保使用本地时间，而不是 UTC 时间
@@ -1244,9 +932,6 @@ class _PodcastEpisodeDetailPageState
     final day = localDate.day.toString().padLeft(2, '0');
     return '$year年$month月$day日';
   }
-
-  // 工具方法：取最小值
-  int min(int a, int b) => a < b ? a : b;
 
   // 错误状态
   Widget _buildErrorState(BuildContext context, dynamic error) {

@@ -5,7 +5,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
-import '../../../podcast/presentation/widgets/floating_player_widget.dart';
+import '../../../podcast/presentation/widgets/side_floating_player_widget.dart';
 import '../../../assistant/presentation/pages/assistant_chat_page.dart';
 import '../../../knowledge/presentation/pages/knowledge_base_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
@@ -74,7 +74,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           children: [
             widget.child!,
             // Floating player overlay
-            const FloatingPlayerWidget(),
+            const SideFloatingPlayerWidget(),
           ],
         ),
         floatingActionButton: _buildFloatingActionButton(),
@@ -95,7 +95,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           body: _buildTabContent(context, _currentIndex),
         ),
         // Floating player overlay - always on top
-        const FloatingPlayerWidget(),
+        const SideFloatingPlayerWidget(),
       ],
     );
   }

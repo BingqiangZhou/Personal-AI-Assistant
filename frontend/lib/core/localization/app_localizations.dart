@@ -3073,6 +3073,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'❌ Reparse failed:'**
   String get podcast_reparse_failed;
+
+  /// Now playing label in floating player
+  ///
+  /// In en, this message translates to:
+  /// **'Now Playing'**
+  String get podcast_player_now_playing;
+
+  /// Collapse button tooltip in floating player
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get podcast_player_collapse;
+
+  /// Playlist button tooltip in floating player
+  ///
+  /// In en, this message translates to:
+  /// **'List'**
+  String get podcast_player_list;
+
+  /// Sleep mode button tooltip in floating player
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Mode'**
+  String get podcast_player_sleep_mode;
+
+  /// Download button tooltip in floating player
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get podcast_player_download;
+
+  /// Expand button tooltip in collapsed floating player
+  ///
+  /// In en, this message translates to:
+  /// **'Expand'**
+  String get podcast_player_expand;
+
+  /// Play button tooltip in floating player
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get podcast_player_play;
+
+  /// Pause button tooltip in floating player
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get podcast_player_pause;
+
+  /// Rewind 10 seconds button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Rewind 10s'**
+  String get podcast_player_rewind_10;
+
+  /// Forward 30 seconds button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Forward 30s'**
+  String get podcast_player_forward_30;
+
+  /// Playback speed selector tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Playback Speed'**
+  String get podcast_player_playback_speed;
 }
 
 class _AppLocalizationsDelegate

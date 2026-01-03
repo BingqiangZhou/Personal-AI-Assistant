@@ -1544,4 +1544,37 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get podcast_reparse_failed => '❌ 重新解析失败：';
+
+  @override
+  String get podcast_player_now_playing => '正在播放';
+
+  @override
+  String get podcast_player_collapse => '收起';
+
+  @override
+  String get podcast_player_list => '列表';
+
+  @override
+  String get podcast_player_sleep_mode => '睡眠模式';
+
+  @override
+  String get podcast_player_download => '下载';
+
+  @override
+  String get podcast_player_expand => '展开';
+
+  @override
+  String get podcast_player_play => '播放';
+
+  @override
+  String get podcast_player_pause => '暂停';
+
+  @override
+  String get podcast_player_rewind_10 => '后退10秒';
+
+  @override
+  String get podcast_player_forward_30 => '前进30秒';
+
+  @override
+  String get podcast_player_playback_speed => '播放速度';
 }

@@ -7,7 +7,7 @@ import '../../data/models/podcast_subscription_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../widgets/simplified_episode_card.dart';
-import '../widgets/floating_player_widget.dart';
+import '../widgets/side_floating_player_widget.dart';
 
 class PodcastEpisodesPage extends ConsumerStatefulWidget {
   final int subscriptionId;
@@ -419,7 +419,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
             ],
           ),
           // Floating player overlay
-          const FloatingPlayerWidget(),
+          const SideFloatingPlayerWidget(),
         ],
       ),
     );

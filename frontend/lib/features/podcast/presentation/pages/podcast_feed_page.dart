@@ -82,7 +82,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
 
           // Feed内容 - 直接使用Expanded填充剩余空间
           Expanded(child: _buildFeedContent(context)),
@@ -322,7 +322,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  Icons.schedule,
+                                  Icons.calendar_today_outlined,
                                   size: 16,
                                   color: Theme.of(
                                     context,
@@ -330,7 +330,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  episode.formattedDuration,
+                                  _formatDate(episode.publishedAt),
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color: Theme.of(
@@ -345,7 +345,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Icon(
-                                  Icons.access_time,
+                                  Icons.schedule,
                                   size: 16,
                                   color: Theme.of(
                                     context,
@@ -353,7 +353,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  _formatDate(episode.publishedAt),
+                                  episode.formattedDuration,
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         color: Theme.of(
@@ -568,6 +568,25 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             ),
                           ),
                         ),
+                        // 日期
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              size: 13,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 2),
+                            Text(
+                              _formatDate(episode.publishedAt),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
                         // 时长
                         Row(
                           mainAxisSize: MainAxisSize.min,
@@ -580,25 +599,6 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             const SizedBox(width: 2),
                             Text(
                               episode.formattedDuration,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                        // 日期
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.access_time,
-                              size: 13,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              _formatDate(episode.publishedAt),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                                 fontSize: 11,

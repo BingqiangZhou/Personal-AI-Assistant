@@ -2545,5 +2545,60 @@
   "podcast_reparse_failed": "❌ 重新解析失败：",
   "@podcast_reparse_failed": {
     "description": "重新解析失败消息"
+  },
+
+  "podcast_player_now_playing": "正在播放",
+  "@podcast_player_now_playing": {
+    "description": "浮动播放器中的正在播放标签"
+  },
+
+  "podcast_player_collapse": "收起",
+  "@podcast_player_collapse": {
+    "description": "浮动播放器中的收起按钮提示"
+  },
+
+  "podcast_player_list": "列表",
+  "@podcast_player_list": {
+    "description": "浮动播放器中的列表按钮提示"
+  },
+
+  "podcast_player_sleep_mode": "睡眠模式",
+  "@podcast_player_sleep_mode": {
+    "description": "浮动播放器中的睡眠模式按钮提示"
+  },
+
+  "podcast_player_download": "下载",
+  "@podcast_player_download": {
+    "description": "浮动播放器中的下载按钮提示"
+  },
+
+  "podcast_player_expand": "展开",
+  "@podcast_player_expand": {
+    "description": "收起状态浮动播放器的展开按钮提示"
+  },
+
+  "podcast_player_play": "播放",
+  "@podcast_player_play": {
+    "description": "浮动播放器中的播放按钮提示"
+  },
+
+  "podcast_player_pause": "暂停",
+  "@podcast_player_pause": {
+    "description": "浮动播放器中的暂停按钮提示"
+  },
+
+  "podcast_player_rewind_10": "后退10秒",
+  "@podcast_player_rewind_10": {
+    "description": "后退10秒按钮提示"
+  },
+
+  "podcast_player_forward_30": "前进30秒",
+  "@podcast_player_forward_30": {
+    "description": "前进30秒按钮提示"
+  },
+
+  "podcast_player_playback_speed": "播放速度",
+  "@podcast_player_playback_speed": {
+    "description": "播放速度选择器提示"
   }
 }

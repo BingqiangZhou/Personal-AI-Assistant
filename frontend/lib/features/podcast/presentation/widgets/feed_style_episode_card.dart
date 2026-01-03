@@ -103,6 +103,24 @@ class FeedStyleEpisodeCard extends ConsumerWidget {
                                       ),
                                 ),
                               ),
+                            // Date
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.calendar_today_outlined,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  TimeFormatter.formatRelativeTime(episode.publishedAt),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
                             // Duration
                             Row(
                               mainAxisSize: MainAxisSize.min,
@@ -115,24 +133,6 @@ class FeedStyleEpisodeCard extends ConsumerWidget {
                                 const SizedBox(width: 4),
                                 Text(
                                   episode.formattedDuration,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            // Date
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.access_time,
-                                  size: 16,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  TimeFormatter.formatRelativeTime(episode.publishedAt),
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                                       ),

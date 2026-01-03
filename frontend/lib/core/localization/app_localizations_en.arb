@@ -2545,5 +2545,60 @@
   "podcast_reparse_failed": "❌ Reparse failed:",
   "@podcast_reparse_failed": {
     "description": "Reparse failed message"
+  },
+
+  "podcast_player_now_playing": "Now Playing",
+  "@podcast_player_now_playing": {
+    "description": "Now playing label in floating player"
+  },
+
+  "podcast_player_collapse": "Collapse",
+  "@podcast_player_collapse": {
+    "description": "Collapse button tooltip in floating player"
+  },
+
+  "podcast_player_list": "List",
+  "@podcast_player_list": {
+    "description": "Playlist button tooltip in floating player"
+  },
+
+  "podcast_player_sleep_mode": "Sleep Mode",
+  "@podcast_player_sleep_mode": {
+    "description": "Sleep mode button tooltip in floating player"
+  },
+
+  "podcast_player_download": "Download",
+  "@podcast_player_download": {
+    "description": "Download button tooltip in floating player"
+  },
+
+  "podcast_player_expand": "Expand",
+  "@podcast_player_expand": {
+    "description": "Expand button tooltip in collapsed floating player"
+  },
+
+  "podcast_player_play": "Play",
+  "@podcast_player_play": {
+    "description": "Play button tooltip in floating player"
+  },
+
+  "podcast_player_pause": "Pause",
+  "@podcast_player_pause": {
+    "description": "Pause button tooltip in floating player"
+  },
+
+  "podcast_player_rewind_10": "Rewind 10s",
+  "@podcast_player_rewind_10": {
+    "description": "Rewind 10 seconds button tooltip"
+  },
+
+  "podcast_player_forward_30": "Forward 30s",
+  "@podcast_player_forward_30": {
+    "description": "Forward 30 seconds button tooltip"
+  },
+
+  "podcast_player_playback_speed": "Playback Speed",
+  "@podcast_player_playback_speed": {
+    "description": "Playback speed selector tooltip"
   }
 }

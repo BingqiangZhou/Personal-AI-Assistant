@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/podcast_episode_model.dart';
-import '../../../../core/utils/time_formatter.dart';
 
 /// Simplified episode card without podcast image and name (for episodes list page)
 class SimplifiedEpisodeCard extends ConsumerWidget {
@@ -66,6 +65,25 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
                 runSpacing: 4,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
+                  // Date
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _formatDate(episode.publishedAt),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
                   // Duration
                   Row(
                     mainAxisSize: MainAxisSize.min,
@@ -78,25 +96,6 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
                       const SizedBox(width: 4),
                       Text(
                         episode.formattedDuration,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                  // Date
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.access_time,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        TimeFormatter.formatRelativeTime(episode.publishedAt),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                           fontSize: 11,
@@ -124,5 +123,14 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    // Use local time instead of UTC
+    final localDate = date.isUtc ? date.toLocal() : date;
+    final year = localDate.year;
+    final month = localDate.month.toString().padLeft(2, '0');
+    final day = localDate.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 }

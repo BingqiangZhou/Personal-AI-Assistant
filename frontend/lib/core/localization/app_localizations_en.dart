@@ -1584,4 +1584,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcast_reparse_failed => '❌ Reparse failed:';
+
+  @override
+  String get podcast_player_now_playing => 'Now Playing';
+
+  @override
+  String get podcast_player_collapse => 'Collapse';
+
+  @override
+  String get podcast_player_list => 'List';
+
+  @override
+  String get podcast_player_sleep_mode => 'Sleep Mode';
+
+  @override
+  String get podcast_player_download => 'Download';
+
+  @override
+  String get podcast_player_expand => 'Expand';
+
+  @override
+  String get podcast_player_play => 'Play';
+
+  @override
+  String get podcast_player_pause => 'Pause';
+
+  @override
+  String get podcast_player_rewind_10 => 'Rewind 10s';
+
+  @override
+  String get podcast_player_forward_30 => 'Forward 30s';
+
+  @override
+  String get podcast_player_playback_speed => 'Playback Speed';
 }
