@@ -35,6 +35,9 @@ dependencies:
   # UI Components
   shimmer: ^3.0.0
   flutter_markdown_plus: ^1.0.6
+  flutter_widget_from_html: ^0.17.1
+  html: ^0.15.0
+  cached_network_image: ^3.3.0
 
   # Utilities
   intl: ^0.20.2

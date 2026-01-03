@@ -278,16 +278,16 @@ class _PodcastEpisodeDetailPageState
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // 标题: 16px, FontWeight.bold, 主题色 + 链接图标
-                        Row(
+                        Wrap(
+                          alignment: WrapAlignment.start,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            Expanded(
-                              child: Text(
-                                episode.title ?? 'Unknown Episode',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
+                            Text(
+                              episode.title ?? 'Unknown Episode',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             // 分集链接图标
@@ -303,10 +303,10 @@ class _PodcastEpisodeDetailPageState
                                   }
                                 },
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  padding: const EdgeInsets.only(left: 6, right: 4),
                                   child: Icon(
                                     Icons.link,
-                                    size: 18,
+                                    size: 16,
                                     color: Theme.of(context).colorScheme.primary,
                                   ),
                                 ),

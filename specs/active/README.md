@@ -6,17 +6,19 @@
 
 ## 当前活跃功能 / Current Active Features
 
-### 1. 播客搜索功能 / Podcast Search Feature
+### 1. 播客功能增强 / Podcast Feature Enhancements
 | 文档名称 | 文件路径 | 描述 | 状态 |
 |---------|---------|------|------|
 | 播客搜索功能需求 | `podcast-itunes-search-feature.md` | iTunes Search API 集成，支持播客搜索和订阅 | Active |
-| **订阅状态指示器功能** | `podcast-subscription-status-indicator.md` | **搜索结果中显示订阅状态（NEW!）** | **Active** |
+| **订阅状态指示器功能** | `podcast-subscription-status-indicator.md` | **搜索结果中显示订阅状态** | **Active** |
+| **Shownotes HTML渲染功能** | `podcast-shownotes-html-rendering.md` | **富文本HTML内容渲染，支持图片和链接（NEW!）** | **Active** |
 
 **功能概述**:
 - 集成 iTunes Search API 实现播客搜索
 - Material 3 搜索 UI 组件（SearchBar/SearchAnchor）
 - 搜索结果展示和直接订阅
 - **搜索结果中显示订阅状态指示器（已订阅/未订阅）**
+- **Shownotes 富文本 HTML 渲染（图片、链接、格式）**
 - 缓存机制避免 API 限流
 - 中英文搜索支持
 - 完整的错误处理和用户反馈
@@ -24,8 +26,9 @@
 **快速导航**:
 - 📋 [播客搜索需求文档](./podcast-itunes-search-feature.md)
 - 📋 [订阅状态指示器需求](./podcast-subscription-status-indicator.md)
+- 📋 [Shownotes HTML渲染需求](./podcast-shownotes-html-rendering.md)
 
-**开发进度**: 搜索功能已完成 | 订阅状态指示器 0% (需求阶段完成，待审批和开发)
+**开发进度**: 搜索功能已完成 | 订阅状态指示器 0% | Shownotes HTML渲染 0% (需求阶段完成，待审批和开发)
 
 ---
 
@@ -116,6 +119,7 @@
 ### 🖥️ 前端工程师 / Frontend Developer
 - [播客搜索功能 - UI/UX设计](./podcast-itunes-search-feature.md#uiux-设计要求)
 - [订阅状态指示器 - 前端需求](./podcast-subscription-status-indicator.md#321-前端需求-frontend-requirements)
+- **[Shownotes HTML渲染 - 前端任务](./podcast-shownotes-html-rendering.md#frontend-tasks--前端任务)**
 - [应用更新提醒功能 - 组件结构](./app-update-notification-feature.md#架构设计)
 - [Material 3 重构 - UI/UX设计](./material-design-3-adaptive-refactor.md#ui-ux设计要求)
 - [播客转录显示 - 实现计划](./podcast-frontend-transcription-display.md#实现计划)
@@ -127,6 +131,7 @@
 ### 🧪 测试工程师 / Test Engineer
 - [应用更新提醒功能 - 测试计划](./app-update-notification-task-tracking.md#testing-tasks)
 - [订阅状态指示器 - 测试计划](./podcast-subscription-status-indicator.md#52-验收测试计划--acceptance-testing-plan)
+- **[Shownotes HTML渲染 - 测试任务](./podcast-shownotes-html-rendering.md#testing-tasks--测试任务)**
 - [播客转录功能 - 测试用例](./podcast-transcription-acceptance-criteria.md#测试用例)
 - [播客批量删除 - 验证报告](./FEP-20241229-podcast-bulk-delete-verification-report.md)
 
@@ -140,6 +145,7 @@
 
 | 日期 | 版本 | 更新内容 | 更新人 |
 |------|------|---------|--------|
+| 2025-01-03 | 3.2 | 添加播客 Shownotes HTML 渲染功能需求 | Product Manager |
 | 2026-01-02 | 3.1 | 添加播客订阅状态指示器功能需求 | Product Manager |
 | 2025-01-02 | 3.0 | 添加播客搜索功能需求（iTunes Search API集成） | Product Manager |
 | 2025-12-30 | 2.0 | 添加应用更新提醒功能需求 | Product Manager |

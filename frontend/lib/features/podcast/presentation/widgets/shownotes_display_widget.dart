@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../../../../core/localization/app_localizations.dart';
 
 import '../../data/models/podcast_episode_model.dart';
+import '../../core/utils/html_sanitizer.dart';
 
 class ShownotesDisplayWidget extends ConsumerWidget {
   final PodcastEpisodeDetailResponse episode;
@@ -18,31 +20,175 @@ class ShownotesDisplayWidget extends ConsumerWidget {
     // Try to get shownotes from different sources
     final shownotes = _getShownotesContent();
 
+    // Debug: Log the shownotes content
+    if (episode.description != null && episode.description!.isNotEmpty) {
+      final preview = episode.description!.length > 100
+          ? '${episode.description!.substring(0, 100)}...'
+          : episode.description!;
+      debugPrint('📝 [Shownotes] Description: $preview');
+    } else {
+      debugPrint('📝 [Shownotes] Description: NULL or EMPTY');
+    }
+
+    if (episode.aiSummary != null && episode.aiSummary!.isNotEmpty) {
+      final preview = episode.aiSummary!.length > 100
+          ? '${episode.aiSummary!.substring(0, 100)}...'
+          : episode.aiSummary!;
+      debugPrint('📝 [Shownotes] AI Summary: $preview');
+    } else {
+      debugPrint('📝 [Shownotes] AI Summary: NULL or EMPTY');
+    }
+
+    debugPrint('📝 [Shownotes] Metadata shownotes: ${episode.metadata?['shownotes']}');
+    debugPrint('📝 [Shownotes] Final content length: ${shownotes.length}');
+
     if (shownotes.isEmpty) {
+      debugPrint('📝 [Shownotes] No content found, showing empty state');
       return _buildEmptyState(context);
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Shownotes content - 节目描述自适应整个宽度
-            _buildShownotesContent(context, shownotes),
-          ],
-        ),
-      ),
+    // Sanitize HTML to prevent XSS attacks
+    final sanitizedHtml = HtmlSanitizer.sanitize(shownotes);
+    debugPrint('📝 [Shownotes] Sanitized HTML length: ${sanitizedHtml.length}');
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Responsive padding based on screen width
+        final isDesktop = constraints.maxWidth > 840;
+        final isTablet = constraints.maxWidth > 600;
+
+        final horizontalPadding = isDesktop ? 32.0 : (isTablet ? 24.0 : 16.0);
+        final maxContentWidth = isDesktop ? 800.0 : double.infinity;
+
+        return Container(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 16),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Shownotes header
+                Text(
+                  'Shownotes',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // HTML content with responsive constraints
+                Container(
+                  constraints: BoxConstraints(maxWidth: maxContentWidth),
+                  child: HtmlWidget(
+                    sanitizedHtml,
+                    // Material 3 styling
+                    textStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 15,
+                          height: 1.6,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                    // Handle link taps
+                    onTapUrl: (url) async {
+                      try {
+                        final uri = Uri.parse(url);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
+                          return true;
+                        }
+                        return false;
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error opening link: ${e.toString()}'),
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                            ),
+                          );
+                        }
+                        return false;
+                      }
+                    },
+                    // Handle errors gracefully
+                    onErrorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Failed to render shownotes',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    // Custom styling for HTML elements
+                    customStylesBuilder: (element) {
+                      // Add custom styling for specific elements
+                      final styles = <String, String>{};
+
+                      // Blockquote styling
+                      if (element.localName == 'blockquote') {
+                        styles['border-left'] = '4px solid ${Theme.of(context).colorScheme.primary.toHex()}';
+                        styles['padding-left'] = '16px';
+                        styles['margin-left'] = '0';
+                        styles['color'] = Theme.of(context).colorScheme.onSurfaceVariant.toHex();
+                      }
+
+                      // Code block styling
+                      if (element.localName == 'pre' || element.localName == 'code') {
+                        styles['background-color'] = Theme.of(context).colorScheme.surfaceContainerHighest.toHex();
+                        styles['padding'] = '8px';
+                        styles['border-radius'] = '4px';
+                        styles['font-family'] = 'monospace';
+                      }
+
+                      // Heading styling
+                      if (element.localName?.startsWith('h') == true) {
+                        styles['color'] = Theme.of(context).colorScheme.onSurface.toHex();
+                        styles['font-weight'] = 'bold';
+                      }
+
+                      // Link styling
+                      if (element.localName == 'a') {
+                        styles['color'] = Theme.of(context).colorScheme.primary.toHex();
+                        styles['text-decoration'] = 'underline';
+                      }
+
+                      return styles.isNotEmpty ? styles : null;
+                    },
+                    // Enable selection for text
+                    enableCaching: true,
+                    // Build mode for better performance
+                    renderMode: RenderMode.column,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
   String _getShownotesContent() {
-    // Priority: 
+    // Priority:
     // 1. Episode description (Most accurate for shownotes)
     // 2. Episode AI summary
     // 3. Metadata
     // 4. Subscription description (Fallback)
-    
+
     // 1. Try to get episode description first
     if (episode.description?.isNotEmpty == true) {
       return episode.description!;
@@ -69,239 +215,6 @@ class ShownotesDisplayWidget extends ConsumerWidget {
     return '';
   }
 
-  Widget _buildShownotesContent(BuildContext context, String content) {
-    // Parse for rich text elements
-    final segments = _parseRichText(content);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Shownotes',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...segments.map((segment) => _buildTextSegment(context, segment)),
-      ],
-    );
-  }
-
-  List<RichTextSegment> _parseRichText(String content) {
-    final segments = <RichTextSegment>[];
-    final lines = content.split('\n');
-
-    for (var line in lines) {
-      final trimmedLine = line.trim();
-
-      // Skip empty lines
-      if (trimmedLine.isEmpty) {
-        segments.add(RichTextSegment(type: RichTextType.lineBreak, text: ''));
-        continue;
-      }
-
-      // Check for headings
-      if (trimmedLine.startsWith('# ')) {
-        segments.add(RichTextSegment(
-          type: RichTextType.heading,
-          text: trimmedLine.substring(2),
-        ));
-        continue;
-      }
-
-      if (trimmedLine.startsWith('## ')) {
-        segments.add(RichTextSegment(
-          type: RichTextType.subheading,
-          text: trimmedLine.substring(3),
-        ));
-        continue;
-      }
-
-      // Check for lists
-      if (trimmedLine.startsWith(RegExp(r'^\d+\.\s'))) {
-        segments.add(RichTextSegment(
-          type: RichTextType.orderedListItem,
-          text: trimmedLine.replaceFirst(RegExp(r'^\d+\.\s'), ''),
-        ));
-        continue;
-      }
-
-      if (trimmedLine.startsWith(RegExp(r'^[-*•]\s'))) {
-        segments.add(RichTextSegment(
-          type: RichTextType.unorderedListItem,
-          text: trimmedLine.substring(2),
-        ));
-        continue;
-      }
-
-      // Check for URLs
-      final urlMatch = RegExp(r'(https?://[^\s]+)').firstMatch(trimmedLine);
-      if (urlMatch != null) {
-        final url = urlMatch.group(0)!;
-        final beforeUrl = trimmedLine.substring(0, urlMatch.start);
-        final afterUrl = trimmedLine.substring(urlMatch.end);
-
-        if (beforeUrl.isNotEmpty) {
-          segments.add(RichTextSegment(
-            type: RichTextType.paragraph,
-            text: beforeUrl,
-          ));
-        }
-
-        segments.add(RichTextSegment(
-          type: RichTextType.link,
-          text: url,
-          url: url,
-        ));
-
-        if (afterUrl.isNotEmpty) {
-          segments.add(RichTextSegment(
-            type: RichTextType.paragraph,
-            text: afterUrl,
-          ));
-        }
-        continue;
-      }
-
-      // Default to paragraph
-      segments.add(RichTextSegment(
-        type: RichTextType.paragraph,
-        text: trimmedLine,
-      ));
-    }
-
-    return segments;
-  }
-
-  Widget _buildTextSegment(BuildContext context, RichTextSegment segment) {
-    switch (segment.type) {
-      case RichTextType.heading:
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Text(
-            segment.text,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-        );
-
-      case RichTextType.subheading:
-        return Padding(
-          padding: const EdgeInsets.only(top: 16, bottom: 8),
-          child: Text(
-            segment.text,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-        );
-
-      case RichTextType.paragraph:
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: SelectableText(
-            segment.text,
-            style: TextStyle(
-              fontSize: 15,
-              height: 1.6,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-          ),
-        );
-
-      case RichTextType.orderedListItem:
-        return Padding(
-          padding: const EdgeInsets.only(left: 24, bottom: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 20,
-                child: Text(
-                  '•',
-                  style: TextStyle(
-                    fontSize: 15,
-                    height: 1.6,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: SelectableText(
-                  segment.text,
-                  style: TextStyle(
-                    fontSize: 15,
-                    height: 1.6,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-
-      case RichTextType.unorderedListItem:
-        return Padding(
-          padding: const EdgeInsets.only(left: 24, bottom: 4),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 20,
-                child: Text(
-                  '•',
-                  style: TextStyle(
-                    fontSize: 15,
-                    height: 1.6,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ),
-              Expanded(
-                child: SelectableText(
-                  segment.text,
-                  style: TextStyle(
-                    fontSize: 15,
-                    height: 1.6,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-
-      case RichTextType.link:
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: InkWell(
-            onTap: () => _launchUrl(segment.url!),
-            borderRadius: BorderRadius.circular(4),
-            child: Text(
-              segment.text,
-              style: TextStyle(
-                fontSize: 15,
-                height: 1.6,
-                color: Theme.of(context).colorScheme.primary,
-                decoration: TextDecoration.underline,
-              ),
-            ),
-          ),
-        );
-
-      case RichTextType.lineBreak:
-        return const SizedBox(height: 8);
-    }
-  }
-
   Widget _buildEmptyState(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Center(
@@ -325,46 +238,12 @@ class ShownotesDisplayWidget extends ConsumerWidget {
       ),
     );
   }
+}
 
-  String _formatDate(BuildContext context, DateTime date) {
-    final l10n = AppLocalizations.of(context)!;
-    // 确保使用本地时间，而不是 UTC 时间
-    final localDate = date.isUtc ? date.toLocal() : date;
-    final year = localDate.year;
-    final month = localDate.month.toString().padLeft(2, '0');
-    final day = localDate.day.toString().padLeft(2, '0');
-    return l10n.date_format(year, month, day);
-  }
-
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      );
-    }
+/// Extension method to convert Color to hex string
+extension ColorExtension on Color {
+  String toHex() {
+    return '#${toARGB32().toRadixString(16).substring(2)}';
   }
 }
 
-enum RichTextType {
-  heading,
-  subheading,
-  paragraph,
-  orderedListItem,
-  unorderedListItem,
-  link,
-  lineBreak,
-}
-
-class RichTextSegment {
-  final RichTextType type;
-  final String text;
-  final String? url;
-
-  RichTextSegment({
-    required this.type,
-    required this.text,
-    this.url,
-  });
-}

@@ -1,311 +1,395 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:personal_ai_assistant/src/core/themes/app_theme.dart';
-import 'package:personal_ai_assistant/src/features/podcast/data/models/podcast_episode_model.dart';
-import 'package:personal_ai_assistant/src/features/podcast/presentation/widgets/shownotes_display_widget.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shownotes_display_widget.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 
 void main() {
-  group('ShownotesDisplayWidget', () {
-    late PodcastEpisodeDetailResponse mockEpisode;
+  group('ShownotesDisplayWidget Widget Tests', () {
+    // Helper DateTime for test episodes
+    final testPublishedAt = DateTime(2024, 1, 1);
+    final testCreatedAt = DateTime(2024, 1, 1);
 
-    setUp(() {
-      mockEpisode = PodcastEpisodeDetailResponse(
+    testWidgets('renders empty state when no description provided',
+        (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
         id: 1,
         subscriptionId: 1,
         title: 'Test Episode',
-        description: 'This is a test episode description',
+        description: null,
         audioUrl: 'https://example.com/audio.mp3',
-        audioDuration: 3600,
-        publishedAt: DateTime.now(),
-        createdAt: DateTime.now(),
-        aiSummary: 'This is the AI summary of the episode',
-        season: 1,
-        episodeNumber: 1,
-      );
-    });
-
-    testWidgets('renders empty state when no content', (WidgetTester tester) async {
-      final emptyEpisode = PodcastEpisodeDetailResponse(
-        id: 1,
-        subscriptionId: 1,
-        title: 'Test Episode',
-        audioUrl: 'https://example.com/audio.mp3',
-        publishedAt: DateTime.now(),
-        createdAt: DateTime.now(),
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
       );
 
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: AppTheme.lightTheme,
             home: Scaffold(
-              body: ShownotesDisplayWidget(episode: emptyEpisode),
+              body: ShownotesDisplayWidget(episode: episode),
             ),
           ),
         ),
       );
 
-      expect(find.text('暂无节目简介'), findsOneWidget);
+      expect(find.text('No shownotes available'), findsOneWidget);
       expect(find.byIcon(Icons.description_outlined), findsOneWidget);
     });
 
-    testWidgets('renders AI summary when available', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            theme: AppTheme.lightTheme,
-            home: Scaffold(
-              body: ShownotesDisplayWidget(episode: mockEpisode),
-            ),
-          ),
-        ),
-      );
-
-      // Should prefer AI summary over description
-      expect(find.text('This is the AI summary of the episode'), findsOneWidget);
-      expect(find.text('This is a test episode description'), findsNothing);
-      expect(find.text('节目简介'), findsOneWidget);
-    });
-
-    testWidgets('falls back to description when no AI summary', (WidgetTester tester) async {
-      final episodeWithoutSummary = PodcastEpisodeDetailResponse(
+    testWidgets('renders empty state when empty description provided',
+        (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
         id: 1,
         subscriptionId: 1,
         title: 'Test Episode',
-        description: 'This is the description only episode',
+        description: '',
         audioUrl: 'https://example.com/audio.mp3',
-        publishedAt: DateTime.now(),
-        createdAt: DateTime.now(),
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
       );
 
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: AppTheme.lightTheme,
             home: Scaffold(
-              body: ShownotesDisplayWidget(episode: episodeWithoutSummary),
+              body: ShownotesDisplayWidget(episode: episode),
             ),
           ),
         ),
       );
 
-      expect(find.text('This is the description only episode'), findsOneWidget);
-      expect(find.text('节目简介'), findsOneWidget);
+      expect(find.text('No shownotes available'), findsOneWidget);
     });
 
-    testWidgets('renders episode metadata correctly', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            theme: AppTheme.lightTheme,
-            home: Scaffold(
-              body: ShownotesDisplayWidget(episode: mockEpisode),
-            ),
-          ),
-        ),
-      );
-
-      // Check episode identifier
-      expect(find.text('S01E01'), findsOneWidget);
-
-      // Check published date
-      expect(find.byIcon(Icons.calendar_today_outlined), findsOneWidget);
-      expect(find.textContaining(RegExp(r'\d{4}年\d{2}月\d{2}日')), findsOneWidget);
-
-      // Check duration
-      expect(find.byIcon(Icons.schedule_outlined), findsOneWidget);
-      expect(find.text('01:00:00'), findsOneWidget);
-    });
-
-    testWidgets('renders explicit content warning', (WidgetTester tester) async {
-      final explicitEpisode = PodcastEpisodeDetailResponse(
+    testWidgets('renders Shownotes header when description provided',
+        (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
         id: 1,
         subscriptionId: 1,
-        title: 'Explicit Episode',
-        description: 'This episode has explicit content',
+        title: 'Test Episode',
+        description: 'This is a test shownotes content.',
         audioUrl: 'https://example.com/audio.mp3',
-        publishedAt: DateTime.now(),
-        createdAt: DateTime.now(),
-        explicit: true,
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
       );
 
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: AppTheme.lightTheme,
             home: Scaffold(
-              body: ShownotesDisplayWidget(episode: explicitEpisode),
+              body: ShownotesDisplayWidget(episode: episode),
             ),
           ),
         ),
       );
 
-      expect(find.text('包含成人内容'), findsOneWidget);
-      expect(find.byIcon(Icons.warning_amber_outlined), findsOneWidget);
+      expect(find.text('Shownotes'), findsOneWidget);
+      expect(find.text('This is a test shownotes content.'), findsOneWidget);
     });
 
-    testWidgets('parses markdown-like formatting', (WidgetTester tester) async {
-      final markdownEpisode = PodcastEpisodeDetailResponse(
+    testWidgets('renders HTML content correctly', (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
         id: 1,
         subscriptionId: 1,
-        title: 'Markdown Episode',
+        title: 'Test Episode',
+        description: '<p>Hello <strong>world</strong></p>',
         audioUrl: 'https://example.com/audio.mp3',
-        publishedAt: DateTime.now(),
-        createdAt: DateTime.now(),
-        aiSummary: '''# Main Title
-## Subtitle
-This is a paragraph.
-- Item 1
-- Item 2
-1. Numbered item 1
-2. Numbered item 2
-Visit https://example.com for more info''',
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
       );
 
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: AppTheme.lightTheme,
             home: Scaffold(
-              body: ShownotesDisplayWidget(episode: markdownEpisode),
+              body: ShownotesDisplayWidget(episode: episode),
             ),
           ),
         ),
       );
 
-      // Should render formatted content
-      expect(find.text('Main Title'), findsOneWidget);
-      expect(find.text('Subtitle'), findsOneWidget);
-      expect(find.text('This is a paragraph.'), findsOneWidget);
+      expect(find.text('Shownotes'), findsOneWidget);
+      expect(find.text('Hello world'), findsOneWidget);
+    });
+
+    testWidgets('removes dangerous script tags from HTML', (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
+        id: 1,
+        subscriptionId: 1,
+        title: 'Test Episode',
+        description: '<p>Safe content</p><script>alert("XSS")</script>',
+        audioUrl: 'https://example.com/audio.mp3',
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: ShownotesDisplayWidget(episode: episode),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Safe content'), findsOneWidget);
+      expect(find.text('alert'), findsNothing);
+    });
+
+    testWidgets('renders lists correctly', (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
+        id: 1,
+        subscriptionId: 1,
+        title: 'Test Episode',
+        description: '''
+          <ul>
+            <li>Item 1</li>
+            <li>Item 2</li>
+          </ul>
+        ''',
+        audioUrl: 'https://example.com/audio.mp3',
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: ShownotesDisplayWidget(episode: episode),
+            ),
+          ),
+        ),
+      );
+
       expect(find.text('Item 1'), findsOneWidget);
       expect(find.text('Item 2'), findsOneWidget);
-      expect(find.text('Numbered item 1'), findsOneWidget);
-      expect(find.text('Numbered item 2'), findsOneWidget);
-
-      // URL should be clickable
-      expect(find.text('https://example.com'), findsOneWidget);
     });
 
-    testWidgets('renders links as clickable', (WidgetTester tester) async {
-      final linkEpisode = PodcastEpisodeDetailResponse(
+    testWidgets('renders headings correctly', (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
         id: 1,
         subscriptionId: 1,
-        title: 'Link Episode',
+        title: 'Test Episode',
+        description: '''
+          <h1>Heading 1</h1>
+          <h2>Heading 2</h2>
+          <h3>Heading 3</h3>
+        ''',
         audioUrl: 'https://example.com/audio.mp3',
-        publishedAt: DateTime.now(),
-        createdAt: DateTime.now(),
-        aiSummary: 'Check out this link: https://example.com/page',
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
       );
 
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: AppTheme.lightTheme,
             home: Scaffold(
-              body: ShownotesDisplayWidget(episode: linkEpisode),
+              body: ShownotesDisplayWidget(episode: episode),
             ),
           ),
         ),
       );
 
-      final linkWidget = find.text('https://example.com/page');
-      expect(linkWidget, findsOneWidget);
-
-      // Should have underline decoration
-      final textWidget = tester.widget<Text>(linkWidget);
-      expect(textWidget.style?.decoration, contains(TextDecoration.underline));
+      expect(find.text('Heading 1'), findsOneWidget);
+      expect(find.text('Heading 2'), findsOneWidget);
+      expect(find.text('Heading 3'), findsOneWidget);
     });
 
-    testWidgets('handles timestamps in transcripts', (WidgetTester tester) async {
-      final timestampEpisode = PodcastEpisodeDetailResponse(
+    testWidgets('uses fallback to AI summary when description is empty',
+        (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
         id: 1,
         subscriptionId: 1,
-        title: 'Timestamp Episode',
+        title: 'Test Episode',
+        description: null,
+        aiSummary: 'AI Generated Summary',
         audioUrl: 'https://example.com/audio.mp3',
-        publishedAt: DateTime.now(),
-        createdAt: DateTime.now(),
-        aiSummary: '''[00:00] Welcome to the show
-[00:30] First topic
-[01:45] Second topic''',
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
       );
 
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: AppTheme.lightTheme,
             home: Scaffold(
-              body: ShownotesDisplayWidget(episode: timestampEpisode),
+              body: ShownotesDisplayWidget(episode: episode),
             ),
           ),
         ),
       );
 
-      expect(find.text('00:00'), findsOneWidget);
-      expect(find.text('00:30'), findsOneWidget);
-      expect(find.text('01:45'), findsOneWidget);
-      expect(find.text('Welcome to the show'), findsOneWidget);
-      expect(find.text('First topic'), findsOneWidget);
-      expect(find.text('Second topic'), findsOneWidget);
+      expect(find.text('AI Generated Summary'), findsOneWidget);
     });
 
-    testWidgets('uses metadata shownotes when available', (WidgetTester tester) async {
-      final metadataEpisode = PodcastEpisodeDetailResponse(
+    testWidgets('applies responsive padding for mobile', (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
         id: 1,
         subscriptionId: 1,
-        title: 'Metadata Episode',
+        title: 'Test Episode',
+        description: '<p>Content</p>',
         audioUrl: 'https://example.com/audio.mp3',
-        publishedAt: DateTime.now(),
-        createdAt: DateTime.now(),
-        metadata: {
-          'shownotes': 'This is from metadata',
-        },
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
+      );
+
+      // Set mobile size
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: ShownotesDisplayWidget(episode: episode),
+            ),
+          ),
+        ),
+      );
+
+      // Verify widget renders
+      expect(find.text('Shownotes'), findsOneWidget);
+      expect(find.text('Content'), findsOneWidget);
+
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    testWidgets('applies responsive padding for desktop', (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
+        id: 1,
+        subscriptionId: 1,
+        title: 'Test Episode',
+        description: '<p>Content</p>',
+        audioUrl: 'https://example.com/audio.mp3',
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
+      );
+
+      // Set desktop size
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1.0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: ShownotesDisplayWidget(episode: episode),
+            ),
+          ),
+        ),
+      );
+
+      // Verify widget renders
+      expect(find.text('Shownotes'), findsOneWidget);
+      expect(find.text('Content'), findsOneWidget);
+
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    testWidgets('handles malformed HTML gracefully', (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
+        id: 1,
+        subscriptionId: 1,
+        title: 'Test Episode',
+        description: '<p>Unclosed paragraph<div>Nested</p>',
+        audioUrl: 'https://example.com/audio.mp3',
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
       );
 
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: AppTheme.lightTheme,
             home: Scaffold(
-              body: ShownotesDisplayWidget(episode: metadataEpisode),
+              body: ShownotesDisplayWidget(episode: episode),
             ),
           ),
         ),
       );
 
-      expect(find.text('This is from metadata'), findsOneWidget);
+      // Should not crash and render some content
+      expect(find.text('Shownotes'), findsOneWidget);
     });
 
-    testWidgets('scrollable content for long shownotes', (WidgetTester tester) async {
-      final longEpisode = PodcastEpisodeDetailResponse(
+    testWidgets('renders tables correctly', (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
         id: 1,
         subscriptionId: 1,
-        title: 'Long Episode',
+        title: 'Test Episode',
+        description: '''
+          <table>
+            <tr><th>Header</th></tr>
+            <tr><td>Data</td></tr>
+          </table>
+        ''',
         audioUrl: 'https://example.com/audio.mp3',
-        publishedAt: DateTime.now(),
-        createdAt: DateTime.now(),
-        aiSummary: 'Paragraph 1\nParagraph 2\nParagraph 3\nParagraph 4\nParagraph 5\nParagraph 6\nParagraph 7\nParagraph 8\nParagraph 9\nParagraph 10',
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
       );
 
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            theme: AppTheme.lightTheme,
             home: Scaffold(
-              body: SizedBox(
-                height: 200,
-                child: ShownotesDisplayWidget(episode: longEpisode),
-              ),
+              body: ShownotesDisplayWidget(episode: episode),
             ),
           ),
         ),
       );
 
-      // Should be scrollable
-      expect(find.byType(SingleChildScrollView), findsOneWidget);
-      expect(find.text('Paragraph 1'), findsOneWidget);
-      expect(find.text('Paragraph 10'), findsOneWidget);
+      expect(find.text('Header'), findsOneWidget);
+      expect(find.text('Data'), findsOneWidget);
+    });
+
+    testWidgets('renders blockquotes correctly', (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
+        id: 1,
+        subscriptionId: 1,
+        title: 'Test Episode',
+        description: '<blockquote>This is a quote</blockquote>',
+        audioUrl: 'https://example.com/audio.mp3',
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: ShownotesDisplayWidget(episode: episode),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('This is a quote'), findsOneWidget);
+    });
+
+    testWidgets('renders code blocks correctly', (tester) async {
+      final episode = PodcastEpisodeDetailResponse(
+        id: 1,
+        subscriptionId: 1,
+        title: 'Test Episode',
+        description: '<pre><code>const x = 1;</code></pre>',
+        audioUrl: 'https://example.com/audio.mp3',
+        publishedAt: testPublishedAt,
+        createdAt: testCreatedAt,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: ShownotesDisplayWidget(episode: episode),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('const x = 1;'), findsOneWidget);
     });
   });
 }

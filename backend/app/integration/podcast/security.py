@@ -203,23 +203,51 @@ class PodcastSecurityValidator:
     @classmethod
     def sanitize_html_content(cls, html: str) -> str:
         """
-        Clean HTML content before processing
+        Clean HTML content before processing while preserving safe HTML tags.
+
+        This method removes dangerous tags (script, iframe, etc.) but preserves
+        safe HTML tags like p, br, a, img, h1-h6, ul, ol, li, table, etc.
+        for proper rendering of shownotes.
         """
         from bs4 import BeautifulSoup
 
+        if not html:
+            return ""
+
         soup = BeautifulSoup(html, 'html.parser')
 
-        # Remove script tags
-        for script in soup(['script', 'style', 'iframe']):
-            script.decompose()
+        # Remove dangerous tags completely
+        dangerous_tags = ['script', 'style', 'iframe', 'object', 'embed',
+                         'form', 'input', 'button', 'select', 'textarea']
+        for tag_name in dangerous_tags:
+            for tag in soup.find_all(tag_name):
+                tag.decompose()
 
-        # Get text content
-        text = soup.get_text(separator=' ', strip=True)
+        # Remove dangerous attributes (onclick, onerror, etc.)
+        for tag in soup.find_all(True):
+            # Remove event handler attributes
+            attrs_to_remove = [attr for attr in tag.attrs
+                             if attr.lower().startswith('on')]
+            for attr in attrs_to_remove:
+                del tag[attr]
 
-        # Reduce multiple spaces
-        text = re.sub(r'\s+', ' ', text)
+            # Remove style attributes with javascript:
+            if 'style' in tag.attrs:
+                style = tag['style']
+                if 'javascript:' in style.lower():
+                    del tag['style']
 
-        return text.strip()
+            # For anchor tags, add rel="nofollow noopener" for security
+            if tag.name == 'a' and 'href' in tag.attrs:
+                tag['rel'] = 'nofollow noopener'
+
+        # Return the cleaned HTML as string (preserves safe tags)
+        cleaned_html = str(soup)
+
+        # Clean up extra whitespace but preserve HTML structure
+        cleaned_html = re.sub(r'\s+', ' ', cleaned_html)
+
+        return cleaned_html.strip()
 
 
 class PodcastContentValidator:

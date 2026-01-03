@@ -214,10 +214,10 @@ class SecureRSSParser:
             # Title (safe)
             title = self._safe_text(item.findtext('title', 'Untitled'))
 
-            # Description (sanitize) - prefer content:encoded over description
+            # Description - prefer content:encoded over description, use raw HTML without sanitization
             content_encoded = item.findtext('content:encoded', '', namespaces={'content': 'http://purl.org/rss/1.0/modules/content/'})
             raw_desc = content_encoded or item.findtext('description', '')
-            description = self._sanitize_description(raw_desc)
+            description = raw_desc if raw_desc else ''  # Use raw HTML directly
 
             # Extract image URL from description or iTunes namespace
             episode_image_url = None
@@ -314,14 +314,24 @@ class SecureRSSParser:
         return text.strip()[:500]  # Limit length
 
     def _sanitize_description(self, text: Optional[str]) -> str:
-        """Sanitize description using privacy system"""
+        """
+        Sanitize description for podcast episodes.
+
+        For HTML content (shownotes):
+        - Apply security cleaning (remove dangerous tags/attributes)
+        - Skip privacy filtering (public content, don't break HTML links)
+
+        Privacy filtering is designed for transcripts/AI summaries, not public shownotes.
+        """
         if not text:
             return ""
-        # Clean HTML first
+
+        # Only apply HTML security cleaning (XSS protection)
+        # Skip privacy filtering to preserve HTML structure and links
         clean_text = self.security.sanitize_html_content(text)
-        # Then apply privacy filters
-        sanitized = self.privacy.sanitize(clean_text, self.user_id, "podcast_description")
-        return sanitized[:1000]  # Truncate
+
+        # Truncate to reasonable length
+        return clean_text[:5000]  # Increased from 1000 to 5000 for HTML content
 
     def _parse_date(self, date_str: Optional[str]) -> datetime:
         """Parse various date formats"""

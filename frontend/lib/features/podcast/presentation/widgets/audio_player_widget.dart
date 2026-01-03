@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/podcast_providers.dart';
 import '../../data/models/audio_player_state_model.dart';
@@ -245,14 +246,56 @@ class AudioPlayerWidget extends ConsumerWidget {
           // Episode title and info
           Column(
             children: [
-              Text(
-                state.currentEpisode!.title,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              // Title with link icon
+              Builder(
+                builder: (context) {
+                  final titleStyle = Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  );
+                  final hasItemLink = state.currentEpisode!.itemLink != null &&
+                    state.currentEpisode!.itemLink!.isNotEmpty;
+
+                  if (!hasItemLink) {
+                    return Text(
+                      state.currentEpisode!.title,
+                      style: titleStyle,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  }
+
+                  // Use Wrap to center title with icon after it
+                  return Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        state.currentEpisode!.title,
+                        style: titleStyle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(width: 6),
+                      InkWell(
+                        onTap: () async {
+                          final Uri linkUri = Uri.parse(state.currentEpisode!.itemLink!);
+                          if (await canLaunchUrl(linkUri)) {
+                            await launchUrl(
+                              linkUri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        },
+                        child: Icon(
+                          Icons.link,
+                          size: 20,
+                          color: theme.primaryColor,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 8),
               if (state.currentEpisode!.description != null)
