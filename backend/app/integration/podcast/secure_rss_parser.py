@@ -276,7 +276,18 @@ class SecureRSSParser:
             guid_is_permalink = guid_element.get('isPermaLink', 'true') if guid_element is not None else 'true'
 
             # Item link (episode detail page link)
-            item_link = self._safe_text(item.findtext('link', ''))
+            # 先尝试直接获取
+            link_element = item.find('link')
+            raw_link = link_element.text if link_element is not None else None
+
+            # Debug: 记录原始 link 值
+            logger.debug(f"🔗 [PARSER] Episode: {title[:50]}...")
+            logger.debug(f"   - raw link element: {link_element}")
+            logger.debug(f"   - raw link text: {repr(raw_link)}")
+
+            # 清理 link
+            item_link = self._safe_text(raw_link) if raw_link else None
+            logger.debug(f"   - cleaned item_link: {repr(item_link)}")
 
             return PodcastEpisode(
                 title=title,
