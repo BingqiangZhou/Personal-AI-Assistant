@@ -62,8 +62,9 @@ RUN uv pip install --system -e . \
 
 # Install Playwright Chromium browser
 # This is required for the browser fallback audio download feature
-RUN playwright install chromium
-RUN playwright install-deps chromium
+# Set PLAYWRIGHT_BROWSERS_PATH to match docker-compose.yml configuration
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+RUN mkdir -p /ms-playwright && playwright install chromium --with-deps
 
 # Create directories with proper permissions
 RUN mkdir -p uploads logs data storage/podcasts temp/transcription

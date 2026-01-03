@@ -435,8 +435,9 @@ class BrowserAudioDownloader:
                     logger.info(f"🌐 [BROWSER DOWNLOAD] Fetching audio file via browser context...")
 
                     # 在浏览器中执行 fetch 获取文件
+                    # 使用 IIFE (Immediately Invoked Function Expression) 格式
                     fetch_script = f'''
-                    async function fetchAudio() {{
+                    (async () => {{
                         try {{
                             const response = await fetch("{url}", {{
                                 headers: {{
@@ -466,8 +467,7 @@ class BrowserAudioDownloader:
                         }} catch (error) {{
                             return {{ error: error.toString() }};
                         }}
-                    }}
-                    fetchAudio();
+                    }})()
                     '''
 
                     try:
