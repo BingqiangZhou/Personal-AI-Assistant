@@ -34,6 +34,7 @@ class PodcastEpisode:
     transcript_url: Optional[str] = None
     guid: Optional[str] = None
     image_url: Optional[str] = None
+    link: Optional[str] = None  # <item><link> 标签，分集详情页链接
 
 
 @dataclass
@@ -274,6 +275,9 @@ class SecureRSSParser:
             guid = guid_element.text if guid_element is not None else f"{title}-{published_at.isoformat()}"
             guid_is_permalink = guid_element.get('isPermaLink', 'true') if guid_element is not None else 'true'
 
+            # Item link (episode detail page link)
+            item_link = self._safe_text(item.findtext('link', ''))
+
             return PodcastEpisode(
                 title=title,
                 description=description,
@@ -282,7 +286,8 @@ class SecureRSSParser:
                 duration=duration,
                 transcript_url=transcript_url,
                 guid=guid,
-                image_url=episode_image_url
+                image_url=episode_image_url,
+                link=item_link if item_link else None
             )
 
         except Exception as e:

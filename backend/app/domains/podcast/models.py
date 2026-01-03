@@ -53,6 +53,9 @@ class PodcastEpisode(Base):
     # 分集图像
     image_url = Column(String(500))  # 分集封面图URL
 
+    # 分集详情页链接
+    item_link = Column(String(500))  # <item><link> 标签内容，指向分集详情页
+
     # 播放统计（全局）
     play_count = Column(Integer, default=0)
     last_played_at = Column(DateTime)

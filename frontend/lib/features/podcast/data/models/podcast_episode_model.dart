@@ -24,6 +24,8 @@ class PodcastEpisodeModel extends Equatable {
   final DateTime publishedAt;
   @JsonKey(name: 'image_url')
   final String? imageUrl;
+  @JsonKey(name: 'item_link')
+  final String? itemLink;
   @JsonKey(name: 'transcript_url')
   final String? transcriptUrl;
   @JsonKey(name: 'transcript_content')
@@ -72,6 +74,7 @@ class PodcastEpisodeModel extends Equatable {
     this.audioFileSize,
     required this.publishedAt,
     this.imageUrl,
+    this.itemLink,
     this.transcriptUrl,
     this.transcriptContent,
     this.aiSummary,
@@ -109,6 +112,7 @@ class PodcastEpisodeModel extends Equatable {
     int? audioFileSize,
     DateTime? publishedAt,
     String? imageUrl,
+    String? itemLink,
     String? transcriptUrl,
     String? transcriptContent,
     String? aiSummary,
@@ -140,6 +144,7 @@ class PodcastEpisodeModel extends Equatable {
       audioFileSize: audioFileSize ?? this.audioFileSize,
       publishedAt: publishedAt ?? this.publishedAt,
       imageUrl: imageUrl ?? this.imageUrl,
+      itemLink: itemLink ?? this.itemLink,
       transcriptUrl: transcriptUrl ?? this.transcriptUrl,
       transcriptContent: transcriptContent ?? this.transcriptContent,
       aiSummary: aiSummary ?? this.aiSummary,
@@ -215,6 +220,7 @@ class PodcastEpisodeModel extends Equatable {
         audioFileSize,
         publishedAt,
         imageUrl,
+        itemLink,
         transcriptUrl,
         transcriptContent,
         aiSummary,
@@ -284,6 +290,8 @@ class PodcastEpisodeDetailResponse extends Equatable {
   final DateTime publishedAt;
   @JsonKey(name: 'image_url')
   final String? imageUrl;
+  @JsonKey(name: 'item_link')
+  final String? itemLink;
   @JsonKey(name: 'transcript_url')
   final String? transcriptUrl;
   @JsonKey(name: 'transcript_content')
@@ -336,6 +344,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
     this.audioFileSize,
     required this.publishedAt,
     this.imageUrl,
+    this.itemLink,
     this.transcriptUrl,
     this.transcriptContent,
     this.aiSummary,
@@ -376,6 +385,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
       audioFileSize: audioFileSize,
       publishedAt: publishedAt,
       imageUrl: imageUrl,  // ✅ 修复：添加缺失的 imageUrl 字段
+      itemLink: itemLink,
       transcriptUrl: transcriptUrl,
       transcriptContent: transcriptContent,
       aiSummary: aiSummary,
@@ -450,6 +460,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
         audioFileSize,
         publishedAt,
         imageUrl,
+        itemLink,
         transcriptUrl,
         transcriptContent,
         aiSummary,

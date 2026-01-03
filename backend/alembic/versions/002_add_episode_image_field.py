@@ -1,7 +1,7 @@
 """Add episode image field
 
-Revision ID: 002
-Revises: 001
+Revision ID: 003_episode_image
+Revises: 002_add_transcription_task_table
 Create Date: 2025-12-20 00:00:00.000000
 
 """

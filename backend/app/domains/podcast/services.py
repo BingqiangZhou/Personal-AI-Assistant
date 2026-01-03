@@ -105,6 +105,7 @@ class PodcastService:
                 published_at=episode.published_at,
                 audio_duration=episode.duration,
                 transcript_url=episode.transcript_url,
+                item_link=episode.link,
                 metadata={"feed_title": feed.title}
             )
 
@@ -399,6 +400,7 @@ class PodcastService:
                 published_at=episode.published_at,
                 audio_duration=episode.duration,
                 transcript_url=episode.transcript_url,
+                item_link=episode.link,
                 metadata={"feed_title": feed.title, "refreshed_at": datetime.utcnow().isoformat()}
             )
 
@@ -473,6 +475,7 @@ class PodcastService:
                     published_at=episode.published_at,
                     audio_duration=episode.duration,
                     transcript_url=episode.transcript_url,
+                    item_link=episode.link,
                     metadata={
                         "feed_title": feed.title,
                         "reparsed_at": datetime.utcnow().isoformat(),

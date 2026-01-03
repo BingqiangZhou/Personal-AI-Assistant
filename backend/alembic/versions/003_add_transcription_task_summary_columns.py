@@ -1,7 +1,7 @@
 """add transcription task summary columns
 
-Revision ID: 003_add_transcription_task_summary_columns
-Revises: 001_create_podcast_tables
+Revision ID: 004_transcription_summary
+Revises: 003_episode_image
 Create Date: 2024-12-21 15:00:00.000000
 
 """

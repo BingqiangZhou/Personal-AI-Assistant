@@ -1,7 +1,7 @@
 """Add transcription task table
 
-Revision ID: add_transcription_task_table
-Revises: create_podcast_tables
+Revision ID: 002_add_transcription_task_table
+Revises: 001
 Create Date: 2025-12-21 11:30:00.000000
 
 """

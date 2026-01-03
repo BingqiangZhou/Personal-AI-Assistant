@@ -123,6 +123,7 @@ class PodcastRepository:
         published_at: datetime,
         audio_duration: Optional[int] = None,
         transcript_url: Optional[str] = None,
+        item_link: Optional[str] = None,
         metadata: Optional[dict] = None
     ) -> PodcastEpisode:
         """
@@ -146,6 +147,7 @@ class PodcastRepository:
             episode.published_at = published_at.replace(tzinfo=None) if published_at.tzinfo else published_at
             episode.audio_duration = audio_duration
             episode.transcript_url = transcript_url
+            episode.item_link = item_link
             episode.updated_at = datetime.utcnow()
             if metadata:
                 episode.metadata_json = {**episode.metadata_json, **metadata}
@@ -160,6 +162,7 @@ class PodcastRepository:
                 published_at=published_at.replace(tzinfo=None) if published_at.tzinfo else published_at,
                 audio_duration=audio_duration,
                 transcript_url=transcript_url,
+                item_link=item_link,
                 status="pending_summary",  # 等待AI总结
                 metadata=metadata or {}
             )

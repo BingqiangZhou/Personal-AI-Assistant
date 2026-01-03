@@ -139,6 +139,7 @@ class PodcastEpisodeResponse(PodcastTimestampedSchema):
     audio_file_size: Optional[int] = None
     published_at: datetime
     image_url: Optional[str] = None
+    item_link: Optional[str] = None  # 分集详情页链接
     subscription_image_url: Optional[str] = None
     transcript_url: Optional[str] = None
     transcript_content: Optional[str] = None

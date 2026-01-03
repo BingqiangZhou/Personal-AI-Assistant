@@ -1,6 +1,6 @@
 """Add subscription schedule configuration fields
 
-Revision ID: 008
+Revision ID: 008_schedule_fields
 Revises: 007_add_podcast_conversations
 Create Date: 2025-12-25
 
