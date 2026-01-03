@@ -220,6 +220,7 @@ class _SideFloatingPlayerWidgetState
                     duration: audioPlayerState.duration,
                     playbackRate: audioPlayerState.playbackRate,
                     onCollapse: _toggleExpand,
+                    onClose: () => _closePlayer(ref),
                     onPlayPause: () => _handlePlayPause(ref, audioPlayerState.isPlaying),
                     onSeek: (position) => ref.read(audioPlayerProvider.notifier).seekTo(position),
                     onRewind: () => _handleRewind(ref, audioPlayerState),
@@ -272,6 +273,11 @@ class _SideFloatingPlayerWidgetState
 
   void _navigateToEpisode(PodcastEpisodeModel episode) {
     context.push('/podcast/episode/detail/${episode.id}');
+  }
+
+  void _closePlayer(WidgetRef ref) {
+    // Stop playback and clear the current episode
+    ref.read(audioPlayerProvider.notifier).stop();
   }
 }
 
@@ -429,6 +435,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
   final int duration;
   final double playbackRate;
   final VoidCallback onCollapse;
+  final VoidCallback onClose;
   final VoidCallback onPlayPause;
   final void Function(int) onSeek;
   final VoidCallback onRewind;
@@ -445,6 +452,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
     required this.duration,
     required this.playbackRate,
     required this.onCollapse,
+    required this.onClose,
     required this.onPlayPause,
     required this.onSeek,
     required this.onRewind,
@@ -507,9 +515,18 @@ class _ExpandedPlayerContent extends StatelessWidget {
         ),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Flexible(
+          // Collapse button on the left
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: onCollapse,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            padding: EdgeInsets.zero,
+            tooltip: l10n.podcast_player_collapse,
+          ),
+          const SizedBox(width: 8),
+          // "正在播放" title in the center
+          Expanded(
             child: Text(
               l10n.podcast_player_now_playing,
               style: TextStyle(
@@ -519,15 +536,17 @@ class _ExpandedPlayerContent extends StatelessWidget {
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
+              textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(width: 8),
+          // Close button on the right
           IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: onCollapse,
+            icon: const Icon(Icons.close),
+            onPressed: onClose,
             constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
             padding: EdgeInsets.zero,
-            tooltip: l10n.podcast_player_collapse,
+            tooltip: 'Close',
           ),
         ],
       ),

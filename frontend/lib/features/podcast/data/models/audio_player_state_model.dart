@@ -43,9 +43,10 @@ class AudioPlayerState extends Equatable {
     double? playbackRate,
     ProcessingState? processingState,
     String? error,
+    bool clearCurrentEpisode = false,
   }) {
     return AudioPlayerState(
-      currentEpisode: currentEpisode ?? this.currentEpisode,
+      currentEpisode: clearCurrentEpisode ? null : (currentEpisode ?? this.currentEpisode),
       isPlaying: isPlaying ?? this.isPlaying,
       isLoading: isLoading ?? this.isLoading,
       isExpanded: isExpanded ?? this.isExpanded,

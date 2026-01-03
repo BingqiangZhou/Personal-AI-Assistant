@@ -339,7 +339,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       await _player!.stop();
       if (ref.mounted && !_isDisposed) {
         state = state.copyWith(
-          currentEpisode: null,
+          clearCurrentEpisode: true,
           isPlaying: false,
           position: 0,
         );
