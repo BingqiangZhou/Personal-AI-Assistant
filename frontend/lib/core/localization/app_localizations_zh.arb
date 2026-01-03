@@ -2525,5 +2525,25 @@
   "podcast_country_italy": "意大利",
   "@podcast_country_italy": {
     "description": "国家名称：意大利"
+  },
+
+  "podcast_reparse_tooltip": "重新解析播客（获取最新分集和链接）",
+  "@podcast_reparse_tooltip": {
+    "description": "重新解析播客按钮提示"
+  },
+
+  "podcast_reparsing": "正在重新解析播客...",
+  "@podcast_reparsing": {
+    "description": "正在重新解析消息"
+  },
+
+  "podcast_reparse_completed": "✅ 重新解析完成！",
+  "@podcast_reparse_completed": {
+    "description": "重新解析完成消息"
+  },
+
+  "podcast_reparse_failed": "❌ 重新解析失败：",
+  "@podcast_reparse_failed": {
+    "description": "重新解析失败消息"
   }
 }

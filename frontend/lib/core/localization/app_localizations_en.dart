@@ -1571,4 +1571,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcast_country_italy => 'Italy';
+
+  @override
+  String get podcast_reparse_tooltip =>
+      'Reparse podcast (fetch latest episodes and links)';
+
+  @override
+  String get podcast_reparsing => 'Reparse podcast...';
+
+  @override
+  String get podcast_reparse_completed => '✅ Reparse completed!';
+
+  @override
+  String get podcast_reparse_failed => '❌ Reparse failed:';
 }

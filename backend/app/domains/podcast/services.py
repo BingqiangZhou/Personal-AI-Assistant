@@ -466,6 +466,11 @@ class PodcastService:
                 continue
 
             try:
+                # Debug: 记录 episode.link 的值
+                logger.info(f"🔗 [REPARSE] Episode: {episode.title[:50]}...")
+                logger.info(f"   - episode.link: {episode.link}")
+                logger.info(f"   - episode.guid: {episode.guid}")
+
                 saved_episode, is_new = await self.repo.create_or_update_episode(
                     subscription_id=subscription_id,
                     guid=episode.guid or f"{sub.source_url}-{episode.title}",

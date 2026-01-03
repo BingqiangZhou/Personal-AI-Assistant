@@ -3049,6 +3049,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Italy'**
   String get podcast_country_italy;
+
+  /// Reparse podcast button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Reparse podcast (fetch latest episodes and links)'**
+  String get podcast_reparse_tooltip;
+
+  /// Reparsing podcast message
+  ///
+  /// In en, this message translates to:
+  /// **'Reparse podcast...'**
+  String get podcast_reparsing;
+
+  /// Reparse completed message
+  ///
+  /// In en, this message translates to:
+  /// **'✅ Reparse completed!'**
+  String get podcast_reparse_completed;
+
+  /// Reparse failed message
+  ///
+  /// In en, this message translates to:
+  /// **'❌ Reparse failed:'**
+  String get podcast_reparse_failed;
 }
 
 class _AppLocalizationsDelegate

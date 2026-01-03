@@ -2525,5 +2525,25 @@
   "podcast_country_italy": "Italy",
   "@podcast_country_italy": {
     "description": "Country name: Italy"
+  },
+
+  "podcast_reparse_tooltip": "Reparse podcast (fetch latest episodes and links)",
+  "@podcast_reparse_tooltip": {
+    "description": "Reparse podcast button tooltip"
+  },
+
+  "podcast_reparsing": "Reparse podcast...",
+  "@podcast_reparsing": {
+    "description": "Reparsing podcast message"
+  },
+
+  "podcast_reparse_completed": "✅ Reparse completed!",
+  "@podcast_reparse_completed": {
+    "description": "Reparse completed message"
+  },
+
+  "podcast_reparse_failed": "❌ Reparse failed:",
+  "@podcast_reparse_failed": {
+    "description": "Reparse failed message"
   }
 }

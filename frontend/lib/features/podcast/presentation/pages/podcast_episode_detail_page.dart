@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import '../../../../core/localization/app_localizations.dart';
 
@@ -54,6 +56,11 @@ class _PodcastEpisodeDetailPageState
 
       debugPrint('🎵 Loaded episode detail: ID=${episodeDetailAsync?.id}, Title=${episodeDetailAsync?.title}');
 
+      // Debug: Log itemLink from API response
+      if (episodeDetailAsync != null) {
+        debugPrint('🔗 [API Response] itemLink: ${episodeDetailAsync.itemLink ?? "NULL"}');
+      }
+
       if (episodeDetailAsync != null) {
         // Convert PodcastEpisodeDetailResponse to PodcastEpisodeModel
         final episodeModel = PodcastEpisodeModel(
@@ -67,6 +74,7 @@ class _PodcastEpisodeDetailPageState
           audioFileSize: episodeDetailAsync.audioFileSize,
           publishedAt: episodeDetailAsync.publishedAt,
           imageUrl: episodeDetailAsync.imageUrl,
+          itemLink: episodeDetailAsync.itemLink,  // ← 添加这一行
           transcriptUrl: episodeDetailAsync.transcriptUrl,
           transcriptContent: episodeDetailAsync.transcriptContent,
           aiSummary: episodeDetailAsync.aiSummary,
@@ -269,14 +277,41 @@ class _PodcastEpisodeDetailPageState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // 标题: 16px, FontWeight.bold, 主题色
-                        Text(
-                          episode.title ?? 'Unknown Episode',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                        // 标题: 16px, FontWeight.bold, 主题色 + 链接图标
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                episode.title ?? 'Unknown Episode',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                            // 分集链接图标
+                            if (episode.itemLink != null && episode.itemLink!.isNotEmpty)
+                              InkWell(
+                                onTap: () async {
+                                  final Uri linkUri = Uri.parse(episode.itemLink!);
+                                  if (await canLaunchUrl(linkUri)) {
+                                    await launchUrl(
+                                      linkUri,
+                                      mode: LaunchMode.externalApplication,
+                                    );
+                                  }
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Icon(
+                                    Icons.link,
+                                    size: 18,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 4),
                         // 副标题: 12px, 次要文字颜色, 支持多行显示

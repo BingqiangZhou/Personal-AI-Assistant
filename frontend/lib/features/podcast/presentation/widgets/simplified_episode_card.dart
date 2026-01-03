@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -19,6 +20,14 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Debug: Log itemLink info
+    if (kDebugMode) {
+      debugPrint('🔗 [SimplifiedEpisodeCard] Building for: "${episode.title}"');
+      debugPrint('   - itemLink: ${episode.itemLink ?? "NULL"}');
+      debugPrint('   - itemLink isEmpty: ${episode.itemLink?.isEmpty ?? true}');
+      debugPrint('   - Should show icon: ${episode.itemLink != null && episode.itemLink!.isNotEmpty}');
+    }
+
     return Card(
       margin: const EdgeInsets.all(6),
       child: InkWell(

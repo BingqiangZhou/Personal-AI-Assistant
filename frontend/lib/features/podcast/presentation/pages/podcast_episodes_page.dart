@@ -49,6 +49,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   final ScrollController _scrollController = ScrollController();
   String _selectedFilter = 'all';
   bool _showOnlyWithSummary = false;
+  bool _isReparsing = false;  // 重新解析状态
 
   @override
   void initState() {
@@ -114,6 +115,69 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
               ? 'unplayed'
               : null,
         );
+  }
+
+  // 重新解析订阅
+  Future<void> _reparseSubscription() async {
+    if (_isReparsing) return;  // 防止重复点击
+
+    setState(() {
+      _isReparsing = true;
+    });
+
+    final l10n = AppLocalizations.of(context)!;
+
+    try {
+      // 显示 loading 提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.podcast_reparsing),
+            duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+
+      // 调用重新解析
+      await ref.read(podcastSubscriptionProvider.notifier).reparseSubscription(
+        widget.subscriptionId,
+        true,  // forceAll: 重新解析所有分集
+      );
+
+      // 重新加载分集列表
+      await _refreshEpisodes();
+
+      // 显示成功提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.podcast_reparse_completed),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (error) {
+      // 显示错误提示
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${l10n.podcast_reparse_failed} $error'),
+            duration: Duration(seconds: 3),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isReparsing = false;
+        });
+      }
+    }
   }
 
   @override
@@ -212,6 +276,21 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                  ),
+                  // 重新解析按钮
+                  IconButton(
+                    icon: _isReparsing
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          )
+                        : Icon(Icons.refresh),
+                    onPressed: _isReparsing ? null : _reparseSubscription,
+                    tooltip: l10n.podcast_reparse_tooltip,
                   ),
                   // 筛选按钮移到标题行
                   if (MediaQuery.of(context).size.width < 700) ...[

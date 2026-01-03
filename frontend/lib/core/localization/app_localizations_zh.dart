@@ -1532,4 +1532,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get podcast_country_italy => '意大利';
+
+  @override
+  String get podcast_reparse_tooltip => '重新解析播客（获取最新分集和链接）';
+
+  @override
+  String get podcast_reparsing => '正在重新解析播客...';
+
+  @override
+  String get podcast_reparse_completed => '✅ 重新解析完成！';
+
+  @override
+  String get podcast_reparse_failed => '❌ 重新解析失败：';
 }
