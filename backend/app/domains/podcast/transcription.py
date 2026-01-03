@@ -459,6 +459,41 @@ class BrowserAudioDownloader:
                     else:
                         error_msg = f"HTTP {response.status}: {response.status_text}"
                         logger.error(f"🌐 [BROWSER DOWNLOAD] Request failed: {error_msg}")
+
+                        # 打印详细的调试信息（特别是 403 错误）
+                        if response.status == 403:
+                            logger.error(f"🔍 [403 DEBUG] === Browser Fallback Intercepted ===")
+
+                            # 获取所有响应头
+                            response_headers = response.headers
+                            for header_name, header_value in response_headers.items():
+                                logger.error(f"🔍 [403 DEBUG] {header_name}: {header_value}")
+
+                            # 获取 Content-Type
+                            content_type = response_headers.get('content-type', 'unknown')
+                            logger.error(f"🔍 [403 DEBUG] Content-Type: {content_type}")
+
+                            # 获取 CF-Ray (Cloudflare 请求ID)
+                            cf_ray = response_headers.get('cf-ray', 'Not found')
+                            logger.error(f"🔍 [403 DEBUG] CF-Ray: {cf_ray}")
+
+                            # 获取响应体的前200字节
+                            try:
+                                body = await response.body()
+                                body_head = body[:200]
+                                logger.error(f"🔍 [403 DEBUG] Response body (first 200 bytes): {body_head}")
+
+                                # 尝试解码为文本（如果是 HTML/JSON）
+                                try:
+                                    body_text = body[:500].decode('utf-8', errors='replace')
+                                    logger.error(f"🔍 [403 DEBUG] Response text preview: {body_text}")
+                                except:
+                                    pass
+                            except Exception as e:
+                                logger.error(f"🔍 [403 DEBUG] Failed to read response body: {e}")
+
+                            logger.error(f"🔍 [403 DEBUG] === End of 403 Debug Info ===")
+
                         raise HTTPException(
                             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"Browser download failed: {error_msg}"
