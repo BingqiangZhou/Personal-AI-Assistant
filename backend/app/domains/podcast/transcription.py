@@ -384,6 +384,8 @@ class BrowserAudioDownloader:
         """
         使用 Playwright 浏览器下载文件
 
+        使用 context.request.get() API 直接在浏览器上下文中发起 HTTP 请求
+
         Args:
             url: 音频文件 URL
             destination: 保存路径
@@ -403,7 +405,6 @@ class BrowserAudioDownloader:
 
             browser = None
             context = None
-            download = None
 
             try:
                 logger.info(f"🌐 [BROWSER DOWNLOAD] Starting browser download for: {url[:100]}...")
@@ -421,89 +422,50 @@ class BrowserAudioDownloader:
 
                     # 创建浏览器上下文
                     context = await browser.new_context(
-                        accept_downloads=True,
                         user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
                         viewport={'width': 1920, 'height': 1080}
                     )
 
-                    page = await context.new_page()
+                    # 使用 Playwright 的 APIRequestContext 发起 HTTP 请求
+                    logger.info(f"🌐 [BROWSER DOWNLOAD] Fetching audio file via context.request.get()...")
 
-                    # 设置下载超时
-                    page.set_default_timeout(self.timeout * 1000)
+                    # 设置请求头
+                    headers = {
+                        'Accept': '*/*',
+                        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+                        'Accept-Encoding': 'gzip, deflate, br',
+                        'Connection': 'keep-alive',
+                        'Referer': 'https://lizhi.fm/'
+                    }
 
-                    # 使用 fetch API 直接获取音频文件（绕过 CDN）
-                    logger.info(f"🌐 [BROWSER DOWNLOAD] Fetching audio file via browser context...")
+                    # 发起 GET 请求
+                    response = await context.request.get(
+                        url,
+                        headers=headers,
+                        timeout=self.timeout * 1000  # 毫秒
+                    )
 
-                    # 在浏览器中执行 fetch 获取文件
-                    # 使用 IIFE (Immediately Invoked Function Expression) 格式
-                    fetch_script = f'''
-                    (async () => {{
-                        try {{
-                            const response = await fetch("{url}", {{
-                                headers: {{
-                                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-                                    'Accept': '*/*',
-                                    'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-                                    'Accept-Encoding': 'gzip, deflate, br',
-                                    'Connection': 'keep-alive',
-                                    'Referer': 'https://lizhi.fm/'
-                                }}
-                            }});
+                    # 检查响应状态
+                    if response.ok:
+                        # 获取响应体（二进制数据）
+                        audio_data = await response.body()
 
-                            if (!response.ok) {{
-                                return {{ error: `HTTP ${{response.status}}` }};
-                            }}
-
-                            const blob = await response.blob();
-                            const arrayBuffer = await blob.arrayBuffer();
-                            const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-
-                            return {{
-                                success: true,
-                                base64: base64,
-                                size: blob.size,
-                                type: blob.type
-                            }};
-                        }} catch (error) {{
-                            return {{ error: error.toString() }};
-                        }}
-                    }})()
-                    '''
-
-                    try:
-                        result = await page.evaluate(fetch_script)
-
-                        if result.get('error'):
-                            raise HTTPException(
-                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                detail=f"Browser fetch failed: {result['error']}"
-                            )
-
-                        if not result.get('success'):
-                            raise HTTPException(
-                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                                detail=f"Browser fetch returned error: {result.get('error', 'Unknown error')}"
-                            )
-
-                        # 解码 base64 数据并写入文件
-                        import base64
-                        audio_data = base64.b64decode(result['base64'])
-
+                        # 写入文件
                         with open(destination, 'wb') as f:
                             f.write(audio_data)
 
                         file_size = len(audio_data)
-                        logger.info(f"🌐 [BROWSER DOWNLOAD] Successfully downloaded {file_size} bytes via fetch")
-
-                    except Exception as e:
-                        logger.error(f"🌐 [BROWSER DOWNLOAD] Fetch failed: {e}")
+                        logger.info(f"🌐 [BROWSER DOWNLOAD] Successfully downloaded {file_size} bytes via context.request.get()")
+                    else:
+                        error_msg = f"HTTP {response.status}: {response.status_text}"
+                        logger.error(f"🌐 [BROWSER DOWNLOAD] Request failed: {error_msg}")
                         raise HTTPException(
                             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Browser download via fetch failed: {str(e)}"
+                            detail=f"Browser download failed: {error_msg}"
                         )
 
-                    # 等待下载完成
-                    await asyncio.sleep(1)  # 给文件系统一点时间
+                    # 等待文件系统写入完成
+                    await asyncio.sleep(1)
 
                     # 验证文件
                     if not os.path.exists(destination):
