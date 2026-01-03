@@ -503,133 +503,188 @@ class _ExpandedPlayerContent extends StatelessWidget {
     if (l10n == null) {
       return const SizedBox.shrink();
     }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          // Collapse button on the left
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: onCollapse,
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-            padding: EdgeInsets.zero,
-            tooltip: l10n.podcast_player_collapse,
-          ),
-          const SizedBox(width: 8),
-          // "正在播放" title in the center
-          Expanded(
-            child: Text(
-              l10n.podcast_player_now_playing,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Close button on the right
-          IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: onClose,
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-            padding: EdgeInsets.zero,
-            tooltip: 'Close',
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildEpisodeInfo(BuildContext context) {
-    return InkWell(
-      onTap: onNavigateToEpisode,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // Podcast icon
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: _buildEpisodeImage(context),
+    // Use LayoutBuilder to detect available width
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Minimum width: padding (12*2) + two buttons (36*2) + spacing (8*2) = 24 + 72 + 16 = 112
+        // Adding safety margin to prevent edge cases
+        final minWidthForHeader = 120.0;
+
+        // If width is too small (during animation), hide the header
+        if (constraints.maxWidth < minWidthForHeader) {
+          return const SizedBox.shrink();
+        }
+
+        // Calculate available width for content after padding
+        final contentWidth = constraints.maxWidth - 24; // 24 = padding horizontal (12*2)
+
+        // Minimum width for showing title: buttons (72) + spacing (16) + some space for text (50)
+        final minWidthForTitle = 140.0;
+        final showTitle = contentWidth >= minWidthForTitle;
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                width: 1,
               ),
             ),
-            const SizedBox(width: 12),
-            // Title and info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    episode.title,
+          ),
+          child: Row(
+            children: [
+              // Collapse button on the left
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                onPressed: onCollapse,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                padding: EdgeInsets.zero,
+                tooltip: l10n.podcast_player_collapse,
+              ),
+              // Only show spacing and title if width allows
+              if (showTitle) const SizedBox(width: 8),
+              // "正在播放" title in the center - only show if width allows
+              if (showTitle)
+                Expanded(
+                  child: Text(
+                    l10n.podcast_player_now_playing,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
-                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 4),
-                  Row(
+                ),
+              if (showTitle) const SizedBox(width: 8),
+              // Add spacer if title is hidden
+              if (!showTitle) const Spacer(),
+              // Close button on the right
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: onClose,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                padding: EdgeInsets.zero,
+                tooltip: 'Close',
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEpisodeInfo(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Minimum width needed: padding (16*2) + image (48) + spacing (12) + min text width (60) = 32 + 48 + 12 + 60 = 152
+        // Adding safety margin to prevent edge cases
+        final minWidth = 160.0;
+
+        // If width is too small, hide episode info during animation
+        if (constraints.maxWidth < minWidth) {
+          return const SizedBox.shrink();
+        }
+
+        // Calculate available width for image
+        final availableWidth = constraints.maxWidth - 32; // subtract padding
+        final imageSize = availableWidth < 100 ? 32.0 : 48.0; // smaller image for tight spaces
+
+        return InkWell(
+          onTap: onNavigateToEpisode,
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Podcast icon - flexible size
+                Container(
+                  width: imageSize,
+                  height: imageSize,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: _buildEpisodeImage(context),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Title and info
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
                       Text(
-                        _formatDate(episode.publishedAt),
+                        episode.title,
                         style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      // Info row with flexible layout to prevent overflow
+                      Flexible(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.calendar_today_outlined,
+                              size: 12,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                _formatDate(episode.publishedAt),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                            if (episode.audioDuration != null) ...[
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.schedule_outlined,
+                                size: 12,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  _formatDuration(episode.audioDuration!),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      if (episode.audioDuration != null) ...[
-                        Icon(
-                          Icons.schedule_outlined,
-                          size: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _formatDuration(episode.audioDuration!),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -674,110 +729,142 @@ class _ExpandedPlayerContent extends StatelessWidget {
   Widget _buildProgressBar(BuildContext context) {
     final progress = duration > 0 ? position / duration : 0.0;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              trackHeight: 3,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-              overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
-            ),
-            child: Slider(
-              value: progress.clamp(0.0, 1.0),
-              onChanged: (value) {
-                final newPosition = (value * duration).round();
-                onSeek(newPosition);
-              },
-              activeColor: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  _formatDuration(position),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Minimum width needed for progress bar: padding (16*2) + slider + time labels (80) = 32 + 80 = 112
+        // Adding safety margin to prevent edge cases
+        final minWidth = 120.0;
+
+        // If width is too small, hide progress bar during animation
+        if (constraints.maxWidth < minWidth) {
+          return const SizedBox.shrink();
+        }
+
+        // Show time labels only if there's enough space
+        final showTimeLabels = constraints.maxWidth >= 170.0;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(
+            children: [
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 3,
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                ),
+                child: Slider(
+                  value: progress.clamp(0.0, 1.0),
+                  onChanged: (value) {
+                    final newPosition = (value * duration).round();
+                    onSeek(newPosition);
+                  },
+                  activeColor: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              // Only show time labels if width allows
+              if (showTimeLabels)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _formatDuration(position),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Text(
+                        _formatRemainingTime(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  _formatRemainingTime(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildPlaybackControls(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        // Rewind 10s
-        _buildControlButton(
-          context,
-          icon: Icons.replay_10,
-          label: '-10',
-          tooltip: l10n?.podcast_player_rewind_10 ?? 'Rewind 10s',
-          onTap: onRewind,
-        ),
-        // Play/Pause
-        Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: IconButton(
-            onPressed: isLoading ? null : onPlayPause,
-            tooltip: isPlaying
-                ? (l10n?.podcast_player_pause ?? 'Pause')
-                : (l10n?.podcast_player_play ?? 'Play'),
-            icon: isLoading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Icon(
-                    isPlaying ? Icons.pause : Icons.play_arrow,
-                    color: Colors.white,
-                    size: 32,
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Minimum width needed: 3 buttons (~44px each) + spacing + margins = 150px minimum
+        // Adding extra margin to prevent edge cases
+        final minWidth = 150.0;
+
+        // If width is too small, hide playback controls during animation
+        if (constraints.maxWidth < minWidth) {
+          return const SizedBox.shrink();
+        }
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // Rewind 10s
+            _buildControlButton(
+              context,
+              icon: Icons.replay_10,
+              label: '-10',
+              tooltip: l10n?.podcast_player_rewind_10 ?? 'Rewind 10s',
+              onTap: onRewind,
+            ),
+            // Play/Pause
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
-          ),
-        ),
-        // Forward 30s
-        _buildControlButton(
-          context,
-          icon: Icons.forward_30,
-          label: '+30',
-          tooltip: l10n?.podcast_player_forward_30 ?? 'Forward 30s',
-          onTap: onForward,
-        ),
-      ],
+                ],
+              ),
+              child: IconButton(
+                onPressed: isLoading ? null : onPlayPause,
+                tooltip: isPlaying
+                    ? (l10n?.podcast_player_pause ?? 'Pause')
+                    : (l10n?.podcast_player_play ?? 'Play'),
+                icon: isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Icon(
+                        isPlaying ? Icons.pause : Icons.play_arrow,
+                        color: Colors.white,
+                        size: 32,
+                      ),
+              ),
+            ),
+            // Forward 30s
+            _buildControlButton(
+              context,
+              icon: Icons.forward_30,
+              label: '+30',
+              tooltip: l10n?.podcast_player_forward_30 ?? 'Forward 30s',
+              onTap: onForward,
+            ),
+          ],
+        );
+      },
     );
   }
 
