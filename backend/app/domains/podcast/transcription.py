@@ -216,7 +216,7 @@ class AudioDownloader:
         url: str,
         destination: str,
         progress_callback=None
-    ) -> Tuple[str, int, str]:
+    ) -> Tuple[str, int]:
         """
         文件下载（直接使用 aiohttp，无回退）
 
@@ -226,7 +226,7 @@ class AudioDownloader:
             progress_callback: 进度回调函数
 
         Returns:
-            Tuple[str, int, str]: (文件路径, 文件大小, 下载方法)
+            Tuple[str, int]: (文件路径, 文件大小)
 
         Raises:
             HTTPException: 如果下载失败
@@ -236,7 +236,7 @@ class AudioDownloader:
         try:
             file_path, file_size = await self.download_file(url, destination, progress_callback)
             logger.info(f"✅ [DOWNLOAD] Download succeeded: {file_size} bytes")
-            return file_path, file_size, "aiohttp"
+            return file_path, file_size
 
         except Exception as e:
             logger.error(f"❌ [DOWNLOAD] Download failed: {type(e).__name__}: {str(e)}")
@@ -1165,12 +1165,10 @@ class PodcastTranscriptionService:
             download_time = 0
             original_file = os.path.join(temp_episode_dir, f"original{os.path.splitext(task.original_audio_url)[-1]}")
             file_size = 0
-            download_method = "none"  # 跟踪下载方法
 
             # 检查是否已下载
             if os.path.exists(original_file) and os.path.getsize(original_file) > 0:
                 file_size = os.path.getsize(original_file)
-                download_method = "none"  # 使用现有文件，未下载
                 log_with_timestamp("INFO", f"⏭️ [STEP 1/6 DOWNLOAD] Skip! File already exists: {original_file} ({file_size/1024/1024:.2f} MB)", task_id)
                 log_with_timestamp("INFO", f"✅ [STEP 1/6 DOWNLOAD] Using existing downloaded file", task_id)
             else:
@@ -1207,16 +1205,13 @@ class PodcastTranscriptionService:
                         )
 
                     # 使用带回退机制的下载方法
-                    file_path, file_size, download_method = await downloader.download_file_with_fallback(
+                    file_path, file_size = await downloader.download_file_with_fallback(
                         task.original_audio_url,
                         original_file,
                         download_progress
                     )
 
-                    # 记录下载方法到数据库
-                    log_with_timestamp("INFO", f"📊 [STEP 1/6 DOWNLOAD] Download method: {download_method}", task_id)
-
-                log_with_timestamp("INFO", f"✅ [STEP 1/6 DOWNLOAD] Download complete! Size: {file_size} bytes ({file_size/1024/1024:.2f} MB), Method: {download_method}", task_id)
+                log_with_timestamp("INFO", f"✅ [STEP 1/6 DOWNLOAD] Download complete! Size: {file_size} bytes ({file_size/1024/1024:.2f} MB)", task_id)
                 download_time = time.time() - download_start
                 log_with_timestamp("INFO", f"⏱️ [STEP 1/6 DOWNLOAD] Time taken: {download_time:.2f}s", task_id)
 
@@ -1567,7 +1562,6 @@ class PodcastTranscriptionService:
                 'download_time': download_time,
                 'conversion_time': conversion_time,
                 'transcription_time': transcription_time,
-                'download_method': download_method,  # 记录下载方法
                 'chunk_info': {
                     'total_chunks': len(chunks),
                     'chunks': [

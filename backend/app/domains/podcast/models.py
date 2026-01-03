@@ -81,6 +81,7 @@ class PodcastEpisode(Base):
         Index('idx_podcast_status', 'status'),
         Index('idx_podcast_published', 'published_at'),
         Index('idx_podcast_episode_image', 'image_url'),
+        Index('idx_podcast_episodes_item_link', 'item_link'),
     )
 
     def __repr__(self):
@@ -219,7 +220,6 @@ class TranscriptionTask(Base):
     download_time = Column(Float)  # 下载耗时（秒）
     conversion_time = Column(Float)  # 转换耗时（秒）
     transcription_time = Column(Float)  # 转录总耗时（秒）
-    download_method = Column(String(20), default='aiohttp', nullable=False)  # 下载方法: aiohttp, browser, none
 
     # 配置信息（记录任务使用的配置）
     chunk_size_mb = Column(Integer, default=10)  # 分片大小（MB）
