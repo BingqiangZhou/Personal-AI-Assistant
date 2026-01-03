@@ -18,31 +18,50 @@ depends_on = None
 
 def upgrade():
     """Add item_link column to podcast_episodes table"""
-    # Add item_link column as nullable first
-    op.add_column(
-        'podcast_episodes',
-        sa.Column(
-            'item_link',
-            sa.String(500),
-            nullable=True
-        )
-    )
+    # Check if column already exists, add if not
+    from sqlalchemy import inspect, text
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('podcast_episodes')]
 
-    # Create index for faster lookups
-    op.create_index(
-        'idx_podcast_episodes_item_link',
-        'podcast_episodes',
-        ['item_link']
-    )
+    if 'item_link' not in columns:
+        op.add_column(
+            'podcast_episodes',
+            sa.Column(
+                'item_link',
+                sa.String(500),
+                nullable=True
+            )
+        )
+
+    # Check if index exists before creating
+    indexes = inspector.get_indexes('podcast_episodes')
+    index_names = [idx['name'] for idx in indexes]
+
+    if 'idx_podcast_episodes_item_link' not in index_names:
+        op.create_index(
+            'idx_podcast_episodes_item_link',
+            'podcast_episodes',
+            ['item_link']
+        )
 
 
 def downgrade():
     """Remove item_link column from podcast_episodes table"""
-    # Drop index
-    op.drop_index(
-        'idx_podcast_episodes_item_link',
-        table_name='podcast_episodes'
-    )
+    # Drop index if exists
+    from sqlalchemy import inspect
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    indexes = inspector.get_indexes('podcast_episodes')
+    index_names = [idx['name'] for idx in indexes]
 
-    # Drop column
-    op.drop_column('podcast_episodes', 'item_link')
+    if 'idx_podcast_episodes_item_link' in index_names:
+        op.drop_index(
+            'idx_podcast_episodes_item_link',
+            table_name='podcast_episodes'
+        )
+
+    # Drop column if exists
+    columns = [col['name'] for col in inspector.get_columns('podcast_episodes')]
+    if 'item_link' in columns:
+        op.drop_column('podcast_episodes', 'item_link')
