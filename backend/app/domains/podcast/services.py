@@ -497,7 +497,8 @@ class PodcastService:
                     updated_episodes += 1
 
             except Exception as e:
-                logger.error(f"重新解析单集失败: {episode.title}, 错误: {e}")
+                # Use explicit logger access to avoid scoping issues
+                logging.getLogger(__name__).error(f"重新解析单集失败: {episode.title}, 错误: {e}")
                 failed += 1
 
         # 更新订阅配置和最后抓取时间
