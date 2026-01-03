@@ -2,6 +2,7 @@
 播客数据访问层 - Podcast Repository
 """
 
+import logging
 from typing import List, Optional, Tuple, Dict, Any, Set
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, desc, func, or_, text
@@ -11,6 +12,8 @@ from datetime import datetime, date, timedelta
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 from app.domains.subscription.models import Subscription, SubscriptionItem
 from app.core.redis import PodcastRedis
+
+logger = logging.getLogger(__name__)
 
 
 class PodcastRepository:
