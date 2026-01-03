@@ -142,12 +142,25 @@ class AudioDownloader:
         # 确保目录存在
         os.makedirs(os.path.dirname(destination), exist_ok=True)
 
+        # 处理 lizhi.fm 的 CDN URL
+        original_url = url
+        if 'cdn.lizhi.fm' in url:
+            url = url.replace('cdn.lizhi.fm', 'cdn.gzlzfm.com')
+            logger.info(f"🔄 [CDN REPLACEMENT] Replaced CDN URL: {original_url[:80]}... -> {url[:80]}...")
+
+        # 准备请求头
+        request_headers = dict(self.session.headers)
+        # 为 lizhi.fm 添加 Referer
+        if 'lizhi.fm' in original_url or 'lizhi.fm' in url or 'gzlzfm.com' in url:
+            request_headers['Referer'] = 'https://www.lizhi.fm/'
+            logger.info(f"📋 [HEADERS] Added Referer for lizhi.fm: https://www.lizhi.fm/")
+
         # 输出请求头信息用于调试
         logger.info(f"📤 [HTTP REQUEST] URL: {url}")
-        logger.info(f"📤 [HTTP REQUEST] Headers: {dict(self.session.headers)}")
+        logger.info(f"📤 [HTTP REQUEST] Headers: {request_headers}")
 
         try:
-            async with self.session.get(url) as response:
+            async with self.session.get(url, headers=request_headers) as response:
                 # ℹ️ 输出响应头信息
                 logger.info(f"ℹ️ [Response Headers] {dict(response.headers)}")
 
