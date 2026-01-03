@@ -205,9 +205,7 @@ class AudioDownloader:
         progress_callback=None
     ) -> Tuple[str, int, str]:
         """
-        带自动回退机制的文件下载
-
-        先尝试使用 aiohttp 下载，失败时自动切换到浏览器下载
+        文件下载（直接使用 aiohttp，无回退）
 
         Args:
             url: 下载URL
@@ -218,343 +216,28 @@ class AudioDownloader:
             Tuple[str, int, str]: (文件路径, 文件大小, 下载方法)
 
         Raises:
-            HTTPException: 如果两种方法都失败
+            HTTPException: 如果下载失败
         """
-        # 步骤 1: 尝试 aiohttp 下载
+        # 直接使用 aiohttp 下载
+        logger.info(f"📥 [DOWNLOAD] Starting download for: {url[:100]}...")
         try:
-            logger.info(f"🔄 [FALLBACK] Attempting aiohttp download for: {url[:100]}...")
             file_path, file_size = await self.download_file(url, destination, progress_callback)
-            logger.info(f"✅ [FALLBACK] aiohttp download succeeded")
+            logger.info(f"✅ [DOWNLOAD] Download succeeded: {file_size} bytes")
             return file_path, file_size, "aiohttp"
 
-        except Exception as aiohttp_error:
-            logger.warning(f"⚠️ [FALLBACK] aiohttp download failed: {type(aiohttp_error).__name__}")
-
-            # 步骤 2: 检查是否应该触发回退
-            if not should_trigger_fallback(aiohttp_error):
-                logger.error(f"❌ [FALLBACK] Error type does not trigger fallback, aborting")
-                # 如果不是可回退的错误，直接抛出原始异常
-                if isinstance(aiohttp_error, HTTPException):
-                    raise
-                else:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=f"Download failed: {str(aiohttp_error)}"
-                    )
-
-            # 步骤 3: 检查 Playwright 是否可用，然后执行浏览器回退下载
-            if not is_playwright_available():
-                logger.error(f"❌ [FALLBACK] Playwright not available, cannot use browser fallback")
-                logger.error(f"❌ [FALLBACK] aiohttp error: {type(aiohttp_error).__name__}: {aiohttp_error}")
-                # Playwright 不可用，直接抛出原始 aiohttp 错误
-                if isinstance(aiohttp_error, HTTPException):
-                    raise
-                else:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=f"Download failed and Playwright browser fallback not available: {str(aiohttp_error)}"
-                    )
-
-            logger.info(f"🌐 [FALLBACK] Triggering browser fallback download...")
-            try:
-                browser_downloader = BrowserAudioDownloader(
-                    timeout=self.timeout,
-                    max_concurrent=3
-                )
-                file_path, file_size = await browser_downloader.download_with_playwright(
-                    url,
-                    destination,
-                    progress_callback
-                )
-                logger.info(f"✅ [FALLBACK] Browser fallback download succeeded")
-                return file_path, file_size, "browser"
-
-            except Exception as browser_error:
-                # 步骤 4: 两种方法都失败，抛出详细错误
-                logger.error(f"❌ [FALLBACK] Both aiohttp and browser downloads failed")
-                logger.error(f"❌ [FALLBACK] aiohttp error: {type(aiohttp_error).__name__}: {aiohttp_error}")
-                logger.error(f"❌ [FALLBACK] browser error: {type(browser_error).__name__}: {browser_error}")
-
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=(
-                        f"Audio download failed using both HTTP and browser methods. "
-                        f"aiohttp: {type(aiohttp_error).__name__}, "
-                        f"browser: {type(browser_error).__name__}"
-                    )
-                )
-
-
-def is_playwright_available() -> bool:
-    """
-    检查 Playwright 是否可用
-
-    Returns:
-        bool: True 表示 Playwright 已安装且可用
-    """
-    try:
-        from playwright.async_api import async_playwright
-        return True
-    except ImportError:
-        logger.warning("🌐 [FALLBACK] Playwright not installed, browser fallback disabled")
-        return False
-
-
-def should_trigger_fallback(error: Exception) -> bool:
-    """
-    判断是否应该触发浏览器回退
-
-    仅在特定错误类型时触发浏览器回退：
-    - HTTP 403（禁止访问）
-    - HTTP 429（请求过多）
-    - HTTP 503（服务不可用）
-    - 连接超时错误
-    - SSL 证书错误
-
-    Args:
-        error: aiohttp 下载时的异常
-
-    Returns:
-        bool: True 表示应该触发浏览器回退
-    """
-    # 检查 HTTPException 的状态码
-    if isinstance(error, HTTPException):
-        status_code = error.status_code
-        # 对于 HTTPException，我们检查其 detail 字段中的状态码信息
-        if hasattr(error, 'detail'):
-            detail_str = str(error.detail)
-            # 从 detail 字符串中提取状态码
-            if 'HTTP 403' in detail_str or status_code == 403:
-                return True
-            if 'HTTP 429' in detail_str or status_code == 429:
-                return True
-            if 'HTTP 503' in detail_str or status_code == 503:
-                return True
-            if '408' in detail_str or status_code == 408:  # Request timeout
-                return True
-        # 直接检查状态码
-        if status_code in [403, 429, 503, 408]:
-            return True
-
-    # 检查超时错误
-    if isinstance(error, (asyncio.TimeoutError, TimeoutError)):
-        return True
-
-    # 检查 aiohttp 客户端错误
-    if isinstance(error, (aiohttp.ClientError, aiohttp.ClientResponseError)):
-        return True
-
-    # 检查 SSL 错误
-    if isinstance(error, (ssl.SSLError, aiohttp.ClientSSLError)):
-        return True
-
-    # 检查连接错误
-    if isinstance(error, (aiohttp.ClientConnectionError, aiohttp.ServerDisconnectedError)):
-        return True
-
-    return False
-
-
-class BrowserAudioDownloader:
-    """
-    基于浏览器的音频文件下载器
-
-    当 aiohttp 下载失败时（403/429/503 等错误），
-    使用 Playwright 启动无头浏览器来下载文件
-    """
-
-    def __init__(self, timeout: int = 300, max_concurrent: int = 3):
-        """
-        初始化浏览器下载器
-
-        Args:
-            timeout: 下载超时时间（秒）
-            max_concurrent: 最大并发浏览器实例数
-        """
-        self.timeout = timeout
-        self.max_concurrent = max_concurrent
-        self._semaphore = asyncio.Semaphore(max_concurrent)
-
-    async def download_with_playwright(
-        self,
-        url: str,
-        destination: str,
-        progress_callback=None
-    ) -> Tuple[str, int]:
-        """
-        使用 Playwright 浏览器下载文件
-
-        使用 context.request.get() API 直接在浏览器上下文中发起 HTTP 请求
-
-        Args:
-            url: 音频文件 URL
-            destination: 保存路径
-            progress_callback: 进度回调函数
-
-        Returns:
-            Tuple[str, int]: (文件路径, 文件大小)
-
-        Raises:
-            HTTPException: 如果浏览器下载失败
-        """
-        async with self._semaphore:  # 限制并发浏览器数量
-            from playwright.async_api import async_playwright, Error as PlaywrightError
-
-            # 确保目录存在
-            os.makedirs(os.path.dirname(destination), exist_ok=True)
-
-            browser = None
-            context = None
-
-            try:
-                logger.info(f"🌐 [BROWSER DOWNLOAD] Starting browser download for: {url[:100]}...")
-
-                async with async_playwright() as p:
-                    # 启动 Chromium 浏览器（无头模式）
-                    browser = await p.chromium.launch(
-                        headless=True,
-                        args=[
-                            '--disable-dev-shm-usage',
-                            '--no-sandbox',
-                            '--disable-gpu'
-                        ]
-                    )
-
-                    # 创建浏览器上下文
-                    context = await browser.new_context(
-                        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-                        viewport={'width': 1920, 'height': 1080}
-                    )
-
-                    # 使用 Playwright 的 APIRequestContext 发起 HTTP 请求
-                    logger.info(f"🌐 [BROWSER DOWNLOAD] Fetching audio file via context.request.get()...")
-
-                    # 设置请求头
-                    headers = {
-                        'Accept': '*/*',
-                        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-                        'Accept-Encoding': 'gzip, deflate, br',
-                        'Connection': 'keep-alive',
-                        'Referer': 'https://lizhi.fm/'
-                    }
-
-                    # 发起 GET 请求
-                    response = await context.request.get(
-                        url,
-                        headers=headers,
-                        timeout=self.timeout * 1000  # 毫秒
-                    )
-
-                    # 检查响应状态
-                    if response.ok:
-                        # 获取响应体（二进制数据）
-                        audio_data = await response.body()
-
-                        # 写入文件
-                        with open(destination, 'wb') as f:
-                            f.write(audio_data)
-
-                        file_size = len(audio_data)
-                        logger.info(f"🌐 [BROWSER DOWNLOAD] Successfully downloaded {file_size} bytes via context.request.get()")
-                    else:
-                        error_msg = f"HTTP {response.status}: {response.status_text}"
-                        logger.error(f"🌐 [BROWSER DOWNLOAD] Request failed: {error_msg}")
-
-                        # 打印详细的调试信息（特别是 403 错误）
-                        if response.status == 403:
-                            logger.error(f"🔍 [403 DEBUG] === Browser Fallback Intercepted ===")
-
-                            # 获取所有响应头
-                            response_headers = response.headers
-                            for header_name, header_value in response_headers.items():
-                                logger.error(f"🔍 [403 DEBUG] {header_name}: {header_value}")
-
-                            # 获取 Content-Type
-                            content_type = response_headers.get('content-type', 'unknown')
-                            logger.error(f"🔍 [403 DEBUG] Content-Type: {content_type}")
-
-                            # 获取 CF-Ray (Cloudflare 请求ID)
-                            cf_ray = response_headers.get('cf-ray', 'Not found')
-                            logger.error(f"🔍 [403 DEBUG] CF-Ray: {cf_ray}")
-
-                            # 获取响应体的前200字节
-                            try:
-                                body = await response.body()
-                                body_head = body[:200]
-                                logger.error(f"🔍 [403 DEBUG] Response body (first 200 bytes): {body_head}")
-
-                                # 尝试解码为文本（如果是 HTML/JSON）
-                                try:
-                                    body_text = body[:500].decode('utf-8', errors='replace')
-                                    logger.error(f"🔍 [403 DEBUG] Response text preview: {body_text}")
-                                except:
-                                    pass
-                            except Exception as e:
-                                logger.error(f"🔍 [403 DEBUG] Failed to read response body: {e}")
-
-                            logger.error(f"🔍 [403 DEBUG] === End of 403 Debug Info ===")
-
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Browser download failed: {error_msg}"
-                        )
-
-                    # 等待文件系统写入完成
-                    await asyncio.sleep(1)
-
-                    # 验证文件
-                    if not os.path.exists(destination):
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Browser download completed but file not found"
-                        )
-
-                    file_size = os.path.getsize(destination)
-                    if file_size == 0:
-                        os.remove(destination)
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Browser download created empty file"
-                        )
-
-                    logger.info(f"✅ [BROWSER DOWNLOAD] Successfully downloaded to {destination}, size: {file_size} bytes")
-
-                    if progress_callback:
-                        await progress_callback(100)
-
-                    return destination, file_size
-
-            except PlaywrightError as e:
-                logger.error(f"🌐 [BROWSER DOWNLOAD] Playwright error: {str(e)}")
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Browser download failed: {str(e)}"
-                )
-
-            except HTTPException:
-                # 直接重新抛出 HTTPException
+        except Exception as e:
+            logger.error(f"❌ [DOWNLOAD] Download failed: {type(e).__name__}: {str(e)}")
+            if isinstance(e, HTTPException):
                 raise
-
-            except Exception as e:
-                logger.error(f"🌐 [BROWSER DOWNLOAD] Unexpected error: {type(e).__name__}: {str(e)}")
+            else:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Browser download error: {str(e)}"
+                    detail=f"Download failed: {str(e)}"
                 )
 
-            finally:
-                # 确保浏览器资源被清理
-                if context:
-                    try:
-                        await context.close()
-                    except Exception as e:
-                        logger.warning(f"⚠️ [BROWSER DOWNLOAD] Failed to close context: {e}")
 
-                if browser:
-                    try:
-                        await browser.close()
-                    except Exception as e:
-                        logger.warning(f"⚠️ [BROWSER DOWNLOAD] Failed to close browser: {e}")
+# Note: Browser fallback download has been removed.
+# The download now uses only aiohttp with proper headers and retry logic.
 
 
 class AudioConverter:
