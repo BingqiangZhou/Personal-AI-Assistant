@@ -207,7 +207,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
             children: [
               // Custom Header with top padding to align with Feed page
               Padding(
-                padding: const EdgeInsets.only(top: 16),
+                padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 8),
                 child: Container(
                   height: 56,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
