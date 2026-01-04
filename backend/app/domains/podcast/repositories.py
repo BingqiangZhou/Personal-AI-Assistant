@@ -175,10 +175,6 @@ class PodcastRepository:
         await self.db.commit()
         await self.db.refresh(episode)
 
-        # Debug: 确认数据是否保存到数据库
-        logger.info(f"🔗 [DB AFTER COMMIT] Episode ID={episode.id}, title={title[:30]}...")
-        logger.info(f"   - item_link in DB: {repr(episode.item_link)}")
-
         # 缓存前几天 episode metadata
         if is_new or episode.ai_summary:
             await self._cache_episode_metadata(episode)
