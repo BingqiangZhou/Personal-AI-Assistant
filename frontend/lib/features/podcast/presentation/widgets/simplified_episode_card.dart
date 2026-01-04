@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/podcast_episode_model.dart';
+import '../../core/utils/episode_description_helper.dart';
 
 /// Simplified episode card without podcast image and name (for episodes list page)
 class SimplifiedEpisodeCard extends ConsumerWidget {
@@ -17,6 +18,12 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Get display description: AI summary main topics or plain shownotes
+    final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
+      aiSummary: episode.aiSummary,
+      description: episode.description,
+    );
+
     return Card(
       margin: const EdgeInsets.all(6),
       child: InkWell(
@@ -107,10 +114,11 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
               ),
 
               // Description - expanded to fill remaining space
-              if (episode.description != null) ...[
+              // Display description: AI summary main topics or plain shownotes
+              if (displayDescription.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
-                    episode.description!,
+                    displayDescription,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),

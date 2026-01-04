@@ -8,6 +8,7 @@ import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../widgets/add_podcast_dialog.dart';
 import '../widgets/bulk_import_dialog.dart';
+import '../../core/utils/episode_description_helper.dart';
 
 /// Material Design 3自适应Feed页面
 class PodcastFeedPage extends ConsumerStatefulWidget {
@@ -218,6 +219,12 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   /// 构建移动端卡片
   Widget _buildMobileCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
+    // Get display description: AI summary main topics or plain shownotes
+    final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
+      aiSummary: episode.aiSummary,
+      description: episode.description,
+    );
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: InkWell(
@@ -366,10 +373,11 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                   ),
                 ],
               ),
-              if (episode.description != null) ...[
+              // Display description: AI summary main topics or plain shownotes
+              if (displayDescription.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(
-                  episode.description!,
+                  displayDescription,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -454,6 +462,12 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   /// 构建桌面端卡片（使用小图标布局）
   Widget _buildDesktopCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
+    // Get display description: AI summary main topics or plain shownotes
+    final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
+      aiSummary: episode.aiSummary,
+      description: episode.description,
+    );
+
     return Card(
       child: InkWell(
         onTap: () {
@@ -525,11 +539,11 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
               ),
 
               // 描述 - 自适应填充剩余高度
-              if (episode.description != null) ...[
+              if (displayDescription.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Expanded(
                   child: Text(
-                    episode.description!,
+                    displayDescription,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),

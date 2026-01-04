@@ -343,31 +343,34 @@ class _PodcastEpisodeDetailPageState
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // 返回按钮
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                            width: 1,
+                      // 返回按钮 - 仅在非移动设备上显示
+                      // 注意：这里检测的是真正的平台类型，而不是屏幕宽度
+                      // 这样可以确保在桌面应用缩小窗口时仍然显示返回按钮
+                      if (!_isMobilePlatform())
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: IconButton(
+                            icon: Icon(
+                              Icons.arrow_back,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20,
+                            ),
+                            onPressed: () => context.pop(),
+                            tooltip: AppLocalizations.of(context)!.back_button,
+                            constraints: const BoxConstraints(
+                              minWidth: 36,
+                              minHeight: 36,
+                            ),
+                            padding: EdgeInsets.zero,
                           ),
                         ),
-                        child: IconButton(
-                          icon: Icon(
-                            Icons.arrow_back,
-                            color: Theme.of(context).colorScheme.primary,
-                            size: 20,
-                          ),
-                          onPressed: () => context.pop(),
-                          tooltip: AppLocalizations.of(context)!.back_button,
-                          constraints: const BoxConstraints(
-                            minWidth: 36,
-                            minHeight: 36,
-                          ),
-                          padding: EdgeInsets.zero,
-                        ),
-                      ),
                     ],
                   ),
                   // 第二行：发布时间、时长和源链接
@@ -1172,5 +1175,28 @@ class _PodcastEpisodeDetailPageState
     _summaryPollingTimer = null;
     _isPolling = false;
     debugPrint('⏹️ [AI SUMMARY] Stopped polling');
+  }
+
+  /// 检测是否是真正的移动设备平台
+  ///
+  /// 注意：这里检测的是平台类型，而不是屏幕宽度
+  /// - iOS 和 Android 平台返回 true（移动设备）
+  /// - Windows、macOS、Linux、Web 平台返回 false（桌面/Web）
+  ///
+  /// 这样可以确保在桌面应用缩小窗口时仍然显示返回按钮
+  bool _isMobilePlatform() {
+    // 使用 Theme.of(context).platform 检测平台类型
+    // 这检测的是真正的平台，而不是屏幕宽度
+    // 因此在桌面应用缩小窗口时仍然会返回 false
+    switch (Theme.of(context).platform) {
+      case TargetPlatform.iOS:
+      case TargetPlatform.android:
+        return true;
+      case TargetPlatform.windows:
+      case TargetPlatform.macOS:
+      case TargetPlatform.linux:
+      case TargetPlatform.fuchsia:
+        return false;
+    }
   }
 }

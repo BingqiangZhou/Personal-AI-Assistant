@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../../../../core/utils/time_formatter.dart';
+import '../../core/utils/episode_description_helper.dart';
 
 class FeedStyleEpisodeCard extends ConsumerWidget {
   final PodcastEpisodeModel episode;
@@ -18,6 +19,12 @@ class FeedStyleEpisodeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Get display description: AI summary main topics or plain shownotes
+    final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
+      aiSummary: episode.aiSummary,
+      description: episode.description,
+    );
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: InkWell(
@@ -146,10 +153,11 @@ class FeedStyleEpisodeCard extends ConsumerWidget {
                   ),
                 ],
               ),
-              if (episode.description != null) ...[
+              // Display description: AI summary main topics or plain shownotes
+              if (displayDescription.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(
-                  episode.description!,
+                  displayDescription,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
