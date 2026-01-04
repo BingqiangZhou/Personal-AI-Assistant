@@ -211,9 +211,13 @@ class _PodcastEpisodeDetailPageState
 
   // A. 顶部元数据区 (Header) - 无底部分割线
   Widget _buildHeader(dynamic episode) {
+    // 获取顶部安全区域高度（状态栏高度）
+    final topPadding = MediaQuery.of(context).padding.top;
+    // 确保至少有 8 像素的基础间距
+    final totalTopPadding = topPadding > 0 ? topPadding + 8.0 : 8.0;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: EdgeInsets.only(top: totalTopPadding),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         color: Theme.of(context).colorScheme.surface,
