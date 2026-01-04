@@ -901,9 +901,9 @@
     "description": "筛选已播放剧集"
   },
 
-  "podcast_filter_with_summary": "有 AI 摘要",
+  "podcast_filter_with_summary": "摘要",
   "@podcast_filter_with_summary": {
-    "description": "筛选有 AI 摘要的剧集"
+    "description": "摘要标签"
   },
 
   "podcast_mark_all_played": "全部标记为已播放",
@@ -921,7 +921,7 @@
     "description": "无剧集状态"
   },
 
-  "podcast_no_episodes_with_summary": "没有带 AI 摘要的剧集",
+  "podcast_no_episodes_with_summary": "没有带摘要的剧集",
   "@podcast_no_episodes_with_summary": {
     "description": "无带摘要剧集状态"
   },
@@ -966,7 +966,7 @@
     "description": "仅已播放筛选选项"
   },
 
-  "podcast_only_with_summary": "仅显示有 AI 摘要的剧集",
+  "podcast_only_with_summary": "仅显示有摘要的剧集",
   "@podcast_only_with_summary": {
     "description": "仅显示有摘要筛选选项"
   },
@@ -2600,5 +2600,20 @@
   "podcast_player_playback_speed": "播放速度",
   "@podcast_player_playback_speed": {
     "description": "播放速度选择器提示"
+  },
+
+  "podcast_play_episode": "播放",
+  "@podcast_play_episode": {
+    "description": "播放按钮标签（移动端简短版本）"
+  },
+
+  "podcast_play_episode_full": "播放此集",
+  "@podcast_play_episode_full": {
+    "description": "播放此集按钮标签（桌面端完整版本）"
+  },
+
+  "podcast_source": "来源",
+  "@podcast_source": {
+    "description": "来源链接标签"
   }
 }

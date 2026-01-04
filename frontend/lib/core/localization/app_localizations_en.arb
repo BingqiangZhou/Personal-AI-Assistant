@@ -901,9 +901,9 @@
     "description": "Filter played episodes"
   },
 
-  "podcast_filter_with_summary": "With AI Summary",
+  "podcast_filter_with_summary": "Summary",
   "@podcast_filter_with_summary": {
-    "description": "Filter episodes with AI summary"
+    "description": "Summary label"
   },
 
   "podcast_mark_all_played": "Mark All as Played",
@@ -921,7 +921,7 @@
     "description": "No episodes state"
   },
 
-  "podcast_no_episodes_with_summary": "No Episodes with AI Summary",
+  "podcast_no_episodes_with_summary": "No Episodes with Summary",
   "@podcast_no_episodes_with_summary": {
     "description": "No episodes with summary state"
   },
@@ -966,7 +966,7 @@
     "description": "Played only filter option"
   },
 
-  "podcast_only_with_summary": "Only episodes with AI Summary",
+  "podcast_only_with_summary": "Only episodes with Summary",
   "@podcast_only_with_summary": {
     "description": "Only with summary filter option"
   },
@@ -2600,5 +2600,20 @@
   "podcast_player_playback_speed": "Playback Speed",
   "@podcast_player_playback_speed": {
     "description": "Playback speed selector tooltip"
+  },
+
+  "podcast_play_episode": "Play",
+  "@podcast_play_episode": {
+    "description": "Play button label (short version for mobile)"
+  },
+
+  "podcast_play_episode_full": "Play this episode",
+  "@podcast_play_episode_full": {
+    "description": "Play this episode button label (full version for desktop)"
+  },
+
+  "podcast_source": "Source",
+  "@podcast_source": {
+    "description": "Source link label"
   }
 }

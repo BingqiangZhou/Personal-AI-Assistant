@@ -1148,10 +1148,10 @@ abstract class AppLocalizations {
   /// **'Played'**
   String get podcast_filter_played;
 
-  /// Filter episodes with AI summary
+  /// Summary label
   ///
   /// In en, this message translates to:
-  /// **'With AI Summary'**
+  /// **'Summary'**
   String get podcast_filter_with_summary;
 
   /// Mark all as played option
@@ -1175,7 +1175,7 @@ abstract class AppLocalizations {
   /// No episodes with summary state
   ///
   /// In en, this message translates to:
-  /// **'No Episodes with AI Summary'**
+  /// **'No Episodes with Summary'**
   String get podcast_no_episodes_with_summary;
 
   /// Try adjusting filters hint
@@ -1229,7 +1229,7 @@ abstract class AppLocalizations {
   /// Only with summary filter option
   ///
   /// In en, this message translates to:
-  /// **'Only episodes with AI Summary'**
+  /// **'Only episodes with Summary'**
   String get podcast_only_with_summary;
 
   /// Apply button label
@@ -3139,6 +3139,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Playback Speed'**
   String get podcast_player_playback_speed;
+
+  /// Play button label (short version for mobile)
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get podcast_play_episode;
+
+  /// Play this episode button label (full version for desktop)
+  ///
+  /// In en, this message translates to:
+  /// **'Play this episode'**
+  String get podcast_play_episode_full;
+
+  /// Source link label
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get podcast_source;
 }
 
 class _AppLocalizationsDelegate

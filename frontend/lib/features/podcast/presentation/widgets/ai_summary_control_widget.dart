@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../providers/summary_providers.dart';
 import '../../../podcast/data/models/podcast_playback_model.dart';
 
@@ -153,7 +154,7 @@ class _AISummaryControlWidgetState
         ElevatedButton.icon(
           onPressed: _generateSummary,
           icon: const Icon(Icons.auto_awesome),
-          label: const Text('Generate AI Summary'),
+          label: Text(AppLocalizations.of(context)!.podcast_filter_with_summary),
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             backgroundColor: Theme.of(context).colorScheme.primary,

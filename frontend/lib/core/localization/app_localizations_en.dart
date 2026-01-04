@@ -539,7 +539,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_filter_played => 'Played';
 
   @override
-  String get podcast_filter_with_summary => 'With AI Summary';
+  String get podcast_filter_with_summary => 'Summary';
 
   @override
   String get podcast_mark_all_played => 'Mark All as Played';
@@ -551,7 +551,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_no_episodes => 'No Episodes Found';
 
   @override
-  String get podcast_no_episodes_with_summary => 'No Episodes with AI Summary';
+  String get podcast_no_episodes_with_summary => 'No Episodes with Summary';
 
   @override
   String get podcast_try_adjusting_filters => 'Try adjusting your filters';
@@ -579,7 +579,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_played_only => 'Played Only';
 
   @override
-  String get podcast_only_with_summary => 'Only episodes with AI Summary';
+  String get podcast_only_with_summary => 'Only episodes with Summary';
 
   @override
   String get podcast_apply => 'Apply';
@@ -1617,4 +1617,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcast_player_playback_speed => 'Playback Speed';
+
+  @override
+  String get podcast_play_episode => 'Play';
+
+  @override
+  String get podcast_play_episode_full => 'Play this episode';
+
+  @override
+  String get podcast_source => 'Source';
 }

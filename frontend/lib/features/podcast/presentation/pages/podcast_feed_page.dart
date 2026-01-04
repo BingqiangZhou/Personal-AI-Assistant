@@ -238,8 +238,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 播放按钮
-                  // 播放按钮
+                  // 播放按钮图标
                   Container(
                     width: 48,
                     height: 48,
@@ -257,9 +256,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Icon(
-                                    episode.isPlayed
-                                        ? Icons.play_arrow
-                                        : Icons.play_circle_filled,
+                                    Icons.podcasts,
                                     color: Theme.of(
                                       context,
                                     ).colorScheme.onPrimaryContainer,
@@ -267,9 +264,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                   ),
                             )
                           : Icon(
-                              episode.isPlayed
-                                  ? Icons.play_arrow
-                                  : Icons.play_circle_filled,
+                              Icons.podcasts,
                               color: Theme.of(
                                 context,
                               ).colorScheme.onPrimaryContainer,
@@ -424,13 +419,20 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     ),
                   ),
                   FilledButton.tonal(
-                    onPressed: () {
-                      PodcastNavigation.goToEpisodeDetail(
-                        context,
-                        episodeId: episode.id,
-                        subscriptionId: episode.subscriptionId,
-                        episodeTitle: episode.title,
-                      );
+                    onPressed: () async {
+                      // 播放分集
+                      await ref
+                          .read(audioPlayerProvider.notifier)
+                          .playEpisode(episode);
+                      // 跳转到详情页
+                      if (context.mounted) {
+                        PodcastNavigation.goToEpisodeDetail(
+                          context,
+                          episodeId: episode.id,
+                          subscriptionId: episode.subscriptionId,
+                          episodeTitle: episode.title,
+                        );
+                      }
                     },
                     child: Text(l10n.podcast_play),
                   ),
@@ -610,12 +612,22 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // 右侧：Play 按钮
+                  // 右侧：Play 按钮（播放并跳转到详情页）
                   FilledButton.tonal(
-                    onPressed: () {
-                      ref
+                    onPressed: () async {
+                      // 播放分集
+                      await ref
                           .read(audioPlayerProvider.notifier)
                           .playEpisode(episode);
+                      // 跳转到详情页
+                      if (context.mounted) {
+                        PodcastNavigation.goToEpisodeDetail(
+                          context,
+                          episodeId: episode.id,
+                          subscriptionId: episode.subscriptionId,
+                          episodeTitle: episode.title,
+                        );
+                      }
                     },
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(70, 36),

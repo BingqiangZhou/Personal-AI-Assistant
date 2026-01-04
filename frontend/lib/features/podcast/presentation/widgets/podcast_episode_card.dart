@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../../../core/utils/time_formatter.dart';
 import 'podcast_image_widget.dart';
@@ -172,7 +173,32 @@ class PodcastEpisodeCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  // Play button removed for Feed page - only show in detail page
+                  // Play button - only show if onPlay callback is provided
+                  if (onPlay != null)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: theme.primaryColor.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: IconButton(
+                        icon: Icon(
+                          Icons.play_arrow,
+                          color: theme.primaryColor,
+                          size: 24,
+                        ),
+                        onPressed: onPlay,
+                        tooltip: 'Play',
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                        padding: const EdgeInsets.all(8),
+                      ),
+                    ),
                 ],
               ),
               // Description (if available)
@@ -204,7 +230,7 @@ class PodcastEpisodeCard extends ConsumerWidget {
                       _buildMetadataItem(
                         context,
                         Icons.summarize,
-                        'AI Summary',
+                        AppLocalizations.of(context)!.podcast_filter_with_summary,
                         color: Colors.green,
                       ),
                     ],

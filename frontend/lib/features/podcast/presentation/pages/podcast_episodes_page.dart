@@ -361,9 +361,16 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                             );
                                           },
                                           onPlay: () async {
+                                            // 播放分集
                                             await ref
                                                 .read(audioPlayerProvider.notifier)
                                                 .playEpisode(episode);
+                                            // 跳转到详情页
+                                            if (mounted) {
+                                              context.push(
+                                                '/podcast/episode/detail/${episode.id}',
+                                              );
+                                            }
                                           },
                                         );
                                       },
@@ -402,9 +409,16 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                           );
                                         },
                                         onPlay: () async {
+                                          // 播放分集
                                           await ref
                                               .read(audioPlayerProvider.notifier)
                                               .playEpisode(episode);
+                                          // 跳转到详情页
+                                          if (mounted) {
+                                            context.push(
+                                              '/podcast/episode/detail/${episode.id}',
+                                            );
+                                          }
                                         },
                                       );
                                     },

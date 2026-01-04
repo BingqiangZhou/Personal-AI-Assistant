@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_conversation_model.dart';
 import '../providers/conversation_providers.dart';
 
@@ -262,7 +263,7 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'AI Summary',
+                          AppLocalizations.of(context)!.podcast_filter_with_summary,
                           style: Theme.of(context).textTheme.labelMedium?.copyWith(
                                 color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.w600,

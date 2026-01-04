@@ -536,13 +536,13 @@ class _ExpandedPlayerContent extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Collapse button on the left
+              // Close button on the left
               IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed: onCollapse,
+                icon: const Icon(Icons.close),
+                onPressed: onClose,
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 padding: EdgeInsets.zero,
-                tooltip: l10n.podcast_player_collapse,
+                tooltip: 'Close',
               ),
               // Only show spacing and title if width allows
               if (showTitle) const SizedBox(width: 8),
@@ -564,13 +564,13 @@ class _ExpandedPlayerContent extends StatelessWidget {
               if (showTitle) const SizedBox(width: 8),
               // Add spacer if title is hidden
               if (!showTitle) const Spacer(),
-              // Close button on the right
+              // Collapse button on the right
               IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: onClose,
+                icon: const Icon(Icons.chevron_right),
+                onPressed: onCollapse,
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 padding: EdgeInsets.zero,
-                tooltip: 'Close',
+                tooltip: l10n.podcast_player_collapse,
               ),
             ],
           ),

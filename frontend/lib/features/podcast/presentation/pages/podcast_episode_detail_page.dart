@@ -37,9 +37,8 @@ class _PodcastEpisodeDetailPageState
   @override
   void initState() {
     super.initState();
-    // Auto-play episode when page loads
+    // Don't auto-play episode when page loads - user must click play button
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadAndPlayEpisode();
       _loadTranscriptionStatus();
     });
   }
@@ -215,6 +214,7 @@ class _PodcastEpisodeDetailPageState
     final topPadding = MediaQuery.of(context).padding.top;
     // 确保至少有 8 像素的基础间距
     final totalTopPadding = topPadding > 0 ? topPadding + 8.0 : 8.0;
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: EdgeInsets.only(top: totalTopPadding),
@@ -239,107 +239,212 @@ class _PodcastEpisodeDetailPageState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // 第一行：标题 + 链接图标
+                  // 第一行：标题 + 播放按钮
                   Row(
                     children: [
+                      // 标题和播放按钮放在一起
                       Expanded(
-                        child: Wrap(
-                          alignment: WrapAlignment.start,
-                          crossAxisAlignment: WrapCrossAlignment.center,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              episode.title ?? 'Unknown Episode',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onSurface,
+                            Flexible(
+                              child: Text(
+                                episode.title ?? 'Unknown Episode',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            // 分集链接图标
-                            if (episode.itemLink != null && episode.itemLink!.isNotEmpty)
-                                                              InkWell(
-                                                                onTap: () async {
-                                                                  final Uri linkUri = Uri.parse(episode.itemLink!);
-                                                                  if (await canLaunchUrl(linkUri)) {
-                                                                    await launchUrl(
-                                                                      linkUri,
-                                                                      mode: LaunchMode.externalApplication,
-                                                                    );
-                                                                  }
-                                                                },
-                                                                child: Padding(
-                                                                  padding: const EdgeInsets.only(left: 6, right: 4),
-                                                                  child: Icon(
-                                                                    Icons.link,
-                                                                    size: 16,
-                                                                    color: Theme.of(context).colorScheme.primary,
-                                                                  ),
-                                                                ),
-                                                              ),
+                            const SizedBox(width: 8),
+                            // 播放按钮
+                            InkWell(
+                              onTap: () async {
+                                try {
+                                  final episodeDetailAsync = await ref.read(
+                                    episodeDetailProvider(widget.episodeId).future,
+                                  );
+                                  if (episodeDetailAsync != null) {
+                                    final episodeModel = PodcastEpisodeModel(
+                                      id: episodeDetailAsync.id,
+                                      subscriptionId: episodeDetailAsync.subscriptionId,
+                                      subscriptionImageUrl: episodeDetailAsync.subscriptionImageUrl,
+                                      title: episodeDetailAsync.title,
+                                      description: episodeDetailAsync.description,
+                                      audioUrl: episodeDetailAsync.audioUrl,
+                                      audioDuration: episodeDetailAsync.audioDuration,
+                                      audioFileSize: episodeDetailAsync.audioFileSize,
+                                      publishedAt: episodeDetailAsync.publishedAt,
+                                      imageUrl: episodeDetailAsync.imageUrl,
+                                      itemLink: episodeDetailAsync.itemLink,
+                                      transcriptUrl: episodeDetailAsync.transcriptUrl,
+                                      transcriptContent: episodeDetailAsync.transcriptContent,
+                                      aiSummary: episodeDetailAsync.aiSummary,
+                                      summaryVersion: episodeDetailAsync.summaryVersion,
+                                      aiConfidenceScore: episodeDetailAsync.aiConfidenceScore,
+                                      playCount: episodeDetailAsync.playCount,
+                                      lastPlayedAt: episodeDetailAsync.lastPlayedAt,
+                                      season: episodeDetailAsync.season,
+                                      episodeNumber: episodeDetailAsync.episodeNumber,
+                                      explicit: episodeDetailAsync.explicit,
+                                      status: episodeDetailAsync.status,
+                                      metadata: episodeDetailAsync.metadata,
+                                      playbackPosition: episodeDetailAsync.playbackPosition,
+                                      isPlaying: episodeDetailAsync.isPlaying,
+                                      playbackRate: episodeDetailAsync.playbackRate,
+                                      isPlayed: episodeDetailAsync.isPlayed ?? false,
+                                      createdAt: episodeDetailAsync.createdAt,
+                                      updatedAt: episodeDetailAsync.updatedAt,
+                                    );
+                                    await ref.read(audioPlayerProvider.notifier).playEpisode(episodeModel);
+                                  }
+                                } catch (error) {
+                                  debugPrint('❌ Failed to play episode: $error');
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.play_arrow,
+                                      size: 18,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      // 根据屏幕宽度显示不同文本：移动端显示"播放"，桌面端显示"播放此集"
+                                      MediaQuery.of(context).size.width < 600
+                                          ? l10n.podcast_play_episode
+                                          : l10n.podcast_play_episode_full,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: Theme.of(context).colorScheme.primary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
+                      const SizedBox(width: 8),
                       // 返回按钮
                       Container(
-                                                        decoration: BoxDecoration(
-                                                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                                                          borderRadius: BorderRadius.circular(8),
-                                                          border: Border.all(
-                                                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                                                            width: 1,
-                                                          ),
-                                                        ),
-                                                        child: IconButton(
-                                                          icon: Icon(
-                                                            Icons.arrow_back,
-                                                            color: Theme.of(context).colorScheme.primary,
-                                                            size: 20,
-                                                          ),
-                                                          onPressed: () => context.pop(),
-                                                          tooltip: AppLocalizations.of(context)!.back_button,
-                                                          constraints: const BoxConstraints(
-                                                            minWidth: 36,
-                                                            minHeight: 36,
-                                                          ),
-                                                          padding: EdgeInsets.zero,
-                                                        ),
-                                                      ),
-                    ],
-                  ),
-                  // 第二行：发布时间和时长
-                  Row(
-                    children: [
-                      // Published date
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        _formatDate(episode.publishedAt),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      // Duration
-                      if (episode.audioDuration != null) ...[
-                        Icon(
-                          Icons.schedule_outlined,
-                          size: 14,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          episode.formattedDuration,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                            width: 1,
                           ),
                         ),
-                      ],
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.arrow_back,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 20,
+                          ),
+                          onPressed: () => context.pop(),
+                          tooltip: AppLocalizations.of(context)!.back_button,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // 第二行：发布时间、时长和源链接
+                  Wrap(
+                    spacing: 16,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      // Published date
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.calendar_today_outlined,
+                            size: 14,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _formatDate(episode.publishedAt),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Duration
+                      if (episode.audioDuration != null)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.schedule_outlined,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              episode.formattedDuration,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      // Source link
+                      if (episode.itemLink != null && episode.itemLink!.isNotEmpty)
+                        InkWell(
+                          onTap: () async {
+                            final Uri linkUri = Uri.parse(episode.itemLink!);
+                            if (await canLaunchUrl(linkUri)) {
+                              await launchUrl(
+                                linkUri,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            }
+                          },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.link,
+                                size: 14,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                l10n.podcast_source,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ],
@@ -430,7 +535,7 @@ class _PodcastEpisodeDetailPageState
             }),
             const SizedBox(width: 8),
             // AI Summary Tab
-            _buildTabButton('AI Summary', _selectedTabIndex == 2, () {
+            _buildTabButton(AppLocalizations.of(context)!.podcast_filter_with_summary, _selectedTabIndex == 2, () {
               if (_selectedTabIndex != 2) {
                 setState(() {
                   _selectedTabIndex = 2;
@@ -491,7 +596,7 @@ class _PodcastEpisodeDetailPageState
           }),
           const SizedBox(height: 8),
           // AI Summary Tab
-          _buildSidebarTabButton('AI Summary', _selectedTabIndex == 2, () {
+          _buildSidebarTabButton(AppLocalizations.of(context)!.podcast_filter_with_summary, _selectedTabIndex == 2, () {
             if (_selectedTabIndex != 2) {
               setState(() {
                 _selectedTabIndex = 2;
@@ -728,7 +833,7 @@ class _PodcastEpisodeDetailPageState
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'AI Summary',
+                          AppLocalizations.of(context)!.podcast_filter_with_summary,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -795,7 +900,7 @@ class _PodcastEpisodeDetailPageState
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'AI Summary',
+                          AppLocalizations.of(context)!.podcast_filter_with_summary,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

@@ -534,7 +534,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_filter_played => '已播放';
 
   @override
-  String get podcast_filter_with_summary => '有 AI 摘要';
+  String get podcast_filter_with_summary => '摘要';
 
   @override
   String get podcast_mark_all_played => '全部标记为已播放';
@@ -546,7 +546,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_no_episodes => '未找到剧集';
 
   @override
-  String get podcast_no_episodes_with_summary => '没有带 AI 摘要的剧集';
+  String get podcast_no_episodes_with_summary => '没有带摘要的剧集';
 
   @override
   String get podcast_try_adjusting_filters => '尝试调整您的筛选条件';
@@ -573,7 +573,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_played_only => '仅已播放';
 
   @override
-  String get podcast_only_with_summary => '仅显示有 AI 摘要的剧集';
+  String get podcast_only_with_summary => '仅显示有摘要的剧集';
 
   @override
   String get podcast_apply => '应用';
@@ -1577,4 +1577,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get podcast_player_playback_speed => '播放速度';
+
+  @override
+  String get podcast_play_episode => '播放';
+
+  @override
+  String get podcast_play_episode_full => '播放此集';
+
+  @override
+  String get podcast_source => '来源';
 }
