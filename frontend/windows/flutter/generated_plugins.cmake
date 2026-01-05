@@ -3,10 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  audioplayers_windows
   desktop_drop
   file_selector_windows
   flutter_secure_storage_windows
+  permission_handler_windows
   url_launcher_windows
 )
 

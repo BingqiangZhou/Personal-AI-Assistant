@@ -2,13 +2,12 @@ package com.example.personal_ai_assistant
 
 import android.os.Build
 import android.os.Bundle
-import android.window.SplashScreenView
 import androidx.annotation.NonNull
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugins.GeneratedPluginRegistrant
 
-class MainActivity : FlutterActivity() {
+class MainActivity : AudioServiceActivity() {
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         GeneratedPluginRegistrant.registerWith(flutterEngine)
     }
@@ -23,5 +22,24 @@ class MainActivity : FlutterActivity() {
             }
         }
         super.onCreate(savedInstanceState)
+    }
+
+    override fun onDestroy() {
+        // CRITICAL: Ensure AudioService is properly released when activity is destroyed
+        // This prevents the service from running indefinitely after app exit
+        try {
+            // AudioService will be cleaned up by Flutter's dispose method
+            super.onDestroy()
+        } catch (e: Exception) {
+            // Log but don't crash
+            android.util.Log.e("MainActivity", "Error in onDestroy", e)
+            super.onDestroy()
+        }
+    }
+
+    override fun onStop() {
+        // Called when the activity is no longer visible to the user
+        // This happens when app is minimized or another app is opened
+        super.onStop()
     }
 }

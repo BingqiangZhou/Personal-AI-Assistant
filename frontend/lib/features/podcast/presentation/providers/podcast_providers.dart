@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:audio_service/audio_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../../../main.dart' as main_app;
+import 'audio_handler.dart';
 
 import '../../../../core/providers/core_providers.dart';
 import '../../../../core/network/exceptions/network_exceptions.dart';
@@ -32,207 +35,216 @@ final podcastRepositoryProvider = Provider<PodcastRepository>((ref) {
 final audioPlayerProvider = NotifierProvider<AudioPlayerNotifier, AudioPlayerState>(AudioPlayerNotifier.new);
 
 class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
-  AudioPlayer? _player;
   late PodcastRepository _repository;
   bool _isDisposed = false;
+  bool _isPlayingEpisode = false;
+  StreamSubscription? _playerStateSubscription;
+  StreamSubscription? _positionSubscription;
+  StreamSubscription? _durationSubscription;
+
+  PodcastAudioHandler get _audioHandler => main_app.audioHandler as PodcastAudioHandler;
 
   @override
   AudioPlayerState build() {
     _repository = ref.read(podcastRepositoryProvider);
     _isDisposed = false;
 
-    // Initialize audio player
-    _initializePlayer();
+    _setupListeners();
 
-    // Clean up when provider is disposed
     ref.onDispose(() {
       _isDisposed = true;
-      _player?.dispose();
+      _playerStateSubscription?.cancel();
+      _positionSubscription?.cancel();
+      _durationSubscription?.cancel();
     });
 
     return const AudioPlayerState();
   }
 
-  Future<void> _initializePlayer() async {
-    if (_player != null || _isDisposed) return;
+  void _setupListeners() {
+    if (_isDisposed) return;
 
-    try {
-      _player = AudioPlayer();
-
-      // Listen to player state changes
-      _player!.onPlayerStateChanged.listen((playerState) {
-        if (_isDisposed || !ref.mounted) return;
-
-        if (kDebugMode) {
-          debugPrint('🎵 Player state changed: $playerState');
-        }
-
-        ProcessingState processingState;
-        switch (playerState) {
-          case PlayerState.stopped:
-          case PlayerState.completed:
-            processingState = ProcessingState.completed;
-            break;
-          case PlayerState.playing:
-            processingState = ProcessingState.ready;
-            break;
-          case PlayerState.paused:
-            processingState = ProcessingState.ready;
-            break;
-          case PlayerState.disposed:
-            processingState = ProcessingState.idle;
-            break;
-        }
-
-        state = state.copyWith(
-          isPlaying: playerState == PlayerState.playing,
-          isLoading: false,
-          processingState: processingState,
-        );
-      });
-
-      // Listen to position changes
-      _player!.onPositionChanged.listen((position) {
-        if (_isDisposed || !ref.mounted) return;
-
-        state = state.copyWith(
-          position: position.inMilliseconds,
-        );
-      });
-
-      // Listen to duration changes
-      _player!.onDurationChanged.listen((duration) {
-        if (_isDisposed || !ref.mounted) return;
-
-        if (duration != null) {
-          if (kDebugMode) {
-            debugPrint('🎵 Duration updated: ${duration.inMilliseconds}ms');
-          }
-
-          state = state.copyWith(
-            duration: duration.inMilliseconds,
-          );
-        }
-      });
+    _playerStateSubscription = _audioHandler.playbackState.listen((playbackState) {
+      if (_isDisposed || !ref.mounted) return;
 
       if (kDebugMode) {
-        debugPrint('🎵 AudioPlayers player initialized successfully');
+        debugPrint('🎵 Playback state changed: playing=${playbackState.playing}');
       }
-    } catch (error) {
-      debugPrint('Failed to initialize audio player: $error');
-      if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(
-          error: 'Failed to initialize audio player: $error'
-        );
+
+      // Always update state regardless of _isPlayingEpisode
+      // This ensures UI stays in sync with actual playback state
+      state = state.copyWith(
+        isPlaying: playbackState.playing,
+        isLoading: false,
+      );
+    });
+
+    _positionSubscription = AudioService.position.listen((position) {
+      if (_isDisposed || !ref.mounted) return;
+
+      state = state.copyWith(
+        position: position.inMilliseconds,
+      );
+    });
+
+    _durationSubscription = _audioHandler.mediaItem.listen((mediaItem) {
+      if (_isDisposed || !ref.mounted) return;
+
+      // CRITICAL: Always update duration, even if null (to handle initial state)
+      // When duration is extracted from audio stream, it will be non-null and update correctly
+      if (mediaItem != null) {
+        final newDuration = mediaItem.duration?.inMilliseconds ?? 0;
+        // Only update if duration changed (avoid unnecessary rebuilds)
+        if (state.duration != newDuration) {
+          if (kDebugMode) {
+            debugPrint('🎵 [DURATION LISTENER] Duration changing: ${state.duration}ms -> ${newDuration}ms');
+            debugPrint('   MediaItem.id: ${mediaItem.id}');
+            debugPrint('   MediaItem.title: ${mediaItem.title}');
+            debugPrint('   MediaItem.duration: ${mediaItem.duration}');
+            debugPrint('   state.currentEpisode?.id: ${state.currentEpisode?.id}');
+          }
+          state = state.copyWith(duration: newDuration);
+          if (kDebugMode) {
+            debugPrint('   ✅ State updated: state.duration = ${state.duration}ms');
+            debugPrint('   ✅ Formatted duration: ${state.formattedDuration}');
+          }
+        }
+      } else {
+        if (kDebugMode) {
+          debugPrint('⚠️ [DURATION LISTENER] mediaItem is null, skipping update');
+        }
       }
-      rethrow;
+    });
+
+    if (kDebugMode) {
+      debugPrint('🎵 AudioService listeners set up successfully');
     }
   }
 
   Future<void> playEpisode(PodcastEpisodeModel episode) async {
+    if (_isPlayingEpisode) {
+      debugPrint('⚠️ playEpisode already in progress, ignoring duplicate call');
+      return;
+    }
+
+    _isPlayingEpisode = true;
+
     try {
-      // Debug: Print audio URL
       debugPrint('🎵 ===== playEpisode called =====');
       debugPrint('🎵 Episode ID: ${episode.id}');
       debugPrint('🎵 Episode Title: ${episode.title}');
       debugPrint('🎵 Audio URL: ${episode.audioUrl}');
       debugPrint('🎵 Subscription ID: ${episode.subscriptionId}');
 
-      // Check if provider is still mounted
-      if (!ref.mounted || _isDisposed) return;
-
-      // Ensure player is initialized (only once, reused for all episodes)
-      await _initializePlayer();
-
-      // Save current playback rate to restore later
-      final savedPlaybackRate = state.playbackRate;
-
-      // ===== STEP 1: Stop and clean up current state =====
-      debugPrint('🛑 Step 1: Stopping current playback and cleaning state');
-      if (_player != null) {
-        try {
-          await _player!.stop();
-          debugPrint('  ✅ Stopped');
-        } catch (e) {
-          debugPrint('  ⚠️ Stop error (ignorable): $e');
-        }
+      if (!ref.mounted || _isDisposed) {
+        _isPlayingEpisode = false;
+        return;
       }
 
-      // Reset state to clean values
+      final savedPlaybackRate = state.playbackRate;
+
+      // ===== STEP 1: Pause current playback instead of stop =====
+      // Using pause() instead of stop() to avoid clearing the audio source
+      // This maintains the media session state better
+      debugPrint('⏸️ Step 1: Pausing current playback');
+      try {
+        await _audioHandler.pause();
+        debugPrint('  ✅ Paused');
+      } catch (e) {
+        debugPrint('  ⚠️ Pause error (ignorable): $e');
+      }
+
       state = const AudioPlayerState().copyWith(
-        playbackRate: savedPlaybackRate, // Preserve user preference
+        playbackRate: savedPlaybackRate,
       );
 
-      // Check again after async operation
       if (!ref.mounted || _isDisposed) return;
 
-      // ===== STEP 2: Set new episode info =====
+      // ===== STEP 2: Set new episode info (DON'T mark as playing yet) =====
       debugPrint('📝 Step 2: Setting new episode info');
       state = state.copyWith(
         currentEpisode: episode,
         isLoading: true,
+        isPlaying: false, // Keep false until actually playing
         error: null,
       );
 
-      // ===== STEP 3: Set new audio source =====
-      debugPrint('🔄 Step 3: Setting new audio source');
-      debugPrint('  📡 URL: ${episode.audioUrl}');
+      // ===== STEP 3: Set MediaItem FIRST (before audio source) =====
+      // CRITICAL: Android MediaSession needs metadata BEFORE content loads
+      // This ensures the notification displays correct information when audio loads
+      // IMPORTANT: Don't set duration here - let just_audio extract it from the audio stream
+      debugPrint('🔄 Step 3: Setting MediaItem for system controls (before audio source)');
+      debugPrint('  📊 Episode.audioDuration: ${episode.audioDuration}ms (this value is NOT used, let audio stream extract duration)');
+      _audioHandler.mediaItem.add(MediaItem(
+        id: episode.id.toString(),
+        title: episode.title,
+        artist: episode.subscriptionTitle ?? 'Unknown Podcast',
+        artUri: episode.imageUrl != null ? Uri.parse(episode.imageUrl!) : null,
+        // Don't set duration - let just_audio extract it from audio stream
+        duration: null,
+      ));
+      debugPrint('  ✅ MediaItem set with duration=null (will be updated when audio loads)');
+
+      // Small delay to ensure MediaItem is set before audio loads
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      if (!ref.mounted || _isDisposed) return;
+
+      // ===== STEP 4: Set new audio source AFTER MediaItem =====
+      debugPrint('🔄 Step 4: Setting new audio source');
       try {
-        await _player!.setSource(UrlSource(episode.audioUrl));
+        await _audioHandler.setAudioSource(episode.audioUrl);
         debugPrint('  ✅ Source set successfully');
       } catch (loadError) {
         debugPrint('  ❌ Failed to set source: $loadError');
         throw Exception('Failed to load audio: $loadError');
       }
 
-      // Check again after async operation
       if (!ref.mounted || _isDisposed) return;
 
-      // ===== STEP 4: Restore playback position if available =====
+      // ===== STEP 5: Restore playback position =====
       if (episode.playbackPosition != null && episode.playbackPosition! > 0) {
-        debugPrint('⏩ Step 4: Seeking to saved position: ${episode.playbackPosition}ms');
+        debugPrint('⏩ Step 5: Seeking to saved position: ${episode.playbackPosition}ms');
         try {
-          await _player!.seek(Duration(milliseconds: episode.playbackPosition!));
+          await _audioHandler.seek(Duration(milliseconds: episode.playbackPosition!));
           debugPrint('  ✅ Seek completed');
         } catch (e) {
-          debugPrint('  ⚠️ Seek error (will play from start): $e');
+          debugPrint('  ⚠️ Seek error: $e');
         }
-      } else {
-        debugPrint('⏩ Step 4: No saved position, starting from beginning');
       }
 
-      // Check again after async operation
       if (!ref.mounted || _isDisposed) return;
 
-      // ===== STEP 5: Restore user preferences (playback rate) =====
+      // ===== STEP 6: Restore playback rate =====
       if (savedPlaybackRate != 1.0) {
-        debugPrint('⚙️ Step 5: Restoring playback rate: ${savedPlaybackRate}x');
+        debugPrint('⚙️ Step 6: Restoring playback rate: ${savedPlaybackRate}x');
         try {
-          await _player!.setPlaybackRate(savedPlaybackRate);
+          await _audioHandler.setSpeed(savedPlaybackRate);
           debugPrint('  ✅ Playback rate restored');
         } catch (e) {
           debugPrint('  ⚠️ Failed to restore playback rate: $e');
         }
       }
 
-      // ===== STEP 6: Start playback =====
-      debugPrint('▶️ Step 6: Starting playback');
+      // ===== STEP 7: Start playback =====
+      debugPrint('▶️ Step 7: Starting playback');
       try {
-        // Use resume() instead of play(UrlSource) since we already set the source
-        await _player!.resume();
+        await _audioHandler.play();
         debugPrint('  ✅ Playback started');
+
+        if (ref.mounted && !_isDisposed) {
+          state = state.copyWith(
+            isPlaying: true,
+            isLoading: false,
+            position: episode.playbackPosition ?? 0,
+            playbackRate: savedPlaybackRate,
+          );
+        }
       } catch (playError) {
         debugPrint('  ❌ Failed to start playback: $playError');
+        _isPlayingEpisode = false;
         throw Exception('Failed to start playback: $playError');
       }
-
-      // ===== STEP 7: Update final state =====
-      state = state.copyWith(
-        isPlaying: true,
-        isLoading: false,
-        position: episode.playbackPosition ?? 0,
-        playbackRate: savedPlaybackRate,
-      );
 
       debugPrint('🎵 ===== playEpisode completed =====');
 
@@ -242,16 +254,23 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           debugPrint('⚠️ Server update failed: $error');
         });
       }
+
+      // Release the lock
+      _isPlayingEpisode = false;
     } catch (error) {
       debugPrint('❌ ===== Failed to play episode =====');
       debugPrint('❌ Episode ID: ${episode.id}');
       debugPrint('❌ Audio URL: ${episode.audioUrl}');
       debugPrint('❌ Error: $error');
 
+      // Release the lock on error
+      _isPlayingEpisode = false;
+
       // Update error state
       if (ref.mounted && !_isDisposed) {
         state = state.copyWith(
           isLoading: false,
+          isPlaying: false, // Ensure playing is false on error
           error: 'Failed to play audio: $error',
         );
       }
@@ -259,84 +278,90 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }
 
   Future<void> pause() async {
-    if (_player == null || _isDisposed) return;
+    if (_isDisposed) return;
 
     try {
-      await _player!.pause();
+      debugPrint('🔴 pause() called, current isPlaying: ${state.isPlaying}');
+
+      // IMPORTANT: Don't manually update state here - let the playbackState listener handle it
+      // The listener will update the state when playbackState.playing changes
+      // This avoids race conditions where manual state gets overwritten
+
+      await _audioHandler.pause();
+      debugPrint('🔴 AudioHandler.pause() completed, waiting for playbackState listener to update UI');
+
       if (ref.mounted && !_isDisposed) {
         await _updatePlaybackStateOnServer();
       }
     } catch (error) {
+      debugPrint('❌ pause() error: $error');
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(
-          error: error.toString()
-        );
+        state = state.copyWith(error: error.toString());
       }
     }
   }
 
   Future<void> resume() async {
-    if (_player == null || _isDisposed) return;
+    if (_isDisposed) return;
 
     try {
-      await _player!.resume();
+      debugPrint('🟢 resume() called, current isPlaying: ${state.isPlaying}');
+
+      // IMPORTANT: Don't manually update state here - let the playbackState listener handle it
+      // The listener will update the state when playbackState.playing changes
+      // This avoids race conditions where manual state gets overwritten
+
+      await _audioHandler.play();
+      debugPrint('🟢 AudioHandler.play() completed, waiting for playbackState listener to update UI');
+
       if (ref.mounted && !_isDisposed) {
         await _updatePlaybackStateOnServer();
       }
     } catch (error) {
+      debugPrint('❌ resume() error: $error');
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(
-          error: error.toString()
-        );
+        state = state.copyWith(isPlaying: false, error: error.toString());
       }
     }
   }
 
   Future<void> seekTo(int position) async {
-    if (_player == null || _isDisposed) return;
+    if (_isDisposed) return;
 
     try {
-      await _player!.seek(Duration(milliseconds: position));
+      await _audioHandler.seek(Duration(milliseconds: position));
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(
-          position: position
-        );
+        state = state.copyWith(position: position);
         await _updatePlaybackStateOnServer();
       }
     } catch (error) {
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(
-          error: error.toString()
-        );
+        state = state.copyWith(error: error.toString());
       }
     }
   }
 
   Future<void> setPlaybackRate(double rate) async {
-    if (_player == null || _isDisposed) return;
+    if (_isDisposed) return;
 
     try {
-      await _player!.setPlaybackRate(rate);
+      await _audioHandler.setSpeed(rate);
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(
-          playbackRate: rate
-        );
+        state = state.copyWith(playbackRate: rate);
         await _updatePlaybackStateOnServer();
       }
     } catch (error) {
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(
-          error: error.toString()
-        );
+        state = state.copyWith(error: error.toString());
       }
     }
   }
 
   Future<void> stop() async {
-    if (_player == null || _isDisposed) return;
+    if (_isDisposed) return;
 
     try {
-      await _player!.stop();
+      await _audioHandler.stop();
       if (ref.mounted && !_isDisposed) {
         state = state.copyWith(
           clearCurrentEpisode: true,
@@ -346,9 +371,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       }
     } catch (error) {
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(
-          error: error.toString()
-        );
+        state = state.copyWith(error: error.toString());
       }
     }
   }

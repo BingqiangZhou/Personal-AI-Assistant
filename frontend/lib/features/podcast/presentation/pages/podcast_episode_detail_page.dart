@@ -399,23 +399,43 @@ class _PodcastEpisodeDetailPageState
                       ),
                       // Duration
                       if (episode.audioDuration != null)
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.schedule_outlined,
-                              size: 14,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              episode.formattedDuration,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final audioPlayerState = ref.watch(audioPlayerProvider);
+                            // Use audio player duration if available (more accurate), otherwise fall back to episode duration
+                            final displayDuration = (audioPlayerState.currentEpisode?.id == episode.id &&
+                                audioPlayerState.duration > 0)
+                                ? audioPlayerState.duration
+                                : episode.audioDuration!;
+                            final duration = Duration(milliseconds: displayDuration);
+                            final hours = duration.inHours;
+                            final minutes = duration.inMinutes.remainder(60);
+                            final seconds = duration.inSeconds.remainder(60);
+
+                            // Format as H:MM:SS or MM:SS depending on whether hours exist
+                            final formattedDuration = hours > 0
+                                ? '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}'
+                                : '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.schedule_outlined,
+                                  size: 14,
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  formattedDuration,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       // Source link
                       if (episode.itemLink != null && episode.itemLink!.isNotEmpty)

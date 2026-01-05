@@ -654,26 +654,41 @@ class _ExpandedPlayerContent extends StatelessWidget {
                                 maxLines: 1,
                               ),
                             ),
-                            if (episode.audioDuration != null) ...[
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.schedule_outlined,
-                                size: 12,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            if (episode.audioDuration != null)
+                              Consumer(
+                                builder: (context, ref, _) {
+                                  final audioPlayerState = ref.watch(audioPlayerProvider);
+                                  // Use audio player duration if available (more accurate), otherwise fall back to episode duration
+                                  final displayDuration = (audioPlayerState.currentEpisode?.id == episode.id &&
+                                      audioPlayerState.duration > 0)
+                                      ? audioPlayerState.duration
+                                      : episode.audioDuration!;
+
+                                  return Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const SizedBox(width: 8),
+                                      Icon(
+                                        Icons.schedule_outlined,
+                                        size: 12,
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Flexible(
+                                        child: Text(
+                                          _formatDuration(displayDuration),
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  _formatDuration(episode.audioDuration!),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                            ],
                           ],
                         ),
                       ),

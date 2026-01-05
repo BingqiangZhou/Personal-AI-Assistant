@@ -341,7 +341,16 @@ class AudioPlayerWidget extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(state.formattedPosition),
-                    Text(state.formattedDuration),
+                    // Debug: Show duration value
+                    Builder(
+                      builder: (context) {
+                        if (const bool.fromEnvironment('dart.vm.product') == false) {
+                          // Only log in debug mode
+                          debugPrint('🎵 [EXPANDED PLAYER] state.duration=${state.duration}ms, formatted=${state.formattedDuration}');
+                        }
+                        return Text(state.formattedDuration);
+                      },
+                    ),
                   ],
                 ),
               ),

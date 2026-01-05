@@ -101,10 +101,12 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
       title: Text(l10n.backend_api_server_config),
       content: SizedBox(
         width: 500,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        // FIX: Wrap in SingleChildScrollView to prevent overflow when keyboard is shown
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Connection status row (icon and text in same row) - width matches TextField
             SizedBox(
               width: double.infinity,
@@ -225,6 +227,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
               ],
             ),
           ],
+          ),
         ),
       ),
       actions: const [],

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:audio_service/audio_service.dart';
 
 import '../localization/locale_provider.dart';
 import '../providers/route_provider.dart';
@@ -12,6 +13,9 @@ import '../theme/app_colors.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/settings/presentation/providers/app_update_provider.dart';
 import '../../features/settings/presentation/widgets/update_dialog.dart';
+import '../../features/podcast/presentation/providers/audio_handler.dart';
+
+import '../../main.dart' as main_app;
 
 /// Splash screen widget that matches the Mindriver brand style
 class _SplashScreenWidget extends StatelessWidget {
@@ -118,6 +122,27 @@ class _PersonalAIAssistantAppState
     super.initState();
     _initializeApp();
     _setupRouteListener();
+  }
+
+  @override
+  void dispose() {
+    // CRITICAL: Release AudioService resources when app is disposed
+    // This ensures the foreground service and notification are properly cleaned up
+    _cleanupAudioService();
+    super.dispose();
+  }
+
+  /// Cleanup audio service resources
+  Future<void> _cleanupAudioService() async {
+    try {
+      // Stop playback - this will stop the audio and remove notification
+      // The AudioService foreground service will be stopped automatically
+      await main_app.audioHandler.stop();
+
+      debugPrint('✅ AudioService stopped and cleaned up');
+    } catch (e) {
+      debugPrint('⚠️ Error cleaning up AudioService: $e');
+    }
   }
 
   Future<void> _initializeApp() async {
