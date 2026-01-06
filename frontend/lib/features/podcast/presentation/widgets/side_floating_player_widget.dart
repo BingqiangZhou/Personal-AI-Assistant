@@ -23,6 +23,12 @@ class _SideFloatingPlayerWidgetState
   bool _isExpanded = false;
   final GlobalKey _playerKey = GlobalKey();
 
+  // Draggable position state
+  Offset _playerOffset = Offset.zero;
+  Offset _savedCollapsedOffset = Offset.zero; // Save position when expanding
+  Offset _dragStartOffset = Offset.zero;
+  Offset _dragStartPosition = Offset.zero;
+
   @override
   void initState() {
     super.initState();
@@ -34,6 +40,58 @@ class _SideFloatingPlayerWidgetState
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+    // Initialize position after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializePosition();
+    });
+  }
+
+  void _initializePosition() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final isMobile = screenWidth < 600;
+
+    // Default position: right side, vertically centered (or bottom for mobile)
+    final right = isMobile ? 16.0 : 24.0;
+    final top = isMobile ? screenHeight - 480 : (screenHeight - 200) / 2;
+
+    setState(() {
+      _playerOffset = Offset(screenWidth - right - 64, top);
+    });
+  }
+
+  /// Snap position to nearest edge
+  /// Always snaps to the closest edge among top, bottom, left, right
+  Offset _snapToEdge(Offset position, double playerWidth, double playerHeight, double screenWidth, double screenHeight) {
+    // Calculate distances to all four edges
+    final distanceToLeft = position.dx;
+    final distanceToRight = screenWidth - position.dx - playerWidth;
+    final distanceToTop = position.dy;
+    final distanceToBottom = screenHeight - position.dy - playerHeight;
+
+    // Find the minimum distance
+    final minDistance = [
+      distanceToLeft,
+      distanceToRight,
+      distanceToTop,
+      distanceToBottom,
+    ].reduce((a, b) => a < b ? a : b);
+
+    // Snap to the closest edge
+    double newX = position.dx;
+    double newY = position.dy;
+
+    if (minDistance == distanceToLeft) {
+      newX = 16; // Snap to left edge
+    } else if (minDistance == distanceToRight) {
+      newX = screenWidth - playerWidth - 16; // Snap to right edge
+    } else if (minDistance == distanceToTop) {
+      newY = 16; // Snap to top edge
+    } else if (minDistance == distanceToBottom) {
+      newY = screenHeight - playerHeight - 16; // Snap to bottom edge
+    }
+
+    return Offset(newX, newY);
   }
 
   @override
@@ -46,9 +104,15 @@ class _SideFloatingPlayerWidgetState
     setState(() {
       _isExpanded = !_isExpanded;
       if (_isExpanded) {
+        // Save current position before expanding
+        _savedCollapsedOffset = _playerOffset;
         _animationController.forward();
+        // Reset position to default when expanding
+        _initializePosition();
       } else {
         _animationController.reverse();
+        // Restore saved position when collapsing
+        _playerOffset = _savedCollapsedOffset;
       }
     });
   }
@@ -153,18 +217,54 @@ class _SideFloatingPlayerWidgetState
               )
             : Positioned(
                 key: _playerKey,
-                right: isMobile ? 16 : 24,
-                top: topPosition,
-                child: _buildPlayerContent(
-                  context,
-                  ref,
-                  audioPlayerState,
-                  l10n,
-                  isMobile,
-                  isTablet,
-                  collapsedWidth,
-                  expandedWidth,
-                  screenHeight,
+                left: _playerOffset.dx,
+                top: _playerOffset.dy,
+                child: GestureDetector(
+                  // Only enable drag when collapsed
+                  onPanStart: _isExpanded ? null : (details) {
+                    setState(() {
+                      _dragStartOffset = details.globalPosition;
+                      _dragStartPosition = _playerOffset;
+                    });
+                  },
+                  onPanUpdate: _isExpanded ? null : (details) {
+                    setState(() {
+                      final deltaX = details.globalPosition.dx - _dragStartOffset.dx;
+                      final deltaY = details.globalPosition.dy - _dragStartOffset.dy;
+                      _playerOffset = Offset(
+                        _dragStartPosition.dx + deltaX,
+                        _dragStartPosition.dy + deltaY,
+                      );
+                    });
+                  },
+                  onPanEnd: _isExpanded ? null : (details) {
+                    setState(() {
+                      // Calculate player size for snapping
+                      final currentWidth = _widthAnimation.value * (expandedWidth - collapsedWidth) + collapsedWidth;
+                      final playerHeight = !_isExpanded ? 64.0 : null;
+                      // Snap to edge
+                      if (playerHeight != null) {
+                        _playerOffset = _snapToEdge(
+                          _playerOffset,
+                          currentWidth,
+                          playerHeight,
+                          screenWidth,
+                          screenHeight,
+                        );
+                      }
+                    });
+                  },
+                  child: _buildPlayerContent(
+                    context,
+                    ref,
+                    audioPlayerState,
+                    l10n,
+                    isMobile,
+                    isTablet,
+                    collapsedWidth,
+                    expandedWidth,
+                    screenHeight,
+                  ),
                 ),
               ),
       ],
