@@ -1779,4 +1779,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcast_summary_no_summary => 'No summary available';
+
+  @override
+  String get podcast_summary_generate => 'Generate Summary';
+
+  @override
+  String get podcast_summary_transcription_required =>
+      'Transcription required to generate AI summary';
+
+  @override
+  String get podcast_advanced_options => 'Advanced Options';
+
+  @override
+  String get podcast_regenerate => 'Regenerate';
+
+  @override
+  String get podcast_ai_model => 'AI Model';
+
+  @override
+  String get podcast_default_model => 'Default';
+
+  @override
+  String get podcast_custom_prompt => 'Custom Prompt (Optional)';
+
+  @override
+  String get podcast_custom_prompt_hint => 'e.g., Focus on technical points...';
+
+  @override
+  String get podcast_generating_summary => 'Generating AI summary...';
+
+  @override
+  String get podcast_summary_chars => 'chars';
+
+  @override
+  String get theme_mode => 'Theme Mode';
+
+  @override
+  String get theme_mode_subtitle => 'Choose your preferred theme';
+
+  @override
+  String get theme_mode_follow_system => 'Follow System';
+
+  @override
+  String get theme_mode_light => 'Light';
+
+  @override
+  String get theme_mode_dark => 'Dark';
+
+  @override
+  String get theme_mode_select_title => 'Select Theme Mode';
+
+  @override
+  String theme_mode_changed(String mode) {
+    return 'Theme mode changed to $mode';
+  }
 }

@@ -2865,5 +2865,95 @@
   "podcast_summary_no_summary": "No summary available",
   "@podcast_summary_no_summary": {
     "description": "No summary available message"
+  },
+
+  "podcast_summary_generate": "Generate Summary",
+  "@podcast_summary_generate": {
+    "description": "Generate AI summary button"
+  },
+
+  "podcast_summary_transcription_required": "Transcription required to generate AI summary",
+  "@podcast_summary_transcription_required": {
+    "description": "Message when transcription is required"
+  },
+
+  "podcast_advanced_options": "Advanced Options",
+  "@podcast_advanced_options": {
+    "description": "Advanced options button"
+  },
+
+  "podcast_regenerate": "Regenerate",
+  "@podcast_regenerate": {
+    "description": "Regenerate summary button"
+  },
+
+  "podcast_ai_model": "AI Model",
+  "@podcast_ai_model": {
+    "description": "Model selector label"
+  },
+
+  "podcast_default_model": "Default",
+  "@podcast_default_model": {
+    "description": "Default model badge"
+  },
+
+  "podcast_custom_prompt": "Custom Prompt (Optional)",
+  "@podcast_custom_prompt": {
+    "description": "Prompt input field label"
+  },
+
+  "podcast_custom_prompt_hint": "e.g., Focus on technical points...",
+  "@podcast_custom_prompt_hint": {
+    "description": "Prompt input placeholder"
+  },
+
+  "podcast_generating_summary": "Generating AI summary...",
+  "@podcast_generating_summary": {
+    "description": "Loading text for summary generation"
+  },
+
+  "podcast_summary_chars": "chars",
+  "@podcast_summary_chars": {
+    "description": "Word count unit"
+  },
+
+  "theme_mode": "Theme Mode",
+  "@theme_mode": {
+    "description": "Theme mode setting label"
+  },
+
+  "theme_mode_subtitle": "Choose your preferred theme",
+  "@theme_mode_subtitle": {
+    "description": "Theme mode subtitle"
+  },
+
+  "theme_mode_follow_system": "Follow System",
+  "@theme_mode_follow_system": {
+    "description": "Option to follow system theme"
+  },
+
+  "theme_mode_light": "Light",
+  "@theme_mode_light": {
+    "description": "Light theme option"
+  },
+
+  "theme_mode_dark": "Dark",
+  "@theme_mode_dark": {
+    "description": "Dark theme option"
+  },
+
+  "theme_mode_select_title": "Select Theme Mode",
+  "@theme_mode_select_title": {
+    "description": "Theme mode selection dialog title"
+  },
+
+  "theme_mode_changed": "Theme mode changed to {mode}",
+  "@theme_mode_changed": {
+    "description": "Theme mode changed success message",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
   }
 }

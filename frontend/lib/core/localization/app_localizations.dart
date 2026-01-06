@@ -3433,6 +3433,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No summary available'**
   String get podcast_summary_no_summary;
+
+  /// Generate AI summary button
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Summary'**
+  String get podcast_summary_generate;
+
+  /// Message when transcription is required
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription required to generate AI summary'**
+  String get podcast_summary_transcription_required;
+
+  /// Advanced options button
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Options'**
+  String get podcast_advanced_options;
+
+  /// Regenerate summary button
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate'**
+  String get podcast_regenerate;
+
+  /// Model selector label
+  ///
+  /// In en, this message translates to:
+  /// **'AI Model'**
+  String get podcast_ai_model;
+
+  /// Default model badge
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get podcast_default_model;
+
+  /// Prompt input field label
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Prompt (Optional)'**
+  String get podcast_custom_prompt;
+
+  /// Prompt input placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Focus on technical points...'**
+  String get podcast_custom_prompt_hint;
+
+  /// Loading text for summary generation
+  ///
+  /// In en, this message translates to:
+  /// **'Generating AI summary...'**
+  String get podcast_generating_summary;
+
+  /// Word count unit
+  ///
+  /// In en, this message translates to:
+  /// **'chars'**
+  String get podcast_summary_chars;
+
+  /// Theme mode setting label
+  ///
+  /// In en, this message translates to:
+  /// **'Theme Mode'**
+  String get theme_mode;
+
+  /// Theme mode subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your preferred theme'**
+  String get theme_mode_subtitle;
+
+  /// Option to follow system theme
+  ///
+  /// In en, this message translates to:
+  /// **'Follow System'**
+  String get theme_mode_follow_system;
+
+  /// Light theme option
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get theme_mode_light;
+
+  /// Dark theme option
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get theme_mode_dark;
+
+  /// Theme mode selection dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Select Theme Mode'**
+  String get theme_mode_select_title;
+
+  /// Theme mode changed success message
+  ///
+  /// In en, this message translates to:
+  /// **'Theme mode changed to {mode}'**
+  String theme_mode_changed(String mode);
 }
 
 class _AppLocalizationsDelegate

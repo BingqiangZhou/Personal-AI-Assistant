@@ -397,7 +397,6 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                 const SizedBox(height: 12),
                 Text(displayDescription, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant), maxLines: 4, overflow: TextOverflow.ellipsis),
               ],
-              const SizedBox(height: 12),
             ],
           ),
         ),
@@ -497,8 +496,6 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                   ),
                 ),
               ],
-
-              const SizedBox(height: 12),
 
               // 底部一行：元数据（左侧） + Play 按钮（右侧）
               Row(

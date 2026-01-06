@@ -2865,5 +2865,140 @@
   "podcast_summary_no_summary": "暂无摘要",
   "@podcast_summary_no_summary": {
     "description": "无摘要可用消息"
+  },
+
+  "podcast_transcription_required": "需要转录才能生成AI摘要",
+  "@podcast_transcription_required": {
+    "description": "无转录内容时的提示"
+  },
+
+  "podcast_advanced_options": "高级选项",
+  "@podcast_advanced_options": {
+    "description": "展开/收起高级选项按钮"
+  },
+
+  "podcast_regenerate": "重新生成",
+  "@podcast_regenerate": {
+    "description": "重新生成摘要按钮"
+  },
+
+  "podcast_ai_model": "AI模型",
+  "@podcast_ai_model": {
+    "description": "模型选择器标签"
+  },
+
+  "podcast_default": "默认",
+  "@podcast_default": {
+    "description": "默认模型标记"
+  },
+
+  "podcast_custom_prompt": "自定义提示词（可选）",
+  "@podcast_custom_prompt": {
+    "description": "提示词输入框标签"
+  },
+
+  "podcast_custom_prompt_hint": "例如：重点关注技术要点...",
+  "@podcast_custom_prompt_hint": {
+    "description": "提示词占位符"
+  },
+
+  "podcast_generating_summary": "正在生成AI摘要...",
+  "@podcast_generating_summary": {
+    "description": "加载状态文本"
+  },
+
+  "podcast_word_count": "字符",
+  "@podcast_word_count": {
+    "description": "字数统计单位"
+  },
+
+  "podcast_summary_generate": "生成摘要",
+  "@podcast_summary_generate": {
+    "description": "生成AI摘要按钮"
+  },
+
+  "podcast_summary_transcription_required": "需要转录才能生成AI摘要",
+  "@podcast_summary_transcription_required": {
+    "description": "无转录内容时的提示"
+  },
+
+  "podcast_advanced_options": "高级选项",
+  "@podcast_advanced_options": {
+    "description": "高级选项按钮"
+  },
+
+  "podcast_regenerate": "重新生成",
+  "@podcast_regenerate": {
+    "description": "重新生成摘要按钮"
+  },
+
+  "podcast_ai_model": "AI模型",
+  "@podcast_ai_model": {
+    "description": "模型选择器标签"
+  },
+
+  "podcast_default_model": "默认",
+  "@podcast_default_model": {
+    "description": "默认模型标记"
+  },
+
+  "podcast_custom_prompt": "自定义提示词（可选）",
+  "@podcast_custom_prompt": {
+    "description": "提示词输入框标签"
+  },
+
+  "podcast_custom_prompt_hint": "例如：重点关注技术要点...",
+  "@podcast_custom_prompt_hint": {
+    "description": "提示词占位符"
+  },
+
+  "podcast_generating_summary": "正在生成AI摘要...",
+  "@podcast_generating_summary": {
+    "description": "生成摘要加载状态文本"
+  },
+
+  "podcast_summary_chars": "字符",
+  "@podcast_summary_chars": {
+    "description": "字数统计单位"
+  },
+
+  "theme_mode": "主题模式",
+  "@theme_mode": {
+    "description": "主题模式设置标签"
+  },
+
+  "theme_mode_subtitle": "选择您偏好的主题",
+  "@theme_mode_subtitle": {
+    "description": "主题模式副标题"
+  },
+
+  "theme_mode_follow_system": "跟随系统",
+  "@theme_mode_follow_system": {
+    "description": "跟随系统主题选项"
+  },
+
+  "theme_mode_light": "浅色",
+  "@theme_mode_light": {
+    "description": "浅色主题选项"
+  },
+
+  "theme_mode_dark": "深色",
+  "@theme_mode_dark": {
+    "description": "深色主题选项"
+  },
+
+  "theme_mode_select_title": "选择主题模式",
+  "@theme_mode_select_title": {
+    "description": "主题模式选择对话框标题"
+  },
+
+  "theme_mode_changed": "主题模式已更改为 {mode}",
+  "@theme_mode_changed": {
+    "description": "主题模式更改成功消息",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
   }
 }

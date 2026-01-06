@@ -132,7 +132,7 @@ class _AISummaryControlWidgetState
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Transcription required to generate AI summary',
+              AppLocalizations.of(context)!.podcast_summary_transcription_required,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
@@ -154,7 +154,7 @@ class _AISummaryControlWidgetState
         ElevatedButton.icon(
           onPressed: _generateSummary,
           icon: const Icon(Icons.auto_awesome),
-          label: Text(AppLocalizations.of(context)!.podcast_filter_with_summary),
+          label: Text(AppLocalizations.of(context)!.podcast_summary_generate),
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             backgroundColor: Theme.of(context).colorScheme.primary,
@@ -172,7 +172,7 @@ class _AISummaryControlWidgetState
                 _showOptions ? Icons.expand_less : Icons.expand_more,
                 size: 18,
               ),
-              label: const Text('Advanced Options'),
+              label: Text(AppLocalizations.of(context)!.podcast_advanced_options),
               style: TextButton.styleFrom(
                 foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -224,7 +224,7 @@ class _AISummaryControlWidgetState
                   _buildMetadataItem(
                     context,
                     Icons.text_fields,
-                    '${summaryState.wordCount} chars',
+                    '${summaryState.wordCount} ${AppLocalizations.of(context)!.podcast_summary_chars}',
                   ),
               ],
             ),
@@ -239,7 +239,7 @@ class _AISummaryControlWidgetState
               child: OutlinedButton.icon(
                 onPressed: _regenerateSummary,
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Regenerate'),
+                label: Text(AppLocalizations.of(context)!.podcast_regenerate),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   foregroundColor: Theme.of(context).colorScheme.primary,
@@ -252,7 +252,7 @@ class _AISummaryControlWidgetState
               icon: Icon(
                 _showOptions ? Icons.expand_less : Icons.expand_more,
               ),
-              tooltip: 'Advanced Options',
+              tooltip: AppLocalizations.of(context)!.podcast_advanced_options,
             ),
           ],
         ),
@@ -306,7 +306,7 @@ class _AISummaryControlWidgetState
             DropdownButtonFormField<SummaryModelInfo>(
               value: _selectedModel,
               decoration: InputDecoration(
-                labelText: 'AI Model',
+                labelText: AppLocalizations.of(context)!.podcast_ai_model,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -337,7 +337,7 @@ class _AISummaryControlWidgetState
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              'Default',
+                              AppLocalizations.of(context)!.podcast_default_model,
                               style: TextStyle(
                                 fontSize: 10,
                                 color: Theme.of(context).colorScheme.primary,
@@ -360,8 +360,8 @@ class _AISummaryControlWidgetState
           TextField(
             controller: _promptController,
             decoration: InputDecoration(
-              labelText: 'Custom Prompt (Optional)',
-              hintText: 'e.g., Focus on technical points...',
+              labelText: AppLocalizations.of(context)!.podcast_custom_prompt,
+              hintText: AppLocalizations.of(context)!.podcast_custom_prompt_hint,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -395,7 +395,7 @@ class _AISummaryControlWidgetState
             ),
             const SizedBox(height: 12),
             Text(
-              'Generating AI summary...',
+              AppLocalizations.of(context)!.podcast_generating_summary,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 14,

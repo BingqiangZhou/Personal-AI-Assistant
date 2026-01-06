@@ -10,6 +10,7 @@ import '../providers/route_provider.dart';
 import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_provider.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/settings/presentation/providers/app_update_provider.dart';
 import '../../features/settings/presentation/widgets/update_dialog.dart';
@@ -149,6 +150,9 @@ class _PersonalAIAssistantAppState
     // Load saved locale from storage
     await ref.read(localeProvider.notifier).loadSavedLocale();
 
+    // Load saved theme mode from storage
+    await ref.read(themeModeProvider.notifier).loadSavedThemeMode();
+
     // Check authentication status
     await ref.read(authProvider.notifier).checkAuthStatus();
 
@@ -232,7 +236,7 @@ class _PersonalAIAssistantAppState
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
+        themeMode: ref.watch(themeModeProvider),
         home: const _SplashScreenWidget(),
       );
     }
@@ -245,7 +249,7 @@ class _PersonalAIAssistantAppState
       // Theme configuration
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: ref.watch(themeModeProvider),
 
       // Router configuration
       routerConfig: ref.watch(appRouterProvider),

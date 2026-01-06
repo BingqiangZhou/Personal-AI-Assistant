@@ -1732,4 +1732,57 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get podcast_summary_no_summary => '暂无摘要';
+
+  @override
+  String get podcast_summary_generate => '生成摘要';
+
+  @override
+  String get podcast_summary_transcription_required => '需要转录才能生成AI摘要';
+
+  @override
+  String get podcast_advanced_options => '高级选项';
+
+  @override
+  String get podcast_regenerate => '重新生成';
+
+  @override
+  String get podcast_ai_model => 'AI模型';
+
+  @override
+  String get podcast_default_model => '默认';
+
+  @override
+  String get podcast_custom_prompt => '自定义提示词（可选）';
+
+  @override
+  String get podcast_custom_prompt_hint => '例如：重点关注技术要点...';
+
+  @override
+  String get podcast_generating_summary => '正在生成AI摘要...';
+
+  @override
+  String get podcast_summary_chars => '字符';
+
+  @override
+  String get theme_mode => '主题模式';
+
+  @override
+  String get theme_mode_subtitle => '选择您偏好的主题';
+
+  @override
+  String get theme_mode_follow_system => '跟随系统';
+
+  @override
+  String get theme_mode_light => '浅色';
+
+  @override
+  String get theme_mode_dark => '深色';
+
+  @override
+  String get theme_mode_select_title => '选择主题模式';
+
+  @override
+  String theme_mode_changed(String mode) {
+    return '主题模式已更改为 $mode';
+  }
 }

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
+import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
 
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
@@ -19,7 +20,6 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   bool _autoSyncEnabled = true;
   String _appVersion = 'Loading...';
 
@@ -383,19 +383,28 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 );
               },
             ),
-            _buildSettingsItem(
-              context,
-              icon: Icons.dark_mode,
-              title: l10n.profile_dark_mode,
-              subtitle: l10n.profile_dark_mode_subtitle,
-              trailing: Switch(
-                value: _darkModeEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _darkModeEnabled = value;
-                  });
-                },
-              ),
+            Consumer(
+              builder: (context, ref, _) {
+                final themeNotifier = ref.watch(themeModeProvider.notifier);
+                final currentCode = themeNotifier.themeModeCode;
+
+                String themeModeName;
+                if (currentCode == kThemeModeSystem) {
+                  themeModeName = l10n.theme_mode_follow_system;
+                } else if (currentCode == kThemeModeLight) {
+                  themeModeName = l10n.theme_mode_light;
+                } else {
+                  themeModeName = l10n.theme_mode_dark;
+                }
+
+                return _buildSettingsItem(
+                  context,
+                  icon: Icons.dark_mode,
+                  title: l10n.theme_mode,
+                  subtitle: themeModeName,
+                  onTap: () => _showThemeModeDialog(context),
+                );
+              },
             ),
             _buildSettingsItem(
               context,
@@ -514,19 +523,29 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       );
                     },
                   ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.dark_mode,
-                    title: l10n.profile_dark_mode,
-                    subtitle: l10n.profile_dark_mode_subtitle,
-                    trailing: Switch(
-                      value: _darkModeEnabled,
-                      onChanged: (value) {
-                        setState(() {
-                          _darkModeEnabled = value;
-                        });
-                      },
-                    ),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final themeNotifier = ref.watch(themeModeProvider.notifier);
+                      final currentCode = themeNotifier.themeModeCode;
+                      final l10n = AppLocalizations.of(context)!;
+
+                      String themeModeName;
+                      if (currentCode == kThemeModeSystem) {
+                        themeModeName = l10n.theme_mode_follow_system;
+                      } else if (currentCode == kThemeModeLight) {
+                        themeModeName = l10n.theme_mode_light;
+                      } else {
+                        themeModeName = l10n.theme_mode_dark;
+                      }
+
+                      return _buildSettingsItem(
+                        context,
+                        icon: Icons.dark_mode,
+                        title: l10n.theme_mode,
+                        subtitle: themeModeName,
+                        onTap: () => _showThemeModeDialog(context),
+                      );
+                    },
                   ),
                   _buildSettingsItem(
                     context,
@@ -727,44 +746,113 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                RadioListTile<String>(
-                  title: Text(l10n.languageFollowSystem),
-                  value: kLanguageSystem,
-                  groupValue: currentCode,
-                  onChanged: (value) async {
-                    if (value != null) {
-                      await ref.read(localeProvider.notifier).setLanguageCode(value);
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
+                SegmentedButton<String>(
+                  segments: [
+                    ButtonSegment(
+                      value: kLanguageSystem,
+                      label: Text(l10n.languageFollowSystem),
+                      icon: const Icon(Icons.computer),
+                    ),
+                    ButtonSegment(
+                      value: kLanguageEnglish,
+                      label: Text(l10n.languageEnglish),
+                      icon: const Icon(Icons.language),
+                    ),
+                    ButtonSegment(
+                      value: kLanguageChinese,
+                      label: Text(l10n.languageChinese),
+                      icon: const Icon(Icons.translate),
+                    ),
+                  ],
+                  selected: {currentCode},
+                  onSelectionChanged: (Set<String> selection) async {
+                    final value = selection.first;
+                    await ref.read(localeProvider.notifier).setLanguageCode(value);
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
                     }
                   },
                 ),
-                RadioListTile<String>(
-                  title: Text(l10n.languageEnglish),
-                  value: kLanguageEnglish,
-                  groupValue: currentCode,
-                  onChanged: (value) async {
-                    if (value != null) {
-                      await ref.read(localeProvider.notifier).setLanguageCode(value);
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
+                const SizedBox(height: 16),
+                Text(
+                  l10n.languageFollowSystem,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(l10n.close),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// 显示主题模式对话框
+  void _showThemeModeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Consumer(
+        builder: (context, ref, _) {
+          final themeNotifier = ref.watch(themeModeProvider.notifier);
+          final currentCode = themeNotifier.themeModeCode;
+          final l10n = AppLocalizations.of(context)!;
+
+          return AlertDialog(
+            title: Text(l10n.theme_mode_select_title),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SegmentedButton<String>(
+                  segments: [
+                    ButtonSegment(
+                      value: kThemeModeSystem,
+                      label: Text(l10n.theme_mode_follow_system),
+                      icon: const Icon(Icons.brightness_auto),
+                    ),
+                    ButtonSegment(
+                      value: kThemeModeLight,
+                      label: Text(l10n.theme_mode_light),
+                      icon: const Icon(Icons.light_mode),
+                    ),
+                    ButtonSegment(
+                      value: kThemeModeDark,
+                      label: Text(l10n.theme_mode_dark),
+                      icon: const Icon(Icons.dark_mode),
+                    ),
+                  ],
+                  selected: {currentCode},
+                  onSelectionChanged: (Set<String> selection) async {
+                    final value = selection.first;
+                    String modeName;
+                    if (value == kThemeModeSystem) {
+                      modeName = l10n.theme_mode_follow_system;
+                    } else if (value == kThemeModeLight) {
+                      modeName = l10n.theme_mode_light;
+                    } else {
+                      modeName = l10n.theme_mode_dark;
+                    }
+                    await ref.read(themeModeProvider.notifier).setThemeModeCode(value);
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.theme_mode_changed(modeName))),
+                      );
                     }
                   },
                 ),
-                RadioListTile<String>(
-                  title: Text(l10n.languageChinese),
-                  value: kLanguageChinese,
-                  groupValue: currentCode,
-                  onChanged: (value) async {
-                    if (value != null) {
-                      await ref.read(localeProvider.notifier).setLanguageCode(value);
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    }
-                  },
+                const SizedBox(height: 16),
+                Text(
+                  l10n.theme_mode_subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
