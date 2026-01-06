@@ -169,42 +169,33 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         error: null,
       );
 
-      // ===== STEP 3: Set MediaItem FIRST (before audio source) =====
-      // CRITICAL: Android MediaSession needs metadata BEFORE content loads
-      // This ensures the notification displays correct information when audio loads
-      // IMPORTANT: Don't set duration here - let just_audio extract it from the audio stream
-      debugPrint('🔄 Step 3: Setting MediaItem for system controls (before audio source)');
+      // ===== STEP 3: Set new episode with metadata =====
+      // CRITICAL: Use setEpisode() to properly set MediaItem, validate artUri, and load audio
+      // artUri validation is built into setEpisode() - only http/https URLs are accepted
+      debugPrint('🔄 Step 3: Setting new episode with metadata');
       debugPrint('  📊 Episode.audioDuration: ${episode.audioDuration}ms (this value is NOT used, let audio stream extract duration)');
-      _audioHandler.mediaItem.add(MediaItem(
-        id: episode.id.toString(),
-        title: episode.title,
-        artist: episode.subscriptionTitle ?? 'Unknown Podcast',
-        artUri: episode.imageUrl != null ? Uri.parse(episode.imageUrl!) : null,
-        // Don't set duration - let just_audio extract it from audio stream
-        duration: null,
-      ));
-      debugPrint('  ✅ MediaItem set with duration=null (will be updated when audio loads)');
+      debugPrint('  🖼️ Image URL: ${episode.imageUrl ?? "NULL"}');
 
-      // Small delay to ensure MediaItem is set before audio loads
-      await Future.delayed(const Duration(milliseconds: 50));
-
-      if (!ref.mounted || _isDisposed) return;
-
-      // ===== STEP 4: Set new audio source AFTER MediaItem =====
-      debugPrint('🔄 Step 4: Setting new audio source');
       try {
-        await _audioHandler.setAudioSource(episode.audioUrl);
-        debugPrint('  ✅ Source set successfully');
+        await _audioHandler.setEpisode(
+          id: episode.id.toString(),
+          url: episode.audioUrl,
+          title: episode.title,
+          artist: episode.subscriptionTitle ?? 'Unknown Podcast',
+          artUri: episode.imageUrl, // Will be validated inside setEpisode()
+          autoPlay: false, // We'll manually start playback after restoring position/speed
+        );
+        debugPrint('  ✅ Episode loaded successfully');
       } catch (loadError) {
-        debugPrint('  ❌ Failed to set source: $loadError');
+        debugPrint('  ❌ Failed to load episode: $loadError');
         throw Exception('Failed to load audio: $loadError');
       }
 
       if (!ref.mounted || _isDisposed) return;
 
-      // ===== STEP 5: Restore playback position =====
+      // ===== STEP 4: Restore playback position =====
       if (episode.playbackPosition != null && episode.playbackPosition! > 0) {
-        debugPrint('⏩ Step 5: Seeking to saved position: ${episode.playbackPosition}ms');
+        debugPrint('⏩ Step 4: Seeking to saved position: ${episode.playbackPosition}ms');
         try {
           await _audioHandler.seek(Duration(milliseconds: episode.playbackPosition!));
           debugPrint('  ✅ Seek completed');
@@ -215,9 +206,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       if (!ref.mounted || _isDisposed) return;
 
-      // ===== STEP 6: Restore playback rate =====
+      // ===== STEP 5: Restore playback rate =====
       if (savedPlaybackRate != 1.0) {
-        debugPrint('⚙️ Step 6: Restoring playback rate: ${savedPlaybackRate}x');
+        debugPrint('⚙️ Step 5: Restoring playback rate: ${savedPlaybackRate}x');
         try {
           await _audioHandler.setSpeed(savedPlaybackRate);
           debugPrint('  ✅ Playback rate restored');
@@ -226,8 +217,8 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         }
       }
 
-      // ===== STEP 7: Start playback =====
-      debugPrint('▶️ Step 7: Starting playback');
+      // ===== STEP 6: Start playback =====
+      debugPrint('▶️ Step 6: Starting playback');
       try {
         await _audioHandler.play();
         debugPrint('  ✅ Playback started');

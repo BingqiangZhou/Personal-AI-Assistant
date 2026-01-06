@@ -28,10 +28,12 @@ void main() async {
       androidNotificationChannelDescription: 'Podcast audio playback controls',
       androidNotificationIcon: 'mipmap/ic_launcher',
       androidShowNotificationBadge: true,
-      // CRITICAL FIX: Keep foreground service running when paused for state sync
+      // CRITICAL: Keep foreground service running when paused for Android 15 + Vivo OriginOS
+      // This prevents service from being killed by system when paused
       androidStopForegroundOnPause: false,
-      // Ongoing notification is automatic when foreground service is running
-      androidNotificationOngoing: false, // Must be false when stopForegroundOnPause is false
+      // CRITICAL: Make notification ongoing to prevent user from swiping it away
+      // This keeps the service alive and allows notification controls to work after pause
+      //androidNotificationOngoing: true,
       // Ensure compact action buttons are visible
       androidResumeOnClick: true,
     ),
@@ -42,9 +44,13 @@ void main() async {
   // Request notification permission on startup (Android 13+)
   // CRITICAL: This is required for system media controls to work properly
   if (Platform.isAndroid) {
-    debugPrint('📱 Android detected: Requesting notification permission on startup...');
+    debugPrint(
+      '📱 Android detected: Requesting notification permission on startup...',
+    );
     final notificationStatus = await Permission.notification.status;
-    debugPrint('📱 Current notification permission status: $notificationStatus');
+    debugPrint(
+      '📱 Current notification permission status: $notificationStatus',
+    );
 
     if (!notificationStatus.isGranted) {
       debugPrint('🔔 Requesting notification permission...');
@@ -52,16 +58,24 @@ void main() async {
       debugPrint('🔔 Permission request result: $result');
 
       if (!result.isGranted) {
-        debugPrint('⚠️ Notification permission DENIED - System media controls may NOT work!');
-        debugPrint('⚠️ Please grant notification permission in system settings');
+        debugPrint(
+          '⚠️ Notification permission DENIED - System media controls may NOT work!',
+        );
+        debugPrint(
+          '⚠️ Please grant notification permission in system settings',
+        );
       } else {
-        debugPrint('✅ Notification permission GRANTED - System media controls will work!');
+        debugPrint(
+          '✅ Notification permission GRANTED - System media controls will work!',
+        );
       }
     } else {
       debugPrint('✅ Notification permission already granted');
     }
   } else {
-    debugPrint('📱 Non-Android platform: Skipping notification permission check');
+    debugPrint(
+      '📱 Non-Android platform: Skipping notification permission check',
+    );
   }
 
   // Set system UI overlay style BEFORE any widget initialization
@@ -104,7 +118,9 @@ void main() async {
     // Migrate old api_base_url to new server_base_url
     await storageService.saveServerBaseUrl(oldApiBaseUrl);
     AppConfig.setServerBaseUrl(oldApiBaseUrl);
-    debugPrint('🔄 [AppInit] Migrated old API URL to server URL: $oldApiBaseUrl');
+    debugPrint(
+      '🔄 [AppInit] Migrated old API URL to server URL: $oldApiBaseUrl',
+    );
   }
 
   // Run app with custom splash screen wrapper and providers
