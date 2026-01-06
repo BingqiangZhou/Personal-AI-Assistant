@@ -68,23 +68,26 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
   void _clearHistory() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear conversation history'),
-        content: const Text('Are you sure you want to clear all conversation history? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return AlertDialog(
+          title: Text(l10n.podcast_conversation_clear_history),
+          content: Text(l10n.podcast_conversation_clear_confirm),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.cancel),
             ),
-            child: const Text('Clear'),
-          ),
-        ],
-      ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: Text(l10n.podcast_transcription_clear),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true && mounted) {
@@ -123,6 +126,7 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
   }
 
   Widget _buildHeader(BuildContext context, ConversationState state) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -140,7 +144,7 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'AI Assistant Chat',
+              l10n.podcast_conversation_title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -149,13 +153,13 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
           if (state.hasMessages)
             IconButton(
               icon: const Icon(Icons.delete_outline),
-              tooltip: 'Clear conversation history',
+              tooltip: l10n.podcast_conversation_clear_history,
               onPressed: state.isSending ? null : _clearHistory,
             ),
           if (state.hasError)
             IconButton(
               icon: const Icon(Icons.refresh),
-              tooltip: 'Reload',
+              tooltip: l10n.podcast_conversation_reload,
               onPressed: state.isSending
                   ? null
                   : () => ref.read(getConversationProvider(widget.episodeId).notifier).refresh(),
@@ -184,7 +188,7 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
             ),
             const SizedBox(height: 16),
             Text(
-              'Failed to load conversation',
+              AppLocalizations.of(context)!.podcast_conversation_loading_failed,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -216,6 +220,7 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
@@ -229,12 +234,12 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
             ),
             const SizedBox(height: 16),
             Text(
-              'Chat with AI Assistant',
+              l10n.podcast_conversation_empty_title,
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              'You can ask the AI assistant questions based on this episode\'s AI summary',
+              l10n.podcast_conversation_empty_hint,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -327,7 +332,7 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  isUser ? 'You' : 'AI Assistant',
+                  isUser ? AppLocalizations.of(context)!.podcast_conversation_user : AppLocalizations.of(context)!.podcast_conversation_assistant,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: isUser
                             ? Theme.of(context).colorScheme.onPrimaryContainer
@@ -355,6 +360,7 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
   }
 
   Widget _buildInputArea(BuildContext context, ConversationState state) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -381,8 +387,8 @@ class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget>
                 onSubmitted: (_) => _sendMessage(),
                 decoration: InputDecoration(
                   hintText: widget.aiSummary == null
-                      ? 'Please generate AI summary first'
-                      : 'Type your question...',
+                      ? l10n.podcast_conversation_no_summary_hint
+                      : l10n.podcast_conversation_send_hint,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide(

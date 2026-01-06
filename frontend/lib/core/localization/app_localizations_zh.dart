@@ -1586,4 +1586,150 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get podcast_source => '来源';
+
+  @override
+  String get podcast_speed_title => '倍速播放';
+
+  @override
+  String get podcast_speed_done => '完成';
+
+  @override
+  String get podcast_speed_current_speed => '当前速度';
+
+  @override
+  String get podcast_speed_select => '选择速度';
+
+  @override
+  String get podcast_speed_feature_1 => '快速选择';
+
+  @override
+  String get podcast_speed_feature_2 => '精确控制';
+
+  @override
+  String get podcast_speed_feature_3 => '刻度尺样式';
+
+  @override
+  String get podcast_speed_feature_4 => '即时应用';
+
+  @override
+  String get podcast_speed_feature_5 => '流畅体验';
+
+  @override
+  String get podcast_tab_shownotes => '节目详情';
+
+  @override
+  String get podcast_tab_transcript => '文字稿';
+
+  @override
+  String get podcast_tab_chat => 'AI对话';
+
+  @override
+  String get podcast_transcription_processing => '正在转录中...';
+
+  @override
+  String get podcast_transcription_auto_starting => '自动开始转录...';
+
+  @override
+  String get podcast_transcription_starting => '正在启动转录...';
+
+  @override
+  String get podcast_transcription_start_title => '开始转录';
+
+  @override
+  String get podcast_transcription_start_desc => '开始转录本集节目以生成文字内容和AI智能摘要。';
+
+  @override
+  String get podcast_transcription_start_button => '开始转录';
+
+  @override
+  String get podcast_conversation_title => 'AI对话';
+
+  @override
+  String get podcast_conversation_empty_title => '开始对话';
+
+  @override
+  String get podcast_conversation_empty_hint => '向AI提问本集节目的相关问题，基于文字稿获取智能回答。';
+
+  @override
+  String get podcast_conversation_clear_history => '清空对话历史';
+
+  @override
+  String get podcast_conversation_clear_confirm => '确定要清空所有对话历史吗？此操作无法撤销。';
+
+  @override
+  String get podcast_conversation_send_hint => '发送消息（Ctrl+Enter）';
+
+  @override
+  String get podcast_conversation_no_summary_hint => '对话功能需要先完成转录。请等待转录完成。';
+
+  @override
+  String get podcast_conversation_loading_failed => '加载对话历史失败';
+
+  @override
+  String get podcast_conversation_user => '你';
+
+  @override
+  String get podcast_conversation_assistant => 'AI助手';
+
+  @override
+  String get podcast_conversation_reload => '重新加载';
+
+  @override
+  String get podcast_error_loading => '加载内容失败';
+
+  @override
+  String get podcast_transcription_delete => '删除';
+
+  @override
+  String get podcast_transcription_clear => '清空';
+
+  @override
+  String get podcast_episode_not_found => '未找到分集';
+
+  @override
+  String get podcast_go_back => '返回';
+
+  @override
+  String get podcast_load_failed => '加载失败';
+
+  @override
+  String get podcast_summary_empty_hint => '暂无摘要';
+
+  @override
+  String get podcast_filter_refresh => '刷新';
+
+  @override
+  String get podcast_please_select_time => '请选择时间';
+
+  @override
+  String get podcast_please_select_time_and_day => '请选择时间和星期';
+
+  @override
+  String podcast_bulk_import_urls_extracted(int count) {
+    return '从文件中提取了$count个链接';
+  }
+
+  @override
+  String podcast_bulk_import_file_error(String error) {
+    return '读取文件失败：$error';
+  }
+
+  @override
+  String podcast_bulk_import_success(int count) {
+    return '成功导入$count个播客';
+  }
+
+  @override
+  String get podcast_global_rss_settings_title => '全局RSS设置';
+
+  @override
+  String podcast_updated_subscriptions(int count) {
+    return '已更新$count个订阅';
+  }
+
+  @override
+  String get podcast_summary_generate_failed => '生成摘要失败';
+
+  @override
+  String get podcast_summary_no_summary => '暂无摘要';
 }

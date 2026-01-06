@@ -1626,4 +1626,157 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcast_source => 'Source';
+
+  @override
+  String get podcast_speed_title => 'Playback Speed';
+
+  @override
+  String get podcast_speed_done => 'Done';
+
+  @override
+  String get podcast_speed_current_speed => 'Current Speed';
+
+  @override
+  String get podcast_speed_select => 'Select Speed';
+
+  @override
+  String get podcast_speed_feature_1 => 'Quick Selection';
+
+  @override
+  String get podcast_speed_feature_2 => 'Precise Control';
+
+  @override
+  String get podcast_speed_feature_3 => 'Ruler Scale';
+
+  @override
+  String get podcast_speed_feature_4 => 'Instant Apply';
+
+  @override
+  String get podcast_speed_feature_5 => 'Smooth Experience';
+
+  @override
+  String get podcast_tab_shownotes => 'Shownotes';
+
+  @override
+  String get podcast_tab_transcript => 'Transcript';
+
+  @override
+  String get podcast_tab_chat => 'Chat';
+
+  @override
+  String get podcast_transcription_processing => 'Transcription in progress...';
+
+  @override
+  String get podcast_transcription_auto_starting =>
+      'Auto-starting transcription...';
+
+  @override
+  String get podcast_transcription_starting => 'Starting transcription...';
+
+  @override
+  String get podcast_transcription_start_title => 'Start Transcription';
+
+  @override
+  String get podcast_transcription_start_desc =>
+      'Start transcribing this episode to generate text content and AI-powered summaries.';
+
+  @override
+  String get podcast_transcription_start_button => 'Start Transcription';
+
+  @override
+  String get podcast_conversation_title => 'AI Conversation';
+
+  @override
+  String get podcast_conversation_empty_title => 'Start a conversation';
+
+  @override
+  String get podcast_conversation_empty_hint =>
+      'Ask questions about this episode and get AI-powered answers based on the transcript.';
+
+  @override
+  String get podcast_conversation_clear_history => 'Clear Conversation History';
+
+  @override
+  String get podcast_conversation_clear_confirm =>
+      'Are you sure you want to clear all conversation history? This cannot be undone.';
+
+  @override
+  String get podcast_conversation_send_hint => 'Send message (Ctrl+Enter)';
+
+  @override
+  String get podcast_conversation_no_summary_hint =>
+      'Conversation requires a completed transcript. Please wait for transcription to complete.';
+
+  @override
+  String get podcast_conversation_loading_failed =>
+      'Failed to load conversation history';
+
+  @override
+  String get podcast_conversation_user => 'You';
+
+  @override
+  String get podcast_conversation_assistant => 'AI Assistant';
+
+  @override
+  String get podcast_conversation_reload => 'Reload';
+
+  @override
+  String get podcast_error_loading => 'Failed to load content';
+
+  @override
+  String get podcast_transcription_delete => 'Delete';
+
+  @override
+  String get podcast_transcription_clear => 'Clear';
+
+  @override
+  String get podcast_episode_not_found => 'Episode not found';
+
+  @override
+  String get podcast_go_back => 'Go back';
+
+  @override
+  String get podcast_load_failed => 'Failed to load';
+
+  @override
+  String get podcast_summary_empty_hint => 'No summary available';
+
+  @override
+  String get podcast_filter_refresh => 'Refresh';
+
+  @override
+  String get podcast_please_select_time => 'Please select a time';
+
+  @override
+  String get podcast_please_select_time_and_day =>
+      'Please select a time and day';
+
+  @override
+  String podcast_bulk_import_urls_extracted(int count) {
+    return 'Extracted $count URLs from file';
+  }
+
+  @override
+  String podcast_bulk_import_file_error(String error) {
+    return 'Failed to read file: $error';
+  }
+
+  @override
+  String podcast_bulk_import_success(int count) {
+    return 'Successfully imported $count podcasts';
+  }
+
+  @override
+  String get podcast_global_rss_settings_title => 'Global RSS Settings';
+
+  @override
+  String podcast_updated_subscriptions(int count) {
+    return 'Updated $count subscriptions';
+  }
+
+  @override
+  String get podcast_summary_generate_failed => 'Failed to generate summary';
+
+  @override
+  String get podcast_summary_no_summary => 'No summary available';
 }

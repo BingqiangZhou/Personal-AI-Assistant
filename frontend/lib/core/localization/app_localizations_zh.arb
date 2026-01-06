@@ -2615,5 +2615,255 @@
   "podcast_source": "来源",
   "@podcast_source": {
     "description": "来源链接标签"
+  },
+
+  "podcast_speed_title": "倍速播放",
+  "@podcast_speed_title": {
+    "description": "播放速度选择标题"
+  },
+
+  "podcast_speed_done": "完成",
+  "@podcast_speed_done": {
+    "description": "速度选择完成按钮"
+  },
+
+  "podcast_speed_current_speed": "当前速度",
+  "@podcast_speed_current_speed": {
+    "description": "当前速度标签"
+  },
+
+  "podcast_speed_select": "选择速度",
+  "@podcast_speed_select": {
+    "description": "速度选择标签"
+  },
+
+  "podcast_speed_feature_1": "快速选择",
+  "@podcast_speed_feature_1": {
+    "description": "速度特性1：快速选择"
+  },
+
+  "podcast_speed_feature_2": "精确控制",
+  "@podcast_speed_feature_2": {
+    "description": "速度特性2：精确控制"
+  },
+
+  "podcast_speed_feature_3": "刻度尺样式",
+  "@podcast_speed_feature_3": {
+    "description": "速度特性3：刻度尺样式"
+  },
+
+  "podcast_speed_feature_4": "即时应用",
+  "@podcast_speed_feature_4": {
+    "description": "速度特性4：即时应用"
+  },
+
+  "podcast_speed_feature_5": "流畅体验",
+  "@podcast_speed_feature_5": {
+    "description": "速度特性5：流畅体验"
+  },
+
+  "podcast_tab_shownotes": "节目详情",
+  "@podcast_tab_shownotes": {
+    "description": "分集详情标签：节目详情"
+  },
+
+  "podcast_tab_transcript": "文字稿",
+  "@podcast_tab_transcript": {
+    "description": "分集详情标签：文字稿"
+  },
+
+  "podcast_tab_chat": "AI对话",
+  "@podcast_tab_chat": {
+    "description": "分集详情标签：AI对话"
+  },
+
+  "podcast_transcription_processing": "正在转录中...",
+  "@podcast_transcription_processing": {
+    "description": "转录状态：处理中"
+  },
+
+  "podcast_transcription_auto_starting": "自动开始转录...",
+  "@podcast_transcription_auto_starting": {
+    "description": "转录自动开始消息"
+  },
+
+  "podcast_transcription_starting": "正在启动转录...",
+  "@podcast_transcription_starting": {
+    "description": "转录启动消息"
+  },
+
+  "podcast_transcription_start_title": "开始转录",
+  "@podcast_transcription_start_title": {
+    "description": "转录开始按钮标题"
+  },
+
+  "podcast_transcription_start_desc": "开始转录本集节目以生成文字内容和AI智能摘要。",
+  "@podcast_transcription_start_desc": {
+    "description": "转录开始描述"
+  },
+
+  "podcast_transcription_start_button": "开始转录",
+  "@podcast_transcription_start_button": {
+    "description": "转录开始按钮标签"
+  },
+
+  "podcast_conversation_title": "AI对话",
+  "@podcast_conversation_title": {
+    "description": "AI对话标题"
+  },
+
+  "podcast_conversation_empty_title": "开始对话",
+  "@podcast_conversation_empty_title": {
+    "description": "空对话标题"
+  },
+
+  "podcast_conversation_empty_hint": "向AI提问本集节目的相关问题，基于文字稿获取智能回答。",
+  "@podcast_conversation_empty_hint": {
+    "description": "空对话提示"
+  },
+
+  "podcast_conversation_clear_history": "清空对话历史",
+  "@podcast_conversation_clear_history": {
+    "description": "清空对话历史对话框标题"
+  },
+
+  "podcast_conversation_clear_confirm": "确定要清空所有对话历史吗？此操作无法撤销。",
+  "@podcast_conversation_clear_confirm": {
+    "description": "清空对话确认消息"
+  },
+
+  "podcast_conversation_send_hint": "发送消息（Ctrl+Enter）",
+  "@podcast_conversation_send_hint": {
+    "description": "发送消息提示文本"
+  },
+
+  "podcast_conversation_no_summary_hint": "对话功能需要先完成转录。请等待转录完成。",
+  "@podcast_conversation_no_summary_hint": {
+    "description": "无摘要提示的对话"
+  },
+
+  "podcast_conversation_loading_failed": "加载对话历史失败",
+  "@podcast_conversation_loading_failed": {
+    "description": "加载对话失败消息"
+  },
+
+  "podcast_conversation_user": "你",
+  "@podcast_conversation_user": {
+    "description": "对话中的用户标签"
+  },
+
+  "podcast_conversation_assistant": "AI助手",
+  "@podcast_conversation_assistant": {
+    "description": "对话中的助手标签"
+  },
+
+  "podcast_conversation_reload": "重新加载",
+  "@podcast_conversation_reload": {
+    "description": "重新加载按钮标签"
+  },
+
+  "podcast_error_loading": "加载内容失败",
+  "@podcast_error_loading": {
+    "description": "通用加载错误消息"
+  },
+
+  "podcast_transcription_delete": "删除",
+  "@podcast_transcription_delete": {
+    "description": "转录删除按钮"
+  },
+
+  "podcast_transcription_clear": "清空",
+  "@podcast_transcription_clear": {
+    "description": "转录清空按钮"
+  },
+
+  "podcast_episode_not_found": "未找到分集",
+  "@podcast_episode_not_found": {
+    "description": "未找到分集消息"
+  },
+
+  "podcast_go_back": "返回",
+  "@podcast_go_back": {
+    "description": "返回按钮标签"
+  },
+
+  "podcast_load_failed": "加载失败",
+  "@podcast_load_failed": {
+    "description": "加载失败消息"
+  },
+
+  "podcast_summary_empty_hint": "暂无摘要",
+  "@podcast_summary_empty_hint": {
+    "description": "摘要空提示"
+  },
+
+  "podcast_filter_refresh": "刷新",
+  "@podcast_filter_refresh": {
+    "description": "筛选刷新按钮标签"
+  },
+
+  "podcast_please_select_time": "请选择时间",
+  "@podcast_please_select_time": {
+    "description": "请选择时间验证消息"
+  },
+
+  "podcast_please_select_time_and_day": "请选择时间和星期",
+  "@podcast_please_select_time_and_day": {
+    "description": "请选择时间和星期验证消息"
+  },
+
+  "podcast_bulk_import_urls_extracted": "从文件中提取了{count}个链接",
+  "@podcast_bulk_import_urls_extracted": {
+    "description": "批量导入链接提取消息（带数量）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_import_file_error": "读取文件失败：{error}",
+  "@podcast_bulk_import_file_error": {
+    "description": "批量导入文件错误消息",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_bulk_import_success": "成功导入{count}个播客",
+  "@podcast_bulk_import_success": {
+    "description": "批量导入成功消息（带数量）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_global_rss_settings_title": "全局RSS设置",
+  "@podcast_global_rss_settings_title": {
+    "description": "全局RSS设置页面标题"
+  },
+
+  "podcast_updated_subscriptions": "已更新{count}个订阅",
+  "@podcast_updated_subscriptions": {
+    "description": "更新订阅消息（带数量）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_summary_generate_failed": "生成摘要失败",
+  "@podcast_summary_generate_failed": {
+    "description": "摘要生成失败消息"
+  },
+
+  "podcast_summary_no_summary": "暂无摘要",
+  "@podcast_summary_no_summary": {
+    "description": "无摘要可用消息"
   }
 }

@@ -435,7 +435,7 @@ class SpeedRulerSheet extends StatefulWidget {
 
   const SpeedRulerSheet({
     super.key,
-    this.title = '倍速播放',
+    this.title,
     this.initialValue = 1.5,
     this.onSpeedChanged,
     this.min = 0.5,
@@ -449,7 +449,7 @@ class SpeedRulerSheet extends StatefulWidget {
   /// 返回选定的倍速值 / Returns the selected speed value
   static Future<double?> show({
     required BuildContext context,
-    String title = '倍速播放',
+    String? title,
     double initialValue = 1.5,
     ValueChanged<double>? onSpeedChanged,
     double min = 0.5,
@@ -542,7 +542,8 @@ class _SpeedRulerSheetState extends State<SpeedRulerSheet> {
               children: [
                 // 标题 / Title
                 Text(
-                  widget.title,
+                  widget.title ??
+                      AppLocalizations.of(context)!.podcast_speed_title,
                   style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w500,
                   ),
@@ -610,16 +611,16 @@ class SpeedRulerDemoPage extends StatefulWidget {
 
 class _SpeedRulerDemoPageState extends State<SpeedRulerDemoPage> {
   double _currentSpeed = 1.5;
-  String _lastAction = '请点击下方按钮选择倍速';
+  String _lastAction = '';
 
   void _showSpeedRulerSheet() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
-      _lastAction = '正在选择倍速...';
+      _lastAction = l10n.podcast_speed_select;
     });
 
     final selectedSpeed = await SpeedRulerSheet.show(
       context: context,
-      title: '倍速播放',
       initialValue: _currentSpeed,
       min: 0.5,
       max: 3.0,
@@ -629,7 +630,8 @@ class _SpeedRulerDemoPageState extends State<SpeedRulerDemoPage> {
         // 实时更新当前速度 / Update current speed in real-time
         setState(() {
           _currentSpeed = speed;
-          _lastAction = '实时更新: ${speed.toStringAsFixed(1)}x';
+          _lastAction =
+              '${l10n.podcast_speed_current_speed}: ${speed.toStringAsFixed(1)}x';
         });
       },
     );
@@ -637,11 +639,12 @@ class _SpeedRulerDemoPageState extends State<SpeedRulerDemoPage> {
     if (selectedSpeed != null) {
       setState(() {
         _currentSpeed = selectedSpeed;
-        _lastAction = '已选择: ${selectedSpeed.toStringAsFixed(1)}x';
+        _lastAction =
+            '${l10n.podcast_speed_select}: ${selectedSpeed.toStringAsFixed(1)}x';
       });
     } else {
       setState(() {
-        _lastAction = '已取消选择';
+        _lastAction = l10n.cancel;
       });
     }
   }
@@ -650,10 +653,11 @@ class _SpeedRulerDemoPageState extends State<SpeedRulerDemoPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('倍速播放控件演示'),
+        title: Text(l10n.podcast_speed_title),
         backgroundColor: colorScheme.surface,
         elevation: 0,
       ),
@@ -673,7 +677,7 @@ class _SpeedRulerDemoPageState extends State<SpeedRulerDemoPage> {
                 child: Column(
                   children: [
                     Text(
-                      '当前倍速',
+                      l10n.podcast_speed_current_speed,
                       style: theme.textTheme.titleMedium?.copyWith(
                         color: colorScheme.onPrimaryContainer,
                       ),
@@ -711,7 +715,9 @@ class _SpeedRulerDemoPageState extends State<SpeedRulerDemoPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        _lastAction,
+                        _lastAction.isEmpty
+                            ? l10n.podcast_speed_select
+                            : _lastAction,
                         style: theme.textTheme.bodyMedium,
                       ),
                     ),
@@ -725,7 +731,7 @@ class _SpeedRulerDemoPageState extends State<SpeedRulerDemoPage> {
               FilledButton.tonalIcon(
                 onPressed: _showSpeedRulerSheet,
                 icon: const Icon(Icons.speed),
-                label: const Text('选择倍速'),
+                label: Text(l10n.podcast_speed_select),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
@@ -739,12 +745,11 @@ class _SpeedRulerDemoPageState extends State<SpeedRulerDemoPage> {
 
               // 功能说明 / Feature description
               Text(
-                '功能特性：\n'
-                '• 拖拽刻度尺选择倍速\n'
-                '• 点击刻度直接跳转\n'
-                '• 自动吸附到 0.1x\n'
-                '• 触感反馈\n'
-                '• 深色/浅色主题适配',
+                '${l10n.podcast_speed_feature_1}\n'
+                '${l10n.podcast_speed_feature_2}\n'
+                '${l10n.podcast_speed_feature_3}\n'
+                '${l10n.podcast_speed_feature_4}\n'
+                '${l10n.podcast_speed_feature_5}',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,

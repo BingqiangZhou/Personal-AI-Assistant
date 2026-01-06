@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 
 /// ============================================
 /// SpeedRollerPicker - 滚筒样式倍速选择器
@@ -439,7 +440,7 @@ class _SpeedPickerContentState extends State<_SpeedPickerContent> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '倍速播放',
+                  AppLocalizations.of(context)!.podcast_speed_title,
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -491,7 +492,7 @@ class _SpeedPickerContentState extends State<_SpeedPickerContent> {
             ),
             child: TextButton(
               onPressed: widget.onClose,
-              child: const Text('完成'),
+              child: Text(AppLocalizations.of(context)!.podcast_speed_done),
             ),
           ),
         ],

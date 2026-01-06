@@ -64,22 +64,24 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       final file = File(path);
       final content = await file.readAsString();
       final urls = _extractUrls(content);
-      
+
       if (mounted) {
         setState(() {
           _previewUrls.addAll(urls);
           _previewUrls = _previewUrls.toSet().toList();
-          
+
+          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Extracted ${urls.length} URLs from file')),
+            SnackBar(content: Text(l10n.podcast_bulk_import_urls_extracted(urls.length))),
           );
         });
       }
     } catch (e) {
       debugPrint('Error reading file: $e');
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to read file: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(l10n.podcast_bulk_import_file_error(e.toString())), backgroundColor: Colors.red),
         );
       }
     }
@@ -110,9 +112,10 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
     try {
       await widget.onImport(_previewUrls);
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Successfully imported ${_previewUrls.length} subscriptions')),
+          SnackBar(content: Text(l10n.podcast_bulk_import_success(_previewUrls.length))),
         );
       }
     } catch (e) {
@@ -300,7 +303,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                     children: [
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cancel'),
+                        child: Text(l10n.cancel),
                       ),
                       const SizedBox(width: 8),
                       FilledButton(

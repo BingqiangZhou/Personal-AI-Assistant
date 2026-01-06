@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/schedule_config_model.dart';
 import '../providers/global_schedule_provider.dart';
 
@@ -28,10 +29,11 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(globalScheduleProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Global RSS Schedule Settings'),
+        title: Text(l10n!.podcast_global_rss_settings_title),
         actions: [
           if (state.isLoading)
             const Padding(
@@ -339,9 +341,10 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
   Future<void> _applyToAll() async {
     if (_selectedFrequency == null) return;
 
+    final l10n = AppLocalizations.of(context);
     if (_selectedFrequency == UpdateFrequency.daily && _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select update time')),
+        SnackBar(content: Text(l10n!.podcast_please_select_time)),
       );
       return;
     }
@@ -349,7 +352,7 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
     if (_selectedFrequency == UpdateFrequency.weekly) {
       if (_selectedTime == null || _selectedDayOfWeek == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select time and day')),
+          SnackBar(content: Text(l10n!.podcast_please_select_time_and_day)),
         );
         return;
       }
@@ -383,9 +386,10 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
         });
 
         if (success) {
+          final l10n = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Successfully updated ${allIds.length} subscriptions'),
+              content: Text(l10n!.podcast_updated_subscriptions(allIds.length)),
               backgroundColor: Colors.green,
             ),
           );

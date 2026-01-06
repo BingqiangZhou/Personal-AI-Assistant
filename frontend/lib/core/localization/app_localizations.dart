@@ -3157,6 +3157,282 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Source'**
   String get podcast_source;
+
+  /// Playback speed selection title
+  ///
+  /// In en, this message translates to:
+  /// **'Playback Speed'**
+  String get podcast_speed_title;
+
+  /// Speed selection done button
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get podcast_speed_done;
+
+  /// Current speed label
+  ///
+  /// In en, this message translates to:
+  /// **'Current Speed'**
+  String get podcast_speed_current_speed;
+
+  /// Speed selection label
+  ///
+  /// In en, this message translates to:
+  /// **'Select Speed'**
+  String get podcast_speed_select;
+
+  /// Speed feature 1: Quick Selection
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Selection'**
+  String get podcast_speed_feature_1;
+
+  /// Speed feature 2: Precise Control
+  ///
+  /// In en, this message translates to:
+  /// **'Precise Control'**
+  String get podcast_speed_feature_2;
+
+  /// Speed feature 3: Ruler Scale
+  ///
+  /// In en, this message translates to:
+  /// **'Ruler Scale'**
+  String get podcast_speed_feature_3;
+
+  /// Speed feature 4: Instant Apply
+  ///
+  /// In en, this message translates to:
+  /// **'Instant Apply'**
+  String get podcast_speed_feature_4;
+
+  /// Speed feature 5: Smooth Experience
+  ///
+  /// In en, this message translates to:
+  /// **'Smooth Experience'**
+  String get podcast_speed_feature_5;
+
+  /// Episode detail tab: Shownotes
+  ///
+  /// In en, this message translates to:
+  /// **'Shownotes'**
+  String get podcast_tab_shownotes;
+
+  /// Episode detail tab: Transcript
+  ///
+  /// In en, this message translates to:
+  /// **'Transcript'**
+  String get podcast_tab_transcript;
+
+  /// Episode detail tab: Chat
+  ///
+  /// In en, this message translates to:
+  /// **'Chat'**
+  String get podcast_tab_chat;
+
+  /// Transcription status: Processing
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription in progress...'**
+  String get podcast_transcription_processing;
+
+  /// Transcription auto-starting message
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-starting transcription...'**
+  String get podcast_transcription_auto_starting;
+
+  /// Transcription starting message
+  ///
+  /// In en, this message translates to:
+  /// **'Starting transcription...'**
+  String get podcast_transcription_starting;
+
+  /// Transcription start button title
+  ///
+  /// In en, this message translates to:
+  /// **'Start Transcription'**
+  String get podcast_transcription_start_title;
+
+  /// Transcription start description
+  ///
+  /// In en, this message translates to:
+  /// **'Start transcribing this episode to generate text content and AI-powered summaries.'**
+  String get podcast_transcription_start_desc;
+
+  /// Transcription start button label
+  ///
+  /// In en, this message translates to:
+  /// **'Start Transcription'**
+  String get podcast_transcription_start_button;
+
+  /// AI Conversation title
+  ///
+  /// In en, this message translates to:
+  /// **'AI Conversation'**
+  String get podcast_conversation_title;
+
+  /// Empty conversation title
+  ///
+  /// In en, this message translates to:
+  /// **'Start a conversation'**
+  String get podcast_conversation_empty_title;
+
+  /// Empty conversation hint
+  ///
+  /// In en, this message translates to:
+  /// **'Ask questions about this episode and get AI-powered answers based on the transcript.'**
+  String get podcast_conversation_empty_hint;
+
+  /// Clear conversation history dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Conversation History'**
+  String get podcast_conversation_clear_history;
+
+  /// Clear conversation confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to clear all conversation history? This cannot be undone.'**
+  String get podcast_conversation_clear_confirm;
+
+  /// Send message hint text
+  ///
+  /// In en, this message translates to:
+  /// **'Send message (Ctrl+Enter)'**
+  String get podcast_conversation_send_hint;
+
+  /// No summary hint for conversation
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation requires a completed transcript. Please wait for transcription to complete.'**
+  String get podcast_conversation_no_summary_hint;
+
+  /// Failed to load conversation message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load conversation history'**
+  String get podcast_conversation_loading_failed;
+
+  /// User label in conversation
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get podcast_conversation_user;
+
+  /// Assistant label in conversation
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get podcast_conversation_assistant;
+
+  /// Reload button label
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get podcast_conversation_reload;
+
+  /// Generic error loading message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load content'**
+  String get podcast_error_loading;
+
+  /// Transcription delete button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get podcast_transcription_delete;
+
+  /// Transcription clear button
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get podcast_transcription_clear;
+
+  /// Episode not found message
+  ///
+  /// In en, this message translates to:
+  /// **'Episode not found'**
+  String get podcast_episode_not_found;
+
+  /// Go back button label
+  ///
+  /// In en, this message translates to:
+  /// **'Go back'**
+  String get podcast_go_back;
+
+  /// Load failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load'**
+  String get podcast_load_failed;
+
+  /// Summary empty hint
+  ///
+  /// In en, this message translates to:
+  /// **'No summary available'**
+  String get podcast_summary_empty_hint;
+
+  /// Filter refresh button label
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get podcast_filter_refresh;
+
+  /// Please select time validation message
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a time'**
+  String get podcast_please_select_time;
+
+  /// Please select time and day validation message
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a time and day'**
+  String get podcast_please_select_time_and_day;
+
+  /// Bulk import URLs extracted message with count
+  ///
+  /// In en, this message translates to:
+  /// **'Extracted {count} URLs from file'**
+  String podcast_bulk_import_urls_extracted(int count);
+
+  /// Bulk import file error message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to read file: {error}'**
+  String podcast_bulk_import_file_error(String error);
+
+  /// Bulk import success message with count
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully imported {count} podcasts'**
+  String podcast_bulk_import_success(int count);
+
+  /// Global RSS settings page title
+  ///
+  /// In en, this message translates to:
+  /// **'Global RSS Settings'**
+  String get podcast_global_rss_settings_title;
+
+  /// Updated subscriptions message with count
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {count} subscriptions'**
+  String podcast_updated_subscriptions(int count);
+
+  /// Summary generation failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to generate summary'**
+  String get podcast_summary_generate_failed;
+
+  /// No summary available message
+  ///
+  /// In en, this message translates to:
+  /// **'No summary available'**
+  String get podcast_summary_no_summary;
 }
 
 class _AppLocalizationsDelegate

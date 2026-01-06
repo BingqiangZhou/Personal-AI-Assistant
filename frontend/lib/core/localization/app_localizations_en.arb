@@ -2615,5 +2615,255 @@
   "podcast_source": "Source",
   "@podcast_source": {
     "description": "Source link label"
+  },
+
+  "podcast_speed_title": "Playback Speed",
+  "@podcast_speed_title": {
+    "description": "Playback speed selection title"
+  },
+
+  "podcast_speed_done": "Done",
+  "@podcast_speed_done": {
+    "description": "Speed selection done button"
+  },
+
+  "podcast_speed_current_speed": "Current Speed",
+  "@podcast_speed_current_speed": {
+    "description": "Current speed label"
+  },
+
+  "podcast_speed_select": "Select Speed",
+  "@podcast_speed_select": {
+    "description": "Speed selection label"
+  },
+
+  "podcast_speed_feature_1": "Quick Selection",
+  "@podcast_speed_feature_1": {
+    "description": "Speed feature 1: Quick Selection"
+  },
+
+  "podcast_speed_feature_2": "Precise Control",
+  "@podcast_speed_feature_2": {
+    "description": "Speed feature 2: Precise Control"
+  },
+
+  "podcast_speed_feature_3": "Ruler Scale",
+  "@podcast_speed_feature_3": {
+    "description": "Speed feature 3: Ruler Scale"
+  },
+
+  "podcast_speed_feature_4": "Instant Apply",
+  "@podcast_speed_feature_4": {
+    "description": "Speed feature 4: Instant Apply"
+  },
+
+  "podcast_speed_feature_5": "Smooth Experience",
+  "@podcast_speed_feature_5": {
+    "description": "Speed feature 5: Smooth Experience"
+  },
+
+  "podcast_tab_shownotes": "Shownotes",
+  "@podcast_tab_shownotes": {
+    "description": "Episode detail tab: Shownotes"
+  },
+
+  "podcast_tab_transcript": "Transcript",
+  "@podcast_tab_transcript": {
+    "description": "Episode detail tab: Transcript"
+  },
+
+  "podcast_tab_chat": "Chat",
+  "@podcast_tab_chat": {
+    "description": "Episode detail tab: Chat"
+  },
+
+  "podcast_transcription_processing": "Transcription in progress...",
+  "@podcast_transcription_processing": {
+    "description": "Transcription status: Processing"
+  },
+
+  "podcast_transcription_auto_starting": "Auto-starting transcription...",
+  "@podcast_transcription_auto_starting": {
+    "description": "Transcription auto-starting message"
+  },
+
+  "podcast_transcription_starting": "Starting transcription...",
+  "@podcast_transcription_starting": {
+    "description": "Transcription starting message"
+  },
+
+  "podcast_transcription_start_title": "Start Transcription",
+  "@podcast_transcription_start_title": {
+    "description": "Transcription start button title"
+  },
+
+  "podcast_transcription_start_desc": "Start transcribing this episode to generate text content and AI-powered summaries.",
+  "@podcast_transcription_start_desc": {
+    "description": "Transcription start description"
+  },
+
+  "podcast_transcription_start_button": "Start Transcription",
+  "@podcast_transcription_start_button": {
+    "description": "Transcription start button label"
+  },
+
+  "podcast_conversation_title": "AI Conversation",
+  "@podcast_conversation_title": {
+    "description": "AI Conversation title"
+  },
+
+  "podcast_conversation_empty_title": "Start a conversation",
+  "@podcast_conversation_empty_title": {
+    "description": "Empty conversation title"
+  },
+
+  "podcast_conversation_empty_hint": "Ask questions about this episode and get AI-powered answers based on the transcript.",
+  "@podcast_conversation_empty_hint": {
+    "description": "Empty conversation hint"
+  },
+
+  "podcast_conversation_clear_history": "Clear Conversation History",
+  "@podcast_conversation_clear_history": {
+    "description": "Clear conversation history dialog title"
+  },
+
+  "podcast_conversation_clear_confirm": "Are you sure you want to clear all conversation history? This cannot be undone.",
+  "@podcast_conversation_clear_confirm": {
+    "description": "Clear conversation confirmation message"
+  },
+
+  "podcast_conversation_send_hint": "Send message (Ctrl+Enter)",
+  "@podcast_conversation_send_hint": {
+    "description": "Send message hint text"
+  },
+
+  "podcast_conversation_no_summary_hint": "Conversation requires a completed transcript. Please wait for transcription to complete.",
+  "@podcast_conversation_no_summary_hint": {
+    "description": "No summary hint for conversation"
+  },
+
+  "podcast_conversation_loading_failed": "Failed to load conversation history",
+  "@podcast_conversation_loading_failed": {
+    "description": "Failed to load conversation message"
+  },
+
+  "podcast_conversation_user": "You",
+  "@podcast_conversation_user": {
+    "description": "User label in conversation"
+  },
+
+  "podcast_conversation_assistant": "AI Assistant",
+  "@podcast_conversation_assistant": {
+    "description": "Assistant label in conversation"
+  },
+
+  "podcast_conversation_reload": "Reload",
+  "@podcast_conversation_reload": {
+    "description": "Reload button label"
+  },
+
+  "podcast_error_loading": "Failed to load content",
+  "@podcast_error_loading": {
+    "description": "Generic error loading message"
+  },
+
+  "podcast_transcription_delete": "Delete",
+  "@podcast_transcription_delete": {
+    "description": "Transcription delete button"
+  },
+
+  "podcast_transcription_clear": "Clear",
+  "@podcast_transcription_clear": {
+    "description": "Transcription clear button"
+  },
+
+  "podcast_episode_not_found": "Episode not found",
+  "@podcast_episode_not_found": {
+    "description": "Episode not found message"
+  },
+
+  "podcast_go_back": "Go back",
+  "@podcast_go_back": {
+    "description": "Go back button label"
+  },
+
+  "podcast_load_failed": "Failed to load",
+  "@podcast_load_failed": {
+    "description": "Load failed message"
+  },
+
+  "podcast_summary_empty_hint": "No summary available",
+  "@podcast_summary_empty_hint": {
+    "description": "Summary empty hint"
+  },
+
+  "podcast_filter_refresh": "Refresh",
+  "@podcast_filter_refresh": {
+    "description": "Filter refresh button label"
+  },
+
+  "podcast_please_select_time": "Please select a time",
+  "@podcast_please_select_time": {
+    "description": "Please select time validation message"
+  },
+
+  "podcast_please_select_time_and_day": "Please select a time and day",
+  "@podcast_please_select_time_and_day": {
+    "description": "Please select time and day validation message"
+  },
+
+  "podcast_bulk_import_urls_extracted": "Extracted {count} URLs from file",
+  "@podcast_bulk_import_urls_extracted": {
+    "description": "Bulk import URLs extracted message with count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_import_file_error": "Failed to read file: {error}",
+  "@podcast_bulk_import_file_error": {
+    "description": "Bulk import file error message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_bulk_import_success": "Successfully imported {count} podcasts",
+  "@podcast_bulk_import_success": {
+    "description": "Bulk import success message with count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_global_rss_settings_title": "Global RSS Settings",
+  "@podcast_global_rss_settings_title": {
+    "description": "Global RSS settings page title"
+  },
+
+  "podcast_updated_subscriptions": "Updated {count} subscriptions",
+  "@podcast_updated_subscriptions": {
+    "description": "Updated subscriptions message with count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_summary_generate_failed": "Failed to generate summary",
+  "@podcast_summary_generate_failed": {
+    "description": "Summary generation failed message"
+  },
+
+  "podcast_summary_no_summary": "No summary available",
+  "@podcast_summary_no_summary": {
+    "description": "No summary available message"
   }
 }

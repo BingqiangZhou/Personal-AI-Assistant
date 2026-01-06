@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 
 import '../providers/transcription_providers.dart';
 import '../../data/models/podcast_transcription_model.dart';
@@ -553,11 +554,17 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     
     // Determine the current active step index based on progress
     int currentActiveIndex = 0;
-    if (progress >= 95) currentActiveIndex = 4;
-    else if (progress >= 45) currentActiveIndex = 3;
-    else if (progress >= 35) currentActiveIndex = 2;
-    else if (progress >= 20) currentActiveIndex = 1;
-    else currentActiveIndex = 0;
+    if (progress >= 95) {
+      currentActiveIndex = 4;
+    } else if (progress >= 45) {
+      currentActiveIndex = 3;
+    } else if (progress >= 35) {
+      currentActiveIndex = 2;
+    } else if (progress >= 20) {
+      currentActiveIndex = 1;
+    } else {
+      currentActiveIndex = 0;
+    }
 
     if (stepIndex < currentActiveIndex) {
       return 'completed';
@@ -571,11 +578,17 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   Color _getStepConnectorColor(BuildContext context, int stepIndex, int totalSteps, double progress) {
     // Determine current active step index
     int currentActiveIndex = 0;
-    if (progress >= 95) currentActiveIndex = 4;
-    else if (progress >= 45) currentActiveIndex = 3;
-    else if (progress >= 35) currentActiveIndex = 2;
-    else if (progress >= 20) currentActiveIndex = 1;
-    else currentActiveIndex = 0;
+    if (progress >= 95) {
+      currentActiveIndex = 4;
+    } else if (progress >= 45) {
+      currentActiveIndex = 3;
+    } else if (progress >= 35) {
+      currentActiveIndex = 2;
+    } else if (progress >= 20) {
+      currentActiveIndex = 1;
+    } else {
+      currentActiveIndex = 0;
+    }
     
     // Connector is colored if the step it originates from is completed or current
     // stepIndex is the index of the step BEFORE the connector
@@ -732,7 +745,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _deleteTranscription(ref),
                     icon: const Icon(Icons.delete_outline),
-                    label: const Text('Delete'),
+                    label: Text(AppLocalizations.of(context)!.podcast_transcription_delete),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -901,7 +914,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _deleteTranscription(ref),
                     icon: const Icon(Icons.delete_outline),
-                    label: const Text('Clear'),
+                    label: Text(AppLocalizations.of(context)!.podcast_transcription_clear),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(

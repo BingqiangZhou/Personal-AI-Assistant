@@ -168,38 +168,41 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                                       break;
                                   }
                                 },
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: 'refresh',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.refresh),
-                                        SizedBox(width: 8),
-                                        Text('Refresh'),
-                                      ],
+                                itemBuilder: (context) {
+                                  final l10n = AppLocalizations.of(context)!;
+                                  return [
+                                    PopupMenuItem(
+                                      value: 'refresh',
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.refresh),
+                                          const SizedBox(width: 8),
+                                          Text(l10n.podcast_filter_refresh),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'reparse',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.sync_problem),
-                                        SizedBox(width: 8),
-                                        Text('Reparse All'),
-                                      ],
+                                    PopupMenuItem(
+                                      value: 'reparse',
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.sync_problem),
+                                          const SizedBox(width: 8),
+                                          Text(l10n.podcast_reparse_tooltip),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'delete',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.delete, color: Colors.red),
-                                        SizedBox(width: 8),
-                                        Text('Delete', style: TextStyle(color: Colors.red)),
-                                      ],
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.delete, color: Colors.red),
+                                          const SizedBox(width: 8),
+                                          Text(l10n.delete, style: const TextStyle(color: Colors.red)),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ];
+                                },
                               ),
                             ),
                           ],

@@ -142,7 +142,7 @@ class _PodcastEpisodeDetailPageState
                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                   ),
                   const SizedBox(width: 12),
-                  const Text('Processing transcription...'),
+                  Text(AppLocalizations.of(context)!.podcast_transcription_processing),
                 ],
               ),
               backgroundColor: Theme.of(context).colorScheme.primary,
@@ -162,7 +162,7 @@ class _PodcastEpisodeDetailPageState
                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                   ),
                   const SizedBox(width: 12),
-                  const Text('Starting transcription automatically...'),
+                  Text(AppLocalizations.of(context)!.podcast_transcription_auto_starting),
                 ],
               ),
               backgroundColor: Theme.of(context).colorScheme.primary,
@@ -538,7 +538,7 @@ class _PodcastEpisodeDetailPageState
         child: Row(
           children: [
             // Shownotes Tab
-            _buildTabButton('Shownotes', _selectedTabIndex == 0, () {
+            _buildTabButton(AppLocalizations.of(context)!.podcast_tab_shownotes, _selectedTabIndex == 0, () {
               if (_selectedTabIndex != 0) {
                 setState(() {
                   _selectedTabIndex = 0;
@@ -548,7 +548,7 @@ class _PodcastEpisodeDetailPageState
             }),
             const SizedBox(width: 8),
             // Transcript Tab
-            _buildTabButton('Transcript', _selectedTabIndex == 1, () {
+            _buildTabButton(AppLocalizations.of(context)!.podcast_tab_transcript, _selectedTabIndex == 1, () {
               if (_selectedTabIndex != 1) {
                 setState(() {
                   _selectedTabIndex = 1;
@@ -568,7 +568,7 @@ class _PodcastEpisodeDetailPageState
             }),
             const SizedBox(width: 8),
             // Conversation Tab
-            _buildTabButton('Chat', _selectedTabIndex == 3, () {
+            _buildTabButton(AppLocalizations.of(context)!.podcast_tab_chat, _selectedTabIndex == 3, () {
               if (_selectedTabIndex != 3) {
                 setState(() {
                   _selectedTabIndex = 3;
@@ -599,7 +599,7 @@ class _PodcastEpisodeDetailPageState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Shownotes Tab
-          _buildSidebarTabButton('Shownotes', _selectedTabIndex == 0, () {
+          _buildSidebarTabButton(AppLocalizations.of(context)!.podcast_tab_shownotes, _selectedTabIndex == 0, () {
             if (_selectedTabIndex != 0) {
               setState(() {
                 _selectedTabIndex = 0;
@@ -609,7 +609,7 @@ class _PodcastEpisodeDetailPageState
           }),
           const SizedBox(height: 8),
           // Transcript Tab
-          _buildSidebarTabButton('Transcript', _selectedTabIndex == 1, () {
+          _buildSidebarTabButton(AppLocalizations.of(context)!.podcast_tab_transcript, _selectedTabIndex == 1, () {
             if (_selectedTabIndex != 1) {
               setState(() {
                 _selectedTabIndex = 1;
@@ -629,7 +629,7 @@ class _PodcastEpisodeDetailPageState
           }),
           const SizedBox(height: 8),
           // Conversation Tab
-          _buildSidebarTabButton('Chat', _selectedTabIndex == 3, () {
+          _buildSidebarTabButton(AppLocalizations.of(context)!.podcast_tab_chat, _selectedTabIndex == 3, () {
             if (_selectedTabIndex != 3) {
               setState(() {
                 _selectedTabIndex = 3;
@@ -761,7 +761,7 @@ class _PodcastEpisodeDetailPageState
           ),
           const SizedBox(height: 16),
           Text(
-            'Failed to load transcript',
+            AppLocalizations.of(context)!.podcast_transcription_failed,
             style: TextStyle(
               fontSize: 16,
               color: Theme.of(context).colorScheme.onSurface,
@@ -829,7 +829,7 @@ class _PodcastEpisodeDetailPageState
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      summaryState.errorMessage ?? 'Failed to generate summary',
+                      summaryState.errorMessage ?? AppLocalizations.of(context)!.podcast_summary_generate_failed,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.error,
                       ),
@@ -991,7 +991,7 @@ class _PodcastEpisodeDetailPageState
           ),
           const SizedBox(height: 16),
           Text(
-            'No AI summary',
+            AppLocalizations.of(context)!.podcast_summary_no_summary,
             style: TextStyle(
               fontSize: 16,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -999,7 +999,7 @@ class _PodcastEpisodeDetailPageState
           ),
           const SizedBox(height: 8),
           Text(
-            'Complete transcription first, then click the button above to generate AI summary',
+            AppLocalizations.of(context)!.podcast_summary_empty_hint,
             style: TextStyle(
               fontSize: 14,
               color: Theme.of(
@@ -1019,7 +1019,7 @@ class _PodcastEpisodeDetailPageState
     return episodeDetailAsync.when(
       data: (episode) {
         if (episode == null) {
-          return const Center(child: Text('Episode not found'));
+          return Center(child: Text(AppLocalizations.of(context)!.podcast_episode_not_found));
         }
         return ConversationChatWidget(
           episodeId: widget.episodeId,
@@ -1038,7 +1038,7 @@ class _PodcastEpisodeDetailPageState
             ),
             const SizedBox(height: 16),
             Text(
-              'Failed to load',
+              AppLocalizations.of(context)!.podcast_load_failed,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -1062,11 +1062,13 @@ class _PodcastEpisodeDetailPageState
     final year = localDate.year;
     final month = localDate.month.toString().padLeft(2, '0');
     final day = localDate.day.toString().padLeft(2, '0');
-    return '$year年$month月$day日';
+    final l10n = AppLocalizations.of(context)!;
+    return l10n.date_format(year, month, day);
   }
 
   // 错误状态
   Widget _buildErrorState(BuildContext context, dynamic error) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -1074,7 +1076,7 @@ class _PodcastEpisodeDetailPageState
           const Icon(Icons.error_outline, size: 64, color: Colors.red),
           const SizedBox(height: 16),
           Text(
-            'Error loading episode',
+            l10n.podcast_error_loading,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
@@ -1093,7 +1095,7 @@ class _PodcastEpisodeDetailPageState
             onPressed: () {
               context.pop();
             },
-            child: const Text('Go Back'),
+            child: Text(l10n.podcast_go_back),
           ),
         ],
       ),
