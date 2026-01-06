@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../providers/podcast_providers.dart';
+import 'speed_ruler/speed_roller_picker.dart';
 
 /// Floating podcast player on the right side of the screen
 /// with collapsed and expanded states
@@ -527,7 +528,7 @@ class _CollapsedPlayerContent extends StatelessWidget {
 }
 
 /// Expanded state content
-class _ExpandedPlayerContent extends StatelessWidget {
+class _ExpandedPlayerContent extends StatefulWidget {
   final PodcastEpisodeModel episode;
   final bool isPlaying;
   final bool isLoading;
@@ -563,7 +564,15 @@ class _ExpandedPlayerContent extends StatelessWidget {
   });
 
   @override
+  State<_ExpandedPlayerContent> createState() => _ExpandedPlayerContentState();
+}
+
+class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
+  final GlobalKey _speedButtonKey = GlobalKey();
+
+  @override
   Widget build(BuildContext context) {
+    // ... 其他代码保持不变
     return Material(
       color: Colors.transparent,
       child: SingleChildScrollView(
@@ -639,7 +648,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
               // Close button on the left
               IconButton(
                 icon: const Icon(Icons.close),
-                onPressed: onClose,
+                onPressed: widget.onClose,
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 padding: EdgeInsets.zero,
                 tooltip: 'Close',
@@ -667,7 +676,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
               // Collapse button on the right
               IconButton(
                 icon: const Icon(Icons.chevron_right),
-                onPressed: onCollapse,
+                onPressed: widget.onCollapse,
                 constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 padding: EdgeInsets.zero,
                 tooltip: l10n.podcast_player_collapse,
@@ -696,7 +705,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
         final imageSize = availableWidth < 100 ? 32.0 : 48.0; // smaller image for tight spaces
 
         return InkWell(
-          onTap: onNavigateToEpisode,
+          onTap: widget.onNavigateToEpisode,
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -722,7 +731,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        episode.title,
+                        widget.episode.title,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -745,7 +754,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                _formatDate(episode.publishedAt),
+                                _formatDate(widget.episode.publishedAt),
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -754,15 +763,15 @@ class _ExpandedPlayerContent extends StatelessWidget {
                                 maxLines: 1,
                               ),
                             ),
-                            if (episode.audioDuration != null)
+                            if (widget.episode.audioDuration != null)
                               Consumer(
                                 builder: (context, ref, _) {
                                   final audioPlayerState = ref.watch(audioPlayerProvider);
                                   // Use audio player duration if available (more accurate), otherwise fall back to episode duration
-                                  final displayDuration = (audioPlayerState.currentEpisode?.id == episode.id &&
+                                  final displayDuration = (audioPlayerState.currentEpisode?.id == widget.episode.id &&
                                       audioPlayerState.duration > 0)
                                       ? audioPlayerState.duration
-                                      : episode.audioDuration!;
+                                      : widget.episode.audioDuration!;
 
                                   return Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -804,7 +813,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
   }
 
   Widget _buildEpisodeImage(BuildContext context) {
-    final imageUrl = episode.subscriptionImageUrl ?? episode.imageUrl;
+    final imageUrl = widget.episode.subscriptionImageUrl ?? widget.episode.imageUrl;
 
     if (imageUrl != null && imageUrl.isNotEmpty) {
       return Image.network(
@@ -842,7 +851,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
   }
 
   Widget _buildProgressBar(BuildContext context) {
-    final progress = duration > 0 ? position / duration : 0.0;
+    final progress = widget.duration > 0 ? widget.position / widget.duration : 0.0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -871,8 +880,8 @@ class _ExpandedPlayerContent extends StatelessWidget {
                 child: Slider(
                   value: progress.clamp(0.0, 1.0),
                   onChanged: (value) {
-                    final newPosition = (value * duration).round();
-                    onSeek(newPosition);
+                    final newPosition = (value * widget.duration).round();
+                    widget.onSeek(newPosition);
                   },
                   activeColor: Theme.of(context).colorScheme.primary,
                 ),
@@ -885,7 +894,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        _formatDuration(position),
+                        _formatDuration(widget.position),
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -906,6 +915,23 @@ class _ExpandedPlayerContent extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _formatRemainingTime() {
+    final remaining = widget.duration - widget.position;
+    if (remaining <= 0) {
+      return '-00:00';
+    }
+
+    final seconds = (remaining / 1000).floor();
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+
+    if (hours > 0) {
+      return "-${hours.toString().padLeft(1, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+    }
+    return '-${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
   Widget _buildPlaybackControls(BuildContext context) {
@@ -931,7 +957,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
               icon: Icons.replay_10,
               label: '-10',
               tooltip: l10n?.podcast_player_rewind_10 ?? 'Rewind 10s',
-              onTap: onRewind,
+              onTap: widget.onRewind,
             ),
             // Play/Pause
             Container(
@@ -949,11 +975,11 @@ class _ExpandedPlayerContent extends StatelessWidget {
                 ],
               ),
               child: IconButton(
-                onPressed: isLoading ? null : onPlayPause,
-                tooltip: isPlaying
+                onPressed: widget.isLoading ? null : widget.onPlayPause,
+                tooltip: widget.isPlaying
                     ? (l10n?.podcast_player_pause ?? 'Pause')
                     : (l10n?.podcast_player_play ?? 'Play'),
-                icon: isLoading
+                icon: widget.isLoading
                     ? const SizedBox(
                         width: 24,
                         height: 24,
@@ -963,7 +989,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
                         ),
                       )
                     : Icon(
-                        isPlaying ? Icons.pause : Icons.play_arrow,
+                        widget.isPlaying ? Icons.pause : Icons.play_arrow,
                         color: Colors.white,
                         size: 32,
                       ),
@@ -975,7 +1001,7 @@ class _ExpandedPlayerContent extends StatelessWidget {
               icon: Icons.forward_30,
               label: '+30',
               tooltip: l10n?.podcast_player_forward_30 ?? 'Forward 30s',
-              onTap: onForward,
+              onTap: widget.onForward,
             ),
           ],
         );
@@ -1059,8 +1085,8 @@ class _ExpandedPlayerContent extends StatelessWidget {
   }
 
   Widget _buildSpeedButton(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     return Container(
+      key: _speedButtonKey,
       decoration: BoxDecoration(
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
@@ -1068,29 +1094,42 @@ class _ExpandedPlayerContent extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       ),
-      child: PopupMenuButton<double>(
-        padding: EdgeInsets.zero,
-        tooltip: l10n?.podcast_player_playback_speed ?? 'Playback Speed',
-        onSelected: onSpeedChange,
-        itemBuilder: (context) => [
-          const PopupMenuItem(value: 0.5, child: Text('0.5x')),
-          const PopupMenuItem(value: 0.75, child: Text('0.75x')),
-          const PopupMenuItem(value: 1.0, child: Text('1.0x')),
-          const PopupMenuItem(value: 1.25, child: Text('1.25x')),
-          const PopupMenuItem(value: 1.5, child: Text('1.5x')),
-          const PopupMenuItem(value: 1.75, child: Text('1.75x')),
-          const PopupMenuItem(value: 2.0, child: Text('2.0x')),
-          const PopupMenuItem(value: 2.5, child: Text('2.5x')),
-          const PopupMenuItem(value: 3.0, child: Text('3.0x')),
-        ],
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Text(
-            '${playbackRate}x',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () async {
+            // 显示滚筒样式倍速选择弹窗（从按钮位置向上展开）
+            await SpeedPickerPopup.show(
+              context: context,
+              buttonKey: _speedButtonKey,
+              initialValue: widget.playbackRate,
+              onSpeedChanged: (speed) {
+                // 实时更新播放速度
+                widget.onSpeedChange(speed);
+              },
+            );
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.speed,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  '${(widget.playbackRate * 10).roundToDouble() / 10}x',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -1139,22 +1178,5 @@ class _ExpandedPlayerContent extends StatelessWidget {
       return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     }
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  String _formatRemainingTime() {
-    final remaining = duration - position;
-    if (remaining <= 0) {
-      return '-00:00';
-    }
-
-    final seconds = (remaining / 1000).floor();
-    final hours = seconds ~/ 3600;
-    final minutes = (seconds % 3600) ~/ 60;
-    final secs = seconds % 60;
-
-    if (hours > 0) {
-      return '-${hours.toString().padLeft(1, '0')}:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-    }
-    return '-${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 }
