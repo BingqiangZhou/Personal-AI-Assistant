@@ -81,9 +81,13 @@ android {
         }
 
         debug {
-            // Debug builds always use debug signing
-            // Debug 构建始终使用 debug 签名
-            signingConfig = signingConfigs.getByName("debug")
+            // Use same signing as release to avoid installation conflicts
+            // 使用与 release 相同的签名以避免安装冲突
+            signingConfig = if (useKeystoreSigning) {
+                signingConfigs.getByName("release")
+            } else {
+                signingConfigs.getByName("debug")
+            }
         }
     }
 }
