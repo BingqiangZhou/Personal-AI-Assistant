@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:audio_service/audio_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io' show Platform;
 
@@ -12,34 +11,51 @@ import 'core/services/service_locator.dart';
 import 'core/storage/local_storage_service.dart';
 import 'features/podcast/presentation/providers/audio_handler.dart';
 
+// Import AudioService only for mobile platforms
+// AudioService is NOT supported on desktop platforms (Windows, macOS, Linux)
+import 'package:audio_service/audio_service.dart';
+
 // Global AudioHandler instance (initialized once in main)
-late final AudioHandler audioHandler;
+// On mobile: AudioHandler from AudioService
+// On desktop: Direct PodcastAudioHandler instance
+late final PodcastAudioHandler audioHandler;
 
 void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize AudioService (MUST be done in main, only once)
-  audioHandler = await AudioService.init(
-    builder: () => PodcastAudioHandler(),
-    config: AudioServiceConfig(
-      androidNotificationChannelId: 'com.personal_ai_assistant.audio',
-      androidNotificationChannelName: 'Podcast Playback',
-      androidNotificationChannelDescription: 'Podcast audio playback controls',
-      androidNotificationIcon: 'mipmap/ic_launcher',
-      androidShowNotificationBadge: true,
-      // CRITICAL: Keep foreground service running when paused for Android 15 + Vivo OriginOS
-      // This prevents service from being killed by system when paused
-      androidStopForegroundOnPause: false,
-      // CRITICAL: Make notification ongoing to prevent user from swiping it away
-      // This keeps the service alive and allows notification controls to work after pause
-      //androidNotificationOngoing: true,
-      // Ensure compact action buttons are visible
-      androidResumeOnClick: true,
-    ),
-  );
+  // Initialize audio handler based on platform
+  // CRITICAL: AudioService is ONLY supported on Android and iOS
+  // Desktop platforms (Windows, macOS, Linux) use direct PodcastAudioHandler
+  final isMobile = Platform.isAndroid || Platform.isIOS;
 
-  debugPrint('🎵 AudioService initialized in main()');
+  if (isMobile) {
+    // Mobile: Initialize AudioService with system media controls
+    audioHandler = await AudioService.init(
+      builder: () => PodcastAudioHandler(),
+      config: AudioServiceConfig(
+        androidNotificationChannelId: 'com.personal_ai_assistant.audio',
+        androidNotificationChannelName: 'Podcast Playback',
+        androidNotificationChannelDescription: 'Podcast audio playback controls',
+        androidNotificationIcon: 'mipmap/ic_launcher',
+        androidShowNotificationBadge: true,
+        // CRITICAL: Keep foreground service running when paused for Android 15 + Vivo OriginOS
+        // This prevents service from being killed by system when paused
+        androidStopForegroundOnPause: false,
+        // CRITICAL: Make notification ongoing to prevent user from swiping it away
+        // This keeps the service alive and allows notification controls to work after pause
+        //androidNotificationOngoing: true,
+        // Ensure compact action buttons are visible
+        androidResumeOnClick: true,
+      ),
+    );
+
+    debugPrint('🎵 AudioService initialized (mobile platform)');
+  } else {
+    // Desktop: Direct PodcastAudioHandler without AudioService
+    audioHandler = PodcastAudioHandler();
+    debugPrint('🎵 PodcastAudioHandler initialized (desktop platform)');
+  }
 
   // Request notification permission on startup (Android 13+)
   // CRITICAL: This is required for system media controls to work properly

@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
-import 'package:audio_service/audio_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../main.dart' as main_app;
@@ -79,7 +78,10 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       );
     });
 
-    _positionSubscription = AudioService.position.listen((position) {
+    // CRITICAL: Use _audioHandler.positionStream instead of AudioService.position
+    // AudioService is NOT available on desktop platforms (Windows, macOS, Linux)
+    // _audioHandler.positionStream works on both mobile and desktop
+    _positionSubscription = _audioHandler.positionStream.listen((position) {
       if (_isDisposed || !ref.mounted) return;
 
       state = state.copyWith(
@@ -117,7 +119,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     });
 
     if (kDebugMode) {
-      debugPrint('🎵 AudioService listeners set up successfully');
+      debugPrint('🎵 Audio listeners set up successfully');
     }
   }
 

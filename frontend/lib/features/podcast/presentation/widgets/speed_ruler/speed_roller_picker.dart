@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
@@ -129,84 +130,95 @@ class _SpeedRollerPickerState extends State<SpeedRollerPicker> {
     // 计算总项数
     final totalItems = ((widget.max - widget.min) / widget.step).round() + 1;
 
-    return SizedBox(
-      height: widget.height,
-      child: Stack(
-        children: [
-          // 背景渐变（上下边缘变暗）
-          Container(
-            height: widget.height,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  colorScheme.surface.withValues(alpha: 0.95),
-                  colorScheme.surface.withValues(alpha: 0.5),
-                  colorScheme.surface.withValues(alpha: 0.5),
-                  colorScheme.surface.withValues(alpha: 0.95),
-                ],
-                stops: const [0.0, 0.2, 0.8, 1.0],
-              ),
-            ),
-          ),
-
-          // 选中指示器（中间横线）
-          Center(
-            child: Container(
-              height: widget.itemHeight,
+    return Listener(
+      onPointerSignal: (pointerSignal) {
+        // Handle mouse wheel scrolling on desktop
+        if (pointerSignal is PointerScrollEvent) {
+          final delta = pointerSignal.scrollDelta.dy;
+          // Adjust scroll position based on mouse wheel
+          final newOffset = _scrollController.offset + delta;
+          _scrollController.jumpTo(newOffset.clamp(0.0, _scrollController.position.maxScrollExtent));
+        }
+      },
+      child: SizedBox(
+        height: widget.height,
+        child: Stack(
+          children: [
+            // 背景渐变（上下边缘变暗）
+            Container(
+              height: widget.height,
               decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: colorScheme.primary.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                  bottom: BorderSide(
-                    color: colorScheme.primary.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    colorScheme.surface.withValues(alpha: 0.95),
+                    colorScheme.surface.withValues(alpha: 0.5),
+                    colorScheme.surface.withValues(alpha: 0.5),
+                    colorScheme.surface.withValues(alpha: 0.95),
+                  ],
+                  stops: const [0.0, 0.2, 0.8, 1.0],
                 ),
               ),
             ),
-          ),
 
-          // 滚筒列表
-          ListView.builder(
-            controller: _scrollController,
-            physics: const ClampingScrollPhysics(),
-            // 添加上下内边距，让首尾项也能滚动到中心位置
-            padding: EdgeInsets.symmetric(vertical: (widget.height / 2) - (widget.itemHeight / 2)),
-            itemCount: totalItems,
-            itemBuilder: (context, index) {
-              final rawValue = _indexToValue(index);
-              // 修正浮点数精度问题：四舍五入到一位小数
-              final value = (rawValue * 10).roundToDouble() / 10;
-              final isMajorTick = (value % widget.majorStep).abs() < 0.001 ||
-                  value == widget.min ||
-                  value == widget.max;
-              final isSelected = index == _currentIndex;
-
-              return SizedBox(
+            // 选中指示器（中间横线）
+            Center(
+              child: Container(
                 height: widget.itemHeight,
-                child: Center(
-                  child: Text(
-                    // 显示所有数值，主要刻度更大更粗
-                    value == value.truncateToDouble()
-                        ? '${value.toInt()}.0x'
-                        : '${value.toStringAsFixed(1)}x',
-                    style: TextStyle(
-                      fontSize: isSelected ? 24 : (isMajorTick ? 18 : 14),
-                      fontWeight: isSelected ? FontWeight.bold : (isMajorTick ? FontWeight.w500 : FontWeight.normal),
-                      color: isSelected
-                          ? colorScheme.primary
-                          : colorScheme.onSurfaceVariant.withValues(alpha: isMajorTick ? 0.8 : 0.4),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: colorScheme.primary.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                    bottom: BorderSide(
+                      color: colorScheme.primary.withValues(alpha: 0.3),
+                      width: 1,
                     ),
                   ),
                 ),
-              );
-            },
-          ),
-        ],
+              ),
+            ),
+
+            // 滚筒列表
+            ListView.builder(
+              controller: _scrollController,
+              physics: const ClampingScrollPhysics(),
+              // 添加上下内边距，让首尾项也能滚动到中心位置
+              padding: EdgeInsets.symmetric(vertical: (widget.height / 2) - (widget.itemHeight / 2)),
+              itemCount: totalItems,
+              itemBuilder: (context, index) {
+                final rawValue = _indexToValue(index);
+                // 修正浮点数精度问题：四舍五入到一位小数
+                final value = (rawValue * 10).roundToDouble() / 10;
+                final isMajorTick = (value % widget.majorStep).abs() < 0.001 ||
+                    value == widget.min ||
+                    value == widget.max;
+                final isSelected = index == _currentIndex;
+
+                return SizedBox(
+                  height: widget.itemHeight,
+                  child: Center(
+                    child: Text(
+                      // 显示所有数值，主要刻度更大更粗
+                      value == value.truncateToDouble()
+                          ? '${value.toInt()}.0x'
+                          : '${value.toStringAsFixed(1)}x',
+                      style: TextStyle(
+                        fontSize: isSelected ? 24 : (isMajorTick ? 18 : 14),
+                        fontWeight: isSelected ? FontWeight.bold : (isMajorTick ? FontWeight.w500 : FontWeight.normal),
+                        color: isSelected
+                            ? colorScheme.primary
+                            : colorScheme.onSurfaceVariant.withValues(alpha: isMajorTick ? 0.8 : 0.4),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -334,6 +346,8 @@ class _SpeedPickerPopupDialog extends StatelessWidget {
         ? popupMargin
         : (right < popupMargin ? screenWidth - popupWidth - popupMargin : left);
 
+    // 计算屏幕高度
+    final screenHeight = MediaQuery.of(context).size.height;
     final bottom = screenHeight - buttonPosition.dy + popupMargin;
 
     return Material(
@@ -366,10 +380,6 @@ class _SpeedPickerPopupDialog extends StatelessWidget {
       ),
     );
   }
-
-  double get screenHeight =>
-      WidgetsBinding.instance.platformDispatcher.views.first.physicalSize.height /
-      WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
 }
 
 /// 弹窗主体内容

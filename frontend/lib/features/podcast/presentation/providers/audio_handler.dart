@@ -1,22 +1,22 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
-import 'package:just_audio/just_audio.dart';
 
 /// AudioHandler for podcast playback with system media controls
+/// Migrated from just_audio to audioplayers 6.5.1
 /// Optimized for Android 15 + Vivo OriginOS with proper state synchronization
 class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
-  // Use just_audio's automatic interruption handling
-  final AudioPlayer _player = AudioPlayer(handleInterruptions: true);
-  String? _currentUrl;
+  final AudioPlayer _player = AudioPlayer();
+  Duration _currentPosition = Duration.zero;
+  Duration? _currentDuration;
 
   // Position broadcast throttling fields
   DateTime _lastPosEmit = DateTime.fromMillisecondsSinceEpoch(0);
   Duration _lastPos = Duration.zero;
-  Duration _lastBuffered = Duration.zero;
 
-  bool _isDisposed = false; // Track disposal state
+  bool _isDisposed = false;
 
   // All stream subscriptions to be cancelled on disposal
   final List<StreamSubscription> _subs = [];
@@ -78,144 +78,90 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     );
 
     if (kDebugMode) {
-      debugPrint('🎵 PodcastAudioHandler initialized');
+      debugPrint('🎵 PodcastAudioHandler initialized (audioplayers)');
     }
   }
 
   void _listenPlayerEvents() {
-    // Listen to player state changes (playing/paused, completed, etc.)
-    _subs.add(_player.playerStateStream.listen((state) {
+    // Listen to player state changes
+    _subs.add(_player.onPlayerStateChanged.listen((state) {
       if (_isDisposed) return;
       if (kDebugMode) {
-        debugPrint('🎧 PlayerState: ${state.playing} ${state.processingState}');
+        debugPrint('🎧 PlayerState: $state');
       }
       _broadcastState();
     }));
 
-    // CRITICAL: Listen to position updates with optimized throttling
-    // Throttled to 500ms to reduce CPU usage and prevent state conflicts on Vivo devices
-    // Only calls _broadcastPosition() (lightweight) instead of _broadcastState()
-    _subs.add(_player.positionStream.listen((pos) {
+    // Listen to player complete events
+    _subs.add(_player.onPlayerComplete.listen((_) {
+      if (_isDisposed) return;
+      if (kDebugMode) {
+        debugPrint('🎧 Player completed');
+      }
+      // Reset to beginning when complete
+      _currentPosition = Duration.zero;
+      _broadcastState();
+    }));
+
+    // Listen to position changes with throttling
+    _subs.add(_player.onPositionChanged.listen((position) {
       if (_isDisposed) return;
       final now = DateTime.now();
       final dt = now.difference(_lastPosEmit).inMilliseconds;
-      final dp = (pos - _lastPos).abs().inMilliseconds;
+      final dp = (position - _lastPos).abs().inMilliseconds;
 
       // Throttle: 500ms OR position change >= 1000ms
       if (dt < 500 && dp < 1000) return;
 
       _lastPosEmit = now;
-      _lastPos = pos;
-      _broadcastPosition(position: pos);
+      _lastPos = position;
+      _currentPosition = position;
+      _broadcastPosition(position: position);
     }));
 
-    // Listen to buffered position changes (optional but recommended)
-    // Throttled to match positionStream for consistency
-    _subs.add(_player.bufferedPositionStream.listen((buf) {
+    // Listen to duration changes
+    _subs.add(_player.onDurationChanged.listen((duration) {
       if (_isDisposed) return;
-      if ((buf - _lastBuffered).abs().inMilliseconds < 1000) return;
-      _lastBuffered = buf;
-      _broadcastPosition(buffered: buf);
-    }));
-
-    // Listen to processing state changes - ONLY handle completed here
-    // Don't call _broadcastState() here to avoid duplicate broadcasts
-    // (playerStateStream already handles state broadcasts)
-    _subs.add(_player.processingStateStream.listen((state) async {
-      if (_isDisposed) return;
-      if (state == ProcessingState.completed) {
-        await _player.seek(Duration.zero);
-        await _player.pause();
-        _broadcastState(); // Only broadcast on completion
-      }
-    }));
-
-    // Update duration in mediaItem when available with URL validation
-    // CRITICAL: Prevent duration "cross-contamination" between episodes
-    _subs.add(_player.durationStream.listen((duration) {
-      if (_isDisposed) return;
-      final mi = mediaItem.value;
-      if (duration == null || mi == null) return;
-
-      // Check if this duration belongs to current URL using extras['url']
-      final miUrl = mi.extras?['url'] as String?;
-
       if (kDebugMode) {
-        debugPrint('⏱️ [DURATION STREAM] Duration available: ${duration.inMilliseconds}ms');
-        debugPrint('  MediaItem.id: ${mi.id}');
-        debugPrint('  MediaItem.title: ${mi.title}');
-        debugPrint('  MediaItem.url (from extras): $miUrl');
-        debugPrint('  Current URL (_currentUrl): $_currentUrl');
+        debugPrint('⏱️ [DURATION] Duration changed: ${duration.inMilliseconds}ms');
       }
 
-      // CRITICAL: URL validation to prevent cross-contamination
-      if (miUrl != null && _currentUrl != null && miUrl != _currentUrl) {
-        // Duration arrived late and we've already switched to another URL
-        // Discard to prevent showing wrong duration on lock screen
-        if (kDebugMode) {
-          debugPrint('⚠️ [DURATION] URL MISMATCH - Discarding stale duration!');
-          debugPrint('  ❌ Old MediaItem URL: $miUrl');
-          debugPrint('  ❌ New current URL: $_currentUrl');
-          debugPrint('  ✅ Duration discarded to prevent cross-contamination');
-        }
-        return;
-      }
-
-      // URLs match (or both null) - safe to update duration
-      // Only update if duration actually changed
-      if (mi.duration != duration) {
-        mediaItem.add(mi.copyWith(duration: duration));
-        if (kDebugMode) {
-          debugPrint('✅ [DURATION] Updated MediaItem:');
-          debugPrint('  id: ${mi.id}');
-          debugPrint('  title: ${mi.title}');
-          debugPrint('  duration: ${duration.inMilliseconds}ms (${duration.inSeconds}s)');
-        }
-      } else {
-        if (kDebugMode) {
-          debugPrint('ℹ️ [DURATION] No change - duration already ${duration.inMilliseconds}ms');
+      final mi = mediaItem.value;
+      if (mi != null) {
+        _currentDuration = duration;
+        // Update MediaItem with new duration
+        if (mi.duration != duration) {
+          mediaItem.add(mi.copyWith(duration: duration));
+          if (kDebugMode) {
+            debugPrint('✅ [DURATION] Updated MediaItem duration: ${duration.inMilliseconds}ms');
+          }
         }
       }
     }));
   }
 
-  /// Lightweight position-only broadcast (avoid full state rebuild)
-  /// Called frequently (500ms throttled) by positionStream
-  /// NOTE: updateTime is only set in _broadcastState() for full state updates
-  void _broadcastPosition({Duration? position, Duration? buffered}) {
+  /// Lightweight position-only broadcast
+  void _broadcastPosition({Duration? position}) {
     if (_isDisposed) return;
-    final pos = position ?? _player.position;
-    final buf = buffered ?? _player.bufferedPosition;
+    final pos = position ?? _currentPosition;
 
-    // Use copyWith for lightweight update - only update position-related fields
-    // NOTE: copyWith doesn't support updateTime, it's only set in _broadcastState()
     final currentState = playbackState.value;
     playbackState.add(
       currentState.copyWith(
         updatePosition: pos,
-        bufferedPosition: buf,
-        speed: _player.speed,
+        bufferedPosition: pos,
+        speed: _player.playbackRate,
       ),
     );
   }
 
   /// Full state broadcast (controls, playing, processingState)
-  /// Called infrequently (state changes only) by playerStateStream
-  /// CRITICAL: Includes updateTime and safely accesses all nullable fields
   void _broadcastState() {
     if (_isDisposed) return;
-    final playing = _player.playing;
-    final rawProcessingState = _mapProcessingState(_player.processingState);
+
+    final playing = _player.state == PlayerState.playing;
+    final processingState = _mapProcessingState(_player.state);
     final updateTime = DateTime.now();
-
-    // CRITICAL: Safely access sequenceState to prevent crashes
-    // Different just_audio versions may have different nullability behavior
-    final hasSource = _player.audioSource != null;
-    final sequenceState = _player.sequenceState;
-    final hasSequence = sequenceState.sequence.isNotEmpty;
-
-    // Use raw processing state directly (no idle->ready override)
-    final processingState = rawProcessingState;
 
     // Build controls list based on current state
     final bool hasContent =
@@ -241,30 +187,25 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       );
       debugPrint('  playing: $playing');
       debugPrint('  processingState: $processingState');
-      debugPrint(
-        '  hasSource: $hasSource, hasSequence: $hasSequence, hasContent: $hasContent',
-      );
-      debugPrint('  position: ${_player.position.inMilliseconds}ms');
-      debugPrint('  duration: ${_player.duration?.inMilliseconds ?? 0}ms');
-      debugPrint('  speed: ${_player.speed}x');
+      debugPrint('  position: ${_currentPosition.inMilliseconds}ms');
+      debugPrint('  duration: ${_currentDuration?.inMilliseconds ?? 0}ms');
+      debugPrint('  speed: ${_player.playbackRate}x');
       debugPrint('  updateTime: $updateTime');
-      debugPrint('  controls: ${controls.map((c) => c.label).join(', ')}');
       debugPrint(
         '🎵 [BROADCAST STATE] ========================================',
       );
     }
 
-    // Create new PlaybackState with full state update including updateTime
     playbackState.add(
       PlaybackState(
         controls: controls,
         androidCompactActionIndices: androidCompactActionIndices,
         playing: playing,
         processingState: processingState,
-        updatePosition: _player.position,
-        bufferedPosition: _player.bufferedPosition,
-        speed: _player.speed,
-        updateTime: updateTime, // CRITICAL: Required for accurate progress on Android/Vivo
+        updatePosition: _currentPosition,
+        bufferedPosition: _currentPosition,
+        speed: _player.playbackRate,
+        updateTime: updateTime,
         systemActions: const {
           MediaAction.play,
           MediaAction.pause,
@@ -277,38 +218,33 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     );
   }
 
-  AudioProcessingState _mapProcessingState(ProcessingState state) {
+  AudioProcessingState _mapProcessingState(PlayerState state) {
     switch (state) {
-      case ProcessingState.idle:
+      case PlayerState.stopped:
         return AudioProcessingState.idle;
-      case ProcessingState.loading:
-        return AudioProcessingState.loading;
-      case ProcessingState.buffering:
-        return AudioProcessingState.buffering;
-      case ProcessingState.ready:
+      case PlayerState.disposed:
+        return AudioProcessingState.idle;
+      case PlayerState.playing:
+      case PlayerState.paused:
         return AudioProcessingState.ready;
-      case ProcessingState.completed:
+      case PlayerState.completed:
         return AudioProcessingState.completed;
     }
   }
 
-  /// NEW: Set episode with full metadata support
-  /// This is the recommended way to load audio for proper lock screen display
+  /// Set episode with full metadata support
   Future<void> setEpisode({
     required String id,
     required String url,
     required String title,
     String? artist,
     String? album,
-    String? artUri, // Changed to String? for validation
+    String? artUri,
     Duration? durationHint,
     Map<String, dynamic>? extras,
     bool autoPlay = false,
   }) async {
-    _currentUrl = url;
-
     // CRITICAL: Validate artUri - ONLY http/https URLs allowed for Vivo/OriginOS
-    // Local asset paths (asset:///) will NOT display on lock screen
     final validArtUri = artUri != null ? _validateArtUri(artUri) : null;
 
     if (artUri != null && validArtUri == null && kDebugMode) {
@@ -317,8 +253,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       );
     }
 
-    // 1) Push MediaItem FIRST (lock screen/notification shows correct info immediately)
-    // CRITICAL: MediaItem must be set BEFORE loading audio to ensure system UI displays correct metadata
+    // 1) Push MediaItem FIRST
     final newMediaItem = MediaItem(
       id: id,
       title: title,
@@ -327,7 +262,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       artUri: validArtUri,
       duration: durationHint,
       extras: <String, dynamic>{
-        'url': url, // Store URL to prevent duration cross-contamination
+        'url': url,
         ...?extras,
       },
     );
@@ -335,7 +270,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     mediaItem.add(newMediaItem);
 
     if (kDebugMode) {
-      debugPrint('📋 [MediaItem] Set BEFORE audio load:');
+      debugPrint('📋 [MediaItem] Set:');
       debugPrint('  id: ${newMediaItem.id}');
       debugPrint('  title: ${newMediaItem.title}');
       debugPrint('  artist: ${newMediaItem.artist}');
@@ -344,22 +279,20 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       debugPrint('  url: $url');
     }
 
-    // 2) Then setUrl (triggers durationStream / processingState updates)
+    // 2) Set source URL
     try {
-      await _player.setUrl(url);
+      await _player.setSourceUrl(url);
       if (kDebugMode) {
-        debugPrint(
-          '✅ Audio source loaded: $title${validArtUri != null ? ' with cover' : ' (no cover)'}',
-        );
+        debugPrint('✅ Audio source set: $url${validArtUri != null ? ' with cover' : ' (no cover)'}');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ Failed to load audio source: $e');
+        debugPrint('❌ Failed to set audio source: $e');
       }
       rethrow;
     }
 
-    // 3) Broadcast state immediately (buttons/controls refresh right away)
+    // 3) Broadcast state immediately
     _broadcastState();
 
     if (autoPlay) {
@@ -368,17 +301,13 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   /// Legacy method for backward compatibility
-  /// Consider migrating to setEpisode() for better metadata support
   @Deprecated(
     'Use setEpisode() with full metadata for proper lock screen display',
   )
   Future<void> setAudioSource(String url) async {
-    _currentUrl = url;
-
-    // Update MediaItem with minimal info for lock screen display
     mediaItem.add(
       MediaItem(
-        id: url, // Use URL as ID for uniqueness
+        id: url,
         title: 'Audio Playback',
         artist: 'Unknown',
         extras: <String, dynamic>{'url': url},
@@ -386,9 +315,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     );
 
     try {
-      await _player.setUrl(url);
-
-      // Broadcast state to update controls
+      await _player.setSourceUrl(url);
       _broadcastState();
 
       if (kDebugMode) {
@@ -411,36 +338,12 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       return;
     }
 
-    // Self-healing: if source is lost, reload it
-    if (_player.audioSource == null && _currentUrl != null) {
-      if (kDebugMode) {
-        debugPrint('⚕️ Source lost, reloading: $_currentUrl');
-      }
-      try {
-        await _player.setUrl(_currentUrl!);
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('❌ Failed to reload source: $e');
-        }
-        rethrow;
-      }
-    }
-
-    // CRITICAL: Check again before actually playing
-    // Prevents race condition with stopService()
-    if (_isDisposed) {
-      if (kDebugMode) {
-        debugPrint('⚠️ Disposed during play(), aborting');
-      }
-      return;
-    }
-
-    // Start playback
     try {
-      await _player.play();
+      await _player.resume();
       if (kDebugMode) {
         debugPrint('▶️ Playback started');
       }
+      _broadcastState();
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ Failed to start playback: $e');
@@ -481,7 +384,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     }
 
     await _player.stop();
-    await _player.seek(Duration.zero);
+    _currentPosition = Duration.zero;
 
     if (kDebugMode) {
       debugPrint('✅ stop() completed');
@@ -489,16 +392,15 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   }
 
   /// Complete stop - stops playback AND stops the AudioService
-  /// Call this when the app is being closed/destroyed
   Future<void> stopService() async {
     if (_isDisposed) return;
     _isDisposed = true;
 
     if (kDebugMode) {
-      debugPrint('🛑 stopService() called - stopping AudioService');
+      debugPrint('🛑 stopService() called - stopping audio playback');
     }
 
-    // Cancel all subscriptions FIRST to prevent any new events
+    // Cancel all subscriptions FIRST
     for (final s in _subs) {
       await s.cancel();
     }
@@ -514,21 +416,19 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       }
     }
 
-    // Stop the foreground service BEFORE clearing state
-    // This prevents platform messages after service shutdown
+    // Stop the AudioService foreground service (mobile only)
     try {
       await super.stop();
       if (kDebugMode) {
-        debugPrint('✅ AudioService stopped');
+        debugPrint('✅ AudioService stopped (mobile)');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('⚠️ Error stopping service: $e');
+        debugPrint('ℹ️ AudioService stop skipped (desktop or already stopped): $e');
       }
     }
 
-    // Clear MediaSession state AFTER stopping service
-    // Wrapped in try-catch to handle potential FlutterJNI detachment
+    // Clear MediaSession state
     try {
       playbackState.add(
         PlaybackState(
@@ -540,7 +440,6 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       );
       mediaItem.add(null);
     } catch (e) {
-      // Ignore errors - service already stopped, state clearing is best-effort
       if (kDebugMode) {
         debugPrint('ℹ️ State clearing after stop (expected): $e');
       }
@@ -554,70 +453,64 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> seek(Duration position) async {
     await _player.seek(position);
-    // CRITICAL: Immediately sync position to lock screen after seek
+    _currentPosition = position;
     _broadcastPosition(position: position);
   }
 
   @override
   Future<void> rewind() async {
-    final currentPosition = _player.position;
-    final newPosition = currentPosition - const Duration(seconds: 15);
+    final newPosition = _currentPosition - const Duration(seconds: 15);
     final clampedPosition = newPosition < Duration.zero
         ? Duration.zero
         : newPosition;
     await _player.seek(clampedPosition);
-    // Sync position after rewind
+    _currentPosition = clampedPosition;
     _broadcastPosition(position: clampedPosition);
   }
 
   @override
   Future<void> fastForward() async {
-    final currentPosition = _player.position;
-    final duration = _player.duration ?? Duration.zero;
-    final newPosition = currentPosition + const Duration(seconds: 30);
+    final duration = _currentDuration ?? Duration.zero;
+    final newPosition = _currentPosition + const Duration(seconds: 30);
     final clampedPosition = newPosition > duration ? duration : newPosition;
     await _player.seek(clampedPosition);
-    // Sync position after fast forward
+    _currentPosition = clampedPosition;
     _broadcastPosition(position: clampedPosition);
   }
 
   @override
   Future<void> setSpeed(double speed) async {
-    await _player.setSpeed(speed);
-    // CRITICAL: Sync speed to lock screen/notification immediately
+    await _player.setPlaybackRate(speed);
     _broadcastPosition();
   }
 
   /// Get current position
-  Duration get position => _player.position;
+  Duration get position => _currentPosition;
 
   /// Get duration
-  Duration? get duration => _player.duration;
+  Duration? get duration => _currentDuration;
 
   /// Get playing state
-  bool get playing => _player.playing;
+  bool get playing => _player.state == PlayerState.playing;
 
   /// Get player state stream
-  Stream<PlayerState> get playerStateStream => _player.playerStateStream;
+  Stream<PlayerState> get playerStateStream => _player.onPlayerStateChanged;
 
   /// Get position stream
-  Stream<Duration> get positionStream => _player.positionStream;
+  Stream<Duration> get positionStream => _player.onPositionChanged;
 
   /// Get duration stream
-  Stream<Duration?> get durationStream => _player.durationStream;
+  Stream<Duration?> get durationStream => _player.onDurationChanged;
 
   @override
   Future<void> onTaskRemoved() async {
     if (kDebugMode) {
       debugPrint('🗑️ Task removed - stopping service and cleaning up');
     }
-    // CRITICAL: Must call stopService() to stop foreground service
-    // This allows the process to exit properly
     await stopService();
   }
 
   Future<void> dispose() async {
-    // Prevent double-dispose
     if (_isDisposed) {
       return;
     }

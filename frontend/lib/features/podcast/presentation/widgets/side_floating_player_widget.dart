@@ -52,6 +52,19 @@ class _SideFloatingPlayerWidgetState
     final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = screenWidth < 600;
 
+    // For desktop expanded: position at right edge center, expand inward
+    if (_isExpanded && !isMobile) {
+      final expandedWidth = 320.0;
+      final right = 24.0;
+      final top = (screenHeight - 400) / 2; // Center vertically, assuming ~400px height
+
+      setState(() {
+        // Position from right edge, expand to the left
+        _playerOffset = Offset(screenWidth - right - expandedWidth, top);
+      });
+      return;
+    }
+
     // Default position: right side, vertically centered (or bottom for mobile)
     final right = isMobile ? 16.0 : 24.0;
     final top = isMobile ? screenHeight - 480 : (screenHeight - 200) / 2;
@@ -62,8 +75,21 @@ class _SideFloatingPlayerWidgetState
   }
 
   /// Snap position to nearest edge
-  /// Always snaps to the closest edge among top, bottom, left, right
-  Offset _snapToEdge(Offset position, double playerWidth, double playerHeight, double screenWidth, double screenHeight) {
+  /// Desktop collapsed: Only X axis snaps to RIGHT edge, Y axis stays free
+  /// Mobile collapsed: Snaps to closest edge (top, bottom, left, right)
+  /// Expanded state: No snapping (uses fixed position)
+  Offset _snapToEdge(Offset position, double playerWidth, double playerHeight, double screenWidth, double screenHeight, bool isDesktop, bool isCollapsed) {
+    // Desktop collapsed: Snap X to right edge only, keep Y free
+    if (isDesktop && isCollapsed) {
+      final newX = screenWidth - playerWidth - 24; // 24dp from right edge
+      // Clamp Y to screen bounds with margin
+      final minY = 16.0;
+      final maxY = screenHeight - playerHeight - 16;
+      final clampedY = position.dy.clamp(minY, maxY);
+      return Offset(newX, clampedY);
+    }
+
+    // Mobile: Allow snapping to all four edges
     // Calculate distances to all four edges
     final distanceToLeft = position.dx;
     final distanceToRight = screenWidth - position.dx - playerWidth;
@@ -221,7 +247,9 @@ class _SideFloatingPlayerWidgetState
                 left: _playerOffset.dx,
                 top: _playerOffset.dy,
                 child: GestureDetector(
-                  // Only enable drag when collapsed
+                  // Desktop collapsed: Enable drag (but only on right edge)
+                  // Mobile collapsed: Enable drag (can snap to any edge)
+                  // Expanded: Disable drag (uses fixed position)
                   onPanStart: _isExpanded ? null : (details) {
                     setState(() {
                       _dragStartOffset = details.globalPosition;
@@ -251,6 +279,8 @@ class _SideFloatingPlayerWidgetState
                           playerHeight,
                           screenWidth,
                           screenHeight,
+                          !isMobile, // isDesktop
+                          !_isExpanded, // isCollapsed
                         );
                       }
                     });
@@ -1085,6 +1115,89 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
   }
 
   Widget _buildSpeedButton(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
+    // 桌面端使用下拉框，移动端使用滚筒选择器
+    if (!isMobile) {
+      return _buildDesktopSpeedDropdown(context);
+    }
+
+    return _buildMobileSpeedButton(context);
+  }
+
+  /// 桌面端倍速下拉框
+  Widget _buildDesktopSpeedDropdown(BuildContext context) {
+    // 可用的倍速选项
+    final speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0];
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+        ),
+        borderRadius: BorderRadius.circular(16),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+      ),
+      // 使用与其他图标按钮一致的 padding
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<double>(
+            value: widget.playbackRate,
+            // 图标放在左侧作为 prefix
+            icon: const Icon(Icons.expand_more, size: 16),
+            iconSize: 16,
+            elevation: 8,
+            isDense: true, // 减少垂直空间
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            itemHeight: 48, // 设置下拉项高度
+            selectedItemBuilder: (BuildContext context) {
+              return speedOptions.map<Widget>((double value) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.speed,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${value.toStringAsFixed(2)}x'.replaceAll(RegExp(r'\.?0+$'), ''),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                );
+              }).toList();
+            },
+            onChanged: (double? newValue) {
+              if (newValue != null) {
+                widget.onSpeedChange(newValue);
+              }
+            },
+            items: speedOptions.map<DropdownMenuItem<double>>((double value) {
+              return DropdownMenuItem<double>(
+                value: value,
+                child: Text('${value.toStringAsFixed(2)}x'.replaceAll(RegExp(r'\.?0+$'), '')),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 移动端倍速按钮（点击弹出滚筒选择器）
+  Widget _buildMobileSpeedButton(BuildContext context) {
     return Container(
       key: _speedButtonKey,
       decoration: BoxDecoration(
