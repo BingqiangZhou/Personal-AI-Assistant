@@ -153,126 +153,138 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
       return const SizedBox.shrink();
     }
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 搜索栏和操作区域（展开时显示）
-        SizeTransition(
-          sizeFactor: _expandAnimation,
-          axisAlignment: -1,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 搜索输入栏（国家选择器集成在内部）
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: SearchBar(
-                    controller: _searchController,
-                    focusNode: _focusNode,
-                    hintText: l10n.podcast_search_hint,
-                    hintStyle: WidgetStateProperty.all(
-                      TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: double.infinity,
-                      maxWidth: double.infinity,
-                    ),
-                    // 国家选择器作为前置widget（显示国家代码）
-                    leading: InkWell(
-                      key: _countryButtonKey,
-                      onTap: _toggleCountrySelector,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        margin: const EdgeInsets.only(right: 8),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              countryState.selectedCountry.code.toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              _countrySelectorOverlay != null ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                              size: 18,
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    trailing: [
-                      if (_searchController.text.isNotEmpty)
-                        IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: _handleClearSearch,
-                        ),
-                    ],
-                    onChanged: _handleSearch,
-                    elevation: WidgetStateProperty.all(0),
-                    backgroundColor: WidgetStateProperty.all(
-                      Theme.of(context).colorScheme.surface,
-                    ),
-                    padding: WidgetStateProperty.all(
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    ),
-                  ),
-                ),
-
-                // 网络提示
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          l10n.podcast_network_hint,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+    // 构建搜索栏UI（提取为可复用的方法）
+    Widget buildSearchBar() => SizeTransition(
+      sizeFactor: _expandAnimation,
+      axisAlignment: -1,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
         ),
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 搜索输入栏（国家选择器集成在内部）
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: SearchBar(
+                controller: _searchController,
+                focusNode: _focusNode,
+                hintText: l10n.podcast_search_hint,
+                hintStyle: WidgetStateProperty.all(
+                  TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: double.infinity,
+                  maxWidth: double.infinity,
+                  minHeight: 40,
+                  maxHeight: 40,
+                ),
+                // 国家选择器作为前置widget（显示国家代码）
+                leading: InkWell(
+                  key: _countryButtonKey,
+                  onTap: _toggleCountrySelector,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          countryState.selectedCountry.code.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          _countrySelectorOverlay != null ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                trailing: [
+                  if (_searchController.text.isNotEmpty)
+                    Center(
+                      child: IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _handleClearSearch,
+                        iconSize: 18,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ),
+                ],
+                onChanged: _handleSearch,
+                elevation: WidgetStateProperty.all(0),
+                backgroundColor: WidgetStateProperty.all(
+                  Theme.of(context).colorScheme.surface,
+                ),
+                padding: WidgetStateProperty.all(
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                ),
+              ),
+            ),
 
-        // 搜索结果（仅在有搜索时显示）
-        if (searchState.hasSearched)
-          SizeTransition(
-            sizeFactor: _expandAnimation,
-            axisAlignment: -1,
-            child: _buildSearchResults(context, searchState, subscriptionState, l10n),
-          ),
-      ],
+            // 网络提示
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    size: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      l10n.podcast_network_hint,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
+
+    // 如果有搜索结果，使用 Expanded 占满剩余空间
+    if (searchState.hasSearched) {
+      return Expanded(
+        child: Column(
+          children: [
+            buildSearchBar(),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _buildSearchResults(context, searchState, subscriptionState, l10n),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 没有搜索结果时，只显示搜索栏
+    return buildSearchBar();
   }
 
   Widget _buildSearchResults(
@@ -283,112 +295,99 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
   ) {
     // 加载中
     if (searchState.isLoading) {
-      return SizedBox(
-        height: 200,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 16),
-              Text(
-                l10n.podcast_search_loading,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
-          ),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              l10n.podcast_search_loading,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
         ),
       );
     }
 
     // 错误状态
     if (searchState.error != null) {
-      return SizedBox(
-        height: 200,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.podcast_search_error,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                searchState.error!,
-                style: Theme.of(context).textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: () {
-                  ref.read(podcastSearchProvider.notifier).retrySearch();
-                },
-                icon: const Icon(Icons.refresh),
-                label: Text(l10n.retry),
-              ),
-            ],
-          ),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.podcast_search_error,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              searchState.error!,
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () {
+                ref.read(podcastSearchProvider.notifier).retrySearch();
+              },
+              icon: const Icon(Icons.refresh),
+              label: Text(l10n.retry),
+            ),
+          ],
         ),
       );
     }
 
     // 无结果
     if (searchState.results.isEmpty) {
-      return SizedBox(
-        height: 200,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.search_off,
-                size: 48,
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.podcast_search_no_results,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
-          ),
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 48,
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.podcast_search_no_results,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
         ),
       );
     }
 
     // 显示搜索结果
-    return Container(
-      constraints: const BoxConstraints(maxHeight: 400),
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemCount: searchState.results.length,
-        itemBuilder: (context, index) {
-          final result = searchState.results[index];
-          // 检查该播客是否已订阅（通过 feedUrl 匹配 sourceUrl）
-          final isSubscribed = subscriptionState.subscriptions.any(
-            (sub) => sub.sourceUrl == result.feedUrl,
-          );
-          return PodcastSearchResultCard(
-            result: result,
-            onSubscribe: widget.onSubscribe,
-            isSubscribed: isSubscribed,
-            searchCountry: searchState.searchCountry,
-          );
-        },
-      ),
+    return ListView.builder(
+      itemCount: searchState.results.length,
+      itemBuilder: (context, index) {
+        final result = searchState.results[index];
+        // 检查该播客是否已订阅（通过 feedUrl 匹配 sourceUrl）
+        final isSubscribed = subscriptionState.subscriptions.any(
+          (sub) => sub.sourceUrl == result.feedUrl,
+        );
+        return PodcastSearchResultCard(
+          result: result,
+          onSubscribe: widget.onSubscribe,
+          isSubscribed: isSubscribed,
+          searchCountry: searchState.searchCountry,
+        );
+      },
     );
   }
 }

@@ -83,7 +83,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 4),
 
           // Feed内容 - 直接使用Expanded填充剩余空间
@@ -226,12 +226,9 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       description: episode.description,
     );
 
-
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
           PodcastNavigation.goToEpisodeDetail(
@@ -254,17 +251,22 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(
-                          width: 48,
-                          height: 48,
+                          width: 56,
+                          height: 56,
                           child: Stack(
+                            clipBehavior: Clip.none,
                             children: [
                               // 可点击的图像区域 - 点击播放
-                              Positioned.fill(
+                              Positioned(
+                                left: 0,
+                                top: 0,
                                 child: Material(
                                   color: Colors.transparent,
                                   child: InkWell(
                                     onTap: () {
-                                      ref.read(audioPlayerProvider.notifier).playEpisode(episode);
+                                      ref
+                                          .read(audioPlayerProvider.notifier)
+                                          .playEpisode(episode);
                                       PodcastNavigation.goToEpisodeDetail(
                                         context,
                                         episodeId: episode.id,
@@ -277,24 +279,40 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                       width: 48,
                                       height: 48,
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.primaryContainer,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primaryContainer,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(8),
-                                        child: (episode.imageUrl != null || episode.subscriptionImageUrl != null)
+                                        child:
+                                            (episode.imageUrl != null ||
+                                                episode.subscriptionImageUrl !=
+                                                    null)
                                             ? Image.network(
-                                                episode.imageUrl ?? episode.subscriptionImageUrl!,
+                                                episode.imageUrl ??
+                                                    episode
+                                                        .subscriptionImageUrl!,
                                                 fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) => Icon(
-                                                  Icons.podcasts,
-                                                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                                  size: 28,
-                                                ),
+                                                errorBuilder:
+                                                    (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) => Icon(
+                                                      Icons.podcasts,
+                                                      color: Theme.of(context)
+                                                          .colorScheme
+                                                          .onPrimaryContainer,
+                                                      size: 28,
+                                                    ),
                                               )
                                             : Icon(
                                                 Icons.podcasts,
-                                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimaryContainer,
                                                 size: 28,
                                               ),
                                       ),
@@ -304,13 +322,15 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                               ),
                               // 播放按钮覆盖在图像右下角
                               Positioned(
-                                right: -4,
-                                bottom: -4,
+                                right: 4,
+                                bottom: 4,
                                 child: Material(
                                   color: Colors.transparent,
                                   child: InkWell(
                                     onTap: () {
-                                      ref.read(audioPlayerProvider.notifier).playEpisode(episode);
+                                      ref
+                                          .read(audioPlayerProvider.notifier)
+                                          .playEpisode(episode);
                                       PodcastNavigation.goToEpisodeDetail(
                                         context,
                                         episodeId: episode.id,
@@ -323,10 +343,27 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                       width: 16,
                                       height: 16,
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withValues(alpha: 0.6),
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
                                         shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
                                       ),
-                                      child: Icon(Icons.play_arrow, color: Colors.white, size: 12),
+                                      child: Icon(
+                                        Icons.play_arrow,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimary,
+                                        size: 10,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -341,7 +378,11 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             children: [
                               Text(
                                 episode.title,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600, fontSize: 13),
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -352,34 +393,79 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                 crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
-                                      episode.subscriptionTitle ?? l10n.podcast_default_podcast,
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        color: Theme.of(context).colorScheme.onPrimary,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 10,
-                                      ),
+                                      episode.subscriptionTitle ??
+                                          l10n.podcast_default_podcast,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onPrimary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 10,
+                                          ),
                                     ),
                                   ),
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.calendar_today_outlined, size: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                      Icon(
+                                        Icons.calendar_today_outlined,
+                                        size: 13,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
                                       const SizedBox(width: 3),
-                                      Text(_formatDate(episode.publishedAt), style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 11)),
+                                      Text(
+                                        _formatDate(episode.publishedAt),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                              fontSize: 11,
+                                            ),
+                                      ),
                                     ],
                                   ),
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.schedule, size: 13, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                      Icon(
+                                        Icons.schedule,
+                                        size: 13,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
                                       const SizedBox(width: 3),
-                                      Text(episode.formattedDuration, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 11)),
+                                      Text(
+                                        episode.formattedDuration,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                              fontSize: 11,
+                                            ),
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -389,13 +475,19 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                         ),
                       ],
                     ),
-
                   ],
                 ),
               ),
               if (displayDescription.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                Text(displayDescription, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant), maxLines: 4, overflow: TextOverflow.ellipsis),
+                Text(
+                  displayDescription,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ],
           ),
@@ -519,12 +611,16 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            episode.subscriptionTitle ?? l10n.podcast_default_podcast,
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onPrimary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11,
-                            ),
+                            episode.subscriptionTitle ??
+                                l10n.podcast_default_podcast,
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                ),
                           ),
                         ),
                         // 日期
@@ -534,15 +630,20 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             Icon(
                               Icons.calendar_today_outlined,
                               size: 13,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 2),
                             Text(
                               _formatDate(episode.publishedAt),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                fontSize: 11,
-                              ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
                             ),
                           ],
                         ),
@@ -553,15 +654,20 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             Icon(
                               Icons.schedule,
                               size: 13,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 2),
                             Text(
                               episode.formattedDuration,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                fontSize: 11,
-                              ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
                             ),
                           ],
                         ),
@@ -603,7 +709,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   }
 }
 
-  String _formatDate(DateTime date) {
-    final localDate = date.isUtc ? date.toLocal() : date;
-    return '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
-  }
+String _formatDate(DateTime date) {
+  final localDate = date.isUtc ? date.toLocal() : date;
+  return '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
+}

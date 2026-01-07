@@ -96,16 +96,21 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                   const Divider(),
                   const SizedBox(height: 8),
                   // 导航项目（除了最后一个Profile）
-                  ...destinations.take(destinations.length - 1).toList().asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final destination = entry.value;
-                    return _buildCompactNavItem(
-                      context,
-                      destination,
-                      index == selectedIndex,
-                      () => onDestinationSelected?.call(index),
-                    );
-                  }),
+                  ...destinations
+                      .take(destinations.length - 1)
+                      .toList()
+                      .asMap()
+                      .entries
+                      .map((entry) {
+                        final index = entry.key;
+                        final destination = entry.value;
+                        return _buildCompactNavItem(
+                          context,
+                          destination,
+                          index == selectedIndex,
+                          () => onDestinationSelected?.call(index),
+                        );
+                      }),
                   const Spacer(),
                   // Profile按钮单独在底部
                   if (destinations.isNotEmpty)
@@ -113,7 +118,8 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                       context,
                       destinations.last,
                       destinations.length - 1 == selectedIndex,
-                      () => onDestinationSelected?.call(destinations.length - 1),
+                      () =>
+                          onDestinationSelected?.call(destinations.length - 1),
                     ),
                   const SizedBox(height: 8),
                 ],
@@ -182,16 +188,21 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                   const Divider(),
                   const SizedBox(height: 8),
                   // 导航项目（除了最后一个Profile）
-                  ...destinations.take(destinations.length - 1).toList().asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final destination = entry.value;
-                    return _buildExpandedNavItem(
-                      context,
-                      destination,
-                      index == selectedIndex,
-                      () => onDestinationSelected?.call(index),
-                    );
-                  }),
+                  ...destinations
+                      .take(destinations.length - 1)
+                      .toList()
+                      .asMap()
+                      .entries
+                      .map((entry) {
+                        final index = entry.key;
+                        final destination = entry.value;
+                        return _buildExpandedNavItem(
+                          context,
+                          destination,
+                          index == selectedIndex,
+                          () => onDestinationSelected?.call(index),
+                        );
+                      }),
                   const Spacer(),
                   // Profile按钮单独在底部
                   if (destinations.isNotEmpty)
@@ -199,7 +210,8 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                       context,
                       destinations.last,
                       destinations.length - 1 == selectedIndex,
-                      () => onDestinationSelected?.call(destinations.length - 1),
+                      () =>
+                          onDestinationSelected?.call(destinations.length - 1),
                     ),
                   const SizedBox(height: 8),
                 ],
@@ -348,11 +360,7 @@ class ResponsiveContainer extends StatelessWidget {
     );
 
     if (screenWidth < 600) {
-      content = SafeArea(
-        top: true,
-        bottom: false,
-        child: content,
-      );
+      content = SafeArea(top: true, bottom: false, child: content);
     }
 
     return Container(

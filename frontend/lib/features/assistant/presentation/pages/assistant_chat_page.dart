@@ -67,7 +67,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
 
           // AI模型选择栏
           Container(
@@ -144,7 +144,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                   Expanded(
                     child: ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(vertical: 4),
                       itemCount: _messages.length,
                       itemBuilder: (context, index) {
                         return _buildMessageBubble(_messages[index]);

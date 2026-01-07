@@ -33,11 +33,11 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
         children: [
           // Header
           _buildHeader(context),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
 
           // Search & Filter
           _buildSearchAndFilter(context),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
 
           // Content
           Expanded(
@@ -169,6 +169,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
 
         if (isMobile) {
           return ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 4),
             itemCount: bases.length,
             itemBuilder: (context, index) => _buildBaseTile(context, bases[index]),
           );
@@ -249,6 +250,7 @@ class _KnowledgeBasePageState extends ConsumerState<KnowledgeBasePage> {
         }
 
         return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 4),
           itemCount: docs.length,
           itemBuilder: (context, index) {
             final doc = docs[index];

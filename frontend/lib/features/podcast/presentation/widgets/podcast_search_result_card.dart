@@ -123,6 +123,7 @@ class PodcastSearchResultCard extends StatelessWidget {
 
                     // 分类和集数（使用更小的图标和字体）
                     Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         if (result.primaryGenreName != null) ...[
                           Icon(
@@ -131,14 +132,16 @@ class PodcastSearchResultCard extends StatelessWidget {
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 3),
-                          Text(
-                            result.primaryGenreName!,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  fontSize: 11,
-                                ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          Flexible(
+                            child: Text(
+                              result.primaryGenreName!,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                           const SizedBox(width: 6),
                         ],
@@ -154,6 +157,8 @@ class PodcastSearchResultCard extends StatelessWidget {
                                 color: theme.colorScheme.onSurfaceVariant,
                                 fontSize: 11,
                               ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),

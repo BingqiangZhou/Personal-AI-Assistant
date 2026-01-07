@@ -50,55 +50,57 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+
     return ResponsiveContainer(
       child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 4),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          // 页面标题和操作区域
-          SizedBox(
-            height: 56,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.profile,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
+              // 页面标题和操作区域
+              SizedBox(
+                height: 56,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.profile,
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    // 设置按钮
+                    IconButton(
+                      onPressed: () {
+                        context.push('/profile/settings');
+                      },
+                      icon: const Icon(Icons.settings),
+                      tooltip: l10n.settings,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                // 设置按钮
-                IconButton(
-                  onPressed: () {
-                    context.push('/profile/settings');
-                  },
-                  icon: const Icon(Icons.settings),
-                  tooltip: l10n.settings,
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 8),
+
+              // 用户信息卡片
+              _buildUserProfileCard(context),
+
+              const SizedBox(height: 8),
+
+              // 统计和活动卡片
+              _buildActivityCards(context),
+
+              const SizedBox(height: 8),
+
+              // 设置选项
+              _buildSettingsContent(context),
+
+              // 底部空间
+              const SizedBox(height: 16),
+            ],
           ),
-          const SizedBox(height: 24),
-
-          // 用户信息卡片
-          _buildUserProfileCard(context),
-
-          const SizedBox(height: 24),
-
-          // 统计和活动卡片
-          _buildActivityCards(context),
-
-          const SizedBox(height: 24),
-
-          // 设置选项
-          _buildSettingsContent(context),
-
-          // 底部空间
-          const SizedBox(height: 32),
-        ],
-      ),
       ),
     );
   }
@@ -112,6 +114,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final user = authState.user;
 
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: EdgeInsets.all(isMobile ? 16 : 24),
         child: Row(
@@ -286,6 +289,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   Widget _buildActivityCard(BuildContext context, IconData icon, String label, String value, Color color) {
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -601,13 +605,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
   }
 
+  /// 统一的 Card 样式封装，确保所有卡片 margin 一致
+  // 保留此方法以便将来统一使用，目前所有卡片已手动设置 margin: EdgeInsets.zero
+  // ignore: unused_element
+  Widget _buildCard(Widget child) => Card(
+        margin: EdgeInsets.zero,
+        child: child,
+      );
+
   /// 构建设置分组
   Widget _buildSettingsSection(BuildContext context, String title, List<Widget> children) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 16, top: 8, bottom: 8),
+          padding: const EdgeInsets.only(top: 8, bottom: 8),
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -647,49 +659,61 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.profile_edit_profile),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                labelText: l10n.profile_name,
-                border: const OutlineInputBorder(),
+      builder: (context) => LayoutBuilder(
+        builder: (context, constraints) {
+          // 计算对话框最大宽度，与卡片列宽度保持一致
+          final screenWidth = MediaQuery.of(context).size.width;
+          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
+
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            child: AlertDialog(
+              insetPadding: const EdgeInsets.all(16),
+              title: Text(l10n.profile_edit_profile),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: l10n.profile_name,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: l10n.profile_email_field,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    decoration: InputDecoration(
+                      labelText: l10n.profile_bio,
+                      border: const OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
               ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(l10n.cancel),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.profile_updated_successfully)),
+                    );
+                  },
+                  child: Text(l10n.save),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: l10n.profile_email_field,
-                border: const OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: InputDecoration(
-                labelText: l10n.profile_bio,
-                border: const OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.profile_updated_successfully)),
-              );
-            },
-            child: Text(l10n.save),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -699,34 +723,45 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.profile_security),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.password),
-              title: Text(l10n.profile_change_password),
-              trailing: const Icon(Icons.chevron_right),
+      builder: (context) => LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
+
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            child: AlertDialog(
+              insetPadding: const EdgeInsets.all(16),
+              title: Text(l10n.profile_security),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.password),
+                    title: Text(l10n.profile_change_password),
+                    trailing: const Icon(Icons.chevron_right),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.fingerprint),
+                    title: Text(l10n.profile_biometric_auth),
+                    trailing: Switch(value: true, onChanged: null),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.phone_android),
+                    title: Text(l10n.profile_two_factor_auth),
+                    trailing: const Icon(Icons.chevron_right),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(l10n.close),
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.fingerprint),
-              title: Text(l10n.profile_biometric_auth),
-              trailing: Switch(value: true, onChanged: null),
-            ),
-            ListTile(
-              leading: const Icon(Icons.phone_android),
-              title: Text(l10n.profile_two_factor_auth),
-              trailing: const Icon(Icons.chevron_right),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.close),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -735,59 +770,70 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   void _showLanguageDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => Consumer(
-        builder: (context, ref, _) {
-          final localeNotifier = ref.watch(localeProvider.notifier);
-          final currentCode = localeNotifier.languageCode;
-          final l10n = AppLocalizations.of(context)!;
+      builder: (context) => LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
 
-          return AlertDialog(
-            title: Text(l10n.language),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SegmentedButton<String>(
-                  segments: [
-                    ButtonSegment(
-                      value: kLanguageSystem,
-                      label: Text(l10n.languageFollowSystem),
-                      icon: const Icon(Icons.computer),
-                    ),
-                    ButtonSegment(
-                      value: kLanguageEnglish,
-                      label: Text(l10n.languageEnglish),
-                      icon: const Icon(Icons.language),
-                    ),
-                    ButtonSegment(
-                      value: kLanguageChinese,
-                      label: Text(l10n.languageChinese),
-                      icon: const Icon(Icons.translate),
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            child: Consumer(
+              builder: (context, ref, _) {
+                final localeNotifier = ref.watch(localeProvider.notifier);
+                final currentCode = localeNotifier.languageCode;
+                final l10n = AppLocalizations.of(context)!;
+
+                return AlertDialog(
+                  insetPadding: const EdgeInsets.all(16),
+                  title: Text(l10n.language),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(
+                            value: kLanguageSystem,
+                            label: Text(l10n.languageFollowSystem),
+                            icon: const Icon(Icons.computer),
+                          ),
+                          ButtonSegment(
+                            value: kLanguageEnglish,
+                            label: Text(l10n.languageEnglish),
+                            icon: const Icon(Icons.language),
+                          ),
+                          ButtonSegment(
+                            value: kLanguageChinese,
+                            label: Text(l10n.languageChinese),
+                            icon: const Icon(Icons.translate),
+                          ),
+                        ],
+                        selected: {currentCode},
+                        onSelectionChanged: (Set<String> selection) async {
+                          final value = selection.first;
+                          await ref.read(localeProvider.notifier).setLanguageCode(value);
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.languageFollowSystem,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(l10n.close),
                     ),
                   ],
-                  selected: {currentCode},
-                  onSelectionChanged: (Set<String> selection) async {
-                    final value = selection.first;
-                    await ref.read(localeProvider.notifier).setLanguageCode(value);
-                    if (context.mounted) {
-                      Navigator.of(context).pop();
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.languageFollowSystem,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+                );
+              },
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.close),
-              ),
-            ],
           );
         },
       ),
@@ -798,70 +844,81 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   void _showThemeModeDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => Consumer(
-        builder: (context, ref, _) {
-          final themeNotifier = ref.watch(themeModeProvider.notifier);
-          final currentCode = themeNotifier.themeModeCode;
-          final l10n = AppLocalizations.of(context)!;
+      builder: (context) => LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
 
-          return AlertDialog(
-            title: Text(l10n.theme_mode_select_title),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SegmentedButton<String>(
-                  segments: [
-                    ButtonSegment(
-                      value: kThemeModeSystem,
-                      label: Text(l10n.theme_mode_follow_system),
-                      icon: const Icon(Icons.brightness_auto),
-                    ),
-                    ButtonSegment(
-                      value: kThemeModeLight,
-                      label: Text(l10n.theme_mode_light),
-                      icon: const Icon(Icons.light_mode),
-                    ),
-                    ButtonSegment(
-                      value: kThemeModeDark,
-                      label: Text(l10n.theme_mode_dark),
-                      icon: const Icon(Icons.dark_mode),
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            child: Consumer(
+              builder: (context, ref, _) {
+                final themeNotifier = ref.watch(themeModeProvider.notifier);
+                final currentCode = themeNotifier.themeModeCode;
+                final l10n = AppLocalizations.of(context)!;
+
+                return AlertDialog(
+                  insetPadding: const EdgeInsets.all(16),
+                  title: Text(l10n.theme_mode_select_title),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(
+                            value: kThemeModeSystem,
+                            label: Text(l10n.theme_mode_follow_system),
+                            icon: const Icon(Icons.brightness_auto),
+                          ),
+                          ButtonSegment(
+                            value: kThemeModeLight,
+                            label: Text(l10n.theme_mode_light),
+                            icon: const Icon(Icons.light_mode),
+                          ),
+                          ButtonSegment(
+                            value: kThemeModeDark,
+                            label: Text(l10n.theme_mode_dark),
+                            icon: const Icon(Icons.dark_mode),
+                          ),
+                        ],
+                        selected: {currentCode},
+                        onSelectionChanged: (Set<String> selection) async {
+                          final value = selection.first;
+                          String modeName;
+                          if (value == kThemeModeSystem) {
+                            modeName = l10n.theme_mode_follow_system;
+                          } else if (value == kThemeModeLight) {
+                            modeName = l10n.theme_mode_light;
+                          } else {
+                            modeName = l10n.theme_mode_dark;
+                          }
+                          await ref.read(themeModeProvider.notifier).setThemeModeCode(value);
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(l10n.theme_mode_changed(modeName))),
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.theme_mode_subtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(l10n.close),
                     ),
                   ],
-                  selected: {currentCode},
-                  onSelectionChanged: (Set<String> selection) async {
-                    final value = selection.first;
-                    String modeName;
-                    if (value == kThemeModeSystem) {
-                      modeName = l10n.theme_mode_follow_system;
-                    } else if (value == kThemeModeLight) {
-                      modeName = l10n.theme_mode_light;
-                    } else {
-                      modeName = l10n.theme_mode_dark;
-                    }
-                    await ref.read(themeModeProvider.notifier).setThemeModeCode(value);
-                    if (context.mounted) {
-                      Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.theme_mode_changed(modeName))),
-                      );
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.theme_mode_subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+                );
+              },
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(l10n.close),
-              ),
-            ],
           );
         },
       ),
@@ -873,34 +930,45 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.profile_help_center),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.book),
-              title: Text(l10n.profile_user_guide),
-              subtitle: Text(l10n.profile_user_guide_subtitle),
+      builder: (context) => LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
+
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            child: AlertDialog(
+              insetPadding: const EdgeInsets.all(16),
+              title: Text(l10n.profile_help_center),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.book),
+                    title: Text(l10n.profile_user_guide),
+                    subtitle: Text(l10n.profile_user_guide_subtitle),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.video_library),
+                    title: Text(l10n.profile_video_tutorials),
+                    subtitle: Text(l10n.profile_video_tutorials_subtitle),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.contact_support),
+                    title: Text(l10n.profile_contact_support),
+                    subtitle: Text(l10n.profile_contact_support_subtitle),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(l10n.close),
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.video_library),
-              title: Text(l10n.profile_video_tutorials),
-              subtitle: Text(l10n.profile_video_tutorials_subtitle),
-            ),
-            ListTile(
-              leading: const Icon(Icons.contact_support),
-              title: Text(l10n.profile_contact_support),
-              subtitle: Text(l10n.profile_contact_support_subtitle),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.close),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
@@ -940,34 +1008,45 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.profile_logout_title),
-        content: Text(l10n.profile_logout_message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              // Close dialog first
-              Navigator.of(dialogContext).pop();
+      builder: (dialogContext) => LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
 
-              // Perform logout
-              await ref.read(authProvider.notifier).logout();
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            child: AlertDialog(
+              insetPadding: const EdgeInsets.all(16),
+              title: Text(l10n.profile_logout_title),
+              content: Text(l10n.profile_logout_message),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(l10n.cancel),
+                ),
+                FilledButton(
+                  onPressed: () async {
+                    // Close dialog first
+                    Navigator.of(dialogContext).pop();
 
-              // Show success message
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.profile_logged_out)),
-                );
-              }
+                    // Perform logout
+                    await ref.read(authProvider.notifier).logout();
 
-              // Navigation will be handled by GoRouter redirect
-            },
-            child: Text(l10n.logout),
-          ),
-        ],
+                    // Show success message
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(l10n.profile_logged_out)),
+                      );
+                    }
+
+                    // Navigation will be handled by GoRouter redirect
+                  },
+                  child: Text(l10n.logout),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

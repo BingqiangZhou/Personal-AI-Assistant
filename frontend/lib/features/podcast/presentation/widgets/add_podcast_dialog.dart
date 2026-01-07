@@ -68,13 +68,14 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Dialog(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 500),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Text(
               l10n.podcast_add_dialog_title,
               style: Theme.of(context).textTheme.headlineSmall,
@@ -86,11 +87,18 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
                 children: [
                   TextFormField(
                     controller: _feedUrlController,
+                    minLines: 1,
+                    maxLines: 1,
                     decoration: InputDecoration(
                       labelText: l10n.podcast_rss_feed_url,
                       hintText: l10n.podcast_feed_url_hint,
                       border: const OutlineInputBorder(),
                       prefixIcon: const Icon(Icons.rss_feed),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      isDense: true,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -152,6 +160,7 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
