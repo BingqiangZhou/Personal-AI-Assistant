@@ -381,13 +381,42 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
 
     try {
       final downloadUrl = widget.release.primaryDownloadUrl;
+
       if (downloadUrl == null) {
         // No download URL available, open in browser
         final uri = Uri.parse(widget.release.htmlUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         }
+      } else if (AppUpdateService.supportsBackgroundDownload) {
+        // Use native background download on Android
+        final service = ref.read(appUpdateServiceProvider);
+        final success = await service.startBackgroundDownload(
+          downloadUrl: downloadUrl,
+          fileName: _extractFileName(downloadUrl),
+        );
+
+        if (!success && mounted) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(l10n.update_download_failed),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        } else if (success && mounted) {
+          // Download started, close dialog and show message
+          Navigator.of(context).pop();
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Downloading in background...'),
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
       } else {
+        // Fallback to browser for other platforms
         final uri = Uri.parse(downloadUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -416,6 +445,19 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
         });
       }
     }
+  }
+
+  /// Extract filename from download URL
+  String _extractFileName(String url) {
+    final uri = Uri.parse(url);
+    final pathSegments = uri.pathSegments;
+    if (pathSegments.isNotEmpty) {
+      final filename = pathSegments.last;
+      if (filename.endsWith('.apk')) {
+        return filename;
+      }
+    }
+    return 'app_update.apk';
   }
 
   void _handleSkip(BuildContext context) {

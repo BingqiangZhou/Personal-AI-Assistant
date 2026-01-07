@@ -22,7 +22,7 @@ storeFile=../release.keystore
 
 # Keystore password
 # Keystore 密码
-storePassword=your_keystore_password
+storePassword=PersonalAIAssistant
 
 # Key alias
 # 密钥别名
@@ -30,4 +30,4 @@ keyAlias=release
 
 # Key password
 # 密钥密码
-keyPassword=your_key_password
+keyPassword=PersonalAIAssistant
