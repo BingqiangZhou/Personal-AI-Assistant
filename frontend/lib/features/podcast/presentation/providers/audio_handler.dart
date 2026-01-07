@@ -1,15 +1,14 @@
+import 'dart:async';
+
 import 'package:audio_service/audio_service.dart';
-import 'package:audio_session/audio_session.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 
 /// AudioHandler for podcast playback with system media controls
 /// Optimized for Android 15 + Vivo OriginOS with proper state synchronization
-/// Uses manual audio focus management via audio_session
 class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
-  // CRITICAL: Disable just_audio's automatic interruption handling
-  // We will manage audio focus manually via audio_session
-  final AudioPlayer _player = AudioPlayer(handleInterruptions: false);
+  // Use just_audio's automatic interruption handling
+  final AudioPlayer _player = AudioPlayer(handleInterruptions: true);
   String? _currentUrl;
 
   // Position broadcast throttling fields
@@ -17,9 +16,10 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   Duration _lastPos = Duration.zero;
   Duration _lastBuffered = Duration.zero;
 
-  bool _isAudioSessionReady = false; // Track AudioSession readiness
-  bool _isActive = false; // Track audio focus state
-  AudioSession? _session; // AudioSession instance for focus management
+  bool _isDisposed = false; // Track disposal state
+
+  // All stream subscriptions to be cancelled on disposal
+  final List<StreamSubscription> _subs = [];
 
   /// Validate and sanitize artUri for Vivo/OriginOS lock screen compatibility
   /// Only returns http/https URLs, returns null for invalid protocols
@@ -47,20 +47,16 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     // Setup player event listeners
     _listenPlayerEvents();
 
-    // CRITICAL FIX: Initialize with default MediaItem WITHOUT artUri
-    // Vivo/OriginOS lock screen does NOT support local asset paths (asset:///)
-    // Only network URLs (http/https) are supported for lock screen display
-    // The actual podcast cover (network URL) will be set when playing an episode
+    // Initialize with default MediaItem
     mediaItem.add(
       MediaItem(
         id: 'default',
         title: 'No media',
         artist: 'Unknown',
-        // artUri: null - Don't use asset paths, Vivo lock screen won't display them
       ),
     );
 
-    // Initialize playback state with IDLE state (no content loaded yet)
+    // Initialize playback state
     playbackState.add(
       PlaybackState(
         controls: [MediaControl.play],
@@ -81,160 +77,26 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       ),
     );
 
-    // CRITICAL: Initialize AudioSession synchronously before any playback
-    _initAudioSession()
-        .then((_) {
-          _isAudioSessionReady = true;
-          if (kDebugMode) {
-            debugPrint('✅ AudioSession is ready for playback');
-          }
-        })
-        .catchError((error) {
-          if (kDebugMode) {
-            debugPrint('⚠️ AudioSession initialization failed: $error');
-          }
-        });
-
     if (kDebugMode) {
       debugPrint('🎵 PodcastAudioHandler initialized');
     }
   }
 
-  // Initialize AudioSession (async method called from constructor)
-  Future<void> _initAudioSession() async {
-    _session = await AudioSession.instance;
-
-    // CRITICAL: Configure for podcast playback with manual audio focus management
-    // Using speech contentType for better Android 15 + Vivo OriginOS compatibility
-    // androidAudioFocusGainType.gain = request permanent audio focus
-    await _session!.configure(
-      const AudioSessionConfiguration.speech().copyWith(
-        androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-      ),
-    );
-
-    // Listen for audio interruptions (calls, other apps, etc.)
-    _session!.interruptionEventStream.listen((event) {
-      if (kDebugMode) {
-        debugPrint('🎧 ========================================');
-        debugPrint('🎧 AUDIO INTERRUPTION DETECTED');
-        debugPrint('  begin: ${event.begin}');
-        debugPrint('  type: ${event.type}');
-        if (event.begin) {
-          debugPrint('  Action: Pausing playback and releasing audio focus');
-        } else {
-          debugPrint('  Action: Interruption ended (not auto-resuming for podcast)');
-        }
-        debugPrint('🎧 ========================================');
-      }
-
-      if (event.begin) {
-        // Interruption began - pause playback and release audio focus
-        // We release focus so other apps can use it
-        pause();
-        _releaseAudioFocus();
-      }
-      // Note: We don't auto-resume for podcasts - user preference
-    });
-
-    // Listen for becoming noisy (headphones unplugged)
-    _session!.becomingNoisyEventStream.listen((_) {
-      if (kDebugMode) {
-        debugPrint('🎧 ========================================');
-        debugPrint('🎧 AUDIO NOISY EVENT: Headphones unplugged');
-        debugPrint('  Action: Pausing playback');
-        debugPrint('🎧 ========================================');
-      }
-      pause();
-    });
-
-    if (kDebugMode) {
-      debugPrint('✅ AudioSession configured: contentType=speech');
-      debugPrint('✅ Manual audio focus management enabled');
-      debugPrint('✅ just_audio automatic interruption handling disabled');
-    }
-  }
-
-  /// Request audio focus before playing
-  /// Returns true if focus was granted, false otherwise
-  Future<bool> _requestAudioFocus() async {
-    if (_isActive) {
-      if (kDebugMode) {
-        debugPrint('🎵 Audio focus already active');
-      }
-      return true;
-    }
-
-    if (_session == null) {
-      if (kDebugMode) {
-        debugPrint('⚠️ AudioSession is null, cannot request focus');
-      }
-      return false;
-    }
-
-    try {
-      final success = await _session!.setActive(true);
-      if (success) {
-        _isActive = true;
-        if (kDebugMode) {
-          debugPrint('🎵 ✅ Audio focus requested and GRANTED');
-        }
-      } else {
-        if (kDebugMode) {
-          debugPrint('🎵 ❌ Audio focus request DENIED (e.g., phone call in progress)');
-        }
-      }
-      return success;
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('🎵 ⚠️ Error requesting audio focus: $e');
-      }
-      return false;
-    }
-  }
-
-  /// Release audio focus when stopping playback
-  Future<void> _releaseAudioFocus() async {
-    if (!_isActive) {
-      if (kDebugMode) {
-        debugPrint('🎵 Audio focus already inactive');
-      }
-      return;
-    }
-
-    if (_session == null) {
-      if (kDebugMode) {
-        debugPrint('⚠️ AudioSession is null, cannot release focus');
-      }
-      return;
-    }
-
-    try {
-      await _session!.setActive(false);
-      _isActive = false;
-      if (kDebugMode) {
-        debugPrint('🎵 ✅ Audio focus released');
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('🎵 ⚠️ Error releasing audio focus: $e');
-      }
-    }
-  }
-
   void _listenPlayerEvents() {
     // Listen to player state changes (playing/paused, completed, etc.)
-    _player.playerStateStream.listen((state) {
+    _subs.add(_player.playerStateStream.listen((state) {
+      if (_isDisposed) return;
       if (kDebugMode) {
         debugPrint('🎧 PlayerState: ${state.playing} ${state.processingState}');
       }
       _broadcastState();
-    });
+    }));
 
     // CRITICAL: Listen to position updates with optimized throttling
     // Throttled to 500ms to reduce CPU usage and prevent state conflicts on Vivo devices
     // Only calls _broadcastPosition() (lightweight) instead of _broadcastState()
-    _player.positionStream.listen((pos) {
+    _subs.add(_player.positionStream.listen((pos) {
+      if (_isDisposed) return;
       final now = DateTime.now();
       final dt = now.difference(_lastPosEmit).inMilliseconds;
       final dp = (pos - _lastPos).abs().inMilliseconds;
@@ -245,30 +107,33 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       _lastPosEmit = now;
       _lastPos = pos;
       _broadcastPosition(position: pos);
-    });
+    }));
 
     // Listen to buffered position changes (optional but recommended)
     // Throttled to match positionStream for consistency
-    _player.bufferedPositionStream.listen((buf) {
+    _subs.add(_player.bufferedPositionStream.listen((buf) {
+      if (_isDisposed) return;
       if ((buf - _lastBuffered).abs().inMilliseconds < 1000) return;
       _lastBuffered = buf;
       _broadcastPosition(buffered: buf);
-    });
+    }));
 
     // Listen to processing state changes - ONLY handle completed here
     // Don't call _broadcastState() here to avoid duplicate broadcasts
     // (playerStateStream already handles state broadcasts)
-    _player.processingStateStream.listen((state) async {
+    _subs.add(_player.processingStateStream.listen((state) async {
+      if (_isDisposed) return;
       if (state == ProcessingState.completed) {
         await _player.seek(Duration.zero);
         await _player.pause();
         _broadcastState(); // Only broadcast on completion
       }
-    });
+    }));
 
     // Update duration in mediaItem when available with URL validation
     // CRITICAL: Prevent duration "cross-contamination" between episodes
-    _player.durationStream.listen((duration) {
+    _subs.add(_player.durationStream.listen((duration) {
+      if (_isDisposed) return;
       final mi = mediaItem.value;
       if (duration == null || mi == null) return;
 
@@ -311,13 +176,14 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
           debugPrint('ℹ️ [DURATION] No change - duration already ${duration.inMilliseconds}ms');
         }
       }
-    });
+    }));
   }
 
   /// Lightweight position-only broadcast (avoid full state rebuild)
   /// Called frequently (500ms throttled) by positionStream
   /// NOTE: updateTime is only set in _broadcastState() for full state updates
   void _broadcastPosition({Duration? position, Duration? buffered}) {
+    if (_isDisposed) return;
     final pos = position ?? _player.position;
     final buf = buffered ?? _player.bufferedPosition;
 
@@ -337,6 +203,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   /// Called infrequently (state changes only) by playerStateStream
   /// CRITICAL: Includes updateTime and safely accesses all nullable fields
   void _broadcastState() {
+    if (_isDisposed) return;
     final playing = _player.playing;
     final rawProcessingState = _mapProcessingState(_player.processingState);
     final updateTime = DateTime.now();
@@ -537,38 +404,10 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> play() async {
-    // CRITICAL: Wait for AudioSession to be ready before playing
-    if (!_isAudioSessionReady) {
+    if (_isDisposed) {
       if (kDebugMode) {
-        debugPrint('⏳ Waiting for AudioSession to be ready...');
+        debugPrint('⚠️ play() called after disposal, ignoring');
       }
-      int attempts = 0;
-      while (!_isAudioSessionReady && attempts < 10) {
-        await Future.delayed(const Duration(milliseconds: 100));
-        attempts++;
-      }
-      if (!_isAudioSessionReady) {
-        if (kDebugMode) {
-          debugPrint(
-            '⚠️ AudioSession not ready after 1 second, proceeding anyway',
-          );
-        }
-      } else {
-        if (kDebugMode) {
-          debugPrint('✅ AudioSession ready for playback');
-        }
-      }
-    }
-
-    // CRITICAL: Request audio focus BEFORE playing
-    // If focus is denied (e.g., phone call in progress), do not play
-    final focusGranted = await _requestAudioFocus();
-    if (!focusGranted) {
-      if (kDebugMode) {
-        debugPrint('❌ Cannot play: audio focus request denied');
-      }
-      // Broadcast state to update UI (showing paused state)
-      _broadcastState();
       return;
     }
 
@@ -587,11 +426,20 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       }
     }
 
-    // Start playback - audio focus is already requested manually
+    // CRITICAL: Check again before actually playing
+    // Prevents race condition with stopService()
+    if (_isDisposed) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Disposed during play(), aborting');
+      }
+      return;
+    }
+
+    // Start playback
     try {
       await _player.play();
       if (kDebugMode) {
-        debugPrint('▶️ Playback started (manual audio focus management)');
+        debugPrint('▶️ Playback started');
       }
     } catch (e) {
       if (kDebugMode) {
@@ -599,19 +447,21 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       }
       rethrow;
     }
-
-    // NOTE: No need to manually call _broadcastState() here
-    // playerStateStream will automatically trigger _broadcastState()
   }
 
   @override
   Future<void> pause() async {
-    // Pause playback but KEEP audio focus
-    // This allows quick resume and prevents other apps from stealing focus
+    if (_isDisposed) {
+      if (kDebugMode) {
+        debugPrint('⚠️ pause() called after disposal, ignoring');
+      }
+      return;
+    }
+
     await _player.pause();
 
     if (kDebugMode) {
-      debugPrint('⏸️ pause() completed - audio focus KEPT for quick resume');
+      debugPrint('⏸️ Playback paused');
     }
 
     _broadcastState();
@@ -619,30 +469,85 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> stop() async {
+    if (_isDisposed) {
+      if (kDebugMode) {
+        debugPrint('⚠️ stop() called after disposal, ignoring');
+      }
+      return;
+    }
+
     if (kDebugMode) {
-      debugPrint('⏹️ stop() called - releasing audio focus manually');
+      debugPrint('⏹️ stop() called - stopping playback');
     }
 
     await _player.stop();
     await _player.seek(Duration.zero);
 
-    // CRITICAL: Release audio focus when stopping
-    await _releaseAudioFocus();
+    if (kDebugMode) {
+      debugPrint('✅ stop() completed');
+    }
+  }
 
-    // CRITICAL: Properly cleanup state when stopping
-    playbackState.add(
-      playbackState.value.copyWith(
-        playing: false,
-        processingState: AudioProcessingState.idle,
-        updatePosition: Duration.zero,
-        bufferedPosition: Duration.zero,
-      ),
-    );
-
-    await super.stop();
+  /// Complete stop - stops playback AND stops the AudioService
+  /// Call this when the app is being closed/destroyed
+  Future<void> stopService() async {
+    if (_isDisposed) return;
+    _isDisposed = true;
 
     if (kDebugMode) {
-      debugPrint('✅ stop() completed - service fully stopped');
+      debugPrint('🛑 stopService() called - stopping AudioService');
+    }
+
+    // Cancel all subscriptions FIRST to prevent any new events
+    for (final s in _subs) {
+      await s.cancel();
+    }
+    _subs.clear();
+
+    // Stop and dispose player
+    try {
+      await _player.stop();
+      await _player.dispose();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Error disposing player: $e');
+      }
+    }
+
+    // Stop the foreground service BEFORE clearing state
+    // This prevents platform messages after service shutdown
+    try {
+      await super.stop();
+      if (kDebugMode) {
+        debugPrint('✅ AudioService stopped');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('⚠️ Error stopping service: $e');
+      }
+    }
+
+    // Clear MediaSession state AFTER stopping service
+    // Wrapped in try-catch to handle potential FlutterJNI detachment
+    try {
+      playbackState.add(
+        PlaybackState(
+          controls: [],
+          systemActions: const {},
+          processingState: AudioProcessingState.idle,
+          playing: false,
+        ),
+      );
+      mediaItem.add(null);
+    } catch (e) {
+      // Ignore errors - service already stopped, state clearing is best-effort
+      if (kDebugMode) {
+        debugPrint('ℹ️ State clearing after stop (expected): $e');
+      }
+    }
+
+    if (kDebugMode) {
+      debugPrint('✅ stopService() completed');
     }
   }
 
@@ -703,22 +608,51 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> onTaskRemoved() async {
-    await stop();
-    await super.onTaskRemoved();
+    if (kDebugMode) {
+      debugPrint('🗑️ Task removed - stopping service and cleaning up');
+    }
+    // CRITICAL: Must call stopService() to stop foreground service
+    // This allows the process to exit properly
+    await stopService();
   }
 
   Future<void> dispose() async {
-    try {
-      await _player.stop();
-      await _player.dispose();
+    // Prevent double-dispose
+    if (_isDisposed) {
+      return;
+    }
 
+    _isDisposed = true;
+
+    if (kDebugMode) {
+      debugPrint('🗑️ Disposing AudioHandler...');
+    }
+
+    // Cancel all stream subscriptions
+    final subCount = _subs.length;
+    for (final s in _subs) {
+      await s.cancel();
+    }
+    _subs.clear();
+
+    if (kDebugMode) {
+      debugPrint('   - $subCount subscriptions cancelled');
+    }
+
+    // Release AudioPlayer
+    try {
+      await _player.dispose();
       if (kDebugMode) {
-        debugPrint('✅ AudioHandler disposed successfully');
+        debugPrint('   - Audio player disposed');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('⚠️ Error disposing AudioHandler: $e');
+        debugPrint('   - Error disposing player: $e');
       }
+    }
+
+    if (kDebugMode) {
+      debugPrint('✅ AudioHandler disposed');
     }
   }
 }
