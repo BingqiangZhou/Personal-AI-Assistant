@@ -107,11 +107,24 @@ class DioClient {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
+    // 🔍 DEBUG: 输出完整的请求URL
+    final fullUrl = '${_dio.options.baseUrl}/${options.path}';
+    debugPrint('🌐 [API REQUEST] ${options.method} $fullUrl');
+    if (options.data != null) {
+      debugPrint('   Data: ${options.data}');
+    }
+    if (options.queryParameters.isNotEmpty) {
+      debugPrint('   Query: ${options.queryParameters}');
+    }
+
     // Only add token if not already set (e.g., by retry logic)
     if (!options.headers.containsKey('Authorization')) {
       final token = await _secureStorage.read(key: config.AppConstants.accessTokenKey);
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
+        debugPrint('   ✅ Token added: ${token.substring(0, 20)}...');
+      } else {
+        debugPrint('   ⚠️ No token found');
       }
     }
 
@@ -136,10 +149,17 @@ class DioClient {
     DioException error,
     ErrorInterceptorHandler handler,
   ) async {
+    // 🔍 DEBUG: 输出错误请求的完整URL
+    final errorUrl = '${error.requestOptions.baseUrl}/${error.requestOptions.path}';
+    debugPrint('❌ [API ERROR] ${error.requestOptions.method} $errorUrl');
+    debugPrint('   Type: ${error.type}');
+    debugPrint('   Message: ${error.message}');
+
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+        debugPrint('   ⏱️ Timeout Error');
         handler.reject(
           DioException(
             requestOptions: error.requestOptions,

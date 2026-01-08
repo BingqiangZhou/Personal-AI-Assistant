@@ -950,6 +950,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   String _getFriendlyErrorMessage(String error) {
     final lowerError = error.toLowerCase();
 
+    if (lowerError.contains('already in progress') || lowerError.contains('already exists') || lowerError.contains('locked')) {
+      return 'Transcription already in progress';
+    }
     if (lowerError.contains('network') || lowerError.contains('connection') || lowerError.contains('timeout')) {
       return 'Network connection failed';
     }

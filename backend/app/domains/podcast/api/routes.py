@@ -880,12 +880,41 @@ async def start_transcription(
         # Acquire Redis lock before creating task
         lock_acquired = await state_manager.acquire_task_lock(episode_id, 0)  # task_id not known yet
         if not lock_acquired and not transcription_request.force_regenerate:
-            # Someone else is processing this episode
+            # Someone else is processing this episode - fetch and return existing task
             locked_task_id = await state_manager.is_episode_locked(episode_id)
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Transcription already in progress. Task ID: {locked_task_id}"
-            )
+            logger.info(f"🔒 [LOCK] Episode {episode_id} already locked by task {locked_task_id}")
+
+            if locked_task_id:
+                try:
+                    # Fetch the existing task from database
+                    existing_task = await transcription_service.get_transcription_status(locked_task_id)
+                    if existing_task:
+                        logger.info(f"✅ [LOCK] Returning existing task {existing_task.id} (status: {existing_task.status}) for locked episode {episode_id}")
+                        return _build_transcription_response(existing_task, episode)
+                    else:
+                        logger.warning(f"⚠️ [LOCK] Locked task {locked_task_id} not found in DB, might be stale")
+                        # Task in lock but not in DB - clean up the stale lock
+                        await state_manager.release_task_lock(episode_id, locked_task_id)
+                        await state_manager.clear_episode_task(episode_id)
+                        logger.info(f"🧹 [LOCK] Cleaned stale lock for episode {episode_id}")
+                except Exception as e:
+                    logger.error(f"❌ [LOCK] Error fetching locked task {locked_task_id}: {e}")
+                    # Clean up stale lock and continue to create new task
+                    try:
+                        await state_manager.release_task_lock(episode_id, locked_task_id or 0)
+                        await state_manager.clear_episode_task(episode_id)
+                        logger.info(f"🧹 [LOCK] Cleaned stale lock due to error: {e}")
+                    except Exception as cleanup_error:
+                        logger.error(f"❌ [LOCK] Failed to clean stale lock: {cleanup_error}")
+            else:
+                logger.warning(f"⚠️ [LOCK] Episode {episode_id} is locked but no task_id found, cleaning up")
+                try:
+                    await state_manager.clear_episode_task(episode_id)
+                except Exception as e:
+                    logger.error(f"❌ [LOCK] Failed to clear episode task: {e}")
+
+            # After cleanup, continue to create new task (don't raise error)
+            logger.info(f"🔄 [LOCK] Proceeding to create new task after cleanup for episode {episode_id}")
 
         # Create new transcription task
         task = await transcription_service.start_transcription(
@@ -1066,6 +1095,95 @@ async def get_transcription(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get transcription: {str(e)}"
+        )
+
+
+@router.delete(
+    "/episodes/{episode_id}/transcription",
+    summary="删除播客单集转录任务",
+    description="删除指定播客单集的转录任务，清理数据库记录和Redis锁"
+)
+async def delete_transcription(
+    episode_id: int,
+    user=Depends(get_token_from_request),
+    db: AsyncSession = Depends(get_db_session)
+):
+    """删除转录任务并清理相关资源"""
+    service = PodcastService(db, int(user["sub"]))
+    transcription_service = DatabaseBackedTranscriptionService(db)
+    state_manager = await get_transcription_state_manager()
+
+    try:
+        # 验证播客单集存在且属于当前用户
+        episode = await service.get_episode_by_id(episode_id)
+        if not episode:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Episode {episode_id} not found"
+            )
+
+        # 验证用户权限
+        if episode.subscription.user_id != int(user["sub"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to delete this transcription"
+            )
+
+        # 获取现有任务
+        task = await transcription_service.get_episode_transcription(episode_id)
+
+        if task:
+            task_id = task.id
+            logger.info(f"🗑️ [DELETE] Deleting transcription task {task_id} for episode {episode_id}")
+
+            # 删除数据库记录
+            await db.delete(task)
+            await db.commit()
+
+            # 清理Redis锁和缓存
+            try:
+                # 清理episode-task映射
+                await state_manager.clear_episode_task(episode_id)
+
+                # 释放任务锁
+                await state_manager.release_task_lock(episode_id, task_id)
+
+                # 清理任务进度缓存
+                await state_manager.clear_task_progress(task_id)
+
+                logger.info(f"✅ [DELETE] Cleaned up Redis locks for task {task_id}")
+            except Exception as redis_error:
+                logger.warning(f"⚠️ [DELETE] Failed to cleanup Redis: {redis_error}")
+
+            logger.info(f"✅ [DELETE] Successfully deleted transcription task {task_id} for episode {episode_id}")
+        else:
+            # 即使没有任务记录，也要清理可能的Redis锁
+            logger.info(f"🧹 [DELETE] No task found for episode {episode_id}, cleaning up any stale locks")
+            try:
+                await state_manager.clear_episode_task(episode_id)
+
+                # 尝试获取锁定的task_id并清理
+                locked_task_id = await state_manager.is_episode_locked(episode_id)
+                if locked_task_id:
+                    await state_manager.release_task_lock(episode_id, locked_task_id)
+                    await state_manager.clear_task_progress(locked_task_id)
+
+                logger.info(f"✅ [DELETE] Cleaned up stale locks for episode {episode_id}")
+            except Exception as redis_error:
+                logger.warning(f"⚠️ [DELETE] Failed to cleanup stale locks: {redis_error}")
+
+        return {
+            "message": "Transcription task deleted successfully",
+            "episode_id": episode_id
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to delete transcription for episode {episode_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete transcription: {str(e)}"
         )
 
 

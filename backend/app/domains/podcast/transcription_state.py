@@ -258,6 +258,17 @@ class TranscriptionStateManager:
         task_id_str = await self.redis.cache_get(key)
         return int(task_id_str) if task_id_str else None
 
+    async def clear_episode_task(self, episode_id: int) -> None:
+        """
+        Clear the episode-to-task mapping (e.g., when task completes or lock is stale)
+
+        Args:
+            episode_id: Episode ID to clear
+        """
+        key = TranscriptionStateKeys.EPISODE_TASK.format(episode_id=episode_id)
+        await self.redis.cache_delete(key)
+        logger.debug(f"Cleared episode {episode_id} task mapping")
+
     # === Progress Caching ===
 
     async def set_task_progress(
@@ -322,6 +333,23 @@ class TranscriptionStateManager:
             except json.JSONDecodeError:
                 logger.warning(f"Invalid cached progress data for task {task_id}")
         return None
+
+    async def clear_task_progress(self, task_id: int) -> None:
+        """
+        Clear cached task progress
+
+        Args:
+            task_id: Task ID to clear
+        """
+        # Clear progress data
+        progress_key = TranscriptionStateKeys.TASK_PROGRESS.format(task_id=task_id)
+        await self.redis.cache_delete(progress_key)
+
+        # Clear status data
+        status_key = TranscriptionStateKeys.TASK_STATUS.format(task_id=task_id)
+        await self.redis.cache_delete(status_key)
+
+        logger.debug(f"Cleared progress cache for task {task_id}")
 
     # === Status Summary ===
 

@@ -67,6 +67,11 @@ class PodcastRedis:
         client = await self._get_client()
         return await client.setex(key, ttl, value)
 
+    async def cache_delete(self, key: str) -> bool:
+        """Delete cached value"""
+        client = await self._get_client()
+        return await client.delete(key)
+
     async def cache_hget(self, key: str, field: str) -> Optional[str]:
         """Get hash field"""
         client = await self._get_client()
