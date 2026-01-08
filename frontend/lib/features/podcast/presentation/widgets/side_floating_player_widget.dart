@@ -822,10 +822,11 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                           builder: (context, ref, _) {
                             final audioPlayerState = ref.watch(audioPlayerProvider);
                             // Use audio player duration if available (more accurate), otherwise fall back to episode duration
+                            // CRITICAL: episode.audioDuration is in SECONDS, convert to MILLISECONDS
                             final displayDuration = (audioPlayerState.currentEpisode?.id == widget.episode.id &&
                                 audioPlayerState.duration > 0)
                                 ? audioPlayerState.duration
-                                : widget.episode.audioDuration!;
+                                : (widget.episode.audioDuration! * 1000); // Convert seconds to milliseconds
 
                             return Padding(
                               padding: const EdgeInsets.only(top: 2),
