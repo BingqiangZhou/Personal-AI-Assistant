@@ -42,8 +42,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _loadSavedCredentials() async {
-    final savedUsername = await _secureStorage.read(key: AppConstants.savedUsernameKey);
-    final savedPassword = await _secureStorage.read(key: AppConstants.savedPasswordKey);
+    final savedUsername = await _secureStorage.read(
+      key: AppConstants.savedUsernameKey,
+    );
+    final savedPassword = await _secureStorage.read(
+      key: AppConstants.savedPasswordKey,
+    );
 
     if (savedUsername != null && savedPassword != null) {
       setState(() {
@@ -57,18 +61,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
       if (_rememberMe) {
-        await _secureStorage.write(key: AppConstants.savedUsernameKey, value: _emailController.text.trim());
-        await _secureStorage.write(key: AppConstants.savedPasswordKey, value: _passwordController.text);
+        await _secureStorage.write(
+          key: AppConstants.savedUsernameKey,
+          value: _emailController.text.trim(),
+        );
+        await _secureStorage.write(
+          key: AppConstants.savedPasswordKey,
+          value: _passwordController.text,
+        );
       } else {
         await _secureStorage.delete(key: AppConstants.savedUsernameKey);
         await _secureStorage.delete(key: AppConstants.savedPasswordKey);
       }
 
-      ref.read(authProvider.notifier).login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        rememberMe: _rememberMe,
-      );
+      ref
+          .read(authProvider.notifier)
+          .login(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            rememberMe: _rememberMe,
+          );
     }
   }
 
@@ -79,7 +91,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => ServerConfigDialog(
-        initialUrl: serverConfig.serverUrl.isNotEmpty ? serverConfig.serverUrl : null,
+        initialUrl: serverConfig.serverUrl.isNotEmpty
+            ? serverConfig.serverUrl
+            : null,
         onSave: () {
           setState(() {});
         },
@@ -137,7 +151,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             onLongPress: _showServerConfigDialog,
                             borderRadius: BorderRadius.circular(20),
                             child: Image.asset(
-                              'assets/icons/appLogo.png',
+                              'assets/icons/Logo3.png',
                               width: 80,
                               height: 80,
                             ),
@@ -146,17 +160,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         const SizedBox(height: 16),
                         Text(
                           l10n.auth_welcome_back,
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context).textTheme.headlineLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           l10n.auth_sign_in_subtitle,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
                         ),
                       ],
                     ),
@@ -191,7 +209,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -222,8 +242,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             _rememberMe = value ?? false;
                           });
                           if (!_rememberMe) {
-                            await _secureStorage.delete(key: AppConstants.savedUsernameKey);
-                            await _secureStorage.delete(key: AppConstants.savedPasswordKey);
+                            await _secureStorage.delete(
+                              key: AppConstants.savedUsernameKey,
+                            );
+                            await _secureStorage.delete(
+                              key: AppConstants.savedPasswordKey,
+                            );
                           }
                         },
                       ),
@@ -267,10 +291,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         onTap: () => context.go('/register'),
                         child: Text(
                           l10n.auth_sign_up,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
                     ],

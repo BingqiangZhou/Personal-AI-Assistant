@@ -196,7 +196,7 @@ class _AdaptiveScaffoldMenuState extends State<AdaptiveScaffoldMenu> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
@@ -206,10 +206,14 @@ class _AdaptiveScaffoldMenuState extends State<AdaptiveScaffoldMenu> {
                 ),
               ],
             ),
-            child: Icon(
-              Icons.smart_toy,
-              color: Theme.of(context).colorScheme.onPrimary,
-              size: 24,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                'assets/icons/Logo3.png',
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
 
