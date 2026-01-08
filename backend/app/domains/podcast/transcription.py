@@ -768,10 +768,10 @@ class PodcastTranscriptionService:
         self.temp_dir = os.path.abspath(temp_dir_config)
         self.storage_dir = os.path.abspath(storage_dir_config)
 
-        # Log for debugging
-        logger.info(f"📁 [TRANSCRIPTION] temp_dir = {self.temp_dir} (from config: {temp_dir_config})")
-        logger.info(f"📁 [TRANSCRIPTION] storage_dir = {self.storage_dir} (from config: {storage_dir_config})")
-        logger.info(f"📁 [TRANSCRIPTION] cwd = {os.getcwd()}")
+        # Log for debugging (use debug level to reduce noise)
+        logger.debug(f"📁 [TRANSCRIPTION] temp_dir = {self.temp_dir} (from config: {temp_dir_config})")
+        logger.debug(f"📁 [TRANSCRIPTION] storage_dir = {self.storage_dir} (from config: {storage_dir_config})")
+        logger.debug(f"📁 [TRANSCRIPTION] cwd = {os.getcwd()}")
 
         self.chunk_size_mb = getattr(settings, 'TRANSCRIPTION_CHUNK_SIZE_MB', 10)
         self.max_threads = getattr(settings, 'TRANSCRIPTION_MAX_THREADS', 4)

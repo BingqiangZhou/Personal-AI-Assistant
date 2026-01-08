@@ -71,11 +71,9 @@ class SecureRSSParser:
         Returns:
             Tuple[success, feed_data, error_message]
         """
-        logger.info(f"User {self.user_id}: Fetching RSS from {feed_url}")
-
         # Step 0: Detect platform
         platform = PlatformDetector.detect_platform(feed_url)
-        logger.info(f"Detected platform: {platform}")
+        logger.debug(f"User {self.user_id}: Fetching RSS from {feed_url}, platform: {platform}")
 
         # Step 1: Validate URL
         valid_url, url_error = self.security.validate_audio_url(feed_url)
@@ -98,7 +96,7 @@ class SecureRSSParser:
         # Step 4: Parse safely
         try:
             feed = await self._parse_feed_securely(feed_url, xml_content, platform)
-            logger.info(f"Successfully parsed feed: {feed.title} with {len(feed.episodes)} episodes from {platform}")
+            logger.debug(f"Successfully parsed feed: {feed.title} with {len(feed.episodes)} episodes from {platform}")
             return True, feed, None
         except Exception as e:
             logger.error(f"Parsing error: {e}")

@@ -423,7 +423,9 @@ class PodcastService:
         # 更新订阅的最后抓取时间（使用最新分集的发布时间）
         await self.repo.update_subscription_fetch_time(subscription_id, feed.last_fetched)
 
-        logger.info(f"用户{self.user_id} 刷新订阅: {sub.title}, {len(new_episodes)}期新节目")
+        # 只在有新节目时输出日志
+        if len(new_episodes) > 0:
+            logger.info(f"用户{self.user_id} 刷新订阅: {sub.title}, 发现 {len(new_episodes)}期新节目")
         return new_episodes
 
     async def reparse_subscription(self, subscription_id: int, force_all: bool = False) -> dict:
