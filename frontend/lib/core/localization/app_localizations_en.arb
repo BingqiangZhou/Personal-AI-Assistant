@@ -1,9 +1,14 @@
 {
   "@@locale": "en",
 
-  "appTitle": "Personal AI Assistant",
+  "appTitle": "Stella",
   "@appTitle": {
     "description": "The title of the application"
+  },
+
+  "appSlogan": "Your personal assistant for everything you follow.",
+  "@appSlogan": {
+    "description": "The slogan of the application"
   },
 
   "settings": "Settings",
@@ -176,7 +181,7 @@
     "description": "Welcome message"
   },
 
-  "auth_welcome_back": "Welcome Back",
+  "auth_welcome_back": "Dawn's near. Let's begin.",
   "@auth_welcome_back": {
     "description": "Login page welcome title"
   },

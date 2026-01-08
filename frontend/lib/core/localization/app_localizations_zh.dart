@@ -9,7 +9,10 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => '个人AI助手';
+  String get appTitle => 'Stella';
+
+  @override
+  String get appSlogan => '你关注的一切，交给我。';
 
   @override
   String get settings => '设置';
@@ -114,7 +117,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get welcome => '欢迎';
 
   @override
-  String get auth_welcome_back => '欢迎回来';
+  String get auth_welcome_back => '天快亮了，我们开始吧。';
 
   @override
   String get auth_sign_in_subtitle => '登录以继续';

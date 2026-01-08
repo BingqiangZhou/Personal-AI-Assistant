@@ -1,9 +1,14 @@
 {
   "@@locale": "zh",
 
-  "appTitle": "个人AI助手",
+  "appTitle": "Stella",
   "@appTitle": {
     "description": "应用程序标题"
+  },
+
+  "appSlogan": "你关注的一切，交给我。",
+  "@appSlogan": {
+    "description": "应用程序标语"
   },
 
   "settings": "设置",
@@ -176,7 +181,7 @@
     "description": "欢迎消息"
   },
 
-  "auth_welcome_back": "欢迎回来",
+  "auth_welcome_back": "天快亮了，我们开始吧。",
   "@auth_welcome_back": {
     "description": "登录页面欢迎标题"
   },

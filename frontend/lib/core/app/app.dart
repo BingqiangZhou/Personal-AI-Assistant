@@ -24,6 +24,7 @@ class _SplashScreenWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final brightness = MediaQuery.platformBrightnessOf(context);
     final isDark = brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       body: Container(
@@ -39,7 +40,6 @@ class _SplashScreenWidget extends StatelessWidget {
               // App logo with shadow
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
                       color: isDark
@@ -50,22 +50,19 @@ class _SplashScreenWidget extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Image.asset(
-                    'assets/icons/Logo3.png',
-                    width: 120,
-                    height: 120,
-                    fit: BoxFit.cover,
-                  ),
+                child: Image.asset(
+                  'assets/icons/Logo3.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.contain,
                 ),
               ),
               const SizedBox(height: 32),
               // App name
               Text(
-                'Personal AI Assistant',
+                l10n?.appTitle ?? 'Stella',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: 28,
                   fontWeight: FontWeight.w600,
                   color: isDark
                       ? AppColors.darkTextPrimary
@@ -73,12 +70,14 @@ class _SplashScreenWidget extends StatelessWidget {
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               // Tagline
               Text(
-                'Your intelligent companion',
+                l10n?.appSlogan ?? 'Dawn\'s near. Let\'s begin.',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
+                  height: 1.5,
                   color: isDark
                       ? AppColors.darkTextSecondary
                       : AppColors.lightTextSecondary,
@@ -232,18 +231,25 @@ class _PersonalAIAssistantAppState
     // Show splash screen while initializing
     if (!_isInitialized) {
       return MaterialApp(
-        title: 'Personal AI Assistant',
+        title: 'Stella',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ref.watch(themeModeProvider),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('en'), Locale('zh')],
         home: const _SplashScreenWidget(),
       );
     }
 
     // Show main app after initialization
     return MaterialApp.router(
-      title: 'Personal AI Assistant',
+      title: 'Stella',
       debugShowCheckedModeBanner: false,
 
       // Theme configuration

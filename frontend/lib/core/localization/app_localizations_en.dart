@@ -9,7 +9,10 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Personal AI Assistant';
+  String get appTitle => 'Stella';
+
+  @override
+  String get appSlogan => 'Your personal assistant for everything you follow.';
 
   @override
   String get settings => 'Settings';
@@ -114,7 +117,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcome => 'Welcome';
 
   @override
-  String get auth_welcome_back => 'Welcome Back';
+  String get auth_welcome_back => 'Dawn\'s near. Let\'s begin.';
 
   @override
   String get auth_sign_in_subtitle => 'Sign in to continue';

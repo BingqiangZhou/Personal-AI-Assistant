@@ -9,6 +9,10 @@ flutter_native_splash:
     image: "assets/icons/Logo3.png"
     # Background color for Android 12+ (matches dark theme for better contrast)
     color: "#0B1020"
+    # Icon background color - set to match the splash background to hide the circle mask
+    icon_background_color: "#0B1020"
+    # Branding image (optional bottom logo)
+    # branding: "assets/icons/Logo3.png"
 
   # Fullscreen support
   fullscreen: true

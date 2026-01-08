@@ -101,8 +101,14 @@ abstract class AppLocalizations {
   /// The title of the application
   ///
   /// In en, this message translates to:
-  /// **'Personal AI Assistant'**
+  /// **'Stella'**
   String get appTitle;
+
+  /// The slogan of the application
+  ///
+  /// In en, this message translates to:
+  /// **'Your personal assistant for everything you follow.'**
+  String get appSlogan;
 
   /// Settings page title
   ///
@@ -311,7 +317,7 @@ abstract class AppLocalizations {
   /// Login page welcome title
   ///
   /// In en, this message translates to:
-  /// **'Welcome Back'**
+  /// **'Dawn\'s near. Let\'s begin.'**
   String get auth_welcome_back;
 
   /// Login page subtitle

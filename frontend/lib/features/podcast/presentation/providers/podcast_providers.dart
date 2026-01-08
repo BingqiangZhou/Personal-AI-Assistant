@@ -40,6 +40,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   StreamSubscription? _playerStateSubscription;
   StreamSubscription? _positionSubscription;
   StreamSubscription? _durationSubscription;
+  bool? _lastPlayingState; // Track last playing state to reduce log spam
 
   PodcastAudioHandler get _audioHandler => main_app.audioHandler as PodcastAudioHandler;
 
@@ -66,8 +67,10 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     _playerStateSubscription = _audioHandler.playbackState.listen((playbackState) {
       if (_isDisposed || !ref.mounted) return;
 
-      if (kDebugMode) {
-        debugPrint('🎵 Playback state changed: playing=${playbackState.playing}');
+      // Only log when state actually changes
+      if (kDebugMode && _lastPlayingState != playbackState.playing) {
+        debugPrint('🎵 Playback state changed: ${_lastPlayingState == null ? "initial" : _lastPlayingState! ? "playing" : "paused"} -> ${playbackState.playing ? "playing" : "paused"}');
+        _lastPlayingState = playbackState.playing;
       }
 
       // Always update state regardless of _isPlayingEpisode
@@ -92,28 +95,24 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     _durationSubscription = _audioHandler.mediaItem.listen((mediaItem) {
       if (_isDisposed || !ref.mounted) return;
 
-      // CRITICAL: Always update duration, even if null (to handle initial state)
-      // When duration is extracted from audio stream, it will be non-null and update correctly
+      // Duration listener as supplementary update (backend duration is used first)
+      // Only update if audio stream provides a different or more accurate duration
       if (mediaItem != null) {
         final newDuration = mediaItem.duration?.inMilliseconds ?? 0;
-        // Only update if duration changed (avoid unnecessary rebuilds)
-        if (state.duration != newDuration) {
+
+        // Only update if:
+        // 1. Current duration is 0 (no backend duration available)
+        // 2. New duration is significantly different (>5% difference) and non-zero
+        final currentDuration = state.duration;
+        final shouldUpdate = currentDuration == 0 ||
+                           (newDuration > 0 &&
+                            (newDuration - currentDuration).abs() > currentDuration * 0.05);
+
+        if (shouldUpdate && newDuration != currentDuration) {
           if (kDebugMode) {
-            debugPrint('🎵 [DURATION LISTENER] Duration changing: ${state.duration}ms -> ${newDuration}ms');
-            debugPrint('   MediaItem.id: ${mediaItem.id}');
-            debugPrint('   MediaItem.title: ${mediaItem.title}');
-            debugPrint('   MediaItem.duration: ${mediaItem.duration}');
-            debugPrint('   state.currentEpisode?.id: ${state.currentEpisode?.id}');
+            debugPrint('🎵 [DURATION UPDATE] ${currentDuration}ms -> ${newDuration}ms (from audio stream)');
           }
           state = state.copyWith(duration: newDuration);
-          if (kDebugMode) {
-            debugPrint('   ✅ State updated: state.duration = ${state.duration}ms');
-            debugPrint('   ✅ Formatted duration: ${state.formattedDuration}');
-          }
-        }
-      } else {
-        if (kDebugMode) {
-          debugPrint('⚠️ [DURATION LISTENER] mediaItem is null, skipping update');
         }
       }
     });
@@ -162,12 +161,16 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       if (!ref.mounted || _isDisposed) return;
 
-      // ===== STEP 2: Set new episode info (DON'T mark as playing yet) =====
+      // ===== STEP 2: Set new episode info with duration from backend =====
       debugPrint('📝 Step 2: Setting new episode info');
+      // CRITICAL: Backend audioDuration is in SECONDS, convert to MILLISECONDS
+      final durationMs = (episode.audioDuration ?? 0) * 1000;
+      debugPrint('  📊 Using backend duration: ${episode.audioDuration}s = ${durationMs}ms');
       state = state.copyWith(
         currentEpisode: episode,
         isLoading: true,
         isPlaying: false, // Keep false until actually playing
+        duration: durationMs, // Convert seconds to milliseconds
         error: null,
       );
 
@@ -175,7 +178,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       // CRITICAL: Use setEpisode() to properly set MediaItem, validate artUri, and load audio
       // artUri validation is built into setEpisode() - only http/https URLs are accepted
       debugPrint('🔄 Step 3: Setting new episode with metadata');
-      debugPrint('  📊 Episode.audioDuration: ${episode.audioDuration}ms (this value is NOT used, let audio stream extract duration)');
+      debugPrint('  📊 Backend duration already set: ${state.duration}ms');
       debugPrint('  🖼️ Image URL: ${episode.imageUrl ?? "NULL"}');
 
       try {

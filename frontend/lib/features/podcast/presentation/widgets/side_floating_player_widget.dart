@@ -134,8 +134,7 @@ class _SideFloatingPlayerWidgetState
         // Save current position before expanding
         _savedCollapsedOffset = _playerOffset;
         _animationController.forward();
-        // Reset position to default when expanding
-        _initializePosition();
+        // No need to change _playerOffset - expanded state uses fixed right positioning
       } else {
         _animationController.reverse();
         // Restore saved position when collapsing
@@ -242,62 +241,77 @@ class _SideFloatingPlayerWidgetState
                   screenHeight,
                 ),
               )
-            : Positioned(
-                key: _playerKey,
-                left: _playerOffset.dx,
-                top: _playerOffset.dy,
-                child: GestureDetector(
-                  // Desktop collapsed: Enable drag (but only on right edge)
-                  // Mobile collapsed: Enable drag (can snap to any edge)
-                  // Expanded: Disable drag (uses fixed position)
-                  onPanStart: _isExpanded ? null : (details) {
-                    setState(() {
-                      _dragStartOffset = details.globalPosition;
-                      _dragStartPosition = _playerOffset;
-                    });
-                  },
-                  onPanUpdate: _isExpanded ? null : (details) {
-                    setState(() {
-                      final deltaX = details.globalPosition.dx - _dragStartOffset.dx;
-                      final deltaY = details.globalPosition.dy - _dragStartOffset.dy;
-                      _playerOffset = Offset(
-                        _dragStartPosition.dx + deltaX,
-                        _dragStartPosition.dy + deltaY,
-                      );
-                    });
-                  },
-                  onPanEnd: _isExpanded ? null : (details) {
-                    setState(() {
-                      // Calculate player size for snapping
-                      final currentWidth = _widthAnimation.value * (expandedWidth - collapsedWidth) + collapsedWidth;
-                      final playerHeight = !_isExpanded ? 64.0 : null;
-                      // Snap to edge
-                      if (playerHeight != null) {
-                        _playerOffset = _snapToEdge(
-                          _playerOffset,
-                          currentWidth,
-                          playerHeight,
-                          screenWidth,
-                          screenHeight,
-                          !isMobile, // isDesktop
-                          !_isExpanded, // isCollapsed
-                        );
-                      }
-                    });
-                  },
-                  child: _buildPlayerContent(
-                    context,
-                    ref,
-                    audioPlayerState,
-                    l10n,
-                    isMobile,
-                    isTablet,
-                    collapsedWidth,
-                    expandedWidth,
-                    screenHeight,
+            : (_isExpanded && !isMobile)
+                ? Positioned(
+                    key: _playerKey,
+                    right: 24, // Fixed to right edge
+                    top: (screenHeight - 450) / 2, // Vertically centered, assuming ~450px height
+                    child: _buildPlayerContent(
+                      context,
+                      ref,
+                      audioPlayerState,
+                      l10n,
+                      isMobile,
+                      isTablet,
+                      collapsedWidth,
+                      expandedWidth,
+                      screenHeight,
+                    ),
+                  )
+                : Positioned(
+                    key: _playerKey,
+                    left: _playerOffset.dx,
+                    top: _playerOffset.dy,
+                    child: GestureDetector(
+                      // Desktop collapsed: Enable drag (but only on right edge)
+                      // Mobile collapsed: Enable drag (can snap to any edge)
+                      // Expanded: Disable drag (uses fixed position)
+                      onPanStart: (details) {
+                        setState(() {
+                          _dragStartOffset = details.globalPosition;
+                          _dragStartPosition = _playerOffset;
+                        });
+                      },
+                      onPanUpdate: (details) {
+                        setState(() {
+                          final deltaX = details.globalPosition.dx - _dragStartOffset.dx;
+                          final deltaY = details.globalPosition.dy - _dragStartOffset.dy;
+                          _playerOffset = Offset(
+                            _dragStartPosition.dx + deltaX,
+                            _dragStartPosition.dy + deltaY,
+                          );
+                        });
+                      },
+                      onPanEnd: (details) {
+                        setState(() {
+                          // Calculate player size for snapping
+                          final currentWidth = collapsedWidth;
+                          final playerHeight = 64.0;
+                          // Snap to edge
+                          _playerOffset = _snapToEdge(
+                            _playerOffset,
+                            currentWidth,
+                            playerHeight,
+                            screenWidth,
+                            screenHeight,
+                            !isMobile, // isDesktop
+                            true, // isCollapsed
+                          );
+                        });
+                      },
+                      child: _buildPlayerContent(
+                        context,
+                        ref,
+                        audioPlayerState,
+                        l10n,
+                        isMobile,
+                        isTablet,
+                        collapsedWidth,
+                        expandedWidth,
+                        screenHeight,
+                      ),
+                    ),
                   ),
-                ),
-              ),
       ],
     );
   }
@@ -646,9 +660,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
     // Use LayoutBuilder to detect available width
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Minimum width: padding (12*2) + two buttons (36*2) + spacing (8*2) = 24 + 72 + 16 = 112
+        // Minimum width: padding (12*2) + two buttons (40*2) + spacing (8*2) = 24 + 80 + 16 = 120
         // Adding safety margin to prevent edge cases
-        final minWidthForHeader = 120.0;
+        final minWidthForHeader = 130.0;
 
         // If width is too small (during animation), hide the header
         if (constraints.maxWidth < minWidthForHeader) {
@@ -658,8 +672,8 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
         // Calculate available width for content after padding
         final contentWidth = constraints.maxWidth - 24; // 24 = padding horizontal (12*2)
 
-        // Minimum width for showing title: buttons (72) + spacing (16) + some space for text (50)
-        final minWidthForTitle = 140.0;
+        // Minimum width for showing title: buttons (80) + spacing (16) + some space for text (60)
+        final minWidthForTitle = 160.0;
         final showTitle = contentWidth >= minWidthForTitle;
 
         return Container(
@@ -674,14 +688,19 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
             ),
           ),
           child: Row(
+            mainAxisSize: MainAxisSize.max,
             children: [
               // Close button on the left
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: widget.onClose,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                padding: EdgeInsets.zero,
-                tooltip: 'Close',
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  iconSize: 20,
+                  onPressed: widget.onClose,
+                  padding: EdgeInsets.zero,
+                  tooltip: 'Close',
+                ),
               ),
               // Only show spacing and title if width allows
               if (showTitle) const SizedBox(width: 8),
@@ -704,12 +723,16 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
               // Add spacer if title is hidden
               if (!showTitle) const Spacer(),
               // Collapse button on the right
-              IconButton(
-                icon: const Icon(Icons.chevron_right),
-                onPressed: widget.onCollapse,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                padding: EdgeInsets.zero,
-                tooltip: l10n.podcast_player_collapse,
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  iconSize: 20,
+                  onPressed: widget.onCollapse,
+                  padding: EdgeInsets.zero,
+                  tooltip: l10n.podcast_player_collapse,
+                ),
               ),
             ],
           ),
@@ -772,65 +795,64 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                       ),
                       const SizedBox(height: 4),
                       // Info row with flexible layout to prevent overflow
-                      Flexible(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.calendar_today_outlined,
-                              size: 12,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                _formatDate(widget.episode.publishedAt),
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.calendar_today_outlined,
+                            size: 12,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              _formatDate(widget.episode.publishedAt),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
-                            if (widget.episode.audioDuration != null)
-                              Consumer(
-                                builder: (context, ref, _) {
-                                  final audioPlayerState = ref.watch(audioPlayerProvider);
-                                  // Use audio player duration if available (more accurate), otherwise fall back to episode duration
-                                  final displayDuration = (audioPlayerState.currentEpisode?.id == widget.episode.id &&
-                                      audioPlayerState.duration > 0)
-                                      ? audioPlayerState.duration
-                                      : widget.episode.audioDuration!;
+                          ),
+                        ],
+                      ),
+                      // Duration on a separate line to prevent overflow
+                      if (widget.episode.audioDuration != null)
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final audioPlayerState = ref.watch(audioPlayerProvider);
+                            // Use audio player duration if available (more accurate), otherwise fall back to episode duration
+                            final displayDuration = (audioPlayerState.currentEpisode?.id == widget.episode.id &&
+                                audioPlayerState.duration > 0)
+                                ? audioPlayerState.duration
+                                : widget.episode.audioDuration!;
 
-                                  return Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const SizedBox(width: 8),
-                                      Icon(
-                                        Icons.schedule_outlined,
-                                        size: 12,
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 2),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.schedule_outlined,
+                                    size: 12,
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      _formatDuration(displayDuration),
+                                      style: TextStyle(
+                                        fontSize: 12,
                                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                                       ),
-                                      const SizedBox(width: 4),
-                                      Flexible(
-                                        child: Text(
-                                          _formatDuration(displayDuration),
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                          maxLines: 1,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                ],
                               ),
-                          ],
+                            );
+                          },
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -1073,44 +1095,62 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
     if (l10n == null) {
       return const SizedBox.shrink();
     }
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 16,
-        runSpacing: 12,
-        children: [
-          // Playback speed
-          _buildSpeedButton(context),
-          // Playlist button (placeholder)
-          _buildIconButton(
-            context,
-            icon: Icons.list,
-            tooltip: l10n.podcast_player_list,
-            onTap: () {
-              // TODO: Implement playlist
-            },
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Minimum width needed for full options row
+        // Speed button (~70) + 3 icon buttons (~40 each) + spacing = ~200px
+        final minWidthForFullRow = 200.0;
+        final showFullOptions = constraints.maxWidth >= minWidthForFullRow;
+
+        // If width is too small, hide the options row entirely during animation
+        if (constraints.maxWidth < 150.0) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 16,
+            runSpacing: 12,
+            children: [
+              // Playback speed - always show if there's enough space
+              if (showFullOptions) _buildSpeedButton(context),
+              // Other buttons - hide if width is limited
+              if (showFullOptions) ...[
+                // Playlist button (placeholder)
+                _buildIconButton(
+                  context,
+                  icon: Icons.list,
+                  tooltip: l10n.podcast_player_list,
+                  onTap: () {
+                    // TODO: Implement playlist
+                  },
+                ),
+                // Sleep timer (placeholder)
+                _buildIconButton(
+                  context,
+                  icon: Icons.bedtime_outlined,
+                  tooltip: l10n.podcast_player_sleep_mode,
+                  onTap: () {
+                    // TODO: Implement sleep timer
+                  },
+                ),
+                // Download button (placeholder)
+                _buildIconButton(
+                  context,
+                  icon: Icons.download_outlined,
+                  tooltip: l10n.podcast_player_download,
+                  onTap: () {
+                    // TODO: Implement download
+                  },
+                ),
+              ],
+            ],
           ),
-          // Sleep timer (placeholder)
-          _buildIconButton(
-            context,
-            icon: Icons.bedtime_outlined,
-            tooltip: l10n.podcast_player_sleep_mode,
-            onTap: () {
-              // TODO: Implement sleep timer
-            },
-          ),
-          // Download button (placeholder)
-          _buildIconButton(
-            context,
-            icon: Icons.download_outlined,
-            tooltip: l10n.podcast_player_download,
-            onTap: () {
-              // TODO: Implement download
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1132,6 +1172,10 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
     final speedOptions = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0];
 
     return Container(
+      constraints: const BoxConstraints(
+        minWidth: 70, // 确保最小宽度
+        maxWidth: 100, // 限制最大宽度
+      ),
       decoration: BoxDecoration(
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
@@ -1141,15 +1185,16 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
       ),
       // 使用与其他图标按钮一致的 padding
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<double>(
             value: widget.playbackRate,
-            // 图标放在左侧作为 prefix
+            // 图标放在右侧
             icon: const Icon(Icons.expand_more, size: 16),
             iconSize: 16,
             elevation: 8,
             isDense: true, // 减少垂直空间
+            isExpanded: true, // 让下拉框占满可用空间
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -1167,12 +1212,15 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                       color: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      '${value.toStringAsFixed(2)}x'.replaceAll(RegExp(r'\.?0+$'), ''),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    Flexible(
+                      child: Text(
+                        '${value.toStringAsFixed(2)}x'.replaceAll(RegExp(r'\.?0+$'), ''),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
