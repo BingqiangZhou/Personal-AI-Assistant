@@ -83,85 +83,102 @@ def refresh_all_podcast_feeds(self):
     """
     定时任务：刷新所有播客RSS Feed
     每分钟执行一次，检查哪些订阅需要根据其调度配置进行更新
-    
+
     支持的调度频率：
     - HOURLY: 每N小时更新一次（使用fetch_interval）
     - DAILY: 每天在指定时间更新（使用update_time）
     - WEEKLY: 每周指定星期和时间更新（使用update_day_of_week和update_time）
+
+    重要：在 Celery worker 中正确处理 asyncio 事件循环
+    - 创建独立的数据库引擎避免跨进程连接池问题
+    - 使用 asyncio.run() 自动管理事件循环生命周期
     """
     logger.info("开始刷新所有播客RSS Feed")
 
     async def _do_refresh():
-        async with async_session_factory() as db:
-            try:
-                # 获取所有需要刷新的订阅
-                repo = PodcastRepository(db)
+        # 创建独立的数据库引擎，避免fork进程后连接池问题
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-                # 获取所有活跃的播客订阅
-                # from app.domains.subscription.models import Subscription # Redundant local import removed
+        worker_engine = create_async_engine(
+            settings.DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=3600,
+            connect_args={
+                "server_settings": {
+                    "application_name": "celery-feed-refresh-worker",
+                    "client_encoding": "utf8"
+                },
+                "timeout": settings.DATABASE_CONNECT_TIMEOUT
+            }
+        )
 
-                # Get active podcast subscriptions that should be updated now
-                stmt = select(Subscription).where(
-                    Subscription.source_type == "podcast-rss"
-                ).where(
-                    Subscription.status == "active"
-                )
+        worker_session_factory = async_sessionmaker(
+            worker_engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
 
-                result = await db.execute(stmt)
-                all_subscriptions = list(result.scalars().all())
+        # 使用 try-finally 确保引擎被正确关闭
+        try:
+            async with worker_session_factory() as db:
+                try:
+                    # 获取所有需要刷新的订阅
+                    repo = PodcastRepository(db)
 
-                # Filter subscriptions that should be updated now based on their schedule
-                subscriptions = [sub for sub in all_subscriptions if sub.should_update_now()]
+                    # Get active podcast subscriptions that should be updated now
+                    stmt = select(Subscription).where(
+                        Subscription.source_type == "podcast-rss"
+                    ).where(
+                        Subscription.status == "active"
+                    )
 
-                refreshed_count = 0
-                new_episodes_count = 0
+                    result = await db.execute(stmt)
+                    all_subscriptions = list(result.scalars().all())
 
-                for sub in subscriptions:
-                    try:
-                        # 为每个订阅创建服务实例
-                        service = PodcastService(db, sub.user_id)
+                    # Filter subscriptions that should be updated now based on their schedule
+                    subscriptions = [sub for sub in all_subscriptions if sub.should_update_now()]
 
-                        # 刷新订阅
-                        new_episodes = await service.refresh_subscription(sub.id)
+                    refreshed_count = 0
+                    new_episodes_count = 0
 
-                        refreshed_count += 1
-                        new_episodes_count += len(new_episodes)
+                    for sub in subscriptions:
+                        try:
+                            # 为每个订阅创建服务实例
+                            service = PodcastService(db, sub.user_id)
 
-                        # service.refresh_subscription already logs progress
-                        await service.refresh_subscription(sub.id)
+                            # 刷新订阅
+                            new_episodes = await service.refresh_subscription(sub.id)
 
-                    except Exception as e:
-                        logger.error(f"刷新订阅 {sub.id} 失败: {e}")
-                        # 继续处理其他订阅
-                        continue
+                            refreshed_count += 1
+                            new_episodes_count += len(new_episodes)
 
-                logger.info(f"RSS Feed刷新完成: {refreshed_count} 个订阅, {new_episodes_count} 期新节目")
+                        except Exception as e:
+                            logger.error(f"刷新订阅 {sub.id} 失败: {e}")
+                            # 继续处理其他订阅
+                            continue
 
-                return {
-                    "status": "success",
-                    "refreshed_subscriptions": refreshed_count,
-                    "new_episodes": new_episodes_count,
-                    "processed_at": datetime.utcnow().isoformat()
-                }
+                    logger.info(f"RSS Feed刷新完成: {refreshed_count} 个订阅, {new_episodes_count} 期新节目")
 
-            except Exception as e:
-                logger.error(f"刷新RSS Feed失败: {e}")
-                raise
+                    return {
+                        "status": "success",
+                        "refreshed_subscriptions": refreshed_count,
+                        "new_episodes": new_episodes_count,
+                        "processed_at": datetime.utcnow().isoformat()
+                    }
+
+                except Exception as e:
+                    logger.error(f"刷新RSS Feed失败: {e}")
+                    raise
+        finally:
+            # 确保引擎被正确关闭，释放所有连接
+            await worker_engine.dispose()
 
     try:
-        # Run async code in sync Celery worker
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(_do_refresh())
-            # Allow pending cleanup tasks to complete (e.g., asyncpg connection cleanup)
-            loop.run_until_complete(asyncio.sleep(0))
-        finally:
-            # Don't close the loop - let the worker process handle cleanup
-            # Closing the loop here causes "Event loop is closed" errors
-            # when asyncpg tries to terminate connections asynchronously
-            pass
-
+        # 使用 asyncio.run() 自动管理事件循环生命周期
+        # 这会：1. 创建新的事件循环 2. 运行 async 函数 3. 关闭所有待处理的任务 4. 关闭事件循环
+        result = asyncio.run(_do_refresh())
         return result
 
     except Exception as e:
@@ -448,27 +465,46 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
 
         # Try to update Redis state one more time
         async def _mark_failed():
-            state_manager = await get_transcription_state_manager()
-            async with async_session_factory() as session:
-                from app.domains.podcast.models import TranscriptionTask
+            # 创建独立的数据库引擎，避免fork进程后连接池问题
+            from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-                stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
-                result = await session.execute(stmt)
-                task = result.scalar_one_or_none()
+            worker_engine = create_async_engine(
+                settings.DATABASE_URL,
+                pool_pre_ping=True,
+                pool_size=5,
+                max_overflow=10,
+                pool_recycle=3600,
+                connect_args={
+                    "server_settings": {
+                        "application_name": "celery-cleanup-worker",
+                        "client_encoding": "utf8"
+                    },
+                    "timeout": settings.DATABASE_CONNECT_TIMEOUT
+                }
+            )
 
-                if task:
-                    await state_manager.fail_task_state(task_id, task.episode_id, f"Failed after {self.max_retries} retries: {str(e)}")
+            worker_session_factory = async_sessionmaker(
+                worker_engine,
+                class_=AsyncSession,
+                expire_on_commit=False
+            )
+
+            try:
+                state_manager = await get_transcription_state_manager()
+                async with worker_session_factory() as session:
+                    from app.domains.podcast.models import TranscriptionTask
+
+                    stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
+                    result = await session.execute(stmt)
+                    task = result.scalar_one_or_none()
+
+                    if task:
+                        await state_manager.fail_task_state(task_id, task.episode_id, f"Failed after {self.max_retries} retries: {str(e)}")
+            finally:
+                await worker_engine.dispose()
 
         try:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                loop.run_until_complete(_mark_failed())
-                # Allow pending cleanup tasks to complete
-                loop.run_until_complete(asyncio.sleep(0))
-            finally:
-                # Don't close the loop - let the worker process handle cleanup
-                pass
+            asyncio.run(_mark_failed())
         except Exception as cleanup_error:
             logger.error(f"Failed to mark task as failed in Redis: {cleanup_error}")
 
@@ -484,39 +520,55 @@ def generate_summary_for_episode(episode_id: int, user_id: int):
     logger.info(f"开始生成单集摘要: episode {episode_id}, user {user_id}")
 
     async def _do_generate():
-        async with async_session_factory() as db:
-            try:
-                service = PodcastService(db, user_id)
+        # 创建独立的数据库引擎，避免fork进程后连接池问题
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-                # 生成摘要
-                summary = await service._generate_summary_task(
-                    await service.repo.get_episode_by_id(episode_id)
-                )
+        worker_engine = create_async_engine(
+            settings.DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=3600,
+            connect_args={
+                "server_settings": {
+                    "application_name": "celery-summary-worker",
+                    "client_encoding": "utf8"
+                },
+                "timeout": settings.DATABASE_CONNECT_TIMEOUT
+            }
+        )
 
-                return {
-                    "status": "success",
-                    "episode_id": episode_id,
-                    "summary": summary,
-                    "processed_at": datetime.utcnow().isoformat()
-                }
+        worker_session_factory = async_sessionmaker(
+            worker_engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
 
-            except Exception as e:
-                logger.error(f"生成单集摘要失败 {episode_id}: {e}")
-                raise
+        try:
+            async with worker_session_factory() as db:
+                try:
+                    service = PodcastService(db, user_id)
+
+                    # 生成摘要
+                    summary = await service._generate_summary_task(
+                        await service.repo.get_episode_by_id(episode_id)
+                    )
+
+                    return {
+                        "status": "success",
+                        "episode_id": episode_id,
+                        "summary": summary,
+                        "processed_at": datetime.utcnow().isoformat()
+                    }
+
+                except Exception as e:
+                    logger.error(f"生成单集摘要失败 {episode_id}: {e}")
+                    raise
+        finally:
+            await worker_engine.dispose()
 
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(_do_generate())
-            # Allow pending cleanup tasks to complete (e.g., asyncpg connection cleanup)
-            loop.run_until_complete(asyncio.sleep(0))
-        finally:
-            # Don't close the loop - let the worker process handle cleanup
-            # Closing the loop here causes "Event loop is closed" errors
-            # when asyncpg tries to terminate connections asynchronously
-            pass
-
+        result = asyncio.run(_do_generate())
         return result
 
     except Exception as e:
@@ -533,46 +585,62 @@ def cleanup_old_playback_states():
     logger.info("开始清理旧的播放状态记录")
 
     async def _do_cleanup():
-        async with async_session_factory() as db:
-            try:
-                # 删除90天前的播放记录
-                cutoff_date = datetime.utcnow() - timedelta(days=90)
+        # 创建独立的数据库引擎，避免fork进程后连接池问题
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-                from app.domains.podcast.models import PodcastPlaybackState
+        worker_engine = create_async_engine(
+            settings.DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=3600,
+            connect_args={
+                "server_settings": {
+                    "application_name": "celery-cleanup-worker",
+                    "client_encoding": "utf8"
+                },
+                "timeout": settings.DATABASE_CONNECT_TIMEOUT
+            }
+        )
 
-                stmt = delete(PodcastPlaybackState).where(
-                    PodcastPlaybackState.last_updated_at < cutoff_date
-                )
+        worker_session_factory = async_sessionmaker(
+            worker_engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
 
-                result = await db.execute(stmt)
-                deleted_count = result.rowcount
-                await db.commit()
+        try:
+            async with worker_session_factory() as db:
+                try:
+                    # 删除90天前的播放记录
+                    cutoff_date = datetime.utcnow() - timedelta(days=90)
 
-                logger.info(f"清理完成: 删除 {deleted_count} 条旧记录")
+                    from app.domains.podcast.models import PodcastPlaybackState
 
-                return {
-                    "status": "success",
-                    "deleted_count": deleted_count,
-                    "processed_at": datetime.utcnow().isoformat()
-                }
+                    stmt = delete(PodcastPlaybackState).where(
+                        PodcastPlaybackState.last_updated_at < cutoff_date
+                    )
 
-            except Exception as e:
-                logger.error(f"清理旧记录失败: {e}")
-                raise
+                    result = await db.execute(stmt)
+                    deleted_count = result.rowcount
+                    await db.commit()
+
+                    logger.info(f"清理完成: 删除 {deleted_count} 条旧记录")
+
+                    return {
+                        "status": "success",
+                        "deleted_count": deleted_count,
+                        "processed_at": datetime.utcnow().isoformat()
+                    }
+
+                except Exception as e:
+                    logger.error(f"清理旧记录失败: {e}")
+                    raise
+        finally:
+            await worker_engine.dispose()
 
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(_do_cleanup())
-            # Allow pending cleanup tasks to complete (e.g., asyncpg connection cleanup)
-            loop.run_until_complete(asyncio.sleep(0))
-        finally:
-            # Don't close the loop - let the worker process handle cleanup
-            # Closing the loop here causes "Event loop is closed" errors
-            # when asyncpg tries to terminate connections asynchronously
-            pass
-
+        result = asyncio.run(_do_cleanup())
         return result
 
     except Exception as e:
@@ -589,55 +657,71 @@ def generate_podcast_recommendations():
     logger.info("开始生成播客推荐")
 
     async def _do_generate():
-        async with async_session_factory() as db:
-            try:
-                # 获取所有用户
-                from app.domains.user.models import User
+        # 创建独立的数据库引擎，避免fork进程后连接池问题
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-                stmt = select(User).where(User.status == UserStatus.ACTIVE)
-                result = await db.execute(stmt)
-                users = list(result.scalars().all())
+        worker_engine = create_async_engine(
+            settings.DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=3600,
+            connect_args={
+                "server_settings": {
+                    "application_name": "celery-recommendation-worker",
+                    "client_encoding": "utf8"
+                },
+                "timeout": settings.DATABASE_CONNECT_TIMEOUT
+            }
+        )
 
-                recommendations_generated = 0
+        worker_session_factory = async_sessionmaker(
+            worker_engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
 
-                for user in users:
-                    try:
-                        service = PodcastService(db, user.id)
-                        recommendations = await service.get_recommendations(limit=20)
+        try:
+            async with worker_session_factory() as db:
+                try:
+                    # 获取所有用户
+                    from app.domains.user.models import User
 
-                        # TODO: 将推荐结果保存到推荐表或缓存中
+                    stmt = select(User).where(User.status == UserStatus.ACTIVE)
+                    result = await db.execute(stmt)
+                    users = list(result.scalars().all())
 
-                        recommendations_generated += len(recommendations)
+                    recommendations_generated = 0
 
-                    except Exception as e:
-                        logger.error(f"为用户 {user.id} 生成推荐失败: {e}")
-                        continue
+                    for user in users:
+                        try:
+                            service = PodcastService(db, user.id)
+                            recommendations = await service.get_recommendations(limit=20)
 
-                logger.info(f"推荐生成完成: {recommendations_generated} 条推荐")
+                            # TODO: 将推荐结果保存到推荐表或缓存中
 
-                return {
-                    "status": "success",
-                    "recommendations_generated": recommendations_generated,
-                    "processed_at": datetime.utcnow().isoformat()
-                }
+                            recommendations_generated += len(recommendations)
 
-            except Exception as e:
-                logger.error(f"生成推荐失败: {e}")
-                raise
+                        except Exception as e:
+                            logger.error(f"为用户 {user.id} 生成推荐失败: {e}")
+                            continue
+
+                    logger.info(f"推荐生成完成: {recommendations_generated} 条推荐")
+
+                    return {
+                        "status": "success",
+                        "recommendations_generated": recommendations_generated,
+                        "processed_at": datetime.utcnow().isoformat()
+                    }
+
+                except Exception as e:
+                    logger.error(f"生成推荐失败: {e}")
+                    raise
+        finally:
+            await worker_engine.dispose()
 
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(_do_generate())
-            # Allow pending cleanup tasks to complete (e.g., asyncpg connection cleanup)
-            loop.run_until_complete(asyncio.sleep(0))
-        finally:
-            # Don't close the loop - let the worker process handle cleanup
-            # Closing the loop here causes "Event loop is closed" errors
-            # when asyncpg tries to terminate connections asynchronously
-            pass
-
+        result = asyncio.run(_do_generate())
         return result
 
     except Exception as e:
@@ -657,36 +741,52 @@ def cleanup_old_transcription_temp_files(days: int = 7):
     logger.info(f"开始清理旧转录临时文件 (保留 {days} 天)")
 
     async def _do_cleanup():
-        async with async_session_factory() as db:
-            try:
-                from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+        # 创建独立的数据库引擎，避免fork进程后连接池问题
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-                service = DatabaseBackedTranscriptionService(db)
-                result = await service.cleanup_old_temp_files(days=days)
+        worker_engine = create_async_engine(
+            settings.DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=3600,
+            connect_args={
+                "server_settings": {
+                    "application_name": "celery-cleanup-worker",
+                    "client_encoding": "utf8"
+                },
+                "timeout": settings.DATABASE_CONNECT_TIMEOUT
+            }
+        )
 
-                return {
-                    "status": "success",
-                    **result,
-                    "processed_at": datetime.utcnow().isoformat()
-                }
+        worker_session_factory = async_sessionmaker(
+            worker_engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
 
-            except Exception as e:
-                logger.error(f"清理临时文件失败: {e}")
-                raise
+        try:
+            async with worker_session_factory() as db:
+                try:
+                    from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+
+                    service = DatabaseBackedTranscriptionService(db)
+                    result = await service.cleanup_old_temp_files(days=days)
+
+                    return {
+                        "status": "success",
+                        **result,
+                        "processed_at": datetime.utcnow().isoformat()
+                    }
+
+                except Exception as e:
+                    logger.error(f"清理临时文件失败: {e}")
+                    raise
+        finally:
+            await worker_engine.dispose()
 
     try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            result = loop.run_until_complete(_do_cleanup())
-            # Allow pending cleanup tasks to complete (e.g., asyncpg connection cleanup)
-            loop.run_until_complete(asyncio.sleep(0))
-        finally:
-            # Don't close the loop - let the worker process handle cleanup
-            # Closing the loop here causes "Event loop is closed" errors
-            # when asyncpg tries to terminate connections asynchronously
-            pass
-
+        result = asyncio.run(_do_cleanup())
         return result
 
     except Exception as e:
