@@ -1305,6 +1305,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ai_test_failed => '测试失败';
 
   @override
+  String get ai_test_content => '测试内容';
+
+  @override
+  String get ai_transcription_test_info_title => '自动转录测试';
+
+  @override
+  String get ai_transcription_test_info_description => '此测试将使用预配置的音频文件来验证转录服务。系统会将转录结果与预期文本进行对比，并报告相似度百分比。';
+
+  @override
+  String get ai_transcription_test_info_details => '期望文本: "华为致力于把数字世界带入每个人、每个家庭、每个组织，构建万物互联的智能世界。"';
+
+  @override
   String get settings_response_speed => '响应速度';
 
   @override

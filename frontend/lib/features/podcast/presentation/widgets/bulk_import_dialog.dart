@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' show PathMetric;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
@@ -55,12 +56,25 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
   List<UrlValidationItem> _validationItems = [];
   bool _isImporting = false;
   bool _isDragging = false;
+  
+  // UI State
+  bool _isInputExpanded = true;
+  int _selectedFilterIndex = 0; // 0: Valid, 1: Invalid
+  
   final Dio _dio = Dio();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _textController.addListener(() {
+      // Auto-expand if user starts typing
+      if (!_isInputExpanded && _textController.text.isNotEmpty) {
+        setState(() {
+          _isInputExpanded = true;
+        });
+      }
+    });
   }
 
   @override
@@ -95,8 +109,15 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
     // Validate URLs in background (append to existing list)
     await _validateUrls(urls, append: true);
-
+    
     if (mounted) {
+      setState(() {
+        _textController.clear();
+        _isInputExpanded = false;
+        // Switch to Valid tab if we found items, or Invalid if only invalid
+        _selectedFilterIndex = 0;
+      });
+      
       final validCount = _validationItems.where((item) => item.isValid).length;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -108,13 +129,11 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
   }
 
   List<String> _extractUrls(String content) {
-    final urls = _urlRegex.allMatches(content).map((m) => m.group(0)!).toSet().toList();
+    final urls = _urlRegex.allMatches(content).map((m) => m.group(0)!.trim()).toSet().toList();
     return urls;
   }
 
   /// Extract RSS feed URLs from OPML file content
-  /// OPML (Outline Processor Markup Language) is an XML format for storing subscription lists
-  /// Returns a list of UrlWithTitle objects containing both URL and title
   List<UrlWithTitle> _extractOpmlUrls(String content) {
     final urlsWithTitles = <UrlWithTitle>[];
 
@@ -195,11 +214,14 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
   }
 
   /// Validate all URLs and update the validation items
-  /// [append] if true, append to existing list; if false, replace the list
   Future<void> _validateUrls(List<String> urls, {bool append = false}) async {
     // Remove duplicates from new URLs
-    final existingUrls = _validationItems.map((item) => item.url).toSet();
-    final newUrls = urls.where((url) => !existingUrls.contains(url)).toList();
+    final existingUrls = _validationItems.map((item) => item.url.trim()).toSet();
+    final newUrls = urls
+        .map((u) => u.trim())
+        .where((url) => !existingUrls.contains(url))
+        .toSet() // Dedupe within new list
+        .toList();
 
     if (newUrls.isEmpty) {
       if (mounted && append) {
@@ -207,6 +229,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
           const SnackBar(
             content: Text('All URLs already exist in the list'),
             duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -218,6 +241,9 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
     setState(() {
       if (append) {
         _validationItems.addAll(items);
+        // We probably don't need _previewUrls as separate list if we use _validationItems
+        // but keeping it for consistency if used elsewhere, though it seems redundant now.
+        // Actually _previewUrls is updated in original code, so let's update it.
         _previewUrls.addAll(newUrls);
       } else {
         _validationItems = items;
@@ -225,50 +251,41 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       }
     });
 
-    // Validate each URL in parallel with concurrency limit
-    final futures = <Future<void>>[];
-    const concurrencyLimit = 5;
-
-    for (var i = 0; i < items.length; i++) {
-      if (futures.length >= concurrencyLimit) {
-        await Future.wait(futures);
-        futures.clear();
-      }
-
-      final item = items[i];
-      futures.add(_validateSingleUrl(item));
-    }
-
-    if (futures.isNotEmpty) {
-      await Future.wait(futures);
-    }
-
-    setState(() {});
+    _startValidation(items);
   }
 
   /// Validate all URLs with titles and update the validation items
-  /// [append] if true, append to existing list; if false, replace the list
   Future<void> _validateUrlsWithTitles(List<UrlWithTitle> urlsWithTitles, {bool append = false}) async {
     // Remove duplicates from new URLs
-    final existingUrls = _validationItems.map((item) => item.url).toSet();
-    final newUrlsWithTitles = urlsWithTitles.where((item) => !existingUrls.contains(item.url)).toList();
+    final existingUrls = _validationItems.map((item) => item.url.trim()).toSet();
+    final newUrlsWithTitles = urlsWithTitles
+        .where((item) => !existingUrls.contains(item.url.trim()))
+        .toList(); // Should also dedupe within itself
 
-    if (newUrlsWithTitles.isEmpty) {
+    // Dedupe within input
+    final uniqueNewItems = <String, UrlWithTitle>{};
+    for (var item in newUrlsWithTitles) {
+      uniqueNewItems[item.url.trim()] = item;
+    }
+    final finalizedNewItems = uniqueNewItems.values.toList();
+
+    if (finalizedNewItems.isEmpty) {
       if (mounted && append) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('All URLs already exist in the list'),
             duration: Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
       return;
     }
 
-    final items = newUrlsWithTitles.map((item) =>
-      UrlValidationItem(url: item.url, title: item.title)
+    final items = finalizedNewItems.map((item) =>
+      UrlValidationItem(url: item.url.trim(), title: item.title)
     ).toList();
-    final newUrls = newUrlsWithTitles.map((item) => item.url).toList();
+    final newUrls = finalizedNewItems.map((item) => item.url.trim()).toList();
 
     setState(() {
       if (append) {
@@ -280,29 +297,38 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       }
     });
 
+    _startValidation(items);
+  }
+  
+  void _startValidation(List<UrlValidationItem> items) async {
     // Validate each URL in parallel with concurrency limit
     final futures = <Future<void>>[];
     const concurrencyLimit = 5;
 
     for (var i = 0; i < items.length; i++) {
-      if (futures.length >= concurrencyLimit) {
-        await Future.wait(futures);
-        futures.clear();
-      }
-
-      final item = items[i];
-      futures.add(_validateSingleUrl(item));
+        if (futures.length >= concurrencyLimit) {
+            await Future.wait(futures);
+            futures.clear();
+        }
+        final item = items[i];
+        futures.add(_validateSingleUrl(item));
     }
-
     if (futures.isNotEmpty) {
-      await Future.wait(futures);
+        await Future.wait(futures);
     }
-
-    setState(() {});
+    setState(() {}); // Trigger rebuild after batch
   }
 
   /// Validate a single URL and update its status
   Future<void> _validateSingleUrl(UrlValidationItem item) async {
+    if (!mounted) return;
+    
+    // Optimistic update if re-validating
+    setState(() {
+        item.isChecking = true;
+        item.errorMessage = null; 
+    });
+
     final isValid = await _validateRssUrl(item.url);
 
     if (mounted) {
@@ -311,6 +337,44 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
         item.isChecking = false;
         item.errorMessage = isValid ? null : 'Not a valid RSS feed';
       });
+    }
+  }
+  
+  Future<void> _showEditUrlDialog(UrlValidationItem item) async {
+    final controller = TextEditingController(text: item.url);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit RSS URL'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'URL',
+            hintText: 'https://example.com/feed',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Save & Re-validate'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty && result != item.url) {
+       // Check duplication with OTHER items?
+       // For now, let's just update this one.
+       setState(() {
+         item.url = result;
+       });
+       await _validateSingleUrl(item);
     }
   }
 
@@ -338,8 +402,11 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
         // Validate URLs with titles (append to existing list)
         await _validateUrlsWithTitles(urlsWithTitles, append: true);
-
+        
         if (mounted) {
+          setState(() {
+            _isInputExpanded = false;
+          });
           final validCount = _validationItems.where((item) => item.isValid).length;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -363,8 +430,11 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
         // Validate URLs in background (append to existing list)
         await _validateUrls(urls, append: true);
-
+        
         if (mounted) {
+          setState(() {
+            _isInputExpanded = false;
+          });
           final validCount = _validationItems.where((item) => item.isValid).length;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -461,27 +531,113 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
     return 'Import All';
   }
 
-  Widget _buildPreviewHeader() {
-    final totalCount = _validationItems.length;
-    final validCount = _validationItems.where((item) => item.isValid).length;
-    final checkingCount = _validationItems.where((item) => item.isChecking).length;
-    final invalidCount = totalCount - validCount - checkingCount;
+  Widget _buildFilterTabs() {
+    final validCount = _validationItems.where((item) => item.isValid || item.isChecking).length;
+    final invalidCount = _validationItems.where((item) => !item.isValid && !item.isChecking).length;
 
-    return Row(
-      children: [
-        Text(
-          'Preview ($totalCount links)',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        if (totalCount > 0) ...[
-          const SizedBox(width: 12),
-          _buildStatusChip('Valid: $validCount', Colors.green, Icons.check_circle),
-          if (invalidCount > 0)
-            _buildStatusChip('Invalid: $invalidCount', Colors.red, Icons.cancel),
-          if (checkingCount > 0)
-            _buildStatusChip('Checking: $checkingCount', Colors.orange, Icons.hourglass_empty),
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildFilterTab(
+              index: 0,
+              label: 'Valid ($validCount)',
+              color: Colors.blue,
+              isSelected: _selectedFilterIndex == 0,
+            ),
+          ),
+          Expanded(
+            child: _buildFilterTab(
+              index: 1,
+              label: 'Invalid ($invalidCount)',
+              color: Colors.red,
+              isSelected: _selectedFilterIndex == 1,
+            ),
+          ),
         ],
-      ],
+      ),
+    );
+  }
+
+  Widget _buildFilterTab({
+    required int index,
+    required String label,
+    required Color color,
+    required bool isSelected,
+  }) {
+    return GestureDetector(
+      onTap: () => setState(() => _selectedFilterIndex = index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompressedInput() {
+    return GestureDetector(
+      onTap: () => setState(() {
+        _tabController.index = 1; // Switch to file tab
+        _isInputExpanded = true;
+        _pickFile(); // Auto-trigger file picker
+      }),
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+            style: BorderStyle.none, // We'll rely on the background color mostly or use dashed border if we could
+          ),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.2), 
+          borderRadius: BorderRadius.circular(12),
+        ),
+        // Dashed border effect can be achieved with CustomPainter, but for simplicity we use simple border or look
+        child: DottedBorderWidget(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+          radius: 12,
+          child: Center(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.upload_file, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 8),
+                RichText(
+                  text: TextSpan(
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                    children: [
+                      const TextSpan(text: 'Drag & Drop files here or '),
+                      TextSpan(
+                        text: 'Select File',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -496,12 +652,12 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: color),
+          Icon(icon, size: 12, color: color), // Smaller icon
           const SizedBox(width: 4),
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11, // Smaller text
               color: color,
               fontWeight: FontWeight.w500,
             ),
@@ -510,134 +666,133 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       ),
     );
   }
-
-  Widget _buildEmptyPreview() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.link_off,
-            size: 48,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'No URLs added yet',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Paste text or upload a file to extract RSS links',
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  
   Widget _buildUrlListItem(UrlValidationItem item, int index) {
     Color statusColor;
     IconData statusIcon;
-    String statusText;
+    bool isValid = item.isValid;
+    bool isChecking = item.isChecking;
 
-    if (item.isChecking) {
+    if (isChecking) {
       statusColor = Colors.orange;
       statusIcon = Icons.hourglass_empty;
-      statusText = 'Checking...';
-    } else if (item.isValid) {
+    } else if (isValid) {
       statusColor = Colors.green;
       statusIcon = Icons.check_circle;
-      statusText = 'Valid RSS';
     } else {
       statusColor = Colors.red;
-      statusIcon = Icons.cancel;
-      statusText = 'Invalid';
+      statusIcon = Icons.error;
     }
 
-    return ListTile(
-      dense: true,
-      minVerticalPadding: 0,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      leading: Icon(statusIcon, color: statusColor, size: 20),
-      title: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Show title if available (from OPML)
-                if (item.title != null && item.title!.isNotEmpty)
-                  Text(
-                    item.title!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                // URL
-                Text(
-                  item.url,
-                  style: TextStyle(
-                    fontSize: item.title != null ? 10 : 11,
-                    color: item.title != null
-                        ? Theme.of(context).colorScheme.onSurfaceVariant
-                        : null,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          // Copy button
-          IconButton(
-            icon: const Icon(Icons.copy, size: 14),
-            onPressed: () => _copyUrlToClipboard(item.url),
-            tooltip: 'Copy URL',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            splashRadius: 16,
-          ),
-        ],
-      ),
-      subtitle: Text(
-        statusText,
-        style: TextStyle(
-          fontSize: 10,
-          color: statusColor,
-          fontWeight: FontWeight.w500,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4), // Compact margin
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(8), // Smaller radius
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
         ),
       ),
-      trailing: IconButton(
-        icon: const Icon(Icons.remove_circle, color: Colors.red, size: 18),
-        onPressed: () => setState(() {
-          _validationItems.removeAt(index);
-          _previewUrls.removeAt(index);
-        }),
-        tooltip: 'Remove',
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(),
-        splashRadius: 16,
+      child: ListTile(
+        dense: true,
+        visualDensity: const VisualDensity(horizontal: 0, vertical: -4), // Compact density
+        contentPadding: const EdgeInsets.fromLTRB(12, 0, 8, 0), // Compact padding
+        leading: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: statusColor.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(statusIcon, color: statusColor, size: 16), // Smaller icon
+        ),
+        title: Text(
+          item.title ?? 'Unknown Title',
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              item.url,
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (!isValid && !isChecking && item.errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  item.errorMessage!,
+                  style: const TextStyle(color: Colors.red, fontSize: 10),
+                ),
+              ),
+          ],
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.copy, size: 16),
+              onPressed: () => _copyUrlToClipboard(item.url, item.title),
+              tooltip: 'Copy',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              splashRadius: 20,
+            ),
+            const SizedBox(width: 8),
+            if (!isValid && !isChecking)
+               IconButton(
+                icon: const Icon(Icons.edit, color: Colors.blue, size: 16),
+                onPressed: () => _showEditUrlDialog(item),
+                tooltip: 'Edit & Retry',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                splashRadius: 20,
+              )
+            else
+               IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.grey, size: 16),
+                onPressed: () {
+                   setState(() {
+                     final originalIndex = _validationItems.indexOf(item);
+                     if (originalIndex != -1) {
+                       _validationItems.removeAt(originalIndex);
+                       // Update _previewUrls as well
+                       if (_previewUrls.contains(item.url)) {
+                         _previewUrls.remove(item.url);
+                       }
+                       
+                       if (_validationItems.isEmpty && !_isInputExpanded) {
+                         _isInputExpanded = true;
+                       }
+                     }
+                   });
+                },
+                tooltip: 'Remove',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                splashRadius: 20,
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  Future<void> _copyUrlToClipboard(String url) async {
-    await Clipboard.setData(ClipboardData(text: url));
+  Future<void> _copyUrlToClipboard(String url, String? title) async {
+    final text = (title != null && title.isNotEmpty) ? '$title - $url' : url;
+    await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('URL copied to clipboard'),
-          duration: const Duration(seconds: 2),
+          content: Text('Copied: $text'),
+          duration: const Duration(seconds: 1),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -647,18 +802,24 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    // We put DropTarget at the very top of the Dialog's child tree
+    
+    // Filter items based on selection
+    final filteredItems = _validationItems.where((item) {
+      if (_selectedFilterIndex == 0) {
+        return item.isValid || item.isChecking;
+      } else {
+        return !item.isValid && !item.isChecking;
+      }
+    }).toList();
+
     return DropTarget(
       onDragEntered: (detail) {
-        debugPrint('WINDWOS_DRAG: Entered');
         setState(() => _isDragging = true);
       },
       onDragExited: (detail) {
-        debugPrint('WINDWOS_DRAG: Exited');
         setState(() => _isDragging = false);
       },
       onDragDone: (detail) async {
-        debugPrint('WINDWOS_DRAG: Done - ${detail.files.length} files');
         for (final file in detail.files) {
           await _processFile(file.path);
         }
@@ -674,7 +835,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
         child: Center(
           child: Container(
             width: 600,
-            constraints: const BoxConstraints(maxHeight: 900),
+            constraints: const BoxConstraints(maxHeight: 800),
             decoration: BoxDecoration(
               color: _isDragging
                   ? Theme.of(context).primaryColor.withValues(alpha: 0.15)
@@ -683,155 +844,208 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                 color: _isDragging ? Theme.of(context).primaryColor : Colors.transparent,
                 width: 2,
               ),
-              borderRadius: BorderRadius.circular(28),
+              borderRadius: BorderRadius.circular(24),
               boxShadow: const [
                 BoxShadow(color: Colors.black26, blurRadius: 16, offset: Offset(0, 8)),
               ],
             ),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             child: Material(
               color: Colors.transparent,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Title Bar with Toggles
                   Row(
                     children: [
-                      const Icon(Icons.playlist_add, size: 28),
-                      const SizedBox(width: 12),
                       Text(
                         'Bulk Import',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 24),
+                      // Input Tabs aligned to the right of title
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.all(2),
+                        child: Row(
+                          children: [
+                            _buildInputTab('Paste Text', 0),
+                            _buildInputTab('Drop/Upload File', 1),
+                          ],
                         ),
                       ),
                       const Spacer(),
                       IconButton(
                         onPressed: () => Navigator.of(context).pop(),
                         icon: const Icon(Icons.close),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
+                  
+                  const SizedBox(height: 20),
+                  
                   if (_isDragging)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.primary,
+                          style: BorderStyle.solid,
+                          width: 2,
                         ),
-                        child: Text(l10n.drop_files_here, style: const TextStyle(fontWeight: FontWeight.bold)),
                       ),
-                    ),
-                  const SizedBox(height: 12),
-                  TabBar(
-                    controller: _tabController,
-                    tabs: const [
-                      Tab(text: 'Paste Text'),
-                      Tab(text: 'Drop/Upload File'),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 200,
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: [
-                        Column(
+                      child: Center(
+                        child: Column(
                           children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _textController,
-                                maxLines: null,
-                                expands: true,
-                                decoration: const InputDecoration(
-                                  border: OutlineInputBorder(),
-                                  hintText: 'Paste content here... URLs will be extracted.',
-                                  alignLabelWithHint: true,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: FilledButton.icon(
-                                onPressed: _analyzeText,
-                                icon: const Icon(Icons.auto_awesome),
-                                label: const Text('Extract URLs'),
+                            Icon(Icons.file_upload, size: 48, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(height: 16),
+                            Text(
+                              l10n.drop_files_here,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ],
                         ),
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Theme.of(context).dividerColor),
-                            borderRadius: BorderRadius.circular(16),
-                            color: Theme.of(context).colorScheme.surfaceContainerLow,
+                      ),
+                    )
+                  else if (_isInputExpanded)
+                    SizedBox(
+                      height: 180,
+                      child: TabBarView(
+                        controller: _tabController,
+                        physics: const NeverScrollableScrollPhysics(), // Prevent swiping
+                        children: [
+                          // Tab 0: Paste Text
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  controller: _textController,
+                                  maxLines: null,
+                                  expands: true,
+                                  decoration: InputDecoration(
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    filled: true,
+                                    fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                                    hintText: 'Paste URLs or OPML content here...',
+                                    contentPadding: const EdgeInsets.all(12),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: FilledButton.icon(
+                                  onPressed: _analyzeText,
+                                  icon: const Icon(Icons.auto_awesome, size: 18),
+                                  label: const Text('Extract'),
+                                  style: FilledButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Row(
+                          // Tab 1: File Upload
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Theme.of(context).dividerColor),
+                              borderRadius: BorderRadius.circular(12),
+                              color: Theme.of(context).colorScheme.surfaceContainerLow,
+                            ),
+                            child: InkWell(
+                              onTap: _pickFile,
+                              borderRadius: BorderRadius.circular(12),
+                              child: Center(
+                                child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Icon(Icons.upload_file, size: 32, color: Colors.grey),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'Drag & Drop files here',
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                                    Icon(Icons.folder_open, size: 40, color: Theme.of(context).colorScheme.primary),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'Click to Select File',
+                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        color: Theme.of(context).colorScheme.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'or drag & drop here',
+                                      style: Theme.of(context).textTheme.bodySmall,
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
-                                OutlinedButton.icon(
-                                  onPressed: _pickFile,
-                                  icon: const Icon(Icons.folder_open, size: 18),
-                                  label: const Text('Select File'),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
+                        ],
+                      ),
+                    )
+                  else
+                    // Collapsed Input
+                    _buildCompressedInput(),
+                    
+                  if (_validationItems.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _buildFilterTabs(),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Free List', // Matches the image "Feed List"?? Image says Feed List
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.only(right: 4), // Space for scrollbar
+                        child: ListView.builder(
+                          itemCount: filteredItems.length,
+                          itemBuilder: (context, index) {
+                            return _buildUrlListItem(filteredItems[index], index);
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text(l10n.cancel),
+                        ),
+                        const SizedBox(width: 12),
+                        FilledButton(
+                          onPressed: _hasValidUrls() && !_isImporting ? _import : null,
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          ),
+                          child: _isImporting
+                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              : Text(_getImportButtonText()),
                         ),
                       ],
                     ),
-                  ),
-                  const Divider(height: 32),
-                  _buildPreviewHeader(),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: _validationItems.isEmpty
-                          ? _buildEmptyPreview()
-                          : ListView.builder(
-                              itemCount: _validationItems.length,
-                              itemBuilder: (context, index) {
-                                return _buildUrlListItem(_validationItems[index], index);
-                              },
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text(l10n.cancel),
-                      ),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: _hasValidUrls() && !_isImporting ? _import : null,
-                        child: _isImporting
-                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                            : Text(_getImportButtonText()),
-                      ),
-                    ],
-                  ),
+                  ] else if (!_isInputExpanded) ...[
+                     // This state shouldn't theoretically happen if logic is correct (collapsed only if items exist),
+                     // but as a fallback:
+                     const Expanded(child: Center(child: Text('No items')))
+                  ],
                 ],
               ),
             ),
@@ -840,4 +1054,94 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       ),
     );
   }
+
+  Widget _buildInputTab(String text, int index) {
+    final isSelected = _tabController.index == index && _isInputExpanded;
+    
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _isInputExpanded = true;
+          _tabController.index = index;
+        });
+      },
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? Theme.of(context).colorScheme.surface : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: isSelected ? [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 2, offset: const Offset(0, 1)),
+          ] : null,
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class DottedBorderWidget extends StatelessWidget {
+  final Widget child;
+  final Color color;
+  final double radius;
+
+  const DottedBorderWidget({super.key, required this.child, required this.color, required this.radius});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _DottedBorderPainter(color: color, radius: radius),
+      child: child,
+    );
+  }
+}
+
+class _DottedBorderPainter extends CustomPainter {
+  final Color color;
+  final double radius;
+
+  _DottedBorderPainter({required this.color, required this.radius});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..style = PaintingStyle.stroke;
+
+    final path = Path()
+      ..addRRect(RRect.fromRectAndRadius(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+        Radius.circular(radius),
+      ));
+
+    // Simple implementation for dotted effect
+    final dashPath = Path();
+    double dashWidth = 5.0;
+    double dashSpace = 5.0;
+    double distance = 0.0;
+    
+    for (PathMetric pathMetric in path.computeMetrics()) {
+      while (distance < pathMetric.length) {
+        dashPath.addPath(
+          pathMetric.extractPath(distance, distance + dashWidth),
+          Offset.zero,
+        );
+        distance += dashWidth + dashSpace;
+      }
+    }
+
+    canvas.drawPath(dashPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

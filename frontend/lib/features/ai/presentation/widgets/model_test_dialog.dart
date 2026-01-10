@@ -44,7 +44,11 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
 
   Future<void> _testModel() async {
     final l10n = AppLocalizations.of(context)!;
-    if (_testPromptController.text.trim().isEmpty) {
+
+    // 对于转录模型，不需要输入测试内容（使用服务器端的默认音频）
+    // 对于文本生成模型，需要输入测试内容
+    if (widget.model.modelType != AIModelType.transcription &&
+        _testPromptController.text.trim().isEmpty) {
       setState(() {
         _error = l10n.ai_enter_test_content;
       });
@@ -59,9 +63,11 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
     });
 
     try {
-      final testData = {
-        'prompt': _testPromptController.text.trim(),
-      };
+      // 对于转录模型，传递 null 作为 testData（服务器端会使用默认音频）
+      // 对于文本生成模型，传递用户输入的测试内容
+      final testData = widget.model.modelType == AIModelType.transcription
+          ? null
+          : {'prompt': _testPromptController.text.trim()};
 
       final response = await ref
           .read(modelNotifierProvider(widget.model.id).notifier)
@@ -104,21 +110,26 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
             _buildModelInfo(),
             const SizedBox(height: 16),
 
-            // 测试输入
-            Text(
-              l10n.settings_test_connection,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _testPromptController,
-              decoration: InputDecoration(
-                hintText: l10n.settings_test_connection,
-                border: const OutlineInputBorder(),
+            // 测试说明
+            if (widget.model.modelType == AIModelType.transcription) ...[
+              _buildTranscriptionTestInfo(l10n),
+            ] else ...[
+              // 测试输入
+              Text(
+                l10n.ai_test_content,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              maxLines: widget.model.modelType == AIModelType.transcription ? 1 : 3,
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _testPromptController,
+                decoration: InputDecoration(
+                  hintText: l10n.ai_test_content,
+                  border: const OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // 测试结果
             if (_isTesting) ...[
@@ -177,6 +188,52 @@ class _ModelTestDialogState extends ConsumerState<ModelTestDialog> {
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTranscriptionTestInfo(AppLocalizations l10n) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.blue.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.blue, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                l10n.ai_transcription_test_info_title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[700],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.ai_transcription_test_info_description,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.ai_transcription_test_info_details,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[600],
+              fontStyle: FontStyle.italic,
             ),
           ),
         ],

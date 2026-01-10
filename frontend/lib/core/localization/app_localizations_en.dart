@@ -1340,6 +1340,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ai_test_failed => 'Test Failed';
 
   @override
+  String get ai_test_content => 'Test Content';
+
+  @override
+  String get ai_transcription_test_info_title => 'Automated Transcription Test';
+
+  @override
+  String get ai_transcription_test_info_description => 'This test will use a pre-configured audio file to verify the transcription service. The system will compare the transcription result with the expected text and report the similarity percentage.';
+
+  @override
+  String get ai_transcription_test_info_details => 'Expected text: "华为致力于把数字世界带入每个人、每个家庭、每个组织，构建万物互联的智能世界。"';
+
+  @override
   String get settings_response_speed => 'Response Speed';
 
   @override

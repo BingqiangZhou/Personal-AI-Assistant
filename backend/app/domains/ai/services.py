@@ -272,13 +272,100 @@ class AIModelConfigService:
         api_key: str,
         test_data: Optional[Dict[str, Any]]
     ) -> str:
-        """测试转录模型"""
-        # 创建一个简单的测试音频文本
-        test_text = "Hello, this is a test for the transcription model."
+        """
+        测试转录模型
+        使用实际的音频文件进行测试，并与期望文本对比
+        """
+        import os
+        import aiohttp
+        from difflib import SequenceMatcher
+        import re
 
-        # 这里应该发送实际的测试音频
-        # 为了简化，我们直接返回测试文本
-        return f"Transcription test successful. Model: {model.model_id}"
+        # 获取测试资源路径
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        test_resources_dir = os.path.join(
+            os.path.dirname(os.path.dirname(current_dir)),
+            'core',
+            'test_resources'
+        )
+
+        example_txt_path = os.path.join(test_resources_dir, 'example.txt')
+        example_mp3_path = os.path.join(test_resources_dir, 'example.mp3')
+
+        # 读取期望文本
+        if not os.path.exists(example_txt_path):
+            return f"⚠️ 测试文件缺失: example.txt 未找到"
+
+        with open(example_txt_path, 'r', encoding='utf-8') as f:
+            expected_text = f.read().strip()
+
+        # 检查音频文件是否存在
+        if not os.path.exists(example_mp3_path):
+            return f"⚠️ 测试文件缺失: example.mp3 未找到，无法进行实际测试"
+
+        # 进行实际的转录测试
+        try:
+            headers = {
+                'Authorization': f'Bearer {api_key}'
+            }
+
+            timeout = aiohttp.ClientTimeout(total=60)  # 转录可能需要更长时间
+
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                with open(example_mp3_path, 'rb') as audio_file:
+                    data = aiohttp.FormData()
+                    data.add_field('file', audio_file, filename='example.mp3', content_type='audio/mpeg')
+                    data.add_field('model', model.model_id)
+                    data.add_field('language', 'zh')  # 中文
+
+                    # 根据provider选择不同的API端点
+                    if model.provider == 'openai':
+                        api_endpoint = 'https://api.openai.com/v1/audio/transcriptions'
+                    else:
+                        api_endpoint = f"{model.api_url}/audio/transcriptions"
+
+                    async with session.post(api_endpoint, headers=headers, data=data) as response:
+                        if response.status != 200:
+                            error_text = await response.text()
+                            return f"❌ API 调用失败: {response.status} - {error_text[:200]}"
+
+                        result = await response.json()
+
+                        if 'text' not in result:
+                            return f"❌ API 响应格式错误: 未包含 'text' 字段"
+
+                        transcribed_text = result['text'].strip()
+
+                        # 清理文本：去除标点、空格、表情符号等
+                        def clean_text(text):
+                            # 只保留中文字符、英文字母和数字
+                            cleaned = re.sub(r'[^\u4e00-\u9fa5a-zA-Z0-9]', '', text)
+                            return cleaned.lower()
+
+                        expected_clean = clean_text(expected_text)
+                        transcribed_clean = clean_text(transcribed_text)
+
+                        # 计算相似度
+                        similarity = SequenceMatcher(None, expected_clean, transcribed_clean).ratio()
+                        similarity_percent = similarity * 100
+
+                        # 判断是否通过测试
+                        passed = similarity_percent >= 90
+
+                        result_parts = [
+                            f"{'✅' if passed else '❌'} 转录测试{'通过' if passed else '失败'}",
+                            f"\n期望文本: {expected_text}",
+                            f"\n转录结果: {transcribed_text}",
+                            f"\n相似度: {similarity_percent:.1f}%",
+                            f"\n阈值: 90.0%"
+                        ]
+
+                        return ''.join(result_parts)
+
+        except aiohttp.ClientError as e:
+            return f"❌ 网络错误: {str(e)}"
+        except Exception as e:
+            return f"❌ 测试失败: {str(e)}"
 
     async def _test_text_generation_model(
         self,

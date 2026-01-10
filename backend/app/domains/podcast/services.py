@@ -151,6 +151,11 @@ class PodcastService:
                 })
             except Exception as e:
                 logger.error(f"批量添加订阅失败 {sub_data.feed_url}: {e}")
+                # 回滚Session以清除错误状态
+                try:
+                    await self.repo.db.rollback()
+                except Exception as rollback_error:
+                    logger.warning(f"回滚Session失败: {rollback_error}")
                 results.append({
                     "source_url": sub_data.feed_url,
                     "status": "error",
@@ -1025,15 +1030,38 @@ class PodcastService:
     ) -> str:
         """
         调用LLM API生成总结
-        这里假设使用OpenAI格式，可替换为其他LLM
+        从数据库中的AI模型配置获取API key
         """
         from openai import AsyncOpenAI
+        from app.domains.ai.repositories import AIModelConfigRepository
+        from app.domains.ai.models import ModelType
+        from app.core.security import decrypt_data
 
-        if not settings.OPENAI_API_KEY:
+        # 从数据库获取默认的文本生成模型配置
+        ai_repo = AIModelConfigRepository(self.repo.db)
+        model_config = await ai_repo.get_default_model(ModelType.TEXT_GENERATION)
+
+        api_key = None
+        if model_config and model_config.api_key:
+            # 解密 API key
+            if model_config.api_key_encrypted:
+                try:
+                    api_key = decrypt_data(model_config.api_key)
+                except Exception as e:
+                    logger.error(f"解密 API key 失败: {e}")
+            else:
+                api_key = model_config.api_key
+
+        # 如果数据库中没有配置，回退到环境变量
+        if not api_key:
+            api_key = settings.OPENAI_API_KEY
+
+        if not api_key:
             # 降级到规则生成（测试环境）
+            logger.warning("未配置 API key，使用规则生成总结")
             return self._rule_based_summary(episode_title, content)
 
-        client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+        client = AsyncOpenAI(api_key=api_key)
 
         # 构建Prompt
         system_prompt = """

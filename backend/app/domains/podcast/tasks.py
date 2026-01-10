@@ -78,6 +78,99 @@ celery_app.conf.update(
 )
 
 
+# 启动时验证 API 配置
+@celery_app.worker_ready.connect
+def worker_ready_hook(sender, **kwargs):
+    """Worker 启动时验证 AI API 配置"""
+    logger.info("=" * 60)
+    logger.info("Celery Worker 启动，验证 AI API 配置...")
+
+    async def validate_api_configs():
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from app.domains.ai.repositories import AIModelConfigRepository
+        from app.domains.ai.services import AIModelConfigService
+        from app.domains.ai.models import ModelType
+        from app.core.security import decrypt_data
+
+        # 创建独立的数据库引擎
+        engine = create_async_engine(
+            settings.DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            connect_args={
+                "server_settings": {"application_name": "celery-startup-validator"},
+                "timeout": settings.DATABASE_CONNECT_TIMEOUT
+            }
+        )
+
+        session_factory = async_sessionmaker(
+            engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
+
+        try:
+            async with session_factory() as db:
+                ai_repo = AIModelConfigRepository(db)
+                ai_service = AIModelConfigService(db)
+
+                # 验证文本生成模型
+                text_model = await ai_repo.get_default_model(ModelType.TEXT_GENERATION)
+                if text_model and text_model.api_key:
+                    logger.info(f"✓ 文本生成模型: {text_model.name} (provider: {text_model.provider})")
+
+                    # 进行实际的 API 测试
+                    try:
+                        test_result = await ai_service.test_model(text_model.id, None)
+                        if test_result.success:
+                            logger.info(f"  ✓ 文本生成模型测试通过: {test_result.result[:100]}")
+                        else:
+                            logger.warning(f"  ✗ 文本生成模型测试失败: {test_result.error}")
+                    except Exception as e:
+                        logger.warning(f"  ✗ 文本生成模型测试异常: {e}")
+                else:
+                    logger.warning("✗ 未配置默认文本生成模型")
+
+                # 验证转录模型
+                transcription_model = await ai_repo.get_default_model(ModelType.TRANSCRIPTION)
+                if transcription_model and transcription_model.api_key:
+                    logger.info(f"✓ 转录模型: {transcription_model.name} (provider: {transcription_model.provider})")
+
+                    # 进行实际的转录测试
+                    try:
+                        test_result = await ai_service.test_model(transcription_model.id, None)
+                        if test_result.success:
+                            # 解析测试结果
+                            result_lines = test_result.result.split('\n')
+                            logger.info(f"  {result_lines[0]}")  # 第一行是测试结果摘要
+                            for line in result_lines[1:]:
+                                logger.info(f"  {line}")
+                        else:
+                            logger.warning(f"  ✗ 转录模型测试失败: {test_result.error}")
+                    except Exception as e:
+                        logger.warning(f"  ✗ 转录模型测试异常: {e}")
+                else:
+                    logger.warning("✗ 未配置默认转录模型")
+
+                # 检查环境变量作为后备
+                if settings.OPENAI_API_KEY:
+                    logger.info("✓ 环境变量 OPENAI_API_KEY 已配置（作为后备）")
+                else:
+                    logger.info("  环境变量 OPENAI_API_KEY 未配置")
+
+        finally:
+            await engine.dispose()
+
+    # 在新的事件循环中运行验证
+    try:
+        asyncio.run(validate_api_configs())
+    except Exception as e:
+        logger.error(f"API 配置验证失败: {e}")
+    finally:
+        logger.info("=" * 60)
+
+
 @celery_app.task(bind=True, max_retries=3)
 def refresh_all_podcast_feeds(self):
     """

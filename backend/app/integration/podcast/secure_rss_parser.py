@@ -268,9 +268,16 @@ class SecureRSSParser:
                 if transcript_text:
                     transcript_url = transcript_text
 
-            # GUID
+            # GUID - 使用更唯一的生成策略
             guid_element = item.find('guid')
-            guid = guid_element.text if guid_element is not None else f"{title}-{published_at.isoformat()}"
+            if guid_element is not None and guid_element.text:
+                # 优先使用 RSS 提供的 guid
+                guid = guid_element.text
+            else:
+                # 后备方案：使用 audio_url 的 hash 作为 guid（因为音频链接通常是最唯一的）
+                import hashlib
+                audio_url_hash = hashlib.md5(audio_url.encode()).hexdigest()[:16]
+                guid = f"gen_{audio_url_hash}"
             guid_is_permalink = guid_element.get('isPermaLink', 'true') if guid_element is not None else 'true'
 
             # Item link (episode detail page link)
