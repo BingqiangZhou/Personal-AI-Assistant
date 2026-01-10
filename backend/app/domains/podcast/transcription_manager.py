@@ -120,38 +120,101 @@ class TranscriptionModelManager:
         ]
 
     async def _get_api_key(self, model_config) -> str:
-        """获取API密钥（支持解密）"""
-        api_key = ""
+        """获取API密钥（支持解密，支持从数据库后备查找）"""
+        # Placeholders that indicate invalid API keys
+        invalid_api_keys = {
+            'your-openai-api-key-here',
+            'your-api-key-here',
+            'your-transcription-api-key-here',
+            '',
+            'none',
+            'null',
+            'your-ope************here',  # Partial match from error logs
+        }
 
-        # 对于系统预设模型，从环境变量获取
+        def is_invalid_key(key: str) -> bool:
+            """Check if API key is invalid/placeholder"""
+            if not key:
+                return True
+            key_lower = key.lower().strip()
+            # Check against known placeholders
+            for placeholder in invalid_api_keys:
+                if key_lower == placeholder.lower() or placeholder.lower() in key_lower:
+                    return True
+            # Check for common placeholder patterns
+            if 'your-' in key_lower and ('key' in key_lower or 'api' in key_lower):
+                return True
+            return False
+
+        # Helper to get and validate API key from a model
+        async def get_valid_key_from_model(model) -> Optional[str]:
+            if not model or not model.api_key:
+                return None
+
+            key = model.api_key
+
+            # Check if encrypted
+            if model.api_key_encrypted and model.api_key:
+                from app.core.security import decrypt_data
+                try:
+                    decrypted = decrypt_data(model.api_key)
+                    if is_invalid_key(decrypted):
+                        return None
+                    # Validate format for specific providers
+                    if model.provider == "siliconflow" and not decrypted.startswith("sk-"):
+                        logger.warning(f"⚠️ [KEY] API key for model {model.name} does not start with 'sk-' prefix")
+                    return decrypted
+                except Exception as e:
+                    logger.error(f"Failed to decrypt API key for model {model.name}: {e}")
+                    return None
+
+            if is_invalid_key(key):
+                return None
+
+            # Validate format for specific providers
+            if model.provider == "siliconflow" and not key.startswith("sk-"):
+                logger.warning(f"⚠️ [KEY] API key for model {model.name} does not start with 'sk-' prefix")
+
+            return key
+
+        # 对于系统预设模型，优先从环境变量获取
         if model_config.is_system:
             from app.core.config import settings
+            api_key = ""
             if model_config.provider == "openai":
                 api_key = getattr(settings, 'OPENAI_API_KEY', '')
             elif model_config.provider == "siliconflow":
                 api_key = getattr(settings, 'TRANSCRIPTION_API_KEY', '')
-            logger.info(f"🔑 [KEY] Using system API key for {model_config.provider}, key (first 10 chars): {api_key[:10]}...")
+
+            if not is_invalid_key(api_key):
+                logger.info(f"🔑 [KEY] Using system API key for {model_config.provider}, key (first 10 chars): {api_key[:10]}...")
+                return api_key
+            # System key is invalid, continue to fallback
+
+        # First try to get API key from the provided model_config
+        api_key = await get_valid_key_from_model(model_config)
+        if api_key:
+            logger.info(f"🔑 [KEY] Using API key from model {model_config.name}, key (first 10 chars): {api_key[:10]}...")
             return api_key
 
-        # 对于用户自定义的模型，检查是否需要解密
-        if model_config.api_key_encrypted and model_config.api_key:
-            from app.core.security import decrypt_data
-            try:
-                api_key = decrypt_data(model_config.api_key)
-                logger.info(f"🔑 [KEY] Decrypted API key for model {model_config.name} (first 10 chars): {api_key[:10]}..., (last 4 chars): ...{api_key[-4:]}")
+        # If current model has invalid key, try to find another active model with valid key
+        logger.warning(f"⚠️ Model {model_config.name} has invalid or placeholder API key, searching for alternative...")
 
-                # Check if key has the expected SiliconFlow format (starts with sk-)
-                if model_config.provider == "siliconflow" and not api_key.startswith("sk-"):
-                    logger.warning(f"⚠️ [KEY] API key for model {model_config.name} does not start with 'sk-' prefix. SiliconFlow keys typically start with 'sk-'")
+        active_models = await self.ai_model_repo.get_active_models(ModelType.TRANSCRIPTION)
+        for model in active_models:
+            if model.id == model_config.id:
+                continue  # Skip the same model
+            alt_key = await get_valid_key_from_model(model)
+            if alt_key:
+                logger.info(f"🔑 [KEY] Found valid API key from alternative model: {model.name}")
+                return alt_key
 
-                return api_key
-            except Exception as e:
-                logger.error(f"Failed to decrypt API key for model {model_config.name}: {e}")
-                raise ValidationError(f"Failed to decrypt API key for model {model_config.name}")
-
-        api_key = model_config.api_key if model_config.api_key else ""
-        logger.info(f"🔑 [KEY] Using API key from model config (first 10 chars): {api_key[:10]}...")
-        return api_key
+        # No valid API key found
+        raise ValidationError(
+            f"No valid API key found. Model '{model_config.name}' has a placeholder/invalid API key, "
+            f"and no alternative models with valid API keys were found. "
+            f"Please configure a valid API key for at least one TRANSCRIPTION model."
+        )
 
 
 class DatabaseBackedTranscriptionService(PodcastTranscriptionService):

@@ -685,10 +685,10 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 4), // Compact margin
+      margin: const EdgeInsets.only(bottom: 2), // More compact margin
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(8), // Smaller radius
+        borderRadius: BorderRadius.circular(6), // Smaller radius
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
         ),
@@ -696,18 +696,18 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       child: ListTile(
         dense: true,
         visualDensity: const VisualDensity(horizontal: 0, vertical: -4), // Compact density
-        contentPadding: const EdgeInsets.fromLTRB(12, 0, 8, 0), // Compact padding
+        contentPadding: const EdgeInsets.fromLTRB(8, 0, 4, 0), // More compact padding
         leading: Container(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: statusColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(statusIcon, color: statusColor, size: 16), // Smaller icon
+          child: Icon(statusIcon, color: statusColor, size: 14), // Smaller icon
         ),
         title: Text(
           item.title ?? 'Unknown Title',
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -718,7 +718,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
             Text(
               item.url,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 10,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               maxLines: 1,
@@ -726,10 +726,10 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
             ),
             if (!isValid && !isChecking && item.errorMessage != null)
               Padding(
-                padding: const EdgeInsets.only(top: 2),
+                padding: const EdgeInsets.only(top: 1),
                 child: Text(
                   item.errorMessage!,
-                  style: const TextStyle(color: Colors.red, fontSize: 10),
+                  style: const TextStyle(color: Colors.red, fontSize: 9),
                 ),
               ),
           ],
@@ -738,26 +738,26 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.copy, size: 16),
+              icon: const Icon(Icons.copy, size: 14),
               onPressed: () => _copyUrlToClipboard(item.url, item.title),
               tooltip: 'Copy',
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
-              splashRadius: 20,
+              splashRadius: 16,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
             if (!isValid && !isChecking)
                IconButton(
-                icon: const Icon(Icons.edit, color: Colors.blue, size: 16),
+                icon: const Icon(Icons.edit, color: Colors.blue, size: 14),
                 onPressed: () => _showEditUrlDialog(item),
                 tooltip: 'Edit & Retry',
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
-                splashRadius: 20,
+                splashRadius: 16,
               )
             else
                IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.grey, size: 16),
+                icon: const Icon(Icons.delete_outline, color: Colors.grey, size: 14),
                 onPressed: () {
                    setState(() {
                      final originalIndex = _validationItems.indexOf(item);
@@ -767,7 +767,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                        if (_previewUrls.contains(item.url)) {
                          _previewUrls.remove(item.url);
                        }
-                       
+
                        if (_validationItems.isEmpty && !_isInputExpanded) {
                          _isInputExpanded = true;
                        }
@@ -777,7 +777,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                 tooltip: 'Remove',
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
-                splashRadius: 20,
+                splashRadius: 16,
               ),
           ],
         ),
@@ -869,10 +869,13 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                       // Input Tabs aligned to the right of title
                       Container(
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(8),
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                          ),
                         ),
-                        padding: const EdgeInsets.all(2),
+                        padding: const EdgeInsets.all(3),
                         child: Row(
                           children: [
                             _buildInputTab('Paste Text', 0),
@@ -1006,7 +1009,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                     _buildFilterTabs(),
                     const SizedBox(height: 12),
                     Text(
-                      'Free List', // Matches the image "Feed List"?? Image says Feed List
+                      'RSS List',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
@@ -1057,7 +1060,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
   Widget _buildInputTab(String text, int index) {
     final isSelected = _tabController.index == index && _isInputExpanded;
-    
+
     return InkWell(
       onTap: () {
         setState(() {
@@ -1065,22 +1068,22 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
           _tabController.index = index;
         });
       },
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).colorScheme.surface : Colors.transparent,
-          borderRadius: BorderRadius.circular(6),
+          color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
           boxShadow: isSelected ? [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 2, offset: const Offset(0, 1)),
+            BoxShadow(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2)),
           ] : null,
         ),
         child: Text(
           text,
           style: TextStyle(
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-            color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ),

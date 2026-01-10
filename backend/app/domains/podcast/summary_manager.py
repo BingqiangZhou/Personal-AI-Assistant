@@ -260,23 +260,77 @@ class SummaryModelManager:
         return prompt
 
     async def _get_api_key(self, model_config) -> str:
-        """获取API密钥（统一从数据库读取）"""
-        # 如果未加密，直接返回
-        if not model_config.api_key_encrypted:
-            return model_config.api_key if model_config.api_key else ""
+        """获取API密钥（统一从数据库读取，支持后备查找）"""
+        # Placeholders that indicate invalid API keys
+        invalid_api_keys = {
+            'your-openai-api-key-here',
+            'your-api-key-here',
+            '',
+            'none',
+            'null',
+            'your-ope************here',  # Partial match from error logs
+        }
 
-        # 使用Fernet解密
-        from app.core.security import decrypt_data
-        try:
-            decrypted = decrypt_data(model_config.api_key)
-            logger.info(f"Successfully decrypted API key for model {model_config.name}")
-            return decrypted
-        except Exception as e:
-            logger.error(f"Failed to decrypt API key for model {model_config.name}: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to decrypt API key for model {model_config.name}"
-            )
+        def is_invalid_key(key: str) -> bool:
+            """Check if API key is invalid/placeholder"""
+            if not key:
+                return True
+            key_lower = key.lower().strip()
+            # Check against known placeholders
+            for placeholder in invalid_api_keys:
+                if key_lower == placeholder.lower() or placeholder.lower() in key_lower:
+                    return True
+            # Check for common placeholder patterns
+            if 'your-' in key_lower and ('key' in key_lower or 'api' in key_lower):
+                return True
+            return False
+
+        # Helper to get and validate API key from a model
+        async def get_valid_key_from_model(model) -> Optional[str]:
+            if not model or not model.api_key:
+                return None
+
+            key = model.api_key
+            if not model.api_key_encrypted:
+                if is_invalid_key(key):
+                    return None
+                return key
+
+            # Decrypt if encrypted
+            from app.core.security import decrypt_data
+            try:
+                decrypted = decrypt_data(model.api_key)
+                if is_invalid_key(decrypted):
+                    return None
+                return decrypted
+            except Exception as e:
+                logger.error(f"Failed to decrypt API key for model {model.name}: {e}")
+                return None
+
+        # First try to get API key from the provided model_config
+        api_key = await get_valid_key_from_model(model_config)
+        if api_key:
+            logger.info(f"Using API key from model {model_config.name}")
+            return api_key
+
+        # If current model has invalid key, try to find another active model with valid key
+        logger.warning(f"Model {model_config.name} has invalid or placeholder API key, searching for alternative...")
+
+        active_models = await self.ai_model_repo.get_active_models(ModelType.TEXT_GENERATION)
+        for model in active_models:
+            if model.id == model_config.id:
+                continue  # Skip the same model
+            alt_key = await get_valid_key_from_model(model)
+            if alt_key:
+                logger.info(f"Found valid API key from alternative model: {model.name}")
+                return alt_key
+
+        # No valid API key found
+        raise ValidationError(
+            f"No valid API key found. Model '{model_config.name}' has a placeholder/invalid API key, "
+            f"and no alternative models with valid API keys were found. "
+            f"Please configure a valid API key for at least one TEXT_GENERATION model."
+        )
 
     async def get_model_info(self, model_name: Optional[str] = None) -> Dict[str, Any]:
         """获取模型信息"""

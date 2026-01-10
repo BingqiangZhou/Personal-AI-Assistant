@@ -101,6 +101,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final bulkSelectionState = ref.watch(bulkSelectionProvider);
     final isSelectionMode = bulkSelectionState.isSelectionMode;
     final searchState = ref.watch(search.podcastSearchProvider);
+    final subscriptionState = ref.watch(podcastSubscriptionProvider);
 
     return ResponsiveContainer(
       child: Column(
@@ -115,7 +116,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   child: Text(
                     isSelectionMode
                         ? l10n.podcast_bulk_select_mode
-                        : l10n.podcast_title,
+                        : '${l10n.podcast_title} (${subscriptionState.total})',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
