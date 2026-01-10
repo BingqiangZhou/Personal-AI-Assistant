@@ -1343,13 +1343,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ai_test_content => 'Test Content';
 
   @override
-  String get ai_transcription_test_info_title => 'Automated Transcription Test';
+  String get ai_transcription_test_info_title => 'Transcription Test Note';
 
   @override
-  String get ai_transcription_test_info_description => 'This test will use a pre-configured audio file to verify the transcription service. The system will compare the transcription result with the expected text and report the similarity percentage.';
+  String get ai_transcription_test_info_description =>
+      'Transcription testing requires a sample audio file. Please ensure you have an audio file ready for testing.';
 
   @override
-  String get ai_transcription_test_info_details => 'Expected text: "华为致力于把数字世界带入每个人、每个家庭、每个组织，构建万物互联的智能世界。"';
+  String get ai_transcription_test_info_details =>
+      'Click \"Test Connection\" to use a built-in test audio for quick verification.';
 
   @override
   String get settings_response_speed => 'Response Speed';

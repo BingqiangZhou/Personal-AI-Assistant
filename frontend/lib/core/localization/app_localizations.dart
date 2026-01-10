@@ -2606,7 +2606,7 @@ abstract class AppLocalizations {
   /// **'Test Failed'**
   String get ai_test_failed;
 
-  /// Test content label
+  /// Test content label for model testing
   ///
   /// In en, this message translates to:
   /// **'Test Content'**
@@ -2615,19 +2615,19 @@ abstract class AppLocalizations {
   /// Transcription test info title
   ///
   /// In en, this message translates to:
-  /// **'Automated Transcription Test'**
+  /// **'Transcription Test Note'**
   String get ai_transcription_test_info_title;
 
   /// Transcription test info description
   ///
   /// In en, this message translates to:
-  /// **'This test will use a pre-configured audio file to verify the transcription service. The system will compare the transcription result with the expected text and report the similarity percentage.'**
+  /// **'Transcription testing requires a sample audio file. Please ensure you have an audio file ready for testing.'**
   String get ai_transcription_test_info_description;
 
   /// Transcription test info details
   ///
   /// In en, this message translates to:
-  /// **'Expected text: "华为致力于把数字世界带入每个人、每个家庭、每个组织，构建万物互联的智能世界。"'**
+  /// **'Click \"Test Connection\" to use a built-in test audio for quick verification.'**
   String get ai_transcription_test_info_details;
 
   /// Response speed label

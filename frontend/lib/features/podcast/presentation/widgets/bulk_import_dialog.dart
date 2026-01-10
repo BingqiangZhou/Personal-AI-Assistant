@@ -11,7 +11,7 @@ import '../../../../core/localization/app_localizations.dart';
 
 /// Model to represent URL validation status
 class UrlValidationItem {
-  final String url;
+  String url;
   final String? title;  // Optional title from OPML file
   bool isValid;
   bool isChecking;

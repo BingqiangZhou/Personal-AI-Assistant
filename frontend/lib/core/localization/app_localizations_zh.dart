@@ -1308,13 +1308,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ai_test_content => '测试内容';
 
   @override
-  String get ai_transcription_test_info_title => '自动转录测试';
+  String get ai_transcription_test_info_title => '转录测试提示';
 
   @override
-  String get ai_transcription_test_info_description => '此测试将使用预配置的音频文件来验证转录服务。系统会将转录结果与预期文本进行对比，并报告相似度百分比。';
+  String get ai_transcription_test_info_description =>
+      '转录测试需要提供音频文件。请确保您已准备好用于测试的音频文件。';
 
   @override
-  String get ai_transcription_test_info_details => '期望文本: "华为致力于把数字世界带入每个人、每个家庭、每个组织，构建万物互联的智能世界。"';
+  String get ai_transcription_test_info_details => '点击\"测试连接\"可使用内置测试音频进行快速验证。';
 
   @override
   String get settings_response_speed => '响应速度';

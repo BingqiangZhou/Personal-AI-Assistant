@@ -2142,6 +2142,26 @@
     "description": "测试失败消息"
   },
 
+  "ai_test_content": "测试内容",
+  "@ai_test_content": {
+    "description": "模型测试的测试内容标签"
+  },
+
+  "ai_transcription_test_info_title": "转录测试提示",
+  "@ai_transcription_test_info_title": {
+    "description": "转录测试信息标题"
+  },
+
+  "ai_transcription_test_info_description": "转录测试需要提供音频文件。请确保您已准备好用于测试的音频文件。",
+  "@ai_transcription_test_info_description": {
+    "description": "转录测试信息描述"
+  },
+
+  "ai_transcription_test_info_details": "点击\"测试连接\"可使用内置测试音频进行快速验证。",
+  "@ai_transcription_test_info_details": {
+    "description": "转录测试信息详情"
+  },
+
   "settings_response_speed": "响应速度",
   "@settings_response_speed": {
     "description": "响应速度标签"

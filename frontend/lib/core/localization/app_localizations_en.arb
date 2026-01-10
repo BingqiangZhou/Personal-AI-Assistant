@@ -2142,6 +2142,26 @@
     "description": "Test failed message"
   },
 
+  "ai_test_content": "Test Content",
+  "@ai_test_content": {
+    "description": "Test content label for model testing"
+  },
+
+  "ai_transcription_test_info_title": "Transcription Test Note",
+  "@ai_transcription_test_info_title": {
+    "description": "Transcription test info title"
+  },
+
+  "ai_transcription_test_info_description": "Transcription testing requires a sample audio file. Please ensure you have an audio file ready for testing.",
+  "@ai_transcription_test_info_description": {
+    "description": "Transcription test info description"
+  },
+
+  "ai_transcription_test_info_details": "Click \"Test Connection\" to use a built-in test audio for quick verification.",
+  "@ai_transcription_test_info_details": {
+    "description": "Transcription test info details"
+  },
+
   "settings_response_speed": "Response Speed",
   "@settings_response_speed": {
     "description": "Response speed label"
