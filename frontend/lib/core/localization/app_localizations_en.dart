@@ -1453,6 +1453,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_no_shownotes => 'No show notes available';
 
   @override
+  String get podcast_copy_shownotes => 'Copy';
+
+  @override
+  String get podcast_shownotes_copied => 'Shownotes copied to clipboard';
+
+  @override
   String get podcast_unknown_error => 'Unknown error';
 
   @override

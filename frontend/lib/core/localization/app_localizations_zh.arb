@@ -2327,6 +2327,16 @@
     "description": "无节目简介消息"
   },
 
+  "podcast_copy_shownotes": "复制",
+  "@podcast_copy_shownotes": {
+    "description": "复制按钮标签"
+  },
+
+  "podcast_shownotes_copied": "已复制到剪贴板",
+  "@podcast_shownotes_copied": {
+    "description": "复制成功提示消息"
+  },
+
   "podcast_unknown_error": "未知错误",
   "@podcast_unknown_error": {
     "description": "未知错误消息"

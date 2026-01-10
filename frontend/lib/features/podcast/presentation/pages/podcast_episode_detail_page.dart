@@ -34,6 +34,12 @@ class _PodcastEpisodeDetailPageState
   Timer? _summaryPollingTimer; // AI摘要轮询定时器
   bool _isPolling = false; // Guard flag to prevent multiple polls
 
+  // Sticky header animation
+  final ScrollController _scrollController = ScrollController();
+  final PageController _pageController = PageController(); // 用于移动端页面切换
+  double _scrollOffset = 0.0;
+  static const double _headerScrollThreshold = 50.0; // Header starts fading after 50px scroll
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +47,38 @@ class _PodcastEpisodeDetailPageState
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadTranscriptionStatus();
     });
+    // Setup scroll listener for sticky header effect
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _pageController.dispose();
+    _summaryPollingTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    setState(() {
+      _scrollOffset = _scrollController.offset;
+    });
+  }
+
+  // Calculate header opacity based on scroll offset
+  double get _headerOpacity {
+    if (_scrollOffset <= 0) return 1.0;
+    if (_scrollOffset >= _headerScrollThreshold) return 0.0;
+    return 1.0 - (_scrollOffset / _headerScrollThreshold);
+  }
+
+  // Calculate header clipping height based on scroll offset
+  double get _headerClipHeight {
+    const maxHeaderHeight = 100.0; // 最大裁剪高度（足够显示完整 header）
+    if (_scrollOffset <= 0) return maxHeaderHeight;
+    if (_scrollOffset >= _headerScrollThreshold) return 0.0;
+    return maxHeaderHeight * (1 - _scrollOffset / _headerScrollThreshold);
   }
 
   Future<void> _loadAndPlayEpisode() async {
@@ -195,35 +233,147 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 新的页面布局
+  // 新的页面布局（带吸顶效果）
   Widget _buildNewLayout(BuildContext context, dynamic episode) {
-    return Column(
-      children: [
-        // A. 顶部元数据区 (Header)
-        _buildHeader(episode),
+    return LayoutBuilder(
+      builder: (context, layoutConstraints) {
+        final isWideScreen = layoutConstraints.maxWidth > 800;
 
-        // B. 中间主体内容区 (Body)
-        Expanded(child: _buildMainContent(episode)),
-      ],
+        if (isWideScreen) {
+          // 宽屏：左侧边栏布局
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 左侧边栏（包含标签按钮）
+              SizedBox(
+                width: 200,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 顶部元数据区（带淡出动画和裁剪）
+                      ClipRect(
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          heightFactor: _headerClipHeight / 100.0, // 归一化高度因子
+                          child: AnimatedOpacity(
+                            opacity: _headerOpacity,
+                            duration: const Duration(milliseconds: 100),
+                            curve: Curves.easeInOut,
+                            child: _buildHeader(episode),
+                          ),
+                        ),
+                      ),
+                      // 左侧标签栏
+                      _buildLeftSidebar(),
+                    ],
+                  ),
+                ),
+              ),
+              // 右侧内容区（可滚动）
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  child: _buildTabContent(episode),
+                ),
+              ),
+            ],
+          );
+        } else {
+          // 窄屏：垂直布局
+          // 获取顶部安全区域高度（状态栏高度）
+          final topPadding = MediaQuery.of(context).padding.top;
+          // 确保至少有 8 像素的基础间距
+          final totalTopPadding = topPadding > 0 ? topPadding + 8.0 : 8.0;
+
+          return Column(
+            children: [
+              // 添加统一的安全区域间距，包裹 header 和按钮栏
+              Padding(
+                padding: EdgeInsets.only(top: totalTopPadding),
+                child: Column(
+                  children: [
+                    // A. 顶部元数据区 (Header) - 带淡出和收起动画
+                    ClipRect(
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        heightFactor: _headerClipHeight / 100.0, // 归一化高度因子
+                        child: AnimatedOpacity(
+                          opacity: _headerOpacity,
+                          duration: const Duration(milliseconds: 100),
+                          curve: Curves.easeInOut,
+                          child: _buildHeader(episode),
+                        ),
+                      ),
+                    ),
+
+                    // B. 固定的标签栏 - 吸顶效果（紧接在 header 下方）
+                    _buildTopButtonBar(),
+                  ],
+                ),
+              ),
+
+              // C. 中间主体内容区 (Body) - 使用 PageView 支持滑动切换
+              Expanded(
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (scrollNotification) {
+                    // 监听滚动更新以实现 header 收起效果
+                    if (scrollNotification is ScrollUpdateNotification) {
+                      final metrics = scrollNotification.metrics;
+                      // 获取当前页面的滚动位置
+                      if (metrics.axis == Axis.vertical) {
+                        setState(() {
+                          _scrollOffset = metrics.pixels;
+                        });
+                      }
+                    }
+                    return false;
+                  },
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _selectedTabIndex = index;
+                        // 切换标签时的轮询控制
+                        if (index == 2) {
+                          _startSummaryPolling();
+                        } else {
+                          _stopSummaryPolling();
+                        }
+                        // 重置滚动偏移
+                        _scrollOffset = 0;
+                      });
+                    },
+                    children: [
+                      // 0 = Shownotes
+                      _buildSingleTabContent(episode, 0),
+                      // 1 = Transcript
+                      _buildSingleTabContent(episode, 1),
+                      // 2 = AI Summary
+                      _buildSingleTabContent(episode, 2),
+                      // 3 = Conversation
+                      _buildSingleTabContent(episode, 3),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+      },
     );
   }
 
   // A. 顶部元数据区 (Header) - 无底部分割线
   Widget _buildHeader(dynamic episode) {
-    // 获取顶部安全区域高度（状态栏高度）
-    final topPadding = MediaQuery.of(context).padding.top;
-    // 确保至少有 8 像素的基础间距
-    final totalTopPadding = topPadding > 0 ? topPadding + 8.0 : 8.0;
     final l10n = AppLocalizations.of(context)!;
 
-    return Padding(
-      padding: EdgeInsets.only(top: totalTopPadding),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        color: Theme.of(context).colorScheme.surface,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Theme.of(context).colorScheme.surface,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             // 左侧：Logo（独占两行）
             PodcastImageWidget(
               imageUrl: episode.imageUrl,
@@ -237,7 +387,7 @@ class _PodcastEpisodeDetailPageState
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // 第一行：标题 + 播放按钮
                   Row(
@@ -373,6 +523,7 @@ class _PodcastEpisodeDetailPageState
                         ),
                     ],
                   ),
+                  const SizedBox(height: 8),
                   // 第二行：发布时间、时长和源链接
                   Wrap(
                     spacing: 16,
@@ -476,49 +627,6 @@ class _PodcastEpisodeDetailPageState
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  // B. 主内容区域 - 响应式布局
-  Widget _buildMainContent(dynamic episode) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // 判断是否为宽屏（大于800px使用左侧边栏，否则使用顶部按钮）
-        final isWideScreen = constraints.maxWidth > 800;
-
-        if (isWideScreen) {
-          // 宽屏：左侧边栏布局
-          return Container(
-            color: Theme.of(context).colorScheme.surface,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 左侧：按钮列
-                _buildLeftSidebar(),
-
-                // 右侧：内容区域
-                Expanded(child: _buildTabContent(episode)),
-              ],
-            ),
-          );
-        } else {
-          // 窄屏：顶部按钮布局
-          return Container(
-            color: Theme.of(context).colorScheme.surface,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // 顶部：按钮行
-                _buildTopButtonBar(),
-
-                // 下方：内容区域
-                Expanded(child: _buildTabContent(episode)),
-              ],
-            ),
-          );
-        }
-      },
     );
   }
 
@@ -541,40 +649,44 @@ class _PodcastEpisodeDetailPageState
             // Shownotes Tab
             _buildTabButton(AppLocalizations.of(context)!.podcast_tab_shownotes, _selectedTabIndex == 0, () {
               if (_selectedTabIndex != 0) {
-                setState(() {
-                  _selectedTabIndex = 0;
-                  _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
-                });
+                _pageController.animateToPage(
+                  0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
               }
             }),
             const SizedBox(width: 8),
             // Transcript Tab
             _buildTabButton(AppLocalizations.of(context)!.podcast_tab_transcript, _selectedTabIndex == 1, () {
               if (_selectedTabIndex != 1) {
-                setState(() {
-                  _selectedTabIndex = 1;
-                  _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
-                });
+                _pageController.animateToPage(
+                  1,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
               }
             }),
             const SizedBox(width: 8),
             // AI Summary Tab
             _buildTabButton(AppLocalizations.of(context)!.podcast_filter_with_summary, _selectedTabIndex == 2, () {
               if (_selectedTabIndex != 2) {
-                setState(() {
-                  _selectedTabIndex = 2;
-                  _startSummaryPolling(); // 切换到AI Summary tab时启动轮询
-                });
+                _pageController.animateToPage(
+                  2,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
               }
             }),
             const SizedBox(width: 8),
             // Conversation Tab
             _buildTabButton(AppLocalizations.of(context)!.podcast_tab_chat, _selectedTabIndex == 3, () {
               if (_selectedTabIndex != 3) {
-                setState(() {
-                  _selectedTabIndex = 3;
-                  _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
-                });
+                _pageController.animateToPage(
+                  3,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
               }
             }),
           ],
@@ -687,12 +799,6 @@ class _PodcastEpisodeDetailPageState
               ? Theme.of(context).colorScheme.primary
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.outline,
-            width: 1,
-          ),
         ),
         child: Text(
           text,
@@ -711,6 +817,22 @@ class _PodcastEpisodeDetailPageState
   // Tab内容根据选择显示
   Widget _buildTabContent(dynamic episode) {
     switch (_selectedTabIndex) {
+      case 0:
+        return ShownotesDisplayWidget(episode: episode);
+      case 1:
+        return _buildTranscriptContent(episode);
+      case 2:
+        return _buildAiSummaryContent(episode);
+      case 3:
+        return _buildConversationContent(episode);
+      default:
+        return ShownotesDisplayWidget(episode: episode);
+    }
+  }
+
+  // 构建单个标签页内容（用于 PageView）
+  Widget _buildSingleTabContent(dynamic episode, int index) {
+    switch (index) {
       case 0:
         return ShownotesDisplayWidget(episode: episode);
       case 1:
@@ -1132,13 +1254,6 @@ class _PodcastEpisodeDetailPageState
       });
       debugPrint('🔄 ===== didUpdateWidget complete =====');
     }
-  }
-
-  @override
-  void dispose() {
-    // 停止AI摘要轮询
-    _summaryPollingTimer?.cancel();
-    super.dispose();
   }
 
   // 启动AI摘要轮询

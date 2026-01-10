@@ -2327,6 +2327,16 @@
     "description": "No show notes message"
   },
 
+  "podcast_copy_shownotes": "Copy",
+  "@podcast_copy_shownotes": {
+    "description": "Copy shownotes button label"
+  },
+
+  "podcast_shownotes_copied": "Shownotes copied to clipboard",
+  "@podcast_shownotes_copied": {
+    "description": "Shownotes copied success message"
+  },
+
   "podcast_unknown_error": "Unknown error",
   "@podcast_unknown_error": {
     "description": "Unknown error message"

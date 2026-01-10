@@ -1416,6 +1416,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_no_shownotes => '暂无节目简介';
 
   @override
+  String get podcast_copy_shownotes => '复制';
+
+  @override
+  String get podcast_shownotes_copied => '已复制到剪贴板';
+
+  @override
   String get podcast_unknown_error => '未知错误';
 
   @override

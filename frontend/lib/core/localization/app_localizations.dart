@@ -2828,6 +2828,18 @@ abstract class AppLocalizations {
   /// **'No show notes available'**
   String get podcast_no_shownotes;
 
+  /// Copy shownotes button label
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get podcast_copy_shownotes;
+
+  /// Shownotes copied success message
+  ///
+  /// In en, this message translates to:
+  /// **'Shownotes copied to clipboard'**
+  String get podcast_shownotes_copied;
+
   /// Unknown error message
   ///
   /// In en, this message translates to:

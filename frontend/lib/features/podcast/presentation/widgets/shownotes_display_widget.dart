@@ -77,101 +77,103 @@ class ShownotesDisplayWidget extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // HTML content with responsive constraints
+                // HTML content with responsive constraints and text selection support
                 Container(
                   constraints: BoxConstraints(maxWidth: maxContentWidth),
-                  child: HtmlWidget(
-                    sanitizedHtml,
-                    // Material 3 styling
-                    textStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontSize: 15,
-                          height: 1.6,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                    // Handle link taps
-                    onTapUrl: (url) async {
-                      try {
-                        final uri = Uri.parse(url);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
-                          );
-                          return true;
+                  child: SelectionArea(
+                    child: HtmlWidget(
+                      sanitizedHtml,
+                      // Material 3 styling
+                      textStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontSize: 15,
+                            height: 1.6,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                      // Handle link taps
+                      onTapUrl: (url) async {
+                        try {
+                          final uri = Uri.parse(url);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                            return true;
+                          }
+                          return false;
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error opening link: ${e.toString()}'),
+                                backgroundColor: Theme.of(context).colorScheme.error,
+                              ),
+                            );
+                          }
+                          return false;
                         }
-                        return false;
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error opening link: ${e.toString()}'),
-                              backgroundColor: Theme.of(context).colorScheme.error,
-                            ),
-                          );
-                        }
-                        return false;
-                      }
-                    },
-                    // Handle errors gracefully
-                    onErrorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Failed to render shownotes',
-                              style: TextStyle(
+                      },
+                      // Handle errors gracefully
+                      onErrorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.error_outline,
                                 color: Theme.of(context).colorScheme.error,
                               ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    // Custom styling for HTML elements
-                    customStylesBuilder: (element) {
-                      // Add custom styling for specific elements
-                      final styles = <String, String>{};
+                              const SizedBox(height: 8),
+                              Text(
+                                'Failed to render shownotes',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      // Custom styling for HTML elements
+                      customStylesBuilder: (element) {
+                        // Add custom styling for specific elements
+                        final styles = <String, String>{};
 
-                      // Blockquote styling
-                      if (element.localName == 'blockquote') {
-                        styles['border-left'] = '4px solid ${Theme.of(context).colorScheme.primary.toHex()}';
-                        styles['padding-left'] = '16px';
-                        styles['margin-left'] = '0';
-                        styles['color'] = Theme.of(context).colorScheme.onSurfaceVariant.toHex();
-                      }
+                        // Blockquote styling
+                        if (element.localName == 'blockquote') {
+                          styles['border-left'] = '4px solid ${Theme.of(context).colorScheme.primary.toHex()}';
+                          styles['padding-left'] = '16px';
+                          styles['margin-left'] = '0';
+                          styles['color'] = Theme.of(context).colorScheme.onSurfaceVariant.toHex();
+                        }
 
-                      // Code block styling
-                      if (element.localName == 'pre' || element.localName == 'code') {
-                        styles['background-color'] = Theme.of(context).colorScheme.surfaceContainerHighest.toHex();
-                        styles['padding'] = '8px';
-                        styles['border-radius'] = '4px';
-                        styles['font-family'] = 'monospace';
-                      }
+                        // Code block styling
+                        if (element.localName == 'pre' || element.localName == 'code') {
+                          styles['background-color'] = Theme.of(context).colorScheme.surfaceContainerHighest.toHex();
+                          styles['padding'] = '8px';
+                          styles['border-radius'] = '4px';
+                          styles['font-family'] = 'monospace';
+                        }
 
-                      // Heading styling
-                      if (element.localName?.startsWith('h') == true) {
-                        styles['color'] = Theme.of(context).colorScheme.onSurface.toHex();
-                        styles['font-weight'] = 'bold';
-                      }
+                        // Heading styling
+                        if (element.localName?.startsWith('h') == true) {
+                          styles['color'] = Theme.of(context).colorScheme.onSurface.toHex();
+                          styles['font-weight'] = 'bold';
+                        }
 
-                      // Link styling
-                      if (element.localName == 'a') {
-                        styles['color'] = Theme.of(context).colorScheme.primary.toHex();
-                        styles['text-decoration'] = 'underline';
-                      }
+                        // Link styling
+                        if (element.localName == 'a') {
+                          styles['color'] = Theme.of(context).colorScheme.primary.toHex();
+                          styles['text-decoration'] = 'underline';
+                        }
 
-                      return styles.isNotEmpty ? styles : null;
-                    },
-                    // Enable selection for text
-                    enableCaching: true,
-                    // Build mode for better performance
-                    renderMode: RenderMode.column,
+                        return styles.isNotEmpty ? styles : null;
+                      },
+                      // Enable selection for text
+                      enableCaching: true,
+                      // Build mode for better performance
+                      renderMode: RenderMode.column,
+                    ),
                   ),
                 ),
               ],
