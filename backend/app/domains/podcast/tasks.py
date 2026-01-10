@@ -79,9 +79,15 @@ celery_app.conf.update(
 
 
 # 启动时验证 API 配置
-@celery_app.worker_init.connect
-def worker_ready_hook(sender, **kwargs):
+@celery_app.on_after_configure.connect
+def worker_ready_hook(sender=None, **kwargs):
     """Worker 启动时验证 AI API 配置"""
+    # 只在 worker 进程中执行，不在 beat 或其他进程中执行
+    import os
+    # 检查是否是 worker 进程（通过环境变量或命令行参数）
+    if not (os.getenv('CELERY_WORKER_NAME') or 'worker' in str(os.sys.argv)):
+        return
+
     logger.info("=" * 60)
     logger.info("Celery Worker 启动，验证 AI API 配置...")
 
