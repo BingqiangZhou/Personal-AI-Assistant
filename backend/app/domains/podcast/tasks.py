@@ -79,7 +79,7 @@ celery_app.conf.update(
 
 
 # 启动时验证 API 配置
-@celery_app.worker_ready.connect
+@celery_app.worker_init.connect
 def worker_ready_hook(sender, **kwargs):
     """Worker 启动时验证 AI API 配置"""
     logger.info("=" * 60)
