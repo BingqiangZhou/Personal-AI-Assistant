@@ -322,7 +322,8 @@ class AIModelConfigService:
                     if model.provider == 'openai':
                         api_endpoint = 'https://api.openai.com/v1/audio/transcriptions'
                     else:
-                        api_endpoint = f"{model.api_url}/audio/transcriptions"
+                        # 对于其他提供商，使用数据库中存储的完整API URL
+                        api_endpoint = model.api_url
 
                     async with session.post(api_endpoint, headers=headers, data=data) as response:
                         if response.status != 200:

@@ -123,8 +123,15 @@ def worker_ready_hook(sender=None, **kwargs):
 
                 # 验证文本生成模型
                 text_model = await ai_repo.get_default_model(ModelType.TEXT_GENERATION)
+                if not text_model:
+                    # 如果没有默认模型，尝试使用第一个活跃的模型
+                    active_models = await ai_repo.get_active_models(ModelType.TEXT_GENERATION)
+                    if active_models:
+                        text_model = active_models[0]
+
                 if text_model and text_model.api_key:
-                    logger.info(f"✓ 文本生成模型: {text_model.name} (provider: {text_model.provider})")
+                    is_default = await ai_repo.get_default_model(ModelType.TEXT_GENERATION) is not None
+                    logger.info(f"✓ 文本生成模型: {text_model.name} (provider: {text_model.provider}){' (默认)' if is_default else ' (后备)'}")
 
                     # 进行实际的 API 测试
                     try:
@@ -136,12 +143,19 @@ def worker_ready_hook(sender=None, **kwargs):
                     except Exception as e:
                         logger.warning(f"  ✗ 文本生成模型测试异常: {e}")
                 else:
-                    logger.warning("✗ 未配置默认文本生成模型")
+                    logger.warning("✗ 未配置默认文本生成模型，且未找到可用的活跃模型")
 
                 # 验证转录模型
                 transcription_model = await ai_repo.get_default_model(ModelType.TRANSCRIPTION)
+                if not transcription_model:
+                    # 如果没有默认模型，尝试使用第一个活跃的模型
+                    active_models = await ai_repo.get_active_models(ModelType.TRANSCRIPTION)
+                    if active_models:
+                        transcription_model = active_models[0]
+
                 if transcription_model and transcription_model.api_key:
-                    logger.info(f"✓ 转录模型: {transcription_model.name} (provider: {transcription_model.provider})")
+                    is_default = await ai_repo.get_default_model(ModelType.TRANSCRIPTION) is not None
+                    logger.info(f"✓ 转录模型: {transcription_model.name} (provider: {transcription_model.provider}){' (默认)' if is_default else ' (后备)'}")
 
                     # 进行实际的转录测试
                     try:
@@ -157,7 +171,7 @@ def worker_ready_hook(sender=None, **kwargs):
                     except Exception as e:
                         logger.warning(f"  ✗ 转录模型测试异常: {e}")
                 else:
-                    logger.warning("✗ 未配置默认转录模型")
+                    logger.warning("✗ 未配置默认转录模型，且未找到可用的活跃模型")
 
                 # 检查环境变量作为后备
                 if settings.OPENAI_API_KEY:
