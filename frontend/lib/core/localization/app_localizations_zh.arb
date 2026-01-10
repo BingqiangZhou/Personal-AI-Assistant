@@ -2877,6 +2877,189 @@
     }
   },
 
+  "podcast_bulk_import_input_text": "文本",
+  "@podcast_bulk_import_input_text": {
+    "description": "批量导入文本输入标签标签"
+  },
+
+  "podcast_bulk_import_input_file": "文件",
+  "@podcast_bulk_import_input_file": {
+    "description": "批量导入文件上传标签标签"
+  },
+
+  "podcast_bulk_import_no_urls_text": "未找到URL",
+  "@podcast_bulk_import_no_urls_text": {
+    "description": "批量导入未在文本中找到URL时的消息"
+  },
+
+  "podcast_bulk_import_links_found": "找到{total}个链接，{valid}个有效RSS订阅",
+  "@podcast_bulk_import_links_found": {
+    "description": "批量导入显示找到的总链接数和有效订阅数",
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "valid": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_import_urls_exist": "所有URL已存在于列表中",
+  "@podcast_bulk_import_urls_exist": {
+    "description": "批量导入当所有URL已存在时的消息"
+  },
+
+  "podcast_bulk_import_edit_url": "编辑RSS URL",
+  "@podcast_bulk_import_edit_url": {
+    "description": "批量导入编辑URL对话框标题"
+  },
+
+  "podcast_bulk_import_save_revalidate": "保存并重新验证",
+  "@podcast_bulk_import_save_revalidate": {
+    "description": "批量导入保存并重新验证按钮文本"
+  },
+
+  "podcast_bulk_import_no_urls_file": "文件中未找到URL",
+  "@podcast_bulk_import_no_urls_file": {
+    "description": "批量导入在文件中未找到URL时的消息"
+  },
+
+  "podcast_bulk_import_no_valid_feeds": "没有有效的RSS订阅可导入。请移除无效URL或等待验证完成。",
+  "@podcast_bulk_import_no_valid_feeds": {
+    "description": "批量导入没有有效订阅可导入时的消息"
+  },
+
+  "podcast_bulk_import_imported_count": "成功导入{count}个RSS订阅",
+  "@podcast_bulk_import_imported_count": {
+    "description": "批量导入成功消息（带数量）",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_import_failed": "导入失败：{error}",
+  "@podcast_bulk_import_failed": {
+    "description": "批量导入失败消息",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_bulk_import_valid_count": "有效 ({count})",
+  "@podcast_bulk_import_valid_count": {
+    "description": "批量导入有效数量标签",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_import_invalid_count": "无效 ({count})",
+  "@podcast_bulk_import_invalid_count": {
+    "description": "批量导入无效数量标签",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_unknown_title": "未知标题",
+  "@podcast_unknown_title": {
+    "description": "播客标题未知时的默认标题"
+  },
+
+  "podcast_copy": "复制",
+  "@podcast_copy": {
+    "description": "复制按钮提示"
+  },
+
+  "podcast_edit_retry": "编辑重试",
+  "@podcast_edit_retry": {
+    "description": "编辑并重试按钮提示"
+  },
+
+  "podcast_remove": "移除",
+  "@podcast_remove": {
+    "description": "移除按钮提示"
+  },
+
+  "podcast_bulk_import_drag_drop": "拖放文件到此处或",
+  "@podcast_bulk_import_drag_drop": {
+    "description": "批量导入拖放说明"
+  },
+
+  "podcast_bulk_import_select_file": "选择文件",
+  "@podcast_bulk_import_select_file": {
+    "description": "批量导入选择文件按钮文本"
+  },
+
+  "podcast_rss_list": "RSS列表",
+  "@podcast_rss_list": {
+    "description": "RSS列表标题"
+  },
+
+  "podcast_import_all": "全部导入",
+  "@podcast_import_all": {
+    "description": "全部导入按钮文本"
+  },
+
+  "podcast_no_items": "无项目",
+  "@podcast_no_items": {
+    "description": "无项目消息"
+  },
+
+  "podcast_bulk_import_extract": "提取",
+  "@podcast_bulk_import_extract": {
+    "description": "批量导入提取按钮文本"
+  },
+
+  "podcast_bulk_import_click_select": "点击选择文件",
+  "@podcast_bulk_import_click_select": {
+    "description": "批量导入点击选择文件文本"
+  },
+
+  "podcast_bulk_import_or_drag_drop": "或拖放到此处",
+  "@podcast_bulk_import_or_drag_drop": {
+    "description": "批量导入或拖放文本"
+  },
+
+  "podcast_bulk_import_paste_hint": "在此粘贴URL或OPML内容...",
+  "@podcast_bulk_import_paste_hint": {
+    "description": "批量导入粘贴文本区域提示"
+  },
+
+  "podcast_not_valid_rss": "不是有效的RSS订阅",
+  "@podcast_not_valid_rss": {
+    "description": "无效RSS订阅错误消息"
+  },
+
+  "podcast_copied": "已复制：{text}",
+  "@podcast_copied": {
+    "description": "复制到剪贴板消息",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_bulk_import_label": "标签",
+  "@podcast_bulk_import_label": {
+    "description": "通用标签文本"
+  },
+
+  "podcast_bulk_import_hint_text": "URL",
+  "@podcast_bulk_import_hint_text": {
+    "description": "文本字段中的URL提示文本"
+  },
+
   "podcast_global_rss_settings_title": "全局RSS设置",
   "@podcast_global_rss_settings_title": {
     "description": "全局RSS设置页面标题"

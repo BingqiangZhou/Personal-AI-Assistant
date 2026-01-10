@@ -1742,6 +1742,109 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get podcast_bulk_import_input_text => '文本';
+
+  @override
+  String get podcast_bulk_import_input_file => '文件';
+
+  @override
+  String get podcast_bulk_import_no_urls_text => '未找到URL';
+
+  @override
+  String podcast_bulk_import_links_found(int total, int valid) {
+    return '找到$total个链接，$valid个有效RSS订阅';
+  }
+
+  @override
+  String get podcast_bulk_import_urls_exist => '所有URL已存在于列表中';
+
+  @override
+  String get podcast_bulk_import_edit_url => '编辑RSS URL';
+
+  @override
+  String get podcast_bulk_import_save_revalidate => '保存并重新验证';
+
+  @override
+  String get podcast_bulk_import_no_urls_file => '文件中未找到URL';
+
+  @override
+  String get podcast_bulk_import_no_valid_feeds =>
+      '没有有效的RSS订阅可导入。请移除无效URL或等待验证完成。';
+
+  @override
+  String podcast_bulk_import_imported_count(int count) {
+    return '成功导入$count个RSS订阅';
+  }
+
+  @override
+  String podcast_bulk_import_failed(String error) {
+    return '导入失败：$error';
+  }
+
+  @override
+  String podcast_bulk_import_valid_count(int count) {
+    return '有效 ($count)';
+  }
+
+  @override
+  String podcast_bulk_import_invalid_count(int count) {
+    return '无效 ($count)';
+  }
+
+  @override
+  String get podcast_unknown_title => '未知标题';
+
+  @override
+  String get podcast_copy => '复制';
+
+  @override
+  String get podcast_edit_retry => '编辑重试';
+
+  @override
+  String get podcast_remove => '移除';
+
+  @override
+  String get podcast_bulk_import_drag_drop => '拖放文件到此处或';
+
+  @override
+  String get podcast_bulk_import_select_file => '选择文件';
+
+  @override
+  String get podcast_rss_list => 'RSS列表';
+
+  @override
+  String get podcast_import_all => '全部导入';
+
+  @override
+  String get podcast_no_items => '无项目';
+
+  @override
+  String get podcast_bulk_import_extract => '提取';
+
+  @override
+  String get podcast_bulk_import_click_select => '点击选择文件';
+
+  @override
+  String get podcast_bulk_import_or_drag_drop => '或拖放到此处';
+
+  @override
+  String get podcast_bulk_import_paste_hint => '在此粘贴URL或OPML内容...';
+
+  @override
+  String get podcast_not_valid_rss => '不是有效的RSS订阅';
+
+  @override
+  String podcast_copied(String text) {
+    return '已复制：$text';
+  }
+
+  @override
+  String get podcast_bulk_import_label => '标签';
+
+  @override
+  String get podcast_bulk_import_hint_text => 'URL';
+
+  @override
   String get podcast_global_rss_settings_title => '全局RSS设置';
 
   @override

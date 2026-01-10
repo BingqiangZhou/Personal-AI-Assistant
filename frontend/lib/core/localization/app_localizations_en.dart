@@ -1790,6 +1790,111 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get podcast_bulk_import_input_text => 'Text';
+
+  @override
+  String get podcast_bulk_import_input_file => 'File';
+
+  @override
+  String get podcast_bulk_import_no_urls_text => 'No URLs found in text';
+
+  @override
+  String podcast_bulk_import_links_found(int total, int valid) {
+    return 'Found $total links, $valid valid RSS feeds';
+  }
+
+  @override
+  String get podcast_bulk_import_urls_exist =>
+      'All URLs already exist in the list';
+
+  @override
+  String get podcast_bulk_import_edit_url => 'Edit RSS URL';
+
+  @override
+  String get podcast_bulk_import_save_revalidate => 'Save & Re-validate';
+
+  @override
+  String get podcast_bulk_import_no_urls_file => 'No URLs found in file';
+
+  @override
+  String get podcast_bulk_import_no_valid_feeds =>
+      'No valid RSS feeds to import. Please remove invalid URLs or wait for validation to complete.';
+
+  @override
+  String podcast_bulk_import_imported_count(int count) {
+    return 'Successfully imported $count RSS feeds';
+  }
+
+  @override
+  String podcast_bulk_import_failed(String error) {
+    return 'Import failed: $error';
+  }
+
+  @override
+  String podcast_bulk_import_valid_count(int count) {
+    return 'Valid ($count)';
+  }
+
+  @override
+  String podcast_bulk_import_invalid_count(int count) {
+    return 'Invalid ($count)';
+  }
+
+  @override
+  String get podcast_unknown_title => 'Unknown Title';
+
+  @override
+  String get podcast_copy => 'Copy';
+
+  @override
+  String get podcast_edit_retry => 'Edit & Retry';
+
+  @override
+  String get podcast_remove => 'Remove';
+
+  @override
+  String get podcast_bulk_import_drag_drop => 'Drag & Drop files here or';
+
+  @override
+  String get podcast_bulk_import_select_file => 'Select File';
+
+  @override
+  String get podcast_rss_list => 'RSS List';
+
+  @override
+  String get podcast_import_all => 'Import All';
+
+  @override
+  String get podcast_no_items => 'No items';
+
+  @override
+  String get podcast_bulk_import_extract => 'Extract';
+
+  @override
+  String get podcast_bulk_import_click_select => 'Click to Select File';
+
+  @override
+  String get podcast_bulk_import_or_drag_drop => 'or drag & drop here';
+
+  @override
+  String get podcast_bulk_import_paste_hint =>
+      'Paste URLs or OPML content here...';
+
+  @override
+  String get podcast_not_valid_rss => 'Not a valid RSS feed';
+
+  @override
+  String podcast_copied(String text) {
+    return 'Copied: $text';
+  }
+
+  @override
+  String get podcast_bulk_import_label => 'Label';
+
+  @override
+  String get podcast_bulk_import_hint_text => 'URL';
+
+  @override
   String get podcast_global_rss_settings_title => 'Global RSS Settings';
 
   @override

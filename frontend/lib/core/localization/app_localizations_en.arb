@@ -2877,6 +2877,189 @@
     }
   },
 
+  "podcast_bulk_import_input_text": "Text",
+  "@podcast_bulk_import_input_text": {
+    "description": "Bulk import input tab label for text input"
+  },
+
+  "podcast_bulk_import_input_file": "File",
+  "@podcast_bulk_import_input_file": {
+    "description": "Bulk import input tab label for file upload"
+  },
+
+  "podcast_bulk_import_no_urls_text": "No URLs found in text",
+  "@podcast_bulk_import_no_urls_text": {
+    "description": "Bulk import message when no URLs found in text input"
+  },
+
+  "podcast_bulk_import_links_found": "Found {total} links, {valid} valid RSS feeds",
+  "@podcast_bulk_import_links_found": {
+    "description": "Bulk import message showing total links found and valid feeds count",
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "valid": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_import_urls_exist": "All URLs already exist in the list",
+  "@podcast_bulk_import_urls_exist": {
+    "description": "Bulk import message when all URLs already exist"
+  },
+
+  "podcast_bulk_import_edit_url": "Edit RSS URL",
+  "@podcast_bulk_import_edit_url": {
+    "description": "Bulk import edit URL dialog title"
+  },
+
+  "podcast_bulk_import_save_revalidate": "Save & Re-validate",
+  "@podcast_bulk_import_save_revalidate": {
+    "description": "Bulk import save and re-validate button text"
+  },
+
+  "podcast_bulk_import_no_urls_file": "No URLs found in file",
+  "@podcast_bulk_import_no_urls_file": {
+    "description": "Bulk import message when no URLs found in file"
+  },
+
+  "podcast_bulk_import_no_valid_feeds": "No valid RSS feeds to import. Please remove invalid URLs or wait for validation to complete.",
+  "@podcast_bulk_import_no_valid_feeds": {
+    "description": "Bulk import message when no valid feeds to import"
+  },
+
+  "podcast_bulk_import_imported_count": "Successfully imported {count} RSS feeds",
+  "@podcast_bulk_import_imported_count": {
+    "description": "Bulk import success message with count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_import_failed": "Import failed: {error}",
+  "@podcast_bulk_import_failed": {
+    "description": "Bulk import failed message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_bulk_import_valid_count": "Valid ({count})",
+  "@podcast_bulk_import_valid_count": {
+    "description": "Bulk import valid count label",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_bulk_import_invalid_count": "Invalid ({count})",
+  "@podcast_bulk_import_invalid_count": {
+    "description": "Bulk import invalid count label",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "podcast_unknown_title": "Unknown Title",
+  "@podcast_unknown_title": {
+    "description": "Default title when podcast title is unknown"
+  },
+
+  "podcast_copy": "Copy",
+  "@podcast_copy": {
+    "description": "Copy button tooltip"
+  },
+
+  "podcast_edit_retry": "Edit & Retry",
+  "@podcast_edit_retry": {
+    "description": "Edit and retry button tooltip"
+  },
+
+  "podcast_remove": "Remove",
+  "@podcast_remove": {
+    "description": "Remove button tooltip"
+  },
+
+  "podcast_bulk_import_drag_drop": "Drag & Drop files here or",
+  "@podcast_bulk_import_drag_drop": {
+    "description": "Bulk import drag and drop instruction"
+  },
+
+  "podcast_bulk_import_select_file": "Select File",
+  "@podcast_bulk_import_select_file": {
+    "description": "Bulk import select file button text"
+  },
+
+  "podcast_rss_list": "RSS List",
+  "@podcast_rss_list": {
+    "description": "RSS list heading"
+  },
+
+  "podcast_import_all": "Import All",
+  "@podcast_import_all": {
+    "description": "Import all button text"
+  },
+
+  "podcast_no_items": "No items",
+  "@podcast_no_items": {
+    "description": "No items message"
+  },
+
+  "podcast_bulk_import_extract": "Extract",
+  "@podcast_bulk_import_extract": {
+    "description": "Bulk import extract button text"
+  },
+
+  "podcast_bulk_import_click_select": "Click to Select File",
+  "@podcast_bulk_import_click_select": {
+    "description": "Bulk import click to select file text"
+  },
+
+  "podcast_bulk_import_or_drag_drop": "or drag & drop here",
+  "@podcast_bulk_import_or_drag_drop": {
+    "description": "Bulk import or drag drop text"
+  },
+
+  "podcast_bulk_import_paste_hint": "Paste URLs or OPML content here...",
+  "@podcast_bulk_import_paste_hint": {
+    "description": "Bulk import paste text area hint"
+  },
+
+  "podcast_not_valid_rss": "Not a valid RSS feed",
+  "@podcast_not_valid_rss": {
+    "description": "Not a valid RSS feed error message"
+  },
+
+  "podcast_copied": "Copied: {text}",
+  "@podcast_copied": {
+    "description": "Copied to clipboard message",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_bulk_import_label": "Label",
+  "@podcast_bulk_import_label": {
+    "description": "Generic label text"
+  },
+
+  "podcast_bulk_import_hint_text": "URL",
+  "@podcast_bulk_import_hint_text": {
+    "description": "URL hint text in text field"
+  },
+
   "podcast_global_rss_settings_title": "Global RSS Settings",
   "@podcast_global_rss_settings_title": {
     "description": "Global RSS settings page title"

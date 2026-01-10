@@ -49,6 +49,106 @@ import asyncio
 
 logger = logging.getLogger(__name__)
 
+
+# === 任务统计辅助函数 ===
+
+async def get_task_statistics():
+    """
+    获取转录任务统计信息
+    Returns dict with counts by status
+    """
+    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+    from app.domains.podcast.models import TranscriptionTask
+    from sqlalchemy import func
+
+    # 创建独立的数据库引擎
+    worker_engine = create_async_engine(
+        settings.DATABASE_URL,
+        pool_pre_ping=True,
+        pool_size=2,
+        max_overflow=5,
+        connect_args={
+            "server_settings": {"application_name": "celery-stats"},
+            "timeout": settings.DATABASE_CONNECT_TIMEOUT
+        }
+    )
+
+    worker_session_factory = async_sessionmaker(
+        worker_engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
+
+    try:
+        async with worker_session_factory() as db:
+            # 统计各状态任务数量
+            stmt = select(
+                TranscriptionTask.status,
+                func.count(TranscriptionTask.id)
+            ).group_by(TranscriptionTask.status)
+
+            result = await db.execute(stmt)
+            stats = {status: count for status, count in result.all()}
+
+            # 获取最早和最晚的待处理任务时间
+            pending_stmt = select(
+                func.min(TranscriptionTask.created_at),
+                func.max(TranscriptionTask.created_at)
+            ).where(TranscriptionTask.status == 'pending')
+
+            pending_result = await db.execute(pending_stmt)
+            min_time, max_time = pending_result.one()
+
+            return {
+                'pending': stats.get('pending', 0),
+                'in_progress': stats.get('in_progress', 0),
+                'completed': stats.get('completed', 0),
+                'failed': stats.get('failed', 0),
+                'cancelled': stats.get('cancelled', 0),
+                'oldest_pending': min_time,
+                'newest_pending': max_time
+            }
+    finally:
+        await worker_engine.dispose()
+
+
+def log_task_statistics():
+    """
+    同步包装函数：获取并打印任务统计信息
+    在日志中显示当前任务队列状态
+    """
+    try:
+        stats = asyncio.run(get_task_statistics())
+
+        total_waiting = stats['pending'] + stats['in_progress']
+        total_processed = stats['completed'] + stats['failed'] + stats['cancelled']
+        total_all = total_waiting + total_processed
+
+        # 打印统计信息
+        logger.info("=" * 70)
+        logger.info("📊 [TASK STATS] 转录任务队列统计")
+        logger.info("-" * 70)
+        logger.info(f"  ⏳ 等待处理: {stats['pending']} 个 (Pending)")
+        logger.info(f"  🔄 正在处理: {stats['in_progress']} 个 (In Progress)")
+        logger.info(f"  ✅ 已完成: {stats['completed']} 个 (Completed)")
+        logger.info(f"  ❌ 失败: {stats['failed']} 个 (Failed)")
+        logger.info(f"  ⚠️  已取消: {stats['cancelled']} 个 (Cancelled)")
+        logger.info("-" * 70)
+        logger.info(f"  📦 总计等待: {total_waiting} | 已处理: {total_processed} | 总任务数: {total_all}")
+
+        if stats['oldest_pending']:
+            from datetime import datetime
+            now = datetime.utcnow()
+            wait_time = now - stats['oldest_pending']
+            wait_hours = wait_time.total_seconds() / 3600
+            logger.info(f"  ⏰ 最久待处理任务已等待: {wait_hours:.1f} 小时")
+        if stats['newest_pending']:
+            logger.info(f"  🕐 最新待处理任务创建于: {stats['newest_pending'].strftime('%H:%M:%S')}")
+        logger.info("=" * 70)
+
+    except Exception as e:
+        logger.warning(f"⚠️  [TASK STATS] 获取任务统计失败: {e}")
+
 # 创建Celery实例
 celery_app = Celery(
     "podcast_tasks",
@@ -189,6 +289,9 @@ def worker_ready_hook(sender=None, **kwargs):
         logger.error(f"API 配置验证失败: {e}")
     finally:
         logger.info("=" * 60)
+        # 显示任务队列统计
+        logger.info("📊 当前任务队列状态:")
+        log_task_statistics()
 
 
 @celery_app.task(bind=True, max_retries=3)
@@ -429,6 +532,8 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
     - 完成或失败时清理Redis状态
     """
     logger.info(f"🎬 [CELERY] 开始处理音频转录任务: task_id={task_id}, config_id={config_db_id}")
+    # 打印任务统计信息
+    log_task_statistics()
 
     async def _do_transcription():
         # 创建新的数据库引擎（避免fork进程后事件循环冲突）
@@ -517,6 +622,8 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
                         await state_manager.clear_task_state(task_id, episode_id)
 
                         logger.info(f"✅ [CELERY] Transcription task {task_id} completed successfully")
+                        # 打印任务统计信息
+                        log_task_statistics()
 
                     except Exception as e:
                         logger.error(f"❌ [CELERY] 转录任务执行出错 {task_id}: {e}")
@@ -575,6 +682,8 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
 
         # Max retries exceeded - mark as permanently failed
         logger.error(f"❌ [CELERY] Task {task_id} failed after {self.max_retries} retries")
+        # 打印任务统计信息
+        log_task_statistics()
 
         # Try to update Redis state one more time
         async def _mark_failed():
@@ -935,6 +1044,13 @@ def _simulate_transcription(title: str, description: str) -> str:
 
 # 配置定时任务
 celery_app.conf.beat_schedule = {
+    # 定期输出任务统计（每10分钟）
+    'log-task-statistics': {
+        'task': 'app.domains.podcast.tasks.log_periodic_task_statistics',
+        'schedule': 600.0,  # 10分钟
+        'options': {'queue': 'celery'}
+    },
+
     # Check for subscriptions to update every hour (on the hour)
     'refresh-podcast-feeds': {
         'task': 'app.domains.podcast.tasks.refresh_all_podcast_feeds',
@@ -970,3 +1086,19 @@ celery_app.conf.beat_schedule = {
         'options': {'queue': 'recommendation'}
     },
 }
+
+
+# === 定期统计任务 ===
+
+@celery_app.task
+def log_periodic_task_statistics():
+    """
+    定期输出任务统计信息
+    每10分钟执行一次，在日志中显示当前任务队列状态
+    """
+    logger.info("⏰ [PERIODIC] 开始输出任务统计...")
+    log_task_statistics()
+    return {
+        "status": "success",
+        "logged_at": datetime.utcnow().isoformat()
+    }

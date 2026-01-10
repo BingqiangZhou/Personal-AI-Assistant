@@ -3452,6 +3452,186 @@ abstract class AppLocalizations {
   /// **'Successfully imported {count} podcasts'**
   String podcast_bulk_import_success(int count);
 
+  /// Bulk import input tab label for text input
+  ///
+  /// In en, this message translates to:
+  /// **'Text'**
+  String get podcast_bulk_import_input_text;
+
+  /// Bulk import input tab label for file upload
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get podcast_bulk_import_input_file;
+
+  /// Bulk import message when no URLs found in text input
+  ///
+  /// In en, this message translates to:
+  /// **'No URLs found in text'**
+  String get podcast_bulk_import_no_urls_text;
+
+  /// Bulk import message showing total links found and valid feeds count
+  ///
+  /// In en, this message translates to:
+  /// **'Found {total} links, {valid} valid RSS feeds'**
+  String podcast_bulk_import_links_found(int total, int valid);
+
+  /// Bulk import message when all URLs already exist
+  ///
+  /// In en, this message translates to:
+  /// **'All URLs already exist in the list'**
+  String get podcast_bulk_import_urls_exist;
+
+  /// Bulk import edit URL dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Edit RSS URL'**
+  String get podcast_bulk_import_edit_url;
+
+  /// Bulk import save and re-validate button text
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Re-validate'**
+  String get podcast_bulk_import_save_revalidate;
+
+  /// Bulk import message when no URLs found in file
+  ///
+  /// In en, this message translates to:
+  /// **'No URLs found in file'**
+  String get podcast_bulk_import_no_urls_file;
+
+  /// Bulk import message when no valid feeds to import
+  ///
+  /// In en, this message translates to:
+  /// **'No valid RSS feeds to import. Please remove invalid URLs or wait for validation to complete.'**
+  String get podcast_bulk_import_no_valid_feeds;
+
+  /// Bulk import success message with count
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully imported {count} RSS feeds'**
+  String podcast_bulk_import_imported_count(int count);
+
+  /// Bulk import failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: {error}'**
+  String podcast_bulk_import_failed(String error);
+
+  /// Bulk import valid count label
+  ///
+  /// In en, this message translates to:
+  /// **'Valid ({count})'**
+  String podcast_bulk_import_valid_count(int count);
+
+  /// Bulk import invalid count label
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid ({count})'**
+  String podcast_bulk_import_invalid_count(int count);
+
+  /// Default title when podcast title is unknown
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Title'**
+  String get podcast_unknown_title;
+
+  /// Copy button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get podcast_copy;
+
+  /// Edit and retry button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Edit & Retry'**
+  String get podcast_edit_retry;
+
+  /// Remove button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get podcast_remove;
+
+  /// Bulk import drag and drop instruction
+  ///
+  /// In en, this message translates to:
+  /// **'Drag & Drop files here or'**
+  String get podcast_bulk_import_drag_drop;
+
+  /// Bulk import select file button text
+  ///
+  /// In en, this message translates to:
+  /// **'Select File'**
+  String get podcast_bulk_import_select_file;
+
+  /// RSS list heading
+  ///
+  /// In en, this message translates to:
+  /// **'RSS List'**
+  String get podcast_rss_list;
+
+  /// Import all button text
+  ///
+  /// In en, this message translates to:
+  /// **'Import All'**
+  String get podcast_import_all;
+
+  /// No items message
+  ///
+  /// In en, this message translates to:
+  /// **'No items'**
+  String get podcast_no_items;
+
+  /// Bulk import extract button text
+  ///
+  /// In en, this message translates to:
+  /// **'Extract'**
+  String get podcast_bulk_import_extract;
+
+  /// Bulk import click to select file text
+  ///
+  /// In en, this message translates to:
+  /// **'Click to Select File'**
+  String get podcast_bulk_import_click_select;
+
+  /// Bulk import or drag drop text
+  ///
+  /// In en, this message translates to:
+  /// **'or drag & drop here'**
+  String get podcast_bulk_import_or_drag_drop;
+
+  /// Bulk import paste text area hint
+  ///
+  /// In en, this message translates to:
+  /// **'Paste URLs or OPML content here...'**
+  String get podcast_bulk_import_paste_hint;
+
+  /// Not a valid RSS feed error message
+  ///
+  /// In en, this message translates to:
+  /// **'Not a valid RSS feed'**
+  String get podcast_not_valid_rss;
+
+  /// Copied to clipboard message
+  ///
+  /// In en, this message translates to:
+  /// **'Copied: {text}'**
+  String podcast_copied(String text);
+
+  /// Generic label text
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get podcast_bulk_import_label;
+
+  /// URL hint text in text field
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get podcast_bulk_import_hint_text;
+
   /// Global RSS settings page title
   ///
   /// In en, this message translates to:
