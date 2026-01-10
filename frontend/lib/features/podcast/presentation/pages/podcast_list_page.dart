@@ -376,6 +376,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     int total,
     AppLocalizations l10n,
   ) {
+    final theme = Theme.of(context);
     return ListView.builder(
       controller: _scrollController,
       itemCount: subscriptions.length + 1, // +1 for loading indicator
@@ -387,56 +388,107 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         final subscription = subscriptions[index];
         final isSelected = bulkSelectionState.isSelected(subscription.id);
 
-        return ListTile(
-          leading: Stack(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                  image: subscription.imageUrl != null
-                      ? DecorationImage(
-                          image: NetworkImage(subscription.imageUrl!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: subscription.imageUrl == null
-                    ? Icon(Icons.podcasts,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer)
-                    : null,
-              ),
-              if (bulkSelectionState.isSelectionMode)
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  child: Checkbox(
-                    value: isSelected,
-                    onChanged: (_) {
-                      ref
-                          .read(bulkSelectionProvider.notifier)
-                          .toggleSelection(subscription.id);
-                    },
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: bulkSelectionState.isSelectionMode
+                ? () => ref
+                    .read(bulkSelectionProvider.notifier)
+                    .toggleSelection(subscription.id)
+                : () {
+                    context.push('/podcast/episodes/${subscription.id}',
+                        extra: subscription);
+                  },
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                children: [
+                  // Podcast artwork (56x56)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: SizedBox(
+                      width: 56,
+                      height: 56,
+                      child: subscription.imageUrl != null
+                          ? Image.network(
+                              subscription.imageUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  color: theme.colorScheme.primaryContainer,
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.podcasts,
+                                      size: 24,
+                                      color: theme.colorScheme.onPrimaryContainer,
+                                    ),
+                                  ),
+                                );
+                              },
+                            )
+                          : Container(
+                              color: theme.colorScheme.primaryContainer,
+                              child: Center(
+                                child: Icon(
+                                  Icons.podcasts,
+                                  size: 24,
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
+                    ),
                   ),
-                ),
-            ],
+
+                  const SizedBox(width: 10),
+
+                  // Podcast info - title and 2-line description
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
+                        Text(
+                          subscription.title,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                        const SizedBox(height: 2),
+
+                        // Description (2 lines with ellipsis)
+                        Text(
+                          subscription.description ?? l10n.podcast_description,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Checkbox in selection mode
+                  if (bulkSelectionState.isSelectionMode)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: Checkbox(
+                        value: isSelected,
+                        onChanged: (_) {
+                          ref
+                              .read(bulkSelectionProvider.notifier)
+                              .toggleSelection(subscription.id);
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-          title: Text(subscription.title),
-          subtitle: Text(
-            subscription.description ?? l10n.podcast_description,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          onTap: bulkSelectionState.isSelectionMode
-              ? () => ref
-                  .read(bulkSelectionProvider.notifier)
-                  .toggleSelection(subscription.id)
-              : () {
-                  context.push('/podcast/episodes/${subscription.id}',
-                      extra: subscription);
-                },
         );
       },
     );
@@ -468,6 +520,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
         final subscription = subscriptions[index];
         final isSelected = bulkSelectionState.isSelected(subscription.id);
+        final theme = Theme.of(context);
 
         return Stack(
           children: [
@@ -485,102 +538,64 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AspectRatio(
-                      aspectRatio: 16 / 9,
-                      child: Container(
-                        color: Theme.of(context).colorScheme.primaryContainer,
+                    // Podcast cover image
+                    Expanded(
+                      child: SizedBox(
+                        width: double.infinity,
                         child: subscription.imageUrl != null
                             ? Image.network(
                                 subscription.imageUrl!,
                                 fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Icon(
-                                  Icons.podcasts,
-                                  size: 48,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer,
-                                ),
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: theme.colorScheme.primaryContainer,
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.podcasts,
+                                        size: 48,
+                                        color: theme.colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                  );
+                                },
                               )
-                            : Icon(
-                                Icons.podcasts,
-                                size: 48,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
+                            : Container(
+                                color: theme.colorScheme.primaryContainer,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.podcasts,
+                                    size: 48,
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
                               ),
                       ),
                     ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              subscription.title,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Expanded(
-                              child: Text(
-                                subscription.description ??
-                                    l10n.podcast_description,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                    ),
-                                overflow: TextOverflow.fade,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 4,
-                              alignment: WrapAlignment.spaceBetween,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                Text(
-                                  '${subscription.episodeCount} ${l10n.podcast_episodes}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant
-                                            .withValues(alpha: 0.7),
-                                        fontWeight: FontWeight.w500,
-                                      ),
+
+                    // Podcast info
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            subscription.title,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                if (subscription.lastFetchedAt != null)
-                                  Text(
-                                    '${l10n.podcast_updated} ${_formatDate(subscription.lastFetchedAt!)}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant
-                                              .withValues(alpha: 0.7),
-                                        ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            subscription.description ?? l10n.podcast_description,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -767,11 +782,5 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         ],
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    // 确保使用本地时间，而不是 UTC 时间
-    final localDate = date.isUtc ? date.toLocal() : date;
-    return '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
   }
 }

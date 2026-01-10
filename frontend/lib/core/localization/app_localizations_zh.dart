@@ -1794,4 +1794,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String theme_mode_changed(String mode) {
     return '主题模式已更改为 $mode';
   }
+
+  @override
+  String get podcast_transcript_search_hint => '搜索转录内容...';
+
+  @override
+  String get podcast_transcript_no_match => '未找到匹配内容';
+
+  @override
+  String podcast_transcript_match(int index) {
+    return '第 $index 个匹配';
+  }
 }

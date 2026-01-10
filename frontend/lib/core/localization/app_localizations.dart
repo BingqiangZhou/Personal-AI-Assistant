@@ -3553,6 +3553,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Theme mode changed to {mode}'**
   String theme_mode_changed(String mode);
+
+  /// Search hint text for transcript content
+  ///
+  /// In en, this message translates to:
+  /// **'Search transcript content...'**
+  String get podcast_transcript_search_hint;
+
+  /// No matching content found message
+  ///
+  /// In en, this message translates to:
+  /// **'No matching content found'**
+  String get podcast_transcript_no_match;
+
+  /// Match number label for search results
+  ///
+  /// In en, this message translates to:
+  /// **'Match {index}'**
+  String podcast_transcript_match(int index);
 }
 
 class _AppLocalizationsDelegate

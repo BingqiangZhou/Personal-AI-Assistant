@@ -99,6 +99,7 @@ class _TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidge
   }
 
   Widget _buildSearchBar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -116,7 +117,7 @@ class _TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidge
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: '搜索转录内容...',
+                hintText: l10n.podcast_transcript_search_hint,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _isSearching
                     ? IconButton(
@@ -224,6 +225,7 @@ class _TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidge
   }
 
   Widget _buildSearchResults(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     if (_searchResults.isEmpty) {
       return Center(
         child: Column(
@@ -236,7 +238,7 @@ class _TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidge
             ),
             const SizedBox(height: 16),
             Text(
-              '未找到匹配内容',
+              l10n.podcast_transcript_no_match,
               style: TextStyle(
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -261,6 +263,7 @@ class _TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidge
   }
 
   Widget _buildSearchResultItem(BuildContext context, String result, int index) {
+    final l10n = AppLocalizations.of(context)!;
     final query = _searchController.text;
     final highlightedText = _highlightSearchText(result, query);
 
@@ -279,7 +282,7 @@ class _TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidge
         children: [
           // Result number
           Text(
-            '匹配 ${index + 1}',
+            l10n.podcast_transcript_match(index + 1),
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,

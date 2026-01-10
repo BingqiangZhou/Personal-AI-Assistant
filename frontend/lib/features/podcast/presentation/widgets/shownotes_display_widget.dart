@@ -51,136 +51,122 @@ class ShownotesDisplayWidget extends ConsumerWidget {
     final sanitizedHtml = HtmlSanitizer.sanitize(shownotes);
     debugPrint('📝 [Shownotes] Sanitized HTML length: ${sanitizedHtml.length}');
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Responsive padding based on screen width
-        final isDesktop = constraints.maxWidth > 840;
-        final isTablet = constraints.maxWidth > 600;
-
-        final horizontalPadding = isDesktop ? 32.0 : (isTablet ? 24.0 : 16.0);
-        final maxContentWidth = isDesktop ? 800.0 : double.infinity;
-
-        return Container(
-          padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 16),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Shownotes header
-                Text(
-                  'Shownotes',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                // HTML content with responsive constraints and text selection support
-                Container(
-                  constraints: BoxConstraints(maxWidth: maxContentWidth),
-                  child: SelectionArea(
-                    child: HtmlWidget(
-                      sanitizedHtml,
-                      // Material 3 styling
-                      textStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontSize: 15,
-                            height: 1.6,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                      // Handle link taps
-                      onTapUrl: (url) async {
-                        try {
-                          final uri = Uri.parse(url);
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(
-                              uri,
-                              mode: LaunchMode.externalApplication,
-                            );
-                            return true;
-                          }
-                          return false;
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Error opening link: ${e.toString()}'),
-                                backgroundColor: Theme.of(context).colorScheme.error,
-                              ),
-                            );
-                          }
-                          return false;
-                        }
-                      },
-                      // Handle errors gracefully
-                      onErrorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            children: [
-                              Icon(
-                                Icons.error_outline,
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Failed to render shownotes',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      // Custom styling for HTML elements
-                      customStylesBuilder: (element) {
-                        // Add custom styling for specific elements
-                        final styles = <String, String>{};
-
-                        // Blockquote styling
-                        if (element.localName == 'blockquote') {
-                          styles['border-left'] = '4px solid ${Theme.of(context).colorScheme.primary.toHex()}';
-                          styles['padding-left'] = '16px';
-                          styles['margin-left'] = '0';
-                          styles['color'] = Theme.of(context).colorScheme.onSurfaceVariant.toHex();
-                        }
-
-                        // Code block styling
-                        if (element.localName == 'pre' || element.localName == 'code') {
-                          styles['background-color'] = Theme.of(context).colorScheme.surfaceContainerHighest.toHex();
-                          styles['padding'] = '8px';
-                          styles['border-radius'] = '4px';
-                          styles['font-family'] = 'monospace';
-                        }
-
-                        // Heading styling
-                        if (element.localName?.startsWith('h') == true) {
-                          styles['color'] = Theme.of(context).colorScheme.onSurface.toHex();
-                          styles['font-weight'] = 'bold';
-                        }
-
-                        // Link styling
-                        if (element.localName == 'a') {
-                          styles['color'] = Theme.of(context).colorScheme.primary.toHex();
-                          styles['text-decoration'] = 'underline';
-                        }
-
-                        return styles.isNotEmpty ? styles : null;
-                      },
-                      // Enable selection for text
-                      enableCaching: true,
-                      // Build mode for better performance
-                      renderMode: RenderMode.column,
-                    ),
-                  ),
-                ),
-              ],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Shownotes header
+            Text(
+              'Shownotes',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
-          ),
-        );
-      },
+            const SizedBox(height: 12),
+
+            // HTML content with text selection support
+            SelectionArea(
+              child: HtmlWidget(
+                sanitizedHtml,
+                // Material 3 styling
+                textStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontSize: 15,
+                  height: 1.6,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                // Handle link taps
+                onTapUrl: (url) async {
+                  try {
+                    final uri = Uri.parse(url);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
+                      return true;
+                    }
+                    return false;
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error opening link: ${e.toString()}'),
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                        ),
+                      );
+                    }
+                    return false;
+                  }
+                },
+                // Handle errors gracefully
+                onErrorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Failed to render shownotes',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                // Custom styling for HTML elements
+                customStylesBuilder: (element) {
+                  // Add custom styling for specific elements
+                  final styles = <String, String>{};
+
+                  // Blockquote styling
+                  if (element.localName == 'blockquote') {
+                    styles['border-left'] = '4px solid ${_colorToHex(Theme.of(context).colorScheme.primary)}';
+                    styles['padding-left'] = '16px';
+                    styles['margin-left'] = '0';
+                    styles['color'] = _colorToHex(Theme.of(context).colorScheme.onSurfaceVariant);
+                  }
+
+                  // Code block styling
+                  if (element.localName == 'pre' || element.localName == 'code') {
+                    styles['background-color'] = _colorToHex(Theme.of(context).colorScheme.surfaceContainerHighest);
+                    styles['padding'] = '8px';
+                    styles['border-radius'] = '4px';
+                    styles['font-family'] = 'monospace';
+                  }
+
+                  // Heading styling
+                  if (element.localName?.startsWith('h') == true) {
+                    styles['color'] = _colorToHex(Theme.of(context).colorScheme.onSurface);
+                    styles['font-weight'] = 'bold';
+                  }
+
+                  // Link styling
+                  if (element.localName == 'a') {
+                    styles['color'] = _colorToHex(Theme.of(context).colorScheme.primary);
+                    styles['text-decoration'] = 'underline';
+                  }
+
+                  return styles.isNotEmpty ? styles : null;
+                },
+                // Enable selection for text
+                enableCaching: true,
+                // Build mode for better performance
+                renderMode: RenderMode.column,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -240,12 +226,9 @@ class ShownotesDisplayWidget extends ConsumerWidget {
       ),
     );
   }
-}
 
-/// Extension method to convert Color to hex string
-extension ColorExtension on Color {
-  String toHex() {
-    return '#${toARGB32().toRadixString(16).substring(2)}';
+  // Helper method to convert Color to hex string
+  String _colorToHex(Color color) {
+    return '#${color.toARGB32().toRadixString(16).substring(2)}';
   }
 }
-

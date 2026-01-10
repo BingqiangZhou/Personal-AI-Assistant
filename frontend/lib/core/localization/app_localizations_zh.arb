@@ -3015,5 +3015,25 @@
         "type": "String"
       }
     }
+  },
+
+  "podcast_transcript_search_hint": "搜索转录内容...",
+  "@podcast_transcript_search_hint": {
+    "description": "转录内容搜索提示文本"
+  },
+
+  "podcast_transcript_no_match": "未找到匹配内容",
+  "@podcast_transcript_no_match": {
+    "description": "未找到匹配内容消息"
+  },
+
+  "podcast_transcript_match": "第 {index} 个匹配",
+  "@podcast_transcript_match": {
+    "description": "搜索结果匹配编号标签",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
   }
 }

@@ -2970,5 +2970,25 @@
         "type": "String"
       }
     }
+  },
+
+  "podcast_transcript_search_hint": "Search transcript content...",
+  "@podcast_transcript_search_hint": {
+    "description": "Search hint text for transcript content"
+  },
+
+  "podcast_transcript_no_match": "No matching content found",
+  "@podcast_transcript_no_match": {
+    "description": "No matching content found message"
+  },
+
+  "podcast_transcript_match": "Match {index}",
+  "@podcast_transcript_match": {
+    "description": "Match number label for search results",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
   }
 }

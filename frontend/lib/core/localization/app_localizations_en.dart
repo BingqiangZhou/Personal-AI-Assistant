@@ -1842,4 +1842,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String theme_mode_changed(String mode) {
     return 'Theme mode changed to $mode';
   }
+
+  @override
+  String get podcast_transcript_search_hint => 'Search transcript content...';
+
+  @override
+  String get podcast_transcript_no_match => 'No matching content found';
+
+  @override
+  String podcast_transcript_match(int index) {
+    return 'Match $index';
+  }
 }

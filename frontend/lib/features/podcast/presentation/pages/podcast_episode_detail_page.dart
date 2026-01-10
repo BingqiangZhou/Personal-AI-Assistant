@@ -40,6 +40,11 @@ class _PodcastEpisodeDetailPageState
   double _scrollOffset = 0.0;
   static const double _headerScrollThreshold = 50.0; // Header starts fading after 50px scroll
 
+  // Scroll to top button
+  final Map<int, double> _tabScrollPositions = {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}; // Track scroll position for each tab
+  final Map<int, double> _tabScrollPercentages = {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}; // Track scroll percentage for each tab
+  final Map<int, ScrollController> _tabScrollControllers = {}; // ScrollController for each tab
+
   @override
   void initState() {
     super.initState();
@@ -57,6 +62,10 @@ class _PodcastEpisodeDetailPageState
     _scrollController.dispose();
     _pageController.dispose();
     _summaryPollingTimer?.cancel();
+    // Clean up tab scroll controllers
+    for (final controller in _tabScrollControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -79,6 +88,11 @@ class _PodcastEpisodeDetailPageState
     if (_scrollOffset <= 0) return maxHeaderHeight;
     if (_scrollOffset >= _headerScrollThreshold) return 0.0;
     return maxHeaderHeight * (1 - _scrollOffset / _headerScrollThreshold);
+  }
+
+  // Check if header should be in expanded state (横跨整个顶部)
+  bool get _isHeaderExpanded {
+    return _scrollOffset < _headerScrollThreshold;
   }
 
   Future<void> _loadAndPlayEpisode() async {
@@ -240,43 +254,103 @@ class _PodcastEpisodeDetailPageState
         final isWideScreen = layoutConstraints.maxWidth > 800;
 
         if (isWideScreen) {
-          // 宽屏：左侧边栏布局
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          // 宽屏：带可滚动收缩 Header 的布局
+          return Stack(
             children: [
-              // 左侧边栏（包含标签按钮）
-              SizedBox(
-                width: 200,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 顶部元数据区（带淡出动画和裁剪）
-                      ClipRect(
-                        child: Align(
-                          alignment: Alignment.topCenter,
-                          heightFactor: _headerClipHeight / 100.0, // 归一化高度因子
-                          child: AnimatedOpacity(
-                            opacity: _headerOpacity,
-                            duration: const Duration(milliseconds: 100),
-                            curve: Curves.easeInOut,
-                            child: _buildHeader(episode),
+              // 主内容行：左侧边栏 + 右侧内容区
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 左侧边栏（包含标签按钮，顶部预留 Header 空间）
+                  SizedBox(
+                    width: 200,
+                    child: Column(
+                      children: [
+                        // 预留空间：根据 Header 状态动态调整
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeInOut,
+                          height: _isHeaderExpanded ? 90 : 100,
+                        ),
+                        // 左侧标签栏（可滚动）
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: _buildLeftSidebar(),
                           ),
                         ),
-                      ),
-                      // 左侧标签栏
-                      _buildLeftSidebar(),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                  // 右侧内容区
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        // 内容区
+                        NotificationListener<ScrollNotification>(
+                          onNotification: (scrollNotification) {
+                            // 监听所有页面的滚动更新以实现 header 收起效果和显示浮动按钮
+                            if (scrollNotification is ScrollUpdateNotification) {
+                              final metrics = scrollNotification.metrics;
+                              // 监听所有标签页的垂直滚动
+                              if (metrics.axis == Axis.vertical) {
+                                final scrollPosition = metrics.pixels;
+                                final maxScroll = metrics.maxScrollExtent;
+                                final scrollPercent = maxScroll > 0 ? (scrollPosition / maxScroll) : 0.0;
+
+                                setState(() {
+                                  _scrollOffset = scrollPosition;
+                                  _tabScrollPositions[_selectedTabIndex] = scrollPosition;
+                                  _tabScrollPercentages[_selectedTabIndex] = scrollPercent;
+                                });
+                              }
+                            }
+                            return false;
+                          },
+                          child: Container(
+                            padding: EdgeInsets.only(
+                              top: _isHeaderExpanded ? 90 : 16,
+                              right: 16,
+                              bottom: 16,
+                            ),
+                            child: _buildTabContent(episode),
+                          ),
+                        ),
+                        // 浮动向上按钮
+                        if (_shouldShowScrollToTopButton())
+                          Positioned(
+                            right: 16,
+                            bottom: 16,
+                            child: _buildScrollToTopButton(),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              // 右侧内容区（可滚动）
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  child: _buildTabContent(episode),
-                ),
+              // 可移动的 Header (使用 AnimatedPositioned 实现平滑移动)
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                top: 0,
+                left: 0,
+                right: _isHeaderExpanded ? 0 : null,
+                width: _isHeaderExpanded ? null : 200,
+                child: _buildAnimatedHeader(episode),
               ),
+              // 浮动的返回按钮（收缩状态时显示在右上方）
+              if (!_isHeaderExpanded)
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: _buildBackButton(),
+                ),
+              // 浮动的播放按钮（收缩状态时显示）
+              if (!_isHeaderExpanded)
+                Positioned(
+                  top: 16,
+                  right: 80,
+                  child: _buildPlayButton(episode, AppLocalizations.of(context)!),
+                ),
             ],
           );
         } else {
@@ -315,46 +389,64 @@ class _PodcastEpisodeDetailPageState
 
               // C. 中间主体内容区 (Body) - 使用 PageView 支持滑动切换
               Expanded(
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (scrollNotification) {
-                    // 监听滚动更新以实现 header 收起效果
-                    if (scrollNotification is ScrollUpdateNotification) {
-                      final metrics = scrollNotification.metrics;
-                      // 获取当前页面的滚动位置
-                      if (metrics.axis == Axis.vertical) {
-                        setState(() {
-                          _scrollOffset = metrics.pixels;
-                        });
-                      }
-                    }
-                    return false;
-                  },
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _selectedTabIndex = index;
-                        // 切换标签时的轮询控制
-                        if (index == 2) {
-                          _startSummaryPolling();
-                        } else {
-                          _stopSummaryPolling();
+                child: Stack(
+                  children: [
+                    // 内容区
+                    NotificationListener<ScrollNotification>(
+                      onNotification: (scrollNotification) {
+                        // 监听滚动更新以实现 header 收起效果和显示浮动按钮
+                        if (scrollNotification is ScrollUpdateNotification) {
+                          final metrics = scrollNotification.metrics;
+                          // 获取当前页面的滚动位置
+                          if (metrics.axis == Axis.vertical) {
+                            final scrollPosition = metrics.pixels;
+                            final maxScroll = metrics.maxScrollExtent;
+                            final scrollPercent = maxScroll > 0 ? (scrollPosition / maxScroll) : 0.0;
+
+                            setState(() {
+                              _scrollOffset = scrollPosition;
+                              _tabScrollPositions[_selectedTabIndex] = scrollPosition;
+                              _tabScrollPercentages[_selectedTabIndex] = scrollPercent;
+                            });
+                          }
                         }
-                        // 重置滚动偏移
-                        _scrollOffset = 0;
-                      });
-                    },
-                    children: [
-                      // 0 = Shownotes
-                      _buildSingleTabContent(episode, 0),
-                      // 1 = Transcript
-                      _buildSingleTabContent(episode, 1),
-                      // 2 = AI Summary
-                      _buildSingleTabContent(episode, 2),
-                      // 3 = Conversation
-                      _buildSingleTabContent(episode, 3),
-                    ],
-                  ),
+                        return false;
+                      },
+                      child: PageView(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _selectedTabIndex = index;
+                            // 切换标签时的轮询控制
+                            if (index == 2) {
+                              _startSummaryPolling();
+                            } else {
+                              _stopSummaryPolling();
+                            }
+                            // 重置滚动偏移
+                            _scrollOffset = 0;
+                          });
+                        },
+                        children: [
+                          // 0 = Shownotes
+                          _buildSingleTabContent(episode, 0),
+                          // 1 = Transcript
+                          _buildSingleTabContent(episode, 1),
+                          // 2 = AI Summary
+                          _buildSingleTabContent(episode, 2),
+                          // 3 = Conversation
+                          _buildSingleTabContent(episode, 3),
+                        ],
+                      ),
+                    ),
+                    // 浮动向上按钮
+                    if (_shouldShowScrollToTopButton())
+                      Positioned(
+                        right: 0,
+                        bottom: 0,
+                        child: _buildScrollToTopButton(),
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -630,6 +722,329 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
+  // 可动画的 Header（桌面端）- 根据滚动位置改变布局
+  Widget _buildAnimatedHeader(dynamic episode) {
+    final l10n = AppLocalizations.of(context)!;
+
+    if (_isHeaderExpanded) {
+      // 展开状态：横跨整个顶部，完整信息
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(
+            bottom: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 左侧：Logo
+            PodcastImageWidget(
+              imageUrl: episode.imageUrl,
+              fallbackImageUrl: episode.subscriptionImageUrl,
+              width: 60,
+              height: 60,
+              iconSize: 32,
+            ),
+            const SizedBox(width: 16),
+            // 中间：标题和信息
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 标题行
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          episode.title ?? 'Unknown Episode',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // 播放按钮
+                      _buildPlayButton(episode, l10n),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // 元数据行
+                  Wrap(
+                    spacing: 16,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      _buildDateChip(episode),
+                      if (episode.audioDuration != null) _buildDurationChip(episode),
+                      if (episode.itemLink != null && episode.itemLink!.isNotEmpty)
+                        _buildSourceLinkChip(episode, l10n),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            // 返回按钮
+            _buildBackButton(),
+          ],
+        ),
+      );
+    } else {
+      // 收缩状态：紧凑布局，显示在左侧边栏
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(
+            right: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+              width: 1,
+            ),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Logo（小尺寸）
+            Center(
+              child: PodcastImageWidget(
+                imageUrl: episode.imageUrl,
+                fallbackImageUrl: episode.subscriptionImageUrl,
+                width: 40,
+                height: 40,
+                iconSize: 24,
+              ),
+            ),
+            const SizedBox(height: 6),
+            // 标题（截断）
+            Text(
+              episode.title ?? 'Unknown',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  // 播放按钮组件
+  Widget _buildPlayButton(dynamic episode, AppLocalizations l10n) {
+    return InkWell(
+      onTap: () async {
+        try {
+          final episodeDetailAsync = await ref.read(
+            episodeDetailProvider(widget.episodeId).future,
+          );
+          if (episodeDetailAsync != null) {
+            final episodeModel = PodcastEpisodeModel(
+              id: episodeDetailAsync.id,
+              subscriptionId: episodeDetailAsync.subscriptionId,
+              subscriptionImageUrl: episodeDetailAsync.subscriptionImageUrl,
+              title: episodeDetailAsync.title,
+              description: episodeDetailAsync.description,
+              audioUrl: episodeDetailAsync.audioUrl,
+              audioDuration: episodeDetailAsync.audioDuration,
+              audioFileSize: episodeDetailAsync.audioFileSize,
+              publishedAt: episodeDetailAsync.publishedAt,
+              imageUrl: episodeDetailAsync.imageUrl,
+              itemLink: episodeDetailAsync.itemLink,
+              transcriptUrl: episodeDetailAsync.transcriptUrl,
+              transcriptContent: episodeDetailAsync.transcriptContent,
+              aiSummary: episodeDetailAsync.aiSummary,
+              summaryVersion: episodeDetailAsync.summaryVersion,
+              aiConfidenceScore: episodeDetailAsync.aiConfidenceScore,
+              playCount: episodeDetailAsync.playCount,
+              lastPlayedAt: episodeDetailAsync.lastPlayedAt,
+              season: episodeDetailAsync.season,
+              episodeNumber: episodeDetailAsync.episodeNumber,
+              explicit: episodeDetailAsync.explicit,
+              status: episodeDetailAsync.status,
+              metadata: episodeDetailAsync.metadata,
+              playbackPosition: episodeDetailAsync.playbackPosition,
+              isPlaying: episodeDetailAsync.isPlaying,
+              playbackRate: episodeDetailAsync.playbackRate,
+              isPlayed: episodeDetailAsync.isPlayed ?? false,
+              createdAt: episodeDetailAsync.createdAt,
+              updatedAt: episodeDetailAsync.updatedAt,
+            );
+            await ref.read(audioPlayerProvider.notifier).playEpisode(episodeModel);
+          }
+        } catch (error) {
+          debugPrint('❌ Failed to play episode: $error');
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.play_arrow,
+              size: 18,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              l10n.podcast_play_episode_full,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 返回按钮组件
+  Widget _buildBackButton() {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: () => context.pop(),
+        borderRadius: BorderRadius.circular(8),
+        child: Center(
+          child: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).colorScheme.primary,
+            size: 18,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 日期芯片组件
+  Widget _buildDateChip(dynamic episode) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.calendar_today_outlined,
+          size: 14,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          _formatDate(episode.publishedAt),
+          style: TextStyle(
+            fontSize: 13,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 时长芯片组件
+  Widget _buildDurationChip(dynamic episode) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final audioPlayerState = ref.watch(audioPlayerProvider);
+        final displayDuration = (audioPlayerState.currentEpisode?.id == episode.id &&
+            audioPlayerState.duration > 0)
+            ? audioPlayerState.duration
+            : (episode.audioDuration! * 1000);
+        final duration = Duration(milliseconds: displayDuration);
+        final hours = duration.inHours;
+        final minutes = duration.inMinutes.remainder(60);
+        final seconds = duration.inSeconds.remainder(60);
+
+        final formattedDuration = hours > 0
+            ? '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}'
+            : '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.schedule_outlined,
+              size: 14,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              formattedDuration,
+              style: TextStyle(
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // 源链接芯片组件
+  Widget _buildSourceLinkChip(dynamic episode, AppLocalizations l10n) {
+    return InkWell(
+      onTap: () async {
+        final Uri linkUri = Uri.parse(episode.itemLink!);
+        if (await canLaunchUrl(linkUri)) {
+          await launchUrl(
+            linkUri,
+            mode: LaunchMode.externalApplication,
+          );
+        }
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.link,
+            size: 14,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            l10n.podcast_source,
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // 顶部按钮行（移动端）
   Widget _buildTopButtonBar() {
     return Container(
@@ -656,7 +1071,6 @@ class _PodcastEpisodeDetailPageState
                 );
               }
             }),
-            const SizedBox(width: 8),
             // Transcript Tab
             _buildTabButton(AppLocalizations.of(context)!.podcast_tab_transcript, _selectedTabIndex == 1, () {
               if (_selectedTabIndex != 1) {
@@ -667,7 +1081,6 @@ class _PodcastEpisodeDetailPageState
                 );
               }
             }),
-            const SizedBox(width: 8),
             // AI Summary Tab
             _buildTabButton(AppLocalizations.of(context)!.podcast_filter_with_summary, _selectedTabIndex == 2, () {
               if (_selectedTabIndex != 2) {
@@ -678,7 +1091,6 @@ class _PodcastEpisodeDetailPageState
                 );
               }
             }),
-            const SizedBox(width: 8),
             // Conversation Tab
             _buildTabButton(AppLocalizations.of(context)!.podcast_tab_chat, _selectedTabIndex == 3, () {
               if (_selectedTabIndex != 3) {
@@ -1335,6 +1747,90 @@ class _PodcastEpisodeDetailPageState
       case TargetPlatform.linux:
       case TargetPlatform.fuchsia:
         return false;
+    }
+  }
+
+  // 判断是否应该显示浮动向上按钮（滚动超过5%）
+  bool _shouldShowScrollToTopButton() {
+    final scrollPercent = _tabScrollPercentages[_selectedTabIndex] ?? 0.0;
+    return scrollPercent > 0.05;
+  }
+
+  // 构建浮动向上按钮
+  Widget _buildScrollToTopButton() {
+    final screenSize = MediaQuery.of(context).size;
+    final isMobile = screenSize.width < 600;
+
+    // 计算距离右下角的位置
+    final rightMargin = isMobile ? 32.0 : (screenSize.width * 0.1);
+    final bottomMargin = isMobile ? (screenSize.height * 0.1) : 32.0;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        right: rightMargin,
+        bottom: bottomMargin,
+      ),
+      child: Material(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(16),
+        elevation: 2,
+        child: InkWell(
+          onTap: _scrollToTop,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              Icons.arrow_upward,
+              color: Theme.of(context).colorScheme.onSurface,
+              size: 18,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 滚动回顶部
+  void _scrollToTop() {
+    // Reset scroll offset to expand header
+    setState(() {
+      _scrollOffset = 0.0;
+      _tabScrollPositions[_selectedTabIndex] = 0.0;
+      _tabScrollPercentages[_selectedTabIndex] = 0.0;
+    });
+
+    // Try to scroll to top using the current tab's scroll controller
+    final scrollController = _tabScrollControllers[_selectedTabIndex];
+    if (scrollController != null && scrollController.hasClients) {
+      scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      return;
+    }
+
+    // If no external scroll controller, try to use the PrimaryScrollController
+    // This will work for ListView and SingleChildScrollView that use the primary controller
+    try {
+      final primaryController = PrimaryScrollController.of(context);
+      if (primaryController.hasClients) {
+        primaryController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    } catch (e) {
+      debugPrint('📍 Failed to scroll to top: $e');
     }
   }
 }
