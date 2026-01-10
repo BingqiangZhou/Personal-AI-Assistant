@@ -112,7 +112,7 @@ class Settings(BaseSettings):
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
 
     # Podcast Processing Limits
-    MAX_PODCAST_SUBSCRIPTIONS: int = 50  # Per user
+    MAX_PODCAST_SUBSCRIPTIONS: int = 999999  # Per user (unlimited)
     MAX_PODCAST_EPISODE_DOWNLOAD_SIZE: int = 500 * 1024 * 1024  # 500MB
     RSS_POLL_INTERVAL_MINUTES: int = 60  # Default polling interval
 
