@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}系统监控{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8">
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-2xl font-semibold text-gray-900">系统监控面板</h1>
+            <p class="mt-2 text-sm text-gray-700">
+                实时监控系统资源和运行状态
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+            <button onclick="location.reload()"
+                    class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                刷新数据
+            </button>
+        </div>
+    </div>
+
+    <!-- System Resources -->
+    <div class="mt-8">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">系统资源</h2>
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <!-- CPU Usage -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">CPU使用率</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold {% if cpu_percent >= 80 %}text-red-600{% elif cpu_percent >= 60 %}text-yellow-600{% else %}text-gray-900{% endif %}">
+                                        {{ cpu_percent }}%
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="relative pt-1">
+                            <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
+                                <div style="width:{{ cpu_percent }}%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center {% if cpu_percent >= 80 %}bg-red-500{% elif cpu_percent >= 60 %}bg-yellow-500{% else %}bg-green-500{% endif %}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memory Usage -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">内存使用率</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold {% if memory_percent >= 80 %}text-red-600{% elif memory_percent >= 60 %}text-yellow-600{% else %}text-gray-900{% endif %}">
+                                        {{ memory_percent }}%
+                                    </div>
+                                    <div class="ml-2 text-sm text-gray-500">
+                                        {{ "%.1f"|format(memory_used_gb) }} / {{ "%.1f"|format(memory_total_gb) }} GB
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="relative pt-1">
+                            <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
+                                <div style="width:{{ memory_percent }}%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center {% if memory_percent >= 80 %}bg-red-500{% elif memory_percent >= 60 %}bg-yellow-500{% else %}bg-blue-500{% endif %}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disk Usage -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">磁盘使用率</dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold {% if disk_percent >= 80 %}text-red-600{% elif disk_percent >= 60 %}text-yellow-600{% else %}text-gray-900{% endif %}">
+                                        {{ disk_percent }}%
+                                    </div>
+                                    <div class="ml-2 text-sm text-gray-500">
+                                        {{ "%.1f"|format(disk_used_gb) }} / {{ "%.1f"|format(disk_total_gb) }} GB
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="relative pt-1">
+                            <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
+                                <div style="width:{{ disk_percent }}%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center {% if disk_percent >= 80 %}bg-red-500{% elif disk_percent >= 60 %}bg-yellow-500{% else %}bg-purple-500{% endif %}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Statistics -->
+    <div class="mt-8">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">数据库统计</h2>
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-4">
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <dt class="text-sm font-medium text-gray-500 truncate">用户总数</dt>
+                    <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ user_count }}</dd>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <dt class="text-sm font-medium text-gray-500 truncate">API Keys</dt>
+                    <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ apikey_count }}</dd>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <dt class="text-sm font-medium text-gray-500 truncate">订阅总数</dt>
+                    <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ subscription_count }}</dd>
+                    <dd class="mt-1 text-sm text-gray-500">活跃: {{ active_subscription_count }}</dd>
+                </div>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <dt class="text-sm font-medium text-gray-500 truncate">24小时操作</dt>
+                    <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ recent_logs_count }}</dd>
+                    <dd class="mt-1 text-sm {% if failed_ops_count > 0 %}text-red-600{% else %}text-gray-500{% endif %}">
+                        失败: {{ failed_ops_count }}
+                    </dd>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="mt-8">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">最近操作</h2>
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul role="list" class="divide-y divide-gray-200">
+                {% for log in recent_audit_logs %}
+                <li>
+                    <div class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5
+                                    {% if log.action == 'create' %}bg-green-100 text-green-800
+                                    {% elif log.action == 'update' %}bg-blue-100 text-blue-800
+                                    {% elif log.action == 'delete' %}bg-red-100 text-red-800
+                                    {% elif log.action == 'toggle' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ log.action }}
+                                </span>
+                                <p class="ml-3 text-sm font-medium text-gray-900">
+                                    {{ log.username }}
+                                </p>
+                                <p class="ml-2 text-sm text-gray-500">
+                                    {{ log.resource_type }}: {{ log.resource_name or log.resource_id }}
+                                </p>
+                            </div>
+                            <div class="ml-2 flex-shrink-0 flex">
+                                <p class="text-sm text-gray-500">
+                                    {{ log.created_at.strftime('%H:%M:%S') }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

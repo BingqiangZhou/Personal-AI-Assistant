@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}API Key管理{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8">
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-2xl font-semibold text-gray-900">AI模型配置管理</h1>
+            <p class="mt-2 text-sm text-gray-700">
+                管理AI模型配置和API密钥
+            </p>
+        </div>
+        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+            <button type="button"
+                    onclick="document.getElementById('create-modal').classList.remove('hidden')"
+                    class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:w-auto">
+                创建模型配置
+            </button>
+        </div>
+    </div>
+
+    <!-- API Keys Table -->
+    <div class="mt-8 flex flex-col">
+        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-300">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">名称</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">显示名称</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">类型</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">提供商</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">状态</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">使用次数</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">成功率</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">创建时间</th>
+                                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                                    <span class="sr-only">操作</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white" id="apikeys-tbody">
+                            {% for key in apikeys %}
+                            <tr id="apikey-{{ key.id }}">
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                                    {{ key.name }}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {{ key.display_name }}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    <span class="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold leading-5 text-blue-800">
+                                        {{ key.model_type }}
+                                    </span>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {{ key.provider }}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                    {% if key.is_active %}
+                                    <span class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
+                                        启用
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
+                                        禁用
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {{ key.usage_count }}
+                                    <span class="text-xs text-gray-400">(成功: {{ key.success_count }}, 失败: {{ key.error_count }})</span>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {% if key.usage_count > 0 %}
+                                    {% set success_rate = (key.success_count / key.usage_count * 100) | round(1) %}
+                                    <span class="{% if success_rate >= 90 %}text-green-600{% elif success_rate >= 70 %}text-yellow-600{% else %}text-red-600{% endif %} font-medium">
+                                        {{ success_rate }}%
+                                    </span>
+                                    {% else %}
+                                    <span class="text-gray-400">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {{ key.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                </td>
+                                <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                    <button onclick="showStats({{ key.id }}, '{{ key.display_name }}', {{ key.usage_count }}, {{ key.success_count }}, {{ key.error_count }}, {{ key.total_tokens_used }}, '{{ key.last_used_at.strftime('%Y-%m-%d %H:%M') if key.last_used_at else '从未使用' }}')"
+                                            class="text-blue-600 hover:text-blue-900 mr-4">
+                                        统计
+                                    </button>
+                                    <button hx-put="/super/apikeys/{{ key.id }}/toggle"
+                                            hx-target="#apikey-{{ key.id }}"
+                                            hx-swap="outerHTML"
+                                            class="text-indigo-600 hover:text-indigo-900 mr-4">
+                                        {{ '禁用' if key.is_active else '启用' }}
+                                    </button>
+                                    <button hx-delete="/super/apikeys/{{ key.id }}/delete"
+                                            hx-confirm="确定要删除这个模型配置吗？"
+                                            hx-target="#apikey-{{ key.id }}"
+                                            hx-swap="outerHTML swap:1s"
+                                            class="text-red-600 hover:text-red-900">
+                                        删除
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create API Key Modal -->
+<div id="create-modal" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="document.getElementById('create-modal').classList.add('hidden')"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                    创建AI模型配置
+                </h3>
+                <form hx-post="/super/apikeys/create"
+                      hx-target="#apikeys-tbody"
+                      hx-swap="afterbegin"
+                      hx-on::after-request="if(event.detail.successful) document.getElementById('create-modal').classList.add('hidden')"
+                      class="mt-5 space-y-4">
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">名称 *</label>
+                        <input type="text" name="name" id="name" required
+                               placeholder="例如: whisper-large-v3"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="display_name" class="block text-sm font-medium text-gray-700">显示名称 *</label>
+                        <input type="text" name="display_name" id="display_name" required
+                               placeholder="例如: Whisper Large v3"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="model_type" class="block text-sm font-medium text-gray-700">模型类型 *</label>
+                        <select name="model_type" id="model_type" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            <option value="transcription">转录模型 (transcription)</option>
+                            <option value="text_generation">文本生成 (text_generation)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="provider" class="block text-sm font-medium text-gray-700">提供商</label>
+                        <input type="text" name="provider" id="provider" value="custom"
+                               placeholder="例如: openai, siliconflow, custom"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="api_url" class="block text-sm font-medium text-gray-700">API URL *</label>
+                        <input type="url" name="api_url" id="api_url" required
+                               placeholder="https://api.example.com/v1/..."
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="model_id" class="block text-sm font-medium text-gray-700">模型ID *</label>
+                        <input type="text" name="model_id" id="model_id" required
+                               placeholder="例如: whisper-1, gpt-4"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-gray-700">描述</label>
+                        <textarea name="description" id="description" rows="2"
+                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                    </div>
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-yellow-700">
+                                    系统将自动生成API Key，创建后请立即复制保存，之后无法再次查看明文。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                        <button type="submit"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
+                            创建
+                        </button>
+                        <button type="button"
+                                onclick="document.getElementById('create-modal').classList.add('hidden')"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                            取消
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Modal -->
+<div id="stats-modal" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="document.getElementById('stats-modal').classList.add('hidden')"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="stats-modal-title">
+                    使用统计
+                </h3>
+                <div class="mt-4 space-y-4">
+                    <div class="bg-gray-50 px-4 py-3 rounded-md">
+                        <dl class="space-y-2">
+                            <div class="flex justify-between">
+                                <dt class="text-sm font-medium text-gray-500">总使用次数</dt>
+                                <dd class="text-sm text-gray-900" id="stat-usage-count">-</dd>
+                            </div>
+                            <div class="flex justify-between">
+                                <dt class="text-sm font-medium text-gray-500">成功次数</dt>
+                                <dd class="text-sm text-green-600" id="stat-success-count">-</dd>
+                            </div>
+                            <div class="flex justify-between">
+                                <dt class="text-sm font-medium text-gray-500">失败次数</dt>
+                                <dd class="text-sm text-red-600" id="stat-error-count">-</dd>
+                            </div>
+                            <div class="flex justify-between">
+                                <dt class="text-sm font-medium text-gray-500">成功率</dt>
+                                <dd class="text-sm font-semibold" id="stat-success-rate">-</dd>
+                            </div>
+                            <div class="flex justify-between">
+                                <dt class="text-sm font-medium text-gray-500">总Token使用量</dt>
+                                <dd class="text-sm text-gray-900" id="stat-tokens">-</dd>
+                            </div>
+                            <div class="flex justify-between">
+                                <dt class="text-sm font-medium text-gray-500">最后使用时间</dt>
+                                <dd class="text-sm text-gray-900" id="stat-last-used">-</dd>
+                            </div>
+                        </dl>
+                    </div>
+                </div>
+                <div class="mt-5 sm:mt-6">
+                    <button type="button"
+                            onclick="document.getElementById('stats-modal').classList.add('hidden')"
+                            class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showStats(id, name, usageCount, successCount, errorCount, totalTokens, lastUsed) {
+    document.getElementById('stats-modal-title').textContent = name + ' - 使用统计';
+    document.getElementById('stat-usage-count').textContent = usageCount;
+    document.getElementById('stat-success-count').textContent = successCount;
+    document.getElementById('stat-error-count').textContent = errorCount;
+
+    // Calculate success rate
+    let successRate = usageCount > 0 ? (successCount / usageCount * 100).toFixed(1) : 0;
+    let rateElement = document.getElementById('stat-success-rate');
+    rateElement.textContent = successRate + '%';
+
+    // Color code success rate
+    if (successRate >= 90) {
+        rateElement.className = 'text-sm font-semibold text-green-600';
+    } else if (successRate >= 70) {
+        rateElement.className = 'text-sm font-semibold text-yellow-600';
+    } else {
+        rateElement.className = 'text-sm font-semibold text-red-600';
+    }
+
+    document.getElementById('stat-tokens').textContent = totalTokens.toLocaleString();
+    document.getElementById('stat-last-used').textContent = lastUsed;
+
+    document.getElementById('stats-modal').classList.remove('hidden');
+}
+</script>
+{% endblock %}

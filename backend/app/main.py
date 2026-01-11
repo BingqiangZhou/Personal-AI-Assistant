@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi import HTTPException, status
+from fastapi.responses import RedirectResponse
 from contextlib import asynccontextmanager
 import uvicorn
 from starlette.responses import Response
@@ -84,8 +86,25 @@ def create_application() -> FastAPI:
     # Set up logging middleware
     setup_logging_middleware(app, slow_threshold=5.0)
 
+    # Set up first-run middleware for admin setup
+    from app.admin.first_run import first_run_middleware
+    app.middleware("http")(first_run_middleware)
+
     # Set up exception handlers
     setup_exception_handlers(app)
+
+    # Add custom exception handler for 2FA redirect
+    @app.exception_handler(HTTPException)
+    async def custom_http_exception_handler(request, exc):
+        # Handle 2FA redirect
+        if exc.status_code == status.HTTP_307_TEMPORARY_REDIRECT:
+            return RedirectResponse(
+                url=exc.headers.get("Location", "/super/2fa/setup"),
+                status_code=status.HTTP_303_SEE_OTHER
+            )
+        # For other HTTP exceptions, use default handler
+        from fastapi.exception_handlers import http_exception_handler
+        return await http_exception_handler(request, exc)
 
     # Include routers
     from app.domains.user.api.routes import router as user_router
@@ -95,6 +114,7 @@ def create_application() -> FastAPI:
     from app.domains.multimedia.api.routes import router as multimedia_router
     from app.domains.podcast.api.routes import router as podcast_router
     from app.domains.ai.api.routes import router as ai_model_router
+    from app.admin.router import router as admin_router
 
     app.include_router(
         user_router,
@@ -136,6 +156,13 @@ def create_application() -> FastAPI:
         ai_model_router,
         prefix=f"{settings.API_V1_STR}/ai",
         tags=["ai-models"]
+    )
+
+    # Admin panel routes (changed to /super for security)
+    app.include_router(
+        admin_router,
+        prefix="/super",
+        tags=["admin"]
     )
 
     # Root endpoint - Welcome page

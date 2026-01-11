@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}RSS订阅管理{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-6 lg:px-8">
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-2xl font-semibold text-gray-900">RSS订阅管理</h1>
+            <p class="mt-2 text-sm text-gray-700">
+                管理系统中的RSS订阅源
+            </p>
+        </div>
+    </div>
+
+    <!-- Batch Operations Bar -->
+    <div id="batch-operations" class="mt-4 bg-white shadow sm:rounded-lg p-4 hidden">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <span class="text-sm text-gray-700 mr-4">
+                    已选择 <span id="selected-count" class="font-semibold">0</span> 项
+                </span>
+                <button onclick="clearSelection()"
+                        class="text-sm text-indigo-600 hover:text-indigo-900">
+                    取消选择
+                </button>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="batchRefresh()"
+                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    批量刷新
+                </button>
+                <button onclick="batchToggleStatus()"
+                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
+                    切换状态
+                </button>
+                <button onclick="batchDelete()"
+                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    批量删除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscriptions Table -->
+    <div class="mt-8 flex flex-col">
+        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-300">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                                    <input type="checkbox" id="select-all"
+                                           onchange="toggleSelectAll(this)"
+                                           class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                </th>
+                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">标题</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">URL</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">状态</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">最后更新</th>
+                                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                                    <span class="sr-only">操作</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white" id="subscriptions-tbody">
+                            {% for sub in subscriptions %}
+                            <tr id="subscription-{{ sub.id }}">
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                                    <input type="checkbox" class="subscription-checkbox h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                           value="{{ sub.id }}"
+                                           onchange="updateBatchOperations()">
+                                </td>
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                                    {{ sub.title or 'Untitled' }}
+                                </td>
+                                <td class="px-3 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                    <a href="{{ sub.feed_url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
+                                        {{ sub.feed_url }}
+                                    </a>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                    {% if sub.is_active %}
+                                    <span class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
+                                        活跃
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex rounded-full bg-gray-100 px-2 text-xs font-semibold leading-5 text-gray-800">
+                                        未激活
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {{ sub.last_fetched_at.strftime('%Y-%m-%d %H:%M') if sub.last_fetched_at else '从未' }}
+                                </td>
+                                <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                    <button onclick="openEditModal({{ sub.id }}, '{{ sub.title }}', '{{ sub.feed_url }}')"
+                                            class="text-indigo-600 hover:text-indigo-900 mr-4">
+                                        编辑
+                                    </button>
+                                    <button hx-post="/super/subscriptions/{{ sub.id }}/refresh"
+                                            hx-target="#subscription-{{ sub.id }}"
+                                            hx-swap="outerHTML"
+                                            class="text-blue-600 hover:text-blue-900 mr-4">
+                                        刷新
+                                    </button>
+                                    <button hx-delete="/super/subscriptions/{{ sub.id }}/delete"
+                                            hx-confirm="确定要删除这个订阅吗？"
+                                            hx-target="#subscription-{{ sub.id }}"
+                                            hx-swap="outerHTML swap:1s"
+                                            class="text-red-600 hover:text-red-900">
+                                        删除
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Subscription Modal -->
+<div id="edit-modal" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="document.getElementById('edit-modal').classList.add('hidden')"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                    编辑订阅
+                </h3>
+                <form id="edit-form" class="mt-5 space-y-4">
+                    <input type="hidden" id="edit-id" name="id">
+                    <div>
+                        <label for="edit-title" class="block text-sm font-medium text-gray-700">标题</label>
+                        <input type="text" name="title" id="edit-title"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="edit-url" class="block text-sm font-medium text-gray-700">Feed URL</label>
+                        <input type="url" name="feed_url" id="edit-url"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    </div>
+                    <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                        <button type="button"
+                                onclick="submitEdit()"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
+                            保存
+                        </button>
+                        <button type="button"
+                                onclick="document.getElementById('edit-modal').classList.add('hidden')"
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                            取消
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openEditModal(id, title, url) {
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-title').value = title;
+    document.getElementById('edit-url').value = url;
+    document.getElementById('edit-modal').classList.remove('hidden');
+}
+
+function submitEdit() {
+    const id = document.getElementById('edit-id').value;
+    const form = document.getElementById('edit-form');
+    const formData = new FormData(form);
+
+    htmx.ajax('PUT', `/super/subscriptions/${id}/edit`, {
+        values: Object.fromEntries(formData),
+        target: `#subscription-${id}`,
+        swap: 'outerHTML'
+    }).then(() => {
+        document.getElementById('edit-modal').classList.add('hidden');
+    });
+}
+
+// Batch operations
+function getSelectedIds() {
+    const checkboxes = document.querySelectorAll('.subscription-checkbox:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
+function updateBatchOperations() {
+    const selectedIds = getSelectedIds();
+    const batchOpsBar = document.getElementById('batch-operations');
+    const selectedCount = document.getElementById('selected-count');
+
+    selectedCount.textContent = selectedIds.length;
+
+    if (selectedIds.length > 0) {
+        batchOpsBar.classList.remove('hidden');
+    } else {
+        batchOpsBar.classList.add('hidden');
+    }
+}
+
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.subscription-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    updateBatchOperations();
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.subscription-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = false;
+    });
+    document.getElementById('select-all').checked = false;
+    updateBatchOperations();
+}
+
+async function batchRefresh() {
+    const selectedIds = getSelectedIds();
+    if (selectedIds.length === 0) {
+        alert('请先选择要刷新的订阅');
+        return;
+    }
+
+    if (!confirm(`确定要刷新选中的 ${selectedIds.length} 个订阅吗？`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/super/subscriptions/batch/refresh', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ids: selectedIds }),
+        });
+
+        if (response.ok) {
+            alert('批量刷新已启动');
+            location.reload();
+        } else {
+            alert('批量刷新失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('批量刷新失败');
+    }
+}
+
+async function batchToggleStatus() {
+    const selectedIds = getSelectedIds();
+    if (selectedIds.length === 0) {
+        alert('请先选择要切换状态的订阅');
+        return;
+    }
+
+    if (!confirm(`确定要切换选中的 ${selectedIds.length} 个订阅的状态吗？`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/super/subscriptions/batch/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ids: selectedIds }),
+        });
+
+        if (response.ok) {
+            alert('批量状态切换成功');
+            location.reload();
+        } else {
+            alert('批量状态切换失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('批量状态切换失败');
+    }
+}
+
+async function batchDelete() {
+    const selectedIds = getSelectedIds();
+    if (selectedIds.length === 0) {
+        alert('请先选择要删除的订阅');
+        return;
+    }
+
+    if (!confirm(`确定要删除选中的 ${selectedIds.length} 个订阅吗？此操作不可恢复！`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/super/subscriptions/batch/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ids: selectedIds }),
+        });
+
+        if (response.ok) {
+            alert('批量删除成功');
+            location.reload();
+        } else {
+            alert('批量删除失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('批量删除失败');
+    }
+}
+</script>
+{% endblock %}

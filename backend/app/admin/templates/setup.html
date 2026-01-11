@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首次运行设置 - Personal AI Assistant</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-50 via-white to-purple-50 min-h-screen">
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Header -->
+            <div class="text-center">
+                <div class="mx-auto h-16 w-16 bg-indigo-600 rounded-full flex items-center justify-center">
+                    <svg class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                </div>
+                <h2 class="mt-6 text-3xl font-extrabold text-gray-900">
+                    欢迎使用 Personal AI Assistant
+                </h2>
+                <p class="mt-2 text-sm text-gray-600">
+                    首次运行设置 - 创建管理员账号
+                </p>
+            </div>
+
+            <!-- Setup Form -->
+            <div class="mt-8 bg-white py-8 px-6 shadow-xl rounded-lg">
+                <form class="space-y-6" action="/super/setup" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                    <!-- Instructions -->
+                    <div class="bg-blue-50 border-l-4 border-blue-400 p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm text-blue-700">
+                                    请创建管理员账号以开始使用系统。此账号将拥有完整的系统管理权限。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Username -->
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700">
+                            管理员用户名 <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <input id="username" name="username" type="text" required
+                                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                   placeholder="admin">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">建议使用 admin 或您的名字</p>
+                    </div>
+
+                    <!-- Email -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">
+                            管理员邮箱 <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <input id="email" name="email" type="email" required
+                                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                   placeholder="admin@example.com">
+                        </div>
+                    </div>
+
+                    <!-- Account Name -->
+                    <div>
+                        <label for="account_name" class="block text-sm font-medium text-gray-700">
+                            显示名称
+                        </label>
+                        <div class="mt-1">
+                            <input id="account_name" name="account_name" type="text"
+                                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                   placeholder="系统管理员">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">可选，用于显示在界面上</p>
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">
+                            密码 <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <input id="password" name="password" type="password" required minlength="8"
+                                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                   placeholder="至少8个字符">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">建议使用大小写字母、数字和特殊字符组合</p>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label for="password_confirm" class="block text-sm font-medium text-gray-700">
+                            确认密码 <span class="text-red-500">*</span>
+                        </label>
+                        <div class="mt-1">
+                            <input id="password_confirm" name="password_confirm" type="password" required minlength="8"
+                                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                   placeholder="再次输入密码">
+                        </div>
+                    </div>
+
+                    <!-- Error Messages -->
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="rounded-md bg-{{ message.type }}-50 p-4">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    {% if message.type == 'error' %}
+                                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                    {% endif %}
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-{{ message.type }}-800">
+                                        {{ message.text }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Submit Button -->
+                    <div>
+                        <button type="submit"
+                                class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                            创建管理员账号并开始使用
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="text-center">
+                <p class="text-xs text-gray-500">
+                    🔒 您的密码将使用 bcrypt 加密存储，确保安全
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Client-side password validation
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('password_confirm').value;
+
+            if (password !== passwordConfirm) {
+                e.preventDefault();
+                alert('两次输入的密码不一致，请重新输入');
+                return false;
+            }
+
+            if (password.length < 8) {
+                e.preventDefault();
+                alert('密码长度至少为8个字符');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
