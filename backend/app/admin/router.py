@@ -1300,6 +1300,60 @@ async def edit_subscription(
         )
 
 
+@router.post("/subscriptions/test-url")
+async def test_subscription_url(
+    request: Request,
+    source_url: str = Body(..., embed=True),
+    user: User = Depends(admin_required),
+):
+    """Test RSS feed URL before saving."""
+    try:
+        from app.core.feed_parser import FeedParser, FeedParserConfig
+        import time
+
+        # Test the RSS feed URL
+        parser = FeedParser(FeedParserConfig(timeout=10.0))
+        start_time = time.time()
+
+        try:
+            result = await parser.parse_feed(source_url)
+            response_time_ms = int((time.time() - start_time) * 1000)
+
+            await parser.close()
+
+            if result.has_errors:
+                error_messages = [err.message for err in result.errors]
+                return JSONResponse(
+                    content={
+                        "success": False,
+                        "message": f"RSS feed test failed: {error_messages[0] if error_messages else 'Unknown error'}",
+                        "error_message": error_messages[0] if error_messages else "Unknown error",
+                    },
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+
+            logger.info(f"RSS feed test successful for {source_url} by user {user.username}")
+            return JSONResponse(content={
+                "success": True,
+                "message": "RSS feed test successful",
+                "feed_title": result.feed_info.title,
+                "feed_description": result.feed_info.description,
+                "entry_count": len(result.entries),
+                "response_time_ms": response_time_ms
+            })
+
+        except Exception as e:
+            await parser.close()
+            raise e
+
+    except Exception as e:
+        logger.error(f"RSS feed test error: {e}")
+        return JSONResponse(
+            content={"success": False, "message": f"Test failed: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 @router.delete("/subscriptions/{sub_id}/delete")
 async def delete_subscription(
     sub_id: int,

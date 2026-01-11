@@ -93,15 +93,39 @@ def create_application() -> FastAPI:
     # Set up exception handlers
     setup_exception_handlers(app)
 
-    # Add custom exception handler for 2FA redirect
+    # Add custom exception handler for admin panel
     @app.exception_handler(HTTPException)
     async def custom_http_exception_handler(request, exc):
+        # Check if this is an admin panel request
+        is_admin_request = request.url.path.startswith("/super/")
+
         # Handle 2FA redirect
         if exc.status_code == status.HTTP_307_TEMPORARY_REDIRECT:
             return RedirectResponse(
                 url=exc.headers.get("Location", "/super/2fa/setup"),
                 status_code=status.HTTP_303_SEE_OTHER
             )
+
+        # Handle 401 Unauthorized for admin panel - redirect to login
+        if is_admin_request and exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            # Don't redirect if already on login page
+            if request.url.path != "/super/login":
+                return RedirectResponse(url="/super/login", status_code=status.HTTP_303_SEE_OTHER)
+
+        # Handle other errors for admin panel - show error page
+        if is_admin_request and exc.status_code >= 400:
+            from fastapi.templating import Jinja2Templates
+            templates = Jinja2Templates(directory="app/admin/templates")
+            return templates.TemplateResponse(
+                "error.html",
+                {
+                    "request": request,
+                    "error_message": exc.detail if isinstance(exc.detail, str) else "发生了一个错误",
+                    "error_detail": f"错误代码: {exc.status_code}",
+                },
+                status_code=exc.status_code
+            )
+
         # For other HTTP exceptions, use default handler
         from fastapi.exception_handlers import http_exception_handler
         return await http_exception_handler(request, exc)
