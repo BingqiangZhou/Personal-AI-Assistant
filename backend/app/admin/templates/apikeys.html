@@ -456,15 +456,33 @@
                     </div>
                     <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                         <button type="button"
+                                onclick="testApiKeyBeforeEdit()"
+                                id="edit-test-btn"
+                                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 sm:col-start-1 sm:text-sm">
+                            测试连接
+                        </button>
+                        <button type="button"
                                 onclick="submitEdit()"
                                 class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm">
                             保存
                         </button>
                         <button type="button"
                                 onclick="document.getElementById('edit-modal').classList.add('hidden')"
-                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-span-2 sm:text-sm">
                             取消
                         </button>
+                    </div>
+                    <!-- Test Result Message -->
+                    <div id="edit-test-result" class="hidden mt-4 rounded-md p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <span id="edit-test-result-icon"></span>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium" id="edit-test-result-message"></p>
+                                <p class="text-sm mt-1" id="edit-test-result-detail"></p>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -692,6 +710,88 @@ async function submitEdit() {
         console.error('Error:', error);
         alert('更新失败');
     }
+}
+
+async function testApiKeyBeforeEdit() {
+    const name = document.getElementById('edit-name').value;
+    const api_url = document.getElementById('edit-api_url').value;
+    const api_key = document.getElementById('edit-api_key').value;
+    const model_type = document.getElementById('edit-model_type').value;
+
+    // Validate required fields (api_key is optional for edit)
+    if (!name || !api_url || !model_type) {
+        showEditTestResult(false, '请填写所有必填字段（名称、API URL、模型类型）');
+        return;
+    }
+
+    // If no API key provided, warn user
+    if (!api_key) {
+        showEditTestResult(false, '请输入API Key进行测试（测试不会保存密钥）');
+        return;
+    }
+
+    // Show loading state
+    const testBtn = document.getElementById('edit-test-btn');
+    const originalText = testBtn.textContent;
+    testBtn.disabled = true;
+    testBtn.textContent = '测试中...';
+
+    // Hide previous test result
+    document.getElementById('edit-test-result').classList.add('hidden');
+
+    try {
+        const response = await fetch('/super/apikeys/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                api_url: api_url,
+                api_key: api_key,
+                model_type: model_type,
+            }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showEditTestResult(true, 'API密钥测试成功', `响应时间: ${result.response_time_ms?.toFixed(0) || 'N/A'}ms`);
+        } else {
+            showEditTestResult(false, result.message || 'API密钥测试失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showEditTestResult(false, '测试请求失败: ' + error.message);
+    } finally {
+        // Restore button state
+        testBtn.disabled = false;
+        testBtn.textContent = originalText;
+    }
+}
+
+function showEditTestResult(success, message, detail = '') {
+    const resultDiv = document.getElementById('edit-test-result');
+    const iconSpan = document.getElementById('edit-test-result-icon');
+    const messageP = document.getElementById('edit-test-result-message');
+    const detailP = document.getElementById('edit-test-result-detail');
+
+    resultDiv.classList.remove('hidden', 'bg-red-50', 'bg-green-50');
+
+    if (success) {
+        resultDiv.classList.add('bg-green-50');
+        iconSpan.innerHTML = '<svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>';
+        messageP.classList.remove('text-red-800');
+        messageP.classList.add('text-green-800');
+    } else {
+        resultDiv.classList.add('bg-red-50');
+        iconSpan.innerHTML = '<svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>';
+        messageP.classList.remove('text-green-800');
+        messageP.classList.add('text-red-800');
+    }
+
+    messageP.textContent = message;
+    detailP.textContent = detail;
 }
 </script>
 {% endblock %}

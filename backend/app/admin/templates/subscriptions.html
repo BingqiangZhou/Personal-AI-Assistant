@@ -377,6 +377,8 @@ function openEditModal(id, title, url) {
     document.getElementById('edit-id').value = id;
     document.getElementById('edit-title').value = title;
     document.getElementById('edit-url').value = url;
+    // 隐藏上一次的测试结果
+    document.getElementById('test-result').classList.add('hidden');
     document.getElementById('edit-modal').classList.remove('hidden');
 }
 
@@ -436,10 +438,10 @@ async function testFeedUrl() {
             testResultDiv.className = 'mt-2 text-sm text-green-600';
             let message = `✓ 链接有效 (${result.response_time_ms}ms)`;
             if (result.feed_title) {
-                message += `\n标题: ${result.feed_title}`;
-            }
-            if (result.entry_count !== undefined) {
-                message += `\n文章数: ${result.entry_count}`;
+                message += `\n${result.feed_title}`;
+                if (result.entry_count !== undefined) {
+                    message += `（分集数: ${result.entry_count}）`;
+                }
             }
             testResultDiv.innerHTML = message.replace(/\n/g, '<br>');
         } else {

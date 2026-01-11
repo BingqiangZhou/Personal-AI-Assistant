@@ -239,7 +239,7 @@ def worker_ready_hook(sender=None, **kwargs):
                         if test_result.success:
                             logger.info(f"  ✓ 文本生成模型测试通过: {test_result.result[:100]}")
                         else:
-                            logger.warning(f"  ✗ 文本生成模型测试失败: {test_result.error}")
+                            logger.warning(f"  ✗ 文本生成模型测试失败: {test_result.error_message}")
                     except Exception as e:
                         logger.warning(f"  ✗ 文本生成模型测试异常: {e}")
                 else:

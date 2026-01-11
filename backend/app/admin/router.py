@@ -1308,26 +1308,40 @@ async def test_subscription_url(
 ):
     """Test RSS feed URL before saving."""
     try:
-        from app.core.feed_parser import FeedParser, FeedParserConfig
+        from app.core.feed_parser import FeedParser, FeedParserConfig, FeedParseOptions
         import time
 
+        # Configure parser (same as backend subscription service)
+        config = FeedParserConfig(
+            max_entries=10000,  # 增加到10000以获取更真实的条目数
+            strip_html=True,
+            strict_mode=False,
+            log_raw_feed=False
+        )
+
+        options = FeedParseOptions(
+            strip_html_content=True,
+            include_raw_metadata=False
+        )
+
         # Test the RSS feed URL
-        parser = FeedParser(FeedParserConfig(timeout=10.0))
+        parser = FeedParser(config)
         start_time = time.time()
 
         try:
-            result = await parser.parse_feed(source_url)
+            result = await parser.parse_feed(source_url, options=options)
             response_time_ms = int((time.time() - start_time) * 1000)
 
             await parser.close()
 
-            if result.has_errors:
-                error_messages = [err.message for err in result.errors]
+            # Check for errors (use method call, not property)
+            if not result.success or result.has_errors():
+                error_messages = [err.message for err in result.errors] if result.errors else []
                 return JSONResponse(
                     content={
                         "success": False,
-                        "message": f"RSS feed test failed: {error_messages[0] if error_messages else 'Unknown error'}",
-                        "error_message": error_messages[0] if error_messages else "Unknown error",
+                        "message": f"RSS feed test failed: {error_messages[0] if error_messages else 'Failed to parse feed'}",
+                        "error_message": error_messages[0] if error_messages else "Failed to parse feed",
                     },
                     status_code=status.HTTP_400_BAD_REQUEST
                 )
@@ -1336,8 +1350,8 @@ async def test_subscription_url(
             return JSONResponse(content={
                 "success": True,
                 "message": "RSS feed test successful",
-                "feed_title": result.feed_info.title,
-                "feed_description": result.feed_info.description,
+                "feed_title": result.feed_info.title or "Untitled",
+                "feed_description": result.feed_info.description or "",
                 "entry_count": len(result.entries),
                 "response_time_ms": response_time_ms
             })

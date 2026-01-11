@@ -171,6 +171,10 @@ class AIModelConfigService:
 
     async def test_model(self, model_id: int, test_data: Optional[Dict[str, Any]] = None) -> ModelTestResponse:
         """测试模型连接"""
+        # 统一处理 None 的情况
+        if test_data is None:
+            test_data = {}
+
         model = await self.repo.get_by_id(model_id)
         if not model:
             raise ValidationError(f"Model {model_id} not found")
@@ -376,6 +380,10 @@ class AIModelConfigService:
         test_data: Optional[Dict[str, Any]]
     ) -> str:
         """测试文本生成模型"""
+        # 修复：如果 test_data 为 None，使用空字典
+        if test_data is None:
+            test_data = {}
+
         test_prompt = test_data.get('prompt', 'Hello, please respond with "Test successful".')
 
         headers = {
