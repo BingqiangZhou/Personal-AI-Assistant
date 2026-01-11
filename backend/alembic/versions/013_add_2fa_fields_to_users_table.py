@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '013_add_2fa_fields_to_users_table'
-down_revision: Union[str, Sequence[str], None] = '012_add_admin_audit_log_table'
+revision: str = '013_add_2fa_fields_to'
+down_revision: Union[str, Sequence[str], None] = '012_add_admin_audit_log'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

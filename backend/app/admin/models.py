@@ -31,3 +31,20 @@ class AdminAuditLog(Base):
         Index('idx_resource', 'resource_type', 'resource_id'),
         Index('idx_created_at_desc', 'created_at'),
     )
+
+
+class SystemSettings(Base):
+    """System settings model for storing configuration values."""
+    __tablename__ = "system_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String(100), unique=True, nullable=False, index=True, comment="Setting key")
+    value = Column(JSON, nullable=True, comment="Setting value (JSON)")
+    description = Column(String(500), nullable=True, comment="Setting description")
+    category = Column(String(50), nullable=False, default="general", comment="Setting category: general, audio, ai, etc.")
+
+    created_at = Column(DateTime, default=datetime.utcnow, comment="Created at")
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, comment="Updated at")
+
+    def __repr__(self):
+        return f"<SystemSettings(id={self.id}, key={self.key})>"

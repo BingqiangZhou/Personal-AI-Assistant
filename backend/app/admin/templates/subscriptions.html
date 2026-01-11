@@ -13,6 +13,49 @@
         </div>
     </div>
 
+    <!-- Update Frequency Settings -->
+    <div class="mt-4 bg-white shadow sm:rounded-lg p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-lg font-medium text-gray-900">更新频率设置</h3>
+                <p class="text-sm text-gray-500">设置所有RSS订阅的默认更新频率</p>
+            </div>
+            <form id="frequency-form" class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label for="update-frequency" class="text-sm font-medium text-gray-700">频率:</label>
+                    <select id="update-frequency" name="update_frequency"
+                            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="HOURLY" {% if default_frequency == 'HOURLY' %}selected{% endif %}>每小时</option>
+                        <option value="DAILY" {% if default_frequency == 'DAILY' %}selected{% endif %}>每天</option>
+                        <option value="WEEKLY" {% if default_frequency == 'WEEKLY' %}selected{% endif %}>每周</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2" id="daily-time-setting" style="display: {% if default_frequency == 'DAILY' or default_frequency == 'WEEKLY' %}block{% else %}none{% endif %};">
+                    <label for="update-time" class="text-sm font-medium text-gray-700">时间:</label>
+                    <input type="time" id="update-time" name="update_time" value="{{ default_update_time or '00:00' }}"
+                           class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                </div>
+                <div class="flex items-center gap-2" id="weekly-day-setting" style="display: {% if default_frequency == 'WEEKLY' %}block{% else %}none{% endif %};">
+                    <label for="update-day" class="text-sm font-medium text-gray-700">星期:</label>
+                    <select id="update-day" name="update_day"
+                            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="1" {% if default_day_of_week == 1 %}selected{% endif %}>周一</option>
+                        <option value="2" {% if default_day_of_week == 2 %}selected{% endif %}>周二</option>
+                        <option value="3" {% if default_day_of_week == 3 %}selected{% endif %}>周三</option>
+                        <option value="4" {% if default_day_of_week == 4 %}selected{% endif %}>周四</option>
+                        <option value="5" {% if default_day_of_week == 5 %}selected{% endif %}>周五</option>
+                        <option value="6" {% if default_day_of_week == 6 %}selected{% endif %}>周六</option>
+                        <option value="7" {% if default_day_of_week == 7 %}selected{% endif %}>周日</option>
+                    </select>
+                </div>
+                <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    应用设置
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Batch Operations Bar -->
     <div id="batch-operations" class="mt-4 bg-white shadow sm:rounded-lg p-4 hidden">
         <div class="flex items-center justify-between">
@@ -59,6 +102,7 @@
                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">URL</th>
                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">状态</th>
                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">最后更新</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">下次更新</th>
                                 <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
                                     <span class="sr-only">操作</span>
                                 </th>
@@ -76,39 +120,50 @@
                                     {{ sub.title or 'Untitled' }}
                                 </td>
                                 <td class="px-3 py-4 text-sm text-gray-500 max-w-xs truncate">
-                                    <a href="{{ sub.feed_url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
-                                        {{ sub.feed_url }}
+                                    <a href="{{ sub.source_url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
+                                        {{ sub.source_url }}
                                     </a>
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm">
-                                    {% if sub.is_active %}
+                                    {% if sub.status == 'active' %}
                                     <span class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
                                         活跃
                                     </span>
-                                    {% else %}
+                                    {% elif sub.status == 'inactive' %}
                                     <span class="inline-flex rounded-full bg-gray-100 px-2 text-xs font-semibold leading-5 text-gray-800">
                                         未激活
+                                    </span>
+                                    {% elif sub.status == 'error' %}
+                                    <span class="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
+                                        错误
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex rounded-full bg-yellow-100 px-2 text-xs font-semibold leading-5 text-yellow-800">
+                                        等待中
                                     </span>
                                     {% endif %}
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {{ sub.last_fetched_at.strftime('%Y-%m-%d %H:%M') if sub.last_fetched_at else '从未' }}
+                                    {{ sub.last_fetched_at | to_local('%Y-%m-%d %H:%M') if sub.last_fetched_at else '从未' }}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {% set next_update = sub.computed_next_update_at %}
+                                    {% if next_update %}
+                                        {{ next_update | to_local('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
                                 </td>
                                 <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                    <button onclick="openEditModal({{ sub.id }}, '{{ sub.title }}', '{{ sub.feed_url }}')"
+                                    <button onclick="openEditModal({{ sub.id }}, '{{ sub.title }}', '{{ sub.source_url }}')"
                                             class="text-indigo-600 hover:text-indigo-900 mr-4">
                                         编辑
                                     </button>
-                                    <button hx-post="/super/subscriptions/{{ sub.id }}/refresh"
-                                            hx-target="#subscription-{{ sub.id }}"
-                                            hx-swap="outerHTML"
+                                    <button onclick="refreshSubscription({{ sub.id }})"
                                             class="text-blue-600 hover:text-blue-900 mr-4">
                                         刷新
                                     </button>
-                                    <button hx-delete="/super/subscriptions/{{ sub.id }}/delete"
-                                            hx-confirm="确定要删除这个订阅吗？"
-                                            hx-target="#subscription-{{ sub.id }}"
-                                            hx-swap="outerHTML swap:1s"
+                                    <button onclick="deleteSubscription({{ sub.id }})"
                                             class="text-red-600 hover:text-red-900">
                                         删除
                                     </button>
@@ -118,6 +173,92 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-4 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+        <div class="flex flex-1 justify-between sm:hidden">
+            {% if total_pages > 1 %}
+            {% if page > 1 %}
+            <a href="?page={{ page - 1 }}&per_page={{ per_page }}"
+               class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                上一页
+            </a>
+            {% endif %}
+            {% if page < total_pages %}
+            <a href="?page={{ page + 1 }}&per_page={{ per_page }}"
+               class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                下一页
+            </a>
+            {% endif %}
+            {% else %}
+            <p class="text-sm text-gray-700">
+                共 <span class="font-medium">{{ total_count }}</span> 条记录
+            </p>
+            {% endif %}
+        </div>
+        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    显示第 <span class="font-medium">{{ (page - 1) * per_page + 1 }}</span> 到
+                    <span class="font-medium">{{ min(page * per_page, total_count) }}</span> 条，
+                    共 <span class="font-medium">{{ total_count }}</span> 条记录
+                </p>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Per page selector - always show -->
+                <div class="flex items-center">
+                    <label for="per-page-select" class="mr-2 text-sm text-gray-700">每页显示:</label>
+                    <select id="per-page-select"
+                            onchange="changePerPage(this.value)"
+                            class="rounded-md border-gray-300 py-1.5 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                        <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+                        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                        <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+                <!-- Pagination - only show when more than 1 page -->
+                {% if total_pages > 1 %}
+                <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <a href="?page=1&per_page={{ per_page }}"
+                       class="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        首页
+                    </a>
+                    <a href="?page={{ page - 1 if page > 1 else 1 }}&per_page={{ per_page }}"
+                       class="relative inline-flex items-center border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        上一页
+                    </a>
+
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p == page %}
+                        <span class="relative z-10 inline-flex items-center border border-indigo-500 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-600">
+                            {{ p }}
+                        </span>
+                        {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                        <a href="?page={{ p }}&per_page={{ per_page }}"
+                           class="relative inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            {{ p }}
+                        </a>
+                        {% elif p == page - 3 or p == page + 3 %}
+                        <span class="relative inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700">
+                            ...
+                        </span>
+                        {% endif %}
+                    {% endfor %}
+
+                    <a href="?page={{ page + 1 if page < total_pages else total_pages }}&per_page={{ per_page }}"
+                       class="relative inline-flex items-center border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        下一页
+                    </a>
+                    <a href="?page={{ total_pages }}&per_page={{ per_page }}"
+                       class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        末页
+                    </a>
+                </nav>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -141,8 +282,8 @@
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     </div>
                     <div>
-                        <label for="edit-url" class="block text-sm font-medium text-gray-700">Feed URL</label>
-                        <input type="url" name="feed_url" id="edit-url"
+                        <label for="edit-url" class="block text-sm font-medium text-gray-700">Source URL</label>
+                        <input type="url" name="source_url" id="edit-url"
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     </div>
                     <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
@@ -164,6 +305,67 @@
 </div>
 
 <script>
+// Update frequency form handling
+document.addEventListener('DOMContentLoaded', function() {
+    const frequencySelect = document.getElementById('update-frequency');
+    const dailyTimeSetting = document.getElementById('daily-time-setting');
+    const weeklyDaySetting = document.getElementById('weekly-day-setting');
+    const frequencyForm = document.getElementById('frequency-form');
+
+    // Show/hide time and day fields based on frequency
+    function updateFrequencyFields() {
+        const frequency = frequencySelect.value;
+        if (frequency === 'HOURLY') {
+            dailyTimeSetting.style.display = 'none';
+            weeklyDaySetting.style.display = 'none';
+        } else if (frequency === 'DAILY') {
+            dailyTimeSetting.style.display = 'flex';
+            weeklyDaySetting.style.display = 'none';
+        } else if (frequency === 'WEEKLY') {
+            dailyTimeSetting.style.display = 'flex';
+            weeklyDaySetting.style.display = 'flex';
+        }
+    }
+
+    frequencySelect.addEventListener('change', updateFrequencyFields);
+
+    // Handle form submission
+    frequencyForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(frequencyForm);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/super/subscriptions/update-frequency', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alert(result.message || '更新频率设置已保存');
+                location.reload();
+            } else {
+                const error = await response.json();
+                alert(error.detail || '保存失败');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('保存失败');
+        }
+    });
+});
+
+function changePerPage(perPage) {
+    const url = new URL(window.location);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', '1');
+    window.location = url.toString();
+}
+
 function openEditModal(id, title, url) {
     document.getElementById('edit-id').value = id;
     document.getElementById('edit-title').value = title;
@@ -171,18 +373,73 @@ function openEditModal(id, title, url) {
     document.getElementById('edit-modal').classList.remove('hidden');
 }
 
-function submitEdit() {
+async function submitEdit() {
     const id = document.getElementById('edit-id').value;
-    const form = document.getElementById('edit-form');
-    const formData = new FormData(form);
+    const title = document.getElementById('edit-title').value;
+    const sourceUrl = document.getElementById('edit-url').value;
 
-    htmx.ajax('PUT', `/super/subscriptions/${id}/edit`, {
-        values: Object.fromEntries(formData),
-        target: `#subscription-${id}`,
-        swap: 'outerHTML'
-    }).then(() => {
-        document.getElementById('edit-modal').classList.add('hidden');
-    });
+    try {
+        const response = await fetch(`/super/subscriptions/${id}/edit`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title: title, source_url: sourceUrl }),
+        });
+
+        if (response.ok) {
+            document.getElementById('edit-modal').classList.add('hidden');
+            location.reload();
+        } else {
+            alert('更新失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('更新失败');
+    }
+}
+
+async function refreshSubscription(id) {
+    try {
+        const response = await fetch(`/super/subscriptions/${id}/refresh`, {
+            method: 'POST',
+        });
+
+        if (response.ok) {
+            alert('刷新已启动');
+            location.reload();
+        } else {
+            alert('刷新失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('刷新失败');
+    }
+}
+
+async function deleteSubscription(id) {
+    if (!confirm('确定要删除这个订阅吗？此操作不可恢复！')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/super/subscriptions/${id}/delete`, {
+            method: 'DELETE',
+        });
+
+        if (response.ok) {
+            // Remove the row from the table
+            const row = document.getElementById(`subscription-${id}`);
+            if (row) {
+                row.remove();
+            }
+        } else {
+            alert('删除失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('删除失败');
+    }
 }
 
 // Batch operations

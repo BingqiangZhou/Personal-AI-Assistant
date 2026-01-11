@@ -106,18 +106,26 @@ class AIModelConfigRepository:
         self,
         model_type: Optional[ModelType] = None
     ) -> List[AIModelConfig]:
-        """获取所有活跃的模型"""
+        """获取所有活跃的模型，按优先级排序"""
         try:
             stmt = select(AIModelConfig).where(AIModelConfig.is_active == True)
             if model_type:
                 stmt = stmt.where(AIModelConfig.model_type == model_type)
 
-            stmt = stmt.order_by(AIModelConfig.is_default.desc(), AIModelConfig.created_at.desc())
+            # 按优先级升序排序（数字越小优先级越高），然后按创建时间降序
+            stmt = stmt.order_by(AIModelConfig.priority.asc(), AIModelConfig.created_at.desc())
 
             result = await self.db.execute(stmt)
             return list(result.scalars().all())
         except Exception as e:
             raise DatabaseError(f"Failed to get active models: {str(e)}")
+
+    async def get_active_models_by_priority(
+        self,
+        model_type: Optional[ModelType] = None
+    ) -> List[AIModelConfig]:
+        """获取所有活跃的模型，按优先级排序（用于API调用fallback）"""
+        return await self.get_active_models(model_type)
 
     async def update(self, model_id: int, update_data: dict) -> Optional[AIModelConfig]:
         """更新模型配置"""

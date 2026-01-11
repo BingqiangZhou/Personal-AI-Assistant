@@ -1,26 +1,29 @@
 """Admin panel routes."""
 import logging
 import secrets
+from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request, Response, status
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from passlib.context import CryptContext
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import encrypt_data, decrypt_data
+
 from app.admin.dependencies import admin_required, admin_required_no_2fa, create_admin_session
 from app.admin.schemas import AdminLoginForm
 from app.admin.csrf import generate_csrf_token, validate_csrf_token
 from app.admin.audit import log_admin_action
-from app.admin.models import AdminAuditLog
+from app.admin.models import AdminAuditLog, SystemSettings
 from app.admin.twofa import generate_totp_secret, generate_qr_code, verify_totp_token
 from app.admin.first_run import check_admin_exists
 from app.core.database import get_db_session
 from app.core.security import verify_password, get_password_hash
-from app.domains.ai.models import AIModelConfig
-from app.domains.subscription.models import Subscription
+from app.domains.ai.models import AIModelConfig, ModelType
+from app.domains.subscription.models import Subscription, UpdateFrequency
 from app.domains.user.models import User, UserStatus
 from app.domains.user.repositories import UserRepository
 
@@ -28,8 +31,27 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-# Setup Jinja2 templates
+# Setup Jinja2 templates with custom functions
 templates = Jinja2Templates(directory="app/admin/templates")
+# Add min function to template globals
+templates.env.globals["min"] = min
+
+# Custom filter to convert UTC datetime to local timezone (Asia/Shanghai, UTC+8)
+def to_local_timezone(dt: datetime, format_str: str = '%Y-%m-%d %H:%M:%S') -> str:
+    """Convert UTC datetime to Asia/Shanghai timezone and format it."""
+    if dt is None:
+        return '-'
+    # Ensure dt is timezone-aware (assume UTC if naive)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    # Convert to Asia/Shanghai timezone (UTC+8)
+    from zoneinfo import ZoneInfo
+    shanghai_tz = ZoneInfo('Asia/Shanghai')
+    local_dt = dt.astimezone(shanghai_tz)
+    return local_dt.strftime(format_str)
+
+# Register the custom filter
+templates.env.filters['to_local'] = to_local_timezone
 
 # Password context for hashing API keys
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -674,14 +696,49 @@ async def apikeys_page(
     request: Request,
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
+    model_type_filter: Optional[str] = None,
+    page: int = 1,
+    per_page: int = 10,
 ):
-    """Display API keys management page."""
+    """Display API keys management page with filtering and pagination."""
     try:
-        # Get all AI Model Configs (which contain API keys)
+        # Build base query
+        query = select(AIModelConfig)
+
+        # Apply model type filter if specified
+        if model_type_filter and model_type_filter in ['transcription', 'text_generation']:
+            query = query.where(AIModelConfig.model_type == model_type_filter)
+
+        # Get total count
+        count_query = select(func.count()).select_from(query.subquery())
+        total_count_result = await db.execute(count_query)
+        total_count = total_count_result.scalar() or 0
+
+        # Calculate pagination
+        total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
+        offset = (page - 1) * per_page
+
+        # Get paginated results, ordered by priority then created_at
         result = await db.execute(
-            select(AIModelConfig).order_by(AIModelConfig.created_at.desc())
+            query.order_by(AIModelConfig.priority.asc(), AIModelConfig.created_at.desc())
+            .limit(per_page)
+            .offset(offset)
         )
         apikeys = result.scalars().all()
+
+        # Decrypt and mask API keys for display
+        for config in apikeys:
+            if config.api_key_encrypted and config.api_key:
+                try:
+                    decrypted_key = decrypt_data(config.api_key)
+                    # Mask the API key: show first 4 and last 4 characters
+                    if len(decrypted_key) > 8:
+                        config.api_key = decrypted_key[:4] + '****' + decrypted_key[-4:]
+                    else:
+                        config.api_key = '****'
+                except Exception as e:
+                    logger.warning(f"Failed to decrypt API key for config {config.id}: {e}")
+                    config.api_key = '****'
 
         return templates.TemplateResponse(
             "apikeys.html",
@@ -689,6 +746,11 @@ async def apikeys_page(
                 "request": request,
                 "user": user,
                 "apikeys": apikeys,
+                "model_type_filter": model_type_filter or '',
+                "page": page,
+                "per_page": per_page,
+                "total_count": total_count,
+                "total_pages": total_pages,
                 "messages": [],
             },
         )
@@ -700,6 +762,66 @@ async def apikeys_page(
         )
 
 
+@router.post("/apikeys/test")
+async def test_apikey(
+    request: Request,
+    api_url: str = Body(...),
+    api_key: str = Body(...),
+    model_type: str = Body(...),
+    name: Optional[str] = Body(None),
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Test API key connection before creating a new model config."""
+    try:
+        # Import the AI service for validation
+        from app.domains.ai.services import AIModelConfigService
+
+        service = AIModelConfigService(db)
+
+        # Convert model_type string to ModelType enum
+        try:
+            model_type_enum = ModelType(model_type)
+        except ValueError:
+            return JSONResponse(
+                content={"success": False, "message": f"无效的模型类型: {model_type}"},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate the API key
+        validation_result = await service.validate_api_key(
+            api_url=api_url,
+            api_key=api_key,
+            model_id=name,
+            model_type=model_type_enum
+        )
+
+        if validation_result.valid:
+            logger.info(f"API key test successful for model type {model_type} by user {user.username}")
+            return JSONResponse(content={
+                "success": True,
+                "message": "API密钥测试成功",
+                "test_result": validation_result.test_result,
+                "response_time_ms": validation_result.response_time_ms
+            })
+        else:
+            logger.warning(f"API key test failed for model type {model_type} by user {user.username}: {validation_result.error_message}")
+            return JSONResponse(
+                content={
+                    "success": False,
+                    "message": f"API密钥测试失败: {validation_result.error_message}",
+                    "error_message": validation_result.error_message
+                },
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+    except Exception as e:
+        logger.error(f"API key test error: {e}")
+        return JSONResponse(
+            content={"success": False, "message": f"测试失败: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 @router.post("/apikeys/create")
 async def create_apikey(
     request: Request,
@@ -707,21 +829,19 @@ async def create_apikey(
     display_name: str = Form(...),
     model_type: str = Form(...),
     api_url: str = Form(...),
-    model_id: str = Form(...),
+    api_key: str = Form(...),
     provider: str = Form(default="custom"),
     description: Optional[str] = Form(None),
+    priority: int = Form(default=1),
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
 ):
     """Create a new AI Model Config with API key."""
     try:
-        # Generate a random API key
-        api_key = f"pak_{secrets.token_urlsafe(32)}"  # pak = Personal AI Key
+        # Encrypt the API key using Fernet symmetric encryption
+        encrypted_key = encrypt_data(api_key)
 
-        # Encrypt the API key
-        encrypted_key = pwd_context.hash(api_key)
-
-        # Create AI Model Config
+        # Create AI Model Config - use name as model_id
         new_config = AIModelConfig(
             name=name,
             display_name=display_name,
@@ -730,9 +850,10 @@ async def create_apikey(
             api_url=api_url,
             api_key=encrypted_key,
             api_key_encrypted=True,
-            model_id=model_id,
+            model_id=name,  # Use name as model_id
             provider=provider,
             is_active=True,
+            priority=priority,
         )
         db.add(new_config)
         await db.commit()
@@ -753,26 +874,16 @@ async def create_apikey(
                 "name": name,
                 "model_type": model_type,
                 "provider": provider,
+                "priority": priority,
             },
             request=request,
         )
 
-        # Return the new row HTML with the plain API key shown once
-        return templates.TemplateResponse(
-            "apikeys.html",
-            {
-                "request": request,
-                "user": user,
-                "apikeys": [new_config],
-                "messages": [
-                    {
-                        "type": "success",
-                        "text": f"API Key已创建: {api_key} (请立即复制保存，之后无法再次查看)",
-                    }
-                ],
-                "show_plain_key": api_key,
-            },
-        )
+        # Return JSON response for AJAX handling
+        return JSONResponse(content={
+            "success": True,
+            "message": f"模型配置 '{display_name}' 已成功创建"
+        })
     except Exception as e:
         logger.error(f"Create API key error: {e}")
         raise HTTPException(
@@ -819,21 +930,104 @@ async def toggle_apikey(
             request=request,
         )
 
-        # Return updated row HTML
-        return templates.TemplateResponse(
-            "apikeys.html",
-            {
-                "request": request,
-                "user": user,
-                "apikeys": [model_config],
-                "messages": [],
-            },
-        )
+        return JSONResponse(content={"success": True})
     except Exception as e:
         logger.error(f"Toggle API key error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to toggle API key",
+        )
+
+
+@router.put("/apikeys/{key_id}/edit")
+async def edit_apikey(
+    key_id: int,
+    request: Request,
+    name: Optional[str] = Body(None),
+    display_name: Optional[str] = Body(None),
+    model_type: Optional[str] = Body(None),
+    api_url: Optional[str] = Body(None),
+    api_key: Optional[str] = Body(None),
+    provider: Optional[str] = Body(None),
+    description: Optional[str] = Body(None),
+    priority: Optional[int] = Body(None),
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Edit an AI Model Config."""
+    try:
+        result = await db.execute(
+            select(AIModelConfig).where(AIModelConfig.id == key_id)
+        )
+        model_config = result.scalar_one_or_none()
+
+        if not model_config:
+            raise HTTPException(status_code=404, detail="API key not found")
+
+        # Store old values for audit log
+        old_values = {
+            "name": model_config.name,
+            "display_name": model_config.display_name,
+            "model_type": model_config.model_type,
+            "api_url": model_config.api_url,
+            "provider": model_config.provider,
+            "description": model_config.description,
+            "priority": model_config.priority,
+        }
+
+        # Update fields if provided
+        if name is not None:
+            model_config.name = name
+            model_config.model_id = name  # Update model_id to match name
+        if display_name is not None:
+            model_config.display_name = display_name
+        if model_type is not None:
+            model_config.model_type = model_type
+        if api_url is not None:
+            model_config.api_url = api_url
+        if provider is not None:
+            model_config.provider = provider
+        if description is not None:
+            model_config.description = description
+        if priority is not None:
+            model_config.priority = priority
+        if api_key is not None and api_key.strip():
+            # Encrypt new API key
+            encrypted_key = encrypt_data(api_key)
+            model_config.api_key = encrypted_key
+            model_config.api_key_encrypted = True
+
+        await db.commit()
+        await db.refresh(model_config)
+
+        logger.info(f"AI Model Config {key_id} updated by user {user.username}")
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="update",
+            resource_type="apikey",
+            resource_id=key_id,
+            resource_name=model_config.display_name,
+            details={"old_values": old_values, "new_values": {
+                "name": model_config.name,
+                "display_name": model_config.display_name,
+                "model_type": model_config.model_type,
+                "priority": model_config.priority,
+            }},
+            request=request,
+        )
+
+        return JSONResponse(content={"success": True})
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Edit API key error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update API key",
         )
 
 
@@ -874,8 +1068,7 @@ async def delete_apikey(
             request=request,
         )
 
-        # Return empty response (htmx will remove the row)
-        return Response(status_code=status.HTTP_200_OK)
+        return JSONResponse(content={"success": True})
     except Exception as e:
         logger.error(f"Delete API key error: {e}")
         raise HTTPException(
@@ -892,14 +1085,48 @@ async def subscriptions_page(
     request: Request,
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
+    page: int = 1,
+    per_page: int = 10,
 ):
-    """Display RSS subscriptions management page."""
+    """Display RSS subscriptions management page with pagination."""
     try:
-        # Get all subscriptions
+        # Get total count
+        count_result = await db.execute(select(func.count()).select_from(Subscription))
+        total_count = count_result.scalar() or 0
+
+        # Calculate pagination
+        total_pages = (total_count + per_page - 1) // per_page
+        offset = (page - 1) * per_page
+
+        # Get paginated subscriptions
         result = await db.execute(
-            select(Subscription).order_by(Subscription.created_at.desc())
+            select(Subscription)
+            .order_by(Subscription.created_at.desc())
+            .limit(per_page)
+            .offset(offset)
         )
         subscriptions = result.scalars().all()
+
+        # Get default frequency settings from the first subscription (if any)
+        # This is a simple approach - could be stored in a settings table instead
+        default_frequency = UpdateFrequency.HOURLY.value
+        default_update_time = "00:00"
+        default_day_of_week = 1
+
+        if total_count > 0:
+            # Get most common frequency settings from existing subscriptions
+            freq_result = await db.execute(
+                select(Subscription.update_frequency, Subscription.update_time, Subscription.update_day_of_week)
+                .where(Subscription.source_type == "rss")
+                .group_by(Subscription.update_frequency, Subscription.update_time, Subscription.update_day_of_week)
+                .order_by(func.count().desc())
+                .limit(1)
+            )
+            row = freq_result.first()
+            if row:
+                default_frequency = row[0]
+                default_update_time = row[1] or "00:00"
+                default_day_of_week = row[2] or 1
 
         return templates.TemplateResponse(
             "subscriptions.html",
@@ -907,6 +1134,13 @@ async def subscriptions_page(
                 "request": request,
                 "user": user,
                 "subscriptions": subscriptions,
+                "page": page,
+                "per_page": per_page,
+                "total_count": total_count,
+                "total_pages": total_pages,
+                "default_frequency": default_frequency,
+                "default_update_time": default_update_time,
+                "default_day_of_week": default_day_of_week,
                 "messages": [],
             },
         )
@@ -918,12 +1152,110 @@ async def subscriptions_page(
         )
 
 
+@router.post("/subscriptions/update-frequency")
+async def update_subscription_frequency(
+    request: Request,
+    update_frequency: str = Body(...),
+    update_time: Optional[str] = Body(None),
+    update_day: Optional[int] = Body(None),
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Update update frequency settings for all RSS subscriptions."""
+    try:
+        # Validate frequency
+        if update_frequency not in [UpdateFrequency.HOURLY.value, UpdateFrequency.DAILY.value, UpdateFrequency.WEEKLY.value]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid update frequency"
+            )
+
+        # Validate time format for DAILY and WEEKLY
+        if update_frequency in [UpdateFrequency.DAILY.value, UpdateFrequency.WEEKLY.value]:
+            if not update_time:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Update time is required for DAILY and WEEKLY frequency"
+                )
+            try:
+                hour, minute = map(int, update_time.split(':'))
+                if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                    raise ValueError
+            except (ValueError, AttributeError):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid time format. Use HH:MM"
+                )
+
+        # Validate day of week for WEEKLY
+        day_of_week = None
+        if update_frequency == UpdateFrequency.WEEKLY.value:
+            if not update_day or not (1 <= update_day <= 7):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid day of week. Must be 1-7"
+                )
+            day_of_week = update_day
+
+        # Update all RSS subscriptions
+        stmt = select(Subscription).where(Subscription.source_type == "rss")
+        result = await db.execute(stmt)
+        subscriptions = result.scalars().all()
+
+        update_count = 0
+        for sub in subscriptions:
+            sub.update_frequency = update_frequency
+            if update_frequency in [UpdateFrequency.DAILY.value, UpdateFrequency.WEEKLY.value]:
+                sub.update_time = update_time
+            else:
+                sub.update_time = None
+
+            if update_frequency == UpdateFrequency.WEEKLY.value:
+                sub.update_day_of_week = day_of_week
+            else:
+                sub.update_day_of_week = None
+            update_count += 1
+
+        await db.commit()
+
+        logger.info(f"Updated frequency settings for {update_count} RSS subscriptions by user {user.username}")
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="update",
+            resource_type="subscription_frequency",
+            resource_name=f"All RSS subscriptions ({update_count})",
+            details={
+                "update_frequency": update_frequency,
+                "update_time": update_time,
+                "update_day_of_week": day_of_week,
+            },
+            request=request,
+        )
+
+        return JSONResponse(content={
+            "success": True,
+            "message": f"已更新 {update_count} 个RSS订阅的更新频率设置"
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update subscription frequency error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update frequency settings",
+        )
+
+
 @router.put("/subscriptions/{sub_id}/edit")
 async def edit_subscription(
     sub_id: int,
     request: Request,
-    title: Optional[str] = Form(None),
-    feed_url: Optional[str] = Form(None),
+    title: Optional[str] = Body(None),
+    source_url: Optional[str] = Body(None),
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
 ):
@@ -938,24 +1270,28 @@ async def edit_subscription(
         # Update fields
         if title is not None:
             subscription.title = title
-        if feed_url is not None:
-            subscription.feed_url = feed_url
+        if source_url is not None:
+            subscription.source_url = source_url
 
         await db.commit()
         await db.refresh(subscription)
 
         logger.info(f"Subscription {sub_id} edited by user {user.username}")
 
-        # Return updated row HTML
-        return templates.TemplateResponse(
-            "subscriptions.html",
-            {
-                "request": request,
-                "user": user,
-                "subscriptions": [subscription],
-                "messages": [],
-            },
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="update",
+            resource_type="subscription",
+            resource_id=sub_id,
+            resource_name=subscription.title,
+            details={"title": title, "source_url": source_url},
+            request=request,
         )
+
+        return JSONResponse(content={"success": True})
     except Exception as e:
         logger.error(f"Edit subscription error: {e}")
         raise HTTPException(
@@ -967,6 +1303,7 @@ async def edit_subscription(
 @router.delete("/subscriptions/{sub_id}/delete")
 async def delete_subscription(
     sub_id: int,
+    request: Request,
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
 ):
@@ -978,13 +1315,27 @@ async def delete_subscription(
         if not subscription:
             raise HTTPException(status_code=404, detail="Subscription not found")
 
+        # Store name before deletion
+        resource_name = subscription.title
+
         await db.delete(subscription)
         await db.commit()
 
         logger.info(f"Subscription {sub_id} deleted by user {user.username}")
 
-        # Return empty response (htmx will remove the row)
-        return Response(status_code=status.HTTP_200_OK)
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="delete",
+            resource_type="subscription",
+            resource_id=sub_id,
+            resource_name=resource_name,
+            request=request,
+        )
+
+        return JSONResponse(content={"success": True})
     except Exception as e:
         logger.error(f"Delete subscription error: {e}")
         raise HTTPException(
@@ -1017,16 +1368,20 @@ async def refresh_subscription(
 
         logger.info(f"Subscription {sub_id} refresh triggered by user {user.username}")
 
-        # Return updated row HTML
-        return templates.TemplateResponse(
-            "subscriptions.html",
-            {
-                "request": request,
-                "user": user,
-                "subscriptions": [subscription],
-                "messages": [],
-            },
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="update",
+            resource_type="subscription",
+            resource_id=sub_id,
+            resource_name=subscription.title,
+            details={"action": "refresh"},
+            request=request,
         )
+
+        return JSONResponse(content={"success": True})
     except Exception as e:
         logger.error(f"Refresh subscription error: {e}")
         raise HTTPException(
@@ -1192,7 +1547,7 @@ async def audit_logs_page(
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
     page: int = 1,
-    per_page: int = 50,
+    per_page: int = 10,
     action: Optional[str] = None,
     resource_type: Optional[str] = None,
 ):
@@ -1259,12 +1614,25 @@ async def users_page(
     request: Request,
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
+    page: int = 1,
+    per_page: int = 10,
 ):
-    """Display users management page."""
+    """Display users management page with pagination."""
     try:
-        # Get all users
+        # Get total count
+        count_result = await db.execute(select(func.count()).select_from(User))
+        total_count = count_result.scalar() or 0
+
+        # Calculate pagination
+        total_pages = (total_count + per_page - 1) // per_page
+        offset = (page - 1) * per_page
+
+        # Get paginated users
         result = await db.execute(
-            select(User).order_by(User.created_at.desc())
+            select(User)
+            .order_by(User.created_at.desc())
+            .limit(per_page)
+            .offset(offset)
         )
         users = result.scalars().all()
 
@@ -1274,6 +1642,10 @@ async def users_page(
                 "request": request,
                 "user": user,
                 "users": users,
+                "page": page,
+                "per_page": per_page,
+                "total_count": total_count,
+                "total_pages": total_pages,
                 "messages": [],
             },
         )
@@ -1332,16 +1704,7 @@ async def toggle_user(
             request=request,
         )
 
-        # Return updated row HTML
-        return templates.TemplateResponse(
-            "users.html",
-            {
-                "request": request,
-                "user": user,
-                "users": [target_user],
-                "messages": [],
-            },
-        )
+        return JSONResponse(content={"success": True, "status": target_user.status})
     except Exception as e:
         logger.error(f"Toggle user error: {e}")
         raise HTTPException(
@@ -1391,11 +1754,11 @@ async def reset_user_password(
             request=request,
         )
 
-        # Return success message with new password
-        return Response(
-            content=f"Password reset successful. New password: {new_password}",
-            status_code=status.HTTP_200_OK,
-        )
+        return JSONResponse(content={
+            "success": True,
+            "new_password": new_password,
+            "message": f"Password reset successful. New password: {new_password}"
+        })
     except Exception as e:
         logger.error(f"Reset password error: {e}")
         raise HTTPException(
@@ -1487,6 +1850,164 @@ async def monitoring_page(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to load monitoring dashboard",
+        )
+
+
+# ==================== System Settings ====================
+
+
+@router.get("/settings", response_class=HTMLResponse)
+async def settings_page(
+    request: Request,
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Display system settings page."""
+    try:
+        return templates.TemplateResponse(
+            "settings.html",
+            {
+                "request": request,
+                "user": user,
+                "messages": [],
+            },
+        )
+    except Exception as e:
+        logger.error(f"Settings page error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to load settings page",
+        )
+
+
+@router.get("/settings/api/audio")
+async def get_audio_settings(
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Get audio processing settings as JSON."""
+    try:
+        # Get chunk size setting
+        chunk_size_result = await db.execute(
+            select(SystemSettings).where(SystemSettings.key == "audio.chunk_size_mb")
+        )
+        chunk_size_setting = chunk_size_result.scalar_one_or_none()
+
+        # Get max threads setting
+        threads_result = await db.execute(
+            select(SystemSettings).where(SystemSettings.key == "audio.max_concurrent_threads")
+        )
+        threads_setting = threads_result.scalar_one_or_none()
+
+        chunk_size_mb = 10  # Default
+        max_concurrent_threads = 4  # Default
+
+        if chunk_size_setting and chunk_size_setting.value:
+            chunk_size_mb = chunk_size_setting.value.get("value", 10)
+
+        if threads_setting and threads_setting.value:
+            max_concurrent_threads = threads_setting.value.get("value", 4)
+
+        return JSONResponse(content={
+            "chunk_size_mb": chunk_size_mb,
+            "max_concurrent_threads": max_concurrent_threads,
+        })
+    except Exception as e:
+        logger.error(f"Get audio settings error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get audio settings",
+        )
+
+
+@router.post("/settings/api/audio")
+async def update_audio_settings(
+    request: Request,
+    chunk_size_mb: int = Body(..., embed=True),
+    max_concurrent_threads: int = Body(..., embed=True),
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Update audio processing settings."""
+    try:
+        # Validate chunk_size_mb range
+        if not (5 <= chunk_size_mb <= 25):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="chunk_size_mb must be between 5 and 25"
+            )
+
+        # Validate max_concurrent_threads range
+        if not (1 <= max_concurrent_threads <= 16):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="max_concurrent_threads must be between 1 and 16"
+            )
+
+        # Update chunk size setting
+        chunk_size_result = await db.execute(
+            select(SystemSettings).where(SystemSettings.key == "audio.chunk_size_mb")
+        )
+        chunk_size_setting = chunk_size_result.scalar_one_or_none()
+
+        if chunk_size_setting:
+            chunk_size_setting.value = {"value": chunk_size_mb, "min": 5, "max": 25}
+        else:
+            new_setting = SystemSettings(
+                key="audio.chunk_size_mb",
+                value={"value": chunk_size_mb, "min": 5, "max": 25},
+                description="Audio chunk size in MB / 音频切块大小（MB）",
+                category="audio"
+            )
+            db.add(new_setting)
+
+        # Update max threads setting
+        threads_result = await db.execute(
+            select(SystemSettings).where(SystemSettings.key == "audio.max_concurrent_threads")
+        )
+        threads_setting = threads_result.scalar_one_or_none()
+
+        if threads_setting:
+            threads_setting.value = {"value": max_concurrent_threads, "min": 1, "max": 16}
+        else:
+            new_setting = SystemSettings(
+                key="audio.max_concurrent_threads",
+                value={"value": max_concurrent_threads, "min": 1, "max": 16},
+                description="Maximum concurrent processing threads / 最大并发处理线程数",
+                category="audio"
+            )
+            db.add(new_setting)
+
+        await db.commit()
+
+        logger.info(f"Audio settings updated by user {user.username}: chunk_size_mb={chunk_size_mb}, max_concurrent_threads={max_concurrent_threads}")
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="update",
+            resource_type="system_settings",
+            resource_name="Audio processing settings",
+            details={
+                "chunk_size_mb": chunk_size_mb,
+                "max_concurrent_threads": max_concurrent_threads,
+            },
+            request=request,
+        )
+
+        return JSONResponse(content={
+            "success": True,
+            "message": "设置已保存"
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update audio settings error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update audio settings",
         )
 
 

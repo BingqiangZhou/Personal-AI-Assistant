@@ -70,7 +70,7 @@
                             {% for log in audit_logs %}
                             <tr>
                                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6">
-                                    {{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                    {{ log.created_at | to_local('%Y-%m-%d %H:%M:%S') }}
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                     {{ log.username }}
@@ -102,7 +102,14 @@
                                     {{ log.ip_address or '-' }}
                                 </td>
                                 <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                    <button onclick="showLogDetails({{ log.id }}, '{{ log.action }}', '{{ log.resource_type }}', '{{ log.resource_name or '' }}', '{{ log.details | tojson | safe }}', '{{ log.user_agent or '' }}', '{{ log.error_message or '' }}')"
+                                    <button onclick="showLogDetails(this)"
+                                            data-id="{{ log.id }}"
+                                            data-action="{{ log.action }}"
+                                            data-resource-type="{{ log.resource_type }}"
+                                            data-resource-name="{{ log.resource_name or '' }}"
+                                            data-details="{{ log.details | tojson }}"
+                                            data-user-agent="{{ log.user_agent or '' }}"
+                                            data-error-message="{{ log.error_message or '' }}"
                                             class="text-indigo-600 hover:text-indigo-900">
                                         详情
                                     </button>
@@ -117,20 +124,25 @@
     </div>
 
     <!-- Pagination -->
-    {% if total_pages > 1 %}
     <div class="mt-4 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
         <div class="flex flex-1 justify-between sm:hidden">
+            {% if total_pages > 1 %}
             {% if page > 1 %}
-            <a href="?page={{ page - 1 }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}"
+            <a href="?page={{ page - 1 }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}&per_page={{ per_page }}"
                class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                 上一页
             </a>
             {% endif %}
             {% if page < total_pages %}
-            <a href="?page={{ page + 1 }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}"
+            <a href="?page={{ page + 1 }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}&per_page={{ per_page }}"
                class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                 下一页
             </a>
+            {% endif %}
+            {% else %}
+            <p class="text-sm text-gray-700">
+                共 <span class="font-medium">{{ total_count }}</span> 条记录
+            </p>
             {% endif %}
         </div>
         <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
@@ -141,11 +153,29 @@
                     共 <span class="font-medium">{{ total_count }}</span> 条记录
                 </p>
             </div>
-            <div>
+            <div class="flex items-center gap-4">
+                <!-- Per page selector - always show -->
+                <div class="flex items-center">
+                    <label for="per-page-select" class="mr-2 text-sm text-gray-700">每页显示:</label>
+                    <select id="per-page-select"
+                            onchange="changePerPage(this.value)"
+                            class="rounded-md border-gray-300 py-1.5 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                        <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+                        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                        <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+                <!-- Pagination - only show when more than 1 page -->
+                {% if total_pages > 1 %}
                 <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                    {% if page > 1 %}
-                    <a href="?page={{ page - 1 }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}"
+                    <a href="?page=1{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}&per_page={{ per_page }}"
                        class="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        首页
+                    </a>
+                    {% if page > 1 %}
+                    <a href="?page={{ page - 1 }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}&per_page={{ per_page }}"
+                       class="relative inline-flex items-center border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
                         上一页
                     </a>
                     {% endif %}
@@ -156,7 +186,7 @@
                             {{ p }}
                         </span>
                         {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
-                        <a href="?page={{ p }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}"
+                        <a href="?page={{ p }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}&per_page={{ per_page }}"
                            class="relative inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
                             {{ p }}
                         </a>
@@ -168,16 +198,20 @@
                     {% endfor %}
 
                     {% if page < total_pages %}
-                    <a href="?page={{ page + 1 }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}"
-                       class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                    <a href="?page={{ page + 1 }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}&per_page={{ per_page }}"
+                       class="relative inline-flex items-center border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
                         下一页
                     </a>
                     {% endif %}
+                    <a href="?page={{ total_pages }}{% if action_filter %}&action={{ action_filter }}{% endif %}{% if resource_type_filter %}&resource_type={{ resource_type_filter }}{% endif %}&per_page={{ per_page }}"
+                       class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        末页
+                    </a>
                 </nav>
+                {% endif %}
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
 
 <!-- Log Details Modal -->
@@ -239,17 +273,31 @@
 </div>
 
 <script>
-function showLogDetails(id, action, resourceType, resourceName, details, userAgent, errorMessage) {
+function changePerPage(perPage) {
+    const url = new URL(window.location);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', '1');
+    window.location = url.toString();
+}
+
+function showLogDetails(button) {
+    const action = button.dataset.action || '-';
+    const resourceType = button.dataset.resourceType || '-';
+    const resourceName = button.dataset.resourceName || '-';
+    const detailsJson = button.dataset.details || '{}';
+    const userAgent = button.dataset.userAgent || '';
+    const errorMessage = button.dataset.errorMessage || '';
+
     document.getElementById('detail-action').textContent = action;
     document.getElementById('detail-resource-type').textContent = resourceType;
-    document.getElementById('detail-resource-name').textContent = resourceName || '-';
+    document.getElementById('detail-resource-name').textContent = resourceName;
 
     // Parse and format details JSON
     try {
-        const detailsObj = typeof details === 'string' ? JSON.parse(details) : details;
+        const detailsObj = JSON.parse(detailsJson);
         document.getElementById('detail-details').textContent = JSON.stringify(detailsObj, null, 2);
     } catch (e) {
-        document.getElementById('detail-details').textContent = details || '-';
+        document.getElementById('detail-details').textContent = detailsJson || '-';
     }
 
     document.getElementById('detail-user-agent').textContent = userAgent || '-';

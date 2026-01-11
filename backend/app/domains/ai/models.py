@@ -61,6 +61,7 @@ class AIModelConfig(Base):
     is_active = Column(Boolean, default=True, comment="是否启用")
     is_default = Column(Boolean, default=False, comment="是否为默认模型")
     is_system = Column(Boolean, default=False, comment="是否为系统预设模型")
+    priority = Column(Integer, default=1, comment="优先级（数字越小优先级越高）")
 
     # 使用统计
     usage_count = Column(Integer, default=0, comment="使用次数")
@@ -134,6 +135,7 @@ class AIModelConfigBase(BaseModel):
     extra_config: Optional[Dict[str, Any]] = Field(default=dict, description="额外配置参数")
     is_active: bool = Field(default=True, description="是否启用")
     is_default: bool = Field(default=False, description="是否为默认模型")
+    priority: int = Field(default=1, ge=1, le=100, description="优先级（数字越小优先级越高）")
 
     @validator('temperature')
     def validate_temperature(cls, v):
@@ -181,6 +183,7 @@ class AIModelConfigUpdate(BaseModel):
     extra_config: Optional[Dict[str, Any]] = None
     is_active: Optional[bool] = None
     is_default: Optional[bool] = None
+    priority: Optional[int] = Field(None, ge=1, le=100)
 
     @validator('temperature')
     def validate_temperature(cls, v):
@@ -218,6 +221,7 @@ class AIModelConfigResponse(AIModelConfigBase):
     updated_at: datetime
     last_used_at: Optional[datetime]
     is_system: bool
+    priority: int
 
     class Config:
         from_attributes = True

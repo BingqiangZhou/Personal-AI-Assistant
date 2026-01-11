@@ -70,16 +70,14 @@
                                     {% endif %}
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {{ u.last_login_at.strftime('%Y-%m-%d %H:%M') if u.last_login_at else '从未登录' }}
+                                    {{ u.last_login_at | to_local('%Y-%m-%d %H:%M') if u.last_login_at else '从未登录' }}
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {{ u.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                    {{ u.created_at | to_local('%Y-%m-%d %H:%M') }}
                                 </td>
                                 <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                     {% if u.id != user.id %}
-                                    <button hx-put="/super/users/{{ u.id }}/toggle"
-                                            hx-target="#user-{{ u.id }}"
-                                            hx-swap="outerHTML"
+                                    <button onclick="toggleUser({{ u.id }})"
                                             class="text-indigo-600 hover:text-indigo-900 mr-4">
                                         {{ '禁用' if u.status == 'active' else '启用' }}
                                     </button>
@@ -96,6 +94,92 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-4 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
+        <div class="flex flex-1 justify-between sm:hidden">
+            {% if total_pages > 1 %}
+            {% if page > 1 %}
+            <a href="?page={{ page - 1 }}&per_page={{ per_page }}"
+               class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                上一页
+            </a>
+            {% endif %}
+            {% if page < total_pages %}
+            <a href="?page={{ page + 1 }}&per_page={{ per_page }}"
+               class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                下一页
+            </a>
+            {% endif %}
+            {% else %}
+            <p class="text-sm text-gray-700">
+                共 <span class="font-medium">{{ total_count }}</span> 条记录
+            </p>
+            {% endif %}
+        </div>
+        <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    显示第 <span class="font-medium">{{ (page - 1) * per_page + 1 }}</span> 到
+                    <span class="font-medium">{{ min(page * per_page, total_count) }}</span> 条，
+                    共 <span class="font-medium">{{ total_count }}</span> 条记录
+                </p>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Per page selector - always show -->
+                <div class="flex items-center">
+                    <label for="per-page-select" class="mr-2 text-sm text-gray-700">每页显示:</label>
+                    <select id="per-page-select"
+                            onchange="changePerPage(this.value)"
+                            class="rounded-md border-gray-300 py-1.5 text-sm font-medium text-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                        <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+                        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                        <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                    </select>
+                </div>
+                <!-- Pagination - only show when more than 1 page -->
+                {% if total_pages > 1 %}
+                <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                    <a href="?page=1&per_page={{ per_page }}"
+                       class="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        首页
+                    </a>
+                    <a href="?page={{ page - 1 if page > 1 else 1 }}&per_page={{ per_page }}"
+                       class="relative inline-flex items-center border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        上一页
+                    </a>
+
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p == page %}
+                        <span class="relative z-10 inline-flex items-center border border-indigo-500 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-600">
+                            {{ p }}
+                        </span>
+                        {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                        <a href="?page={{ p }}&per_page={{ per_page }}"
+                           class="relative inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            {{ p }}
+                        </a>
+                        {% elif p == page - 3 or p == page + 3 %}
+                        <span class="relative inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700">
+                            ...
+                        </span>
+                        {% endif %}
+                    {% endfor %}
+
+                    <a href="?page={{ page + 1 if page < total_pages else total_pages }}&per_page={{ per_page }}"
+                       class="relative inline-flex items-center border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        下一页
+                    </a>
+                    <a href="?page={{ total_pages }}&per_page={{ per_page }}"
+                       class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        末页
+                    </a>
+                </nav>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -188,6 +272,33 @@
 </div>
 
 <script>
+function changePerPage(perPage) {
+    const url = new URL(window.location);
+    url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', '1');
+    window.location = url.toString();
+}
+
+async function toggleUser(userId) {
+    try {
+        const response = await fetch(`/super/users/${userId}/toggle`, {
+            method: 'PUT',
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            // Reload page to show updated status
+            location.reload();
+        } else {
+            const error = await response.json();
+            alert(error.detail || '操作失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('操作失败');
+    }
+}
+
 let currentUserId = null;
 
 function resetPassword(userId, username) {
@@ -208,15 +319,10 @@ async function confirmResetPassword() {
         });
 
         if (response.ok) {
-            const text = await response.text();
-            // Extract password from response text
-            const match = text.match(/New password: (.+)/);
-            if (match) {
-                const newPassword = match[1];
-                document.getElementById('new-password').textContent = newPassword;
-                document.getElementById('password-reset-modal').classList.add('hidden');
-                document.getElementById('password-display-modal').classList.remove('hidden');
-            }
+            const data = await response.json();
+            document.getElementById('new-password').textContent = data.new_password;
+            document.getElementById('password-reset-modal').classList.add('hidden');
+            document.getElementById('password-display-modal').classList.remove('hidden');
         } else {
             alert('密码重置失败，请稍后重试');
         }

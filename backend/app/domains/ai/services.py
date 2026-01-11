@@ -79,6 +79,7 @@ class AIModelConfigService:
             extra_config=model_data.extra_config or {},
             is_active=model_data.is_active,
             is_default=model_data.is_default,
+            priority=model_data.priority,
             is_system=False
         )
 
@@ -532,3 +533,195 @@ class AIModelConfigService:
         elif model_name == "sensevoice-small":
             return getattr(settings, 'TRANSCRIPTION_API_KEY', None)
         return None
+
+    async def call_transcription_with_fallback(
+        self,
+        audio_file_path: str,
+        language: str = "zh",
+        model_id: Optional[str] = None
+    ) -> Tuple[str, Optional[AIModelConfig]]:
+        """
+        使用优先级fallback机制调用转录API
+
+        Args:
+            audio_file_path: 音频文件路径
+            language: 语言代码 (默认: zh)
+            model_id: 指定模型ID（如果提供，仅使用该模型）
+
+        Returns:
+            Tuple[转录结果, 使用的模型配置]
+
+        Raises:
+            ValidationError: 当所有模型都失败时抛出异常
+        """
+        if model_id:
+            # 如果指定了模型ID，只使用该模型
+            model = await self.repo.get_by_id(model_id)
+            if not model or not model.is_active:
+                raise ValidationError(f"Model {model_id} not found or not active")
+            models = [model]
+        else:
+            # 获取按优先级排序的活跃转录模型
+            models = await self.repo.get_active_models_by_priority(ModelType.TRANSCRIPTION)
+
+        if not models:
+            raise ValidationError("No active transcription models available")
+
+        last_error = None
+        for model in models:
+            try:
+                logger.info(f"Trying transcription model: {model.name} (priority: {model.priority})")
+                result = await self._call_transcription_model(model, audio_file_path, language)
+                logger.info(f"Transcription succeeded with model: {model.name}")
+                # 更新成功统计
+                await self.repo.increment_usage(model.id, success=True)
+                return result, model
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Transcription failed with model {model.name}: {str(e)}")
+                # 更新失败统计
+                await self.repo.increment_usage(model.id, success=False)
+
+        # 所有模型都失败了
+        error_msg = f"All transcription models failed. Last error: {str(last_error)}"
+        logger.error(error_msg)
+        raise ValidationError(error_msg)
+
+    async def call_text_generation_with_fallback(
+        self,
+        messages: List[Dict[str, str]],
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+        model_id: Optional[str] = None
+    ) -> Tuple[str, Optional[AIModelConfig]]:
+        """
+        使用优先级fallback机制调用文本生成API
+
+        Args:
+            messages: 消息列表 (格式: [{"role": "user", "content": "..."}])
+            max_tokens: 最大令牌数
+            temperature: 温度参数
+            model_id: 指定模型ID（如果提供，仅使用该模型）
+
+        Returns:
+            Tuple[生成结果, 使用的模型配置]
+
+        Raises:
+            ValidationError: 当所有模型都失败时抛出异常
+        """
+        if model_id:
+            # 如果指定了模型ID，只使用该模型
+            model = await self.repo.get_by_id(model_id)
+            if not model or not model.is_active:
+                raise ValidationError(f"Model {model_id} not found or not active")
+            models = [model]
+        else:
+            # 获取按优先级排序的活跃文本生成模型
+            models = await self.repo.get_active_models_by_priority(ModelType.TEXT_GENERATION)
+
+        if not models:
+            raise ValidationError("No active text generation models available")
+
+        last_error = None
+        for model in models:
+            try:
+                logger.info(f"Trying text generation model: {model.name} (priority: {model.priority})")
+                result = await self._call_text_generation_model(
+                    model, messages, max_tokens, temperature
+                )
+                logger.info(f"Text generation succeeded with model: {model.name}")
+                # 更新成功统计
+                await self.repo.increment_usage(model.id, success=True)
+                return result, model
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Text generation failed with model {model.name}: {str(e)}")
+                # 更新失败统计
+                await self.repo.increment_usage(model.id, success=False)
+
+        # 所有模型都失败了
+        error_msg = f"All text generation models failed. Last error: {str(last_error)}"
+        logger.error(error_msg)
+        raise ValidationError(error_msg)
+
+    async def _call_transcription_model(
+        self,
+        model: AIModelConfig,
+        audio_file_path: str,
+        language: str = "zh"
+    ) -> str:
+        """调用单个转录模型"""
+        import os
+        import aiohttp
+
+        # 解密API密钥
+        api_key = await self._get_decrypted_api_key(model)
+
+        headers = {
+            'Authorization': f'Bearer {api_key}'
+        }
+
+        timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
+
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            with open(audio_file_path, 'rb') as audio_file:
+                data = aiohttp.FormData()
+                data.add_field('file', audio_file, filename=os.path.basename(audio_file_path), content_type='audio/mpeg')
+                data.add_field('model', model.model_id)
+                data.add_field('language', language)
+
+                # 根据provider选择不同的API端点
+                if model.provider == 'openai':
+                    api_endpoint = 'https://api.openai.com/v1/audio/transcriptions'
+                else:
+                    api_endpoint = model.api_url
+
+                async with session.post(api_endpoint, headers=headers, data=data) as response:
+                    if response.status != 200:
+                        error_text = await response.text()
+                        raise Exception(f"API error: {response.status} - {error_text}")
+
+                    result = await response.json()
+                    if 'text' not in result:
+                        raise Exception("Invalid response format: missing 'text' field")
+
+                    return result['text'].strip()
+
+    async def _call_text_generation_model(
+        self,
+        model: AIModelConfig,
+        messages: List[Dict[str, str]],
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None
+    ) -> str:
+        """调用单个文本生成模型"""
+        import aiohttp
+
+        # 解密API密钥
+        api_key = await self._get_decrypted_api_key(model)
+
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+
+        data = {
+            'model': model.model_id,
+            'messages': messages,
+            'max_tokens': max_tokens or model.max_tokens or 1000,
+            'temperature': temperature or model.get_temperature_float() or 0.7
+        }
+
+        timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
+
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(f"{model.api_url}/chat/completions", headers=headers, json=data) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise Exception(f"API error: {response.status} - {error_text}")
+
+                result = await response.json()
+                if 'choices' not in result or not result['choices']:
+                    raise Exception("Invalid response from API")
+
+                return result['choices'][0]['message']['content'].strip()
