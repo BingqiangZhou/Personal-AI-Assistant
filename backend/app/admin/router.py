@@ -23,6 +23,7 @@ from app.admin.first_run import check_admin_exists
 from app.admin.monitoring import get_monitor_service
 from app.core.database import get_db_session
 from app.core.security import verify_password, get_password_hash
+from app.core.config import settings
 from app.domains.ai.models import AIModelConfig, ModelType
 from app.domains.subscription.models import Subscription, UpdateFrequency, SubscriptionStatus
 from app.domains.user.models import User, UserStatus
@@ -352,8 +353,20 @@ async def login(
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
 
-        # Check if 2FA is enabled
-        if user.is_2fa_enabled and user.totp_secret:
+        # Check if 2FA is globally enabled and user has 2FA configured
+        # 检查2FA是否全局启用且用户配置了2FA
+        from app.admin.security_settings import get_admin_2fa_enabled
+        admin_2fa_enabled, source = await get_admin_2fa_enabled(db)
+
+        # Log 2FA status for audit / 记录2FA状态用于审计
+        if admin_2fa_enabled:
+            logger.debug(f"Admin 2FA is enabled (from {source}). User {username} has 2FA: {user.is_2fa_enabled}")
+        else:
+            logger.warning(f"Admin 2FA is DISABLED (from {source}). User {username} will bypass 2FA verification.")
+
+        # Check if 2FA is enabled (globally AND per-user)
+        # 检查2FA是否启用（全局启用且用户已配置）
+        if admin_2fa_enabled and user.is_2fa_enabled and user.totp_secret:
             # Redirect to 2FA verification page
             csrf_token_2fa = generate_csrf_token()
             response = templates.TemplateResponse(
@@ -2405,29 +2418,44 @@ async def get_frequency_settings(
 ):
     """Get RSS subscription update frequency settings."""
     try:
-        # Get default frequency settings from the first subscription (if any)
+        # Default values
         default_frequency = UpdateFrequency.HOURLY.value
         default_update_time = "00:00"
         default_day_of_week = 1
+        source = "default"
 
-        # Get most common frequency settings from existing subscriptions
-        freq_result = await db.execute(
-            select(Subscription.update_frequency, Subscription.update_time, Subscription.update_day_of_week)
-            .where(Subscription.source_type == "rss")
-            .group_by(Subscription.update_frequency, Subscription.update_time, Subscription.update_day_of_week)
-            .order_by(func.count().desc())
-            .limit(1)
+        # First, try to get from SystemSettings (persisted settings)
+        from app.admin.models import SystemSettings
+        settings_result = await db.execute(
+            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
         )
-        row = freq_result.first()
-        if row:
-            default_frequency = row[0]
-            default_update_time = row[1] or "00:00"
-            default_day_of_week = row[2] or 1
+        setting = settings_result.scalar_one_or_none()
+        if setting and setting.value:
+            default_frequency = setting.value.get("update_frequency", UpdateFrequency.HOURLY.value)
+            default_update_time = setting.value.get("update_time", "00:00")
+            default_day_of_week = setting.value.get("update_day_of_week", 1)
+            source = "database"
+            logger.debug(f"RSS frequency settings from database: {default_frequency}")
+        else:
+            # Fall back to the most recently updated subscription
+            recent_result = await db.execute(
+                select(Subscription.update_frequency, Subscription.update_time, Subscription.update_day_of_week)
+                .order_by(Subscription.updated_at.desc())
+                .limit(1)
+            )
+            row = recent_result.first()
+            if row:
+                default_frequency = row[0]
+                default_update_time = row[1] or "00:00"
+                default_day_of_week = row[2] or 1
+                source = "subscription"
+                logger.debug(f"RSS frequency settings from subscription: {default_frequency}")
 
         return JSONResponse(content={
             "update_frequency": default_frequency,
             "update_time": default_update_time,
             "update_day_of_week": default_day_of_week,
+            "source": source,
         })
     except Exception as e:
         logger.error(f"Get frequency settings error: {e}")
@@ -2476,36 +2504,60 @@ async def update_frequency_settings(
                 detail="update_day must be between 1 and 7"
             )
 
-        # Update all RSS subscriptions with the new frequency settings
-        update_data = {
+        # Prepare the settings data
+        settings_data = {
             "update_frequency": update_frequency,
             "update_time": update_time if update_frequency in ['DAILY', 'WEEKLY'] else None,
             "update_day_of_week": update_day if update_frequency == 'WEEKLY' else None,
         }
 
+        # First, save to SystemSettings (this persists the settings even with no subscriptions)
+        from app.admin.models import SystemSettings
+        existing_setting = await db.execute(
+            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
+        )
+        setting = existing_setting.scalar_one_or_none()
+
+        if setting:
+            setting.value = settings_data
+            logger.info(f"Updated RSS frequency settings in SystemSettings")
+        else:
+            setting = SystemSettings(
+                key="rss.frequency_settings",
+                value=settings_data,
+                description="RSS subscription update frequency settings / RSS订阅更新频率设置",
+                category="subscription"
+            )
+            db.add(setting)
+            logger.info(f"Created RSS frequency settings in SystemSettings")
+
+        # Then update all existing subscriptions with the new frequency settings
         update_count_result = await db.execute(
-            select(func.count()).select_from(Subscription).where(Subscription.source_type == "rss")
+            select(func.count()).select_from(Subscription)
         )
         total_count = update_count_result.scalar() or 0
 
         if total_count > 0:
-            await db.execute(
-                select(Subscription).where(Subscription.source_type == "rss")
-            )
             subscriptions = (await db.execute(
-                select(Subscription).where(Subscription.source_type == "rss")
+                select(Subscription)
             )).scalars().all()
 
             for sub in subscriptions:
                 sub.update_frequency = update_frequency
+                # Set or clear update_time based on frequency
                 if update_frequency in ['DAILY', 'WEEKLY']:
                     sub.update_time = update_time
+                else:
+                    sub.update_time = None
+                # Set or clear update_day_of_week based on frequency
                 if update_frequency == 'WEEKLY':
                     sub.update_day_of_week = update_day
+                else:
+                    sub.update_day_of_week = None
 
             await db.commit()
 
-        logger.info(f"Frequency settings updated by user {user.username}: {update_data}, affected {total_count} subscriptions")
+        logger.info(f"Frequency settings updated by user {user.username}: {settings_data}, affected {total_count} subscriptions")
 
         # Log audit action
         await log_admin_action(
@@ -2514,14 +2566,14 @@ async def update_frequency_settings(
             username=user.username,
             action="update",
             resource_type="subscription_frequency",
-            resource_name=f"All RSS subscriptions ({total_count})",
-            details=update_data,
+            resource_name=f"All subscriptions (affected {total_count})",
+            details=settings_data,
             request=request,
         )
 
         return JSONResponse(content={
             "success": True,
-            "message": f"已更新 {total_count} 个RSS订阅的更新频率设置"
+            "message": f"RSS订阅设置已保存 (更新了 {total_count} 个现有订阅)"
         })
     except HTTPException:
         raise
@@ -2533,6 +2585,75 @@ async def update_frequency_settings(
         )
 
 
+# ==================== Security Settings ====================
+
+
+@router.get("/settings/api/security")
+async def get_security_settings(
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Get security settings as JSON."""
+    try:
+        from app.admin.security_settings import get_admin_2fa_enabled
+
+        # Get 2FA setting with priority
+        admin_2fa_enabled, source = await get_admin_2fa_enabled(db)
+
+        return JSONResponse(content={
+            "admin_2fa_enabled": admin_2fa_enabled,
+            "source": source,
+        })
+    except Exception as e:
+        logger.error(f"Get security settings error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get security settings",
+        )
+
+
+@router.post("/settings/api/security")
+async def update_security_settings(
+    request: Request,
+    admin_2fa_enabled: bool = Body(..., embed=True),
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Update security settings."""
+    try:
+        from app.admin.security_settings import set_admin_2fa_enabled
+
+        # Save 2FA setting to database
+        await set_admin_2fa_enabled(db, admin_2fa_enabled)
+
+        logger.info(f"Security settings updated by user {user.username}: admin_2fa_enabled={admin_2fa_enabled}")
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="update",
+            resource_type="security_settings",
+            resource_name="Admin 2FA Settings",
+            details={
+                "admin_2fa_enabled": admin_2fa_enabled,
+            },
+            request=request,
+        )
+
+        return JSONResponse(content={
+            "success": True,
+            "message": "安全设置已保存"
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update security settings error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update security settings",
+        )
 
 
 

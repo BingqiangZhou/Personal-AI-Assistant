@@ -268,6 +268,44 @@
         </div>
     </div>
 
+    <!-- Security Settings Card -->
+    <div class="mt-6 mb-8 bg-white shadow sm:rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">安全设置</h3>
+        </div>
+        <div class="px-6 py-6 space-y-6">
+            <!-- 2FA Toggle -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="card-subtitle">双因素认证 (2FA)</div>
+                        <p class="card-description mt-1">启用后，登录后台管理需要验证两步认证码</p>
+                    </div>
+                    <div class="flex items-center">
+                        <button
+                            type="button"
+                            id="2fa-toggle"
+                            onclick="toggleAndSave2FA()"
+                            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            role="switch"
+                            aria-checked="true"
+                        >
+                            <span
+                                aria-hidden="true"
+                                id="2fa-toggle-knob"
+                                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                            ></span>
+                        </button>
+                    </div>
+                </div>
+                <div id="2fa-status" class="text-sm text-gray-500">
+                    当前状态: <span id="2fa-status-text">启用</span>
+                    <span id="2fa-source" class="text-xs text-gray-400 ml-2">(来源: 数据库)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- System Info Card -->
     <div class="mt-6 mb-8 bg-white shadow sm:rounded-lg overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-200">
@@ -302,14 +340,110 @@
     const weeklyDaySetting = document.getElementById('weekly-day-setting');
     const messageContainer = document.getElementById('message-container');
 
+    // 2FA Toggle elements
+    const twoFaToggle = document.getElementById('2fa-toggle');
+    const twoFaToggleKnob = document.getElementById('2fa-toggle-knob');
+    const twoFaStatusText = document.getElementById('2fa-status-text');
+    const twoFaSource = document.getElementById('2fa-source');
+
     // Store original values to detect changes
     let originalValues = {
         chunkSize: 10,
         maxThreads: 4,
         frequency: 'HOURLY',
         updateTime: '00:00',
-        updateDay: '1'
+        updateDay: '1',
+        twoFaEnabled: true
     };
+
+    // Current 2FA state
+    let current2FAState = {
+        enabled: true,
+        source: 'database'
+    };
+
+    // Toggle 2FA switch (no longer used, replaced by toggleAndSave2FA)
+    function toggle2FA() {
+        current2FAState.enabled = !current2FAState.enabled;
+        update2FAUI();
+    }
+
+    // Toggle 2FA and immediately save
+    async function toggleAndSave2FA() {
+        // Show loading state
+        const originalEnabled = current2FAState.enabled;
+        const newEnabled = !originalEnabled;
+
+        // Optimistically update UI
+        current2FAState.enabled = newEnabled;
+        update2FAUI();
+
+        // Show saving indicator
+        twoFaStatusText.textContent = newEnabled ? '启用中...' : '禁用中...';
+
+        try {
+            const response = await fetch('/super/settings/api/security', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    admin_2fa_enabled: newEnabled,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Update original value and show success message
+                originalValues.twoFaEnabled = newEnabled;
+                current2FAState.source = 'database';
+                update2FAUI();
+
+                // Show success message
+                const statusText = newEnabled ? '双因素认证已启用' : '双因素认证已禁用';
+                showMessage(statusText + '！');
+            } else {
+                // Revert to original value on error
+                current2FAState.enabled = originalEnabled;
+                update2FAUI();
+                showMessage('保存失败: ' + (data.detail || data.message || '未知错误'), false);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            // Revert to original value
+            current2FAState.enabled = originalEnabled;
+            update2FAUI();
+            showMessage('保存失败: 网络错误', false);
+        }
+    }
+
+    // Update 2FA UI based on state
+    function update2FAUI() {
+        const enabled = current2FAState.enabled;
+
+        if (enabled) {
+            twoFaToggle.classList.remove('bg-gray-200');
+            twoFaToggle.classList.add('bg-indigo-600');
+            twoFaToggleKnob.classList.remove('translate-x-0');
+            twoFaToggleKnob.classList.add('translate-x-5');
+            twoFaStatusText.textContent = '启用';
+            twoFaStatusText.classList.remove('text-red-600');
+            twoFaStatusText.classList.add('text-green-600');
+        } else {
+            twoFaToggle.classList.remove('bg-indigo-600');
+            twoFaToggle.classList.add('bg-gray-200');
+            twoFaToggleKnob.classList.remove('translate-x-5');
+            twoFaToggleKnob.classList.add('translate-x-0');
+            twoFaStatusText.textContent = '禁用';
+            twoFaStatusText.classList.remove('text-green-600');
+            twoFaStatusText.classList.add('text-red-600');
+        }
+
+        // Update source text
+        const sourceText = current2FAState.source === 'database' ? '数据库' : '环境变量';
+        twoFaSource.textContent = `(来源: ${sourceText})`;
+    }
 
     // Show/hide time and day fields based on frequency
     function updateFrequencyFields() {
@@ -323,6 +457,57 @@
         } else if (frequency === 'WEEKLY') {
             dailyTimeSetting.style.display = 'block';
             weeklyDaySetting.style.display = 'block';
+        }
+    }
+
+    // Save frequency settings
+    async function saveFrequencySettings() {
+        const saveBtn = document.getElementById('rss-save-btn');
+
+        // Disable button and show loading
+        saveBtn.disabled = true;
+        const originalText = saveBtn.textContent;
+        saveBtn.innerHTML = '<span class="spinner"></span> 保存中...';
+
+        try {
+            const frequencyData = {
+                update_frequency: frequencySelect.value
+            };
+
+            if (frequencySelect.value === 'DAILY' || frequencySelect.value === 'WEEKLY') {
+                frequencyData.update_time = document.getElementById('update-time').value;
+            }
+            if (frequencySelect.value === 'WEEKLY') {
+                // Backend expects 'update_day', not 'update_day_of_week'
+                frequencyData.update_day = parseInt(document.getElementById('update-day').value);
+            }
+
+            const response = await fetch('/super/settings/frequency', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(frequencyData),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showMessage(data.message || 'RSS订阅设置已保存成功！');
+                // Update original values
+                originalValues.frequency = frequencySelect.value;
+                originalValues.updateTime = document.getElementById('update-time').value;
+                originalValues.updateDay = document.getElementById('update-day').value;
+            } else {
+                showMessage('保存失败: ' + (data.detail || data.message || '未知错误'), false);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showMessage('保存失败: 网络错误', false);
+        } finally {
+            // Re-enable button
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
         }
     }
 
@@ -392,6 +577,20 @@
         } catch (error) {
             console.error('Failed to load frequency settings:', error);
         }
+
+        // Load security settings (2FA)
+        try {
+            const securityResponse = await fetch('/super/settings/api/security');
+            if (securityResponse.ok) {
+                const securityData = await securityResponse.json();
+                current2FAState.enabled = securityData.admin_2fa_enabled;
+                current2FAState.source = securityData.source;
+                originalValues.twoFaEnabled = securityData.admin_2fa_enabled;
+                update2FAUI();
+            }
+        } catch (error) {
+            console.error('Failed to load security settings:', error);
+        }
     });
 
     // Update display when slider moves
@@ -405,56 +604,6 @@
 
     // Handle frequency change
     frequencySelect.addEventListener('change', updateFrequencyFields);
-
-    // Save frequency settings
-    async function saveFrequencySettings() {
-        const saveBtn = document.getElementById('rss-save-btn');
-
-        // Disable button and show loading
-        saveBtn.disabled = true;
-        const originalText = saveBtn.textContent;
-        saveBtn.innerHTML = '<span class="spinner"></span> 保存中...';
-
-        try {
-            const frequencyData = {
-                update_frequency: frequencySelect.value
-            };
-
-            if (frequencySelect.value === 'DAILY' || frequencySelect.value === 'WEEKLY') {
-                frequencyData.update_time = document.getElementById('update-time').value;
-            }
-            if (frequencySelect.value === 'WEEKLY') {
-                frequencyData.update_day_of_week = parseInt(document.getElementById('update-day').value);
-            }
-
-            const response = await fetch('/super/settings/frequency', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(frequencyData),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                showMessage('RSS订阅设置已保存成功！');
-                // Update original values
-                originalValues.frequency = frequencySelect.value;
-                originalValues.updateTime = document.getElementById('update-time').value;
-                originalValues.updateDay = document.getElementById('update-day').value;
-            } else {
-                showMessage('保存失败: ' + (data.detail || data.message || '未知错误'), false);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            showMessage('保存失败: 网络错误', false);
-        } finally {
-            // Re-enable button
-            saveBtn.disabled = false;
-            saveBtn.textContent = originalText;
-        }
-    }
 
     // Save audio settings only
     async function saveAudioSettings() {

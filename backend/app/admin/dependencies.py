@@ -1,6 +1,7 @@
 """Admin authentication dependencies and utilities."""
 from datetime import datetime, timedelta
 from typing import Optional
+import logging
 
 from fastapi import Cookie, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
@@ -12,6 +13,8 @@ from app.core.config import settings
 from app.core.database import get_db_session
 from app.domains.user.models import User
 from app.domains.user.repositories import UserRepository
+
+logger = logging.getLogger(__name__)
 
 # Session serializer for secure cookies
 serializer = URLSafeTimedSerializer(settings.SECRET_KEY)
@@ -67,7 +70,15 @@ class AdminAuthRequired:
                 )
 
             # Check if 2FA is required and not enabled
-            if self.require_2fa and not user.is_2fa_enabled:
+            # 检查是否需要2FA但用户未启用
+            # If global 2FA is disabled, don't require 2FA even if require_2fa is True
+            # 如果全局2FA被禁用，即使 require_2fa 为 True 也不要求2FA
+            # Priority: database setting > environment variable
+            # 优先级：数据库设置 > 环境变量
+            from app.admin.security_settings import get_admin_2fa_enabled
+            admin_2fa_enabled, _ = await get_admin_2fa_enabled(db)
+
+            if self.require_2fa and admin_2fa_enabled and not user.is_2fa_enabled:
                 # Redirect to 2FA setup page
                 # Note: This will raise an exception that should be caught by the route handler
                 raise HTTPException(

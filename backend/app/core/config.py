@@ -163,6 +163,9 @@ class Settings(BaseSettings):
     SUMMARY_MODEL: str = "gpt-4o-mini"  # Default AI summary model
     SUPPORTED_SUMMARY_MODELS: str = "gpt-4o-mini,gpt-4o,gpt-3.5-turbo"  # Comma-separated list
 
+    # Admin Panel 2FA Configuration
+    ADMIN_2FA_ENABLED: bool = True  # Admin panel 2FA toggle (default: enabled)
+
     @validator("ALLOWED_HOSTS", pre=True)
     def assemble_cors_origins(cls, v):
         if isinstance(v, str) and not v.startswith("["):
@@ -170,6 +173,15 @@ class Settings(BaseSettings):
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
+
+    @validator("ADMIN_2FA_ENABLED", pre=True)
+    def parse_admin_2fa_enabled(cls, v):
+        """Parse ADMIN_2FA_ENABLED from string to bool."""
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            return v.lower() in ("true", "1", "yes", "on")
+        return bool(v)
 
     class Config:
         env_file = ".env"

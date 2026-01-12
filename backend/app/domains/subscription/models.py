@@ -86,8 +86,8 @@ class Subscription(Base):
         Index('idx_source_type', 'source_type'),
     )
 
-    def _parse_update_time(self) -> tuple[int, int]:
-        """Parse update_time string (HH:MM) to integers."""
+    def _parse_local_time(self) -> tuple[int, int]:
+        """Parse update_time string (HH:MM) to local hour/minute integers."""
         if not self.update_time:
             return 0, 0
         try:
@@ -99,34 +99,62 @@ class Subscription(Base):
         return 0, 0
 
     def _get_next_scheduled_time(self, base_time: datetime) -> datetime:
-        """Calculate the next scheduled time after base_time."""
-        hour, minute = self._parse_update_time()
-        
+        """
+        Calculate the next scheduled time after base_time.
+
+        All date calculations are done in local timezone (Asia/Shanghai),
+        then converted to UTC for storage/comparison.
+
+        Args:
+            base_time: UTC datetime to compare against
+
+        Returns:
+            UTC datetime of next scheduled time
+        """
+        from zoneinfo import ZoneInfo
+
+        # Convert base_time to local timezone for comparison
+        shanghai_tz = ZoneInfo('Asia/Shanghai')
+        base_local = base_time.astimezone(shanghai_tz)
+
         if self.update_frequency == UpdateFrequency.HOURLY.value:
-            # Next top of the hour after base_time
-            return (base_time + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
-            
+            # Next top of the hour in local time, then convert to UTC
+            next_local = (base_local + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
+            return next_local.astimezone(timezone.utc)
+
         elif self.update_frequency == UpdateFrequency.DAILY.value:
-            # Scheduled time today
-            scheduled = base_time.replace(hour=hour, minute=minute, second=0, microsecond=0)
-            if scheduled <= base_time:
-                # If already passed today, next one is tomorrow
-                scheduled += timedelta(days=1)
-            return scheduled
-            
+            # Get local hour/minute from stored time
+            local_hour, local_minute = self._parse_local_time()
+
+            # Today at scheduled time in local timezone
+            scheduled_local = base_local.replace(hour=local_hour, minute=local_minute, second=0, microsecond=0)
+
+            # If already passed today, next one is tomorrow
+            if scheduled_local <= base_local:
+                scheduled_local += timedelta(days=1)
+
+            # Convert back to UTC
+            return scheduled_local.astimezone(timezone.utc)
+
         elif self.update_frequency == UpdateFrequency.WEEKLY.value:
-            # Default to Monday (0) if not set. DB stores 1-7 (Mon-Sun)
+            # Get local hour/minute from stored time
+            local_hour, local_minute = self._parse_local_time()
+
+            # DB stores 1-7 (Mon-Sun), Python weekday is 0-6 (Mon-Sun)
             target_weekday = (self.update_day_of_week - 1) if self.update_day_of_week else 0
-            # Scheduled time today
-            scheduled = base_time.replace(hour=hour, minute=minute, second=0, microsecond=0)
-            
+
+            # Today at scheduled time in local timezone
+            scheduled_local = base_local.replace(hour=local_hour, minute=local_minute, second=0, microsecond=0)
+
             # Find days until target weekday
-            days_ahead = target_weekday - base_time.weekday()
-            if days_ahead < 0 or (days_ahead == 0 and scheduled <= base_time):
+            days_ahead = target_weekday - base_local.weekday()
+            if days_ahead < 0 or (days_ahead == 0 and scheduled_local <= base_local):
                 days_ahead += 7
-                
-            return scheduled + timedelta(days=days_ahead)
-            
+
+            # Add the days and convert to UTC
+            scheduled_local += timedelta(days=days_ahead)
+            return scheduled_local.astimezone(timezone.utc)
+
         return base_time + timedelta(hours=1) # Fallback
 
     @property

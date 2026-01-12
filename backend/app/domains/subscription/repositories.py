@@ -91,6 +91,25 @@ class SubscriptionRepository:
         sub_data: SubscriptionCreate
     ) -> Subscription:
         """Create a new subscription."""
+        # Get global RSS frequency settings from SystemSettings
+        from app.admin.models import SystemSettings
+        from app.domains.subscription.models import UpdateFrequency
+
+        # Default values
+        update_frequency = UpdateFrequency.HOURLY.value
+        update_time = None
+        update_day_of_week = None
+
+        # Try to get global settings from SystemSettings
+        settings_result = await self.db.execute(
+            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
+        )
+        setting = settings_result.scalar_one_or_none()
+        if setting and setting.value:
+            update_frequency = setting.value.get("update_frequency", UpdateFrequency.HOURLY.value)
+            update_time = setting.value.get("update_time")
+            update_day_of_week = setting.value.get("update_day_of_week")
+
         sub = Subscription(
             user_id=user_id,
             title=sub_data.title,
@@ -99,7 +118,11 @@ class SubscriptionRepository:
             source_url=sub_data.source_url,
             config=sub_data.config,
             fetch_interval=sub_data.fetch_interval,
-            status=SubscriptionStatus.ACTIVE
+            status=SubscriptionStatus.ACTIVE,
+            # Use global frequency settings
+            update_frequency=update_frequency,
+            update_time=update_time,
+            update_day_of_week=update_day_of_week
         )
         self.db.add(sub)
         await self.db.commit()
