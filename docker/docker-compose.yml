@@ -1,12 +1,18 @@
 # =============================================================================
 # Docker Compose - 统一配置 / Unified Configuration
 # =============================================================================
-# 此配置通过切换 env 文件控制本地开发和云端部署
-# Switch between .env.dev (local) and .env (cloud) to change environment
-#
 # 使用方法 / Usage:
-#   本地开发 (Local):  docker compose --env-file .env.dev up -d
-#   云端部署 (Cloud):   docker compose --env-file .env up -d
+#   1. 复制 .env.example 为 .env / Copy .env.example to .env
+#   2. 根据需要修改 .env 配置 / Modify .env as needed
+#   3. 启动服务 / Start services: docker compose up -d
+#
+# 启动的服务 / Started Services:
+#   - PostgreSQL (数据库 / Database)
+#   - Redis (缓存 / Cache)
+#   - Backend API (后端服务)
+#   - Celery Worker (后台任务处理 / Background tasks)
+#   - Celery Beat (定时任务调度 / Scheduled tasks)
+#   - Nginx (反向代理 / Reverse proxy)
 
 services:
   # =============================================================================
@@ -74,6 +80,8 @@ services:
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
       # Playwright configuration
       - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+      # Timezone for log timestamps / 日志时区
+      - TZ=${TZ:-Asia/Shanghai}
     ports:
       - "${BACKEND_PUBLISH_PORT:-8000}:8000"
     volumes:
@@ -123,6 +131,8 @@ services:
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
       # Playwright configuration
       - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+      # Timezone for log timestamps / 日志时区
+      - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - backend_data:/app/data
       - ${TRANSCRIPTION_STORAGE_DIR:-./storage/podcasts}:/app/storage/podcasts
@@ -165,6 +175,8 @@ services:
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
       - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
       - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
+      # Timezone for log timestamps / 日志时区
+      - TZ=${TZ:-Asia/Shanghai}
     volumes:
       - backend_data:/app/data
       - ${LOG_DIR:-./logs}:/app/logs
@@ -181,11 +193,8 @@ services:
     command: celery -A app.domains.podcast.tasks.celery_app beat --loglevel=${CELERY_LOG_LEVEL:-info}
 
   # =============================================================================
-  # Nginx Reverse Proxy (仅云端 / Cloud Only)
+  # Nginx Reverse Proxy (反向代理)
   # =============================================================================
-  # profiles: ["prod"] - 需要通过 COMPOSE_PROFILES=prod 启用
-  # 本地开发: COMPOSE_PROFILES= 留空，nginx 不启动
-  # 云端部署: COMPOSE_PROFILES=prod，nginx 自动启动
   nginx:
     image: nginx:stable-alpine
     container_name: ${PROJECT_NAME:-personal_ai}_nginx
@@ -224,12 +233,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    # ========================================
-    # 关键配置：仅通过 COMPOSE_PROFILES=prod 启用
-    # 本地开发不设置 COMPOSE_PROFILES，nginx 不会启动
-    # ========================================
-    profiles:
-      - prod
 
 volumes:
   postgres_data:
