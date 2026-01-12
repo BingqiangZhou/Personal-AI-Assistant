@@ -82,8 +82,6 @@ services:
       - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
       # Timezone for log timestamps / 日志时区
       - TZ=${TZ:-Asia/Shanghai}
-      # Only backend runs migrations to avoid duplicate execution
-      - RUN_MIGRATIONS=true
     ports:
       - "${BACKEND_PUBLISH_PORT:-8000}:8000"
     volumes:
