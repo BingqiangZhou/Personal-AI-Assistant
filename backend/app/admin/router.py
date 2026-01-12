@@ -1330,7 +1330,7 @@ async def edit_subscription(
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
 ):
-    """Edit a subscription."""
+    """Edit a subscription and re-test connection."""
     try:
         result = await db.execute(select(Subscription).where(Subscription.id == sub_id))
         subscription = result.scalar_one_or_none()
@@ -1338,16 +1338,48 @@ async def edit_subscription(
         if not subscription:
             raise HTTPException(status_code=404, detail="Subscription not found")
 
+        # Store original URL for comparison
+        original_source_url = subscription.source_url
+
         # Update fields
         if title is not None:
             subscription.title = title
         if source_url is not None:
             subscription.source_url = source_url
 
+        # Test the connection if URL was changed
+        if source_url is not None and source_url != original_source_url:
+            from app.core.feed_parser import parse_feed_url, FeedParserConfig
+            
+            config = FeedParserConfig(
+                max_entries=10,
+                strip_html=True,
+                strict_mode=False,
+                log_raw_feed=False
+            )
+            
+            try:
+                test_result = await parse_feed_url(subscription.source_url, config=config)
+                
+                # Update status based on test result
+                if test_result and test_result.success and test_result.entries:
+                    subscription.status = SubscriptionStatus.ACTIVE
+                    subscription.error_message = None
+                    logger.info(f"Subscription {sub_id} ({subscription.title}) connection test successful after edit")
+                else:
+                    subscription.status = SubscriptionStatus.ERROR
+                    error_msg = test_result.errors[0].message if test_result and test_result.errors else "No entries found or invalid feed"
+                    subscription.error_message = error_msg
+                    logger.warning(f"Subscription {sub_id} ({subscription.title}) connection test failed after edit: {error_msg}")
+            except Exception as e:
+                subscription.status = SubscriptionStatus.ERROR
+                subscription.error_message = str(e)
+                logger.error(f"Subscription {sub_id} ({subscription.title}) connection test error after edit: {e}")
+
         await db.commit()
         await db.refresh(subscription)
 
-        logger.info(f"Subscription {sub_id} edited by user {user.username}")
+        logger.info(f"Subscription {sub_id} edited by user {user.username}, status: {subscription.status}")
 
         # Log audit action
         await log_admin_action(
@@ -1358,11 +1390,20 @@ async def edit_subscription(
             resource_type="subscription",
             resource_id=sub_id,
             resource_name=subscription.title,
-            details={"title": title, "source_url": source_url},
+            details={
+                "title": title,
+                "source_url": source_url,
+                "status": subscription.status,
+                "error_message": subscription.error_message
+            },
             request=request,
         )
 
-        return JSONResponse(content={"success": True})
+        return JSONResponse(content={
+            "success": True,
+            "status": subscription.status,
+            "error_message": subscription.error_message
+        })
     except Exception as e:
         logger.error(f"Edit subscription error: {e}")
         raise HTTPException(
@@ -1382,7 +1423,7 @@ async def test_subscription_url(
         from app.core.feed_parser import FeedParser, FeedParserConfig, FeedParseOptions
         import time
 
-        # Configure parser (same as backend subscription service)
+        # Configure parser (same as backend subscription service, uses default user_agent)
         config = FeedParserConfig(
             max_entries=10000,  # 增加到10000以获取更真实的条目数
             strip_html=True,
@@ -1468,7 +1509,7 @@ async def test_all_subscriptions(
                 "failed_items": [],
             })
 
-        # Configure parser
+        # Configure parser (uses default user_agent from FeedParserConfig)
         config = FeedParserConfig(
             max_entries=10,
             strip_html=True,
@@ -1484,42 +1525,100 @@ async def test_all_subscriptions(
 
         logger.info(f"Starting test for {len(subscriptions)} subscriptions")
 
-        for subscription in subscriptions:
+        # Import asyncio for concurrent processing
+        import asyncio
+
+        # Define async function to test a single subscription with timeout
+        async def test_single_subscription(subscription: Subscription, timeout: int = 15):
+            """Test a single subscription with timeout."""
             try:
                 start_time = time.time()
-                result = await parse_feed_url(subscription.source_url, config=config)
+                # Use asyncio.wait_for to add timeout
+                result = await asyncio.wait_for(
+                    parse_feed_url(subscription.source_url, config=config),
+                    timeout=timeout
+                )
                 response_time_ms = int((time.time() - start_time) * 1000)
 
                 if result and result.success and result.entries:
-                    success_count += 1
-                    logger.info(f"Subscription {subscription.id} ({subscription.title}) test passed")
-                else:
-                    failed_count += 1
-                    error_msg = result.errors[0] if result and result.errors else "No entries found or invalid feed"
-                    failed_items.append({
+                    return {
                         "id": subscription.id,
                         "title": subscription.title,
                         "source_url": subscription.source_url,
-                        "error": error_msg
-                    })
-                    # Mark for disabling if currently active
-                    if subscription.status == SubscriptionStatus.ACTIVE:
-                        subscriptions_to_disable.append(subscription.id)
-                    logger.warning(f"Subscription {subscription.id} ({subscription.title}) test failed: {error_msg}")
-
+                        "success": True,
+                        "response_time_ms": response_time_ms,
+                    }
+                else:
+                    error_msg = result.errors[0] if result and result.errors else "No entries found or invalid feed"
+                    return {
+                        "id": subscription.id,
+                        "title": subscription.title,
+                        "source_url": subscription.source_url,
+                        "success": False,
+                        "error": error_msg,
+                    }
+            except asyncio.TimeoutError:
+                return {
+                    "id": subscription.id,
+                    "title": subscription.title,
+                    "source_url": subscription.source_url,
+                    "success": False,
+                    "error": f"Timeout after {timeout} seconds",
+                }
             except Exception as e:
+                return {
+                    "id": subscription.id,
+                    "title": subscription.title,
+                    "source_url": subscription.source_url,
+                    "success": False,
+                    "error": str(e),
+                }
+
+        # Test all subscriptions concurrently with a limit of 10 concurrent requests
+        semaphore = asyncio.Semaphore(10)
+
+        async def test_with_semaphore(subscription):
+            async with semaphore:
+                return await test_single_subscription(subscription)
+
+        # Run all tests concurrently
+        test_results = await asyncio.gather(
+            *[test_with_semaphore(sub) for sub in subscriptions],
+            return_exceptions=True
+        )
+
+        # Process results
+        for i, result in enumerate(test_results):
+            if isinstance(result, Exception):
+                # Handle unexpected exceptions
+                subscription = subscriptions[i]
                 failed_count += 1
-                error_msg = str(e)
+                error_msg = f"Unexpected error: {str(result)}"
                 failed_items.append({
                     "id": subscription.id,
                     "title": subscription.title,
                     "source_url": subscription.source_url,
                     "error": error_msg
                 })
-                # Mark for disabling if currently active
                 if subscription.status == SubscriptionStatus.ACTIVE:
                     subscriptions_to_disable.append(subscription.id)
-                logger.error(f"Subscription {subscription.id} ({subscription.title}) test error: {e}", exc_info=True)
+                logger.error(f"Subscription {subscription.id} ({subscription.title}) unexpected error: {result}")
+            elif result["success"]:
+                success_count += 1
+                logger.info(f"Subscription {result['id']} ({result['title']}) test passed in {result.get('response_time_ms', 0)}ms")
+            else:
+                failed_count += 1
+                failed_items.append({
+                    "id": result["id"],
+                    "title": result["title"],
+                    "source_url": result["source_url"],
+                    "error": result["error"]
+                })
+                # Mark for disabling if currently active
+                subscription = subscriptions[i]
+                if subscription.status == SubscriptionStatus.ACTIVE:
+                    subscriptions_to_disable.append(subscription.id)
+                logger.warning(f"Subscription {result['id']} ({result['title']}) test failed: {result['error']}")
 
         # Disable failed subscriptions
         if subscriptions_to_disable:

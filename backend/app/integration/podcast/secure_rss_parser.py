@@ -108,7 +108,7 @@ class SecureRSSParser:
             timeout = aiohttp.ClientTimeout(total=60, connect=10)
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.get(url, headers={
-                    'User-Agent': 'PersonalAI-Assistant/1.0 (+https://github.com/user/repo)'
+                    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'
                 }) as resp:
                     if resp.status != 200:
                         return None, f"HTTP {resp.status}"
