@@ -1,28 +1,73 @@
 {% extends "base.html" %}
 
-{% block title %}系统监控{% endblock %}
+{% block title %}系统监控 / System Monitoring{% endblock %}
 
 {% block content %}
 <div class="px-4 sm:px-6 lg:px-8">
     <div class="sm:flex sm:items-center">
         <div class="sm:flex-auto">
-            <h1 class="text-2xl font-semibold text-gray-900">系统监控面板</h1>
+            <h1 class="text-2xl font-semibold text-gray-900">系统监控面板 / System Monitoring</h1>
             <p class="mt-2 text-sm text-gray-700">
-                实时监控系统资源和运行状态
+                实时监控系统资源和运行状态 / Real-time system resource monitoring
             </p>
         </div>
-        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-            <button onclick="location.reload()"
+        <div class="mt-4 sm:mt-0 sm:ml-16 sm:flex-none flex items-center gap-2">
+            <select id="refreshInterval" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                <option value="0" selected>手动刷新 / Manual</option>
+                <option value="10">10秒 / 10s</option>
+                <option value="30">30秒 / 30s</option>
+                <option value="60">1分钟 / 1m</option>
+            </select>
+            <button onclick="refreshMonitoring()"
                     class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                刷新数据
+                刷新 / Refresh
             </button>
         </div>
     </div>
 
-    <!-- System Resources -->
+    <!-- System Information -->
     <div class="mt-8">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">系统资源</h2>
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">系统信息 / System Information</h2>
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6">
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">主机名 / Hostname</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ hostname }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">操作系统 / OS</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ os_type }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">架构 / Architecture</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ architecture }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">运行时间 / Uptime</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ uptime_seconds | format_uptime }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">CPU核心 / Cores</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ cpu_count }}</dd>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <dt class="text-sm font-medium text-gray-500">当前用户 / Users</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ current_users }}</dd>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <dt class="text-sm font-medium text-gray-500">系统版本 / OS Version</dt>
+                        <dd class="mt-1 text-sm text-gray-900 truncate" title="{{ os_version }}">{{ os_version[:50] }}{% if os_version|length > 50 %}...{% endif %}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <!-- CPU Metrics -->
+    <div class="mt-8">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">CPU 指标 / CPU Metrics</h2>
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <!-- CPU Usage -->
             <div class="bg-white overflow-hidden shadow rounded-lg">
                 <div class="p-5">
@@ -34,7 +79,7 @@
                         </div>
                         <div class="ml-5 w-0 flex-1">
                             <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">CPU使用率</dt>
+                                <dt class="text-sm font-medium text-gray-500 truncate">CPU 使用率 / Usage</dt>
                                 <dd class="flex items-baseline">
                                     <div class="text-2xl font-semibold {% if cpu_percent >= 80 %}text-red-600{% elif cpu_percent >= 60 %}text-yellow-600{% else %}text-gray-900{% endif %}">
                                         {{ cpu_percent }}%
@@ -53,7 +98,60 @@
                 </div>
             </div>
 
-            <!-- Memory Usage -->
+            <!-- Load Average -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <dt class="text-sm font-medium text-gray-500 truncate">系统负载 / Load Average</dt>
+                    <dd class="mt-1 text-2xl font-semibold text-gray-900">
+                        {{ "%.2f"|format(load_average_1min) }}
+                    </dd>
+                    <div class="mt-2 text-xs text-gray-500">
+                        <span class="mr-3">1m: {{ "%.2f"|format(load_average_1min) }}</span>
+                        <span class="mr-3">5m: {{ "%.2f"|format(load_average_5min) }}</span>
+                        <span>15m: {{ "%.2f"|format(load_average_15min) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CPU Stats -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <dt class="text-sm font-medium text-gray-500 truncate">上下文切换 / Context Switches</dt>
+                    <dd class="mt-1 text-2xl font-semibold text-gray-900">
+                        {{ context_switches | format_number }}
+                    </dd>
+                    <div class="mt-2 text-xs text-gray-500">
+                        中断 / Interrupts: {{ interrupts | format_number }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Per-CPU Core Usage -->
+        <div class="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6">
+                <h3 class="text-sm font-medium text-gray-500 mb-3">各核心使用率 / Per-Core Usage</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+                    {% for usage in per_cpu_percent %}
+                    <div class="text-center">
+                        <div class="text-xs text-gray-500 mb-1">Core {{ loop.index0 }}</div>
+                        <div class="relative h-16 bg-gray-200 rounded overflow-hidden">
+                            <div style="height:{{ usage }}%; bottom:0; position:absolute; width:100%;"
+                                 class="{% if usage >= 80 %}bg-red-500{% elif usage >= 60 %}bg-yellow-500{% else %}bg-green-500{% endif %}"></div>
+                        </div>
+                        <div class="text-xs text-gray-700 mt-1">{{ usage }}%</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Memory Metrics -->
+    <div class="mt-8">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">内存指标 / Memory Metrics</h2>
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <!-- Physical Memory -->
             <div class="bg-white overflow-hidden shadow rounded-lg">
                 <div class="p-5">
                     <div class="flex items-center">
@@ -64,7 +162,7 @@
                         </div>
                         <div class="ml-5 w-0 flex-1">
                             <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">内存使用率</dt>
+                                <dt class="text-sm font-medium text-gray-500 truncate">物理内存 / Physical Memory</dt>
                                 <dd class="flex items-baseline">
                                     <div class="text-2xl font-semibold {% if memory_percent >= 80 %}text-red-600{% elif memory_percent >= 60 %}text-yellow-600{% else %}text-gray-900{% endif %}">
                                         {{ memory_percent }}%
@@ -83,27 +181,43 @@
                             </div>
                         </div>
                     </div>
+                    {% if memory_buffered_gb > 0 or memory_cached_gb > 0 %}
+                    <div class="mt-2 text-xs text-gray-500">
+                        {% if memory_buffered_gb > 0 %}缓冲: {{ "%.1f"|format(memory_buffered_gb) }} GB{% endif %}
+                        {% if memory_cached_gb > 0 %} 缓存: {{ "%.1f"|format(memory_cached_gb) }} GB{% endif %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Disk Usage -->
+            <!-- Available Memory -->
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="p-5">
+                    <dt class="text-sm font-medium text-gray-500 truncate">可用内存 / Available Memory</dt>
+                    <dd class="mt-1 text-2xl font-semibold text-gray-900">
+                        {{ "%.1f"|format(memory_available_gb) }} GB
+                    </dd>
+                </div>
+            </div>
+
+            <!-- Swap Memory -->
             <div class="bg-white overflow-hidden shadow rounded-lg">
                 <div class="p-5">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
                             <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                         </div>
                         <div class="ml-5 w-0 flex-1">
                             <dl>
-                                <dt class="text-sm font-medium text-gray-500 truncate">磁盘使用率</dt>
+                                <dt class="text-sm font-medium text-gray-500 truncate">交换分区 / Swap</dt>
                                 <dd class="flex items-baseline">
-                                    <div class="text-2xl font-semibold {% if disk_percent >= 80 %}text-red-600{% elif disk_percent >= 60 %}text-yellow-600{% else %}text-gray-900{% endif %}">
-                                        {{ disk_percent }}%
+                                    <div class="text-2xl font-semibold {% if swap_percent >= 50 %}text-red-600{% elif swap_percent >= 20 %}text-yellow-600{% else %}text-gray-900{% endif %}">
+                                        {{ swap_percent }}%
                                     </div>
                                     <div class="ml-2 text-sm text-gray-500">
-                                        {{ "%.1f"|format(disk_used_gb) }} / {{ "%.1f"|format(disk_total_gb) }} GB
+                                        {{ "%.1f"|format(swap_used_gb) }} / {{ "%.1f"|format(swap_total_gb) }} GB
                                     </div>
                                 </dd>
                             </dl>
@@ -112,7 +226,7 @@
                     <div class="mt-4">
                         <div class="relative pt-1">
                             <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
-                                <div style="width:{{ disk_percent }}%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center {% if disk_percent >= 80 %}bg-red-500{% elif disk_percent >= 60 %}bg-yellow-500{% else %}bg-purple-500{% endif %}"></div>
+                                <div style="width:{{ swap_percent }}%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center {% if swap_percent >= 50 %}bg-red-500{% elif swap_percent >= 20 %}bg-yellow-500{% else %}bg-purple-500{% endif %}"></div>
                             </div>
                         </div>
                     </div>
@@ -121,13 +235,99 @@
         </div>
     </div>
 
+    <!-- Disk Partitions -->
+    <div class="mt-8">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">磁盘分区 / Disk Partitions</h2>
+        <div class="bg-white shadow overflow-hidden sm:rounded-md">
+            <ul role="list" class="divide-y divide-gray-200">
+                {% for partition in disk_partitions %}
+                <li>
+                    <div class="px-4 py-4 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <p class="text-sm font-medium text-indigo-600 truncate">{{ partition.mountpoint }}</p>
+                                <p class="ml-2 text-sm text-gray-500">({{ partition.fstype }})</p>
+                            </div>
+                            <div class="ml-2 flex-shrink-0 flex">
+                                <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if partition.percent >= 90 %}bg-red-100 text-red-800{% elif partition.percent >= 70 %}bg-yellow-100 text-yellow-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ partition.percent }}%
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-2 sm:flex sm:justify-between">
+                            <div class="sm:flex">
+                                <p class="flex items-center text-sm text-gray-500">
+                                    <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                                    </svg>
+                                    {{ "%.1f"|format(partition.used_gb) }} / {{ "%.1f"|format(partition.total_gb) }} GB
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="relative pt-1">
+                                <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
+                                    <div style="width:{{ partition.percent }}%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center {% if partition.percent >= 90 %}bg-red-500{% elif partition.percent >= 70 %}bg-yellow-500{% else %}bg-green-500{% endif %}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Network Interfaces -->
+    <div class="mt-8">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">网络接口 / Network Interfaces</h2>
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">接口 / Interface</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态 / Status</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">发送 / Sent</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">接收 / Recv</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">错误 / Errors</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for iface in network_interfaces %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ iface.name }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if iface.is_up %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">活动 / UP</span>
+                            {% else %}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">关闭 / DOWN</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                            {{ iface.bytes_sent | format_bytes }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                            {{ iface.bytes_recv | format_bytes }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+                            in: {{ iface.errors_in }} / out: {{ iface.errors_out }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Database Statistics -->
     <div class="mt-8">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">数据库统计</h2>
+        <h2 class="text-lg font-medium text-gray-900 mb-4">数据库统计 / Database Statistics</h2>
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-4">
             <div class="bg-white overflow-hidden shadow rounded-lg">
                 <div class="px-4 py-5 sm:p-6">
-                    <dt class="text-sm font-medium text-gray-500 truncate">用户总数</dt>
+                    <dt class="text-sm font-medium text-gray-500 truncate">用户总数 / Total Users</dt>
                     <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ user_count }}</dd>
                 </div>
             </div>
@@ -141,18 +341,18 @@
 
             <div class="bg-white overflow-hidden shadow rounded-lg">
                 <div class="px-4 py-5 sm:p-6">
-                    <dt class="text-sm font-medium text-gray-500 truncate">订阅总数</dt>
+                    <dt class="text-sm font-medium text-gray-500 truncate">订阅总数 / Total Subscriptions</dt>
                     <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ subscription_count }}</dd>
-                    <dd class="mt-1 text-sm text-gray-500">活跃: {{ active_subscription_count }}</dd>
+                    <dd class="mt-1 text-sm text-gray-500">活跃 / Active: {{ active_subscription_count }}</dd>
                 </div>
             </div>
 
             <div class="bg-white overflow-hidden shadow rounded-lg">
                 <div class="px-4 py-5 sm:p-6">
-                    <dt class="text-sm font-medium text-gray-500 truncate">24小时操作</dt>
+                    <dt class="text-sm font-medium text-gray-500 truncate">24小时操作 / 24h Operations</dt>
                     <dd class="mt-1 text-3xl font-semibold text-gray-900">{{ recent_logs_count }}</dd>
                     <dd class="mt-1 text-sm {% if failed_ops_count > 0 %}text-red-600{% else %}text-gray-500{% endif %}">
-                        失败: {{ failed_ops_count }}
+                        失败 / Failed: {{ failed_ops_count }}
                     </dd>
                 </div>
             </div>
@@ -161,7 +361,7 @@
 
     <!-- Recent Activity -->
     <div class="mt-8">
-        <h2 class="text-lg font-medium text-gray-900 mb-4">最近操作</h2>
+        <h2 class="text-lg font-medium text-gray-900 mb-4">最近操作 / Recent Activity</h2>
         <div class="bg-white shadow overflow-hidden sm:rounded-md">
             <ul role="list" class="divide-y divide-gray-200">
                 {% for log in recent_audit_logs %}
@@ -196,5 +396,49 @@
             </ul>
         </div>
     </div>
+
+    <!-- Last Update -->
+    <div class="mt-8 text-sm text-gray-500">
+        最后更新 / Last Update: <span id="lastUpdate">{{ current_time }}</span>
+    </div>
 </div>
+
+<script>
+// Auto-refresh functionality
+let refreshIntervalId = null;
+let currentInterval = 0; // Default manual refresh (0 = no auto-refresh)
+
+function refreshMonitoring() {
+    // Show loading state
+    document.body.style.cursor = 'wait';
+
+    // Reload the page
+    location.reload();
+}
+
+function setAutoRefresh(interval) {
+    // Clear existing interval
+    if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = null;
+    }
+
+    currentInterval = interval;
+
+    if (interval > 0) {
+        refreshIntervalId = setInterval(refreshMonitoring, interval * 1000);
+    }
+}
+
+// Handle interval selection change
+document.getElementById('refreshInterval').addEventListener('change', function(e) {
+    setAutoRefresh(parseInt(e.target.value));
+});
+
+// Start auto-refresh on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setAutoRefresh(currentInterval);
+});
+</script>
+
 {% endblock %}

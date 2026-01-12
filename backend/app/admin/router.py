@@ -1,7 +1,7 @@
 """Admin panel routes."""
 import logging
 import secrets
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request, Response, status
@@ -20,10 +20,11 @@ from app.admin.audit import log_admin_action
 from app.admin.models import AdminAuditLog, SystemSettings
 from app.admin.twofa import generate_totp_secret, generate_qr_code, verify_totp_token
 from app.admin.first_run import check_admin_exists
+from app.admin.monitoring import get_monitor_service
 from app.core.database import get_db_session
 from app.core.security import verify_password, get_password_hash
 from app.domains.ai.models import AIModelConfig, ModelType
-from app.domains.subscription.models import Subscription, UpdateFrequency
+from app.domains.subscription.models import Subscription, UpdateFrequency, SubscriptionStatus
 from app.domains.user.models import User, UserStatus
 from app.domains.user.repositories import UserRepository
 
@@ -52,6 +53,47 @@ def to_local_timezone(dt: datetime, format_str: str = '%Y-%m-%d %H:%M:%S') -> st
 
 # Register the custom filter
 templates.env.filters['to_local'] = to_local_timezone
+
+# Custom filter for uptime formatting
+def format_uptime(seconds: float) -> str:
+    """Format uptime seconds to human readable string."""
+    if seconds is None:
+        return '-'
+    days = int(seconds // 86400)
+    hours = int((seconds % 86400) // 3600)
+    minutes = int((seconds % 3600) // 60)
+    if days > 0:
+        return f"{days}天 {hours}小时"
+    elif hours > 0:
+        return f"{hours}小时 {minutes}分钟"
+    else:
+        return f"{minutes}分钟"
+
+# Custom filter for bytes formatting
+def format_bytes(bytes_value: int) -> str:
+    """Format bytes to human readable string."""
+    if bytes_value is None:
+        return '-'
+    if bytes_value >= 1073741824:
+        return f"{bytes_value / 1073741824:.1f} GB"
+    elif bytes_value >= 1048576:
+        return f"{bytes_value / 1048576:.1f} MB"
+    elif bytes_value >= 1024:
+        return f"{bytes_value / 1024:.1f} KB"
+    else:
+        return f"{bytes_value} B"
+
+# Custom filter for number formatting
+def format_number(value: int) -> str:
+    """Format number with thousand separators."""
+    if value is None:
+        return '-'
+    return f"{value:,}"
+
+# Register custom filters
+templates.env.filters['format_uptime'] = format_uptime
+templates.env.filters['format_bytes'] = format_bytes
+templates.env.filters['format_number'] = format_number
 
 # Password context for hashing API keys
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -1846,13 +1888,11 @@ async def monitoring_page(
 ):
     """Display system monitoring dashboard."""
     try:
-        import psutil
-        from datetime import datetime, timedelta
+        from datetime import timedelta
 
-        # System resources
-        cpu_percent = psutil.cpu_percent(interval=1)
-        memory = psutil.virtual_memory()
-        disk = psutil.disk_usage('/')
+        # Get system metrics
+        monitor = get_monitor_service()
+        metrics = monitor.get_all_metrics()
 
         # Database statistics
         user_count_query = select(func.count()).select_from(User)
@@ -1868,7 +1908,7 @@ async def monitoring_page(
         subscription_count = subscription_count_result.scalar() or 0
 
         # Active subscriptions
-        active_subscription_query = select(func.count()).select_from(Subscription).where(Subscription.is_active == True)
+        active_subscription_query = select(func.count()).select_from(Subscription).where(Subscription.status == SubscriptionStatus.ACTIVE)
         active_subscription_result = await db.execute(active_subscription_query)
         active_subscription_count = active_subscription_result.scalar() or 0
 
@@ -1896,13 +1936,39 @@ async def monitoring_page(
             {
                 "request": request,
                 "user": user,
-                "cpu_percent": cpu_percent,
-                "memory_percent": memory.percent,
-                "memory_used_gb": memory.used / (1024 ** 3),
-                "memory_total_gb": memory.total / (1024 ** 3),
-                "disk_percent": disk.percent,
-                "disk_used_gb": disk.used / (1024 ** 3),
-                "disk_total_gb": disk.total / (1024 ** 3),
+                # Current time
+                "current_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                # System info
+                "hostname": metrics.system_info.hostname,
+                "os_type": metrics.system_info.os_type,
+                "os_version": metrics.system_info.os_version,
+                "architecture": metrics.system_info.architecture,
+                "uptime_seconds": metrics.system_info.uptime_seconds,
+                "cpu_count": metrics.system_info.cpu_count,
+                "current_users": metrics.system_info.current_users,
+                # CPU metrics
+                "cpu_percent": metrics.cpu.usage_percent,
+                "per_cpu_percent": metrics.cpu.per_cpu_percent,
+                "load_average_1min": metrics.cpu.load_average_1min,
+                "load_average_5min": metrics.cpu.load_average_5min,
+                "load_average_15min": metrics.cpu.load_average_15min,
+                "context_switches": metrics.cpu.context_switches,
+                "interrupts": metrics.cpu.interrupts,
+                # Memory metrics
+                "memory_percent": metrics.memory.percent,
+                "memory_used_gb": metrics.memory.used_gb,
+                "memory_total_gb": metrics.memory.total_gb,
+                "memory_available_gb": metrics.memory.available_gb,
+                "memory_buffered_gb": metrics.memory.buffered_gb,
+                "memory_cached_gb": metrics.memory.cached_gb,
+                "swap_percent": metrics.memory.swap_percent,
+                "swap_used_gb": metrics.memory.swap_used_gb,
+                "swap_total_gb": metrics.memory.swap_total_gb,
+                # Disk metrics
+                "disk_partitions": metrics.disk.partitions,
+                # Network metrics
+                "network_interfaces": metrics.network.interfaces,
+                # Database stats
                 "user_count": user_count,
                 "apikey_count": apikey_count,
                 "subscription_count": subscription_count,
@@ -1918,6 +1984,111 @@ async def monitoring_page(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to load monitoring dashboard",
+        )
+
+
+# ==================== Monitoring API Endpoints ====================
+
+
+@router.get("/api/monitoring/all")
+async def get_all_metrics_api(
+    user: User = Depends(admin_required),
+):
+    """Get all system metrics as JSON."""
+    try:
+        monitor = get_monitor_service()
+        metrics = monitor.get_all_metrics()
+        return JSONResponse(content=metrics.model_dump())
+    except Exception as e:
+        logger.error(f"Get all metrics API error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get system metrics",
+        )
+
+
+@router.get("/api/monitoring/system-info")
+async def get_system_info_api(
+    user: User = Depends(admin_required),
+):
+    """Get system basic information as JSON."""
+    try:
+        monitor = get_monitor_service()
+        info = monitor.get_system_info()
+        return JSONResponse(content=info.model_dump())
+    except Exception as e:
+        logger.error(f"Get system info API error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get system info",
+        )
+
+
+@router.get("/api/monitoring/cpu")
+async def get_cpu_metrics_api(
+    user: User = Depends(admin_required),
+):
+    """Get CPU metrics as JSON."""
+    try:
+        monitor = get_monitor_service()
+        metrics = monitor.get_cpu_metrics()
+        return JSONResponse(content=metrics.model_dump())
+    except Exception as e:
+        logger.error(f"Get CPU metrics API error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get CPU metrics",
+        )
+
+
+@router.get("/api/monitoring/memory")
+async def get_memory_metrics_api(
+    user: User = Depends(admin_required),
+):
+    """Get memory metrics as JSON."""
+    try:
+        monitor = get_monitor_service()
+        metrics = monitor.get_memory_metrics()
+        return JSONResponse(content=metrics.model_dump())
+    except Exception as e:
+        logger.error(f"Get memory metrics API error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get memory metrics",
+        )
+
+
+@router.get("/api/monitoring/disk")
+async def get_disk_metrics_api(
+    user: User = Depends(admin_required),
+):
+    """Get disk metrics as JSON."""
+    try:
+        monitor = get_monitor_service()
+        metrics = monitor.get_disk_metrics()
+        return JSONResponse(content=metrics.model_dump())
+    except Exception as e:
+        logger.error(f"Get disk metrics API error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get disk metrics",
+        )
+
+
+@router.get("/api/monitoring/network")
+async def get_network_metrics_api(
+    user: User = Depends(admin_required),
+):
+    """Get network metrics as JSON."""
+    try:
+        monitor = get_monitor_service()
+        metrics = monitor.get_network_metrics()
+        return JSONResponse(content=metrics.model_dump())
+    except Exception as e:
+        logger.error(f"Get network metrics API error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get network metrics",
         )
 
 
