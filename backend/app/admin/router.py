@@ -1143,6 +1143,7 @@ async def subscriptions_page(
     page: int = 1,
     per_page: int = 10,
     status_filter: Optional[str] = None,
+    search_query: Optional[str] = None,
 ):
     """Display RSS subscriptions management page with pagination and status filter."""
     try:
@@ -1159,6 +1160,11 @@ async def subscriptions_page(
                 'pending': SubscriptionStatus.PENDING,
             }
             query = query.where(Subscription.status == status_map[status_filter])
+        
+        # Apply title search if specified
+        if search_query and search_query.strip():
+            search_term = f"%{search_query.strip()}%"
+            query = query.where(Subscription.title.ilike(search_term))
 
         # Get total count (with filter applied)
         count_query = select(func.count()).select_from(query.subquery())
@@ -1212,6 +1218,7 @@ async def subscriptions_page(
                 "default_update_time": default_update_time,
                 "default_day_of_week": default_day_of_week,
                 "status_filter": status_filter or "",
+                "search_query": search_query or "",
                 "messages": [],
             },
         )
@@ -1347,34 +1354,33 @@ async def edit_subscription(
         if source_url is not None:
             subscription.source_url = source_url
 
-        # Test the connection if URL was changed
-        if source_url is not None and source_url != original_source_url:
-            from app.core.feed_parser import parse_feed_url, FeedParserConfig
+        # Always test the connection after editing to ensure feed is valid
+        from app.core.feed_parser import parse_feed_url, FeedParserConfig
+        
+        config = FeedParserConfig(
+            max_entries=10,
+            strip_html=True,
+            strict_mode=False,
+            log_raw_feed=False
+        )
+        
+        try:
+            test_result = await parse_feed_url(subscription.source_url, config=config)
             
-            config = FeedParserConfig(
-                max_entries=10,
-                strip_html=True,
-                strict_mode=False,
-                log_raw_feed=False
-            )
-            
-            try:
-                test_result = await parse_feed_url(subscription.source_url, config=config)
-                
-                # Update status based on test result
-                if test_result and test_result.success and test_result.entries:
-                    subscription.status = SubscriptionStatus.ACTIVE
-                    subscription.error_message = None
-                    logger.info(f"Subscription {sub_id} ({subscription.title}) connection test successful after edit")
-                else:
-                    subscription.status = SubscriptionStatus.ERROR
-                    error_msg = test_result.errors[0].message if test_result and test_result.errors else "No entries found or invalid feed"
-                    subscription.error_message = error_msg
-                    logger.warning(f"Subscription {sub_id} ({subscription.title}) connection test failed after edit: {error_msg}")
-            except Exception as e:
+            # Update status based on test result
+            if test_result and test_result.success and test_result.entries:
+                subscription.status = SubscriptionStatus.ACTIVE
+                subscription.error_message = None
+                logger.info(f"Subscription {sub_id} ({subscription.title}) connection test successful after edit")
+            else:
                 subscription.status = SubscriptionStatus.ERROR
-                subscription.error_message = str(e)
-                logger.error(f"Subscription {sub_id} ({subscription.title}) connection test error after edit: {e}")
+                error_msg = test_result.errors[0].message if test_result and test_result.errors else "No entries found or invalid feed"
+                subscription.error_message = error_msg
+                logger.warning(f"Subscription {sub_id} ({subscription.title}) connection test failed after edit: {error_msg}")
+        except Exception as e:
+            subscription.status = SubscriptionStatus.ERROR
+            subscription.error_message = str(e)
+            logger.error(f"Subscription {sub_id} ({subscription.title}) connection test error after edit: {e}")
 
         await db.commit()
         await db.refresh(subscription)
@@ -1574,8 +1580,8 @@ async def test_all_subscriptions(
                     "error": str(e),
                 }
 
-        # Test all subscriptions concurrently with a limit of 10 concurrent requests
-        semaphore = asyncio.Semaphore(10)
+        # Test all subscriptions concurrently with a limit of 5 concurrent requests (avoid rate limiting)
+        semaphore = asyncio.Semaphore(5)
 
         async def test_with_semaphore(subscription):
             async with semaphore:
