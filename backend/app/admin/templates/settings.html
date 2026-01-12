@@ -19,6 +19,7 @@
         background: #4f46e5;
         cursor: pointer;
         margin-top: -8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
     input[type=range]::-webkit-slider-runnable-track {
@@ -35,6 +36,7 @@
         background: #4f46e5;
         cursor: pointer;
         border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
     input[type=range]::-moz-range-track {
@@ -51,107 +53,233 @@
     input[type=range]:focus::-webkit-slider-runnable-track {
         background: #d1d5db;
     }
+
+    /* Value display styling */
+    .value-display {
+        min-width: 60px;
+        text-align: center;
+        padding: 8px 16px;
+        background: #f3f4f6;
+        border-radius: 8px;
+        font-weight: 600;
+        color: #4f46e5;
+        font-size: 16px;
+    }
+
+    /* Card title styling */
+    .card-subtitle {
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 4px;
+    }
+
+    .card-description {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 16px;
+    }
+
+    /* Header save button */
+    .header-save-btn {
+        transition: all 0.2s ease;
+    }
+
+    .header-save-btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+
+    .header-save-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Success message */
+    .save-success {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Loading spinner */
+    .spinner {
+        border: 2px solid #ffffff;
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="px-4 sm:px-6 lg:px-8">
-    <div class="md:flex md:items-center md:justify-between">
-        <div class="min-w-0 flex-1">
-            <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-                系统设置
-            </h2>
-        </div>
+    <!-- Header -->
+    <div class="py-4">
+        <h2 class="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+            系统设置
+        </h2>
     </div>
 
-    <!-- Audio Processing Settings -->
-    <div class="mt-8 bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">音频处理设置</h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">配置音频文件处理的相关参数</p>
+    <!-- Audio Processing Settings Card -->
+    <div class="mt-6 bg-white shadow sm:rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">音频处理</h3>
+            <button
+                type="button"
+                onclick="saveAudioSettings()"
+                id="audio-save-btn"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+                保存
+            </button>
         </div>
-        <div class="px-4 py-5 sm:p-6">
-            <form id="audio-settings-form" class="space-y-8">
-                <!-- Audio Chunk Size -->
-                <div class="bg-gray-50 rounded-lg p-6">
-                    <label for="chunk-size" class="block text-base font-semibold text-gray-900 mb-2">
-                        音频切块大小
-                    </label>
-                    <p class="text-sm text-gray-600 mb-6">
-                        音频文件切块的大小，较大的值可以提高处理速度但会增加内存使用
-                    </p>
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between px-2">
-                            <span class="text-sm font-medium text-gray-500">5 MB</span>
-                            <span id="chunk-size-value" class="text-2xl font-bold text-indigo-600">10 MB</span>
-                            <span class="text-sm font-medium text-gray-500">25 MB</span>
-                        </div>
-                        <input
-                            type="range"
-                            id="chunk-size"
-                            name="chunk_size_mb"
-                            min="5"
-                            max="25"
-                            value="10"
-                            class="w-full"
-                        >
-                    </div>
-                </div>
-
-                <!-- Max Concurrent Threads -->
-                <div class="bg-gray-50 rounded-lg p-6">
-                    <label for="max-threads" class="block text-base font-semibold text-gray-900 mb-2">
-                        最大并发线程数
-                    </label>
-                    <p class="text-sm text-gray-600 mb-6">
-                        同时处理的最大线程数，较高的值可以加快处理速度但会增加系统负载
-                    </p>
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between px-2">
-                            <span class="text-sm font-medium text-gray-500">1</span>
-                            <span id="max-threads-value" class="text-2xl font-bold text-indigo-600">4</span>
-                            <span class="text-sm font-medium text-gray-500">16</span>
-                        </div>
-                        <input
-                            type="range"
-                            id="max-threads"
-                            name="max_concurrent_threads"
-                            min="1"
-                            max="16"
-                            value="4"
-                            class="w-full"
-                        >
-                    </div>
-                </div>
-
-                <!-- Save Button -->
-                <div class="flex items-center gap-4 pt-2">
-                    <button
-                        type="button"
-                        onclick="saveAudioSettings()"
-                        id="save-btn"
-                        class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-6 py-3 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+        <div class="px-6 py-6 space-y-8">
+            <!-- Audio Chunk Size -->
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <div class="card-subtitle whitespace-nowrap">音频切块大小</div>
+                    <div class="flex-1"></div>
+                    <input
+                        type="range"
+                        id="chunk-size"
+                        name="chunk_size_mb"
+                        min="5"
+                        max="25"
+                        value="10"
+                        step="1"
+                        style="width: 120px;"
                     >
-                        保存设置
-                    </button>
-                    <span id="save-status" class="text-sm font-medium hidden"></span>
+                    <div class="flex items-center gap-2 ml-4">
+                        <div id="chunk-size-value" class="value-display" style="min-width: 50px; padding: 6px 12px;">10</div>
+                        <span class="text-sm text-gray-500 w-8">MB</span>
+                    </div>
                 </div>
-            </form>
+                <p class="card-description">较大的值可提高处理速度，但会增加内存使用</p>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-gray-200"></div>
+
+            <!-- Max Concurrent Threads -->
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <div class="card-subtitle whitespace-nowrap">最大并发线程数</div>
+                    <div class="flex-1"></div>
+                    <input
+                        type="range"
+                        id="max-threads"
+                        name="max_concurrent_threads"
+                        min="1"
+                        max="16"
+                        value="4"
+                        step="1"
+                        style="width: 120px;"
+                    >
+                    <div class="flex items-center gap-2 ml-4">
+                        <div id="max-threads-value" class="value-display" style="min-width: 50px; padding: 6px 12px;">4</div>
+                        <span class="text-sm text-gray-500 w-8">个</span>
+                    </div>
+                </div>
+                <p class="card-description">高并发可加快处理速度，但会增加系统负载</p>
+            </div>
         </div>
     </div>
 
-    <!-- System Info -->
-    <div class="mt-8 bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">系统信息</h3>
+    <!-- RSS Subscription Settings Card -->
+    <div class="mt-6 bg-white shadow sm:rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">RSS订阅设置</h3>
+            <button
+                type="button"
+                onclick="saveFrequencySettings()"
+                id="rss-save-btn"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+                保存
+            </button>
         </div>
-        <div class="px-4 py-5 sm:p-6">
-            <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                <div class="sm:col-span-1">
+        <div class="px-6 py-6 space-y-6">
+            <!-- Update Frequency -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div class="card-subtitle">更新频率</div>
+                    <select id="update-frequency" name="update_frequency"
+                            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3 border">
+                        <option value="HOURLY">每小时</option>
+                        <option value="DAILY">每天</option>
+                        <option value="WEEKLY">每周</option>
+                    </select>
+                </div>
+                <p class="card-description">设置默认刷新频率</p>
+            </div>
+
+            <!-- Conditional Time Setting (for DAILY and WEEKLY) -->
+            <div id="daily-time-setting" class="space-y-3" style="display: none;">
+                <div class="flex items-center justify-between">
+                    <div class="card-subtitle">更新时间</div>
+                    <input type="time" id="update-time" name="update_time" value="00:00"
+                           class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3 border">
+                </div>
+            </div>
+
+            <!-- Conditional Day Setting (for WEEKLY only) -->
+            <div id="weekly-day-setting" class="space-y-3" style="display: none;">
+                <div class="flex items-center justify-between">
+                    <div class="card-subtitle">星期</div>
+                    <select id="update-day" name="update_day"
+                            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3 border">
+                        <option value="1">周一</option>
+                        <option value="2">周二</option>
+                        <option value="3">周三</option>
+                        <option value="4">周四</option>
+                        <option value="5">周五</option>
+                        <option value="6">周六</option>
+                        <option value="7">周日</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Info Card -->
+    <div class="mt-6 mb-8 bg-white shadow sm:rounded-lg overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">系统信息</h3>
+        </div>
+        <div class="px-6 py-5">
+            <dl class="grid grid-cols-1 gap-x-4 gap-y-4 sm:grid-cols-2">
+                <div>
                     <dt class="text-sm font-medium text-gray-500">系统版本</dt>
                     <dd class="mt-1 text-sm text-gray-900">1.0.0</dd>
                 </div>
-                <div class="sm:col-span-1">
+                <div>
                     <dt class="text-sm font-medium text-gray-500">数据库状态</dt>
                     <dd class="mt-1 text-sm text-green-600">正常</dd>
                 </div>
@@ -160,51 +288,182 @@
     </div>
 </div>
 
+<!-- Success/Error Message Container -->
+<div id="message-container"></div>
+
 <script>
-    // Update slider values display
+    // Get DOM elements
     const chunkSizeSlider = document.getElementById('chunk-size');
     const chunkSizeValue = document.getElementById('chunk-size-value');
     const maxThreadsSlider = document.getElementById('max-threads');
     const maxThreadsValue = document.getElementById('max-threads-value');
+    const frequencySelect = document.getElementById('update-frequency');
+    const dailyTimeSetting = document.getElementById('daily-time-setting');
+    const weeklyDaySetting = document.getElementById('weekly-day-setting');
+    const messageContainer = document.getElementById('message-container');
+
+    // Store original values to detect changes
+    let originalValues = {
+        chunkSize: 10,
+        maxThreads: 4,
+        frequency: 'HOURLY',
+        updateTime: '00:00',
+        updateDay: '1'
+    };
+
+    // Show/hide time and day fields based on frequency
+    function updateFrequencyFields() {
+        const frequency = frequencySelect.value;
+        if (frequency === 'HOURLY') {
+            dailyTimeSetting.style.display = 'none';
+            weeklyDaySetting.style.display = 'none';
+        } else if (frequency === 'DAILY') {
+            dailyTimeSetting.style.display = 'block';
+            weeklyDaySetting.style.display = 'none';
+        } else if (frequency === 'WEEKLY') {
+            dailyTimeSetting.style.display = 'block';
+            weeklyDaySetting.style.display = 'block';
+        }
+    }
+
+    // Show success/error message
+    function showMessage(message, isSuccess = true) {
+        const messageEl = document.createElement('div');
+        messageEl.className = 'save-success';
+        messageEl.style.background = isSuccess ? '#10b981' : '#ef4444';
+        messageEl.textContent = message;
+        messageContainer.appendChild(messageEl);
+
+        setTimeout(() => {
+            messageEl.remove();
+        }, 3000);
+    }
+
+    // Check if there are unsaved changes
+    function hasChanges() {
+        return chunkSizeSlider.value != originalValues.chunkSize ||
+               maxThreadsSlider.value != originalValues.maxThreads ||
+               frequencySelect.value != originalValues.frequency ||
+               document.getElementById('update-time').value != originalValues.updateTime ||
+               document.getElementById('update-day').value != originalValues.updateDay;
+    }
 
     // Load current settings on page load
     document.addEventListener('DOMContentLoaded', async function() {
+        // Load audio settings
         try {
             const response = await fetch('/super/settings/api/audio');
             if (response.ok) {
                 const data = await response.json();
                 if (data.chunk_size_mb !== undefined) {
                     chunkSizeSlider.value = data.chunk_size_mb;
-                    chunkSizeValue.textContent = data.chunk_size_mb + ' MB';
+                    chunkSizeValue.textContent = data.chunk_size_mb;
+                    originalValues.chunkSize = data.chunk_size_mb;
                 }
                 if (data.max_concurrent_threads !== undefined) {
                     maxThreadsSlider.value = data.max_concurrent_threads;
                     maxThreadsValue.textContent = data.max_concurrent_threads;
+                    originalValues.maxThreads = data.max_concurrent_threads;
                 }
             }
         } catch (error) {
-            console.error('Failed to load settings:', error);
+            console.error('Failed to load audio settings:', error);
+        }
+
+        // Load frequency settings
+        try {
+            const freqResponse = await fetch('/super/settings/frequency');
+            if (freqResponse.ok) {
+                const freqData = await freqResponse.json();
+                if (freqData.update_frequency) {
+                    frequencySelect.value = freqData.update_frequency;
+                    originalValues.frequency = freqData.update_frequency;
+                }
+                if (freqData.update_time) {
+                    document.getElementById('update-time').value = freqData.update_time;
+                    originalValues.updateTime = freqData.update_time;
+                }
+                if (freqData.update_day_of_week) {
+                    document.getElementById('update-day').value = freqData.update_day_of_week;
+                    originalValues.updateDay = freqData.update_day_of_week;
+                }
+                updateFrequencyFields();
+            }
+        } catch (error) {
+            console.error('Failed to load frequency settings:', error);
         }
     });
 
     // Update display when slider moves
     chunkSizeSlider.addEventListener('input', function() {
-        chunkSizeValue.textContent = this.value + ' MB';
+        chunkSizeValue.textContent = this.value;
     });
 
     maxThreadsSlider.addEventListener('input', function() {
         maxThreadsValue.textContent = this.value;
     });
 
-    // Save audio settings
-    async function saveAudioSettings() {
-        const saveBtn = document.getElementById('save-btn');
-        const saveStatus = document.getElementById('save-status');
+    // Handle frequency change
+    frequencySelect.addEventListener('change', updateFrequencyFields);
+
+    // Save frequency settings
+    async function saveFrequencySettings() {
+        const saveBtn = document.getElementById('rss-save-btn');
 
         // Disable button and show loading
         saveBtn.disabled = true;
-        saveBtn.textContent = '保存中...';
-        saveStatus.classList.add('hidden');
+        const originalText = saveBtn.textContent;
+        saveBtn.innerHTML = '<span class="spinner"></span> 保存中...';
+
+        try {
+            const frequencyData = {
+                update_frequency: frequencySelect.value
+            };
+
+            if (frequencySelect.value === 'DAILY' || frequencySelect.value === 'WEEKLY') {
+                frequencyData.update_time = document.getElementById('update-time').value;
+            }
+            if (frequencySelect.value === 'WEEKLY') {
+                frequencyData.update_day_of_week = parseInt(document.getElementById('update-day').value);
+            }
+
+            const response = await fetch('/super/settings/frequency', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(frequencyData),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                showMessage('RSS订阅设置已保存成功！');
+                // Update original values
+                originalValues.frequency = frequencySelect.value;
+                originalValues.updateTime = document.getElementById('update-time').value;
+                originalValues.updateDay = document.getElementById('update-day').value;
+            } else {
+                showMessage('保存失败: ' + (data.detail || data.message || '未知错误'), false);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showMessage('保存失败: 网络错误', false);
+        } finally {
+            // Re-enable button
+            saveBtn.disabled = false;
+            saveBtn.textContent = originalText;
+        }
+    }
+
+    // Save audio settings only
+    async function saveAudioSettings() {
+        const saveBtn = document.getElementById('audio-save-btn');
+
+        // Disable button and show loading
+        saveBtn.disabled = true;
+        const originalText = saveBtn.textContent;
+        saveBtn.innerHTML = '<span class="spinner"></span> 保存中...';
 
         try {
             const response = await fetch('/super/settings/api/audio', {
@@ -221,27 +480,20 @@
             const data = await response.json();
 
             if (response.ok) {
-                saveStatus.textContent = '保存成功';
-                saveStatus.classList.remove('hidden', 'text-red-600');
-                saveStatus.classList.add('text-green-600');
-
-                // Hide success message after 3 seconds
-                setTimeout(() => {
-                    saveStatus.classList.add('hidden');
-                }, 3000);
+                showMessage('音频设置已保存成功！');
+                // Update original values
+                originalValues.chunkSize = chunkSizeSlider.value;
+                originalValues.maxThreads = maxThreadsSlider.value;
             } else {
-                saveStatus.textContent = '保存失败: ' + (data.detail || data.message || '未知错误');
-                saveStatus.classList.remove('hidden', 'text-green-600');
-                saveStatus.classList.add('text-red-600');
+                showMessage('保存失败: ' + (data.detail || data.message || '未知错误'), false);
             }
         } catch (error) {
-            saveStatus.textContent = '保存失败: 网络错误';
-            saveStatus.classList.remove('hidden', 'text-green-600');
-            saveStatus.classList.add('text-red-600');
+            console.error('Error:', error);
+            showMessage('保存失败: 网络错误', false);
         } finally {
             // Re-enable button
             saveBtn.disabled = false;
-            saveBtn.textContent = '保存设置';
+            saveBtn.textContent = originalText;
         }
     }
 </script>

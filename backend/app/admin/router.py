@@ -8,7 +8,7 @@ from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request, Resp
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from passlib.context import CryptContext
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import encrypt_data, decrypt_data
@@ -1129,21 +1129,36 @@ async def subscriptions_page(
     db: AsyncSession = Depends(get_db_session),
     page: int = 1,
     per_page: int = 10,
+    status_filter: Optional[str] = None,
 ):
-    """Display RSS subscriptions management page with pagination."""
+    """Display RSS subscriptions management page with pagination and status filter."""
     try:
-        # Get total count
-        count_result = await db.execute(select(func.count()).select_from(Subscription))
-        total_count = count_result.scalar() or 0
+        # Build base query
+        query = select(Subscription)
+
+        # Apply status filter if specified
+        if status_filter and status_filter in ['active', 'inactive', 'error', 'pending']:
+            # Map filter to SubscriptionStatus enum values
+            status_map = {
+                'active': SubscriptionStatus.ACTIVE,
+                'inactive': SubscriptionStatus.INACTIVE,
+                'error': SubscriptionStatus.ERROR,
+                'pending': SubscriptionStatus.PENDING,
+            }
+            query = query.where(Subscription.status == status_map[status_filter])
+
+        # Get total count (with filter applied)
+        count_query = select(func.count()).select_from(query.subquery())
+        total_count_result = await db.execute(count_query)
+        total_count = total_count_result.scalar() or 0
 
         # Calculate pagination
-        total_pages = (total_count + per_page - 1) // per_page
+        total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
         offset = (page - 1) * per_page
 
         # Get paginated subscriptions
         result = await db.execute(
-            select(Subscription)
-            .order_by(Subscription.created_at.desc())
+            query.order_by(Subscription.created_at.desc())
             .limit(per_page)
             .offset(offset)
         )
@@ -1183,6 +1198,7 @@ async def subscriptions_page(
                 "default_frequency": default_frequency,
                 "default_update_time": default_update_time,
                 "default_day_of_week": default_day_of_week,
+                "status_filter": status_filter or "",
                 "messages": [],
             },
         )
@@ -1407,6 +1423,137 @@ async def test_subscription_url(
         return JSONResponse(
             content={"success": False, "message": f"Test failed: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@router.post("/subscriptions/test-all")
+async def test_all_subscriptions(
+    request: Request,
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Test all RSS subscriptions and disable failed ones."""
+    try:
+        from app.core.feed_parser import parse_feed_url, FeedParserConfig
+        import time
+
+        # Get all subscriptions (admin page only shows RSS subscriptions)
+        result = await db.execute(
+            select(Subscription)
+            .order_by(Subscription.created_at.desc())
+        )
+        subscriptions = result.scalars().all()
+
+        if not subscriptions:
+            return JSONResponse(content={
+                "success": True,
+                "message": "没有RSS订阅需要测试",
+                "total_count": 0,
+                "success_count": 0,
+                "failed_count": 0,
+                "disabled_count": 0,
+                "failed_items": [],
+            })
+
+        # Configure parser
+        config = FeedParserConfig(
+            max_entries=10,
+            strip_html=True,
+            strict_mode=False,
+            log_raw_feed=False
+        )
+
+        success_count = 0
+        failed_count = 0
+        disabled_count = 0
+        failed_items = []
+        subscriptions_to_disable = []
+
+        logger.info(f"Starting test for {len(subscriptions)} subscriptions")
+
+        for subscription in subscriptions:
+            try:
+                start_time = time.time()
+                result = await parse_feed_url(subscription.source_url, config=config)
+                response_time_ms = int((time.time() - start_time) * 1000)
+
+                if result and result.success and result.entries:
+                    success_count += 1
+                    logger.info(f"Subscription {subscription.id} ({subscription.title}) test passed")
+                else:
+                    failed_count += 1
+                    error_msg = result.errors[0] if result and result.errors else "No entries found or invalid feed"
+                    failed_items.append({
+                        "id": subscription.id,
+                        "title": subscription.title,
+                        "source_url": subscription.source_url,
+                        "error": error_msg
+                    })
+                    # Mark for disabling if currently active
+                    if subscription.status == SubscriptionStatus.ACTIVE:
+                        subscriptions_to_disable.append(subscription.id)
+                    logger.warning(f"Subscription {subscription.id} ({subscription.title}) test failed: {error_msg}")
+
+            except Exception as e:
+                failed_count += 1
+                error_msg = str(e)
+                failed_items.append({
+                    "id": subscription.id,
+                    "title": subscription.title,
+                    "source_url": subscription.source_url,
+                    "error": error_msg
+                })
+                # Mark for disabling if currently active
+                if subscription.status == SubscriptionStatus.ACTIVE:
+                    subscriptions_to_disable.append(subscription.id)
+                logger.error(f"Subscription {subscription.id} ({subscription.title}) test error: {e}", exc_info=True)
+
+        # Disable failed subscriptions
+        if subscriptions_to_disable:
+            await db.execute(
+                update(Subscription)
+                .where(Subscription.id.in_(subscriptions_to_disable))
+                .values(status=SubscriptionStatus.ERROR)
+            )
+            await db.commit()
+            disabled_count = len(subscriptions_to_disable)
+
+        total_count = len(subscriptions)
+
+        logger.info(f"Test all subscriptions completed: {success_count}/{total_count} passed, {failed_count} failed, {disabled_count} disabled by user {user.username}")
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="test_all",
+            resource_type="subscription",
+            resource_name=f"All RSS subscriptions",
+            details={
+                "total_count": total_count,
+                "success_count": success_count,
+                "failed_count": failed_count,
+                "disabled_count": disabled_count,
+            },
+            request=request,
+        )
+
+        return JSONResponse(content={
+            "success": True,
+            "message": f"测试完成: {success_count}/{total_count} 通过, {failed_count} 失败, {disabled_count} 已禁用",
+            "total_count": total_count,
+            "success_count": success_count,
+            "failed_count": failed_count,
+            "disabled_count": disabled_count,
+            "failed_items": failed_items,
+        })
+
+    except Exception as e:
+        logger.error(f"Test all subscriptions error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to test subscriptions: {str(e)}",
         )
 
 
@@ -2248,6 +2395,143 @@ async def update_audio_settings(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update audio settings",
         )
+
+
+@router.get("/settings/frequency")
+async def get_frequency_settings(
+    request: Request,
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Get RSS subscription update frequency settings."""
+    try:
+        # Get default frequency settings from the first subscription (if any)
+        default_frequency = UpdateFrequency.HOURLY.value
+        default_update_time = "00:00"
+        default_day_of_week = 1
+
+        # Get most common frequency settings from existing subscriptions
+        freq_result = await db.execute(
+            select(Subscription.update_frequency, Subscription.update_time, Subscription.update_day_of_week)
+            .where(Subscription.source_type == "rss")
+            .group_by(Subscription.update_frequency, Subscription.update_time, Subscription.update_day_of_week)
+            .order_by(func.count().desc())
+            .limit(1)
+        )
+        row = freq_result.first()
+        if row:
+            default_frequency = row[0]
+            default_update_time = row[1] or "00:00"
+            default_day_of_week = row[2] or 1
+
+        return JSONResponse(content={
+            "update_frequency": default_frequency,
+            "update_time": default_update_time,
+            "update_day_of_week": default_day_of_week,
+        })
+    except Exception as e:
+        logger.error(f"Get frequency settings error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get frequency settings",
+        )
+
+
+@router.post("/settings/frequency")
+async def update_frequency_settings(
+    request: Request,
+    update_frequency: str = Body(..., embed=True),
+    update_time: Optional[str] = Body(None, embed=True),
+    update_day: Optional[int] = Body(None, embed=True),
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Update RSS subscription update frequency settings."""
+    try:
+        # Validate frequency value
+        valid_frequencies = ['HOURLY', 'DAILY', 'WEEKLY']
+        if update_frequency not in valid_frequencies:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid frequency. Must be one of: {valid_frequencies}"
+            )
+
+        # Validate time if DAILY or WEEKLY
+        if update_frequency in ['DAILY', 'WEEKLY'] and not update_time:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="update_time is required for DAILY and WEEKLY frequencies"
+            )
+
+        # Validate day if WEEKLY
+        if update_frequency == 'WEEKLY' and not update_day:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="update_day is required for WEEKLY frequency"
+            )
+
+        if update_day is not None and not (1 <= update_day <= 7):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="update_day must be between 1 and 7"
+            )
+
+        # Update all RSS subscriptions with the new frequency settings
+        update_data = {
+            "update_frequency": update_frequency,
+            "update_time": update_time if update_frequency in ['DAILY', 'WEEKLY'] else None,
+            "update_day_of_week": update_day if update_frequency == 'WEEKLY' else None,
+        }
+
+        update_count_result = await db.execute(
+            select(func.count()).select_from(Subscription).where(Subscription.source_type == "rss")
+        )
+        total_count = update_count_result.scalar() or 0
+
+        if total_count > 0:
+            await db.execute(
+                select(Subscription).where(Subscription.source_type == "rss")
+            )
+            subscriptions = (await db.execute(
+                select(Subscription).where(Subscription.source_type == "rss")
+            )).scalars().all()
+
+            for sub in subscriptions:
+                sub.update_frequency = update_frequency
+                if update_frequency in ['DAILY', 'WEEKLY']:
+                    sub.update_time = update_time
+                if update_frequency == 'WEEKLY':
+                    sub.update_day_of_week = update_day
+
+            await db.commit()
+
+        logger.info(f"Frequency settings updated by user {user.username}: {update_data}, affected {total_count} subscriptions")
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="update",
+            resource_type="subscription_frequency",
+            resource_name=f"All RSS subscriptions ({total_count})",
+            details=update_data,
+            request=request,
+        )
+
+        return JSONResponse(content={
+            "success": True,
+            "message": f"已更新 {total_count} 个RSS订阅的更新频率设置"
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update frequency settings error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update frequency settings",
+        )
+
 
 
 

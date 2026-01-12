@@ -13,50 +13,52 @@
         </div>
     </div>
 
-    <!-- Update Frequency Settings -->
+    <!-- Filter Bar -->
     <div class="mt-4 bg-white shadow sm:rounded-lg p-4">
         <div class="flex items-center justify-between">
-            <div>
-                <h3 class="text-lg font-medium text-gray-900">更新频率设置</h3>
-                <p class="text-sm text-gray-500">设置所有RSS订阅的默认更新频率</p>
-            </div>
-            <form id="frequency-form" class="flex items-center gap-4">
+            <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2">
-                    <label for="update-frequency" class="text-sm font-medium text-gray-700">频率:</label>
-                    <select id="update-frequency" name="update_frequency"
+                    <label for="status-filter" class="text-sm font-medium text-gray-700">状态筛选:</label>
+                    <select id="status-filter" onchange="applyStatusFilter()"
                             class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                        <option value="HOURLY" {% if default_frequency == 'HOURLY' %}selected{% endif %}>每小时</option>
-                        <option value="DAILY" {% if default_frequency == 'DAILY' %}selected{% endif %}>每天</option>
-                        <option value="WEEKLY" {% if default_frequency == 'WEEKLY' %}selected{% endif %}>每周</option>
+                        <option value="">全部</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>活跃</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>未激活</option>
+                        <option value="error" {% if status_filter == 'error' %}selected{% endif %}>错误</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>等待中</option>
                     </select>
                 </div>
-                <div class="flex items-center gap-2" id="daily-time-setting" style="display: {% if default_frequency == 'DAILY' or default_frequency == 'WEEKLY' %}block{% else %}none{% endif %};">
-                    <label for="update-time" class="text-sm font-medium text-gray-700">时间:</label>
-                    <input type="time" id="update-time" name="update_time" value="{{ default_update_time or '00:00' }}"
-                           class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                </div>
-                <div class="flex items-center gap-2" id="weekly-day-setting" style="display: {% if default_frequency == 'WEEKLY' %}block{% else %}none{% endif %};">
-                    <label for="update-day" class="text-sm font-medium text-gray-700">星期:</label>
-                    <select id="update-day" name="update_day"
-                            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                        <option value="1" {% if default_day_of_week == 1 %}selected{% endif %}>周一</option>
-                        <option value="2" {% if default_day_of_week == 2 %}selected{% endif %}>周二</option>
-                        <option value="3" {% if default_day_of_week == 3 %}selected{% endif %}>周三</option>
-                        <option value="4" {% if default_day_of_week == 4 %}selected{% endif %}>周四</option>
-                        <option value="5" {% if default_day_of_week == 5 %}selected{% endif %}>周五</option>
-                        <option value="6" {% if default_day_of_week == 6 %}selected{% endif %}>周六</option>
-                        <option value="7" {% if default_day_of_week == 7 %}selected{% endif %}>周日</option>
-                    </select>
-                </div>
-                <button type="submit"
-                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    应用设置
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="testAllSubscriptions()"
+                        id="test-all-btn"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    测试全部链接
                 </button>
-            </form>
+            </div>
         </div>
     </div>
 
-    <!-- Batch Operations Bar -->
+    <!-- Test Results -->
+    <div id="test-results" class="mt-4 hidden">
+        <div class="bg-white shadow sm:rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">测试结果</h3>
+                    <button onclick="closeTestResults()"
+                            class="text-gray-400 hover:text-gray-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div id="test-results-content"></div>
+            </div>
+        </div>
+    </div>
     <div id="batch-operations" class="mt-4 bg-white shadow sm:rounded-lg p-4 hidden">
         <div class="flex items-center justify-between">
             <div class="flex items-center">
@@ -312,60 +314,6 @@
 </div>
 
 <script>
-// Update frequency form handling
-document.addEventListener('DOMContentLoaded', function() {
-    const frequencySelect = document.getElementById('update-frequency');
-    const dailyTimeSetting = document.getElementById('daily-time-setting');
-    const weeklyDaySetting = document.getElementById('weekly-day-setting');
-    const frequencyForm = document.getElementById('frequency-form');
-
-    // Show/hide time and day fields based on frequency
-    function updateFrequencyFields() {
-        const frequency = frequencySelect.value;
-        if (frequency === 'HOURLY') {
-            dailyTimeSetting.style.display = 'none';
-            weeklyDaySetting.style.display = 'none';
-        } else if (frequency === 'DAILY') {
-            dailyTimeSetting.style.display = 'flex';
-            weeklyDaySetting.style.display = 'none';
-        } else if (frequency === 'WEEKLY') {
-            dailyTimeSetting.style.display = 'flex';
-            weeklyDaySetting.style.display = 'flex';
-        }
-    }
-
-    frequencySelect.addEventListener('change', updateFrequencyFields);
-
-    // Handle form submission
-    frequencyForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const formData = new FormData(frequencyForm);
-        const data = Object.fromEntries(formData.entries());
-
-        try {
-            const response = await fetch('/super/subscriptions/update-frequency', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data),
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                alert(result.message || '更新频率设置已保存');
-                location.reload();
-            } else {
-                const error = await response.json();
-                alert(error.detail || '保存失败');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('保存失败');
-        }
-    });
-});
-
 function changePerPage(perPage) {
     const url = new URL(window.location);
     url.searchParams.set('per_page', perPage);
@@ -629,6 +577,221 @@ async function batchDelete() {
         console.error('Error:', error);
         alert('批量删除失败');
     }
+}
+
+// Status filter function
+function applyStatusFilter() {
+    const statusFilter = document.getElementById('status-filter').value;
+    const url = new URL(window.location);
+    if (statusFilter) {
+        url.searchParams.set('status_filter', statusFilter);
+    } else {
+        url.searchParams.delete('status_filter');
+    }
+    url.searchParams.set('page', '1');
+    window.location = url.toString();
+}
+
+// Test all subscriptions function
+async function testAllSubscriptions() {
+    const testBtn = document.getElementById('test-all-btn');
+    const testResults = document.getElementById('test-results');
+    const testResultsContent = document.getElementById('test-results-content');
+
+    // Disable button and show progress
+    testBtn.disabled = true;
+    testBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    testBtn.innerHTML = `
+        <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        测试中...
+    `;
+    testResults.classList.remove('hidden');
+    testResultsContent.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-12">
+            <svg class="animate-spin h-12 w-12 text-indigo-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-lg font-medium text-gray-900 mb-2">正在测试所有订阅链接...</p>
+            <p class="text-sm text-gray-500">这可能需要一些时间，请稍候</p>
+            <div class="mt-4 flex items-center space-x-2">
+                <div class="w-2 h-2 bg-indigo-600 rounded-full animate-pulse"></div>
+                <div class="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+                <div class="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+            </div>
+        </div>
+    `;
+
+    try {
+        // First, get all subscriptions
+        const response = await fetch('/super/subscriptions/test-all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+            throw new Error(errorData.detail || '测试请求失败');
+        }
+
+        const result = await response.json();
+
+        // Debug: log the result
+        console.log('=== Test Result Debug ===');
+        console.log('Raw result:', result);
+        console.log('Result type:', typeof result);
+        console.log('Result keys:', Object.keys(result));
+        console.log('Total count:', result.total_count);
+        console.log('Success count:', result.success_count);
+        console.log('Failed count:', result.failed_count);
+        console.log('Disabled count:', result.disabled_count);
+        console.log('Failed items:', result.failed_items);
+        console.log('========================');
+
+        // Display results
+        displayTestResults(result);
+
+    } catch (error) {
+        console.error('Error:', error);
+        testResultsContent.innerHTML = `<div class="bg-red-50 border-l-4 border-red-400 p-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-red-800">测试失败</p>
+                    <p class="text-sm text-red-700 mt-1">${error.message}</p>
+                </div>
+            </div>
+        </div>`;
+    } finally {
+        // Re-enable button and restore original text
+        testBtn.disabled = false;
+        testBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        testBtn.innerHTML = `
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            测试全部链接
+        `;
+    }
+}
+
+function closeTestResults() {
+    document.getElementById('test-results').classList.add('hidden');
+}
+
+function displayTestResults(result) {
+    const testResultsContent = document.getElementById('test-results-content');
+
+    // Debug logging
+    console.log('=== displayTestResults Called ===');
+    console.log('Input result:', result);
+
+    const totalCount = result.total_count || 0;
+    const successCount = result.success_count || 0;
+    const failedCount = result.failed_count || 0;
+    const disabledCount = result.disabled_count || 0;
+    const failedItems = result.failed_items || [];
+
+    console.log('Parsed values:', {
+        totalCount,
+        successCount,
+        failedCount,
+        disabledCount,
+        failedItemsLength: failedItems.length
+    });
+
+    let html = `
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-4 mb-6">
+            <div class="bg-blue-50 rounded-lg p-4">
+                <div class="text-sm font-medium text-blue-700">总计</div>
+                <div class="mt-2 text-2xl font-semibold text-blue-900">${totalCount}</div>
+            </div>
+            <div class="bg-green-50 rounded-lg p-4">
+                <div class="text-sm font-medium text-green-700">通过</div>
+                <div class="mt-2 text-2xl font-semibold text-green-900">${successCount}</div>
+            </div>
+            <div class="bg-red-50 rounded-lg p-4">
+                <div class="text-sm font-medium text-red-700">失败</div>
+                <div class="mt-2 text-2xl font-semibold text-red-900">${failedCount}</div>
+            </div>
+            <div class="bg-yellow-50 rounded-lg p-4">
+                <div class="text-sm font-medium text-yellow-700">已禁用</div>
+                <div class="mt-2 text-2xl font-semibold text-yellow-900">${disabledCount}</div>
+            </div>
+        </div>
+    `;
+
+    if (failedItems.length > 0) {
+        html += `
+            <div class="border-t border-gray-200 pt-4">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">失败的订阅 (${failedItems.length})</h4>
+                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-300">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">标题</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">错误信息</th>
+                                <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">URL</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white">
+        `;
+
+        failedItems.forEach(item => {
+            html += `
+                <tr>
+                    <td class="px-3 py-4 text-sm font-medium text-gray-900">${item.title || 'Untitled'}</td>
+                    <td class="px-3 py-4 text-sm text-red-600">${item.error || '未知错误'}</td>
+                    <td class="px-3 py-4 text-sm text-gray-500 max-w-xs truncate" title="${item.source_url}">
+                        <a href="${item.source_url}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
+                            ${item.source_url}
+                        </a>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    if (successCount === totalCount && totalCount > 0) {
+        html += `
+            <div class="mt-4 bg-green-50 border-l-4 border-green-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-green-700">
+                            所有订阅链接测试通过！页面将在3秒后自动刷新以显示最新状态。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+        // Auto refresh after 3 seconds
+        setTimeout(() => {
+            location.reload();
+        }, 3000);
+    }
+
+    testResultsContent.innerHTML = html;
 }
 </script>
 {% endblock %}

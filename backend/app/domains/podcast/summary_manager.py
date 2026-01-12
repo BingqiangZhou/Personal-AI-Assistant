@@ -276,9 +276,12 @@ class SummaryModelManager:
             if not key:
                 return True
             key_lower = key.lower().strip()
-            # Check against known placeholders
+            # Check against known placeholders (skip empty strings to avoid false positives)
             for placeholder in invalid_api_keys:
-                if key_lower == placeholder.lower() or placeholder.lower() in key_lower:
+                if not placeholder:
+                    continue  # Skip empty placeholders
+                placeholder_lower = placeholder.lower()
+                if key_lower == placeholder_lower or placeholder_lower in key_lower:
                     return True
             # Check for common placeholder patterns
             if 'your-' in key_lower and ('key' in key_lower or 'api' in key_lower):
