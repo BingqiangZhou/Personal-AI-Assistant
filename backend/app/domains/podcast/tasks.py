@@ -118,7 +118,13 @@ def log_task_statistics():
     在日志中显示当前任务队列状态
     """
     try:
-        stats = asyncio.run(get_task_statistics())
+        # 在 Celery 环境中，事件循环已经在运行，不能使用 asyncio.run()
+        try:
+            loop = asyncio.get_running_loop()
+            stats = loop.run_until_complete(get_task_statistics())
+        except RuntimeError:
+            # 如果没有运行中的事件循环，使用 asyncio.run()
+            stats = asyncio.run(get_task_statistics())
 
         total_waiting = stats['pending'] + stats['in_progress']
         total_processed = stats['completed'] + stats['failed'] + stats['cancelled']
