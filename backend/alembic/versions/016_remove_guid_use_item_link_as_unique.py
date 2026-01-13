@@ -43,9 +43,20 @@ def upgrade():
 
     # Step 5: Remove duplicate item_link values
     # First, delete playback_states for duplicate episodes (keep max id)
-    # Then delete the duplicate episodes
+    # Then delete transcription_tasks for duplicate episodes
+    # Finally, delete the duplicate episodes
     conn.execute(sa.text("""
         DELETE FROM podcast_playback_states
+        WHERE episode_id IN (
+            SELECT id FROM podcast_episodes
+            WHERE id NOT IN (
+                SELECT max(id) FROM podcast_episodes GROUP BY item_link
+            )
+        )
+    """))
+
+    conn.execute(sa.text("""
+        DELETE FROM transcription_tasks
         WHERE episode_id IN (
             SELECT id FROM podcast_episodes
             WHERE id NOT IN (
