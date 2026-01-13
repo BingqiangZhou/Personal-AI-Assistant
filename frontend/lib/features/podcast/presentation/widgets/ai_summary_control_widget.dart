@@ -379,29 +379,16 @@ class _AISummaryControlWidgetState
   }
 
   Widget _buildLoadingState(BuildContext context) {
+    // 移除转圈，只显示文字提示
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              AppLocalizations.of(context)!.podcast_generating_summary,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontSize: 14,
-              ),
-            ),
-          ],
+        child: Text(
+          AppLocalizations.of(context)!.podcast_generating_summary,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 14,
+          ),
         ),
       ),
     );

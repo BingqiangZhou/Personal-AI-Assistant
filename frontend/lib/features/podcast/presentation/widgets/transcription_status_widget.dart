@@ -194,62 +194,77 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   }
 
   Widget _buildPendingState(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Icon
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(40),
-              ),
-              child: Icon(
-                Icons.pending_actions,
-                size: 40,
-                color: Colors.orange,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 根据可用宽度确定组件尺寸
+        final isSmallScreen = constraints.maxWidth < 400;
+        final isLargeScreen = constraints.maxWidth > 800;
+
+        // 响应式尺寸
+        final iconSize = isSmallScreen ? 50.0 : (isLargeScreen ? 100.0 : 80.0);
+        final iconInnerSize = iconSize * 0.5;
+        final titleFontSize = isSmallScreen ? 16.0 : (isLargeScreen ? 20.0 : 18.0);
+        final descriptionFontSize = isSmallScreen ? 13.0 : 14.0;
+
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: isLargeScreen ? 600 : double.infinity),
+              child: Padding(
+                padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Icon - 响应式大小
+                    Container(
+                      width: iconSize,
+                      height: iconSize,
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(iconSize / 2),
+                      ),
+                      child: Icon(
+                        Icons.pending_actions,
+                        size: iconInnerSize,
+                        color: Colors.orange,
+                      ),
+                    ),
+
+                    SizedBox(height: isSmallScreen ? 12 : 16),
+
+                    // Title - 响应式字体大小
+                    Text(
+                      'Pending',
+                      style: TextStyle(
+                        fontSize: titleFontSize,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+
+                    SizedBox(height: isSmallScreen ? 6 : 8),
+
+                    // Description - 响应式字体大小
+                    Text(
+                      'Transcription task has been queued\nProcessing will start shortly',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: descriptionFontSize,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            // Title
-            Text(
-              'Pending',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            // Description
-            Text(
-              'Transcription task has been queued\nProcessing will start shortly',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                height: 1.5,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -258,192 +273,215 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     final statusText = transcription.statusDescription;
     final currentStep = _getCurrentStep(transcription);
 
-    return Card(
-      elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Animated icon with progress ring
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(50),
-              ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Progress ring
-                  SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: CircularProgressIndicator(
-                      value: progress / 100,
-                      strokeWidth: 6,
-                      backgroundColor: Colors.blue.withValues(alpha: 0.2),
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-                    ),
-                  ),
-                  // Center percentage
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                    '${progress.toStringAsFixed(0)}%',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  Text(
-                    'Complete',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: Colors.blue.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ],
-              ),
-                ],
-              ),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 根据可用宽度确定组件尺寸
+        final isSmallScreen = constraints.maxWidth < 400;
+        final isLargeScreen = constraints.maxWidth > 800;
 
-            const SizedBox(height: 20),
+        // 响应式尺寸
+        final progressContainerSize = isSmallScreen ? 70.0 : (isLargeScreen ? 120.0 : 100.0);
+        final progressIndicatorSize = progressContainerSize * 0.8;
+        final progressStrokeWidth = isSmallScreen ? 4.0 : 6.0;
+        final percentageFontSize = isSmallScreen ? 16.0 : (isLargeScreen ? 24.0 : 20.0);
+        final labelFontSize = isSmallScreen ? 8.0 : 10.0;
+        final statusFontSize = isSmallScreen ? 14.0 : 16.0;
 
-            // Current status with icon
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _getStatusIcon(currentStep),
-                  const SizedBox(width: 8),
-                  Text(
-                    statusText,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Step indicators
-            _buildStepIndicators(context, transcription),
-
-            const SizedBox(height: 16),
-
-            // Progress bar
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: progress / 100,
-                backgroundColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
-                minHeight: 6,
-              ),
-            ),
-
-            // Debug info (if available)
-            if (transcription.debugMessage != null) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
-                  ),
-                ),
-                child: Row(
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: isLargeScreen ? 700 : double.infinity),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.secondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        transcription.debugMessage!,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontFamily: 'monospace',
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    // Animated icon with progress ring - 响应式尺寸
+                    Container(
+                      width: progressContainerSize,
+                      height: progressContainerSize,
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(progressContainerSize / 2),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Progress ring
+                          SizedBox(
+                            width: progressIndicatorSize,
+                            height: progressIndicatorSize,
+                            child: CircularProgressIndicator(
+                              value: progress / 100,
+                              strokeWidth: progressStrokeWidth,
+                              backgroundColor: Colors.blue.withValues(alpha: 0.2),
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                            ),
+                          ),
+                          // Center percentage - 响应式字体大小
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '${progress.toStringAsFixed(0)}%',
+                                style: TextStyle(
+                                  fontSize: percentageFontSize,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                              ),
+                              Text(
+                                'Complete',
+                                style: TextStyle(
+                                  fontSize: labelFontSize,
+                                  color: Colors.blue.withValues(alpha: 0.8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
+
+                    SizedBox(height: isSmallScreen ? 16 : 20),
+
+                    // Current status with icon - 响应式字体大小
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isSmallScreen ? 12 : 16,
+                        vertical: isSmallScreen ? 8 : 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _getStatusIcon(currentStep),
+                          SizedBox(width: isSmallScreen ? 6 : 8),
+                          Flexible(
+                            child: Text(
+                              statusText,
+                              style: TextStyle(
+                                fontSize: statusFontSize,
+                                fontWeight: FontWeight.w600,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: isSmallScreen ? 16 : 20),
+
+                    // Step indicators
+                    _buildStepIndicators(context, transcription),
+
+                    SizedBox(height: isSmallScreen ? 12 : 16),
+
+                    // Progress bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: progress / 100,
+                        backgroundColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                        valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                        minHeight: isSmallScreen ? 4 : 6,
+                      ),
+                    ),
+
+                    // Debug info (if available)
+                    if (transcription.debugMessage != null) ...[
+                      SizedBox(height: isSmallScreen ? 12 : 16),
+                      Container(
+                        padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: isSmallScreen ? 12 : 14,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                            SizedBox(width: isSmallScreen ? 6 : 8),
+                            Expanded(
+                              child: Text(
+                                transcription.debugMessage!,
+                                style: TextStyle(
+                                  fontSize: isSmallScreen ? 10 : 11,
+                                  fontFamily: 'monospace',
+                                  color: Theme.of(context).colorScheme.secondary,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // Additional info
+                    if (transcription.wordCount != null || transcription.durationSeconds != null) ...[
+                      SizedBox(height: isSmallScreen ? 10 : 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (transcription.durationSeconds != null) ...[
+                            Icon(
+                              Icons.schedule,
+                              size: isSmallScreen ? 12 : 14,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                            SizedBox(width: isSmallScreen ? 3 : 4),
+                            Text(
+                              'Duration: ${_formatDuration(transcription.durationSeconds!)}',
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 11 : 12,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                          if (transcription.wordCount != null && transcription.durationSeconds != null)
+                            SizedBox(width: isSmallScreen ? 12 : 16),
+                          if (transcription.wordCount != null) ...[
+                            Icon(
+                              Icons.text_fields,
+                              size: isSmallScreen ? 12 : 14,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                            SizedBox(width: isSmallScreen ? 3 : 4),
+                            Text(
+                              '~${(transcription.wordCount! / 1000).toStringAsFixed(1)}K words',
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 11 : 12,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
-            ],
-
-            // Additional info
-            if (transcription.wordCount != null || transcription.durationSeconds != null) ...[
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (transcription.durationSeconds != null) ...[
-                    Icon(
-                      Icons.schedule,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Duration: ${_formatDuration(transcription.durationSeconds!)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                  if (transcription.wordCount != null && transcription.durationSeconds != null)
-                    const SizedBox(width: 16),
-                  if (transcription.wordCount != null) ...[
-                    Icon(
-                      Icons.text_fields,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '~${(transcription.wordCount! / 1000).toStringAsFixed(1)}K words',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
+            ),
+          ),
+        );
+      },
     );
   }
 

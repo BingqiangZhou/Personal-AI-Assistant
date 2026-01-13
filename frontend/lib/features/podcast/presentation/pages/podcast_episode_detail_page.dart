@@ -1351,7 +1351,22 @@ class _PodcastEpisodeDetailPageState
 
             // 总结内容显示
             if (summaryState.isLoading) ...[
-              const Center(child: CircularProgressIndicator()),
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Text(
+                      AppLocalizations.of(context)!.podcast_generating_summary,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ] else if (summaryState.hasError) ...[
               Center(
                 child: Column(
