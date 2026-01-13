@@ -119,7 +119,6 @@ class PodcastRepository:
     async def create_or_update_episode(
         self,
         subscription_id: int,
-        guid: str,
         title: str,
         description: str,
         audio_url: str,
@@ -131,82 +130,43 @@ class PodcastRepository:
     ) -> PodcastEpisode:
         """
         创建或更新播客单集
-        使用guid唯一标识（RSS标准）
-
-        注意：由于guid字段有全局唯一约束，如果相同guid已存在于其他订阅中，
-        将复用该episode而不是创建新记录。
+        使用item_link作为唯一标识
         """
-        # 首先尝试按 (subscription_id, guid) 组合查找
+        # 首先尝试按 item_link 查找
         stmt = select(PodcastEpisode).where(
-            and_(
-                PodcastEpisode.subscription_id == subscription_id,
-                PodcastEpisode.guid == guid
-            )
+            PodcastEpisode.item_link == item_link
         )
         result = await self.db.execute(stmt)
         episode = result.scalar_one_or_none()
 
         if episode:
-            # 在当前订阅中找到，更新字段
+            # 找到，更新字段
             episode.title = title
             episode.description = description
             episode.audio_url = audio_url
             episode.published_at = published_at.replace(tzinfo=None) if published_at.tzinfo else published_at
             episode.audio_duration = audio_duration
             episode.transcript_url = transcript_url
-            episode.item_link = item_link
             episode.updated_at = datetime.utcnow()
             if metadata:
                 episode.metadata_json = {**episode.metadata_json, **metadata}
             is_new = False
         else:
-            # 当前订阅中不存在，检查guid是否已存在于其他订阅
-            stmt_global = select(PodcastEpisode).where(
-                PodcastEpisode.guid == guid
+            # 不存在，创建新记录
+            episode = PodcastEpisode(
+                subscription_id=subscription_id,
+                title=title,
+                description=description,
+                audio_url=audio_url,
+                published_at=published_at.replace(tzinfo=None) if published_at.tzinfo else published_at,
+                audio_duration=audio_duration,
+                transcript_url=transcript_url,
+                item_link=item_link,
+                status="pending_summary",  # 等待AI总结
+                metadata=metadata or {}
             )
-            result_global = await self.db.execute(stmt_global)
-            existing_episode = result_global.scalar_one_or_none()
-
-            if existing_episode:
-                # guid已存在于其他订阅，复用该episode（关联到当前订阅）
-                # 注意：这种情况下，我们需要创建一个新的episode记录
-                # 因为subscription_id不同，但guid相同会导致唯一约束冲突
-                # 解决方案：使用带subscription前缀的guid
-                logger.info(f"Guid {guid} 已存在于订阅 {existing_episode.subscription_id}，为订阅 {subscription_id} 创建独立记录")
-                # 使用 subscription_id 前缀创建唯一guid
-                unique_guid = f"{subscription_id}_{guid}"
-                episode = PodcastEpisode(
-                    subscription_id=subscription_id,
-                    guid=unique_guid,
-                    title=title,
-                    description=description,
-                    audio_url=audio_url,
-                    published_at=published_at.replace(tzinfo=None) if published_at.tzinfo else published_at,
-                    audio_duration=audio_duration,
-                    transcript_url=transcript_url,
-                    item_link=item_link,
-                    status="pending_summary",
-                    metadata=metadata or {}
-                )
-                self.db.add(episode)
-                is_new = True
-            else:
-                # guid完全不存在，正常创建
-                episode = PodcastEpisode(
-                    subscription_id=subscription_id,
-                    guid=guid,
-                    title=title,
-                    description=description,
-                    audio_url=audio_url,
-                    published_at=published_at.replace(tzinfo=None) if published_at.tzinfo else published_at,
-                    audio_duration=audio_duration,
-                    transcript_url=transcript_url,
-                    item_link=item_link,
-                    status="pending_summary",  # 等待AI总结
-                    metadata=metadata or {}
-                )
-                self.db.add(episode)
-                is_new = True
+            self.db.add(episode)
+            is_new = True
 
         await self.db.commit()
         await self.db.refresh(episode)
@@ -256,12 +216,12 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_episode_by_guid(self, subscription_id: int, guid: str) -> Optional[PodcastEpisode]:
-        """通过GUID查找单集"""
+    async def get_episode_by_item_link(self, subscription_id: int, item_link: str) -> Optional[PodcastEpisode]:
+        """通过item_link查找单集"""
         stmt = select(PodcastEpisode).where(
             and_(
                 PodcastEpisode.subscription_id == subscription_id,
-                PodcastEpisode.guid == guid
+                PodcastEpisode.item_link == item_link
             )
         )
         result = await self.db.execute(stmt)

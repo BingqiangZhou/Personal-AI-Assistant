@@ -98,7 +98,6 @@ class PodcastService:
         for episode in feed.episodes:  # 所有单集
             saved_episode, is_new = await self.repo.create_or_update_episode(
                 subscription_id=subscription.id,
-                guid=episode.guid or f"{feed_url}-{episode.title}",
                 title=episode.title,
                 description=episode.description,
                 audio_url=episode.audio_url,
@@ -400,7 +399,6 @@ class PodcastService:
         for episode in feed.episodes:
             saved_episode, is_new = await self.repo.create_or_update_episode(
                 subscription_id=subscription_id,
-                guid=episode.guid or f"{sub.source_url}-{episode.title}",
                 title=episode.title,
                 description=episode.description,
                 audio_url=episode.audio_url,
@@ -456,13 +454,11 @@ class PodcastService:
         if not success:
             raise ValueError(f"重新解析失败: {error}")
 
-        # 获取当前已存在的单集GUID
-        existing_guids = set()
+        # 获取当前已存在的单集item_links
+        existing_item_links = set()
         if not force_all:
             existing_episodes = await self.repo.get_subscription_episodes(subscription_id, limit=None)
-            existing_guids = {ep.metadata_json.get('guid') if ep.metadata_json else None for ep in existing_episodes}
-            existing_guids.discard(None)
-
+            existing_item_links = {ep.item_link for ep in existing_episodes if ep.item_link}
         # 保存单集
         processed = 0
         new_episodes = 0
@@ -471,18 +467,16 @@ class PodcastService:
 
         for episode in feed.episodes:
             # 如果不是强制全部重新解析，跳过已存在的
-            if not force_all and episode.guid in existing_guids:
+            if not force_all and episode.link in existing_item_links:
                 continue
 
             try:
                 # Debug: 记录 episode.link 的值
                 logger.info(f"🔗 [REPARSE] Episode: {episode.title[:50]}...")
                 logger.info(f"   - episode.link: {episode.link}")
-                logger.info(f"   - episode.guid: {episode.guid}")
 
                 saved_episode, is_new = await self.repo.create_or_update_episode(
                     subscription_id=subscription_id,
-                    guid=episode.guid or f"{sub.source_url}-{episode.title}",
                     title=episode.title,
                     description=episode.description,
                     audio_url=episode.audio_url,
@@ -493,7 +487,7 @@ class PodcastService:
                     metadata={
                         "feed_title": feed.title,
                         "reparsed_at": datetime.utcnow().isoformat(),
-                        "guid": episode.guid
+                        "item_link": episode.link
                     }
                 )
 

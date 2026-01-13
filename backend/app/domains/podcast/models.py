@@ -28,9 +28,6 @@ class PodcastEpisode(Base):
     id = Column(Integer, primary_key=True, index=True)
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"), nullable=False)
 
-    # 准唯一标识
-    guid = Column(String(500), unique=True, nullable=False, index=True)  # RSS原始ID
-
     # 播客基本信息
     title = Column(String(500), nullable=False)
     description = Column(Text, nullable=True)
@@ -54,7 +51,7 @@ class PodcastEpisode(Base):
     image_url = Column(String(500))  # 分集封面图URL
 
     # 分集详情页链接
-    item_link = Column(String(500))  # <item><link> 标签内容，指向分集详情页
+    item_link = Column(String(500), unique=True, nullable=False)  # <item><link> 标签内容，指向分集详情页
 
     # 播放统计（全局）
     play_count = Column(Integer, default=0)
@@ -81,7 +78,7 @@ class PodcastEpisode(Base):
         Index('idx_podcast_status', 'status'),
         Index('idx_podcast_published', 'published_at'),
         Index('idx_podcast_episode_image', 'image_url'),
-        Index('idx_podcast_episodes_item_link', 'item_link'),
+        Index('idx_podcast_episodes_item_link', 'item_link', unique=True),
     )
 
     def __repr__(self):
