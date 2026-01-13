@@ -214,7 +214,7 @@ class StorageCleanupService:
                     "enabled": enabled,
                     "last_cleanup": setting.value.get("last_cleanup") if setting.value else None
                 }
-                setting.updated_at = datetime.now(timezone.utc)
+                setting.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
             else:
                 # 创建新配置
                 setting = SystemSettings(
@@ -379,7 +379,7 @@ class StorageCleanupService:
 
             if setting:
                 setting.value["last_cleanup"] = current_time
-                setting.updated_at = datetime.now(timezone.utc)
+                setting.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
             else:
                 # 创建配置记录
                 setting = SystemSettings(

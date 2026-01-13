@@ -420,16 +420,22 @@
 
             <!-- Manual Cleanup Button -->
             <div class="space-y-3">
-                <div class="card-subtitle">手动清理</div>
-                <p class="card-description">立即清理昨天及之前的文件</p>
-                <button
-                    type="button"
-                    id="manual-cleanup-btn"
-                    onclick="executeManualCleanup()"
-                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                >
-                    立即清理
-                </button>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="card-subtitle">手动清理</div>
+                        <p class="card-description mt-1">立即清理昨天及之前的文件</p>
+                    </div>
+                    <div class="flex items-center">
+                        <button
+                            type="button"
+                            id="manual-cleanup-btn"
+                            onclick="executeManualCleanup()"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                        >
+                            立即清理
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
