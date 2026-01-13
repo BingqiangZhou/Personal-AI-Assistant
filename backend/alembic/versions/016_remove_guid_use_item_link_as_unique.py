@@ -42,7 +42,18 @@ def upgrade():
     op.drop_index('idx_podcast_episodes_item_link', table_name='podcast_episodes')
 
     # Step 5: Remove duplicate item_link values
-    # Keep the row with the highest id for each item_link
+    # First, delete playback_states for duplicate episodes (keep max id)
+    # Then delete the duplicate episodes
+    conn.execute(sa.text("""
+        DELETE FROM podcast_playback_states
+        WHERE episode_id IN (
+            SELECT id FROM podcast_episodes
+            WHERE id NOT IN (
+                SELECT max(id) FROM podcast_episodes GROUP BY item_link
+            )
+        )
+    """))
+
     conn.execute(sa.text("""
         DELETE FROM podcast_episodes
         WHERE id NOT IN (
