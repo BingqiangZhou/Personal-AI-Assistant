@@ -2404,13 +2404,13 @@ async def get_audio_settings(
         threads_setting = threads_result.scalar_one_or_none()
 
         chunk_size_mb = 10  # Default
-        max_concurrent_threads = 4  # Default
+        max_concurrent_threads = 2  # Default
 
         if chunk_size_setting and chunk_size_setting.value:
             chunk_size_mb = chunk_size_setting.value.get("value", 10)
 
         if threads_setting and threads_setting.value:
-            max_concurrent_threads = threads_setting.value.get("value", 4)
+            max_concurrent_threads = threads_setting.value.get("value", 2)
 
         return JSONResponse(content={
             "chunk_size_mb": chunk_size_mb,

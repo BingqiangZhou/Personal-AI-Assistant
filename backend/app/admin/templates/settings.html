@@ -198,12 +198,12 @@
                         name="max_concurrent_threads"
                         min="1"
                         max="16"
-                        value="4"
+                        value="2"
                         step="1"
                         style="width: 120px;"
                     >
                     <div class="flex items-center gap-2 ml-4">
-                        <div id="max-threads-value" class="value-display" style="min-width: 50px; padding: 6px 12px;">4</div>
+                        <div id="max-threads-value" class="value-display" style="min-width: 50px; padding: 6px 12px;">2</div>
                         <span class="text-sm text-gray-500 w-8">个</span>
                     </div>
                 </div>
@@ -483,7 +483,7 @@
     // Store original values to detect changes
     let originalValues = {
         chunkSize: 10,
-        maxThreads: 4,
+        maxThreads: 2,
         frequency: 'HOURLY',
         updateTime: '00:00',
         updateDay: '1',

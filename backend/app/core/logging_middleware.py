@@ -59,12 +59,20 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         try:
             # 尝试从请求头获取认证信息
             auth_header = request.headers.get("authorization", "")
-            if auth_header:
-                # 这里可以添加解析 JWT 获取 user_id 的逻辑
-                # 简化处理：只记录有认证头的情况
-                user_id = "authenticated"
-        except Exception:
-            pass
+            if auth_header and auth_header.startswith("Bearer "):
+                # 提取 token
+                token = auth_header.split(" ")[1]
+
+                # 解析 JWT 获取用户信息
+                from app.core.security import verify_token
+                payload = verify_token(token)
+
+                # 获取真实用户 ID (sub 字段)
+                user_id = payload.get("sub", "authenticated")
+        except Exception as e:
+            # Token 无效或过期，标记为认证失败但继续处理请求
+            # 后续的路由守卫会处理认证问题
+            user_id = "authenticated_invalid_token"
 
         # 记录请求开始
         logger.info(f"API请求开始: {method} {path} | 客户端: {client_host} | 用户: {user_id}")
