@@ -17,13 +17,24 @@ class ConversationChatWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ConversationChatWidget> createState() => _ConversationChatWidgetState();
+  ConsumerState<ConversationChatWidget> createState() => ConversationChatWidgetState();
 }
 
-class _ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> {
+class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
+
+  /// 滚动到顶部
+  void scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
 
   @override
   void initState() {

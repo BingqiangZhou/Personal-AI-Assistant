@@ -18,14 +18,25 @@ class TranscriptDisplayWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TranscriptDisplayWidget> createState() => _TranscriptDisplayWidgetState();
+  ConsumerState<TranscriptDisplayWidget> createState() => TranscriptDisplayWidgetState();
 }
 
-class _TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget> {
+class TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<String> _searchResults = [];
   bool _isSearching = false;
+
+  /// 滚动到顶部
+  void scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
 
   @override
   void initState() {

@@ -7,7 +7,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../core/utils/html_sanitizer.dart';
 
-class ShownotesDisplayWidget extends ConsumerWidget {
+class ShownotesDisplayWidget extends ConsumerStatefulWidget {
   final PodcastEpisodeDetailResponse episode;
 
   const ShownotesDisplayWidget({
@@ -16,30 +16,54 @@ class ShownotesDisplayWidget extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ShownotesDisplayWidget> createState() => ShownotesDisplayWidgetState();
+}
+
+class ShownotesDisplayWidgetState extends ConsumerState<ShownotesDisplayWidget> {
+  final ScrollController _scrollController = ScrollController();
+
+  /// 滚动到顶部
+  void scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Try to get shownotes from different sources
     final shownotes = _getShownotesContent();
 
     // Debug: Log the shownotes content
-    if (episode.description != null && episode.description!.isNotEmpty) {
-      final preview = episode.description!.length > 100
-          ? '${episode.description!.substring(0, 100)}...'
-          : episode.description!;
+    if (widget.episode.description != null && widget.episode.description!.isNotEmpty) {
+      final preview = widget.episode.description!.length > 100
+          ? '${widget.episode.description!.substring(0, 100)}...'
+          : widget.episode.description!;
       debugPrint('📝 [Shownotes] Description: $preview');
     } else {
       debugPrint('📝 [Shownotes] Description: NULL or EMPTY');
     }
 
-    if (episode.aiSummary != null && episode.aiSummary!.isNotEmpty) {
-      final preview = episode.aiSummary!.length > 100
-          ? '${episode.aiSummary!.substring(0, 100)}...'
-          : episode.aiSummary!;
+    if (widget.episode.aiSummary != null && widget.episode.aiSummary!.isNotEmpty) {
+      final preview = widget.episode.aiSummary!.length > 100
+          ? '${widget.episode.aiSummary!.substring(0, 100)}...'
+          : widget.episode.aiSummary!;
       debugPrint('📝 [Shownotes] AI Summary: $preview');
     } else {
       debugPrint('📝 [Shownotes] AI Summary: NULL or EMPTY');
     }
 
-    debugPrint('📝 [Shownotes] Metadata shownotes: ${episode.metadata?['shownotes']}');
+    debugPrint('📝 [Shownotes] Metadata shownotes: ${widget.episode.metadata?['shownotes']}');
     debugPrint('📝 [Shownotes] Final content length: ${shownotes.length}');
 
     if (shownotes.isEmpty) {
@@ -54,6 +78,7 @@ class ShownotesDisplayWidget extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       child: SingleChildScrollView(
+        controller: _scrollController,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -178,23 +203,23 @@ class ShownotesDisplayWidget extends ConsumerWidget {
     // 4. Subscription description (Fallback)
 
     // 1. Try to get episode description first
-    if (episode.description?.isNotEmpty == true) {
-      return episode.description!;
+    if (widget.episode.description?.isNotEmpty == true) {
+      return widget.episode.description!;
     }
 
     // 2. Fallback to episode AI summary
-    if (episode.aiSummary?.isNotEmpty == true) {
-      return episode.aiSummary!;
+    if (widget.episode.aiSummary?.isNotEmpty == true) {
+      return widget.episode.aiSummary!;
     }
 
     // 3. Try to get from metadata
-    if (episode.metadata != null && episode.metadata!['shownotes'] != null) {
-      return episode.metadata!['shownotes'].toString();
+    if (widget.episode.metadata != null && widget.episode.metadata!['shownotes'] != null) {
+      return widget.episode.metadata!['shownotes'].toString();
     }
 
     // 4. Fallback to subscription description
-    if (episode.subscription != null) {
-      final subscriptionDesc = episode.subscription!['description'];
+    if (widget.episode.subscription != null) {
+      final subscriptionDesc = widget.episode.subscription!['description'];
       if (subscriptionDesc != null && subscriptionDesc.toString().isNotEmpty) {
         return subscriptionDesc.toString();
       }

@@ -17,6 +17,7 @@ import '../widgets/ai_summary_control_widget.dart';
 import '../widgets/conversation_chat_widget.dart';
 import '../widgets/podcast_image_widget.dart';
 import '../widgets/side_floating_player_widget.dart';
+import '../widgets/scrollable_content_wrapper.dart';
 
 class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
   final int episodeId;
@@ -44,6 +45,12 @@ class _PodcastEpisodeDetailPageState
   final Map<int, double> _tabScrollPositions = {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}; // Track scroll position for each tab
   final Map<int, double> _tabScrollPercentages = {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}; // Track scroll percentage for each tab
   final Map<int, ScrollController> _tabScrollControllers = {}; // ScrollController for each tab
+
+  // GlobalKeys for accessing child widget states to call scrollToTop
+  final GlobalKey<ShownotesDisplayWidgetState> _shownotesKey = GlobalKey<ShownotesDisplayWidgetState>();
+  final GlobalKey<TranscriptDisplayWidgetState> _transcriptKey = GlobalKey<TranscriptDisplayWidgetState>();
+  final GlobalKey<ScrollableContentWrapperState> _aiSummaryKey = GlobalKey<ScrollableContentWrapperState>();
+  final GlobalKey<ConversationChatWidgetState> _conversationKey = GlobalKey<ConversationChatWidgetState>();
 
   @override
   void initState() {
@@ -1230,7 +1237,7 @@ class _PodcastEpisodeDetailPageState
   Widget _buildTabContent(dynamic episode) {
     switch (_selectedTabIndex) {
       case 0:
-        return ShownotesDisplayWidget(episode: episode);
+        return ShownotesDisplayWidget(key: _shownotesKey, episode: episode);
       case 1:
         return _buildTranscriptContent(episode);
       case 2:
@@ -1238,7 +1245,7 @@ class _PodcastEpisodeDetailPageState
       case 3:
         return _buildConversationContent(episode);
       default:
-        return ShownotesDisplayWidget(episode: episode);
+        return ShownotesDisplayWidget(key: _shownotesKey, episode: episode);
     }
   }
 
@@ -1246,7 +1253,7 @@ class _PodcastEpisodeDetailPageState
   Widget _buildSingleTabContent(dynamic episode, int index) {
     switch (index) {
       case 0:
-        return ShownotesDisplayWidget(episode: episode);
+        return ShownotesDisplayWidget(key: _shownotesKey, episode: episode);
       case 1:
         return _buildTranscriptContent(episode);
       case 2:
@@ -1254,7 +1261,7 @@ class _PodcastEpisodeDetailPageState
       case 3:
         return _buildConversationContent(episode);
       default:
-        return ShownotesDisplayWidget(episode: episode);
+        return ShownotesDisplayWidget(key: _shownotesKey, episode: episode);
     }
   }
 
@@ -1268,11 +1275,12 @@ class _PodcastEpisodeDetailPageState
         // If transcription is completed, show the text
         if (transcription != null && isTranscriptionCompleted(transcription)) {
           return TranscriptDisplayWidget(
+            key: _transcriptKey,
             episodeId: widget.episodeId,
             transcription: transcription,
           );
         }
-        
+
         // Otherwise (pending, processing, failed, or null), show the status widget
         return TranscriptionStatusWidget(
           episodeId: widget.episodeId,
@@ -1334,197 +1342,196 @@ class _PodcastEpisodeDetailPageState
       });
     }
 
-    return Container(
+    return ScrollableContentWrapper(
+      key: _aiSummaryKey,
       padding: const EdgeInsets.all(16),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // AI总结控制区域
-            AISummaryControlWidget(
-              episodeId: widget.episodeId,
-              hasTranscript: transcriptionState.value?.transcriptContent != null &&
-                  transcriptionState.value!.transcriptContent!.isNotEmpty,
-            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // AI总结控制区域
+          AISummaryControlWidget(
+            episodeId: widget.episodeId,
+            hasTranscript: transcriptionState.value?.transcriptContent != null &&
+                transcriptionState.value!.transcriptContent!.isNotEmpty,
+          ),
 
-            const SizedBox(height: 16),
+          const SizedBox(height: 16),
 
-            // 总结内容显示
-            if (summaryState.isLoading) ...[
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const CircularProgressIndicator(),
-                    const SizedBox(height: 16),
-                    Text(
-                      AppLocalizations.of(context)!.podcast_generating_summary,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 14,
-                      ),
+          // 总结内容显示
+          if (summaryState.isLoading) ...[
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    AppLocalizations.of(context)!.podcast_generating_summary,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 14,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ] else if (summaryState.hasError) ...[
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48,
+            ),
+          ] else if (summaryState.hasError) ...[
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    summaryState.errorMessage ?? AppLocalizations.of(context)!.podcast_summary_generate_failed,
+                    style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      summaryState.errorMessage ?? AppLocalizations.of(context)!.podcast_summary_generate_failed,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ] else if (summaryState.hasSummary) ...[
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.auto_awesome,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
+            ),
+          ] else if (summaryState.hasSummary) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        AppLocalizations.of(context)!.podcast_filter_with_summary,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          AppLocalizations.of(context)!.podcast_filter_with_summary,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SelectionArea(
+                    child: MarkdownBody(
+                      data: summaryState.summary!,
+                      styleSheet: MarkdownStyleSheet(
+                        p: TextStyle(
+                          fontSize: 15,
+                          height: 1.6,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SelectionArea(
-                      child: MarkdownBody(
-                        data: summaryState.summary!,
-                        styleSheet: MarkdownStyleSheet(
-                          p: TextStyle(
-                            fontSize: 15,
-                            height: 1.6,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          h1: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          h2: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          h3: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          listBullet: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          strong: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                        h1: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        h2: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        h3: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        listBullet: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        strong: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ] else if (episode.aiSummary != null && episode.aiSummary!.isNotEmpty) ...[
-              // 兼容旧版本：如果episode有aiSummary但state还没有，显示episode的aiSummary
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.auto_awesome,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
+            ),
+          ] else if (episode.aiSummary != null && episode.aiSummary!.isNotEmpty) ...[
+            // 兼容旧版本：如果episode有aiSummary但state还没有，显示episode的aiSummary
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        AppLocalizations.of(context)!.podcast_filter_with_summary,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          AppLocalizations.of(context)!.podcast_filter_with_summary,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SelectionArea(
+                    child: MarkdownBody(
+                      data: episode.aiSummary!,
+                      styleSheet: MarkdownStyleSheet(
+                        p: TextStyle(
+                          fontSize: 15,
+                          height: 1.6,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    SelectionArea(
-                      child: MarkdownBody(
-                        data: episode.aiSummary!,
-                        styleSheet: MarkdownStyleSheet(
-                          p: TextStyle(
-                            fontSize: 15,
-                            height: 1.6,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          h1: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          h2: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          h3: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          listBullet: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          strong: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
+                        h1: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        h2: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        h3: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        listBullet: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        strong: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ] else ...[
-              _buildAiSummaryEmptyState(context),
-            ],
+            ),
+          ] else ...[
+            _buildAiSummaryEmptyState(context),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -1572,6 +1579,7 @@ class _PodcastEpisodeDetailPageState
           return Center(child: Text(AppLocalizations.of(context)!.podcast_episode_not_found));
         }
         return ConversationChatWidget(
+          key: _conversationKey,
           episodeId: widget.episodeId,
           aiSummary: episode.aiSummary,
         );
@@ -1765,10 +1773,10 @@ class _PodcastEpisodeDetailPageState
     }
   }
 
-  // 判断是否应该显示浮动向上按钮（滚动超过5%）
+  // 判断是否应该显示浮动向上按钮（只要向下滚动就显示）
   bool _shouldShowScrollToTopButton() {
-    final scrollPercent = _tabScrollPercentages[_selectedTabIndex] ?? 0.0;
-    return scrollPercent > 0.05;
+    final scrollPosition = _tabScrollPositions[_selectedTabIndex] ?? 0.0;
+    return scrollPosition > 0;
   }
 
   // 构建浮动向上按钮
@@ -1822,30 +1830,20 @@ class _PodcastEpisodeDetailPageState
       _tabScrollPercentages[_selectedTabIndex] = 0.0;
     });
 
-    // Try to scroll to top using the current tab's scroll controller
-    final scrollController = _tabScrollControllers[_selectedTabIndex];
-    if (scrollController != null && scrollController.hasClients) {
-      scrollController.animateTo(
-        0.0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-      return;
-    }
-
-    // If no external scroll controller, try to use the PrimaryScrollController
-    // This will work for ListView and SingleChildScrollView that use the primary controller
-    try {
-      final primaryController = PrimaryScrollController.of(context);
-      if (primaryController.hasClients) {
-        primaryController.animateTo(
-          0.0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
-      }
-    } catch (e) {
-      debugPrint('📍 Failed to scroll to top: $e');
+    // Call scrollToTop on the appropriate widget based on the current tab
+    switch (_selectedTabIndex) {
+      case 0: // Shownotes
+        _shownotesKey.currentState?.scrollToTop();
+        break;
+      case 1: // Transcript
+        _transcriptKey.currentState?.scrollToTop();
+        break;
+      case 2: // AI Summary
+        _aiSummaryKey.currentState?.scrollToTop();
+        break;
+      case 3: // Conversation
+        _conversationKey.currentState?.scrollToTop();
+        break;
     }
   }
 }
