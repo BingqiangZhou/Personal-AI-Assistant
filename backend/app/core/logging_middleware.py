@@ -11,6 +11,7 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 from urllib.parse import parse_qs
+from itsdangerous import BadSignature, SignatureExpired
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             elif "admin_session" in request.cookies:
                 admin_session = request.cookies.get("admin_session")
                 if admin_session:
-                    from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+                    from itsdangerous import URLSafeTimedSerializer
                     from app.core.config import settings
 
                     # 解析 session cookie
