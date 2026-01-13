@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_search_model.dart';
 import '../../data/models/podcast_state_models.dart';
+import '../../data/utils/podcast_url_utils.dart';
 import '../providers/podcast_search_provider.dart';
 import '../providers/podcast_providers.dart' as providers;
 import '../providers/country_selector_provider.dart';
@@ -377,15 +378,22 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
       itemCount: searchState.results.length,
       itemBuilder: (context, index) {
         final result = searchState.results[index];
-        // 检查该播客是否已订阅（通过 feedUrl 匹配 sourceUrl）
+        // 检查该播客是否已订阅（使用规范化 URL 比较）
         final isSubscribed = subscriptionState.subscriptions.any(
-          (sub) => sub.sourceUrl == result.feedUrl,
+          (sub) => PodcastUrlUtils.feedUrlMatches(sub.sourceUrl, result.feedUrl),
         );
+        // 检查是否正在订阅
+        final isSubscribing = result.feedUrl != null &&
+            subscriptionState.subscribingFeedUrls.any(
+              (url) => PodcastUrlUtils.feedUrlMatches(url, result.feedUrl),
+            );
         return PodcastSearchResultCard(
           result: result,
           onSubscribe: widget.onSubscribe,
           isSubscribed: isSubscribed,
+          isSubscribing: isSubscribing,
           searchCountry: searchState.searchCountry,
+          key: ValueKey('search_${result.feedUrl}'),
         );
       },
     );

@@ -118,6 +118,8 @@ class PodcastSubscriptionState extends Equatable {
   final bool isLoading;
   final bool isLoadingMore;
   final String? error;
+  /// 正在订阅的 Feed URLs 集合 / Set of Feed URLs currently being subscribed
+  final Set<String> subscribingFeedUrls;
 
   const PodcastSubscriptionState({
     this.subscriptions = const [],
@@ -128,6 +130,7 @@ class PodcastSubscriptionState extends Equatable {
     this.isLoading = false,
     this.isLoadingMore = false,
     this.error,
+    this.subscribingFeedUrls = const {},
   });
 
   PodcastSubscriptionState copyWith({
@@ -139,6 +142,7 @@ class PodcastSubscriptionState extends Equatable {
     bool? isLoading,
     bool? isLoadingMore,
     String? error,
+    Set<String>? subscribingFeedUrls,
   }) {
     return PodcastSubscriptionState(
       subscriptions: subscriptions ?? this.subscriptions,
@@ -149,6 +153,7 @@ class PodcastSubscriptionState extends Equatable {
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       error: error ?? this.error,
+      subscribingFeedUrls: subscribingFeedUrls ?? this.subscribingFeedUrls,
     );
   }
 
@@ -162,5 +167,6 @@ class PodcastSubscriptionState extends Equatable {
         isLoading,
         isLoadingMore,
         error,
+        subscribingFeedUrls,
       ];
 }

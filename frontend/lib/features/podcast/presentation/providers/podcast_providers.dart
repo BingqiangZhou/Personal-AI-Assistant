@@ -504,6 +504,11 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
     required String feedUrl,
     List<int>? categoryIds,
   }) async {
+    // Mark as subscribing
+    state = state.copyWith(
+      subscribingFeedUrls: {...state.subscribingFeedUrls, feedUrl},
+    );
+
     try {
       final subscription = await _repository.addSubscription(
         feedUrl: feedUrl,
@@ -513,8 +518,17 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
       // Refresh the list
       await refreshSubscriptions();
 
+      // Remove from subscribing set (refreshSubscriptions resets state, so we need to add it back)
+      state = state.copyWith(
+        subscribingFeedUrls: state.subscribingFeedUrls.where((url) => url != feedUrl).toSet(),
+      );
+
       return subscription;
     } catch (error) {
+      // Remove from subscribing set
+      state = state.copyWith(
+        subscribingFeedUrls: state.subscribingFeedUrls.where((url) => url != feedUrl).toSet(),
+      );
       rethrow;
     }
   }

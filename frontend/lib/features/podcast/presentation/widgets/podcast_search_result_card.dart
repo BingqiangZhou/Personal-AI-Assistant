@@ -12,12 +12,14 @@ class PodcastSearchResultCard extends StatelessWidget {
     required this.result,
     this.onSubscribe,
     this.isSubscribed = false,
+    this.isSubscribing = false,
     this.searchCountry = PodcastCountry.china,
   });
 
   final PodcastSearchResult result;
   final ValueChanged<PodcastSearchResult>? onSubscribe;
   final bool isSubscribed;
+  final bool isSubscribing;
   final PodcastCountry searchCountry;
 
   @override
@@ -168,39 +170,78 @@ class PodcastSearchResultCard extends StatelessWidget {
 
               const SizedBox(width: 6),
 
-              // 订阅状态图标（缩小尺寸）
-              isSubscribed
-                  ? Tooltip(
-                      message: l10n.podcast_subscribed,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Icon(
-                          Icons.check_circle,
-                          color: theme.colorScheme.primary,
-                          size: 24,
-                        ),
-                      ),
-                    )
-                  : Tooltip(
-                      message: l10n.podcast_subscribe,
-                      child: IconButton(
-                        onPressed: () => onSubscribe?.call(result),
-                        icon: const Icon(Icons.add_circle_outline),
-                        iconSize: 24,
-                        color: theme.colorScheme.onSurfaceVariant,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                          minWidth: 36,
-                          minHeight: 36,
-                        ),
-                      ),
+              // 订阅状态图标（带过渡动画）
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: animation,
+                      child: child,
                     ),
+                  );
+                },
+                child: _buildSubscribeButton(context, l10n, theme),
+              ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// 构建订阅按钮
+  Widget _buildSubscribeButton(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
+    // 已订阅状态
+    if (isSubscribed) {
+      return Tooltip(
+        key: const ValueKey('subscribed'),
+        message: l10n.podcast_subscribed,
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Icon(
+            Icons.check_circle,
+            color: theme.colorScheme.primary,
+            size: 24,
+          ),
+        ),
+      );
+    }
+
+    // 订阅中状态 - 显示加载动画（与订阅图标大小一致）
+    if (isSubscribing) {
+      return const SizedBox(
+        key: ValueKey('subscribing'),
+        width: 24,
+        height: 24,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+        ),
+      );
+    }
+
+    // 未订阅状态
+    return Tooltip(
+      key: const ValueKey('not_subscribed'),
+      message: l10n.podcast_subscribe,
+      child: IconButton(
+        onPressed: () => onSubscribe?.call(result),
+        icon: const Icon(Icons.add_circle_outline),
+        iconSize: 24,
+        color: theme.colorScheme.onSurfaceVariant,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(
+          minWidth: 36,
+          minHeight: 36,
         ),
       ),
     );
