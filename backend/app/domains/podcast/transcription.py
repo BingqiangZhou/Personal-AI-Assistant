@@ -1019,17 +1019,12 @@ class PodcastTranscriptionService:
             if not model_config or not model_config.is_active or model_config.model_type != ModelType.TRANSCRIPTION:
                 raise ValidationError(f"Transcription model '{model}' not found or not active")
 
-        # 2. 如果未指定或未找到，使用默认转录模型
+        # 2. 如果未指定或未找到，按优先级获取转录模型
         if not model_config:
-            model_config = await ai_repo.get_default_model(ModelType.TRANSCRIPTION)
-            logger.info(f"🔍 [TRANSCRIPTION] Default model: {model_config.model_id if model_config else 'None'}")
-
-        # 3. 如果没有默认模型，使用第一个活跃的转录模型
-        if not model_config:
-            active_models = await ai_repo.get_active_models(ModelType.TRANSCRIPTION)
+            active_models = await ai_repo.get_active_models_by_priority(ModelType.TRANSCRIPTION)
             if active_models:
-                model_config = active_models[0]
-                logger.info(f"🔍 [TRANSCRIPTION] Using first active model: {model_config.model_id}")
+                model_config = active_models[0]  # 使用优先级最高的模型
+                logger.info(f"🔍 [TRANSCRIPTION] Using highest priority model: {model_config.model_id} (priority={model_config.priority})")
             else:
                 # 如果没有找到任何活跃的转录模型，抛出错误
                 raise ValidationError("No active transcription model found")

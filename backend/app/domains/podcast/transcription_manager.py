@@ -33,7 +33,7 @@ class TranscriptionModelManager:
         self.ai_model_repo = AIModelConfigRepository(db)
 
     async def get_active_transcription_model(self, model_name: Optional[str] = None):
-        """获取活跃的转录模型配置"""
+        """获取活跃的转录模型配置（按优先级排序）"""
         if model_name:
             # 根据名称获取指定模型
             model = await self.ai_model_repo.get_by_name(model_name)
@@ -41,15 +41,12 @@ class TranscriptionModelManager:
                 raise ValidationError(f"Transcription model '{model_name}' not found or not active")
             return model
         else:
-            # 获取默认转录模型
-            model = await self.ai_model_repo.get_default_model(ModelType.TRANSCRIPTION)
-            if not model:
-                # 如果没有默认模型，获取第一个活跃模型
-                active_models = await self.ai_model_repo.get_active_models(ModelType.TRANSCRIPTION)
-                if not active_models:
-                    raise ValidationError("No active transcription model found")
-                model = active_models[0]
-            return model
+            # 按优先级获取转录模型列表
+            active_models = await self.ai_model_repo.get_active_models_by_priority(ModelType.TRANSCRIPTION)
+            if not active_models:
+                raise ValidationError("No active transcription model found")
+            # 返回优先级最高的模型（priority 数字最小的）
+            return active_models[0]
 
     async def create_transcriber(self, model_name: Optional[str] = None):
         """创建转录器实例"""
@@ -267,13 +264,14 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
                 # 提交到 Celery 队列
                 from app.domains.podcast.tasks import process_audio_transcription
 
-                # 获取模型配置 ID
+                # 获取模型配置 ID（按优先级）
                 ai_repo = AIModelConfigRepository(self.db)
                 model_config = None
                 if model_name:
                     model_config = await ai_repo.get_by_name(model_name)
                 if not model_config:
-                    model_config = await ai_repo.get_default_model(ModelType.TRANSCRIPTION)
+                    active_models = await ai_repo.get_active_models_by_priority(ModelType.TRANSCRIPTION)
+                    model_config = active_models[0] if active_models else None
                 config_db_id = model_config.id if model_config else None
 
                 process_audio_transcription.delay(existing_task.id, config_db_id)
@@ -321,13 +319,14 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
                     # 提交到 Celery 队列
                     from app.domains.podcast.tasks import process_audio_transcription
 
-                    # 获取模型配置 ID
+                    # 获取模型配置 ID（按优先级）
                     ai_repo = AIModelConfigRepository(self.db)
                     model_config = None
                     if model_name:
                         model_config = await ai_repo.get_by_name(model_name)
                     if not model_config:
-                        model_config = await ai_repo.get_default_model(ModelType.TRANSCRIPTION)
+                        active_models = await ai_repo.get_active_models_by_priority(ModelType.TRANSCRIPTION)
+                        model_config = active_models[0] if active_models else None
                     config_db_id = model_config.id if model_config else None
 
                     process_audio_transcription.delay(existing_task.id, config_db_id)

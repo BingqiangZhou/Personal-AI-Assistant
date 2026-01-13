@@ -1030,41 +1030,48 @@ class PodcastService:
     ) -> str:
         """
         调用LLM API生成总结
-        从数据库中的AI模型配置获取API key
+        从数据库中的AI模型配置按优先级获取API key，实现fallback机制
         """
         from openai import AsyncOpenAI
         from app.domains.ai.repositories import AIModelConfigRepository
         from app.domains.ai.models import ModelType
         from app.core.security import decrypt_data
+        from openai import AuthenticationError, APIError, APIConnectionError, RateLimitError
 
-        # 从数据库获取默认的文本生成模型配置
+        # 从数据库获取按优先级排序的文本生成模型配置列表
         ai_repo = AIModelConfigRepository(self.repo.db)
-        model_config = await ai_repo.get_default_model(ModelType.TEXT_GENERATION)
+        model_configs = await ai_repo.get_active_models_by_priority(ModelType.TEXT_GENERATION)
 
-        api_key = None
-        if model_config and model_config.api_key:
-            # 解密 API key
-            if model_config.api_key_encrypted:
-                try:
-                    api_key = decrypt_data(model_config.api_key)
-                except Exception as e:
-                    logger.error(f"解密 API key 失败: {e}")
-            else:
-                api_key = model_config.api_key
-
-        # 如果数据库中没有配置，回退到环境变量
-        if not api_key:
-            api_key = settings.OPENAI_API_KEY
-
-        if not api_key:
-            # 降级到规则生成（测试环境）
-            logger.warning("未配置 API key，使用规则生成总结")
+        if not model_configs:
+            # 数据库中没有配置任何 API key
+            logger.error("数据库中未配置任何启用的 TEXT_GENERATION 类型的 API key，跳过 AI 总结生成")
             return self._rule_based_summary(episode_title, content)
 
-        client = AsyncOpenAI(api_key=api_key)
+        # 按 priority 排序（数字越小优先级越高），依次尝试每个 API 配置
+        last_error = None
+        for idx, model_config in enumerate(model_configs):
+            api_key = None
+            try:
+                # 解密 API key
+                if model_config.api_key:
+                    if model_config.api_key_encrypted:
+                        api_key = decrypt_data(model_config.api_key)
+                    else:
+                        api_key = model_config.api_key
 
-        # 构建Prompt
-        system_prompt = """
+                if not api_key:
+                    logger.warning(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 的 API key 为空，跳过")
+                    continue
+
+                logger.info(f"尝试使用模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}, 尝试 {idx + 1}/{len(model_configs)})")
+
+                client = AsyncOpenAI(
+                    api_key=api_key,
+                    base_url=model_config.base_url if model_config.base_url else None
+                )
+
+                # 构建Prompt
+                system_prompt = """
 你是一位专业的播客总结专家。你的任务是从播客单集内容中提取最有价值的信息。
 
 请提取以下信息：
@@ -1087,7 +1094,7 @@ class PodcastService:
 [关联问题]
 """
 
-        user_prompt = f"""
+                user_prompt = f"""
 播客标题: {episode_title}
 内容类型: {content_type}
 内容: {content[:2000]}  <!-- 限制输入长度 -->
@@ -1095,17 +1102,39 @@ class PodcastService:
 请提供详细总结（150-300字）。
 """
 
-        response = await client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.7,
-            max_tokens=500
-        )
+                response = await client.chat.completions.create(
+                    model=model_config.model_name if model_config.model_name else "gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
 
-        return response.choices[0].message.content.strip()
+                # 成功获取响应，记录并返回
+                logger.info(f"成功使用模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 生成总结")
+                return response.choices[0].message.content.strip()
+
+            except AuthenticationError as e:
+                last_error = e
+                logger.error(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 认证失败: {e}")
+            except RateLimitError as e:
+                last_error = e
+                logger.error(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 达到速率限制: {e}")
+            except APIConnectionError as e:
+                last_error = e
+                logger.error(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 连接失败: {e}")
+            except APIError as e:
+                last_error = e
+                logger.error(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) API 错误: {e}")
+            except Exception as e:
+                last_error = e
+                logger.error(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 未知错误: {type(e).__name__}: {e}")
+
+        # 所有 API 配置都失败了
+        logger.error(f"所有 {len(model_configs)} 个 TEXT_GENERATION 模型配置均访问失败，最后错误: {type(last_error).__name__}: {last_error}")
+        return self._rule_based_summary(episode_title, content)
 
     def _rule_based_summary(self, title: str, content: str) -> str:
         """如果没有LLM，使用规则生成基本总结"""

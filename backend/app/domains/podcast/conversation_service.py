@@ -181,7 +181,10 @@ class ConversationService:
         messages: List[Dict[str, str]],
         model_name: Optional[str] = None
     ) -> str:
-        """调用AI API进行对话"""
+        """
+        调用AI API进行对话
+        按优先级获取模型配置，实现fallback机制
+        """
         import aiohttp
 
         # 获取活跃的文本生成模型
@@ -189,50 +192,77 @@ class ConversationService:
             model = await self.ai_model_repo.get_by_name(model_name)
             if not model or not model.is_active or model.model_type != ModelType.TEXT_GENERATION:
                 raise ValidationError(f"Chat model '{model_name}' not found or not active")
+            models_to_try = [model]
         else:
-            model = await self.ai_model_repo.get_default_model(ModelType.TEXT_GENERATION)
-            if not model:
-                active_models = await self.ai_model_repo.get_active_models(ModelType.TEXT_GENERATION)
-                if not active_models:
-                    raise ValidationError("No active chat model found")
-                model = active_models[0]
+            # 按优先级获取所有活跃的文本生成模型
+            models_to_try = await self.ai_model_repo.get_active_models_by_priority(ModelType.TEXT_GENERATION)
+            if not models_to_try:
+                raise ValidationError("No active chat model found")
 
-        # 解密API密钥
-        api_key = await self._get_api_key(model)
+        # 按 priority 依次尝试每个模型
+        last_error = None
+        for idx, model in enumerate(models_to_try):
+            try:
+                logger.info(f"尝试使用对话模型 [{model.display_name or model.name}] (priority={model.priority}, 尝试 {idx + 1}/{len(models_to_try)})")
 
-        # 构建请求数据
-        data = {
-            'model': model.model_id,
-            'messages': messages,
-            'max_tokens': model.max_tokens or 1500,
-            'temperature': model.get_temperature_float() or 0.7
-        }
+                # 解密API密钥
+                api_key = await self._get_api_key(model)
+                if not api_key:
+                    logger.warning(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) 的 API key 为空，跳过")
+                    continue
 
-        # 添加额外配置
-        if model.extra_config:
-            data.update(model.extra_config)
+                # 构建请求数据
+                data = {
+                    'model': model.model_id,
+                    'messages': messages,
+                    'max_tokens': model.max_tokens or 1500,
+                    'temperature': model.get_temperature_float() or 0.7
+                }
 
-        timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
+                # 添加额外配置
+                if model.extra_config:
+                    data.update(model.extra_config)
 
-        headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
-        }
+                timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
 
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(f"{model.api_url}/chat/completions", headers=headers, json=data) as response:
-                if response.status != 200:
-                    error_text = await response.text()
-                    logger.error(f"AI Chat API error: {response.status} - {error_text}")
-                    raise ValidationError(f"AI chat API error: {response.status}")
+                headers = {
+                    'Authorization': f'Bearer {api_key}',
+                    'Content-Type': 'application/json'
+                }
 
-                result = await response.json()
+                async with aiohttp.ClientSession(timeout=timeout) as session:
+                    async with session.post(f"{model.api_url}/chat/completions", headers=headers, json=data) as response:
+                        if response.status != 200:
+                            error_text = await response.text()
+                            last_error = f"HTTP {response.status}: {error_text}"
+                            logger.error(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) API 错误: {last_error}")
+                            continue
 
-                if 'choices' not in result or not result['choices']:
-                    raise ValidationError("Invalid response from AI API")
+                        result = await response.json()
 
-                content = result['choices'][0]['message']['content']
-                return content.strip()
+                        if 'choices' not in result or not result['choices']:
+                            last_error = "Invalid response from AI API"
+                            logger.error(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) {last_error}")
+                            continue
+
+                        content = result['choices'][0]['message']['content']
+                        logger.info(f"成功使用对话模型 [{model.display_name or model.name}] (priority={model.priority})")
+                        return content.strip()
+
+            except aiohttp.ClientTimeout as e:
+                last_error = e
+                logger.error(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) 请求超时: {e}")
+            except aiohttp.ClientError as e:
+                last_error = e
+                logger.error(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) 网络错误: {e}")
+            except Exception as e:
+                last_error = e
+                logger.error(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) 未知错误: {type(e).__name__}: {e}")
+
+        # 所有模型都失败了
+        error_msg = f"所有 {len(models_to_try)} 个对话模型配置均访问失败，最后错误: {type(last_error).__name__}: {last_error}"
+        logger.error(error_msg)
+        raise ValidationError(error_msg)
 
     async def _get_api_key(self, model_config) -> str:
         """获取API密钥"""
