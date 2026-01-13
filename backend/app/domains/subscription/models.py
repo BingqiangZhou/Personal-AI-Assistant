@@ -172,11 +172,14 @@ class Subscription(Base):
         if not self.last_fetched_at:
             return True
 
+        # Convert naive datetime to aware datetime (assume UTC)
+        last_fetched_aware = self.last_fetched_at.replace(tzinfo=timezone.utc)
+
         # Calculate the Earliest next scheduled time AFTER the last fetch
-        next_possible = self._get_next_scheduled_time(self.last_fetched_at)
-        
+        next_possible = self._get_next_scheduled_time(last_fetched_aware)
+
         # If the scheduled time has arrived or passed, we should update
-        return datetime.utcnow() >= next_possible
+        return datetime.now(timezone.utc) >= next_possible
 
 
 class SubscriptionItem(Base):
