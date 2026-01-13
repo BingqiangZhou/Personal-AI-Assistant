@@ -67,6 +67,33 @@
         </div>
     </div>
 
+    <!-- Reparse All Section -->
+    <div class="mt-4 bg-white shadow sm:rounded-lg p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-medium text-gray-900">全局操作</h3>
+                <p class="text-xs text-gray-500">重新获取分集GUID并保存到数据库</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="reparseAllSubscriptions()"
+                        id="reparse-all-btn"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    重新解析全部RSS
+                </button>
+            </div>
+        </div>
+        <!-- Reparse Results (hidden by default) -->
+        <div id="reparse-results" class="mt-4 hidden">
+            <div class="border-t pt-4">
+                <h4 class="text-sm font-medium text-gray-900 mb-2">解析结果</h4>
+                <div id="reparse-results-content" class="text-sm text-gray-600 max-h-60 overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Test Results -->
     <div id="test-results" class="mt-4 hidden">
         <div class="bg-white shadow sm:rounded-lg">
@@ -634,6 +661,81 @@ async function batchDelete() {
     } catch (error) {
         console.error('Error:', error);
         alert('批量删除失败');
+    }
+}
+
+// Reparse all subscriptions
+async function reparseAllSubscriptions() {
+    if (!confirm('确定要重新解析全部RSS订阅吗？这将更新所有分集的GUID信息。')) {
+        return;
+    }
+
+    const button = document.getElementById('reparse-all-btn');
+    const originalText = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = `
+        <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        解析中...
+    `;
+
+    const resultsDiv = document.getElementById('reparse-results');
+    const resultsContent = document.getElementById('reparse-results-content');
+    resultsContent.innerHTML = '<p class="text-gray-500">正在解析RSS订阅，请稍候...</p>';
+    resultsDiv.classList.remove('hidden');
+
+    try {
+        const response = await fetch('/super/subscriptions/reparse-all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Display results
+            let html = `<p class="mb-2">${data.message}</p>`;
+            html += '<div class="space-y-1">';
+
+            data.results.forEach(result => {
+                if (result.status === 'success') {
+                    html += `
+                        <div class="flex items-center text-green-600">
+                            <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-medium">${result.title}</span>
+                            <span class="ml-2 text-gray-500 text-xs">(${result.message})</span>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="flex items-center text-red-600">
+                            <svg class="h-4 w-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="font-medium">${result.title}</span>
+                            <span class="ml-2 text-gray-500 text-xs">(${result.message})</span>
+                        </div>
+                    `;
+                }
+            });
+
+            html += '</div>';
+            resultsContent.innerHTML = html;
+        } else {
+            resultsContent.innerHTML = `<p class="text-red-600">${data.message}</p>`;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        resultsContent.innerHTML = '<p class="text-red-600">解析失败，请稍后重试</p>';
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalText;
     }
 }
 

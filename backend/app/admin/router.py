@@ -1675,6 +1675,156 @@ async def test_all_subscriptions(
         )
 
 
+@router.post("/subscriptions/reparse-all")
+async def reparse_all_subscriptions(
+    request: Request,
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Reparse all RSS subscriptions and update episode guids."""
+    try:
+        from app.core.feed_parser import parse_feed_url, FeedParserConfig
+        from app.domains.podcast.repositories import PodcastRepository
+
+        # Get all active RSS subscriptions
+        result = await db.execute(
+            select(Subscription)
+            .where(Subscription.status == SubscriptionStatus.ACTIVE)
+            .order_by(Subscription.created_at.desc())
+        )
+        subscriptions = result.scalars().all()
+
+        if not subscriptions:
+            return JSONResponse(content={
+                "success": True,
+                "message": "没有活跃的RSS订阅需要解析",
+                "total_count": 0,
+                "results": [],
+            })
+
+        logger.info(f"Starting reparse for {len(subscriptions)} subscriptions")
+
+        config = FeedParserConfig(
+            max_entries=100,
+            strip_html=True,
+            strict_mode=False,
+            log_raw_feed=False
+        )
+
+        repo = PodcastRepository(db)
+        results = []
+        success_count = 0
+        error_count = 0
+
+        for subscription in subscriptions:
+            try:
+                logger.info(f"Reparsing subscription: {subscription.title} ({subscription.source_url})")
+
+                # Parse the RSS feed
+                feed_result = await parse_feed_url(subscription.source_url, config=config)
+
+                if not feed_result.success or not feed_result.entries:
+                    results.append({
+                        "title": subscription.title,
+                        "status": "error",
+                        "message": feed_result.errors[0] if feed_result.errors else "No entries found"
+                    })
+                    error_count += 1
+                    continue
+
+                # Update episodes with proper guids from RSS feed
+                episodes_updated = 0
+                for entry in feed_result.entries:
+                    # Extract guid from entry (FeedEntry is a Pydantic model)
+                    # First try raw_metadata for guid, then fall back to id or link
+                    guid = None
+                    if entry.raw_metadata:
+                        guid = entry.raw_metadata.get('guid')
+                    if not guid:
+                        guid = entry.id  # entry.id is the parsed guid/id field
+                    if not guid:
+                        guid = entry.link
+
+                    if not guid:
+                        continue
+
+                    # Try to find existing episode by item_link or audio_url
+                    from app.domains.podcast.models import PodcastEpisode
+                    from sqlalchemy import or_
+
+                    episode_result = await db.execute(
+                        select(PodcastEpisode)
+                        .where(
+                            PodcastEpisode.subscription_id == subscription.id
+                        )
+                        .where(
+                            or_(
+                                PodcastEpisode.item_link == entry.link,
+                                PodcastEpisode.audio_url == entry.raw_metadata.get('enclosure_url') if entry.raw_metadata else None
+                            )
+                        )
+                        .limit(1)
+                    )
+                    episode = episode_result.scalar_one_or_none()
+
+                    if episode:
+                        # Update guid for existing episode
+                        episode.guid = guid
+                        episodes_updated += 1
+
+                await db.commit()
+
+                results.append({
+                    "title": subscription.title,
+                    "status": "success",
+                    "guid": subscription.source_url,
+                    "message": f"Updated {episodes_updated} episodes"
+                })
+                success_count += 1
+                logger.info(f"Successfully reparsed {subscription.title}: {episodes_updated} episodes updated")
+
+            except Exception as e:
+                logger.error(f"Error reparsing {subscription.title}: {e}")
+                results.append({
+                    "title": subscription.title,
+                    "status": "error",
+                    "message": str(e)
+                })
+                error_count += 1
+
+        logger.info(f"Reparse all completed: {success_count}/{len(subscriptions)} success, {error_count} errors by user {user.username}")
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="reparse_all",
+            resource_type="subscription",
+            resource_name=f"All RSS subscriptions",
+            details={
+                "total_count": len(subscriptions),
+                "success_count": success_count,
+                "error_count": error_count,
+            },
+            request=request,
+        )
+
+        return JSONResponse(content={
+            "success": True,
+            "message": f"重新解析完成: {success_count} 成功, {error_count} 失败",
+            "total_count": len(subscriptions),
+            "results": results,
+        })
+
+    except Exception as e:
+        logger.error(f"Reparse all subscriptions error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to reparse subscriptions: {str(e)}",
+        )
+
+
 @router.delete("/subscriptions/{sub_id}/delete")
 async def delete_subscription(
     sub_id: int,
