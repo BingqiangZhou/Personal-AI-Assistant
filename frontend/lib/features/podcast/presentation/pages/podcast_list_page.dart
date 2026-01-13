@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
+import '../../core/utils/episode_description_helper.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import '../../data/models/podcast_search_model.dart';
 import '../providers/podcast_providers.dart';
@@ -462,7 +463,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
                         // Description (2 lines with ellipsis)
                         Text(
-                          subscription.description ?? l10n.podcast_description,
+                          subscription.description != null
+                              ? EpisodeDescriptionHelper.stripHtmlTags(subscription.description!)
+                              : l10n.podcast_description,
                           style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
@@ -589,7 +592,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            subscription.description ?? l10n.podcast_description,
+                            subscription.description != null
+                                ? EpisodeDescriptionHelper.stripHtmlTags(subscription.description!)
+                                : l10n.podcast_description,
                             style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../core/utils/episode_description_helper.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import 'platform_badge.dart';
 import 'podcast_image_widget.dart';
@@ -105,7 +106,7 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                         if (subscription.description != null) ...[
                           const SizedBox(height: 4),
                           Text(
-                              subscription.description!,
+                              EpisodeDescriptionHelper.stripHtmlTags(subscription.description!),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
                                 fontSize: 12,

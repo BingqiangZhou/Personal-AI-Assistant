@@ -78,10 +78,12 @@ class EpisodeDescriptionHelper {
       return '';
     }
 
+    String text = '';
+
     try {
       // Parse HTML and extract text content
       final document = parser.parse(htmlContent);
-      String text = document.body?.text ?? '';
+      text = document.body?.text ?? htmlContent;
 
       // Decode HTML entities (common ones)
       final htmlEntities = {
@@ -121,31 +123,32 @@ class EpisodeDescriptionHelper {
         RegExp(r'&#x([0-9a-fA-F]+);'),
         (match) => String.fromCharCode(int.tryParse(match.group(1) ?? '0', radix: 16) ?? 0),
       );
-
-      // Clean up extra whitespace and newlines
-      text = text.replaceAll(RegExp(r'\r\n'), '\n'); // Normalize line endings
-      text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n'); // Max 2 consecutive newlines
-      text = text.replaceAll(RegExp(r'[ \t]{2,}'), ' '); // Multiple spaces/tabs to single space
-      text = text.replaceAll(RegExp(r'\n[ \t]+'), '\n'); // Spaces after newline
-      text = text.replaceAll(RegExp(r'[ \t]+\n'), '\n'); // Spaces before newline
-      text = text.trim();
-
-      return text;
     } catch (e) {
-      // If parsing fails, try basic cleanup as fallback
-      String fallback = htmlContent;
-      // Remove HTML tags
-      fallback = fallback.replaceAll(RegExp(r'<[^>]*>'), '');
-      // Decode basic entities
-      fallback = fallback.replaceAll('&nbsp;', ' ');
-      fallback = fallback.replaceAll('&amp;', '&');
-      fallback = fallback.replaceAll('&lt;', '<');
-      fallback = fallback.replaceAll('&gt;', '>');
-      fallback = fallback.replaceAll('&quot;', '"');
-      // Clean up whitespace
-      fallback = fallback.replaceAll(RegExp(r'\s+'), ' ').trim();
-      return fallback;
+      // If parsing fails, continue with original content
+      text = htmlContent;
     }
+
+    // Always apply regex fallback to catch any remaining HTML-like tags
+    // This handles malformed HTML that the parser might miss
+    // (e.g., <p data-flag="normal"style="color:#333"> with missing space)
+    text = text.replaceAll(RegExp(r'<[^>]*>'), '');
+
+    // Decode basic entities again in case the parser missed them
+    text = text.replaceAll('&nbsp;', ' ');
+    text = text.replaceAll('&amp;', '&');
+    text = text.replaceAll('&lt;', '<');
+    text = text.replaceAll('&gt;', '>');
+    text = text.replaceAll('&quot;', '"');
+
+    // Clean up extra whitespace and newlines
+    text = text.replaceAll(RegExp(r'\r\n'), '\n'); // Normalize line endings
+    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n'); // Max 2 consecutive newlines
+    text = text.replaceAll(RegExp(r'[ \t]{2,}'), ' '); // Multiple spaces/tabs to single space
+    text = text.replaceAll(RegExp(r'\n[ \t]+'), '\n'); // Spaces after newline
+    text = text.replaceAll(RegExp(r'[ \t]+\n'), '\n'); // Spaces before newline
+    text = text.trim();
+
+    return text;
   }
 
   /// Gets the best description to display for an episode
