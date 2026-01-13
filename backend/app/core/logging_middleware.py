@@ -57,7 +57,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         # 获取用户 ID (如果已认证)
         user_id = "anonymous"
         try:
-            # 尝试从请求头获取认证信息
+            # 方法1: 检查 JWT Bearer Token (API 认证)
             auth_header = request.headers.get("authorization", "")
             if auth_header and auth_header.startswith("Bearer "):
                 # 提取 token
@@ -69,10 +69,32 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
 
                 # 获取真实用户 ID (sub 字段)
                 user_id = payload.get("sub", "authenticated")
+
+            # 方法2: 检查 Admin Session Cookie (管理后台认证)
+            elif "admin_session" in request.cookies:
+                admin_session = request.cookies.get("admin_session")
+                if admin_session:
+                    from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+                    from app.core.config import settings
+
+                    # 解析 session cookie
+                    serializer = URLSafeTimedSerializer(settings.SECRET_KEY)
+                    data = serializer.loads(
+                        admin_session,
+                        max_age=30 * 60  # 30分钟超时
+                    )
+
+                    # 获取用户 ID
+                    user_id = f"admin_{data.get('user_id', 'unknown')}"
+
+        except SignatureExpired:
+            user_id = "admin_session_expired"
+        except BadSignature:
+            user_id = "admin_session_invalid"
         except Exception as e:
-            # Token 无效或过期，标记为认证失败但继续处理请求
+            # Token/Session 无效，保持 anonymous
             # 后续的路由守卫会处理认证问题
-            user_id = "authenticated_invalid_token"
+            pass
 
         # 记录请求开始
         logger.info(f"API请求开始: {method} {path} | 客户端: {client_host} | 用户: {user_id}")
