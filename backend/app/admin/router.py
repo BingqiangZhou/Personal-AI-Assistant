@@ -1777,7 +1777,6 @@ async def reparse_all_subscriptions(
                 results.append({
                     "title": subscription.title,
                     "status": "success",
-                    "guid": subscription.source_url,
                     "message": f"Updated {episodes_updated} episodes"
                 })
                 success_count += 1
