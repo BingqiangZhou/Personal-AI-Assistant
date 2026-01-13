@@ -1065,25 +1065,32 @@ celery_app.conf.beat_schedule = {
         'options': {'queue': 'ai'}
     },
 
-    # 每天凌晨2点清理旧记录
-    'cleanup-old-records': {
-        'task': 'app.domains.podcast.tasks.cleanup_old_playback_states',
-        'schedule': 86400.0,  # 24小时
-        'options': {'queue': 'cleanup'}
-    },
+    # 每天凌晨2点清理旧记录（已禁用 - 时间不固定）
+    # 'cleanup-old-records': {
+    #     'task': 'app.domains.podcast.tasks.cleanup_old_playback_states',
+    #     'schedule': 86400.0,  # 24小时
+    #     'options': {'queue': 'cleanup'}
+    # },
 
-    # 每天凌晨4点清理旧的转录临时文件（在清理旧记录和生成推荐之后）
-    'cleanup-transcription-temp-files': {
-        'task': 'app.domains.podcast.tasks.cleanup_old_transcription_temp_files',
-        'schedule': 86400.0,  # 24小时
-        'options': {'queue': 'cleanup'}
-    },
+    # 每天凌晨4点清理旧的转录临时文件（已禁用 - 时间不固定）
+    # 'cleanup-transcription-temp-files': {
+    #     'task': 'app.domains.podcast.tasks.cleanup_old_transcription_temp_files',
+    #     'schedule': 86400.0,  # 24小时
+    #     'options': {'queue': 'cleanup'}
+    # },
 
-    # 每天凌晨3点生成推荐
-    'generate-recommendations': {
-        'task': 'app.domains.podcast.tasks.generate_podcast_recommendations',
-        'schedule': 86400.0,  # 24小时
-        'options': {'queue': 'recommendation'}
+    # 每天凌晨3点生成推荐（已禁用 - 时间不固定，且结果未持久化）
+    # 'generate-recommendations': {
+    #     'task': 'app.domains.podcast.tasks.generate_podcast_recommendations',
+    #     'schedule': 86400.0,  # 24小时
+    #     'options': {'queue': 'recommendation'}
+    # },
+
+    # 每天凌晨4点自动清理缓存文件（如果启用）
+    'auto-cleanup-cache': {
+        'task': 'app.domains.podcast.tasks.auto_cleanup_cache_files',
+        'schedule': crontab(hour=4, minute=0),  # 每天凌晨4点
+        'options': {'queue': 'cleanup'}
     },
 }
 
@@ -1102,3 +1109,81 @@ def log_periodic_task_statistics():
         "status": "success",
         "logged_at": datetime.utcnow().isoformat()
     }
+
+
+@celery_app.task
+def auto_cleanup_cache_files():
+    """
+    自动清理缓存文件任务
+    每天凌晨4点执行，清理昨天及之前的文件（仅保留今天）
+    如果启用了自动清理功能，则执行清理操作
+    """
+    logger.info("🕛 [AUTO CLEANUP] 开始执行自动清理缓存任务...")
+
+    async def _do_auto_cleanup():
+        # 创建独立的数据库引擎，避免fork进程后连接池问题
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+        worker_engine = create_async_engine(
+            settings.DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=3600,
+            connect_args={
+                "server_settings": {
+                    "application_name": "celery-auto-cleanup-worker",
+                    "client_encoding": "utf8"
+                },
+                "timeout": settings.DATABASE_CONNECT_TIMEOUT
+            }
+        )
+
+        worker_session_factory = async_sessionmaker(
+            worker_engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
+
+        try:
+            async with worker_session_factory() as db:
+                try:
+                    from app.admin.storage_service import StorageCleanupService
+
+                    service = StorageCleanupService(db)
+
+                    # 检查是否启用了自动清理
+                    config = await service.get_cleanup_config()
+
+                    if not config.get("enabled"):
+                        logger.info("⏸️  [AUTO CLEANUP] 自动清理未启用，跳过执行")
+                        return {
+                            "status": "skipped",
+                            "reason": "Auto cleanup is disabled",
+                            "checked_at": datetime.utcnow().isoformat()
+                        }
+
+                    logger.info("✅ [AUTO CLEANUP] 自动清理已启用，开始执行清理...")
+
+                    # 执行清理（保留1天，即仅保留今天）
+                    result = await service.execute_cleanup(keep_days=1)
+
+                    return {
+                        "status": "success",
+                        **result,
+                        "executed_at": datetime.utcnow().isoformat()
+                    }
+
+                except Exception as e:
+                    logger.error(f"❌ [AUTO CLEANUP] 清理失败: {e}")
+                    raise
+        finally:
+            await worker_engine.dispose()
+
+    try:
+        result = asyncio.run(_do_auto_cleanup())
+        return result
+
+    except Exception as e:
+        logger.error(f"❌ [AUTO CLEANUP] 自动清理任务失败: {e}")
+        raise

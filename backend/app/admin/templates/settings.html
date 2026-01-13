@@ -306,6 +306,134 @@
         </div>
     </div>
 
+    <!-- Storage Management Card -->
+    <div class="mt-6 bg-white shadow sm:rounded-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">存储管理</h3>
+            <button
+                type="button"
+                onclick="loadStorageInfo()"
+                id="storage-refresh-btn"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+                刷新
+            </button>
+        </div>
+        <div class="px-6 py-6 space-y-6">
+            <!-- Storage Directory Info -->
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <div class="card-subtitle whitespace-nowrap">📁 Storage 目录</div>
+                    <div class="flex-1"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-500">文件数:</span>
+                        <span id="storage-file-count" class="ml-2 font-semibold text-gray-900">-</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">大小:</span>
+                        <span id="storage-size" class="ml-2 font-semibold text-gray-900">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-gray-200"></div>
+
+            <!-- Temp Directory Info -->
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <div class="card-subtitle whitespace-nowrap">📁 Temp 目录</div>
+                    <div class="flex-1"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-500">文件数:</span>
+                        <span id="temp-file-count" class="ml-2 font-semibold text-gray-900">-</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">大小:</span>
+                        <span id="temp-size" class="ml-2 font-semibold text-gray-900">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-gray-200"></div>
+
+            <!-- Disk Usage Info -->
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <div class="card-subtitle whitespace-nowrap">💾 系统磁盘</div>
+                    <div class="flex-1"></div>
+                </div>
+                <div class="space-y-2">
+                    <div class="text-sm">
+                        <span class="text-gray-500">剩余:</span>
+                        <span id="disk-free" class="ml-2 font-semibold text-gray-900">-</span>
+                        <span class="text-gray-500"> / </span>
+                        <span id="disk-total" class="font-semibold text-gray-900">-</span>
+                        <span id="disk-usage-percent" class="ml-2 px-2 py-1 text-xs font-semibold rounded bg-gray-100 text-gray-600">-</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="disk-usage-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-gray-200"></div>
+
+            <!-- Auto Cleanup Toggle -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="card-subtitle">自动清理缓存</div>
+                        <p class="card-description mt-1">每天凌晨4点清理昨天及之前的文件</p>
+                    </div>
+                    <div class="flex items-center">
+                        <button
+                            type="button"
+                            id="auto-cleanup-toggle"
+                            onclick="toggleAutoCleanup()"
+                            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                            role="switch"
+                            aria-checked="false"
+                        >
+                            <span
+                                aria-hidden="true"
+                                id="auto-cleanup-toggle-knob"
+                                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                            ></span>
+                        </button>
+                    </div>
+                </div>
+                <div id="auto-cleanup-status" class="text-sm text-gray-500">
+                    当前状态: <span id="auto-cleanup-status-text">禁用</span>
+                    <span id="auto-cleanup-last-run" class="text-xs text-gray-400 ml-2"></span>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="border-t border-gray-200"></div>
+
+            <!-- Manual Cleanup Button -->
+            <div class="space-y-3">
+                <div class="card-subtitle">手动清理</div>
+                <p class="card-description">立即清理昨天及之前的文件</p>
+                <button
+                    type="button"
+                    id="manual-cleanup-btn"
+                    onclick="executeManualCleanup()"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                >
+                    立即清理
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- System Info Card -->
     <div class="mt-6 mb-8 bg-white shadow sm:rounded-lg overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-200">
@@ -645,5 +773,223 @@
             saveBtn.textContent = originalText;
         }
     }
+
+    // ==================== Storage Management Functions ====================
+
+    // Auto cleanup state
+    let autoCleanupState = {
+        enabled: false,
+        lastCleanup: null
+    };
+
+    // Load storage information
+    async function loadStorageInfo() {
+        const refreshBtn = document.getElementById('storage-refresh-btn');
+        const originalText = refreshBtn.textContent;
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<span class="spinner"></span> 加载中...';
+
+        try {
+            const response = await fetch('/super/settings/api/storage/info');
+            if (response.ok) {
+                const data = await response.json();
+                updateStorageUI(data);
+            } else {
+                showMessage('加载存储信息失败', false);
+            }
+        } catch (error) {
+            console.error('Failed to load storage info:', error);
+            showMessage('加载失败: 网络错误', false);
+        } finally {
+            refreshBtn.disabled = false;
+            refreshBtn.textContent = originalText;
+        }
+    }
+
+    // Update storage UI with data
+    function updateStorageUI(data) {
+        // Update storage directory info
+        if (data.storage) {
+            document.getElementById('storage-file-count').textContent = data.storage.file_count.toLocaleString();
+            document.getElementById('storage-size').textContent = data.storage.total_size_human;
+        }
+
+        // Update temp directory info
+        if (data.temp) {
+            document.getElementById('temp-file-count').textContent = data.temp.file_count.toLocaleString();
+            document.getElementById('temp-size').textContent = data.temp.total_size_human;
+        }
+
+        // Update disk usage info
+        if (data.disk) {
+            document.getElementById('disk-free').textContent = data.disk.free_human;
+            document.getElementById('disk-total').textContent = data.disk.total_human;
+            document.getElementById('disk-usage-percent').textContent = data.disk.usage_percent + '%';
+            document.getElementById('disk-usage-bar').style.width = data.disk.usage_percent + '%';
+
+            // Update progress bar color based on usage
+            const usageBar = document.getElementById('disk-usage-bar');
+            if (data.disk.usage_percent > 90) {
+                usageBar.classList.remove('bg-indigo-600', 'bg-yellow-500');
+                usageBar.classList.add('bg-red-600');
+            } else if (data.disk.usage_percent > 70) {
+                usageBar.classList.remove('bg-indigo-600', 'bg-red-600');
+                usageBar.classList.add('bg-yellow-500');
+            } else {
+                usageBar.classList.remove('bg-red-600', 'bg-yellow-500');
+                usageBar.classList.add('bg-indigo-600');
+            }
+        }
+    }
+
+    // Toggle auto cleanup
+    async function toggleAutoCleanup() {
+        const originalEnabled = autoCleanupState.enabled;
+        const newEnabled = !originalEnabled;
+
+        // Optimistically update UI
+        autoCleanupState.enabled = newEnabled;
+        updateAutoCleanupUI();
+
+        try {
+            const response = await fetch('/super/settings/api/storage/cleanup/config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    enabled: newEnabled,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showMessage(data.message || '配置已更新！');
+            } else {
+                // Revert on error
+                autoCleanupState.enabled = originalEnabled;
+                updateAutoCleanupUI();
+                showMessage('保存失败: ' + (data.detail || data.message || '未知错误'), false);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            // Revert on error
+            autoCleanupState.enabled = originalEnabled;
+            updateAutoCleanupUI();
+            showMessage('保存失败: 网络错误', false);
+        }
+    }
+
+    // Update auto cleanup UI
+    function updateAutoCleanupUI() {
+        const toggle = document.getElementById('auto-cleanup-toggle');
+        const knob = document.getElementById('auto-cleanup-toggle-knob');
+        const statusText = document.getElementById('auto-cleanup-status-text');
+
+        if (autoCleanupState.enabled) {
+            toggle.classList.remove('bg-gray-200');
+            toggle.classList.add('bg-indigo-600');
+            toggle.setAttribute('aria-checked', 'true');
+            knob.classList.remove('translate-x-0');
+            knob.classList.add('translate-x-5');
+            statusText.textContent = '启用';
+            statusText.classList.remove('text-red-600');
+            statusText.classList.add('text-green-600');
+        } else {
+            toggle.classList.remove('bg-indigo-600');
+            toggle.classList.add('bg-gray-200');
+            toggle.setAttribute('aria-checked', 'false');
+            knob.classList.remove('translate-x-5');
+            knob.classList.add('translate-x-0');
+            statusText.textContent = '禁用';
+            statusText.classList.remove('text-green-600');
+            statusText.classList.add('text-red-600');
+        }
+
+        // Update last run text
+        const lastRunText = document.getElementById('auto-cleanup-last-run');
+        if (autoCleanupState.lastCleanup) {
+            const date = new Date(autoCleanupState.lastCleanup);
+            lastRunText.textContent = '(上次清理: ' + date.toLocaleString('zh-CN') + ')';
+        } else {
+            lastRunText.textContent = '';
+        }
+    }
+
+    // Execute manual cleanup
+    async function executeManualCleanup() {
+        if (!confirm('确定要立即清理缓存吗？\n\n这将删除昨天及之前的所有缓存文件。\n此操作不可撤销。')) {
+            return;
+        }
+
+        const cleanupBtn = document.getElementById('manual-cleanup-btn');
+        const originalText = cleanupBtn.textContent;
+        cleanupBtn.disabled = true;
+        cleanupBtn.innerHTML = '<span class="spinner"></span> 清理中...';
+
+        try {
+            const response = await fetch('/super/settings/api/storage/cleanup/execute', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    keep_days: 2,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                const totalDeleted = data.total.deleted_count;
+                const totalFreed = data.total.freed_space_human;
+
+                showMessage(
+                    `清理完成！删除 ${totalDeleted} 个文件，释放 ${totalFreed} 空间`
+                );
+
+                // Refresh storage info after cleanup
+                await loadStorageInfo();
+
+                // Update last cleanup time
+                autoCleanupState.lastCleanup = new Date().toISOString();
+                updateAutoCleanupUI();
+            } else {
+                showMessage('清理失败: ' + (data.detail || data.message || '未知错误'), false);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showMessage('清理失败: 网络错误', false);
+        } finally {
+            cleanupBtn.disabled = false;
+            cleanupBtn.textContent = originalText;
+        }
+    }
+
+    // Load auto cleanup config on page load
+    async function loadAutoCleanupConfig() {
+        try {
+            const response = await fetch('/super/settings/api/storage/cleanup/config');
+            if (response.ok) {
+                const data = await response.json();
+                autoCleanupState.enabled = data.enabled;
+                autoCleanupState.lastCleanup = data.last_cleanup;
+                updateAutoCleanupUI();
+            }
+        } catch (error) {
+            console.error('Failed to load auto cleanup config:', error);
+        }
+    }
+
+    // Add storage info loading to page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load storage info
+        loadStorageInfo();
+
+        // Load auto cleanup config
+        loadAutoCleanupConfig();
+    });
+
 </script>
 {% endblock %}

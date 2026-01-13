@@ -2761,4 +2761,131 @@ async def update_security_settings(
         )
 
 
+# ==================== Storage Management ====================
+
+
+@router.get("/settings/api/storage/info")
+async def get_storage_info(
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Get storage information as JSON."""
+    try:
+        from app.admin.storage_service import StorageCleanupService
+
+        service = StorageCleanupService(db)
+        info = await service.get_storage_info()
+
+        return JSONResponse(content=info)
+    except Exception as e:
+        logger.error(f"Get storage info error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get storage information",
+        )
+
+
+@router.get("/settings/api/storage/cleanup/config")
+async def get_cleanup_config(
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Get auto cleanup configuration as JSON."""
+    try:
+        from app.admin.storage_service import StorageCleanupService
+
+        service = StorageCleanupService(db)
+        config = await service.get_cleanup_config()
+
+        return JSONResponse(content=config)
+    except Exception as e:
+        logger.error(f"Get cleanup config error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get cleanup configuration",
+        )
+
+
+@router.post("/settings/api/storage/cleanup/config")
+async def update_cleanup_config(
+    request: Request,
+    enabled: bool = Body(..., embed=True),
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Update auto cleanup configuration."""
+    try:
+        from app.admin.storage_service import StorageCleanupService
+
+        service = StorageCleanupService(db)
+        result = await service.update_cleanup_config(enabled)
+
+        if result["success"]:
+            logger.info(f"Auto cleanup config updated by user {user.username}: enabled={enabled}")
+
+            # Log audit action
+            await log_admin_action(
+                db=db,
+                user_id=user.id,
+                username=user.username,
+                action="update",
+                resource_type="storage_settings",
+                resource_name="Auto Cleanup Settings",
+                details={
+                    "enabled": enabled,
+                },
+                request=request,
+            )
+
+        return JSONResponse(content=result)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Update cleanup config error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update cleanup configuration",
+        )
+
+
+@router.post("/settings/api/storage/cleanup/execute")
+async def execute_cleanup(
+    request: Request,
+    keep_days: int = Body(1, embed=True),
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Execute manual cleanup (deletes files from yesterday and earlier, keeps only today's files)."""
+    try:
+        from app.admin.storage_service import StorageCleanupService
+
+        service = StorageCleanupService(db)
+        result = await service.execute_cleanup(keep_days)
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="execute",
+            resource_type="storage_cleanup",
+            resource_name="Manual Cache Cleanup",
+            details={
+                "keep_days": keep_days,
+                "deleted_count": result.get("total", {}).get("deleted_count", 0),
+                "freed_space": result.get("total", {}).get("freed_space_human", "0 B"),
+            },
+            request=request,
+        )
+
+        return JSONResponse(content=result)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Execute cleanup error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to execute cleanup",
+        )
+
 
