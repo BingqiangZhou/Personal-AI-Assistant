@@ -41,13 +41,22 @@ def upgrade():
     # Step 4: Drop the old index on item_link
     op.drop_index('idx_podcast_episodes_item_link', table_name='podcast_episodes')
 
-    # Step 5: Make item_link NOT NULL
+    # Step 5: Remove duplicate item_link values
+    # Keep the row with the highest id for each item_link
+    conn.execute(sa.text("""
+        DELETE FROM podcast_episodes
+        WHERE id NOT IN (
+            SELECT max(id) FROM podcast_episodes GROUP BY item_link
+        )
+    """))
+
+    # Step 6: Make item_link NOT NULL
     conn.execute(sa.text("""
         ALTER TABLE podcast_episodes
         ALTER COLUMN item_link SET NOT NULL
     """))
 
-    # Step 6: Create unique index on item_link
+    # Step 7: Create unique index on item_link
     op.create_index(
         'idx_podcast_episodes_item_link',
         'podcast_episodes',
