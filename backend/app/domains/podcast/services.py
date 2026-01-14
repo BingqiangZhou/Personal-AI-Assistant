@@ -682,69 +682,97 @@ class PodcastService:
         }
 
     async def remove_subscription(self, subscription_id: int) -> bool:
-        """删除订阅（按正确的依赖顺序删除关联数据）"""
-        from sqlalchemy import delete, and_
+        """
+        删除订阅（在单个事务中完成验证和删除，避免竞态条件）
+
+        删除顺序（按外键依赖关系）:
+        1. conversations (通过 episode_id)
+        2. playback_progress (podcast_playback_states)
+        3. transcriptions (transcription_tasks)
+        4. episodes (podcast_episodes)
+        5. subscriptions
+        """
+        from sqlalchemy import delete, and_, select
         from app.domains.podcast.models import (
             PodcastEpisode,
             PodcastPlaybackState,
             TranscriptionTask,
             PodcastConversation
         )
-
-        # 验证订阅存在且属于当前用户
-        sub = await self.repo.get_subscription_by_id(self.user_id, subscription_id)
-        if not sub:
-            return False
+        from app.domains.subscription.models import Subscription
 
         try:
-            # 使用显式事务确保删除操作的原子性
+            # 在单个事务中完成所有操作
             async with self.db.begin():
-                # 获取该订阅的所有 episode_id
+                # 1. 验证订阅存在且属于当前用户（在事务内）
+                sub_stmt = select(Subscription).where(
+                    and_(
+                        Subscription.id == subscription_id,
+                        Subscription.user_id == self.user_id
+                    )
+                )
+                sub_result = await self.db.execute(sub_stmt)
+                sub = sub_result.scalar_one_or_none()
+
+                if not sub:
+                    return False
+
+                # 保存标题用于日志（在事务提交前）
+                sub_title = sub.title
+
+                # 2. 获取该订阅的所有 episode_id
                 ep_stmt = select(PodcastEpisode.id).where(
                     PodcastEpisode.subscription_id == subscription_id
                 )
                 ep_result = await self.db.execute(ep_stmt)
                 episode_ids = [row[0] for row in ep_result.fetchall()]
 
-                # 按依赖顺序删除：
-                # 1. conversations (通过 episode_id)
+                # 3. 按依赖顺序删除（使用原生 SQL DELETE，绕过 ORM 级联）
+                # 3a. 删除 conversations
                 if episode_ids:
-                    conv_delete = delete(PodcastConversation).where(
-                        PodcastConversation.episode_id.in_(episode_ids)
-                    ).execution_options(synchronize_session="fetch")
-                    await self.db.execute(conv_delete)
+                    await self.db.execute(
+                        delete(PodcastConversation).where(
+                            PodcastConversation.episode_id.in_(episode_ids)
+                        )
+                    )
 
-                # 2. playback_progress (podcast_playback_states)
+                # 3b. 删除 playback_progress
                 if episode_ids:
-                    playback_delete = delete(PodcastPlaybackState).where(
-                        PodcastPlaybackState.episode_id.in_(episode_ids)
-                    ).execution_options(synchronize_session="fetch")
-                    await self.db.execute(playback_delete)
+                    await self.db.execute(
+                        delete(PodcastPlaybackState).where(
+                            PodcastPlaybackState.episode_id.in_(episode_ids)
+                        )
+                    )
 
-                # 3. transcriptions (transcription_tasks)
+                # 3c. 删除 transcriptions
                 if episode_ids:
-                    trans_delete = delete(TranscriptionTask).where(
-                        TranscriptionTask.episode_id.in_(episode_ids)
-                    ).execution_options(synchronize_session="fetch")
-                    await self.db.execute(trans_delete)
+                    await self.db.execute(
+                        delete(TranscriptionTask).where(
+                            TranscriptionTask.episode_id.in_(episode_ids)
+                        )
+                    )
 
-                # 4. episodes (podcast_episodes)
-                episode_delete = delete(PodcastEpisode).where(
-                    PodcastEpisode.subscription_id == subscription_id
-                ).execution_options(synchronize_session="fetch")
-                await self.db.execute(episode_delete)
+                # 3d. 删除 episodes
+                await self.db.execute(
+                    delete(PodcastEpisode).where(
+                        PodcastEpisode.subscription_id == subscription_id
+                    )
+                )
 
-                # 5. subscription
-                from app.domains.subscription.models import Subscription
-                sub_delete = delete(Subscription).where(
-                    Subscription.id == subscription_id
-                ).execution_options(synchronize_session="fetch")
-                await self.db.execute(sub_delete)
+                # 3e. 删除 subscription
+                await self.db.execute(
+                    delete(Subscription).where(
+                        Subscription.id == subscription_id
+                    )
+                )
 
-            logger.info(f"用户{self.user_id} 删除订阅: {sub.title}")
+            # 事务成功提交
+            logger.info(f"用户{self.user_id} 删除订阅: {sub_title}")
             return True
+
         except Exception as e:
             logger.error(f"删除订阅 {subscription_id} 失败: {e}")
+            # 事务自动回滚
             raise
 
     # === 单集管理与AI总结 ===
