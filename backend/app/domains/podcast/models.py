@@ -112,7 +112,7 @@ class PodcastPlaybackState(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    episode_id = Column(Integer, ForeignKey("podcast_episodes.id"), nullable=False)
+    episode_id = Column(Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False)
 
     # 播放状态
     current_position = Column(Integer, default=0)  # 当前播放位置(秒)
@@ -170,7 +170,7 @@ class TranscriptionTask(Base):
     __tablename__ = "transcription_tasks"
 
     id = Column(Integer, primary_key=True, index=True)
-    episode_id = Column(Integer, ForeignKey("podcast_episodes.id"), nullable=False, unique=True)
+    episode_id = Column(Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False, unique=True)
 
     # 任务状态（简化版）- Use explicit values to match database enum
     status = Column(
@@ -270,7 +270,7 @@ class PodcastConversation(Base):
     __tablename__ = "podcast_conversations"
 
     id = Column(Integer, primary_key=True, index=True)
-    episode_id = Column(Integer, ForeignKey("podcast_episodes.id"), nullable=False)
+    episode_id = Column(Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # 对话内容

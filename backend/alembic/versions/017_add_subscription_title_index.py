@@ -12,7 +12,7 @@ from sqlalchemy import inspect, text
 
 # revision identifiers, used by Alembic.
 revision = '017_add_subscription_title_index'
-down_revision = '016_remove_guid'
+down_revision = '016_remove_guid_use_item_link'
 branch_labels = None
 depends_on = None
 

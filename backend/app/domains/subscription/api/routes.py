@@ -88,8 +88,71 @@ async def create_subscription(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db_session)
 ):
-    """Create a new subscription."""
+    """Create a new subscription.
+
+    If duplicate URL or title is found, returns the existing subscription with a message.
+    """
     service = SubscriptionService(db, current_user.id)
+
+    # Check for duplicate before creation
+    from sqlalchemy import func, select
+    from app.domains.subscription.models import Subscription
+
+    # Check by URL first (exact match)
+    query_url = select(Subscription).where(
+        Subscription.user_id == current_user.id,
+        Subscription.source_url == subscription_data.source_url
+    )
+    result_url = await db.execute(query_url)
+    existing_by_url = result_url.scalar_one_or_none()
+
+    if existing_by_url and existing_by_url.status == "active":
+        # Return existing subscription as response (duplicate URL)
+        return SubscriptionResponse(
+            id=existing_by_url.id,
+            user_id=existing_by_url.user_id,
+            title=existing_by_url.title,
+            description=existing_by_url.description,
+            source_type=existing_by_url.source_type,
+            source_url=existing_by_url.source_url,
+            config=existing_by_url.config,
+            status=existing_by_url.status,
+            last_fetched_at=existing_by_url.last_fetched_at,
+            error_message=f"该RSS链接已存在 / This RSS URL already exists",
+            fetch_interval=existing_by_url.fetch_interval,
+            item_count=0,
+            created_at=existing_by_url.created_at,
+            updated_at=existing_by_url.updated_at,
+        )
+
+    # Check by title (case-insensitive)
+    query_title = select(Subscription).where(
+        Subscription.user_id == current_user.id,
+        func.lower(Subscription.title) == func.lower(subscription_data.title)
+    )
+    result_title = await db.execute(query_title)
+    existing_by_title = result_title.scalar_one_or_none()
+
+    if existing_by_title and existing_by_title.status == "active":
+        # Return existing subscription as response (duplicate title)
+        return SubscriptionResponse(
+            id=existing_by_title.id,
+            user_id=existing_by_title.user_id,
+            title=existing_by_title.title,
+            description=existing_by_title.description,
+            source_type=existing_by_title.source_type,
+            source_url=existing_by_title.source_url,
+            config=existing_by_title.config,
+            status=existing_by_title.status,
+            last_fetched_at=existing_by_title.last_fetched_at,
+            error_message=f"该订阅标题已存在 / Subscription with this title already exists",
+            fetch_interval=existing_by_title.fetch_interval,
+            item_count=0,
+            created_at=existing_by_title.created_at,
+            updated_at=existing_by_title.updated_at,
+        )
+
+    # No duplicate found - create subscription
     try:
         return await service.create_subscription(subscription_data)
     except ValueError as e:
