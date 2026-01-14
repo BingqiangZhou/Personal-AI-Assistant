@@ -1697,61 +1697,62 @@ async def delete_subscription(
         resource_name = subscription.title
         is_podcast = subscription.source_type == "podcast-rss"
 
-        # Use explicit transaction for atomic delete
-        async with db.begin():
-            # If it's a podcast subscription, delete related data first
-            if is_podcast:
-                from app.domains.podcast.models import (
-                    PodcastEpisode,
-                    PodcastPlaybackState,
-                    TranscriptionTask,
-                    PodcastConversation
-                )
-
-                # Get all episode IDs for this subscription
-                ep_result = await db.execute(
-                    select(PodcastEpisode.id).where(
-                        PodcastEpisode.subscription_id == sub_id
-                    )
-                )
-                episode_ids = [row[0] for row in ep_result.fetchall()]
-
-                # Delete in dependency order
-                if episode_ids:
-                    # 1. conversations
-                    await db.execute(
-                        delete(PodcastConversation).where(
-                            PodcastConversation.episode_id.in_(episode_ids)
-                        )
-                    )
-                    # 2. playback states
-                    await db.execute(
-                        delete(PodcastPlaybackState).where(
-                            PodcastPlaybackState.episode_id.in_(episode_ids)
-                        )
-                    )
-                    # 3. transcription tasks
-                    await db.execute(
-                        delete(TranscriptionTask).where(
-                            TranscriptionTask.episode_id.in_(episode_ids)
-                        )
-                    )
-
-                # 4. episodes
-                await db.execute(
-                    delete(PodcastEpisode).where(
-                        PodcastEpisode.subscription_id == sub_id
-                    )
-                )
-
-            # 5. Finally delete the subscription
-            await db.execute(
-                delete(Subscription).where(Subscription.id == sub_id)
+        # If it's a podcast subscription, delete related data first
+        if is_podcast:
+            from app.domains.podcast.models import (
+                PodcastEpisode,
+                PodcastPlaybackState,
+                TranscriptionTask,
+                PodcastConversation
             )
+
+            # Get all episode IDs for this subscription
+            ep_result = await db.execute(
+                select(PodcastEpisode.id).where(
+                    PodcastEpisode.subscription_id == sub_id
+                )
+            )
+            episode_ids = [row[0] for row in ep_result.fetchall()]
+
+            # Delete in dependency order (no explicit transaction, use existing session)
+            if episode_ids:
+                # 1. conversations
+                await db.execute(
+                    delete(PodcastConversation).where(
+                        PodcastConversation.episode_id.in_(episode_ids)
+                    )
+                )
+                # 2. playback states
+                await db.execute(
+                    delete(PodcastPlaybackState).where(
+                        PodcastPlaybackState.episode_id.in_(episode_ids)
+                    )
+                )
+                # 3. transcription tasks
+                await db.execute(
+                    delete(TranscriptionTask).where(
+                        TranscriptionTask.episode_id.in_(episode_ids)
+                    )
+                )
+
+            # 4. episodes
+            await db.execute(
+                delete(PodcastEpisode).where(
+                    PodcastEpisode.subscription_id == sub_id
+                )
+            )
+
+        # 5. Finally delete the subscription
+        await db.execute(
+            delete(Subscription).where(Subscription.id == sub_id)
+        )
+
+        # Commit all deletions
+        await db.commit()
 
         logger.info(f"Subscription {sub_id} deleted by user {user.username}")
 
-        # Log audit action (outside the transaction)
+        # Log audit action (after commit)
         await log_admin_action(
             db=db,
             user_id=user.id,
@@ -1765,6 +1766,7 @@ async def delete_subscription(
 
         return JSONResponse(content={"success": True})
     except Exception as e:
+        await db.rollback()
         logger.error(f"Delete subscription error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
