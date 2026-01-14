@@ -1,8 +1,8 @@
 # Personal AI Assistant
 
-一个可扩展的私人AI助手，集成了播客订阅、转录、AI摘要和知识库管理功能。旨在通过本地化部署和AI能力，打造个人化的信息处理中心。
+一个可扩展的私人AI助手，集成了播客订阅、音频播放、知识库管理和 AI 功能。旨在通过本地化部署和 AI 能力，打造个人化的信息处理中心。
 
-An extensible personal AI assistant that integrates podcast subscription, transcription, AI summarization, and knowledge base management. Designed to create a personalized information processing center through local deployment and AI capabilities.
+An extensible personal AI assistant that integrates podcast subscription, audio playback, knowledge base management, and AI features. Designed to create a personalized information processing center through local deployment and AI capabilities.
 
 ## 📋 [更新日志 / Changelog](CHANGELOG.md)
 
@@ -12,76 +12,202 @@ Check the latest version updates and feature improvements.
 
 ---
 
-## ✨ 核心特性 / Core Features
+## ✨ 已实现功能 / Implemented Features
+
+### 🔐 用户认证与会话 / Authentication & User Management
+
+#### 认证功能 / Authentication
+- **用户注册**: 邮箱注册，自动创建登录会话
+- **用户登录**: 支持邮箱或用户名登录
+- **JWT 认证**: Access Token + Refresh Token 双 Token 机制，自动刷新
+- **多设备会话**: 管理多个登录设备，查看设备信息和 IP
+- **退出登录**: 单设备退出或全部设备退出
+- **密码重置**: 基于邮件的密码重置流程
+
+#### 用户资料 / User Profile
+- **个人信息**: 管理用户名、邮箱、头像、全名
+- **时区设置**: 配置用户时区，显示本地化时间
+
+---
 
 ### 🎙️ 播客管理 / Podcast Management
-- **订阅管理 / Subscription**: 支持 RSS Feed 订阅，自动抓取最新单集 / RSS Feed subscription with automatic episode fetching
-- **智能播放 / Smart Playback**: 内置 Flutter 播放器，支持后台播放、进度记忆 / Built-in Flutter player with background playback and progress tracking
-- **AI 转录 / AI Transcription**: 集成 OpenAI Whisper 和 Azure Speech Services，将音频转化为文本 / Integrated with OpenAI Whisper and Azure Speech Services for audio-to-text conversion
-- **智能摘要 / Smart Summary**: 利用 LLM (GPT-4, Claude 等) 自动生成单集摘要和关键点提取 / Auto-generate episode summaries and key points using LLMs (GPT-4, Claude, etc.)
-- **全文搜索 / Full-text Search**: 支持对转录内容的全文检索，快速定位感兴趣片段 / Full-text search across transcripts for quick content discovery
-- **AI 对话 / AI Conversation**: 与播客单集内容进行智能问答 / Intelligent Q&A based on episode content
 
-### 🤖 AI 集成 / AI Integration
-- **多模型支持 / Multi-model Support**: 支持配置不同的 LLM 模型 (OpenAI, Anthropic 等) 用于摘要和对话 / Support for various LLM models (OpenAI, Anthropic, etc.) for summaries and conversations
-- **灵活配置 / Flexible Configuration**: 可动态管理 API Key 和模型参数 / Dynamic API key and model parameter management
-- **加密存储 / Encrypted Storage**: API Key 使用 RSA + Fernet 加密存储 / API keys encrypted with RSA + Fernet
+#### 订阅管理 / Subscription Management
+- **RSS Feed 订阅**: 支持 RSS Feed 订阅，自动解析播客元数据
+- **自动抓取**: 自动抓取最新单集
+- **批量操作**: 批量删除订阅
+- **手动刷新**: 手动触发内容更新和重新解析
 
-### 🧠 AI 助手 / AI Assistant
-- **对话管理 / Conversation Management**: 创建和管理多个对话会话，支持对话历史 / Create and manage multiple conversations with history
-- **上下文保持 / Context Retention**: 保持对话上下文，实现连续对话 / Maintain conversation context for continuous dialogue
-- **提示词模板 / Prompt Templates**: 创建可复用的提示词模板 / Create reusable prompt templates
+#### 单集管理 / Episode Management
+- **懒加载分页**: 高效处理大量单集数据
+- **多维度筛选**: 按订阅筛选
+- **搜索功能**: 支持标题和描述搜索
+
+#### 音频播放 / Audio Playback
+- **播放器**: 基于 `audioplayers` 的完整播放器实现
+- **播放控制**: 播放/暂停、快进/快退、进度条拖动
+- **后台播放**: 支持后台音频播放
+- **系统媒体控制**: Android/iOS 锁屏媒体控制
+- **播放进度**: 记录和恢复播放进度
+- **播放状态追踪**: 播放次数、完成状态
+
+#### AI 功能（需配置）/ AI Features (Requires Configuration)
+- **音频转录**: 支持 OpenAI Whisper 等转录服务
+- **AI 摘要**: 使用 LLM 生成单集摘要
+- **进度追踪**: 实时查看转录任务状态
+- **对话功能**: 针对单集内容的 AI 对话（后端已实现）
+
+---
+
+### 🤖 AI 模型配置 / AI Model Configuration
+
+- **模型管理**: 创建、更新、删除 AI 模型配置
+- **多供应商支持**: OpenAI、Anthropic 等多种 AI 服务商
+- **加密存储**: API Key 使用 RSA + Fernet 双重加密存储
+- **连接测试**: 测试模型连接性和可用性
+- **使用统计**: 追踪模型调用成功率和 Token 使用量
+
+---
 
 ### 📚 知识库 / Knowledge Base
-- **知识库管理 / Knowledge Base Management**: 创建多个知识库，支持分类组织 / Create and organize multiple knowledge bases
-- **文档管理 / Document Management**: 上传、存储和检索文档 / Upload, store, and retrieve documents
-- **跨库搜索 / Cross-base Search**: 在所有知识库中搜索内容 / Search across all knowledge bases
 
-### 📰 订阅管理 / Subscription Management
-- **Feed 订阅 / Feed Subscription**: 支持 RSS/API Feed 订阅 / Support for RSS/API feed subscriptions
-- **内容同步 / Content Sync**: 自动同步订阅内容 / Automatic content synchronization
-- **分类管理 / Category Management**: 使用分类组织订阅 / Organize subscriptions with categories
-- **阅读状态 / Reading Status**: 跟踪已读/未读状态，支持收藏 / Track read/unread status with bookmark support
+- **知识库管理**: 创建和删除知识库
+- **文档上传**: 支持 PDF、DOCX、TXT、MD 等格式文档上传
+- **文档列表**: 查看知识库中的文档
+- **搜索功能**: 跨知识库搜索文档
 
-### 🎬 多媒体处理 / Multimedia Processing
-- **文件上传 / File Upload**: 支持图片、音频、视频、文档上传 / Support for image, audio, video, and document uploads
-- **音频转录 / Audio Transcription**: 后台异步音频转录任务 / Asynchronous background audio transcription
-- **图片分析 / Image Analysis**: 物体检测、人脸识别、OCR、情绪识别 / Object detection, face recognition, OCR, emotion recognition
-- **任务管理 / Job Management**: 实时跟踪处理任务状态 / Real-time processing job status tracking
+---
 
-### 🔐 认证与用户 / Authentication & User
-- **多种登录方式 / Multiple Login Methods**: 支持邮箱或用户名登录 / Login with email or username
-- **JWT 认证 / JWT Authentication**: Access + Refresh Token 双 Token 机制 / Dual-token mechanism with access and refresh tokens
-- **多设备支持 / Multi-device Support**: 管理多个登录会话 / Manage multiple login sessions
-- **密码重置 / Password Reset**: 邮件重置密码流程 / Email-based password reset flow
+### 🎨 用户界面 / User Interface
 
-## 🛠️ 技术架构
+- **Material 3 设计**: 采用最新 Material Design 3 规范
+- **自适应布局**: 使用 `flutter_adaptive_scaffold` 实现桌面/平板/移动端自适应
+- **双语支持**: 中英文国际化
 
-### 后端 (Backend)
-- **核心框架**: FastAPI (Python 3.10+)
-- **依赖管理**: `uv` (高性能Python包管理器)
-- **数据库**: PostgreSQL (业务数据)
-- **缓存/队列**: Redis (缓存与Celery Broker)
-- **ORM**: SQLAlchemy 2.0 (Async)
-- **异步任务**: Celery (处理音频转录、下载、Feed刷新等耗时任务)
+---
 
-### 前端 (Frontend)
-- **框架**: Flutter 3.x (跨平台移动端/桌面端)
-- **状态管理**: Riverpod 2.0
+## 🛠️ 技术架构 / Technical Architecture
+
+### 后端架构 (Backend - DDD)
+
+```
+backend/app/
+├── core/                   # 核心基础设施层
+│   ├── config/            # 配置管理
+│   ├── security/          # 安全认证（JWT、加密）
+│   ├── database/          # 数据库连接
+│   ├── exceptions/        # 异常处理
+│   └── container/         # 依赖注入容器
+│
+├── shared/                # 共享层
+│   ├── schemas/           # 通用数据模型
+│   ├── utils/             # 工具函数
+│   └── constants/         # 常量定义
+│
+└── domains/               # 领域层（按业务功能划分）
+    ├── user/              # 用户认证和会话管理
+    ├── podcast/           # 播客订阅、单集、转录
+    ├── knowledge/         # 知识库管理
+    ├── assistant/         # AI 助手对话
+    └── ai/                # AI 服务集成和模型管理
+```
+
+#### 后端技术栈
+- **框架**: FastAPI (Python 3.10+) - 高性能异步 Web 框架
+- **依赖管理**: `uv` - 极速 Python 包管理器
+- **数据库**: PostgreSQL 15 - 关系型数据库
+- **ORM**: SQLAlchemy 2.0 (Async) - 异步 ORM
+- **缓存/消息队列**: Redis 7 - 缓存和 Celery Broker
+- **异步任务**: Celery 5.x - 处理耗时任务（转录、Feed 刷新）
+- **任务调度**: Celery Beat - 定时任务调度
+- **数据迁移**: Alembic - 数据库版本控制
+- **加密**: cryptography (RSA + Fernet) - API Key 加密
+- **RSS 解析**: feedparser - RSS/Atom Feed 解析
+
+### 前端架构 (Frontend)
+
+```
+frontend/lib/
+├── core/                  # 核心层
+│   ├── constants/         # 常量
+│   ├── error/             # 错误处理
+│   ├── network/           # 网络客户端 (Dio)
+│   ├── storage/           # 本地存储 (Hive)
+│   └── utils/             # 工具函数
+│
+├── shared/                # 共享层
+│   ├── widgets/           # 可复用组件
+│   ├── theme/             # Material 3 主题
+│   └── extensions/        # 扩展方法
+│
+└── features/              # 功能模块
+    ├── auth/              # 登录、注册、密码重置
+    ├── home/              # 首页
+    ├── podcast/           # 播客订阅、单集、播放器
+    ├── ai/                # AI 模型配置
+    ├── knowledge/         # 知识库
+    └── profile/           # 用户资料
+```
+
+#### 前端技术栈
+- **框架**: Flutter 3.x - 跨平台 UI 框架
+- **UI 设计**: Material 3 Design System
+- **响应式布局**: flutter_adaptive_scaffold
+- **状态管理**: Riverpod 2.x
 - **路由**: GoRouter
 - **网络**: Dio + Retrofit
-- **本地存储**: Hive + Flutter Secure Storage
+- **本地存储**: Hive + flutter_secure_storage
+- **音频播放**: audioplayers 6.5.1
 
-## 🚀 快速开始
+---
 
-### 前置要求
-- **Docker**: 推荐用于运行 PostgreSQL, Redis 和 Celery Worker。
+## 📊 主要 API 端点 / Main API Endpoints
+
+### 认证 / Authentication (`/api/v1/auth/`)
+- `POST /register` - 用户注册
+- `POST /login` - 用户登录
+- `POST /refresh` - 刷新 Token
+- `POST /logout` - 登出
+- `GET /me` - 获取当前用户信息
+
+### 播客 / Podcast (`/api/v1/podcasts/`)
+- `POST /subscriptions` - 添加订阅
+- `GET /subscriptions` - 列出订阅
+- `DELETE /subscriptions/{id}` - 删除订阅
+- `POST /subscriptions/bulk-delete` - 批量删除
+- `POST /subscriptions/{id}/refresh` - 手动刷新
+- `GET /episodes` - 列出单集（支持筛选）
+- `GET /episodes/{id}` - 获取单集详情
+- `PUT /episodes/{id}/playback` - 更新播放进度
+- `POST /episodes/{id}/transcribe` - 开始转录
+- `POST /episodes/{id}/summary` - 生成 AI 摘要
+
+### AI 服务 / AI (`/api/v1/ai/`)
+- `POST /models` - 创建模型配置
+- `GET /models` - 列出模型
+- `PUT /models/{id}` - 更新模型
+- `DELETE /models/{id}` - 删除模型
+- `POST /models/{id}/test` - 测试连接
+
+### 知识库 / Knowledge (`/api/v1/knowledge/`)
+- `GET /bases/` - 列出知识库
+- `POST /bases/` - 创建知识库
+- `DELETE /bases/{id}` - 删除知识库
+- `GET /bases/{id}/documents/` - 列出文档
+- `POST /bases/{id}/documents/upload` - 上传文档
+- `POST /search` - 搜索
+
+---
+
+## 🚀 快速开始 / Quick Start
+
+### 前置要求 / Prerequisites
+- **Docker & Docker Compose**: 推荐用于运行 PostgreSQL、Redis 和 Celery 服务
 - **Python**: 3.10+
-- **uv**: 推荐安装 `uv` 获得极致的包管理体验。
+- **uv**: 推荐安装 `uv` 获得极致的包管理体验
 - **Flutter**: 3.0+
 
-### 1. 启动基础设施
-项目提供了 Docker Compose配置来一键启动数据库和后台任务服务。
+### 1. 启动基础设施服务 / Start Infrastructure
 
 ```bash
 cd docker
@@ -92,31 +218,29 @@ scripts\start.bat
 # Linux/Mac 用户:
 docker compose -f docker-compose.podcast.yml up -d --build
 ```
-> **注意**: `docker-compose.podcast.yml` 包含了 Postgres, Redis, Celery Worker 和 Celery Beat 服务。
 
-### 2. 后端开发环境运行
-
-如果您需要开发或调试后端代码：
+### 2. 后端开发环境运行 / Backend Development
 
 ```bash
 cd backend
 
 # 2.1 配置环境变量
 cp .env.example .env
-# 编辑 .env 文件，设置必要的配置 (如 API Keys, 数据库连接)
+# 编辑 .env 文件，设置必要的配置
 
-# 2.2 安装依赖
-uv sync
+# 2.2 安装依赖 (使用 uv)
+uv sync --extra dev
 
-# 2.3 运行数据库迁移 (确保数据库表结构最新)
-uv run python database_migration.py
+# 2.3 运行数据库迁移
+uv run alembic upgrade head
 
 # 2.4 启动 API 服务
 uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-API 文档地址: http://localhost:8000/docs
 
-### 3. 前端运行
+**API 文档**: http://localhost:8000/docs
+
+### 3. 前端运行 / Frontend
 
 ```bash
 cd frontend
@@ -124,37 +248,84 @@ cd frontend
 # 3.1 安装依赖
 flutter pub get
 
-# 3.2 启动应用
+# 3.2 运行应用
 flutter run
 ```
 
-## 📂 项目结构
+---
+
+## 📂 项目结构 / Project Structure
 
 ```
 personal-ai-assistant/
-├── backend/                # FastAPI 后端应用
+├── backend/                    # FastAPI 后端应用
 │   ├── app/
-│   │   ├── core/           # 核心配置 (Config, DB, Security)
-│   │   ├── domains/        # 业务领域 (Podcast, AI, User...)
-│   │   ├── integration/    # 外部集成 (LLM, Transcribers)
-│   │   └── main.py         # 入口文件
-│   ├── pyproject.toml      # uv 依赖管理配置
-│   └── alembic/            # 数据库版本控制
+│   │   ├── core/               # 核心基础设施
+│   │   ├── shared/             # 共享层
+│   │   ├── domains/            # 业务领域（DDD）
+│   │   ├── integration/        # 外部集成
+│   │   └── main.py             # 应用入口
+│   ├── alembic/                # 数据库迁移
+│   ├── tests/                  # 测试文件
+│   └── pyproject.toml          # uv 依赖配置
 │
-├── frontend/               # Flutter 移动端应用
+├── frontend/                   # Flutter 前端应用
 │   ├── lib/
-│   │   ├── features/       # 业务功能模块
-│   │   └── core/           # 核心组件
+│   │   ├── core/               # 核心层
+│   │   ├── shared/             # 共享层
+│   │   └── features/           # 功能模块
+│   ├── test/                   # 测试文件
+│   └── pubspec.yaml            # Flutter 依赖配置
 │
-├── docker/                 # Docker 部署配置
-│   ├── docker-compose.podcast.yml # 完整服务编排
-│   └── scripts/            # 启动脚本
+├── docker/                     # Docker 部署
+│   └── docker-compose.podcast.yml
 │
-└── docs/                   # 详细文档
+├── docs/                       # 详细文档
+├── CLAUDE.md                   # Claude Code 项目指南
+├── CHANGELOG.md                # 更新日志
+└── README.md                   # 项目说明
 ```
 
-## 🤝 贡献
-欢迎提交 Issue 和 Pull Request 帮助改进这个项目。
+---
 
-## 📄 许可证
+## 📈 开发路线图 / Development Roadmap
+
+### ✅ 已完成 / Completed
+- [x] 用户认证和会话管理
+- [x] 播客订阅和单集管理
+- [x] 音频播放器（完整实现）
+- [x] AI 模型配置管理
+- [x] 知识库基础功能
+- [x] Material 3 UI 实现
+- [x] Docker 部署配置
+
+### ⚠️ 部分完成 / Partial
+- [ ] AI 助手对话（UI 已完成，后端需配置）
+- [ ] 播客播放器页面优化
+
+### 📅 计划中 / Planned
+- [ ] AI 转录和摘要的完整配置
+- [ ] 知识库搜索增强
+- [ ] 更多播客发现功能
+
+---
+
+## 🤝 贡献指南 / Contributing
+
+欢迎提交 Issue 和 Pull Request 来帮助改进这个项目。
+
+### 开发规范
+1. 遵循现有代码风格和架构模式
+2. 编写测试覆盖新功能
+3. 更新相关文档
+4. 提交前运行 `uv run black .` 和 `flutter analyze`
+
+---
+
+## 📄 许可证 / License
+
 MIT License
+
+---
+
+**Made with ❤️ for Personal Knowledge Management**
