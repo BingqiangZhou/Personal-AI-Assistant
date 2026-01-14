@@ -24,8 +24,8 @@
     <div class="mt-4 bg-white shadow sm:rounded-lg p-4">
         <form method="get" action="/super/apikeys" class="flex gap-4">
             <div class="flex-1">
-                <label for="model_type" class="block text-sm font-medium text-gray-700">模型类型</label>
-                <select name="model_type_filter" id="model_type"
+                <label for="model_type_filter" class="block text-sm font-medium text-gray-700">模型类型</label>
+                <select name="model_type_filter" id="model_type_filter"
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     <option value="">全部</option>
                     <option value="transcription" {% if model_type_filter == 'transcription' %}selected{% endif %}>转录模型 (transcription)</option>
@@ -258,7 +258,7 @@
                         <select name="model_type" id="model_type" required
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                             <option value="transcription">转录模型 (transcription)</option>
-                            <option value="text_generation">文本生成 (text_generation)</option>
+                            <option value="text_generation" selected>文本生成 (text_generation)</option>
                         </select>
                     </div>
                     <div>
@@ -477,14 +477,38 @@
 
 <script>
 async function testApiKeyBeforeCreate() {
-    const name = document.getElementById('name').value;
-    const api_url = document.getElementById('api_url').value;
-    const api_key = document.getElementById('api_key').value;
-    const model_type = document.getElementById('model_type').value;
+    const name = document.getElementById('name').value.trim();
+    const api_url = document.getElementById('api_url').value.trim();
+    const api_key = document.getElementById('api_key').value.trim();
+    const model_type = document.getElementById('model_type').value.trim();
 
-    // Validate required fields
-    if (!name || !api_url || !api_key || !model_type) {
-        showTestResult(false, '请填写所有必填字段（名称、API URL、API Key、模型类型）');
+    // Debug logging
+    console.log('testApiKeyBeforeCreate - field values:', {
+        name: name,
+        name_length: name.length,
+        api_url: api_url,
+        api_url_length: api_url.length,
+        api_key: api_key,
+        api_key_length: api_key.length,
+        model_type: model_type,
+        model_type_length: model_type.length,
+    });
+
+    // Validate required fields and provide specific error messages
+    if (!name) {
+        showTestResult(false, '请填写名称字段', '名称为必填项');
+        return;
+    }
+    if (!api_url) {
+        showTestResult(false, '请填写API URL字段', 'API URL为必填项');
+        return;
+    }
+    if (!api_key) {
+        showTestResult(false, '请填写API Key字段', 'API Key为必填项');
+        return;
+    }
+    if (!model_type) {
+        showTestResult(false, '请选择模型类型', '模型类型为必填项');
         return;
     }
 
@@ -707,10 +731,10 @@ async function submitEdit() {
 }
 
 async function testApiKeyBeforeEdit() {
-    const name = document.getElementById('edit-name').value;
-    const api_url = document.getElementById('edit-api_url').value;
-    const api_key = document.getElementById('edit-api_key').value;
-    const model_type = document.getElementById('edit-model_type').value;
+    const name = document.getElementById('edit-name').value.trim();
+    const api_url = document.getElementById('edit-api_url').value.trim();
+    const api_key = document.getElementById('edit-api_key').value.trim();
+    const model_type = document.getElementById('edit-model_type').value.trim();
 
     // Validate required fields (api_key is optional for edit)
     if (!name || !api_url || !model_type) {
