@@ -6,6 +6,23 @@
 
 ## 当前活跃功能 / Current Active Features
 
+### 0. RSS订阅功能增强 / RSS Subscription Enhancement
+| 文档名称 | 文件路径 | 描述 | 状态 |
+|---------|---------|------|------|
+| RSS订阅重复检测增强 | `REQ-20260114-001-rss-subscription-duplicate-detection.md` | 增强重复检测（URL+标题）和智能处理策略 | Active |
+
+**功能概述**:
+- 增强重复检测：同时检查URL和标题
+- 智能处理策略：根据现有订阅状态决定更新或跳过
+- 批量导入支持：应用相同的重复检测逻辑
+
+**快速导航**:
+- 📋 [需求文档](./REQ-20260114-001-rss-subscription-duplicate-detection.md)
+
+**开发进度**: 0% (需求阶段完成，待开发)
+
+---
+
 ### 1. 播客功能增强 / Podcast Feature Enhancements
 | 文档名称 | 文件路径 | 描述 | 状态 |
 |---------|---------|------|------|
@@ -145,6 +162,7 @@
 
 | 日期 | 版本 | 更新内容 | 更新人 |
 |------|------|---------|--------|
+| 2026-01-14 | 4.0 | 添加RSS订阅重复检测增强需求 | Product Manager |
 | 2025-01-03 | 3.2 | 添加播客 Shownotes HTML 渲染功能需求 | Product Manager |
 | 2026-01-02 | 3.1 | 添加播客订阅状态指示器功能需求 | Product Manager |
 | 2025-01-02 | 3.0 | 添加播客搜索功能需求（iTunes Search API集成） | Product Manager |
