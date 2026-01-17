@@ -55,6 +55,14 @@
                 </div>
             </div>
             <div class="flex items-center gap-4">
+                <button onclick="exportOPML()"
+                        id="export-opml-btn"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    导出所有订阅
+                </button>
                 <button onclick="testAllSubscriptions()"
                         id="test-all-btn"
                         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
@@ -677,6 +685,84 @@ function clearSearch() {
     window.location = url.toString();
 }
 
+
+// Export OPML function
+async function exportOPML() {
+    const exportBtn = document.getElementById('export-opml-btn');
+
+    // Store original button content
+    const originalContent = exportBtn.innerHTML;
+
+    try {
+        // Disable button and show loading state
+        exportBtn.disabled = true;
+        exportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        exportBtn.innerHTML = `
+            <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            导出中... / Exporting...
+        `;
+
+        // Fetch OPML content
+        const response = await fetch('/super/api/subscriptions/export/opml');
+
+        if (!response.ok) {
+            throw new Error('Export failed');
+        }
+
+        // Get the blob
+        const blob = await response.blob();
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'stella.opml';
+        document.body.appendChild(a);
+        a.click();
+
+        // Cleanup
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        // Show success message
+        exportBtn.innerHTML = `
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            完成! / Done!
+        `;
+
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            exportBtn.innerHTML = originalContent;
+            exportBtn.disabled = false;
+            exportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }, 2000);
+
+    } catch (error) {
+        console.error('Export error:', error);
+
+        // Show error state
+        exportBtn.innerHTML = `
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+            失败 / Failed
+        `;
+
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            exportBtn.innerHTML = originalContent;
+            exportBtn.disabled = false;
+            exportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }, 2000);
+
+        alert('导出失败，请稍后重试 / Export failed, please try again later');
+    }
+}
 
 
 // Test all subscriptions function

@@ -3,9 +3,12 @@
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from xml.sax.saxutils import escape
+from urllib.parse import urlparse
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.core.feed_parser import FeedParseOptions, FeedParser, FeedParserConfig
 from app.core.feed_schemas import FeedParseResult, ParseErrorCode
@@ -631,3 +634,130 @@ class SubscriptionService:
         return await self.repo.remove_subscription_from_category(
             subscription_id, category_id
         )
+
+    async def generate_opml_content(
+        self,
+        user_id: Optional[int] = None,
+        status_filter: Optional[str] = SubscriptionStatus.ACTIVE,
+    ) -> str:
+        """
+        Generate OPML 2.0 format XML content for RSS subscriptions.
+
+        生成符合OPML 2.0规范的RSS订阅XML内容。
+
+        Args:
+            user_id: Optional user ID to filter subscriptions. If None, exports all subscriptions.
+            status_filter: Subscription status filter (default: ACTIVE)
+
+        Returns:
+            OPML format XML string
+
+        生成OPML 2.0格式的RSS订阅XML内容。
+        """
+        from app.domains.subscription.models import Subscription, SubscriptionType
+
+        # Query all subscriptions (no source_type filter)
+        # 查询所有订阅（不限制source_type）
+        query = (
+            select(Subscription)
+            .options(selectinload(Subscription.categories))
+        )
+
+        # Filter by user_id if specified (for normal users)
+        # 如果指定了user_id则过滤（普通用户）
+        if user_id is not None:
+            query = query.where(Subscription.user_id == user_id)
+
+        # Apply status filter if specified
+        if status_filter:
+            query = query.where(Subscription.status == status_filter)
+
+        # Order by title
+        query = query.order_by(Subscription.title)
+
+        result = await self.db.execute(query)
+        subscriptions = result.scalars().all()
+
+        # Start building OPML XML
+        opml_lines = []
+        opml_lines.append('<?xml version="1.0" encoding="UTF-8"?>')
+        opml_lines.append('<opml version="2.0">')
+
+        # Head section
+        opml_lines.append('  <head>')
+        opml_lines.append('    <title>Stella RSS Subscriptions</title>')
+        opml_lines.append(
+            f'    <dateCreated>{datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")}</dateCreated>'
+        )
+        opml_lines.append('    <ownerName>Stella Admin</ownerName>')
+        opml_lines.append(f'    <totalSubscriptions>{len(subscriptions)}</totalSubscriptions>')
+        opml_lines.append('  </head>')
+
+        # Body section
+        opml_lines.append('  <body>')
+
+        # Group subscriptions by category
+        categorized_subs: Dict[str, List[Subscription]] = {}
+        uncategorized_subs: List[Subscription] = []
+
+        for sub in subscriptions:
+            if sub.categories:
+                # Use first category name as group
+                category_name = sub.categories[0].name
+                if category_name not in categorized_subs:
+                    categorized_subs[category_name] = []
+                categorized_subs[category_name].append(sub)
+            else:
+                uncategorized_subs.append(sub)
+
+        # Add categorized subscriptions
+        for category_name in sorted(categorized_subs.keys()):
+            opml_lines.append(f'    <outline text="{escape(category_name)}" title="{escape(category_name)}">')
+            for sub in categorized_subs[category_name]:
+                opml_lines.append(self._subscription_to_opml_outline(sub, indent="      "))
+            opml_lines.append("    </outline>")
+
+        # Add uncategorized subscriptions
+        for sub in uncategorized_subs:
+            opml_lines.append(self._subscription_to_opml_outline(sub, indent="    "))
+
+        # Close body and opml tags
+        opml_lines.append("  </body>")
+        opml_lines.append("</opml>")
+
+        return "\n".join(opml_lines)
+
+    def _subscription_to_opml_outline(self, subscription: Subscription, indent: str = "    ") -> str:
+        """
+        Convert a Subscription to OPML outline element.
+
+        将订阅转换为OPML outline元素。
+
+        Args:
+            subscription: Subscription model instance
+            indent: Indentation string
+
+        Returns:
+            OPML outline XML string
+        """
+        # Build outline attributes
+        attrs = [
+            f'text="{escape(subscription.title or "Untitled")}"',
+            f'title="{escape(subscription.title or "Untitled")}"',
+            f'xmlUrl="{escape(subscription.source_url)}"',
+        ]
+
+        # Try to extract htmlUrl from source_url
+        try:
+            parsed = urlparse(subscription.source_url)
+            # Reconstruct URL without path (scheme://netloc/)
+            html_url = f"{parsed.scheme}://{parsed.netloc}/"
+            attrs.append(f'htmlUrl="{escape(html_url)}"')
+        except Exception:
+            pass
+
+        # Add description if available
+        if subscription.description:
+            attrs.append(f'description="{escape(subscription.description)}"')
+
+        return f'{indent}<outline {" ".join(attrs)}/>'

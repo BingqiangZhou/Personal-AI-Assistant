@@ -1968,6 +1968,57 @@ async def batch_delete_subscriptions(
         )
 
 
+@router.get("/api/subscriptions/export/opml")
+async def export_subscriptions_opml(
+    request: Request,
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """
+    Export all RSS subscriptions to OPML format.
+
+    导出所有RSS订阅为OPML格式。
+    """
+    from fastapi.responses import Response
+    from app.domains.subscription.services import SubscriptionService
+
+    try:
+        # Create subscription service (export all subscriptions for admin)
+        service = SubscriptionService(db, user_id=user.id)
+
+        # Generate OPML content - export ALL subscriptions regardless of user_id
+        opml_content = await service.generate_opml_content(user_id=None)
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="export_opml",
+            resource_type="subscription",
+            details={"format": "opml", "filename": "stella.opml"},
+            request=request,
+        )
+
+        logger.info(f"Exported OPML for user {user.username}")
+
+        # Return as downloadable file
+        return Response(
+            content=opml_content,
+            media_type="application/xml; charset=utf-8",
+            headers={
+                "Content-Disposition": 'attachment; filename="stella.opml"'
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"OPML export error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to export OPML: {str(e)}",
+        )
+
+
 # ==================== Audit Log Management ====================
 
 
