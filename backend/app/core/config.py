@@ -104,7 +104,7 @@ class Settings(BaseSettings):
 
     # JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7  # Sliding session: refresh extends to 7 days from now
     ALGORITHM: str = "HS256"
 
     # Celery

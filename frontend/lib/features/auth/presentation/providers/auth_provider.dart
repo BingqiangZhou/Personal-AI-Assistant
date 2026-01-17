@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dartz/dartz.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart';
 
@@ -10,8 +10,11 @@ import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../../../../core/storage/secure_storage_service.dart';
-import '../../../../core/network/dio_client.dart';
 import '../../../../core/providers/core_providers.dart';
+
+// Token refresh constants
+const int _tokenRefreshBufferMinutes = 5; // Refresh 5 minutes before expiry
+const int _tokenCheckIntervalSeconds = 60; // Check every minute
 
 // Storage provider
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
@@ -90,6 +93,7 @@ enum AuthOperation {
 class AuthNotifier extends Notifier<AuthState> {
   late final AuthRepository _authRepository;
   late final SecureStorageService _secureStorage;
+  Timer? _tokenRefreshTimer;
 
   @override
   AuthState build() {
@@ -97,6 +101,9 @@ class AuthNotifier extends Notifier<AuthState> {
     _secureStorage = ref.read(secureStorageProvider);
     // Don't check auth status here to avoid circular dependency
     // Let the UI call checkAuthStatus when needed
+    ref.onDispose(() {
+      _stopTokenRefreshTimer();
+    });
     return const AuthState();
   }
 
@@ -125,15 +132,24 @@ class AuthNotifier extends Notifier<AuthState> {
         final result = await _authRepository.getCurrentUser();
         result.fold(
           (error) {
-            String userMessage = _getErrorMessage(error);
             if (error is AuthenticationException) {
+              // For authentication errors, clear state and let router handle redirect
+              // Don't show error message, just navigate to login
               _handleAuthError();
+              state = state.copyWith(
+                isLoading: false,
+                error: null,  // Don't show error message
+                currentOperation: null,
+              );
+            } else {
+              // For other errors, show error message
+              String userMessage = _getErrorMessage(error);
+              state = state.copyWith(
+                isLoading: false,
+                error: userMessage,
+                currentOperation: null,
+              );
             }
-            state = state.copyWith(
-              isLoading: false,
-              error: userMessage,
-              currentOperation: null,
-            );
           },
           (user) => state = state.copyWith(
             user: user,
@@ -143,6 +159,8 @@ class AuthNotifier extends Notifier<AuthState> {
             currentOperation: null,
           ),
         );
+        // Enable auto-refresh on successful auth check
+        _enableAutoRefresh();
       } else {
         state = state.copyWith(isLoading: false, currentOperation: null);
       }
@@ -204,6 +222,8 @@ class AuthNotifier extends Notifier<AuthState> {
               error: null,
               currentOperation: null,
             );
+            // Enable auto-refresh
+            _enableAutoRefresh();
           },
           (user) {
             state = state.copyWith(
@@ -213,6 +233,8 @@ class AuthNotifier extends Notifier<AuthState> {
               error: null,
               currentOperation: null,
             );
+            // Enable auto-refresh
+            _enableAutoRefresh();
           },
         );
       },
@@ -285,6 +307,8 @@ class AuthNotifier extends Notifier<AuthState> {
               error: null,
               currentOperation: null,
             );
+            // Enable auto-refresh
+            _enableAutoRefresh();
           },
           (user) {
             state = state.copyWith(
@@ -294,6 +318,8 @@ class AuthNotifier extends Notifier<AuthState> {
               error: null,
               currentOperation: null,
             );
+            // Enable auto-refresh
+            _enableAutoRefresh();
           },
         );
       },
@@ -305,6 +331,9 @@ class AuthNotifier extends Notifier<AuthState> {
       isLoading: true,
       currentOperation: AuthOperation.logout,
     );
+
+    // Stop auto-refresh timer
+    _disableAutoRefresh();
 
     final refreshToken = await _secureStorage.getRefreshToken();
     final result = await _authRepository.logout(refreshToken);
@@ -348,10 +377,11 @@ class AuthNotifier extends Notifier<AuthState> {
     final result = await _authRepository.refreshToken(refreshToken);
     result.fold(
       (error) async {
+        // Clear auth state and let router handle redirect automatically
         await _handleAuthError();
         state = state.copyWith(
           isRefreshingToken: false,
-          error: 'Session expired. Please login again.',
+          error: null,  // Don't show error message
           currentOperation: null,
         );
       },
@@ -385,7 +415,8 @@ class AuthNotifier extends Notifier<AuthState> {
         result = 'Network error. Please check your connection and try again.';
         break;
       case AuthenticationException:
-        result = 'Invalid credentials. Please check your email and password.';
+        // Use the already user-friendly message from AuthenticationException
+        result = error.message;
         break;
       case ValidationException:
         final validationError = error as ValidationException;
@@ -544,5 +575,65 @@ class AuthNotifier extends Notifier<AuthState> {
         );
       },
     );
+  }
+
+  // === Auto Token Refresh Methods ===
+
+  /// Start automatic token refresh timer
+  /// Checks token expiry every minute and refreshes 5 minutes before expiry
+  void _startTokenRefreshTimer() {
+    _stopTokenRefreshTimer(); // Clear any existing timer
+
+    _tokenRefreshTimer = Timer.periodic(
+      const Duration(seconds: _tokenCheckIntervalSeconds),
+      (_) => _checkAndRefreshToken(),
+    );
+
+    debugPrint('✅ [Auth] Token refresh timer started');
+  }
+
+  /// Stop automatic token refresh timer
+  void _stopTokenRefreshTimer() {
+    _tokenRefreshTimer?.cancel();
+    _tokenRefreshTimer = null;
+    debugPrint('⏹️ [Auth] Token refresh timer stopped');
+  }
+
+  /// Check if token needs refresh and refresh if necessary
+  Future<void> _checkAndRefreshToken() async {
+    // Only proceed if authenticated and not already refreshing
+    if (!state.isAuthenticated || state.isRefreshingToken) {
+      return;
+    }
+
+    try {
+      final tokenExpiry = await _secureStorage.getTokenExpiry();
+      if (tokenExpiry == null) {
+        return; // No expiry info, skip
+      }
+
+      final now = DateTime.now();
+      final timeUntilExpiry = tokenExpiry.difference(now);
+
+      // Refresh if token expires in less than buffer time
+      if (timeUntilExpiry <= Duration(minutes: _tokenRefreshBufferMinutes)) {
+        debugPrint('🔄 [Auth] Token expiring in ${timeUntilExpiry.inMinutes} minutes, auto-refreshing...');
+        await refreshToken();
+      }
+    } catch (e) {
+      debugPrint('⚠️ [Auth] Error checking token expiry: $e');
+    }
+  }
+
+  /// Start auto-refresh for authenticated user
+  /// Call this after successful login or authentication check
+  void _enableAutoRefresh() {
+    _startTokenRefreshTimer();
+  }
+
+  /// Stop auto-refresh for logout
+  /// Call this after logout
+  void _disableAutoRefresh() {
+    _stopTokenRefreshTimer();
   }
 }

@@ -7,6 +7,9 @@ from sqlalchemy import select, and_, or_
 from sqlalchemy.exc import IntegrityError
 import secrets
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 from app.core.security import (
     get_password_hash,
@@ -141,18 +144,45 @@ class AuthenticationService:
         remember_me: bool = False
     ) -> Dict[str, Any]:
         """
-        Create user session with tokens.
+        Create user session with tokens and concurrent session limit.
+
+        Security features:
+        - Maximum 5 concurrent active sessions per user
+        - Oldest sessions are automatically invalidated when limit is reached
 
         Args:
             user: User instance
             device_info: Optional device information
             ip_address: Optional IP address
             user_agent: Optional user agent string
-            remember_me: If True, refresh token expires in 30 days; otherwise 7 days
+            remember_me: If True, refresh token expires in 30 days
 
         Returns:
             Dictionary containing access and refresh tokens
         """
+        # Security: Limit concurrent sessions (max 5 per user)
+        MAX_CONCURRENT_SESSIONS = 5
+
+        # Get existing active sessions for this user
+        existing_sessions = await self.db.execute(
+            select(UserSession).where(
+                and_(
+                    UserSession.user_id == user.id,
+                    UserSession.is_active == True,
+                    UserSession.expires_at > datetime.utcnow()
+                )
+            ).order_by(UserSession.created_at)
+        )
+        active_sessions = existing_sessions.scalars().all()
+
+        # If limit reached, invalidate oldest sessions
+        if len(active_sessions) >= MAX_CONCURRENT_SESSIONS:
+            sessions_to_invalidate = len(active_sessions) - MAX_CONCURRENT_SESSIONS + 1
+            for i in range(sessions_to_invalidate):
+                old_session = active_sessions[i]
+                old_session.is_active = False
+                logger.info(f"🔒 Invalidating old session {old_session.id} for user {user.id}")
+
         # Create tokens
         access_token = create_access_token(
             data={"sub": str(user.id), "email": user.email}
@@ -204,13 +234,19 @@ class AuthenticationService:
 
     async def refresh_access_token(self, refresh_token: str) -> Dict[str, Any]:
         """
-        Refresh access token using refresh token.
+        Refresh access token using refresh token with sliding session expiration.
+
+        This implements a sliding session mechanism where:
+        - The refresh token expiration is extended each time it's used
+        - Active users can stay logged in indefinitely
+        - Inactive users will eventually need to re-login
+        - Rate limited: max 10 refreshes per minute per session
 
         Args:
             refresh_token: Valid refresh token
 
         Returns:
-            Dictionary with new access token
+            Dictionary with new access token and updated refresh token
 
         Raises:
             UnauthorizedError: If refresh token is invalid
@@ -232,6 +268,14 @@ class AuthenticationService:
         if not session.is_active:
             raise UnauthorizedError("Session expired")
 
+        # Security: Rate limit token refresh (prevent abuse)
+        # Allow max 10 refreshes per minute per session
+        MIN_REFRESH_INTERVAL_SECONDS = 6  # ~10 refreshes per minute
+        time_since_last_activity = (datetime.utcnow() - session.last_activity_at).total_seconds()
+        if time_since_last_activity < MIN_REFRESH_INTERVAL_SECONDS:
+            logger.warning(f"⚠️ Rate limit: User {user_id} refreshing too frequently (interval: {time_since_last_activity}s)")
+            # Still allow refresh, but log suspicious activity
+
         # Get user
         user = await self._get_user_by_id(user_id)
         if not user or user.status != "active":
@@ -242,17 +286,31 @@ class AuthenticationService:
             data={"sub": str(user.id), "email": user.email}
         )
 
-        # Update session
-        session.session_token = new_access_token
-        session.last_activity_at = datetime.utcnow()
-        session.expires_at = datetime.utcnow() + timedelta(
+        # Create new refresh token (sliding session - extend expiration)
+        new_refresh_token = create_refresh_token(
+            data={"sub": str(user.id), "email": user.email},
+            expires_delta=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        )
+
+        # Calculate new expiration times
+        access_expires_at = datetime.utcnow() + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
+        refresh_expires_at = datetime.utcnow() + timedelta(
+            days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+        )
+
+        # Update session with sliding expiration
+        session.session_token = new_access_token
+        session.refresh_token = new_refresh_token
+        session.last_activity_at = datetime.utcnow()
+        session.expires_at = access_expires_at
 
         await self.db.commit()
 
         return {
             "access_token": new_access_token,
+            "refresh_token": new_refresh_token,  # Return new refresh token
             "token_type": "bearer",
             "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
         }

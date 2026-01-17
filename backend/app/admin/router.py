@@ -291,14 +291,14 @@ async def setup_admin(
 
 
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
+async def login_page(request: Request, error: str = None):
     """Display login page."""
     # Generate CSRF token
     csrf_token = generate_csrf_token()
 
     response = templates.TemplateResponse(
         "login.html",
-        {"request": request, "user": None, "messages": [], "csrf_token": csrf_token},
+        {"request": request, "user": None, "error": error, "csrf_token": csrf_token},
     )
 
     # Set CSRF token in cookie
@@ -332,23 +332,27 @@ async def login(
         user = await user_repo.get_by_username(username)
 
         if not user or not verify_password(password, user.hashed_password):
+            csrf_token = generate_csrf_token()
             return templates.TemplateResponse(
                 "login.html",
                 {
                     "request": request,
                     "user": None,
-                    "messages": [{"type": "error", "text": "用户名或密码错误"}],
+                    "error": "用户名或密码错误",
+                    "csrf_token": csrf_token,
                 },
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
 
         if not user.is_active:
+            csrf_token = generate_csrf_token()
             return templates.TemplateResponse(
                 "login.html",
                 {
                     "request": request,
                     "user": None,
-                    "messages": [{"type": "error", "text": "用户已被禁用"}],
+                    "error": "用户已被禁用",
+                    "csrf_token": csrf_token,
                 },
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )

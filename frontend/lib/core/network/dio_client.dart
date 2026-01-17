@@ -124,7 +124,7 @@ class DioClient {
         options.headers['Authorization'] = 'Bearer $token';
         debugPrint('   ✅ Token added: ${token.substring(0, 20)}...');
       } else {
-        debugPrint('   ⚠️ No token found');
+        debugPrint('   ⚠️ No token found - skipping auth, will return 401 if protected route');
       }
     }
 
@@ -194,6 +194,11 @@ class DioClient {
                   if (retryError.response?.statusCode == 401) {
                     debugPrint('❌ Retry still returns 401, clearing tokens');
                     await _clearTokens();
+                    // Token was refreshed but request still fails - likely permission/resource issue
+                    // Don't confuse user with authentication error when it's actually authorization
+                    debugPrint('⚠️ Token refreshed but resource access denied - may not exist or no permission');
+                    handler.reject(retryError);
+                    return;
                   }
                   // Pass the retry error to handler (could be 404, 403, etc.)
                   debugPrint('⚠️ Retry failed with status: ${retryError.response?.statusCode}');
@@ -420,6 +425,7 @@ class DioClient {
     await _secureStorage.delete(key: config.AppConstants.accessTokenKey);
     await _secureStorage.delete(key: config.AppConstants.refreshTokenKey);
     await _secureStorage.delete(key: config.AppConstants.userProfileKey);
+    debugPrint('🔓 [DioClient] Tokens cleared, user will need to re-login');
   }
 
   // HTTP methods

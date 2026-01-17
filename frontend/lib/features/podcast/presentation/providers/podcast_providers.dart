@@ -820,16 +820,6 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
 
       debugPrint('📋 Loaded ${response.episodes.length} episodes for subscription $subscriptionId');
 
-      // Debug: Log item_link data for first few episodes
-      if (response.episodes.isNotEmpty) {
-        for (var i = 0; i < response.episodes.length && i < 3; i++) {
-          final ep = response.episodes[i];
-          debugPrint('🔗 Episode ${i + 1}: "${ep.title}"');
-          debugPrint('   - itemLink: ${ep.itemLink ?? "NULL"}');
-          debugPrint('   - audioUrl: ${ep.audioUrl}');
-        }
-      }
-
       state = state.copyWith(
         episodes: page == 1 ? response.episodes : [...state.episodes, ...response.episodes],
         hasMore: page < response.pages,

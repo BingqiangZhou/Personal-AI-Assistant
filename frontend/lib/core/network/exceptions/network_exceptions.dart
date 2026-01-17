@@ -73,13 +73,24 @@ class AuthenticationException extends AppException {
   static AuthenticationException fromDioError(DioException error) {
     final data = error.response?.data;
     String message = 'Authentication failed';
+    String backendMessage = '';
 
     if (data is Map) {
-      message = data['detail']?.toString() ??
-                data['message']?.toString() ??
-                'Authentication failed';
+      backendMessage = data['detail']?.toString() ??
+                      data['message']?.toString() ??
+                      '';
     } else if (data is String) {
-      message = data;
+      backendMessage = data;
+    }
+
+    // Translate backend error messages to user-friendly messages
+    if (backendMessage.contains('Could not validate credentials') ||
+        backendMessage.contains('Invalid credentials') ||
+        backendMessage.contains('Token has expired') ||
+        backendMessage.contains('Invalid token')) {
+      message = 'Session expired. Please login again.';
+    } else if (backendMessage.isNotEmpty) {
+      message = backendMessage;
     }
 
     return AuthenticationException(message);

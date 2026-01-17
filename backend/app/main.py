@@ -14,6 +14,7 @@ from app.core.exceptions import setup_exception_handlers
 from app.core.logging_config import setup_logging_from_env
 from app.core.logging_middleware import setup_logging_middleware
 from app.core.json_encoder import CustomJSONEncoder
+from app.core.security_middleware import SecurityHeadersMiddleware
 import logging
 import json
 
@@ -82,6 +83,9 @@ def create_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Set up security headers middleware for XSS protection
+    app.add_middleware(SecurityHeadersMiddleware)
 
     # Set up logging middleware
     setup_logging_middleware(app, slow_threshold=5.0)

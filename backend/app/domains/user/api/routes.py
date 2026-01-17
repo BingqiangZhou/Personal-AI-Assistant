@@ -167,7 +167,7 @@ async def refresh_token(
     refresh_data: RefreshTokenRequest,
     db: AsyncSession = Depends(get_db_session)
 ) -> Any:
-    """Refresh access token using refresh token."""
+    """Refresh access token using refresh token with sliding session."""
     try:
         auth_service = AuthenticationService(db)
 
@@ -175,9 +175,10 @@ async def refresh_token(
             refresh_token=refresh_data.refresh_token
         )
 
+        # Return new refresh token for sliding session
         return Token(
             access_token=token_data["access_token"],
-            refresh_token=refresh_data.refresh_token,  # Return same refresh token
+            refresh_token=token_data["refresh_token"],  # Return NEW refresh token
             token_type=token_data["token_type"],
             expires_in=token_data["expires_in"]
         )
