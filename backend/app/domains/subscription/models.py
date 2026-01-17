@@ -50,6 +50,11 @@ class Subscription(Base):
     config = Column(JSON, nullable=True, default={})
     status = Column(String(20), default=SubscriptionStatus.ACTIVE)
     last_fetched_at = Column(DateTime, nullable=True)
+    latest_item_published_at = Column(
+        DateTime,
+        nullable=True,
+        comment="Published timestamp of the latest item from this feed"
+    )
     error_message = Column(Text, nullable=True)
     fetch_interval = Column(Integer, default=3600)
 

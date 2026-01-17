@@ -70,6 +70,7 @@ class SubscriptionService:
                     config=sub.config,
                     status=sub.status,
                     last_fetched_at=sub.last_fetched_at,
+                    latest_item_published_at=sub.latest_item_published_at,
                     error_message=sub.error_message,
                     fetch_interval=sub.fetch_interval,
                     item_count=item_count,
@@ -143,6 +144,7 @@ class SubscriptionService:
                 config=existing.config,
                 status=existing.status,
                 last_fetched_at=existing.last_fetched_at,
+                latest_item_published_at=existing.latest_item_published_at,
                 error_message=existing.error_message,
                 fetch_interval=existing.fetch_interval,
                 item_count=0,  # Will be updated if needed
@@ -162,6 +164,7 @@ class SubscriptionService:
             config=sub.config,
             status=sub.status,
             last_fetched_at=sub.last_fetched_at,
+            latest_item_published_at=sub.latest_item_published_at,
             error_message=sub.error_message,
             fetch_interval=sub.fetch_interval,
             item_count=0,
@@ -293,6 +296,7 @@ class SubscriptionService:
             config=sub.config,
             status=sub.status,
             last_fetched_at=sub.last_fetched_at,
+            latest_item_published_at=sub.latest_item_published_at,
             error_message=sub.error_message,
             fetch_interval=sub.fetch_interval,
             item_count=item_count,
@@ -365,6 +369,7 @@ class SubscriptionService:
             # Process feed entries
             new_items = 0
             updated_items = 0
+            latest_published_at: Optional[datetime] = None
 
             for entry in result.entries:
                 try:
@@ -388,6 +393,11 @@ class SubscriptionService:
                     else:
                         updated_items += 1
 
+                    # Track the latest published_at
+                    if entry.published_at:
+                        if latest_published_at is None or entry.published_at > latest_published_at:
+                            latest_published_at = entry.published_at
+
                 except Exception as e:
                     logger.warning(f"Error processing entry {entry.id}: {e}")
                     if config.strict_mode:
@@ -405,7 +415,9 @@ class SubscriptionService:
                 if result.warnings:
                     error_msg = "; ".join(result.warnings)
 
-            await self.repo.update_fetch_status(sub.id, status, error_msg)
+            await self.repo.update_fetch_status(
+                sub.id, status, error_msg, latest_published_at
+            )
 
             return {
                 "subscription_id": sub.id,

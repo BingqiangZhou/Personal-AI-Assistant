@@ -209,8 +209,17 @@ class SubscriptionRepository:
         sub_id: int,
         status: str = SubscriptionStatus.ACTIVE,
         error_message: Optional[str] = None,
+        latest_published_at: Optional[datetime] = None,
     ) -> Optional[Subscription]:
-        """Update subscription fetch status."""
+        """
+        Update subscription fetch status.
+
+        Args:
+            sub_id: Subscription ID
+            status: Subscription status
+            error_message: Error message if any
+            latest_published_at: Published timestamp of the latest item
+        """
         query = select(Subscription).where(Subscription.id == sub_id)
         result = await self.db.execute(query)
         sub = result.scalar_one_or_none()
@@ -221,6 +230,10 @@ class SubscriptionRepository:
         sub.status = status
         sub.error_message = error_message
         sub.last_fetched_at = datetime.utcnow()
+
+        # Update latest item published time if provided
+        if latest_published_at:
+            sub.latest_item_published_at = latest_published_at
 
         await self.db.commit()
         await self.db.refresh(sub)
