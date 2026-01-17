@@ -189,12 +189,26 @@ class DioClient {
                   final response = await _retryRequest(error.requestOptions, newToken);
                   handler.resolve(response);
                   return;
+                } on DioException catch (retryError) {
+                  // Check if retry still fails with 401
+                  if (retryError.response?.statusCode == 401) {
+                    debugPrint('❌ Retry still returns 401, clearing tokens');
+                    await _clearTokens();
+                  }
+                  // Pass the retry error to handler (could be 404, 403, etc.)
+                  debugPrint('⚠️ Retry failed with status: ${retryError.response?.statusCode}');
+                  handler.reject(retryError);
+                  return;
                 } catch (e) {
-                  // If retry fails, reject with authentication error
+                  // Unexpected error during retry
+                  debugPrint('❌ Unexpected error during retry: $e');
                   await _clearTokens();
+                  handler.reject(error);
+                  return;
                 }
               } else {
                 // Refresh failed, clear tokens and reject
+                debugPrint('❌ Token refresh failed, clearing tokens');
                 await _clearTokens();
               }
             }
@@ -379,10 +393,35 @@ class DioClient {
   }
 
   Future<Response> _retryRequest(RequestOptions options, String token) async {
-    options.headers['Authorization'] = 'Bearer $token';
-    debugPrint('🔄 Retrying ${options.method} ${options.path} with token: ${token.substring(0, 20)}...');
+    // Create a new RequestOptions by copying all properties from the original
+    // This ensures all parameters (queryParameters, data, etc.) are preserved
+    final newOptions = RequestOptions(
+      path: options.path,
+      method: options.method,
+      baseUrl: options.baseUrl,
+      headers: Map<String, dynamic>.from(options.headers)..['Authorization'] = 'Bearer $token',
+      data: options.data,
+      queryParameters: options.queryParameters,
+      connectTimeout: options.connectTimeout,
+      sendTimeout: options.sendTimeout,
+      receiveTimeout: options.receiveTimeout,
+      extra: options.extra,
+      contentType: options.contentType,
+      responseType: options.responseType,
+      validateStatus: options.validateStatus,
+      followRedirects: options.followRedirects,
+      maxRedirects: options.maxRedirects,
+      requestEncoder: options.requestEncoder,
+      responseDecoder: options.responseDecoder,
+      listFormat: options.listFormat,
+    );
+
+    debugPrint('🔄 Retrying ${options.method} ${options.path} with new token: ${token.substring(0, 20)}...');
+    debugPrint('   Query: ${newOptions.queryParameters}');
+    debugPrint('   Data: ${newOptions.data}');
+
     try {
-      final response = await _dio.fetch(options);
+      final response = await _dio.fetch(newOptions);
       debugPrint('✅ Retry successful: ${response.statusCode}');
       return response;
     } catch (e) {
