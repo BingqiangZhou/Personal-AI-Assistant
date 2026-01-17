@@ -6,6 +6,7 @@
 import logging
 from typing import Optional, Dict, Any
 import time
+import asyncio
 import aiohttp
 from datetime import datetime
 
@@ -51,51 +52,155 @@ class SummaryModelManager:
         model_name: Optional[str] = None,
         custom_prompt: Optional[str] = None
     ) -> Dict[str, Any]:
-        """生成AI摘要"""
-        model_config = await self.get_active_summary_model(model_name)
+        """
+        生成AI摘要（支持模型fallback机制）
 
-        # 解密API密钥
-        api_key = await self._get_api_key(model_config)
+        Args:
+            transcript: 转录文本
+            episode_info: 播客单集信息
+            model_name: 指定的模型名称（可选）
+            custom_prompt: 自定义提示词（可选）
 
-        # 构建提示词
-        if not custom_prompt:
-            custom_prompt = self._build_default_prompt(episode_info, transcript)
+        Returns:
+            摘要结果字典
 
-        # 调用AI API生成摘要
-        start_time = time.time()
+        Raises:
+            ValidationError: 当所有模型都失败时抛出异常
+        """
+        # 获取按优先级排序的文本生成模型列表
+        if model_name:
+            # 如果指定了模型名称，只使用该模型
+            model = await self.get_active_summary_model(model_name)
+            models_to_try = [model]
+        else:
+            # 获取所有按优先级排序的活跃文本生成模型
+            models_to_try = await self.ai_model_repo.get_active_models_by_priority(ModelType.TEXT_GENERATION)
+            if not models_to_try:
+                raise ValidationError("No active text generation models available")
 
-        try:
-            summary_content = await self._call_ai_api(
-                model_config=model_config,
-                api_key=api_key,
-                prompt=custom_prompt,
-                episode_info=episode_info
-            )
+        last_error = None
+        total_processing_time = 0
+        total_tokens_used = 0
 
-            processing_time = time.time() - start_time
+        # 尝试每个模型（按优先级从高到低）
+        for model_config in models_to_try:
+            try:
+                logger.info(f"Trying text generation model: {model_config.name} (priority: {model_config.priority})")
 
-            # 更新使用统计
-            await self.ai_model_repo.increment_usage(
-                model_config.id,
-                success=True,
-                tokens_used=len(custom_prompt.split()) + len(summary_content.split())
-            )
+                # 解密API密钥
+                api_key = await self._get_api_key(model_config)
 
-            return {
-                "summary_content": summary_content,
-                "model_name": model_config.name,
-                "model_id": model_config.id,
-                "processing_time": processing_time,
-                "tokens_used": len(custom_prompt.split()) + len(summary_content.split())
-            }
+                # 构建提示词
+                if not custom_prompt:
+                    custom_prompt = self._build_default_prompt(episode_info, transcript)
 
-        except Exception as e:
-            # 更新失败统计
-            await self.ai_model_repo.increment_usage(
-                model_config.id,
-                success=False
-            )
-            raise
+                # 调用AI API生成摘要（带重试）
+                summary_content, processing_time, tokens_used = await self._call_ai_api_with_retry(
+                    model_config=model_config,
+                    api_key=api_key,
+                    prompt=custom_prompt,
+                    episode_info=episode_info
+                )
+
+                total_processing_time += processing_time
+                total_tokens_used += tokens_used
+
+                logger.info(f"Text generation succeeded with model: {model_config.name}")
+
+                # 更新成功统计（只记录最后一次成功的调用，因为重试的失败已经在内部记录了）
+                # 实际上重试的统计已经在 _call_ai_api_with_retry 中记录了，这里不需要重复记录
+
+                return {
+                    "summary_content": summary_content,
+                    "model_name": model_config.name,
+                    "model_id": model_config.id,
+                    "processing_time": total_processing_time,
+                    "tokens_used": total_tokens_used
+                }
+
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Text generation failed with model {model_config.name}: {str(e)}")
+                # 失败的统计已经在 _call_ai_api_with_retry 中记录了，这里不需要重复记录
+                continue
+
+        # 所有模型都失败了
+        error_msg = f"All text generation models failed. Last error: {str(last_error)}"
+        logger.error(error_msg)
+        raise ValidationError(error_msg)
+
+    async def _call_ai_api_with_retry(
+        self,
+        model_config,
+        api_key: str,
+        prompt: str,
+        episode_info: Dict[str, Any]
+    ) -> tuple[str, float, int]:
+        """
+        调用AI API生成摘要（带重试机制）
+
+        Args:
+            model_config: 模型配置
+            api_key: API密钥
+            prompt: 提示词
+            episode_info: 播客单集信息
+
+        Returns:
+            Tuple[摘要内容, 处理时间(秒), 使用的token数]
+
+        Raises:
+            Exception: 当所有重试都失败时抛出异常
+        """
+        max_retries = 3
+        base_delay = 2  # seconds
+
+        for attempt in range(max_retries):
+            attempt_start = time.time()
+            try:
+                logger.info(f"📝 [SUMMARY] Attempt {attempt+1}/{max_retries} with model {model_config.name}")
+
+                # 调用API
+                summary_content = await self._call_ai_api(
+                    model_config=model_config,
+                    api_key=api_key,
+                    prompt=prompt,
+                    episode_info=episode_info
+                )
+
+                processing_time = time.time() - attempt_start
+                tokens_used = len(prompt.split()) + len(summary_content.split())
+
+                # 记录本次尝试成功
+                await self.ai_model_repo.increment_usage(
+                    model_config.id,
+                    success=True,
+                    tokens_used=tokens_used
+                )
+                logger.debug(f"📊 [STATS] Recorded success for model {model_config.name}, attempt {attempt+1}")
+
+                return summary_content, processing_time, tokens_used
+
+            except Exception as e:
+                processing_time = time.time() - attempt_start
+                logger.error(f"❌ [SUMMARY] Attempt {attempt+1} failed for model {model_config.name}: {str(e)}")
+
+                # 记录本次尝试失败
+                await self.ai_model_repo.increment_usage(
+                    model_config.id,
+                    success=False
+                )
+                logger.debug(f"📊 [STATS] Recorded failure for model {model_config.name}, attempt {attempt+1}")
+
+                if attempt < max_retries - 1:
+                    delay = base_delay * (2 ** attempt)
+                    logger.info(f"⏳ [SUMMARY] Retrying in {delay}s...")
+                    await asyncio.sleep(delay)
+                else:
+                    # 所有重试都失败了，抛出异常
+                    raise Exception(f"Model {model_config.name} failed after {max_retries} attempts: {str(e)}")
+
+        # 不应该到达这里
+        raise Exception("Unexpected error in _call_ai_api_with_retry")
 
     async def _call_ai_api(
         self,

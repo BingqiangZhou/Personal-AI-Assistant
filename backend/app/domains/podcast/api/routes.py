@@ -27,7 +27,7 @@ from app.core.database import get_db_session
 from app.core.security import get_token_from_request
 from app.domains.podcast.services import PodcastService
 from app.domains.podcast.repositories import PodcastRepository
-from app.domains.podcast.transcription import PodcastTranscriptionService, AISummaryService
+from app.domains.podcast.transcription import PodcastTranscriptionService
 from app.domains.podcast.models import TranscriptionStatus
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService

@@ -621,7 +621,9 @@ class SiliconFlowTranscriber:
     async def transcribe_chunk(
         self,
         chunk: AudioChunk,
-        model: str = "FunAudioLLM/SenseVoiceSmall"
+        model: str = "FunAudioLLM/SenseVoiceSmall",
+        ai_repo=None,
+        config_db_id: Optional[int] = None
     ) -> AudioChunk:
         """
         转录单个音频片段
@@ -629,6 +631,8 @@ class SiliconFlowTranscriber:
         Args:
             chunk: 音频片段
             model: 转录模型名称
+            ai_repo: AI模型配置仓库（用于记录统计）
+            config_db_id: AI模型配置数据库ID
 
         Returns:
             AudioChunk: 包含转录结果的音频片段
@@ -642,6 +646,7 @@ class SiliconFlowTranscriber:
 
             for attempt in range(max_retries):
                 chunk_start = time.time()
+                attempt_succeeded = False
                 try:
                     logger.info(f"🎤 [CHUNK {chunk.index:03d}] Starting transcription (Attempt {attempt+1}/{max_retries}), file={os.path.basename(chunk.file_path)}, size={chunk.file_size} bytes, model={model}")
 
@@ -669,7 +674,15 @@ class SiliconFlowTranscriber:
                         if response.status != 200:
                             error_text = await response.text()
                             logger.error(f"❌ [CHUNK {chunk.index:03d}] API error (Attempt {attempt+1}): {response.status} - {error_text}")
-                            
+
+                            # 记录本次尝试失败
+                            if ai_repo and config_db_id:
+                                try:
+                                    await ai_repo.increment_usage(config_db_id, success=False)
+                                    logger.debug(f"📊 [STATS] Recorded failure for chunk {chunk.index}, attempt {attempt+1}")
+                                except Exception as stats_error:
+                                    logger.warning(f"⚠️ [STATS] Failed to record failure stats: {stats_error}")
+
                             if attempt < max_retries - 1:
                                 delay = base_delay * (2 ** attempt)
                                 logger.info(f"⏳ [CHUNK {chunk.index:03d}] Retrying in {delay}s...")
@@ -685,14 +698,30 @@ class SiliconFlowTranscriber:
 
                         chunk_elapsed = time.time() - chunk_start
                         logger.info(f"✅ [CHUNK {chunk.index:03d}] Success! Got {transcript_len} chars in {chunk_elapsed:.2f}s")
-                        
+
+                        # 记录本次尝试成功
+                        if ai_repo and config_db_id:
+                            try:
+                                await ai_repo.increment_usage(config_db_id, success=True)
+                                logger.debug(f"📊 [STATS] Recorded success for chunk {chunk.index}, attempt {attempt+1}")
+                            except Exception as stats_error:
+                                logger.warning(f"⚠️ [STATS] Failed to record success stats: {stats_error}")
+
                         chunk.transcript = transcript
                         return chunk
 
                 except Exception as e:
                     chunk_elapsed = time.time() - chunk_start
                     logger.error(f"❌ [CHUNK {chunk.index:03d}] Failed attempt {attempt+1} after {chunk_elapsed:.2f}s: {str(e)}")
-                    
+
+                    # 记录本次尝试失败
+                    if ai_repo and config_db_id:
+                        try:
+                            await ai_repo.increment_usage(config_db_id, success=False)
+                            logger.debug(f"📊 [STATS] Recorded failure for chunk {chunk.index}, attempt {attempt+1} (exception)")
+                        except Exception as stats_error:
+                            logger.warning(f"⚠️ [STATS] Failed to record failure stats: {stats_error}")
+
                     if attempt < max_retries - 1:
                         delay = base_delay * (2 ** attempt)
                         logger.info(f"⏳ [CHUNK {chunk.index:03d}] Retrying in {delay}s...")
@@ -700,7 +729,7 @@ class SiliconFlowTranscriber:
                     else:
                         chunk.transcript = None
                         return chunk
-            
+
             return chunk
 
 
@@ -708,16 +737,29 @@ class SiliconFlowTranscriber:
         self,
         chunks: List[AudioChunk],
         model: str = "FunAudioLLM/SenseVoiceSmall",
-        progress_callback=None
+        progress_callback=None,
+        ai_repo=None,
+        config_db_id: Optional[int] = None
     ) -> List[AudioChunk]:
         """
         并发转录多个音频片段
+
+        Args:
+            chunks: 音频分片列表
+            model: 转录模型名称
+            progress_callback: 进度回调函数
+            ai_repo: AI模型配置仓库（用于记录统计）
+            config_db_id: AI模型配置数据库ID
+
+        Note:
+            统计记录在 transcribe_chunk 方法中每次API调用后立即进行，
+            包括重试尝试，因此这里不需要重复记录。
         """
         start_time = time.time()
 
-        # 创建转录任务
+        # 创建转录任务（传入 ai_repo 和 config_db_id）
         tasks = [
-            asyncio.create_task(self.transcribe_chunk(chunk, model))
+            asyncio.create_task(self.transcribe_chunk(chunk, model, ai_repo, config_db_id))
             for chunk in chunks
         ]
 
@@ -742,7 +784,7 @@ class SiliconFlowTranscriber:
         duration = time.time() - start_time
         # Ensure correct order
         results.sort(key=lambda x: x.index)
-        
+
         success_count = sum(1 for c in results if c.transcript is not None)
         logger.info(f"Completed transcription of {success_count}/{len(chunks)} chunks in {duration:.2f}s")
 
@@ -1069,6 +1111,9 @@ class PodcastTranscriptionService:
 
         try:
             logger.info(f"🔗 [EXECUTE] Using provided database session for task {task_id}")
+
+            # 初始化 AI 模型配置仓库（用于记录统计）
+            ai_repo = AIModelConfigRepository(session)
             # 获取任务信息
             stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
             result = await session.execute(stmt)
@@ -1112,7 +1157,6 @@ class PodcastTranscriptionService:
 
             if config_db_id:
                 logger.info(f"transcription._execute_transcription: Using custom model config {config_db_id}")
-                ai_repo = AIModelConfigRepository(session)
                 model_config = await ai_repo.get_by_id(config_db_id)
                 if model_config and model_config.is_active:
                     api_url = model_config.api_url
@@ -1460,7 +1504,9 @@ class PodcastTranscriptionService:
                     transcribed_chunks = await transcriber.transcribe_chunks(
                         chunks_to_transcribe,
                         task.model_used,
-                        transcribe_progress
+                        transcribe_progress,
+                        ai_repo=ai_repo,
+                        config_db_id=config_db_id
                     )
 
                 # 合并已有转录和新转录
@@ -1599,7 +1645,7 @@ class PodcastTranscriptionService:
             log_with_timestamp("INFO", f"✅ [TRANSCRIPTION COMPLETE] Successfully completed transcription for episode {task.episode_id}", task_id)
             log_with_timestamp("INFO", f"✅ [TRANSCRIPTION COMPLETE] Total time: {total_time:.2f}s (download:{download_time:.2f}s, convert:{conversion_time:.2f}s, transcribe:{transcription_time:.2f}s)", task_id)
             log_with_timestamp("INFO", f"✅ [TRANSCRIPTION COMPLETE] Transcript: {len(full_transcript)} chars, {len(full_transcript.split())} words", task_id)
-                
+
             # 触发AI总结
             log_with_timestamp("INFO", f"🤖 [AI SUMMARY] Scheduling AI summary for episode {task.episode_id}", task_id)
             await self._schedule_ai_summary(session, task_id)
@@ -1718,214 +1764,3 @@ class PodcastTranscriptionService:
 
         return True
 
-
-class AISummaryService:
-    """AI总结服务"""
-
-    def __init__(self, db: AsyncSession):
-        self.db = db
-        self.api_key = getattr(settings, 'OPENAI_API_KEY', None)
-        self.api_url = getattr(settings, 'OPENAI_API_BASE_URL', 'https://api.openai.com/v1')
-        self.default_model = getattr(settings, 'SUMMARY_MODEL', 'gpt-4o-mini')
-
-        if not self.api_key:
-            raise ValidationError("OPENAI_API_KEY is not configured")
-
-    async def generate_summary(
-        self,
-        episode_id: int,
-        model: Optional[str] = None,
-        custom_prompt: Optional[str] = None
-    ) -> TranscriptionTask:
-        """
-        为播客单集生成AI总结
-
-        Args:
-            episode_id: 播客单集ID
-            model: 使用的AI模型，如果不指定则使用默认模型
-            custom_prompt: 自定义提示词
-
-        Returns:
-            TranscriptionTask: 更新后的转录任务
-        """
-        # 获取转录任务
-        stmt = select(TranscriptionTask).where(TranscriptionTask.episode_id == episode_id)
-        result = await self.db.execute(stmt)
-        task = result.scalar_one_or_none()
-
-        if not task:
-            raise ValidationError(f"No transcription task found for episode {episode_id}")
-
-        if not task.transcript_content or not task.transcript_content.strip():
-            raise ValidationError(f"No transcript content available for episode {episode_id}")
-
-        # 检查是否已有总结（除非强制重新生成）
-        if task.summary_content and not custom_prompt:
-            return task
-
-        # 获取播客单集信息
-        stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
-        result = await self.db.execute(stmt)
-        episode = result.scalar_one_or_none()
-
-        if not episode:
-            raise ValidationError(f"Episode {episode_id} not found")
-
-        # 使用指定的模型或默认模型
-        summary_model = model or self.default_model
-
-        # 构建总结提示词
-        if not custom_prompt:
-            custom_prompt = f"""
-请为以下播客内容生成一个简洁但信息丰富的总结。播客标题：{episode.title}
-
-总结内容应该包括：
-1. 主要话题和核心观点
-2. 关键信息或要点
-3. 适合的听众群体
-4. 总结长度控制在200-500字之间
-
-播客转录内容：
-{task.transcript_content}
-"""
-
-        try:
-            start_time = time.time()
-
-            # 调用AI API生成总结
-            summary_content = await self._call_openai_api(summary_model, custom_prompt)
-
-            processing_time = time.time() - start_time
-
-            # 更新数据库
-            update_data = {
-                'summary_content': summary_content,
-                'summary_model_used': summary_model,
-                'summary_word_count': len(summary_content.split()),
-                'summary_processing_time': processing_time,
-                'summary_error_message': None,
-                'updated_at': datetime.utcnow()
-            }
-
-            stmt = (
-                update(TranscriptionTask)
-                .where(TranscriptionTask.id == task.id)
-                .values(**update_data)
-            )
-            await self.db.execute(stmt)
-
-            # 更新播客单集的总结信息
-            episode_update = {
-                'ai_summary': summary_content,
-                'status': 'summarized'
-            }
-
-            stmt = (
-                update(PodcastEpisode)
-                .where(PodcastEpisode.id == episode_id)
-                .values(**episode_update)
-            )
-            await self.db.execute(stmt)
-
-            await self.db.commit()
-            await self.db.refresh(task)
-
-            logger.info(f"Successfully generated summary for episode {episode_id} using model {summary_model}")
-            return task
-
-        except Exception as e:
-            logger.error(f"Failed to generate summary for episode {episode_id}: {str(e)}")
-
-            # 更新错误信息
-            error_update = {
-                'summary_error_message': str(e),
-                'updated_at': datetime.utcnow()
-            }
-
-            stmt = (
-                update(TranscriptionTask)
-                .where(TranscriptionTask.id == task.id)
-                .values(**error_update)
-            )
-            await self.db.execute(stmt)
-            await self.db.commit()
-
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to generate AI summary: {str(e)}"
-            )
-
-    async def _call_openai_api(self, model: str, prompt: str) -> str:
-        """调用OpenAI API生成总结"""
-        timeout = aiohttp.ClientTimeout(total=300)  # 5分钟超时
-
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            headers = {
-                'Authorization': f'Bearer {self.api_key}',
-                'Content-Type': 'application/json'
-            }
-
-            data = {
-                'model': model,
-                'messages': [
-                    {
-                        'role': 'user',
-                        'content': prompt
-                    }
-                ],
-                'max_tokens': 1000,
-                'temperature': 0.7
-            }
-
-            async with session.post(f"{self.api_url}/chat/completions", headers=headers, json=data) as response:
-                if response.status != 200:
-                    error_text = await response.text()
-                    logger.error(f"OpenAI API error: {response.status} - {error_text}")
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=f"AI summary API error: {response.status}"
-                    )
-
-                result = await response.json()
-
-                if 'choices' not in result or not result['choices']:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="Invalid response from AI API"
-                    )
-
-                summary = result['choices'][0]['message']['content']
-                return summary.strip()
-
-    async def regenerate_summary(
-        self,
-        episode_id: int,
-        model: Optional[str] = None,
-        custom_prompt: Optional[str] = None
-    ) -> TranscriptionTask:
-        """重新生成AI总结"""
-        # 先清除现有总结
-        stmt = select(TranscriptionTask).where(TranscriptionTask.episode_id == episode_id)
-        result = await self.db.execute(stmt)
-        task = result.scalar_one_or_none()
-
-        if task:
-            update_data = {
-                'summary_content': None,
-                'summary_model_used': None,
-                'summary_word_count': None,
-                'summary_processing_time': None,
-                'summary_error_message': None,
-                'updated_at': datetime.utcnow()
-            }
-
-            stmt = (
-                update(TranscriptionTask)
-                .where(TranscriptionTask.id == task.id)
-                .values(**update_data)
-            )
-            await self.db.execute(stmt)
-            await self.db.commit()
-
-        # 生成新的总结
-        return await self.generate_summary(episode_id, model, custom_prompt)
