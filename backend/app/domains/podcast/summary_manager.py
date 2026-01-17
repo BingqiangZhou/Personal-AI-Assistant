@@ -304,8 +304,17 @@ class SummaryModelManager:
                         detail="AI API returned empty or invalid content"
                     )
 
-                logger.info(f"✅ [AI API] Summary generated successfully: {len(content)} chars")
-                return content.strip()
+                # Filter out <thinking> tags and content
+                # 过滤掉 <thinking> 标签及其内容
+                from app.core.utils import filter_thinking_content
+                original_length = len(content)
+                cleaned_content = filter_thinking_content(content)
+
+                if len(cleaned_content) != original_length:
+                    logger.info(f"🧹 [FILTER] Removed thinking content: {original_length} -> {len(cleaned_content)} chars")
+
+                logger.info(f"✅ [AI API] Summary generated successfully: {len(cleaned_content)} chars")
+                return cleaned_content.strip()
 
     def _build_default_prompt(self, episode_info: Dict[str, Any], transcript: str) -> str:
         """构建默认的摘要提示词"""

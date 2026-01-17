@@ -246,8 +246,18 @@ class ConversationService:
                             continue
 
                         content = result['choices'][0]['message']['content']
+
+                        # Filter out <thinking> tags and content
+                        # 过滤掉 <thinking> 标签及其内容
+                        from app.core.utils import filter_thinking_content
+                        original_length = len(content)
+                        cleaned_content = filter_thinking_content(content)
+
+                        if len(cleaned_content) != original_length:
+                            logger.info(f"🧹 [FILTER] Removed thinking content: {original_length} -> {len(cleaned_content)} chars")
+
                         logger.info(f"成功使用对话模型 [{model.display_name or model.name}] (priority={model.priority})")
-                        return content.strip()
+                        return cleaned_content.strip()
 
             except aiohttp.ClientTimeout as e:
                 last_error = e
