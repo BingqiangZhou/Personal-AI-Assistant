@@ -25,6 +25,40 @@ from app.core.feed_schemas import (
 
 logger = logging.getLogger(__name__)
 
+# HTML tag pattern for stripping
+_HTML_TAG_PATTERN = re.compile(r'<[^>]+>')
+
+
+def strip_html_tags(text: str) -> str:
+    """
+    Strip HTML tags and decode entities / 去除 HTML 标签并解码实体
+
+    This is a module-level utility function that can be imported and used
+    across different modules without instantiating FeedParser.
+
+    Args:
+        text: Text potentially containing HTML tags
+
+    Returns:
+        Clean text with HTML tags removed and entities decoded
+    """
+    if not text:
+        return ""
+
+    # Remove script and style content first
+    text = re.sub(r'<(script|style)[^>]*>.*?</\1>', '', text, flags=re.DOTALL | re.IGNORECASE)
+
+    # Strip tags
+    text = _HTML_TAG_PATTERN.sub(' ', text)
+
+    # Decode HTML entities
+    text = html.unescape(text)
+
+    # Normalize whitespace
+    text = re.sub(r'\s+', ' ', text)
+
+    return text.strip()
+
 
 class FeedParser:
     """
@@ -32,9 +66,6 @@ class FeedParser:
 
     增强的 RSS/Atom 解析器，具有健壮的错误处理能力。
     """
-
-    # HTML tag stripping pattern
-    _HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
 
     def __init__(
         self,
@@ -489,19 +520,7 @@ class FeedParser:
 
     def _strip_html_tags(self, text: str) -> str:
         """Strip HTML tags and decode entities / 去除 HTML 标签并解码实体"""
-        # Remove script and style content first
-        text = re.sub(r'<(script|style)[^>]*>.*?</\1>', '', text, flags=re.DOTALL | re.IGNORECASE)
-
-        # Strip tags
-        text = self._HTML_TAG_PATTERN.sub(' ', text)
-
-        # Decode HTML entities
-        text = html.unescape(text)
-
-        # Normalize whitespace
-        text = re.sub(r'\s+', ' ', text)
-
-        return text.strip()
+        return strip_html_tags(text)
 
 
 async def parse_feed_url(

@@ -393,28 +393,14 @@ class DioClient {
   }
 
   Future<Response> _retryRequest(RequestOptions options, String token) async {
-    // Create a new RequestOptions by copying all properties from the original
-    // This ensures all parameters (queryParameters, data, etc.) are preserved
-    final newOptions = RequestOptions(
-      path: options.path,
-      method: options.method,
-      baseUrl: options.baseUrl,
-      headers: Map<String, dynamic>.from(options.headers)..['Authorization'] = 'Bearer $token',
-      data: options.data,
-      queryParameters: options.queryParameters,
-      connectTimeout: options.connectTimeout,
-      sendTimeout: options.sendTimeout,
-      receiveTimeout: options.receiveTimeout,
-      extra: options.extra,
-      contentType: options.contentType,
-      responseType: options.responseType,
-      validateStatus: options.validateStatus,
-      followRedirects: options.followRedirects,
-      maxRedirects: options.maxRedirects,
-      requestEncoder: options.requestEncoder,
-      responseDecoder: options.responseDecoder,
-      listFormat: options.listFormat,
-    );
+    // Create a new headers map, removing any existing Authorization header (case-insensitive)
+    // and adding the new one with the correct token
+    final newHeaders = Map<String, dynamic>.from(options.headers);
+    newHeaders.removeWhere((key, value) => key.toLowerCase() == 'authorization');
+    newHeaders['Authorization'] = 'Bearer $token';
+
+    // Use copyWith to create a new RequestOptions with updated headers
+    final newOptions = options.copyWith(headers: newHeaders);
 
     debugPrint('🔄 Retrying ${options.method} ${options.path} with new token: ${token.substring(0, 20)}...');
     debugPrint('   Query: ${newOptions.queryParameters}');

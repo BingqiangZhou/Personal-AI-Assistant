@@ -15,6 +15,7 @@ from app.domains.ai.repositories import AIModelConfigRepository
 from app.domains.ai.models import ModelType
 from app.domains.podcast.models import TranscriptionTask, PodcastEpisode
 from app.core.exceptions import ValidationError, HTTPException
+from app.core.feed_parser import strip_html_tags
 from sqlalchemy import update
 
 logger = logging.getLogger(__name__)
@@ -204,56 +205,68 @@ class SummaryModelManager:
     def _build_default_prompt(self, episode_info: Dict[str, Any], transcript: str) -> str:
         """构建默认的摘要提示词"""
         title = episode_info.get('title', '未知标题')
-        description = episode_info.get('description', '')
+        raw_description = episode_info.get('description', '')
 
-        prompt = f"""你是一位专业的播客内容分析师。请为以下播客内容生成一份详细且结构化的总结。
+        # 剥离HTML标签，确保AI只看到纯文本内容
+        description = strip_html_tags(raw_description)
 
-## 播客信息
-**标题**：{title}
-**描述**：{description}
+        prompt = f"""# Role
+你是一位追求极致完整性的资深播客内容分析师。你的目标是将冗长的音频转录文本转化为一份详尽、结构化且无遗漏的深度研报。
 
-## 转录内容
+# Task
+请根据提供的元数据和转录文本生成总结。
+**核心原则**：内容完整性高于篇幅限制。请确保转录文本中所有有价值的议题、论据和细节都被捕捉，**不要受限于固定的段落数量**。
+
+# Input Data
+<podcast_info>
+Title: {title}
+Shownotes: {description}
+</podcast_info>
+
+<transcript>
 {transcript}
+</transcript>
 
-## 总结要求
+# Analysis Constraints
+1. **全面覆盖**：不要遗漏任何一个主要话题。如果播客讨论了 10 个不同的话题，请生成 10 个对应的小节。
+2. **事实来源严格分级**：
+    - **最高优先级**：<transcript>。所有的观点、数据、结论必须严格源自实际的对话转录。
+    - **辅助参考**：<podcast_info> (Shownotes)。仅用于提取正确的人名拼写、专业术语或理解对话的大致背景。
+    - **冲突处理**：如果 Shownotes 中提到的内容在 Transcript 中未出现，**坚决不写入总结**，防止被营销文案误导。
+3. **拒绝过度压缩**：对于技术细节、操作步骤或复杂逻辑，请保留足够的解释篇幅，不要一笔带过。
+4. **结构化输出**：使用 Markdown 格式。
 
-【重要】你必须严格按照以下5个部分结构生成完整的总结，**不得遗漏任何部分**：
+# Output Structure (Strictly Follow)
 
-### 1. 主要话题概述
-简要概括本期播客的核心主题（2-3句话）
+## 1. 一句话摘要 (Executive Summary)
+用精炼的语言（50-100字）概括整期播客的核心主旨。
 
-### 2. 核心观点
-列出本期播客表达的主要观点和见解（3-5个要点，每个要点用一句话概括）
+## 2. 核心观点与洞察 (Key Insights & Takeaways)
+提取本期播客中所有具有独立价值的观点。
+- **数量不限**：根据内容密度，自动调整观点数量，务必覆盖所有关键结论。
+- **格式**：**[观点关键词]**：详细阐述（包含推导过程或背景）。
+- **逻辑分组**：如果观点较多（例如超过5个），请尝试按主题归类（例如：【市场趋势】、【技术实现】等），避免简单的列表堆砌。
 
-### 3. 关键信息与要点
-详细列出本期播客讨论的关键信息、数据、案例和重要细节：
-- 重要数据或统计信息
-- 具体案例或实例
-- 人物、公司、事件等关键要素
-- 时间、地点等背景信息
-- 其他值得关注的细节
+## 3. 内容深度拆解 (Deep Dive / Topic Breakdown)
+**这是本总结最核心的部分。** 请顺着对话的时间线或逻辑流，将长文本自然拆解为多个板块。
+- **切分原则**：每当对话切换到一个新的重大话题或议程时，就创建一个新的二级标题（例如：#### 3.1 话题：...）。
+- **数量不限**：**不要局限于3-5个小节**。如有必要，可以有 8 个、10 个甚至更多小节，务必确保覆盖对话的全貌。
+- **内容要求**：在每个小节下，详细列出：
+    - 具体的讨论细节、正反方观点。
+    - 提及的数据、案例、工具名称、人名（请加粗）。
+    - 具体的行动建议或步骤。
 
-### 4. 讨论亮点
-本期播客最有趣或最有价值的部分（1-2点）
+## 4. 精彩语录与金句 (Memorable Quotes)
+摘录原文中所有打动人心、发人深省或具有幽默感的原话。
+- **数量不限**：**不要局限于2-3句**。只要是高价值的"原声"，都请保留。
+- **格式**：引用原文（可做微小的书面化修饰），并注明大概的上下文背景。
 
-### 5. 总结性陈述
-用1-2句话总结本期播客的价值和意义
+## 5. 适合听众与收获 (Audience & Value)
+简要说明本期内容适合哪类人群深入聆听，以及他们能从中学到什么。
 
-## 输出格式要求
-
-1. **必须包含全部5个部分**，每个部分都要有明确的标题（### 1. 主要话题概述、### 2. 核心观点 等）
-2. 每个部分都必须有实质内容，不能省略或跳过
-3. 使用Markdown格式，确保结构清晰
-4. 如果某个部分确实没有相关内容，请明确说明"本期播客未涉及此内容"，而不是直接省略该部分
-
-## 质量标准
-- 保持客观中立的立场
-- 突出信息的准确性和完整性
-- 使用清晰简洁的语言
-- 确保总结的可读性和实用性
-- 总结总长度建议在500-1500字之间
-
-请开始生成完整的总结（确保包含所有5个部分）："""
+# Start Analysis
+请开始进行详尽的分析，确保不遗漏重要内容，且严格遵守事实分级原则：
+"""
         return prompt
 
     async def _get_api_key(self, model_config) -> str:
