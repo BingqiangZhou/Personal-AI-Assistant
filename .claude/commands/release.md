@@ -10,7 +10,7 @@ example: /release 1.0.0
 当收到 `/release <版本号>` 命令时，按以下步骤自动执行发布流程：
 
 ## 步骤1: 生成 CHANGELOG
-使用 git-cliff 生成 CHANGELOG.md
+使用 `git-cliff --tag v<版本号> -o CHANGELOG.md`生成 CHANGELOG.md
 
 ## 步骤2: 更新版本号
 1. 读取 frontend/pubspec.yaml 当前版本

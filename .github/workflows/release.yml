@@ -54,28 +54,43 @@ jobs:
           echo "📦 Version: $VERSION"
           echo "🔢 Build Number: $BUILD_NUMBER"
 
-      - name: Generate changelog
+      - name: Generate changelog from CHANGELOG.md
         run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          VERSION="${{ steps.version.outputs.version }}"
 
-          {
-            echo "## 📦 Release v${{ steps.version.outputs.version }}"
-            echo ""
-            if [ -z "$PREV_TAG" ]; then
-              echo "**首次发布 / Initial Release**"
-            else
-              echo "**Changes since ${PREV_TAG}:**"
+          # Extract the version section from CHANGELOG.md
+          # Match the version header and extract content until the next version header or end of file
+          awk -v version="$VERSION" '
+            BEGIN { found = 0; printing = 0 }
+            /^## \[' version '\]/ { found = 1; printing = 1; next }
+            /^## \[/ && found { printing = 0; exit }
+            printing { print }
+          ' CHANGELOG.md > changelog_content.md
+
+          # Check if we found the version content
+          if [ -s changelog_content.md ]; then
+            # Add release times at the beginning
+            {
+              cat changelog_content.md
               echo ""
-              git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --reverse 2>/dev/null | head -100
-            fi
-            echo ""
-            echo "---"
-            echo ""
-            echo "**Version:** \`${{ steps.version.outputs.version }}\`"
-            echo "**Release Date:**"
-            echo "- $(date -u +'%Y-%m-%d %H:%M:%S %Z (%z)')"
-            echo "- $(TZ=Asia/Shanghai date +'%Y-%m-%d %H:%M:%S %Z (%z)')"
-          } > changelog.md
+              echo "**Release Date:**"
+              echo "- $(date -u +'%Y-%m-%d %H:%M:%S %Z (%z)')"
+              echo "- $(TZ=Asia/Shanghai date +'%Y-%m-%d %H:%M:%S %Z (%z)')"
+            } > changelog.md
+            rm changelog_content.md
+          else
+            # Fallback: Version not found in CHANGELOG.md
+            {
+              echo "## 📦 Release v$VERSION"
+              echo ""
+              echo "**⚠️ Version not found in CHANGELOG.md. Please add changelog entry for this version.**"
+              echo ""
+              echo "**Version:** \`$VERSION\`"
+              echo "**Release Date:**"
+              echo "- $(date -u +'%Y-%m-%d %H:%M:%S %Z (%z)')"
+              echo "- $(TZ=Asia/Shanghai date +'%Y-%m-%d %H:%M:%S %Z (%z)')"
+            } > changelog.md
+          fi
 
       - name: Upload changelog artifact
         uses: actions/upload-artifact@v4

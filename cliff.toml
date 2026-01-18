@@ -12,11 +12,13 @@ All notable changes to this project will be documented in this file.
 # template for the changelog body
 # https://keats.github.io/tera/docs/#introduction
 body = """
+{% set remote_url = "https://github.com/BingqiangZhou/Personal-AI-Assistant" %}
+
 {% if version %}\
     {% if previous %}\
-    ## [{{ version | trim_start_matches(pat="v") }}]({{ remote }}/compare/{{ previous }}...{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }} ([📥]({{ remote }}/releases/tag/{{ version }}))
+    ## [{{ version | trim_start_matches(pat="v") }}]({{ remote_url }}/compare/{{ previous.version }}...{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }} ([📥]({{ remote_url }}/releases/tag/{{ version }}))
     {% else %}\
-    ## [{{ version | trim_start_matches(pat="v") }}]({{ remote }}/releases/tag/{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }} ([📥]({{ remote }}/releases/tag/{{ version }}))
+    ## [{{ version | trim_start_matches(pat="v") }}]({{ remote_url }}/releases/tag/{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }} ([📥]({{ remote_url }}/releases/tag/{{ version }}))
     {% endif %}\
 {% else %}\
     ## [Unreleased]
@@ -24,7 +26,7 @@ body = """
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | upper_first }}
     {% for commit in commits %}
-        - {% if commit.scope %}*({{ commit.scope }})* {% endif %}{{ commit.message | upper_first }} ([{{ commit.id | truncate(length=7, end="") }}]({{ remote }}/commit/{{ commit.id }}))\
+        - {% if commit.scope %}*({{ commit.scope }})* {% endif %}{{ commit.message | upper_first }} ([{{ commit.id | truncate(length=7, end="") }}]({{ remote_url }}/commit/{{ commit.id }}))\
     {% endfor %}
 {% endfor %}\n
 """
@@ -37,8 +39,6 @@ footer = """
 trim = true
 
 [git]
-# git repository remote configuration (for generating links)
-remote = "https://github.com/BingqiangZhou/Personal-AI-Assistant"
 # parse the commits based on https://www.conventionalcommits.org
 conventional_commits = true
 # filter out the commits that are not conventional
