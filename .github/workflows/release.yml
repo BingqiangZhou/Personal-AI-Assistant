@@ -59,12 +59,12 @@ jobs:
           VERSION="${{ steps.version.outputs.version }}"
 
           # Extract the version section from CHANGELOG.md
-          # Match the version header and extract content until the next version header or end of file
+          # Match the version header (e.g., ## [0.1.9](...)) and extract content until next version
           awk -v ver="$VERSION" '
-            BEGIN { found = 0; printing = 0 }
-            $0 == "## [" ver "]" { found = 1; printing = 1; next }
+            BEGIN { found = 0; printing = 0; prefix = "## [" ver "]" }
+            index($0, prefix) == 1 { found = 1; printing = 1; next }
             /^## \[/ && found { printing = 0; exit }
-            printing && NF > 0 { print }
+            printing { print }
           ' CHANGELOG.md > changelog_content.md
 
           # Check if we found the version content
