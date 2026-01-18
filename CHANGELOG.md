@@ -15,6 +15,10 @@ All notable changes to this project will be documented in this file.
 ### 🐛 Bug Fixes
 
 - *(deps)* Move flutter_native_splash to dependencies ([a6a706d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a6a706d8f86f60bcf208ba3f261b5b503f5b15bd))
+- *(release)* Fix awk regexp syntax in changelog extraction ([35b6e3c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/35b6e3cdf916006aee05bba73bab91f6fb51e214))
+- *(release)* Use prefix match to find version in CHANGELOG.md ([31481fa](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/31481fa0afb43495424d74471907c5e057be3019))
+- *(release)* Add consistent header and version info to changelog ([5dfc340](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5dfc340f353f2b1253822c179c492154f84df68e))
+- *(changelog)* Skip all version update commits in git-cliff ([d197b56](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d197b566333b7bae9392b8fff1bfc73e4890d0d2))
 
 ### 📚 Documentation
 
