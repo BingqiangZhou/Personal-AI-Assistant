@@ -60,18 +60,20 @@ jobs:
 
           # Extract the version section from CHANGELOG.md
           # Match the version header and extract content until the next version header or end of file
-          awk -v version="$VERSION" '
+          awk -v ver="$VERSION" '
             BEGIN { found = 0; printing = 0 }
-            /^## \[' version '\]/ { found = 1; printing = 1; next }
+            $0 == "## [" ver "]" { found = 1; printing = 1; next }
             /^## \[/ && found { printing = 0; exit }
-            printing { print }
+            printing && NF > 0 { print }
           ' CHANGELOG.md > changelog_content.md
 
           # Check if we found the version content
           if [ -s changelog_content.md ]; then
-            # Add release times at the beginning
+            # Add release times at the end
             {
               cat changelog_content.md
+              echo ""
+              echo "---"
               echo ""
               echo "**Release Date:**"
               echo "- $(date -u +'%Y-%m-%d %H:%M:%S %Z (%z)')"
