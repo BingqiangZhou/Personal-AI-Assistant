@@ -69,12 +69,15 @@ jobs:
 
           # Check if we found the version content
           if [ -s changelog_content.md ]; then
-            # Add release times at the end
+            # Add header, version info, and release times
             {
+              echo "## 📦 Release v$VERSION"
+              echo ""
               cat changelog_content.md
               echo ""
               echo "---"
               echo ""
+              echo "**Version:** \`$VERSION\`"
               echo "**Release Date:**"
               echo "- $(date -u +'%Y-%m-%d %H:%M:%S %Z (%z)')"
               echo "- $(TZ=Asia/Shanghai date +'%Y-%m-%d %H:%M:%S %Z (%z)')"
