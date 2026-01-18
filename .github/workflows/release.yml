@@ -12,6 +12,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 env:
   JAVA_VERSION: '21'
@@ -103,6 +104,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: wrapper
+          cache-read-only: false
 
       - name: Cache Pub cache
         uses: actions/cache@v4
