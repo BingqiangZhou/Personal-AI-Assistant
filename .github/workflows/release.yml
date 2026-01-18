@@ -14,7 +14,7 @@ permissions:
   contents: write
 
 env:
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'temurin'
 
 jobs:
@@ -99,16 +99,10 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v4
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            ~/.gradle/build-cache
-          key: ${{ runner.os }}-gradle-${{ hashFiles('frontend/android/**/*.gradle*', 'frontend/android/**/gradle-wrapper.properties', 'frontend/android/**/gradle.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          gradle-version: wrapper
 
       - name: Cache Pub cache
         uses: actions/cache@v4
@@ -123,7 +117,6 @@ jobs:
         with:
           channel: stable
           cache: true
-          cache-key: flutter-android-${{ hashFiles('frontend/pubspec.lock') }}
 
       - name: Get dependencies
         working-directory: frontend
@@ -131,25 +124,15 @@ jobs:
 
       - name: Setup Android Keystore for Release Signing
         run: |
-          echo "🔐 Setting up Android keystore signing..."
           cd frontend/android/app
-
-          # Decode keystore from base64
           echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 -d > release.keystore
-
-          # Create key.properties file
           cat > key.properties << EOF
           storeFile=release.keystore
           storePassword=${{ secrets.KEYSTORE_PASSWORD }}
           keyAlias=${{ secrets.KEY_ALIAS }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
           EOF
-
-          echo "✅ Keystore setup completed"
-          echo "📁 Keystore file created:"
-          ls -la release.keystore
-          echo "📄 key.properties content:"
-          cat key.properties | sed 's/=.*/=***/'
+          echo "✅ Keystore configured"
 
       - name: Build APK (Release)
         working-directory: frontend
@@ -160,6 +143,7 @@ jobs:
 
           flutter build apk \
             --release \
+            --no-pub \
             --target-platform android-arm64 \
             --build-name=${{ needs.prepare-release.outputs.version }} \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
@@ -174,7 +158,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-artifacts
-          path: frontend/build/app/outputs/flutter-apk/**/*.apk
+          path: frontend/build/app/outputs/flutter-apk/*.apk
           retention-days: 7
 
   # ============================================
@@ -201,7 +185,6 @@ jobs:
         with:
           channel: stable
           cache: true
-          cache-key: flutter-windows-${{ hashFiles('frontend/pubspec.lock') }}
 
       - name: Enable Windows desktop
         shell: pwsh
@@ -217,7 +200,7 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "🔨 Building Windows application..."
-          flutter build windows --release --build-number=${{ needs.prepare-release.outputs.build_number }}
+          flutter build windows --release --no-pub --build-number=${{ needs.prepare-release.outputs.build_number }}
           Write-Host "✅ Windows build completed"
 
       - name: Create release directory
@@ -279,7 +262,6 @@ jobs:
         with:
           channel: stable
           cache: true
-          cache-key: flutter-linux-${{ hashFiles('frontend/pubspec.lock') }}
 
       - name: Enable Linux desktop
         run: flutter config --enable-linux-desktop
@@ -294,6 +276,7 @@ jobs:
           echo "🔨 Building Linux application..."
           flutter build linux \
             --release \
+            --no-pub \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
           echo "✅ Linux build completed"
 
@@ -338,7 +321,6 @@ jobs:
         with:
           channel: stable
           cache: true
-          cache-key: flutter-macos-${{ hashFiles('frontend/pubspec.lock') }}
 
       - name: Enable macOS desktop
         run: flutter config --enable-macos-desktop
@@ -353,6 +335,7 @@ jobs:
           echo "🔨 Building macOS application..."
           flutter build macos \
             --release \
+            --no-pub \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
           echo "✅ macOS build completed"
 
@@ -419,7 +402,6 @@ jobs:
         with:
           channel: stable
           cache: true
-          cache-key: flutter-ios-${{ hashFiles('frontend/pubspec.lock') }}
 
       - name: Get dependencies
         working-directory: frontend
@@ -432,6 +414,7 @@ jobs:
           flutter build ios \
             --release \
             --no-codesign \
+            --no-pub \
             --build-number=${{ needs.prepare-release.outputs.build_number }}
 
           echo "✅ iOS build completed"
