@@ -15,7 +15,7 @@ from app.core.security import encrypt_data, decrypt_data
 
 from app.admin.dependencies import admin_required, admin_required_no_2fa, create_admin_session
 from app.admin.schemas import AdminLoginForm
-from app.admin.csrf import generate_csrf_token, validate_csrf_token
+from app.admin.csrf import generate_csrf_token, validate_csrf_token, CSRFException
 from app.admin.audit import log_admin_action
 from app.admin.models import AdminAuditLog, SystemSettings
 from app.admin.twofa import generate_totp_secret, generate_qr_code, verify_totp_token
@@ -37,6 +37,86 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/admin/templates")
 # Add min function to template globals
 templates.env.globals["min"] = min
+
+
+# CSRF Exception Handler - Returns user-friendly HTML page instead of JSON
+@router.exception_handler(CSRFException)
+async def csrf_exception_handler(request: Request, exc: CSRFException) -> Response:
+    """
+    Handle CSRF exceptions by rendering user-friendly error pages.
+
+    This handler intercepts CSRFException and returns HTML pages
+    with friendly error messages instead of JSON responses.
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    # Log the technical error
+    logger.warning(
+        f"CSRF validation failed: {exc.detail} | "
+        f"Type: {exc.error_type} | "
+        f"Path: {request.url.path}"
+    )
+
+    # Generate new CSRF token for retry
+    new_csrf_token = generate_csrf_token()
+
+    # Determine which template to use based on referer
+    referer = request.headers.get("referer", "")
+
+    # Map paths to their templates
+    template_mapping = {
+        "/super/setup": "setup.html",
+        "/super/login": "login.html",
+        "/super/2fa_setup": "2fa_setup.html",
+        "/super/2fa_verify": "2fa_verify.html",
+    }
+
+    # Try to determine the current page from referer or path
+    current_template = "login.html"  # Default fallback
+
+    # Check if we're on a setup/login page
+    for path, template in template_mapping.items():
+        if path in referer or request.url.path.startswith(path):
+            current_template = template
+            break
+
+    # Prepare context for template
+    context = {
+        "request": request,
+        "csrf_token": new_csrf_token,
+        "messages": [
+            {
+                "type": "error",
+                "text": exc.user_message
+            }
+        ],
+    }
+
+    # Add page-specific context
+    if current_template == "setup.html":
+        context.update({
+            "username": "",
+            "email": "",
+            "account_name": "",
+        })
+
+    # Render the template with error message
+    response = templates.TemplateResponse(current_template, context)
+
+    # Set new CSRF token in cookie
+    response.set_cookie(
+        key="csrf_token",
+        value=new_csrf_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=3600,
+    )
+
+    return response
+
 
 # Custom filter to convert UTC datetime to local timezone (Asia/Shanghai, UTC+8)
 def to_local_timezone(dt: datetime, format_str: str = '%Y-%m-%d %H:%M:%S') -> str:
@@ -296,9 +376,12 @@ async def login_page(request: Request, error: str = None):
     # Generate CSRF token
     csrf_token = generate_csrf_token()
 
+    # Convert error string to messages list format
+    messages = [{"type": "error", "text": error}] if error else []
+
     response = templates.TemplateResponse(
         "login.html",
-        {"request": request, "user": None, "error": error, "csrf_token": csrf_token},
+        {"request": request, "user": None, "messages": messages, "csrf_token": csrf_token},
     )
 
     # Set CSRF token in cookie
@@ -338,7 +421,9 @@ async def login(
                 {
                     "request": request,
                     "user": None,
-                    "error": "用户名或密码错误",
+                    "messages": [
+                        {"type": "error", "text": "用户名或密码错误"}
+                    ],
                     "csrf_token": csrf_token,
                 },
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -351,7 +436,9 @@ async def login(
                 {
                     "request": request,
                     "user": None,
-                    "error": "用户已被禁用",
+                    "messages": [
+                        {"type": "error", "text": "用户已被禁用"}
+                    ],
                     "csrf_token": csrf_token,
                 },
                 status_code=status.HTTP_401_UNAUTHORIZED,
