@@ -143,6 +143,8 @@ def create_application() -> FastAPI:
     from app.domains.podcast.api.routes import router as podcast_router
     from app.domains.ai.api.routes import router as ai_model_router
     from app.admin.router import router as admin_router
+    from app.admin.exception_handlers import csrf_exception_handler
+    from app.admin.csrf import CSRFException
 
     app.include_router(
         user_router,
@@ -192,6 +194,9 @@ def create_application() -> FastAPI:
         prefix="/super",
         tags=["admin"]
     )
+
+    # Register CSRF exception handler for admin panel
+    app.add_exception_handler(CSRFException, csrf_exception_handler)
 
     # Root endpoint - Welcome page
     @app.get("/")
