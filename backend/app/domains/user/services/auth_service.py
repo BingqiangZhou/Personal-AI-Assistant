@@ -211,7 +211,7 @@ class AuthenticationService:
             device_info=device_info or {},
             ip_address=ip_address,
             user_agent=user_agent,
-            expires_at=access_expires_at,
+            expires_at=refresh_expires_at,  # Fix: session expires at same time as refresh token (7 days)
             last_activity_at=datetime.utcnow(),
             is_active=True
         )
@@ -286,10 +286,21 @@ class AuthenticationService:
             data={"sub": str(user.id), "email": user.email}
         )
 
+        # Determine refresh expiry days based on current session
+        # If session has > 7 days remaining, it was created with remember_me=True (30 days)
+        # Otherwise, use default 7 days
+        days_until_expiry = (session.expires_at - datetime.utcnow()).days
+        if days_until_expiry > settings.REFRESH_TOKEN_EXPIRE_DAYS:
+            # Session was created with remember_me=True (30 days)
+            refresh_expiry_days = 30
+        else:
+            # Standard session (7 days)
+            refresh_expiry_days = settings.REFRESH_TOKEN_EXPIRE_DAYS
+
         # Create new refresh token (sliding session - extend expiration)
         new_refresh_token = create_refresh_token(
             data={"sub": str(user.id), "email": user.email},
-            expires_delta=timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+            expires_delta=timedelta(days=refresh_expiry_days)
         )
 
         # Calculate new expiration times
@@ -297,14 +308,14 @@ class AuthenticationService:
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
         refresh_expires_at = datetime.utcnow() + timedelta(
-            days=settings.REFRESH_TOKEN_EXPIRE_DAYS
+            days=refresh_expiry_days
         )
 
         # Update session with sliding expiration
         session.session_token = new_access_token
         session.refresh_token = new_refresh_token
         session.last_activity_at = datetime.utcnow()
-        session.expires_at = access_expires_at
+        session.expires_at = refresh_expires_at  # Fix: session should expire with refresh token, not access token
 
         await self.db.commit()
 

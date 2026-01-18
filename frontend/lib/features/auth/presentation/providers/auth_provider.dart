@@ -8,6 +8,7 @@ import '../../domain/models/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
+import '../../../../core/auth/auth_event.dart';
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../core/providers/core_providers.dart';
@@ -94,15 +95,34 @@ class AuthNotifier extends Notifier<AuthState> {
   late final AuthRepository _authRepository;
   late final SecureStorageService _secureStorage;
   Timer? _tokenRefreshTimer;
+  StreamSubscription<AuthEvent>? _authEventSubscription;
 
   @override
   AuthState build() {
     _authRepository = ref.read(authRepositoryProvider);
     _secureStorage = ref.read(secureStorageProvider);
+
+    // Listen to auth events from DioClient
+    _authEventSubscription = AuthEventNotifier.instance.authEventStream.listen(
+      (event) {
+        if (event.type == AuthEventType.tokenCleared) {
+          // Sync auth state when tokens are cleared by DioClient
+          if (state.isAuthenticated) {
+            debugPrint('🔔 [AuthProvider] Received tokenCleared event, clearing auth state');
+            state = state.copyWith(
+              isAuthenticated: false,
+              user: null,
+            );
+          }
+        }
+      },
+    );
+
     // Don't check auth status here to avoid circular dependency
     // Let the UI call checkAuthStatus when needed
     ref.onDispose(() {
       _stopTokenRefreshTimer();
+      _authEventSubscription?.cancel();
     });
     return const AuthState();
   }

@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/app/config/app_config.dart' as config;
 import '../constants/app_constants.dart' as constants;
 import 'exceptions/network_exceptions.dart';
+import '../auth/auth_event.dart';
 
 final sl = GetIt.instance;
 
@@ -52,7 +53,20 @@ class DioClient {
   void _initializeBaseUrl() {
     // Try to get saved URL synchronously from AppConfig first
     // AppConfig.setServerBaseUrl() should have been called during app init
-    final savedBaseUrl = config.AppConfig.serverBaseUrl;
+    String savedBaseUrl = config.AppConfig.serverBaseUrl;
+
+    // Normalize URL: remove trailing slashes
+    if (savedBaseUrl.isNotEmpty) {
+      savedBaseUrl = savedBaseUrl.trim();
+      while (savedBaseUrl.endsWith('/')) {
+        savedBaseUrl = savedBaseUrl.substring(0, savedBaseUrl.length - 1);
+      }
+      // Remove /api/v1 suffix if present
+      if (savedBaseUrl.endsWith('/api/v1')) {
+        savedBaseUrl = savedBaseUrl.substring(0, savedBaseUrl.length - 7);
+      }
+    }
+
     final apiBaseUrl = savedBaseUrl.isNotEmpty
         ? '$savedBaseUrl/api/v1'
         : '${config.AppConfig.serverBaseUrl}/api/v1';
@@ -426,6 +440,12 @@ class DioClient {
     await _secureStorage.delete(key: config.AppConstants.refreshTokenKey);
     await _secureStorage.delete(key: config.AppConstants.userProfileKey);
     debugPrint('🔓 [DioClient] Tokens cleared, user will need to re-login');
+
+    // Notify auth state listeners that tokens were cleared
+    AuthEventNotifier.instance.notify(AuthEvent(
+      type: AuthEventType.tokenCleared,
+      message: 'Tokens cleared due to authentication failure',
+    ));
   }
 
   // HTTP methods
