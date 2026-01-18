@@ -105,6 +105,7 @@ jobs:
         with:
           gradle-version: wrapper
           cache-read-only: false
+          build-root-directory: frontend/android
 
       - name: Cache Pub cache
         uses: actions/cache@v4
