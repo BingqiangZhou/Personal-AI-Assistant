@@ -626,3 +626,70 @@ class PodcastRepository:
             dates.add(last_updated.date())
 
         return dates
+
+    async def get_user_stats_aggregated(self, user_id: int) -> Dict[str, Any]:
+        """
+        Get aggregated user statistics using efficient single-query approach.
+
+        Replaces the O(n*m) nested loop implementation with aggregate queries.
+        """
+        # Count total subscriptions
+        sub_count_stmt = select(func.count(Subscription.id)).where(
+            Subscription.user_id == user_id
+        )
+        sub_count_result = await self.db.execute(sub_count_stmt)
+        total_subscriptions = sub_count_result.scalar() or 0
+
+        # Aggregate episode statistics
+        episode_stats_stmt = select(
+            func.count(PodcastEpisode.id).label('total_episodes'),
+            func.sum(
+                case(
+                    (PodcastEpisode.ai_summary.isnot(None), 1),
+                    else_=0
+                )
+            ).label('summaries_generated'),
+            func.sum(
+                case(
+                    (PodcastEpisode.ai_summary.is_(None), 1),
+                    else_=0
+                )
+            ).label('pending_summaries'),
+            func.coalesce(
+                func.sum(PodcastPlaybackState.current_position),
+                0
+            ).label('total_playtime')
+        ).select_from(
+            PodcastEpisode.__table__.join(
+                Subscription.__table__,
+                PodcastEpisode.subscription_id == Subscription.id
+            ).outerjoin(
+                PodcastPlaybackState.__table__,
+                and_(
+                    PodcastPlaybackState.episode_id == PodcastEpisode.id,
+                    PodcastPlaybackState.user_id == user_id
+                )
+            )
+        ).where(Subscription.user_id == user_id)
+
+        episode_stats_result = await self.db.execute(episode_stats_stmt)
+        episode_stats = episode_stats_result.one()
+
+        # Check for active subscriptions
+        active_check_stmt = select(func.count(Subscription.id)).where(
+            and_(
+                Subscription.user_id == user_id,
+                Subscription.status == "active"
+            )
+        )
+        active_check_result = await self.db.execute(active_check_stmt)
+        has_active_plus = (active_check_result.scalar() or 0) > 0
+
+        return {
+            "total_subscriptions": total_subscriptions,
+            "total_episodes": episode_stats.total_episodes or 0,
+            "total_playtime": episode_stats.total_playtime or 0,
+            "summaries_generated": episode_stats.summaries_generated or 0,
+            "pending_summaries": episode_stats.pending_summaries or 0,
+            "has_active_plus": has_active_plus
+        }

@@ -1,5 +1,7 @@
 """User domain models."""
 
+from typing import Optional
+
 from sqlalchemy import (
     Column, Integer, String, Text, DateTime,
     Boolean, JSON, Index

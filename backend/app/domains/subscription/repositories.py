@@ -32,8 +32,15 @@ class SubscriptionRepository:
         size: int = 20,
         status: Optional[str] = None,
         source_type: Optional[str] = None,
-    ) -> Tuple[List[Subscription], int]:
-        """Get user's subscriptions with pagination and filters."""
+    ) -> Tuple[List[Subscription], int, Dict[int, int]]:
+        """
+        Get user's subscriptions with pagination and filters.
+
+        Returns:
+            Tuple of (subscriptions list, total count, item counts dict)
+
+        Enhanced to include item counts in a single query to avoid N+1 problem.
+        """
         skip = (page - 1) * size
 
         # Build base query
@@ -57,7 +64,22 @@ class SubscriptionRepository:
         result = await self.db.execute(query)
         items = result.scalars().all()
 
-        return list(items), total
+        # Batch fetch item counts for all subscriptions (single query)
+        if items:
+            subscription_ids = [sub.id for sub in items]
+            item_count_query = select(
+                SubscriptionItem.subscription_id,
+                func.count(SubscriptionItem.id).label('item_count')
+            ).where(
+                SubscriptionItem.subscription_id.in_(subscription_ids)
+            ).group_by(SubscriptionItem.subscription_id)
+
+            item_count_result = await self.db.execute(item_count_query)
+            item_counts = {row.subscription_id: row.item_count for row in item_count_result}
+        else:
+            item_counts = {}
+
+        return list(items), total, item_counts
 
     async def get_subscription_by_id(
         self, user_id: int, sub_id: int

@@ -42,6 +42,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   StreamSubscription? _positionSubscription;
   StreamSubscription? _durationSubscription;
   bool? _lastPlayingState; // Track last playing state to reduce log spam
+  Timer? _syncThrottleTimer; // Throttle timer for server sync
 
   PodcastAudioHandler get _audioHandler => main_app.audioHandler;
 
@@ -57,6 +58,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       _playerStateSubscription?.cancel();
       _positionSubscription?.cancel();
       _durationSubscription?.cancel();
+      _syncThrottleTimer?.cancel();
     });
 
     return const AudioPlayerState();
@@ -288,7 +290,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       logger.AppLogger.debug('🔴 AudioHandler.pause() completed, waiting for playbackState listener to update UI');
 
       if (ref.mounted && !_isDisposed) {
-        await _updatePlaybackStateOnServer();
+        await _updatePlaybackStateOnServer(immediate: true);
       }
     } catch (error) {
       logger.AppLogger.debug('❌ pause() error: $error');
@@ -381,11 +383,31 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     }
   }
 
-  Future<void> _updatePlaybackStateOnServer() async {
+  Future<void> _updatePlaybackStateOnServer({bool immediate = false}) async {
     if (_isDisposed) return;
 
     final episode = state.currentEpisode;
     if (episode == null) return;
+
+    // Cancel previous timer
+    _syncThrottleTimer?.cancel();
+
+    // If immediate (pause, stop), send right away
+    if (immediate) {
+      _sendPlaybackUpdate(episode);
+      return;
+    }
+
+    // Otherwise, throttle to 2-3 seconds to batch rapid updates
+    _syncThrottleTimer = Timer(const Duration(seconds: 2), () {
+      if (!_isDisposed) {
+        _sendPlaybackUpdate(episode);
+      }
+    });
+  }
+
+  Future<void> _sendPlaybackUpdate(PodcastEpisodeModel episode) async {
+    if (_isDisposed) return;
 
     try {
       await _repository.updatePlaybackProgress(
@@ -708,10 +730,14 @@ final podcastSearchProvider = AsyncNotifierProvider<PodcastSearchNotifier, Podca
 
 class PodcastSearchNotifier extends AsyncNotifier<PodcastEpisodeListResponse> {
   late PodcastRepository _repository;
+  Timer? _debounceTimer;
 
   @override
   FutureOr<PodcastEpisodeListResponse> build() {
     _repository = ref.read(podcastRepositoryProvider);
+    ref.onDispose(() {
+      _debounceTimer?.cancel();
+    });
     return Future.value(const PodcastEpisodeListResponse(
       episodes: [],
       total: 0,
@@ -728,6 +754,9 @@ class PodcastSearchNotifier extends AsyncNotifier<PodcastEpisodeListResponse> {
     int page = 1,
     int size = 20,
   }) async {
+    // Cancel previous debounce timer
+    _debounceTimer?.cancel();
+
     if (query.trim().isEmpty) {
       state = AsyncValue.data(const PodcastEpisodeListResponse(
         episodes: [],
@@ -740,19 +769,35 @@ class PodcastSearchNotifier extends AsyncNotifier<PodcastEpisodeListResponse> {
       return;
     }
 
+    // Show loading state immediately
     state = const AsyncValue.loading();
 
-    try {
-      final response = await _repository.searchPodcasts(
-        query: query,
-        searchIn: searchIn,
-        page: page,
-        size: size,
-      );
-      state = AsyncValue.data(response);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-    }
+    // Debounce: wait 400ms before executing search
+    _debounceTimer = Timer(const Duration(milliseconds: 400), () async {
+      try {
+        final response = await _repository.searchPodcasts(
+          query: query,
+          searchIn: searchIn,
+          page: page,
+          size: size,
+        );
+        state = AsyncValue.data(response);
+      } catch (error, stackTrace) {
+        state = AsyncValue.error(error, stackTrace);
+      }
+    });
+  }
+
+  void clearSearch() {
+    _debounceTimer?.cancel();
+    state = AsyncValue.data(const PodcastEpisodeListResponse(
+      episodes: [],
+      total: 0,
+      page: 1,
+      size: 20,
+      pages: 0,
+      subscriptionId: 0,
+    ));
   }
 }
 

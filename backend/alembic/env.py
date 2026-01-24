@@ -90,23 +90,10 @@ class MockConfig:
     TRANSCRIPTION_STORAGE_DIR = "./storage/podcasts"
     TRANSCRIPTION_MAX_THREADS = 4
     TRANSCRIPTION_QUEUE_SIZE = 100
-    TRANSCRIPTION_MODEL = "FunAudioLLM/SenseVoiceSmall"
-    SUPPORTED_TRANSCRIPTION_MODELS = "FunAudioLLM/SenseVoiceSmall,whisper-1,whisper-large-v3"
-    SUMMARY_MODEL = "gpt-4o-mini"
-    SUPPORTED_SUMMARY_MODELS = "gpt-4o-mini,gpt-4o,gpt-3.5-turbo"
 
 # Mock config module
 mock_config_module = types.ModuleType('app.core.config')
 mock_config_module.settings = MockConfig()
-
-def mock_get_supported_transcription_models():
-    return [model.strip() for model in MockConfig.SUPPORTED_TRANSCRIPTION_MODELS.split(',') if model.strip()]
-
-def mock_get_supported_summary_models():
-    return [model.strip() for model in MockConfig.SUPPORTED_SUMMARY_MODELS.split(',') if model.strip()]
-
-mock_config_module.get_supported_transcription_models = mock_get_supported_transcription_models
-mock_config_module.get_supported_summary_models = mock_get_supported_summary_models
 sys.modules['app.core.config'] = mock_config_module
 
 # Mock security module

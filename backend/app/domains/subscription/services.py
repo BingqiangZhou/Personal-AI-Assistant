@@ -44,20 +44,19 @@ class SubscriptionService:
         status: Optional[str] = None,
         source_type: Optional[str] = None,
     ) -> PaginatedResponse:
-        """List user's subscriptions."""
-        items, total = await self.repo.get_user_subscriptions(
+        """
+        List user's subscriptions.
+
+        Optimized to use batch fetched item counts instead of N+1 queries.
+        """
+        items, total, item_counts = await self.repo.get_user_subscriptions(
             self.user_id, page, size, status, source_type
         )
 
         response_items = []
         for sub in items:
-            # Get item count for this subscription
-            count_query = select(func.count()).select_from(
-                select(SubscriptionItem)
-                .where(SubscriptionItem.subscription_id == sub.id)
-                .subquery()
-            )
-            item_count = await self.db.scalar(count_query) or 0
+            # Get item count from batch result (default to 0 if not found)
+            item_count = item_counts.get(sub.id, 0)
 
             response_items.append(
                 SubscriptionResponse(

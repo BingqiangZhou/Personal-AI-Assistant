@@ -14,9 +14,15 @@ Recommended naming conventions:
 - podcast:lock:{action}:{id} - Distributed locks
 - podcast:progress:{user}:{episode} - Listening progress
 - podcast:summary:{episode}:{version} - AI summaries
+- podcast:subscriptions:{user_id} - User subscription list
+- podcast:stats:{user_id} - User statistics
+- podcast:episodes:{sub_id}:{page} - Episode list page
+- podcast:search:{query_hash} - Search results
 """
 
-from typing import Optional
+import hashlib
+import json
+from typing import Optional, Any, List
 from redis import asyncio as aioredis
 from app.core.config import settings
 
@@ -128,6 +134,109 @@ class PodcastRedis:
         """Set user progress (30 days)"""
         key = f"podcast:progress:{user_id}:{episode_id}"
         await self.cache_set(key, str(progress), ttl=2592000)
+
+    # === JSON Cache Helpers ===
+
+    async def cache_get_json(self, key: str) -> Optional[Any]:
+        """Get and parse JSON from cache"""
+        data = await self.cache_get(key)
+        if data:
+            try:
+                return json.loads(data)
+            except json.JSONDecodeError:
+                return None
+        return None
+
+    async def cache_set_json(self, key: str, value: Any, ttl: int = 3600) -> bool:
+        """Serialize and cache JSON value"""
+        try:
+            json_str = json.dumps(value)
+            return await self.cache_set(key, json_str, ttl)
+        except (json.JSONEncodeError, TypeError):
+            return False
+
+    # === Subscription List Cache ===
+
+    async def get_subscription_list(self, user_id: int, page: int, size: int) -> Optional[dict]:
+        """Get cached subscription list (15 minutes TTL)"""
+        key = f"podcast:subscriptions:{user_id}:{page}:{size}"
+        return await self.cache_get_json(key)
+
+    async def set_subscription_list(self, user_id: int, page: int, size: int, data: dict) -> bool:
+        """Cache subscription list (15 minutes TTL)"""
+        key = f"podcast:subscriptions:{user_id}:{page}:{size}"
+        return await self.cache_set_json(key, data, ttl=900)
+
+    async def invalidate_subscription_list(self, user_id: int) -> None:
+        """Invalidate all subscription list caches for a user"""
+        client = await self._get_client()
+        pattern = f"podcast:subscriptions:{user_id}:*"
+        keys = await client.keys(pattern)
+        if keys:
+            await client.delete(*keys)
+
+    # === User Stats Cache ===
+
+    async def get_user_stats(self, user_id: int) -> Optional[dict]:
+        """Get cached user statistics (30 minutes TTL)"""
+        key = f"podcast:stats:{user_id}"
+        return await self.cache_get_json(key)
+
+    async def set_user_stats(self, user_id: int, stats: dict) -> bool:
+        """Cache user statistics (30 minutes TTL)"""
+        key = f"podcast:stats:{user_id}"
+        return await self.cache_set_json(key, stats, ttl=1800)
+
+    async def invalidate_user_stats(self, user_id: int) -> None:
+        """Invalidate user stats cache"""
+        key = f"podcast:stats:{user_id}"
+        await self.cache_delete(key)
+
+    # === Episode List Cache ===
+
+    async def get_episode_list(self, subscription_id: int, page: int, size: int) -> Optional[dict]:
+        """Get cached episode list (10 minutes TTL)"""
+        key = f"podcast:episodes:{subscription_id}:{page}:{size}"
+        return await self.cache_get_json(key)
+
+    async def set_episode_list(self, subscription_id: int, page: int, size: int, data: dict) -> bool:
+        """Cache episode list (10 minutes TTL)"""
+        key = f"podcast:episodes:{subscription_id}:{page}:{size}"
+        return await self.cache_set_json(key, data, ttl=600)
+
+    async def invalidate_episode_list(self, subscription_id: int) -> None:
+        """Invalidate all episode list caches for a subscription"""
+        client = await self._get_client()
+        pattern = f"podcast:episodes:{subscription_id}:*"
+        keys = await client.keys(pattern)
+        if keys:
+            await client.delete(*keys)
+
+    # === Search Results Cache ===
+
+    def _hash_search_query(self, query: str, search_in: str, page: int, size: int) -> str:
+        """Generate hash key for search query"""
+        query_str = f"{query}:{search_in}:{page}:{size}".lower()
+        return hashlib.md5(query_str.encode()).hexdigest()
+
+    async def get_search_results(self, query: str, search_in: str, page: int, size: int) -> Optional[dict]:
+        """Get cached search results (5 minutes TTL)"""
+        hash_key = self._hash_search_query(query, search_in, page, size)
+        key = f"podcast:search:{hash_key}"
+        return await self.cache_get_json(key)
+
+    async def set_search_results(self, query: str, search_in: str, page: int, size: int, data: dict) -> bool:
+        """Cache search results (5 minutes TTL)"""
+        hash_key = self._hash_search_query(query, search_in, page, size)
+        key = f"podcast:search:{hash_key}"
+        return await self.cache_set_json(key, data, ttl=300)
+
+    # === Batch Invalidation ===
+
+    async def invalidate_user_caches(self, user_id: int) -> None:
+        """Invalidate all user-related caches"""
+        await self.invalidate_subscription_list(user_id)
+        await self.invalidate_user_stats(user_id)
 
     # === Lock Operations ===
 

@@ -155,14 +155,6 @@ class Settings(BaseSettings):
     TRANSCRIPTION_MAX_THREADS: int = 4  # Maximum concurrent transcription requests
     TRANSCRIPTION_QUEUE_SIZE: int = 100  # Maximum queue size for pending tasks
 
-    # Transcription Model Configuration
-    TRANSCRIPTION_MODEL: str = "FunAudioLLM/SenseVoiceSmall"  # Default transcription model
-    SUPPORTED_TRANSCRIPTION_MODELS: str = "FunAudioLLM/SenseVoiceSmall,whisper-1,whisper-large-v3"  # Comma-separated list
-
-    # AI Summary Configuration
-    SUMMARY_MODEL: str = "gpt-4o-mini"  # Default AI summary model
-    SUPPORTED_SUMMARY_MODELS: str = "gpt-4o-mini,gpt-4o,gpt-3.5-turbo"  # Comma-separated list
-
     # Admin Panel 2FA Configuration
     ADMIN_2FA_ENABLED: bool = True  # Admin panel 2FA toggle (default: enabled)
 
@@ -200,12 +192,3 @@ settings = get_settings()
 # Ensure SECRET_KEY is loaded on import
 if settings.SECRET_KEY is None:
     settings.SECRET_KEY = get_or_generate_secret_key()
-
-# Helper methods for model lists
-def get_supported_transcription_models() -> list[str]:
-    """Get list of supported transcription models"""
-    return [model.strip() for model in settings.SUPPORTED_TRANSCRIPTION_MODELS.split(',') if model.strip()]
-
-def get_supported_summary_models() -> list[str]:
-    """Get list of supported summary models"""
-    return [model.strip() for model in settings.SUPPORTED_SUMMARY_MODELS.split(',') if model.strip()]

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,7 +25,28 @@ class DioClient {
   // Storage key for custom backend server base URL
   static const String _serverBaseUrlKey = 'server_base_url';
 
+  // Cache store and interceptor
+  late final CacheStore _cacheStore;
+  late final DioCacheInterceptor _cacheInterceptor;
+
   DioClient() {
+    // Initialize cache store
+    _cacheStore = MemCacheStore();
+
+    // Initialize cache interceptor with default policy
+    _cacheInterceptor = DioCacheInterceptor(
+      options: CacheOptions(
+        store: _cacheStore,
+        policy: CachePolicy.request,
+        hitCacheOnErrorExcept: [401, 403],
+        maxStale: const Duration(days: 7),
+        priority: CachePriority.high,
+        cipher: null,
+        keyBuilder: CacheOptions.defaultCacheKeyBuilder,
+        allowPostMethod: false,
+      ),
+    );
+
     // Initialize with default/empty baseUrl first
     // The actual baseUrl will be applied by _applySavedBaseUrl()
     _dio = Dio(BaseOptions(
@@ -34,6 +56,9 @@ class DioClient {
       receiveTimeout: Duration(milliseconds: constants.ApiConstants.receiveTimeout.inMilliseconds),
       sendTimeout: Duration(milliseconds: constants.ApiConstants.sendTimeout.inMilliseconds),
     ));
+
+    // Add cache interceptor FIRST (before auth interceptor)
+    _dio.interceptors.add(_cacheInterceptor);
 
     // Add interceptors
     _dio.interceptors.add(
@@ -449,20 +474,63 @@ class DioClient {
   }
 
   // HTTP methods
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
-    return _dio.get(path, queryParameters: queryParameters);
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Duration? maxStale,
+    CachePolicy? cachePolicy,
+  }) async {
+    final options = Options();
+
+    // Apply cache control for specific endpoints
+    if (maxStale != null || cachePolicy != null) {
+      options.extra = {
+        'cache_key': path,
+        if (maxStale != null) 'cache_max_stale': maxStale,
+        if (cachePolicy != null) 'cache_policy': cachePolicy,
+      };
+    }
+
+    return _dio.get(path, queryParameters: queryParameters, options: options);
   }
 
-  Future<Response> post(String path, {dynamic data}) async {
-    return _dio.post(path, data: data);
+  Future<Response> post(String path, {dynamic data, bool invalidateCache = false}) async {
+    final options = Options();
+
+    // Invalidate cache for POST mutations (e.g., creating/updating resources)
+    if (invalidateCache) {
+      options.extra = {'dio_cache_interceptor_invalidate': true};
+    }
+
+    return _dio.post(path, data: data, options: options);
   }
 
-  Future<Response> put(String path, {dynamic data}) async {
-    return _dio.put(path, data: data);
+  Future<Response> put(String path, {dynamic data, bool invalidateCache = true}) async {
+    final options = Options();
+
+    // Always invalidate cache for PUT updates
+    if (invalidateCache) {
+      options.extra = {'dio_cache_interceptor_invalidate': true};
+    }
+
+    return _dio.put(path, data: data, options: options);
   }
 
-  Future<Response> delete(String path) async {
-    return _dio.delete(path);
+  Future<Response> delete(String path, {bool invalidateCache = true}) async {
+    final options = Options();
+
+    // Always invalidate cache for DELETE
+    if (invalidateCache) {
+      options.extra = {'dio_cache_interceptor_invalidate': true};
+    }
+
+    return _dio.delete(path, options: options);
+  }
+
+  /// Clear all cached responses
+  Future<void> clearCache() async {
+    await _cacheStore.clean();
+    logger.AppLogger.debug('🗑️ [DioClient] Cache cleared');
   }
 
   // Static factory method for ServiceLocator

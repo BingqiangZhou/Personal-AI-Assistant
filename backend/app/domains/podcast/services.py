@@ -254,7 +254,19 @@ class PodcastService:
         page: int = 1,
         size: int = 20
     ) -> Tuple[List[dict], int]:
-        """获取播客单集列表（支持分页和过滤）"""
+        """获取播客单集列表（支持分页和过滤）- 支持缓存"""
+        # Extract subscription_id from filters for caching
+        subscription_id = filters.get('subscription_id') if filters else None
+
+        # Try cache first if filtering by subscription (10 minutes TTL)
+        if subscription_id:
+            cached = await self.redis.get_episode_list(subscription_id, page, size)
+            if cached:
+                logger.info(f"Cache HIT for episode list: sub_id={subscription_id}, page={page}")
+                return cached['results'], cached['total']
+
+            logger.info(f"Cache MISS for episode list: sub_id={subscription_id}, page={page}, querying database")
+
         episodes, total = await self.repo.get_episodes_paginated(
             self.user_id,
             page=page,
@@ -315,6 +327,13 @@ class PodcastService:
                 "updated_at": ep.updated_at
             })
 
+        # Cache the results if filtering by subscription
+        if subscription_id:
+            await self.redis.set_episode_list(subscription_id, page, size, {
+                'results': results,
+                'total': total
+            })
+
         return results, total
 
     async def search_podcasts(
@@ -324,7 +343,15 @@ class PodcastService:
         page: int = 1,
         size: int = 20
     ) -> Tuple[List[dict], int]:
-        """搜索播客内容"""
+        """搜索播客内容 - 支持缓存"""
+        # Try cache first
+        cached = await self.redis.get_search_results(query, search_in, page, size)
+        if cached:
+            logger.info(f"Cache HIT for search: {query}")
+            return cached['results'], cached['total']
+
+        logger.info(f"Cache MISS for search: {query}, querying database")
+
         episodes, total = await self.repo.search_episodes(
             self.user_id,
             query=query,
@@ -333,10 +360,14 @@ class PodcastService:
             size=size
         )
 
+        # Batch fetch playback states for all episodes to avoid N+1 query
+        episode_ids = [ep.id for ep in episodes]
+        playback_states = await self.repo.get_playback_states_batch(self.user_id, episode_ids)
+
         results = []
         for ep in episodes:
-            # 获取用户播放状态
-            playback = await self.repo.get_playback_state(self.user_id, ep.id)
+            # Get playback state from batch result
+            playback = playback_states.get(ep.id)
 
             # 从订阅配置中提取图片URL
             subscription_image_url = None
@@ -383,6 +414,12 @@ class PodcastService:
                 # 搜索相关性分数（如果存在）
                 "relevance_score": getattr(ep, 'relevance_score', 1.0)
             })
+
+        # Cache the results (5 minutes TTL)
+        await self.redis.set_search_results(query, search_in, page, size, {
+            'results': results,
+            'total': total
+        })
 
         return results, total
 
@@ -567,30 +604,17 @@ class PodcastService:
         }
 
     async def get_user_stats(self) -> dict:
-        """获取用户播客统计"""
-        # 基础统计
-        subscriptions = await self.repo.get_user_subscriptions(self.user_id)
+        """获取用户播客统计 - 使用高效聚合查询和缓存"""
+        # Try cache first (30 minutes TTL)
+        cached = await self.redis.get_user_stats(self.user_id)
+        if cached:
+            logger.info(f"Cache HIT for user stats: user_id={self.user_id}")
+            return cached
 
-        # 收听统计
-        total_episodes = 0
-        total_playtime = 0
-        summaries_generated = 0
-        pending_summaries = 0
+        logger.info(f"Cache MISS for user stats: user_id={self.user_id}, querying database")
 
-        for sub in subscriptions:
-            episodes = await self.repo.get_subscription_episodes(sub.id, limit=None)
-            total_episodes += len(episodes)
-
-            for ep in episodes:
-                if ep.ai_summary:
-                    summaries_generated += 1
-                else:
-                    pending_summaries += 1
-
-                # 统计播放时间
-                playback = await self.repo.get_playback_state(self.user_id, ep.id)
-                if playback:
-                    total_playtime += playback.current_position
+        # 使用聚合查询获取基础统计（O(1) vs O(n*m)）
+        stats = await self.repo.get_user_stats_aggregated(self.user_id)
 
         # 最近播放
         recently_played = await self.repo.get_recently_played(self.user_id, limit=5)
@@ -601,17 +625,17 @@ class PodcastService:
         # 热门分类（TODO: 实现分类统计）
         top_categories = []
 
-        return {
-            "total_subscriptions": len(subscriptions),
-            "total_episodes": total_episodes,
-            "total_playtime": total_playtime,
-            "summaries_generated": summaries_generated,
-            "pending_summaries": pending_summaries,
+        result = {
+            **stats,
             "recently_played": recently_played,
             "top_categories": top_categories,
-            "listening_streak": listening_streak,
-            "has_active_plus": any(s.status == "active" for s in subscriptions)
+            "listening_streak": listening_streak
         }
+
+        # Cache the results (30 minutes TTL)
+        await self.redis.set_user_stats(self.user_id, result)
+
+        return result
 
     async def get_recommendations(self, limit: int = 10) -> List[dict]:
         """获取播客推荐"""

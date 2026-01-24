@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.1.10](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.1.9...v0.1.10) - 2026-01-24 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.1.10))
+
+### ⚙️ Miscellaneous Tasks
+
+- Clean up unused code and update dependencies ([5c0ccef](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5c0ccef090fd0af76657586deccb11d43d5d0e01))
+- Update dependencies and remove debug logs ([0880ac8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0880ac843da6ffce3a62d35816ff670e457b5f00))
+- Remove unused imports and add analyzer exclusions ([0ea06e0](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0ea06e0eec94af09e04524be685f86690a850289))
+
+### 🚜 Refactor
+
+- Clean up unused imports and improve type safety ([77c76d4](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/77c76d43ddca856c0d8ab09b0494f63407cdf948))
+- Replace debugPrint with AppLogger for conditional logging ([a603155](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a603155831d043ac14e70c1c6d0f5df04976ccac))
+- Improve code quality and remove unused platform badges ([2df3b67](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2df3b672a18bd90e3749907e0a2c33f507b48086))
+- Rename full_name to account_name and add database index ([a17e3ef](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a17e3ef0e9c3f1161807dec9de1eab04f78b4416))
+
+
+
 ## [0.1.9](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.1.8...v0.1.9) - 2026-01-18 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.1.9))
 
 ### Ci
@@ -11,6 +28,10 @@ All notable changes to this project will be documented in this file.
 - *(release)* Optimize build workflow and configurations ([87a456a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/87a456a886f392d3e9f3e64d86d42327bca8d13e))
 - *(release)* Add actions write permission and disable cache read-only ([3007f4d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3007f4de37484e71aeaa35f6a254892e150684c4))
 - *(gradle)* Specify build root directory for accurate caching ([52c6edf](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/52c6edf4869b6682ed47dbf82dcd73420526e1fc))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Update CHANGELOG.md for v0.1.9 ([fc31366](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/fc31366e800d12bcaf7837c627dcd45fde7c6941))
 
 ### 🐛 Bug Fixes
 
