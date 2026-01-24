@@ -450,7 +450,14 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
     int size = 10,
     int? categoryId,
     String? status,
+    bool forceRefresh = false,
   }) async {
+    // Check if data is fresh and skip refresh if not forced
+    if (!forceRefresh && page == 1 && state.isDataFresh()) {
+      logger.AppLogger.debug('📦 Using cached subscription data (fresh within 5 min)');
+      return;
+    }
+
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -468,7 +475,9 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
         currentPage: page,
         total: response.total,
         isLoading: false,
+        lastRefreshTime: DateTime.now(), // Record refresh time
       );
+      logger.AppLogger.debug('✅ Subscription data loaded at ${DateTime.now()}');
     } catch (error) {
       state = state.copyWith(
         isLoading: false,
@@ -841,7 +850,14 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
     int page = 1,
     int size = 20,
     String? status,
+    bool forceRefresh = false,
   }) async {
+    // Check if data is fresh and skip refresh if not forced (only for first page)
+    if (!forceRefresh && page == 1 && state.isDataFresh()) {
+      logger.AppLogger.debug('📦 Using cached episode data for sub $subscriptionId (fresh within 5 min)');
+      return;
+    }
+
     logger.AppLogger.debug('📋 Loading episodes for subscription $subscriptionId, page $page');
 
     // When loading first page, clear existing episodes immediately to avoid showing old data
@@ -873,7 +889,9 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
         currentPage: page,
         total: response.total,
         isLoading: false,
+        lastRefreshTime: DateTime.now(), // Record refresh time
       );
+      logger.AppLogger.debug('✅ Episode data loaded at ${DateTime.now()}');
     } catch (error) {
       logger.AppLogger.debug('❌ Failed to load episodes: $error');
       state = state.copyWith(

@@ -27,12 +27,12 @@ language_policy: "strict"
    - 如果用户使用英文输入 → 用英文回复
 
 2. **Documentation Language / 文档语言**
-   - Requirement documents (PRD): Bilingual format preferred
-   - 需求文档(PRD)：首选双语格式
-   - User stories: Write in target users' language
-   - 用户故事：使用目标用户的语言编写
-   - Acceptance criteria: Bilingual when possible
-   - 验收标准：尽可能使用双语
+   - Requirement documents (PRD): Chinese only
+   - 需求文档(PRD)：仅使用中文
+   - User stories: Write in Chinese
+   - 用户故事：使用中文编写
+   - Acceptance criteria: Chinese
+   - 验收标准：使用中文
 
 3. **Cross-Agent Communication / 跨 Agent 通信**
    - Maintain language consistency across the workflow
@@ -335,19 +335,19 @@ Low Value  | Low Priority     | Avoid
 - Market position
 - Customer lifetime value
 
-## 🌐 Bilingual Validation Checklist / 双语验证检查清单
+## 🌐 Language & UI Bilingual Validation Checklist / 语言与UI双语验证检查清单
 
-**IMPORTANT: When validating features, always check bilingual support**
+**IMPORTANT: Requirement documents use Chinese only, UI features support bilingual**
 
-**重要：验证功能时，始终检查双语支持**
+**重要：需求文档仅使用中文，UI 功能支持双语**
 
 ### Stage 1: Requirement Analysis / 需求分析阶段
-- [ ] Requirement document includes language specification
-- [ ] 需求文档包含语言规范
-- [ ] User stories specify target language(s)
-- [ ] 用户故事指定目标语言
-- [ ] Acceptance criteria include language requirements
-- [ ] 验收标准包含语言要求
+- [ ] Requirement document written in Chinese
+- [ ] 需求文档使用中文编写
+- [ ] User stories written in Chinese
+- [ ] 用户故事使用中文编写
+- [ ] Acceptance criteria include UI language requirements
+- [ ] 验收标准包含 UI 语言要求
 
 ### Stage 2: Development / 开发阶段
 - [ ] Backend API returns bilingual error messages

@@ -14,6 +14,11 @@ from app.core.exceptions import setup_exception_handlers
 from app.core.logging_config import setup_logging_from_env
 from app.core.logging_middleware import setup_logging_middleware
 from app.core.json_encoder import CustomJSONEncoder
+from app.core.middleware import (
+    PerformanceMonitoringMiddleware,
+    get_performance_middleware,
+    set_performance_middleware
+)
 # from app.core.security_middleware import SecurityHeadersMiddleware
 import logging
 import json
@@ -74,6 +79,12 @@ def create_application() -> FastAPI:
         lifespan=lifespan,
         default_response_class=CustomJSONResponse  # 使用自定义 JSON 响应类
     )
+
+    # Set up performance monitoring middleware
+    perf_middleware = PerformanceMonitoringMiddleware(app)
+    set_performance_middleware(perf_middleware)
+    app.add_middleware(PerformanceMonitoringMiddleware)
+    logger.info("✅ Performance monitoring middleware enabled")
 
     # Set up CORS
     app.add_middleware(
@@ -213,6 +224,15 @@ def create_application() -> FastAPI:
     @app.get("/health")
     async def health_check():
         return {"status": "healthy"}
+
+    # Performance metrics endpoint
+    @app.get("/metrics", include_in_schema=False)
+    async def get_metrics():
+        """Get performance metrics (internal use only)"""
+        middleware = get_performance_middleware()
+        if middleware:
+            return middleware.get_metrics()
+        return {"error": "Performance monitoring not enabled"}
 
     return app
 

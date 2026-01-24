@@ -35,12 +35,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
    - 错误消息：首选双语格式（英文为主，中文为辅）
 
 4. **Product Documentation / 产品文档**
-   - **Requirement Documents (PRD)**: Bilingual format preferred
-   - **需求文档(PRD)**：首选双语格式
-   - **User Stories**: Write in the language of the target users
-   - **用户故事**：使用目标用户的语言编写
-   - **Acceptance Criteria**: Bilingual when possible for clarity
-   - **验收标准**：尽可能使用双语以确保清晰
+   - **Requirement Documents (PRD)**: Chinese only
+   - **需求文档(PRD)**：仅使用中文
+   - **User Stories**: Write in Chinese
+   - **用户故事**：使用中文编写
+   - **Acceptance Criteria**: Chinese
+   - **验收标准**：使用中文
 
 ### Implementation Guidelines / 实现指南
 

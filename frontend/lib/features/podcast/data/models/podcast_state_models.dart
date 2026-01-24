@@ -62,6 +62,8 @@ class PodcastEpisodesState extends Equatable {
   final bool isLoading;
   final bool isLoadingMore;
   final String? error;
+  /// Last refresh timestamp for cache validation
+  final DateTime? lastRefreshTime;
 
   const PodcastEpisodesState({
     this.episodes = const [],
@@ -72,6 +74,7 @@ class PodcastEpisodesState extends Equatable {
     this.isLoading = false,
     this.isLoadingMore = false,
     this.error,
+    this.lastRefreshTime,
   });
 
   PodcastEpisodesState copyWith({
@@ -83,6 +86,7 @@ class PodcastEpisodesState extends Equatable {
     bool? isLoading,
     bool? isLoadingMore,
     String? error,
+    DateTime? lastRefreshTime,
   }) {
     return PodcastEpisodesState(
       episodes: episodes ?? this.episodes,
@@ -93,7 +97,14 @@ class PodcastEpisodesState extends Equatable {
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       error: error ?? this.error,
+      lastRefreshTime: lastRefreshTime ?? this.lastRefreshTime,
     );
+  }
+
+  /// Check if data is fresh (within cache duration)
+  bool isDataFresh({Duration cacheDuration = const Duration(minutes: 5)}) {
+    if (lastRefreshTime == null) return false;
+    return DateTime.now().difference(lastRefreshTime!) < cacheDuration;
   }
 
   @override
@@ -106,6 +117,7 @@ class PodcastEpisodesState extends Equatable {
         isLoading,
         isLoadingMore,
         error,
+        lastRefreshTime,
       ];
 }
 
@@ -120,6 +132,8 @@ class PodcastSubscriptionState extends Equatable {
   final String? error;
   /// 正在订阅的 Feed URLs 集合 / Set of Feed URLs currently being subscribed
   final Set<String> subscribingFeedUrls;
+  /// Last refresh timestamp for cache validation
+  final DateTime? lastRefreshTime;
 
   const PodcastSubscriptionState({
     this.subscriptions = const [],
@@ -131,6 +145,7 @@ class PodcastSubscriptionState extends Equatable {
     this.isLoadingMore = false,
     this.error,
     this.subscribingFeedUrls = const {},
+    this.lastRefreshTime,
   });
 
   PodcastSubscriptionState copyWith({
@@ -143,6 +158,7 @@ class PodcastSubscriptionState extends Equatable {
     bool? isLoadingMore,
     String? error,
     Set<String>? subscribingFeedUrls,
+    DateTime? lastRefreshTime,
   }) {
     return PodcastSubscriptionState(
       subscriptions: subscriptions ?? this.subscriptions,
@@ -154,7 +170,14 @@ class PodcastSubscriptionState extends Equatable {
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       error: error ?? this.error,
       subscribingFeedUrls: subscribingFeedUrls ?? this.subscribingFeedUrls,
+      lastRefreshTime: lastRefreshTime ?? this.lastRefreshTime,
     );
+  }
+
+  /// Check if data is fresh (within cache duration)
+  bool isDataFresh({Duration cacheDuration = const Duration(minutes: 5)}) {
+    if (lastRefreshTime == null) return false;
+    return DateTime.now().difference(lastRefreshTime!) < cacheDuration;
   }
 
   @override
@@ -168,5 +191,6 @@ class PodcastSubscriptionState extends Equatable {
         isLoadingMore,
         error,
         subscribingFeedUrls,
+        lastRefreshTime,
       ];
 }

@@ -22,9 +22,18 @@ Recommended naming conventions:
 
 import hashlib
 import json
+from datetime import datetime
 from typing import Optional, Any, List
 from redis import asyncio as aioredis
 from app.core.config import settings
+
+
+class RedisJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder for Redis that handles datetime objects"""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
 
 class PodcastRedis:
@@ -150,9 +159,9 @@ class PodcastRedis:
     async def cache_set_json(self, key: str, value: Any, ttl: int = 3600) -> bool:
         """Serialize and cache JSON value"""
         try:
-            json_str = json.dumps(value)
+            json_str = json.dumps(value, cls=RedisJSONEncoder)
             return await self.cache_set(key, json_str, ttl)
-        except (json.JSONEncodeError, TypeError):
+        except (TypeError, ValueError) as e:
             return False
 
     # === Subscription List Cache ===
