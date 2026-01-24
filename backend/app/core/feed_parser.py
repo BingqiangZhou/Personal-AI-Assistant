@@ -80,6 +80,15 @@ class FeedParser:
         self.config = config or FeedParserConfig()
         self._client: Optional[httpx.AsyncClient] = None
 
+    async def __aenter__(self):
+        """Async context manager entry / 异步上下文管理器入口"""
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit with cleanup / 异步上下文管理器退出并清理资源"""
+        await self.close()
+        return False
+
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create HTTP client / 获取或创建 HTTP 客户端"""
         if self._client is None:

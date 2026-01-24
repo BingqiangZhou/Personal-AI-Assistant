@@ -1,7 +1,7 @@
 """Knowledge domain repositories."""
 
-from typing import List, Optional, Tuple, Any
-from sqlalchemy import select, func, update, delete, or_
+from typing import List, Optional, Tuple, Any, Dict
+from sqlalchemy import select, func, update, delete, or_, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -41,6 +41,40 @@ class KnowledgeRepository:
         items = result.scalars().all()
         
         return list(items), total
+
+    async def get_document_counts_for_bases(self, kb_ids: List[int]) -> Dict[int, int]:
+        """Get document counts for multiple knowledge bases in a single query.
+
+        Args:
+            kb_ids: List of knowledge base IDs
+
+        Returns:
+            Dictionary mapping knowledge base ID to document count
+        """
+        if not kb_ids:
+            return {}
+
+        query = (
+            select(Document.knowledge_base_id, func.count(Document.id))
+            .where(Document.knowledge_base_id.in_(kb_ids))
+            .group_by(Document.knowledge_base_id)
+        )
+        result = await self.db.execute(query)
+
+        # Convert to dict: {kb_id: count}
+        return {row[0]: row[1] for row in result.all()}
+
+    async def get_document_count_for_base(self, kb_id: int) -> int:
+        """Get document count for a single knowledge base.
+
+        Args:
+            kb_id: Knowledge base ID
+
+        Returns:
+            Number of documents in the knowledge base
+        """
+        query = select(func.count()).where(Document.knowledge_base_id == kb_id)
+        return await self.db.scalar(query) or 0
 
     async def get_knowledge_base_by_id(self, user_id: int, kb_id: int) -> Optional[KnowledgeBase]:
         """Get knowledge base by ID."""

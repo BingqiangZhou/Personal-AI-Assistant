@@ -31,18 +31,13 @@ class KnowledgeService:
     async def list_knowledge_bases(self, page: int = 1, size: int = 20) -> PaginatedResponse:
         """List knowledge bases and format as paginated response."""
         items, total = await self.repo.get_user_knowledge_bases(self.user_id, page, size)
-        
-        # We need to count documents for each KB to match the schema
-        # In a real app, this might be optimized with joined queries
+
+        # Batch fetch document counts for all knowledge bases (N+1 query fix)
+        kb_ids = [kb.id for kb in items]
+        doc_counts = await self.repo.get_document_counts_for_bases(kb_ids)
+
         response_items = []
         for kb in items:
-            # Simple count for now
-            from sqlalchemy import select, func
-            from app.domains.knowledge.models import Document as DocModel
-            doc_count = await self.db.scalar(
-                select(func.count()).where(DocModel.knowledge_base_id == kb.id)
-            ) or 0
-            
             response_items.append(KnowledgeBaseResponse(
                 id=kb.id,
                 user_id=kb.user_id,
@@ -51,11 +46,11 @@ class KnowledgeService:
                 is_public=kb.is_public,
                 is_default=kb.is_default,
                 settings=kb.settings,
-                document_count=doc_count,
+                document_count=doc_counts.get(kb.id, 0),
                 created_at=kb.created_at,
                 updated_at=kb.updated_at
             ))
-            
+
         return PaginatedResponse.create(
             items=response_items,
             total=total,
@@ -84,13 +79,10 @@ class KnowledgeService:
         kb = await self.repo.get_knowledge_base_by_id(self.user_id, kb_id)
         if not kb:
             return None
-            
-        from sqlalchemy import select, func
-        from app.domains.knowledge.models import Document as DocModel
-        doc_count = await self.db.scalar(
-            select(func.count()).where(DocModel.knowledge_base_id == kb.id)
-        ) or 0
-            
+
+        # Use repository method for single KB document count
+        doc_count = await self.repo.get_document_count_for_base(kb_id)
+
         return KnowledgeBaseResponse(
             id=kb.id,
             user_id=kb.user_id,

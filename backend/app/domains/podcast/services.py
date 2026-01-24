@@ -45,6 +45,10 @@ class PodcastService:
         from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
         self.transcription_service = DatabaseBackedTranscriptionService(db)
 
+        # AI text generation service for summaries
+        from app.domains.ai.services import TextGenerationService
+        self.text_generation = TextGenerationService(db)
+
     # === 订阅管理 ===
 
     async def add_subscription(
@@ -176,12 +180,34 @@ class PodcastService:
             filters=filters
         )
 
+        # Batch fetch episode counts and recent episodes for all subscriptions (N+1 query fix)
+        subscription_ids = [sub.id for sub in subscriptions]
+        episode_counts = await self.repo.get_episodes_counts_batch(subscription_ids)
+        episodes_batch = await self.repo.get_subscription_episodes_batch(
+            subscription_ids,
+            limit_per_subscription=settings.PODCAST_RECENT_EPISODES_LIMIT
+        )
+
+        # Batch fetch playback states for all episodes
+        all_episode_ids = []
+        for ep_list in episodes_batch.values():
+            all_episode_ids.extend([ep.id for ep in ep_list])
+        playback_states = await self.repo.get_playback_states_batch(self.user_id, all_episode_ids)
+
         results = []
         for sub in subscriptions:
-            # 获取最新3个单集
-            episodes = await self.repo.get_subscription_episodes(sub.id, limit=3)
-            episode_count = await self._get_episode_count(sub.id)
-            unplayed_count = await self._get_unplayed_count(sub.id)
+            # Get episodes for this subscription
+            episodes = episodes_batch.get(sub.id, [])
+
+            # Calculate unplayed count using batch-fetched playback states
+            unplayed_count = 0
+            for ep in episodes:
+                playback = playback_states.get(ep.id)
+                if not playback or not playback.current_position or \
+                   (ep.audio_duration and playback.current_position < ep.audio_duration * 0.9):
+                    unplayed_count += 1
+
+            episode_count = episode_counts.get(sub.id, 0)
 
             # 从订阅配置中提取图片URL和其他元数据
             config = sub.config or {}
@@ -278,54 +304,8 @@ class PodcastService:
         episode_ids = [ep.id for ep in episodes]
         playback_states = await self.repo.get_playback_states_batch(self.user_id, episode_ids)
 
-        results = []
-        for ep in episodes:
-            # 获取用户播放状态 (from batch-fetched states)
-            playback = playback_states.get(ep.id)
-
-            # 从订阅配置中提取图片URL
-            subscription_image_url = None
-            if ep.subscription and ep.subscription.config:
-                subscription_image_url = ep.subscription.config.get("image_url")
-
-            # Use episode image_url if available, otherwise fallback to subscription image
-            image_url = ep.image_url or subscription_image_url
-
-            results.append({
-                "id": ep.id,
-                "subscription_id": ep.subscription_id,
-                "subscription_title": ep.subscription.title if ep.subscription else None,
-                "subscription_image_url": subscription_image_url,
-                "title": ep.title,
-                "description": ep.description,
-                "audio_url": ep.audio_url,
-                "audio_duration": ep.audio_duration,
-                "audio_file_size": ep.audio_file_size,
-                "published_at": ep.published_at,
-                "image_url": image_url,
-                "item_link": ep.item_link,
-                "transcript_url": ep.transcript_url,
-                "transcript_content": ep.transcript_content,
-                "ai_summary": ep.ai_summary,
-                "summary_version": ep.summary_version,
-                "ai_confidence_score": ep.ai_confidence_score,
-                "play_count": ep.play_count,
-                "last_played_at": ep.last_played_at,
-                "season": ep.season,
-                "episode_number": ep.episode_number,
-                "explicit": ep.explicit,
-                "status": ep.status,
-                "metadata": ep.metadata_json,
-                # 播放状态
-                "playback_position": playback.current_position if playback else None,
-                "is_playing": playback.is_playing if playback else False,
-                "playback_rate": playback.playback_rate if playback else 1.0,
-                "is_played": bool(playback and playback.current_position and
-                             ep.audio_duration and
-                             playback.current_position >= ep.audio_duration * 0.9),
-                "created_at": ep.created_at,
-                "updated_at": ep.updated_at
-            })
+        # Use helper method to build response (eliminates duplicate code)
+        results = self._build_episode_response(episodes, playback_states)
 
         # Cache the results if filtering by subscription
         if subscription_id:
@@ -364,56 +344,12 @@ class PodcastService:
         episode_ids = [ep.id for ep in episodes]
         playback_states = await self.repo.get_playback_states_batch(self.user_id, episode_ids)
 
-        results = []
-        for ep in episodes:
-            # Get playback state from batch result
-            playback = playback_states.get(ep.id)
+        # Use helper method to build response (eliminates duplicate code)
+        results = self._build_episode_response(episodes, playback_states)
 
-            # 从订阅配置中提取图片URL
-            subscription_image_url = None
-            if ep.subscription and ep.subscription.config:
-                subscription_image_url = ep.subscription.config.get("image_url")
-
-            # Use episode image_url if available, otherwise fallback to subscription image
-            image_url = ep.image_url or subscription_image_url
-
-            results.append({
-                "id": ep.id,
-                "subscription_id": ep.subscription_id,
-                "subscription_title": ep.subscription.title if ep.subscription else None,
-                "subscription_image_url": subscription_image_url,
-                "title": ep.title,
-                "description": ep.description,
-                "audio_url": ep.audio_url,
-                "audio_duration": ep.audio_duration,
-                "audio_file_size": ep.audio_file_size,
-                "published_at": ep.published_at,
-                "image_url": image_url,
-                "item_link": ep.item_link,
-                "transcript_url": ep.transcript_url,
-                "transcript_content": ep.transcript_content,
-                "ai_summary": ep.ai_summary,
-                "summary_version": ep.summary_version,
-                "ai_confidence_score": ep.ai_confidence_score,
-                "play_count": ep.play_count,
-                "last_played_at": ep.last_played_at,
-                "season": ep.season,
-                "episode_number": ep.episode_number,
-                "explicit": ep.explicit,
-                "status": ep.status,
-                "metadata": ep.metadata_json,
-                # 播放状态
-                "playback_position": playback.current_position if playback else None,
-                "is_playing": playback.is_playing if playback else False,
-                "playback_rate": playback.playback_rate if playback else 1.0,
-                "is_played": bool(playback and playback.current_position and
-                             ep.audio_duration and
-                             playback.current_position >= ep.audio_duration * 0.9),
-                "created_at": ep.created_at,
-                "updated_at": ep.updated_at,
-                # 搜索相关性分数（如果存在）
-                "relevance_score": getattr(ep, 'relevance_score', 1.0)
-            })
+        # Add relevance scores if present
+        for i, ep in enumerate(episodes):
+            results[i]["relevance_score"] = getattr(ep, 'relevance_score', 1.0)
 
         # Cache the results (5 minutes TTL)
         await self.redis.set_search_results(query, search_in, page, size, {
@@ -668,7 +604,10 @@ class PodcastService:
         if not sub:
             return None
 
-        episodes = await self.repo.get_subscription_episodes(subscription_id, limit=50)
+        episodes = await self.repo.get_subscription_episodes(
+            subscription_id,
+            limit=settings.PODCAST_EPISODE_BATCH_SIZE
+        )
         pending_count = len([e for e in episodes if not e.ai_summary])
 
         # 从订阅配置中提取图片URL和其他元数据
@@ -720,28 +659,11 @@ class PodcastService:
         4. episodes (podcast_episodes)
         5. subscriptions
         """
-        from sqlalchemy import delete, and_, select
-        from app.domains.podcast.models import (
-            PodcastEpisode,
-            PodcastPlaybackState,
-            TranscriptionTask,
-            PodcastConversation
-        )
-        from app.domains.subscription.models import Subscription
-
         try:
             # 在单个事务中完成所有操作
             async with self.db.begin():
-                # 1. 验证订阅存在且属于当前用户（在事务内）
-                sub_stmt = select(Subscription).where(
-                    and_(
-                        Subscription.id == subscription_id,
-                        Subscription.user_id == self.user_id
-                    )
-                )
-                sub_result = await self.db.execute(sub_stmt)
-                sub = sub_result.scalar_one_or_none()
-
+                # 1. 验证订阅存在且属于当前用户
+                sub = await self._validate_and_get_subscription(subscription_id)
                 if not sub:
                     return False
 
@@ -749,50 +671,10 @@ class PodcastService:
                 sub_title = sub.title
 
                 # 2. 获取该订阅的所有 episode_id
-                ep_stmt = select(PodcastEpisode.id).where(
-                    PodcastEpisode.subscription_id == subscription_id
-                )
-                ep_result = await self.db.execute(ep_stmt)
-                episode_ids = [row[0] for row in ep_result.fetchall()]
+                episode_ids = await self._get_episode_ids_for_subscription(subscription_id)
 
-                # 3. 按依赖顺序删除（使用原生 SQL DELETE，绕过 ORM 级联）
-                # 3a. 删除 conversations
-                if episode_ids:
-                    await self.db.execute(
-                        delete(PodcastConversation).where(
-                            PodcastConversation.episode_id.in_(episode_ids)
-                        )
-                    )
-
-                # 3b. 删除 playback_progress
-                if episode_ids:
-                    await self.db.execute(
-                        delete(PodcastPlaybackState).where(
-                            PodcastPlaybackState.episode_id.in_(episode_ids)
-                        )
-                    )
-
-                # 3c. 删除 transcriptions
-                if episode_ids:
-                    await self.db.execute(
-                        delete(TranscriptionTask).where(
-                            TranscriptionTask.episode_id.in_(episode_ids)
-                        )
-                    )
-
-                # 3d. 删除 episodes
-                await self.db.execute(
-                    delete(PodcastEpisode).where(
-                        PodcastEpisode.subscription_id == subscription_id
-                    )
-                )
-
-                # 3e. 删除 subscription
-                await self.db.execute(
-                    delete(Subscription).where(
-                        Subscription.id == subscription_id
-                    )
-                )
+                # 3. 按依赖顺序删除所有相关实体
+                await self._delete_subscription_related_entities(subscription_id, episode_ids)
 
             # 事务成功提交
             logger.info(f"用户{self.user_id} 删除订阅: {sub_title}")
@@ -1003,54 +885,43 @@ class PodcastService:
         episode: PodcastEpisode,
         session: AsyncSession,
         repo: PodcastRepository,
-        sanitizer: 'ContentSanitizer'
+        sanitizer: ContentSanitizer
     ) -> str:
-        """使用指定 session 生成 AI 总结"""
+        """使用指定 session 生成 AI 总结
+
+        Args:
+            episode: 播客单集对象
+            session: SQLAlchemy 异步会话
+            repo: 播客仓库对象
+            sanitizer: 内容净化器，用于清理敏感信息
+
+        Returns:
+            str: AI 生成的总结文本
+
+        Raises:
+            ValueError: 当内容太短或被完全过滤时
+            asyncio.TimeoutError: 当生成超时时
+        """
         import asyncio
         from sqlalchemy import select
 
         # 检查锁，防止重复处理
         lock_key = f"summary:{episode.id}"
         if not await self.redis.acquire_lock(lock_key, expire=300):
-            logger.info(f"总结任务已在进行中: episode_id={episode.id}")
-            # 等待
-            current_try = 0
-            while current_try < 5:
-                await asyncio.sleep(2)
-                stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode.id)
-                result = await session.execute(stmt)
-                episode_check = result.scalar_one_or_none()
-                if episode_check and episode_check.ai_summary:
-                    return episode_check.ai_summary
-                current_try += 1
+            return await self._wait_for_existing_summary(episode, session)
 
         try:
-            # 准备内容（优先使用转录文本）
-            if episode.transcript_content:
-                raw_content = episode.transcript_content
-                content_type = "transcript"
-                has_transcript = True
-            else:
-                raw_content = episode.description
-                content_type = "description"
-                has_transcript = False
+            # 准备内容并生成总结
+            raw_content, content_type, has_transcript = self._prepare_episode_content(episode)
+            sanitized_prompt = self._sanitize_content(raw_content, sanitizer, content_type)
 
-            # 使用隐私净化器加工内容
-            sanitized_prompt = sanitizer.sanitize(
-                raw_content, self.user_id, f"podcast_{content_type}"
-            )
-
-            if not sanitized_prompt or len(sanitized_prompt.strip()) < 10:
-                raise ValueError("内容太短或已被完全过滤")
-
-            # 调用AI生成总结
+            # 生成并保存总结
             summary = await self._call_llm_for_summary(
                 episode_title=episode.title,
                 content=sanitized_prompt,
                 content_type=content_type
             )
 
-            # 保存到数据库和缓存
             await repo.update_ai_summary(
                 episode.id,
                 summary,
@@ -1073,43 +944,20 @@ class PodcastService:
         # 检查锁，防止重复处理
         lock_key = f"summary:{episode.id}"
         if not await self.redis.acquire_lock(lock_key, expire=300):
-            logger.info(f"总结任务已在进行中: episode_id={episode.id}")
-            # 等待
-            current_try = 0
-            while current_try < 5:
-                await asyncio.sleep(2)
-                episode = await self.repo.get_episode_by_id(episode.id)  # Refresh
-                if episode and episode.ai_summary:
-                    return episode.ai_summary
-                current_try += 1
+            return await self._wait_for_existing_summary(episode, None)
 
         try:
-            # 准备内容（优先使用转录文本）
-            if episode.transcript_content:
-                raw_content = episode.transcript_content
-                content_type = "transcript"
-                has_transcript = True
-            else:
-                raw_content = episode.description
-                content_type = "description"
-                has_transcript = False
+            # 准备内容并生成总结
+            raw_content, content_type, has_transcript = self._prepare_episode_content(episode)
+            sanitized_prompt = self._sanitize_content(raw_content, self.sanitizer, content_type)
 
-            # 使用隐私净化器加工内容
-            sanitized_prompt = self.sanitizer.sanitize(
-                raw_content, self.user_id, f"podcast_{content_type}"
-            )
-
-            if not sanitized_prompt or len(sanitized_prompt.strip()) < 10:
-                raise ValueError("内容太短或已被完全过滤")
-
-            # 调用AI生成总结
+            # 生成并保存总结
             summary = await self._call_llm_for_summary(
                 episode_title=episode.title,
                 content=sanitized_prompt,
                 content_type=content_type
             )
 
-            # 保存到数据库和缓存
             await self.repo.update_ai_summary(
                 episode.id,
                 summary,
@@ -1133,115 +981,103 @@ class PodcastService:
         content: str,
         content_type: str
     ) -> str:
+        """调用LLM API生成总结，支持fallback机制
+
+        从数据库中的AI模型配置按优先级获取API key，依次尝试每个配置，
+        直到成功生成总结或所有配置都失败。
+
+        Args:
+            episode_title: 播客单集标题
+            content: 播客内容（转录文本或描述）
+            content_type: 内容类型标识（transcript/description）
+
+        Returns:
+            str: AI生成的总结文本，如果所有API都失败则返回基于规则的总结
+
+        Raises:
+            APIConnectionError: 当网络连接失败时
+            RateLimitError: 当超过API速率限制时
         """
-        调用LLM API生成总结
-        从数据库中的AI模型配置按优先级获取API key，实现fallback机制
+        # Delegate to AI domain service for text generation
+        # This follows DDD principles by keeping AI-related logic in the AI domain
+        return await self.text_generation.generate_podcast_summary(
+            episode_title=episode_title,
+            content=content,
+            content_type=content_type,
+            max_tokens=500
+        )
+
+    def _build_episode_response(
+        self,
+        episodes: List[PodcastEpisode],
+        playback_states: Dict[int, Any]
+    ) -> List[dict]:
         """
-        from openai import AsyncOpenAI
-        from app.domains.ai.repositories import AIModelConfigRepository
-        from app.domains.ai.models import ModelType
-        from app.core.security import decrypt_data
-        from app.core.database import async_session_factory
-        from openai import AuthenticationError, APIError, APIConnectionError, RateLimitError
+        Build episode response list with playback states and image URLs.
 
-        # 创建独立的数据库会话以避免并发问题
-        async with async_session_factory() as ai_session:
-            ai_repo = AIModelConfigRepository(ai_session)
-            model_configs = await ai_repo.get_active_models_by_priority(ModelType.TEXT_GENERATION)
+        Args:
+            episodes: List of podcast episodes
+            playback_states: Dictionary mapping episode_id to playback state
 
-            if not model_configs:
-                # 数据库中没有配置任何 API key
-                logger.error("数据库中未配置任何启用的 TEXT_GENERATION 类型的 API key，跳过 AI 总结生成")
-                return self._rule_based_summary(episode_title, content)
+        Returns:
+            List of episode response dictionaries
+        """
+        results = []
+        for ep in episodes:
+            # Get playback state from batch result
+            playback = playback_states.get(ep.id)
 
-            # 按 priority 排序（数字越小优先级越高），依次尝试每个 API 配置
-            last_error = None
-            for idx, model_config in enumerate(model_configs):
-                api_key = None
-                try:
-                    # 解密 API key
-                    if model_config.api_key:
-                        if model_config.api_key_encrypted:
-                            api_key = decrypt_data(model_config.api_key)
-                        else:
-                            api_key = model_config.api_key
+            # Extract image URL from subscription config
+            subscription_image_url = None
+            if ep.subscription and ep.subscription.config:
+                subscription_image_url = ep.subscription.config.get("image_url")
 
-                    if not api_key:
-                        logger.warning(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 的 API key 为空，跳过")
-                        continue
+            # Use episode image_url if available, otherwise fallback to subscription image
+            image_url = ep.image_url or subscription_image_url
 
-                    logger.info(f"尝试使用模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}, 尝试 {idx + 1}/{len(model_configs)})")
+            # Calculate is_played based on playback position and duration
+            is_played = bool(
+                playback and playback.current_position and
+                ep.audio_duration and
+                playback.current_position >= ep.audio_duration * 0.9
+            )
 
-                    client = AsyncOpenAI(
-                        api_key=api_key,
-                        base_url=model_config.base_url if model_config.base_url else None
-                    )
+            results.append({
+                "id": ep.id,
+                "subscription_id": ep.subscription_id,
+                "subscription_title": ep.subscription.title if ep.subscription else None,
+                "subscription_image_url": subscription_image_url,
+                "title": ep.title,
+                "description": ep.description,
+                "audio_url": ep.audio_url,
+                "audio_duration": ep.audio_duration,
+                "audio_file_size": ep.audio_file_size,
+                "published_at": ep.published_at,
+                "image_url": image_url,
+                "item_link": ep.item_link,
+                "transcript_url": ep.transcript_url,
+                "transcript_content": ep.transcript_content,
+                "ai_summary": ep.ai_summary,
+                "summary_version": ep.summary_version,
+                "ai_confidence_score": ep.ai_confidence_score,
+                "play_count": ep.play_count,
+                "last_played_at": ep.last_played_at,
+                "season": ep.season,
+                "episode_number": ep.episode_number,
+                "explicit": ep.explicit,
+                "status": ep.status,
+                "metadata": ep.metadata_json,
+                # Playback state
+                "current_position": playback.current_position if playback else None,
+                "is_playing": playback.is_playing if playback else False,
+                "playback_rate": playback.playback_rate if playback else 1.0,
+                "is_played": is_played,
+                "liked": playback.liked if playback else None,
+                "created_at": ep.created_at,
+                "updated_at": ep.updated_at,
+            })
 
-                    # 构建Prompt
-                    system_prompt = """
-你是一位专业的播客总结专家。你的任务是从播客单集内容中提取最有价值的信息。
-
-请提取以下信息：
-1. 主要话题和讨论点
-2. 关键见解和结论
-3. 可执行的建议
-4. 需要进一步研究的领域
-
-输出格式：
-## 主要话题
-[3-5个要点]
-
-## 关键见解
-[深入洞察]
-
-## 行动建议
-[具体步骤]
-
-## 扩展思考
-[关联问题]
-"""
-
-                    user_prompt = f"""
-播客标题: {episode_title}
-内容类型: {content_type}
-内容: {content[:2000]}  <!-- 限制输入长度 -->
-
-请提供详细总结（150-300字）。
-"""
-
-                    response = await client.chat.completions.create(
-                        model=model_config.model_name if model_config.model_name else "gpt-4o-mini",
-                        messages=[
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt}
-                        ],
-                        temperature=0.7,
-                        max_tokens=500
-                    )
-
-                    # 成功获取响应，记录并返回
-                    logger.info(f"成功使用模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 生成总结")
-                    return response.choices[0].message.content.strip()
-
-                except AuthenticationError as e:
-                    last_error = e
-                    logger.error(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 认证失败: {e}")
-                except RateLimitError as e:
-                    last_error = e
-                    logger.error(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 达到速率限制: {e}")
-                except APIConnectionError as e:
-                    last_error = e
-                    logger.error(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 连接失败: {e}")
-                except APIError as e:
-                    last_error = e
-                    logger.error(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) API 错误: {e}")
-                except Exception as e:
-                    last_error = e
-                    logger.error(f"模型配置 [{model_config.display_name or model_config.name}] (priority={model_config.priority}) 未知错误: {type(e).__name__}: {e}")
-
-            # 所有 API 配置都失败了
-            logger.error(f"所有 {len(model_configs)} 个 TEXT_GENERATION 模型配置均访问失败，最后错误: {type(last_error).__name__}: {last_error}")
-            return self._rule_based_summary(episode_title, content)
+        return results
 
     def _rule_based_summary(self, title: str, content: str) -> str:
         """如果没有LLM，使用规则生成基本总结"""
@@ -1265,6 +1101,88 @@ class PodcastService:
 {bullet_points}
 
 {disclaimer}"""
+
+    async def _wait_for_existing_summary(
+        self,
+        episode: PodcastEpisode,
+        session: Optional[AsyncSession]
+    ) -> str:
+        """等待现有的总结任务完成
+
+        Args:
+            episode: 播客单集对象
+            session: 可选的数据库会话
+
+        Returns:
+            str: AI生成的总结文本
+
+        Raises:
+            ValueError: 当等待超时时
+        """
+        import asyncio
+        from sqlalchemy import select
+
+        logger.info(f"总结任务已在进行中: episode_id={episode.id}")
+        current_try = 0
+        while current_try < 5:
+            await asyncio.sleep(2)
+            if session:
+                stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode.id)
+                result = await session.execute(stmt)
+                episode_check = result.scalar_one_or_none()
+            else:
+                episode_check = await self.repo.get_episode_by_id(episode.id)
+
+            if episode_check and episode_check.ai_summary:
+                return episode_check.ai_summary
+            current_try += 1
+
+        raise ValueError("等待总结超时")
+
+    def _prepare_episode_content(
+        self,
+        episode: PodcastEpisode
+    ) -> Tuple[str, str, bool]:
+        """准备播客单集内容用于总结
+
+        Args:
+            episode: 播客单集对象
+
+        Returns:
+            Tuple[str, str, bool]: (原始内容, 内容类型, 是否有转录)
+        """
+        if episode.transcript_content:
+            return episode.transcript_content, "transcript", True
+        else:
+            return episode.description, "description", False
+
+    def _sanitize_content(
+        self,
+        raw_content: str,
+        sanitizer: ContentSanitizer,
+        content_type: str
+    ) -> str:
+        """净化内容并验证
+
+        Args:
+            raw_content: 原始内容
+            sanitizer: 内容净化器
+            content_type: 内容类型标识
+
+        Returns:
+            str: 净化后的内容
+
+        Raises:
+            ValueError: 当内容太短或被完全过滤时
+        """
+        sanitized_prompt = sanitizer.sanitize(
+            raw_content, self.user_id, f"podcast_{content_type}"
+        )
+
+        if not sanitized_prompt or len(sanitized_prompt.strip()) < 10:
+            raise ValueError("内容太短或已被完全过滤")
+
+        return sanitized_prompt
 
     async def _get_episode_count(self, subscription_id: int) -> int:
         """获取订阅的单集数量"""
@@ -1311,6 +1229,107 @@ class PodcastService:
 
         return streak
 
+    # === 订阅删除辅助方法 ===
+
+    async def _validate_and_get_subscription(
+        self,
+        subscription_id: int,
+        check_source_type: bool = False
+    ) -> Optional[Subscription]:
+        """验证订阅存在且属于当前用户
+
+        Args:
+            subscription_id: 订阅ID
+            check_source_type: 是否检查source_type
+
+        Returns:
+            Subscription对象或None
+        """
+        from sqlalchemy import and_, select
+        from app.domains.subscription.models import Subscription
+
+        conditions = [
+            Subscription.id == subscription_id,
+            Subscription.user_id == self.user_id
+        ]
+
+        if check_source_type:
+            conditions.append(Subscription.source_type == "podcast-rss")
+
+        stmt = select(Subscription).where(and_(*conditions))
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def _get_episode_ids_for_subscription(
+        self,
+        subscription_id: int
+    ) -> List[int]:
+        """获取订阅的所有episode_id
+
+        Args:
+            subscription_id: 订阅ID
+
+        Returns:
+            List[int]: episode_id列表
+        """
+        from sqlalchemy import select
+        from app.domains.podcast.models import PodcastEpisode
+
+        ep_stmt = select(PodcastEpisode.id).where(
+            PodcastEpisode.subscription_id == subscription_id
+        )
+        ep_result = await self.db.execute(ep_stmt)
+        return [row[0] for row in ep_result.fetchall()]
+
+    async def _delete_subscription_related_entities(
+        self,
+        subscription_id: int,
+        episode_ids: List[int]
+    ) -> None:
+        """删除订阅相关的所有实体（按外键依赖顺序）
+
+        Args:
+            subscription_id: 订阅ID
+            episode_ids: 要删除的episode_id列表
+        """
+        from sqlalchemy import delete
+        from app.domains.podcast.models import (
+            PodcastEpisode,
+            PodcastPlaybackState,
+            TranscriptionTask,
+            PodcastConversation
+        )
+        from app.domains.subscription.models import Subscription
+
+        # 按依赖顺序删除：conversations -> playback -> transcriptions -> episodes -> subscription
+        if episode_ids:
+            await self.db.execute(
+                delete(PodcastConversation).where(
+                    PodcastConversation.episode_id.in_(episode_ids)
+                )
+            )
+            await self.db.execute(
+                delete(PodcastPlaybackState).where(
+                    PodcastPlaybackState.episode_id.in_(episode_ids)
+                )
+            )
+            await self.db.execute(
+                delete(TranscriptionTask).where(
+                    TranscriptionTask.episode_id.in_(episode_ids)
+                )
+            )
+
+        await self.db.execute(
+            delete(PodcastEpisode).where(
+                PodcastEpisode.subscription_id == subscription_id
+            )
+        )
+        await self.db.execute(
+            delete(Subscription).where(
+                Subscription.id == subscription_id
+            )
+        )
+
     # === 批量删除订阅 ===
 
     async def remove_subscriptions_bulk(
@@ -1338,15 +1357,6 @@ class PodcastService:
                 "deleted_subscription_ids": List[int]
             }
         """
-        from sqlalchemy import delete, and_
-        from app.domains.podcast.models import (
-            PodcastEpisode,
-            PodcastPlaybackState,
-            TranscriptionTask,
-            PodcastConversation
-        )
-        from app.domains.subscription.models import Subscription
-
         success_count = 0
         failed_count = 0
         errors: List[Dict[str, Any]] = []
@@ -1357,15 +1367,10 @@ class PodcastService:
                 # 使用显式事务确保删除操作的原子性
                 async with self.db.begin():
                     # 1. 验证订阅存在且属于当前用户
-                    stmt = select(Subscription).where(
-                        and_(
-                            Subscription.id == subscription_id,
-                            Subscription.user_id == self.user_id,
-                            Subscription.source_type == "podcast-rss"
-                        )
+                    subscription = await self._validate_and_get_subscription(
+                        subscription_id,
+                        check_source_type=True
                     )
-                    result = await self.db.execute(stmt)
-                    subscription = result.scalar_one_or_none()
 
                     if not subscription:
                         errors.append({
@@ -1375,46 +1380,11 @@ class PodcastService:
                         failed_count += 1
                         continue
 
-                    # 获取该订阅的所有 episode_id
-                    ep_stmt = select(PodcastEpisode.id).where(
-                        PodcastEpisode.subscription_id == subscription_id
-                    )
-                    ep_result = await self.db.execute(ep_stmt)
-                    episode_ids = [row[0] for row in ep_result.fetchall()]
+                    # 2. 获取该订阅的所有 episode_id
+                    episode_ids = await self._get_episode_ids_for_subscription(subscription_id)
 
-                    # 2. 删除 conversations (通过 episode_id)
-                    # 使用 synchronize_session=False 避免 SQLAlchemy 自引用关系递归问题
-                    if episode_ids:
-                        conv_delete = delete(PodcastConversation).where(
-                            PodcastConversation.episode_id.in_(episode_ids)
-                        ).execution_options(synchronize_session="fetch")
-                        await self.db.execute(conv_delete)
-
-                    # 3. 删除 playback_progress (podcast_playback_states)
-                    if episode_ids:
-                        playback_delete = delete(PodcastPlaybackState).where(
-                            PodcastPlaybackState.episode_id.in_(episode_ids)
-                        ).execution_options(synchronize_session="fetch")
-                        await self.db.execute(playback_delete)
-
-                    # 4. 删除 transcriptions (transcription_tasks)
-                    if episode_ids:
-                        trans_delete = delete(TranscriptionTask).where(
-                            TranscriptionTask.episode_id.in_(episode_ids)
-                        ).execution_options(synchronize_session="fetch")
-                        await self.db.execute(trans_delete)
-
-                    # 5. 删除 episodes (podcast_episodes)
-                    episode_delete = delete(PodcastEpisode).where(
-                        PodcastEpisode.subscription_id == subscription_id
-                    ).execution_options(synchronize_session="fetch")
-                    await self.db.execute(episode_delete)
-
-                    # 6. 删除 subscription
-                    sub_delete = delete(Subscription).where(
-                        Subscription.id == subscription_id
-                    ).execution_options(synchronize_session="fetch")
-                    await self.db.execute(sub_delete)
+                    # 3. 按依赖顺序删除所有相关实体
+                    await self._delete_subscription_related_entities(subscription_id, episode_ids)
 
                 # 事务提交成功，记录成功
                 success_count += 1

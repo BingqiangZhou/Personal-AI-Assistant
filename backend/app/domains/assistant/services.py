@@ -37,10 +37,12 @@ class AssistantService:
         """List user's conversations."""
         items, total = await self.repo.get_user_conversations(self.user_id, page, size, status)
 
-        # Get message counts for each conversation
+        # Batch fetch message counts for all conversations (N+1 query fix)
+        conv_ids = [conv.id for conv in items]
+        msg_counts = await self.repo.get_message_counts_for_conversations(conv_ids)
+
         response_items = []
         for conv in items:
-            msg_count = await self.repo.get_conversation_message_count(conv.id)
             response_items.append(ConversationResponse(
                 id=conv.id,
                 user_id=conv.user_id,
@@ -51,7 +53,7 @@ class AssistantService:
                 system_prompt=conv.system_prompt,
                 temperature=conv.temperature,
                 settings=conv.settings,
-                message_count=msg_count,
+                message_count=msg_counts.get(conv.id, 0),
                 created_at=conv.created_at,
                 updated_at=conv.updated_at
             ))
@@ -279,10 +281,13 @@ class AssistantService:
         Send a message and get AI response.
         This is a skeleton implementation that would integrate with AI models.
         """
+        from app.core.config import settings
+
         # Create conversation if not provided
         if not conversation_id:
             # Generate title from first message
-            title = message[:50] + "..." if len(message) > 50 else message
+            max_len = settings.ASSISTANT_TITLE_TRUNCATION_LENGTH
+            title = message[:max_len] + "..." if len(message) > max_len else message
             conv_data = ConversationCreate(
                 title=title,
                 model_name=model_name,

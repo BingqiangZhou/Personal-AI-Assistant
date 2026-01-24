@@ -184,14 +184,14 @@ class TranscriptionModelManager:
                 api_key = getattr(settings, 'TRANSCRIPTION_API_KEY', '')
 
             if not is_invalid_key(api_key):
-                logger.info(f"🔑 [KEY] Using system API key for {model_config.provider}, key (first 10 chars): {api_key[:10]}...")
+                logger.debug(f"Using system API key for {model_config.provider}")
                 return api_key
             # System key is invalid, continue to fallback
 
         # First try to get API key from the provided model_config
         api_key = await get_valid_key_from_model(model_config)
         if api_key:
-            logger.info(f"🔑 [KEY] Using API key from model {model_config.name}, key (first 10 chars): {api_key[:10]}...")
+            logger.debug(f"Using API key from model {model_config.name}")
             return api_key
 
         # If current model has invalid key, try to find another active model with valid key

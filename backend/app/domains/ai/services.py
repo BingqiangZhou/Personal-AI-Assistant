@@ -56,7 +56,8 @@ class AIModelConfigService:
             from app.core.security import encrypt_data
 
             encrypted_key = encrypt_data(model_data.api_key)
-            logger.info(f"API key encrypted for model {model_data.name}")
+            # Don't log API key operations - security best practice
+            logger.debug(f"API key processed for model {model_data.name}")
 
         # 创建模型配置
         model_config = AIModelConfig(
@@ -142,7 +143,8 @@ class AIModelConfigService:
                 from app.core.security import encrypt_data
 
                 update_data["api_key"] = encrypt_data(update_data["api_key"])
-                logger.info(f"API key encrypted for model {model_id}")
+                # Don't log API key operations - security best practice
+                logger.debug(f"API key updated for model {model_id}")
                 update_data["api_key_encrypted"] = True
             else:
                 update_data["api_key"] = ""
@@ -269,7 +271,8 @@ class AIModelConfigService:
 
         try:
             decrypted = decrypt_data(model.api_key)
-            logger.info(f"Successfully decrypted API key for model {model.name}")
+            # Don't log API key operations - security best practice
+            logger.debug(f"API key decrypted for model {model.name}")
             return decrypted
         except Exception as e:
             logger.error(f"Failed to decrypt API key for model {model.name}: {e}")
@@ -388,9 +391,9 @@ class AIModelConfigService:
         if test_data is None:
             test_data = {}
 
-        test_prompt = test_data.get(
-            "prompt", 'Hello, please respond with "Test successful".'
-        )
+        # Use configured test prompt or allow custom prompt
+        default_prompt = settings.ASSISTANT_TEST_PROMPT
+        test_prompt = test_data.get("prompt", default_prompt)
 
         headers = {
             "Authorization": f"Bearer {api_key}",
@@ -422,11 +425,13 @@ class AIModelConfigService:
 
                 # Filter out thinking tags in test results as well
                 # 测试结果中也过滤掉 thinking 标签
-                from app.core.utils import filter_thinking_content
+                from app.core.utils import filter_thinking_content, sanitize_html
 
+                # First filter thinking content, then sanitize HTML
                 cleaned_content = filter_thinking_content(raw_content)
+                safe_content = sanitize_html(cleaned_content)
 
-                return cleaned_content
+                return safe_content
 
     async def _clear_default_models(self, model_type: ModelType):
         """清除指定类型的所有默认模型标记"""
@@ -799,14 +804,193 @@ class AIModelConfigService:
 
                 raw_content = result["choices"][0]["message"]["content"].strip()
 
-                # Filter out <thinking> tags and content before returning
-                # 过滤掉 <thinking> 标签及其内容后再返回
-                from app.core.utils import filter_thinking_content
+                # Filter out <thinking> tags and sanitize HTML before returning
+                # 过滤掉 <thinking> 标签并清理 HTML 后再返回
+                from app.core.utils import filter_thinking_content, sanitize_html
 
+                # First filter thinking content, then sanitize HTML for XSS prevention
                 cleaned_content = filter_thinking_content(raw_content)
+                safe_content = sanitize_html(cleaned_content)
 
                 logger.debug(
-                    f"Filtered thinking content: {len(raw_content)} -> {len(cleaned_content)} chars"
+                    f"Filtered and sanitized content: {len(raw_content)} -> {len(safe_content)} chars"
                 )
 
-                return cleaned_content
+                return safe_content
+
+
+class TextGenerationService:
+    """
+    Text generation service for AI-powered content creation.
+
+    文本生成服务，用于 AI 驱动的内容创建
+    """
+
+    def __init__(self, db: AsyncSession):
+        self.db = db
+        self.repo = AIModelConfigRepository(db)
+
+    async def generate_podcast_summary(
+        self,
+        episode_title: str,
+        content: str,
+        content_type: str = "transcript",
+        max_tokens: int = 500
+    ) -> str:
+        """Generate a summary for podcast content using AI models.
+
+        为播客内容生成 AI 总结，支持 fallback 机制
+
+        Args:
+            episode_title: The title of the podcast episode
+            content: The podcast content (transcript or description)
+            content_type: Type of content (transcript/description)
+            max_tokens: Maximum tokens for the summary
+
+        Returns:
+            Generated summary text. Returns rule-based summary if all AI models fail.
+
+        Raises:
+            ValidationError: When content is too short
+            ExternalServiceError: When all external services fail
+        """
+        from openai import AsyncOpenAI
+        from app.core.security import decrypt_data
+        from app.domains.ai.models import ModelType
+        from openai import AuthenticationError, APIError, APIConnectionError, RateLimitError
+
+        # Get active text generation models ordered by priority
+        model_configs = await self.repo.get_active_models_by_priority(ModelType.TEXT_GENERATION)
+
+        if not model_configs:
+            logger.warning("No active text generation models configured, using rule-based summary")
+            return self._rule_based_summary(episode_title, content)
+
+        last_error = None
+        for idx, model_config in enumerate(model_configs):
+            api_key = None
+            try:
+                # Decrypt API key
+                if model_config.api_key:
+                    if model_config.api_key_encrypted:
+                        api_key = decrypt_data(model_config.api_key)
+                    else:
+                        api_key = model_config.api_key
+
+                if not api_key:
+                    logger.warning(
+                        f"Model [{model_config.display_name or model_config.name}] has empty API key, skipping"
+                    )
+                    continue
+
+                logger.info(
+                    f"Trying model [{model_config.display_name or model_config.name}] "
+                    f"(priority={model_config.priority}, attempt {idx + 1}/{len(model_configs)})"
+                )
+
+                client = AsyncOpenAI(
+                    api_key=api_key,
+                    base_url=model_config.api_url if model_config.api_url else None
+                )
+
+                # Build system prompt for podcast summarization
+                system_prompt = """
+你是一位专业的播客总结专家。你的任务是从播客单集内容中提取最有价值的信息。
+
+请提取以下信息：
+1. 主要话题和讨论点
+2. 关键见解和结论
+3. 可执行的建议
+4. 需要进一步研究的领域
+
+输出格式：
+## 主要话题
+[3-5个要点]
+
+## 关键见解
+[深入洞察]
+
+## 行动建议
+[具体步骤]
+
+## 扩展思考
+[关联问题]
+"""
+
+                user_prompt = f"""
+播客标题: {episode_title}
+内容类型: {content_type}
+内容: {content[:2000]}
+
+请提供详细总结（150-300字）。
+"""
+
+                response = await client.chat.completions.create(
+                    model=model_config.model_id if model_config.model_id else "gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=max_tokens
+                )
+
+                # Success - log and return
+                logger.info(
+                    f"Successfully generated summary using model "
+                    f"[{model_config.display_name or model_config.name}]"
+                )
+                return response.choices[0].message.content.strip()
+
+            except AuthenticationError as e:
+                last_error = e
+                logger.warning(f"Authentication failed for model {model_config.name}: {e}")
+            except RateLimitError as e:
+                last_error = e
+                logger.warning(f"Rate limit exceeded for model {model_config.name}: {e}")
+                # Don't retry on rate limit, move to next model
+                continue
+            except APIConnectionError as e:
+                last_error = e
+                logger.warning(f"Connection failed for model {model_config.name}: {e}")
+            except APIError as e:
+                last_error = e
+                logger.warning(f"API error for model {model_config.name}: {e}")
+            except Exception as e:
+                last_error = e
+                logger.error(f"Unexpected error with model {model_config.name}: {e}")
+
+        # All models failed, log and return rule-based summary
+        logger.error(f"All AI models failed for summary generation. Last error: {last_error}")
+        return self._rule_based_summary(episode_title, content)
+
+    def _rule_based_summary(self, episode_title: str, content: str) -> str:
+        """Generate a basic summary using rule-based approach.
+
+        使用基于规则的方法生成基本总结（AI 失败时的回退方案）
+
+        Args:
+            episode_title: The episode title
+            content: The content to summarize
+
+        Returns:
+            A basic summary string
+        """
+        # Take first few sentences as summary
+        sentences = content.split('。')
+        summary_sentences = sentences[:3] if len(sentences) >= 3 else sentences
+        summary = '。'.join(summary_sentences).strip()
+
+        if not summary:
+            summary = f"《{episode_title}》的内容暂无总结。"
+
+        return f"""
+## 播客概览
+节目名称: {episode_title}
+
+## 内容摘要
+{summary[:300]}...
+
+## 说明
+此为系统自动生成的概要，完整总结正在处理中。
+"""

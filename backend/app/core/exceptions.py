@@ -1,10 +1,13 @@
-"""Custom exception handlers."""
+"""Custom exception handlers.
+
+自定义异常处理器
+"""
 
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from typing import Union
+from typing import Union, Optional, Dict, Any
 import logging
 import traceback
 
@@ -12,65 +15,156 @@ logger = logging.getLogger(__name__)
 
 
 class BaseCustomException(Exception):
-    """Base custom exception."""
+    """Base custom exception.
 
-    def __init__(self, message: str, status_code: int = 500):
+    基础自定义异常
+    """
+
+    def __init__(
+        self,
+        message: str,
+        status_code: int = 500,
+        error_code: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None
+    ):
         self.message = message
         self.status_code = status_code
+        self.error_code = error_code or self.__class__.__name__
+        self.details = details or {}
         super().__init__(self.message)
 
 
 class NotFoundError(BaseCustomException):
-    """Resource not found exception."""
+    """Resource not found exception.
 
-    def __init__(self, message: str = "Resource not found"):
-        super().__init__(message, 404)
+    资源未找到异常
+    """
+
+    def __init__(
+        self,
+        message: str = "Resource not found",
+        **kwargs
+    ):
+        super().__init__(message, 404, **kwargs)
 
 
 class BadRequestError(BaseCustomException):
-    """Bad request exception."""
+    """Bad request exception.
 
-    def __init__(self, message: str = "Bad request"):
-        super().__init__(message, 400)
+    错误请求异常
+    """
+
+    def __init__(
+        self,
+        message: str = "Bad request",
+        **kwargs
+    ):
+        super().__init__(message, 400, **kwargs)
 
 
 class UnauthorizedError(BaseCustomException):
-    """Unauthorized exception."""
+    """Unauthorized exception.
 
-    def __init__(self, message: str = "Unauthorized"):
-        super().__init__(message, 401)
+    未授权异常
+    """
+
+    def __init__(
+        self,
+        message: str = "Unauthorized",
+        **kwargs
+    ):
+        super().__init__(message, 401, **kwargs)
 
 
 class ForbiddenError(BaseCustomException):
-    """Forbidden exception."""
+    """Forbidden exception.
 
-    def __init__(self, message: str = "Forbidden"):
-        super().__init__(message, 403)
+    禁止访问异常
+    """
+
+    def __init__(
+        self,
+        message: str = "Forbidden",
+        **kwargs
+    ):
+        super().__init__(message, 403, **kwargs)
 
 
 class ConflictError(BaseCustomException):
-    """Conflict exception."""
+    """Conflict exception.
 
-    def __init__(self, message: str = "Conflict"):
-        super().__init__(message, 409)
+    冲突异常
+    """
+
+    def __init__(
+        self,
+        message: str = "Resource already exists",
+        **kwargs
+    ):
+        super().__init__(message, 409, "CONFLICT", **kwargs)
 
 
 class ValidationError(BaseCustomException):
-    """Validation exception."""
+    """Validation exception.
 
-    def __init__(self, message: str = "Validation failed"):
-        super().__init__(message, 400)
+    验证异常
+    """
+
+    def __init__(
+        self,
+        message: str = "Validation failed",
+        **kwargs
+    ):
+        super().__init__(message, 400, "VALIDATION_ERROR", **kwargs)
 
 
 class DatabaseError(BaseCustomException):
-    """Database exception."""
+    """Database exception.
 
-    def __init__(self, message: str = "Database error"):
-        super().__init__(message, 500)
+    数据库异常
+    """
+
+    def __init__(
+        self,
+        message: str = "Database error",
+        **kwargs
+    ):
+        super().__init__(message, 500, "DATABASE_ERROR", **kwargs)
+
+
+class ExternalServiceError(BaseCustomException):
+    """External service error exception.
+
+    外部服务错误异常
+    """
+
+    def __init__(
+        self,
+        message: str = "External service error",
+        **kwargs
+    ):
+        super().__init__(message, 502, "EXTERNAL_SERVICE_ERROR", **kwargs)
+
+
+class FileProcessingError(BaseCustomException):
+    """File processing error exception.
+
+    文件处理错误异常
+    """
+
+    def __init__(
+        self,
+        message: str = "File processing error",
+        **kwargs
+    ):
+        super().__init__(message, 422, "FILE_PROCESSING_ERROR", **kwargs)
 
 
 async def custom_exception_handler(request: Request, exc: BaseCustomException) -> JSONResponse:
-    """Handle custom exceptions."""
+    """Handle custom exceptions.
+
+    处理自定义异常
+    """
     logger.error(
         f"自定义异常: {exc.__class__.__name__} | "
         f"路径: {request.url.path} | "
@@ -78,14 +172,26 @@ async def custom_exception_handler(request: Request, exc: BaseCustomException) -
         f"消息: {exc.message} | "
         f"状态码: {exc.status_code}"
     )
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.message, "type": exc.__class__.__name__}
-    )
+
+    # Build response content
+    content = {
+        "detail": exc.message,
+        "type": exc.error_code,
+        "status_code": exc.status_code
+    }
+
+    # Add details if present
+    if exc.details:
+        content["details"] = exc.details
+
+    return JSONResponse(status_code=exc.status_code, content=content)
 
 
 async def http_exception_handler(request: Request, exc: Union[HTTPException, StarletteHTTPException]) -> JSONResponse:
-    """Handle HTTP exceptions."""
+    """Handle HTTP exceptions.
+
+    处理 HTTP 异常
+    """
     logger.error(
         f"HTTP异常: {exc.status_code} | "
         f"路径: {request.url.path} | "
@@ -94,12 +200,19 @@ async def http_exception_handler(request: Request, exc: Union[HTTPException, Sta
     )
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.detail, "type": "HTTPException"}
+        content={
+            "detail": str(exc.detail),
+            "type": "HTTPException",
+            "status_code": exc.status_code
+        }
     )
 
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-    """Handle validation exceptions."""
+    """Handle validation exceptions.
+
+    处理验证异常
+    """
     errors = []
     for error in exc.errors():
         errors.append({
@@ -114,14 +227,22 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         f"错误字段: {len(errors)}个 | "
         f"错误详情: {errors}"
     )
+
     return JSONResponse(
         status_code=422,
-        content={"detail": "Validation failed", "errors": errors}
+        content={
+            "detail": "Validation failed",
+            "type": "VALIDATION_ERROR",
+            "errors": errors
+        }
     )
 
 
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Handle general exceptions."""
+    """Handle general exceptions.
+
+    处理通用异常
+    """
     logger.error(
         f"未处理异常: {exc.__class__.__name__} | "
         f"路径: {request.url.path} | "
@@ -129,16 +250,74 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
         f"消息: {str(exc)}",
         exc_info=True
     )
+
     return JSONResponse(
         status_code=500,
-        content={"detail": "Internal server error", "type": "InternalServerError"}
+        content={
+            "detail": "Internal server error",
+            "type": "INTERNAL_SERVER_ERROR",
+            "status_code": 500
+        }
     )
 
 
 def setup_exception_handlers(app: FastAPI) -> None:
-    """Setup exception handlers for the FastAPI app."""
+    """Setup exception handlers for the FastAPI app.
+
+    为 FastAPI 应用设置异常处理器
+    """
     app.add_exception_handler(BaseCustomException, custom_exception_handler)
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(Exception, general_exception_handler)
+
+
+# Convenience functions for raising common exceptions
+# 抛出常见异常的便捷函数
+
+def raise_not_found(resource_type: str = "Resource", resource_id: Any = None) -> None:
+    """Raise a NotFoundError with standardized message.
+
+    抛出标准化的 NotFoundError
+    """
+    if resource_id is not None:
+        message = f"{resource_type} with ID '{resource_id}' not found"
+    else:
+        message = f"{resource_type} not found"
+
+    raise NotFoundError(
+        message=message,
+        details={"resource_type": resource_type, "resource_id": str(resource_id) if resource_id is not None else None}
+    )
+
+
+def raise_conflict(resource_type: str = "Resource", field: str = "field", value: Any = None) -> None:
+    """Raise a ConflictError with standardized message.
+
+    抛出标准化的 ConflictError
+    """
+    if value is not None:
+        message = f"{resource_type} with {field} '{value}' already exists"
+    else:
+        message = f"{resource_type} already exists"
+
+    raise ConflictError(
+        message=message,
+        details={"resource_type": resource_type, "field": field, "value": str(value) if value is not None else None}
+    )
+
+
+def raise_validation(message: str, field: Optional[str] = None) -> None:
+    """Raise a ValidationError with standardized message.
+
+    抛出标准化的 ValidationError
+    """
+    details = {}
+    if field:
+        details["field"] = field
+
+    raise ValidationError(
+        message=message,
+        details=details
+    )

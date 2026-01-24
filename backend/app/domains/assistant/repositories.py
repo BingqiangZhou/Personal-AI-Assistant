@@ -1,6 +1,6 @@
 """Assistant domain repositories."""
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 from sqlalchemy import select, func, update, delete, and_, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -248,6 +248,28 @@ class AssistantRepository:
             Message.conversation_id == conversation_id
         )
         return await self.db.scalar(query) or 0
+
+    async def get_message_counts_for_conversations(self, conv_ids: List[int]) -> Dict[int, int]:
+        """Get message counts for multiple conversations in a single query.
+
+        Args:
+            conv_ids: List of conversation IDs
+
+        Returns:
+            Dictionary mapping conversation ID to message count
+        """
+        if not conv_ids:
+            return {}
+
+        query = (
+            select(Message.conversation_id, func.count(Message.id))
+            .where(Message.conversation_id.in_(conv_ids))
+            .group_by(Message.conversation_id)
+        )
+        result = await self.db.execute(query)
+
+        # Convert to dict: {conv_id: count}
+        return {row[0]: row[1] for row in result.all()}
 
     # Prompt Template operations
     async def get_prompt_templates(

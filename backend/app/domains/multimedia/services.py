@@ -12,6 +12,12 @@ from fastapi import UploadFile
 from app.domains.multimedia.repositories import MultimediaRepository
 from app.domains.multimedia.models import MediaFile, ProcessingJob, MediaType, ProcessingStatus
 from app.shared.schemas import PaginatedResponse
+from app.core.file_validation import (
+    validate_file_upload,
+    get_allowed_types_for_media,
+    FileValidationError
+)
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -69,14 +75,42 @@ class MultimediaService:
         file: UploadFile,
         description: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Upload a media file."""
-        # Determine media type from MIME type
-        mime_type = file.content_type or "application/octet-stream"
-        media_type = self.repo.determine_media_type(mime_type)
+        """Upload a media file with comprehensive security validation."""
+        # Determine expected media type from file extension/MIME
+        declared_mime = file.content_type or "application/octet-stream"
+        temp_media_type = self.repo.determine_media_type(declared_mime)
 
-        # Generate file path
-        filename = f"{datetime.utcnow().timestamp()}_{file.filename}"
-        upload_path = self.repo.get_upload_path(self.user_id, media_type, filename)
+        # Get allowed MIME types for this media category
+        allowed_types = get_allowed_types_for_media(temp_media_type.value)
+
+        # If no specific types found, allow common types for that category
+        if not allowed_types:
+            if temp_media_type == MediaType.IMAGE:
+                allowed_types = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+            elif temp_media_type == MediaType.AUDIO:
+                allowed_types = {"audio/mpeg", "audio/wav", "audio/ogg", "audio/m4a"}
+            elif temp_media_type == MediaType.VIDEO:
+                allowed_types = {"video/mp4", "video/webm", "video/ogg"}
+
+        # Validate file upload (size, extension, MIME type)
+        try:
+            sanitized_filename, validated_mime = await validate_file_upload(
+                file=file,
+                allowed_types=allowed_types,
+                max_size=settings.MAX_FILE_SIZE,
+                strict_mime_check=True
+            )
+        except FileValidationError as e:
+            logger.warning(f"File validation failed: {e.message_en}")
+            raise
+
+        # Re-determine media type based on validated MIME
+        media_type = self.repo.determine_media_type(validated_mime)
+
+        # Generate safe file path
+        timestamp = datetime.utcnow().timestamp()
+        safe_filename = f"{int(timestamp)}_{sanitized_filename}"
+        upload_path = self.repo.get_upload_path(self.user_id, media_type.value, safe_filename)
 
         # Ensure directory exists
         os.makedirs(os.path.dirname(upload_path), exist_ok=True)
@@ -104,17 +138,18 @@ class MultimediaService:
                 "original_filename": existing.original_filename,
                 "file_path": existing.file_path,
                 "message": "File already exists (deduplicated)",
+                "message_zh": "文件已存在（已去重）",
                 "duplicate": True
             }
 
         # Create media file record
         media_file = await self.repo.create_media_file(
             user_id=self.user_id,
-            original_filename=file.filename,
+            original_filename=sanitized_filename,
             file_path=upload_path,
             file_size=file_size,
-            mime_type=mime_type,
-            media_type=media_type,
+            mime_type=validated_mime,
+            media_type=media_type.value,
             checksum=checksum,
             metadata={"description": description} if description else {}
         )

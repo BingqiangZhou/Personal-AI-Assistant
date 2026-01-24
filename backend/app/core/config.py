@@ -158,6 +158,14 @@ class Settings(BaseSettings):
     # Admin Panel 2FA Configuration
     ADMIN_2FA_ENABLED: bool = True  # Admin panel 2FA toggle (default: enabled)
 
+    # Assistant and Chat Configuration
+    ASSISTANT_TITLE_TRUNCATION_LENGTH: int = 50  # Max length for auto-generated conversation titles
+    ASSISTANT_TEST_PROMPT: str = "Hello, please respond with \"Test successful\"."
+
+    # Pagination and Batch Processing
+    PODCAST_EPISODE_BATCH_SIZE: int = 50  # Default batch size for episode processing
+    PODCAST_RECENT_EPISODES_LIMIT: int = 3  # Number of recent episodes to fetch by default
+
     @validator("ALLOWED_HOSTS", pre=True)
     def assemble_cors_origins(cls, v):
         if isinstance(v, str) and not v.startswith("["):

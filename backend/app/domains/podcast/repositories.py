@@ -12,6 +12,7 @@ from datetime import datetime, date, timedelta
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 from app.domains.subscription.models import Subscription, SubscriptionItem
 from app.core.redis import PodcastRedis
+from app.core.datetime_utils import sanitize_published_date
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +145,7 @@ class PodcastRepository:
             episode.title = title
             episode.description = description
             episode.audio_url = audio_url
-            episode.published_at = published_at.replace(tzinfo=None) if published_at.tzinfo else published_at
+            episode.published_at = sanitize_published_date(published_at)
             episode.audio_duration = audio_duration
             episode.transcript_url = transcript_url
             episode.updated_at = datetime.utcnow()
@@ -158,7 +159,7 @@ class PodcastRepository:
                 title=title,
                 description=description,
                 audio_url=audio_url,
-                published_at=published_at.replace(tzinfo=None) if published_at.tzinfo else published_at,
+                published_at=sanitize_published_date(published_at),
                 audio_duration=audio_duration,
                 transcript_url=transcript_url,
                 item_link=item_link,
@@ -318,6 +319,74 @@ class PodcastRepository:
 
         # Create a dictionary mapping episode_id to state
         return {state.episode_id: state for state in states}
+
+    async def get_episodes_counts_batch(
+        self,
+        subscription_ids: List[int]
+    ) -> Dict[int, int]:
+        """
+        Batch fetch episode counts for multiple subscriptions.
+
+        批量获取多个订阅的剧集计数
+
+        Args:
+            subscription_ids: List of subscription IDs
+
+        Returns:
+            Dictionary mapping subscription_id to episode count
+        """
+        if not subscription_ids:
+            return {}
+
+        # Use GROUP BY to count episodes for all subscriptions in one query
+        stmt = select(
+            PodcastEpisode.subscription_id,
+            func.count(PodcastEpisode.id)
+        ).where(
+            PodcastEpisode.subscription_id.in_(subscription_ids)
+        ).group_by(PodcastEpisode.subscription_id)
+
+        result = await self.db.execute(stmt)
+        return {row[0]: row[1] for row in result.all()}
+
+    async def get_subscription_episodes_batch(
+        self,
+        subscription_ids: List[int],
+        limit_per_subscription: int = 3
+    ) -> Dict[int, List[PodcastEpisode]]:
+        """
+        Batch fetch recent episodes for multiple subscriptions.
+
+        批量获取多个订阅的最新剧集
+
+        Args:
+            subscription_ids: List of subscription IDs
+            limit_per_subscription: Number of recent episodes per subscription
+
+        Returns:
+            Dictionary mapping subscription_id to list of episodes
+        """
+        if not subscription_ids:
+            return {}
+
+        # Get all episodes for these subscriptions, ordered by published_at
+        stmt = select(PodcastEpisode).where(
+            PodcastEpisode.subscription_id.in_(subscription_ids)
+        ).order_by(desc(PodcastEpisode.published_at))
+
+        result = await self.db.execute(stmt)
+        all_episodes = result.scalars().all()
+
+        # Group episodes by subscription_id and limit per subscription
+        episodes_by_sub = {}
+        for ep in all_episodes:
+            if ep.subscription_id not in episodes_by_sub:
+                episodes_by_sub[ep.subscription_id] = []
+
+            if len(episodes_by_sub[ep.subscription_id]) < limit_per_subscription:
+                episodes_by_sub[ep.subscription_id].append(ep)
+
+        return episodes_by_sub
 
     async def update_playback_progress(
         self,
@@ -536,9 +605,7 @@ class PodcastRepository:
 
         if subscription:
             # 移除时区信息以匹配数据库的TIMESTAMP WITHOUT TIME ZONE
-            time_to_set = fetch_time or datetime.utcnow()
-            if time_to_set.tzinfo is not None:
-                time_to_set = time_to_set.replace(tzinfo=None)
+            time_to_set = sanitize_published_date(fetch_time or datetime.utcnow())
             subscription.last_fetched_at = time_to_set
             await self.db.commit()
 

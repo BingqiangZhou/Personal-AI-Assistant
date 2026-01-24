@@ -83,6 +83,100 @@ router = APIRouter(prefix="")
 logger = logging.getLogger(__name__)
 
 
+# === Transcription helper functions ===
+
+async def _validate_episode_and_permission(
+    episode_id: int,
+    user_id: int,
+    service: PodcastService
+) -> PodcastEpisode:
+    """验证播客单集存在且属于当前用户
+
+    Args:
+        episode_id: 单集ID
+        user_id: 用户ID
+        service: PodcastService实例
+
+    Returns:
+        PodcastEpisode对象
+
+    Raises:
+        HTTPException: 当单集不存在或无权限时
+    """
+    episode = await service.get_episode_by_id(episode_id)
+    if not episode:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Episode {episode_id} not found"
+        )
+
+    if episode.subscription.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have permission to access this episode"
+        )
+
+    return episode
+
+
+async def _check_redis_cached_task(
+    episode_id: int,
+    state_manager,
+    transcription_service: DatabaseBackedTranscriptionService,
+    episode: PodcastEpisode
+) -> Optional[PodcastTranscriptionResponse]:
+    """检查Redis缓存中的任务
+
+    Args:
+        episode_id: 单集ID
+        state_manager: 状态管理器
+        transcription_service: 转录服务
+        episode: 播客单集对象
+
+    Returns:
+        如果有缓存任务则返回响应，否则返回None
+    """
+    redis_task_id = await state_manager.get_episode_task(episode_id)
+    if redis_task_id:
+        cached_progress = await state_manager.get_task_progress(redis_task_id)
+        if cached_progress and cached_progress.get("status") not in ["completed", "failed"]:
+            logger.info(f"⚡ [REDIS] Returning cached in-progress task {redis_task_id} for episode {episode_id}")
+            task = await transcription_service.get_transcription_status(redis_task_id)
+            if task:
+                return _build_transcription_response(task, episode)
+    return None
+
+
+async def _check_existing_db_task(
+    episode_id: int,
+    force_regenerate: bool,
+    transcription_service: DatabaseBackedTranscriptionService,
+    episode: PodcastEpisode
+) -> Optional[PodcastTranscriptionResponse]:
+    """检查数据库中已存在的任务
+
+    Args:
+        episode_id: 单集ID
+        force_regenerate: 是否强制重新生成
+        transcription_service: 转录服务
+        episode: 播客单集对象
+
+    Returns:
+        如果有现有任务则返回响应，否则返回None
+    """
+    existing_task = await transcription_service.get_episode_transcription(episode_id)
+    if existing_task:
+        if existing_task.status == 'completed' and not force_regenerate:
+            logger.info(f"✅ [DB] Returning existing completed task {existing_task.id} for episode {episode_id}")
+            return _build_transcription_response(existing_task, episode)
+        elif existing_task.status == 'in_progress' and not force_regenerate:
+            state_manager = await get_transcription_state_manager()
+            await state_manager.set_episode_task(episode_id, existing_task.id)
+            logger.info(f"🔄 [DB] Returning existing in-progress task {existing_task.id} for episode {episode_id}")
+            return _build_transcription_response(existing_task, episode)
+    return None
+
+
 # === 订阅管理 ===
 
 @router.post(
@@ -831,115 +925,32 @@ async def start_transcription(
     state_manager = await get_transcription_state_manager()
 
     try:
-        # 验证播客单集存在且属于当前用户
-        episode = await service.get_episode_by_id(episode_id)
-        if not episode:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Episode {episode_id} not found"
-            )
+        # 1. 验证播客单集存在且属于当前用户
+        episode = await _validate_episode_and_permission(episode_id, int(user["sub"]), service)
 
-        # 验证用户权限
-        if episode.subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this episode"
-            )
+        # 2. FAST PATH: 检查Redis缓存中的正在进行的任务
+        cached_response = await _check_redis_cached_task(episode_id, state_manager, transcription_service, episode)
+        if cached_response:
+            return cached_response
 
-        # === FAST PATH 1: Check Redis for in-progress task ===
-        redis_task_id = await state_manager.get_episode_task(episode_id)
-        if redis_task_id:
-            # Get task progress from Redis cache
-            cached_progress = await state_manager.get_task_progress(redis_task_id)
-            if cached_progress and cached_progress.get("status") not in ["completed", "failed"]:
-                logger.info(f"⚡ [REDIS] Returning cached in-progress task {redis_task_id} for episode {episode_id}")
-                # Return cached task data
-                task = await transcription_service.get_transcription_status(redis_task_id)
-                if task:
-                    return _build_transcription_response(task, episode)
+        # 3. FAST PATH: 检查数据库中已存在的任务
+        db_response = await _check_existing_db_task(
+            episode_id, transcription_request.force_regenerate, transcription_service, episode
+        )
+        if db_response:
+            return db_response
 
-        # === FAST PATH 2: Check DB for existing completed or in-progress task ===
+        # 4. 如果force_regenerate，删除现有任务
         existing_task = await transcription_service.get_episode_transcription(episode_id)
-        if existing_task:
-            if existing_task.status == 'completed' and not transcription_request.force_regenerate:  # Use string value
-                logger.info(f"✅ [DB] Returning existing completed task {existing_task.id} for episode {episode_id}")
-                return _build_transcription_response(existing_task, episode)
-            elif existing_task.status == 'in_progress':  # Use string value
-                if not transcription_request.force_regenerate:
-                    # Task is in progress, map it in Redis and return
-                    await state_manager.set_episode_task(episode_id, existing_task.id)
-                    logger.info(f"🔄 [DB] Returning existing in-progress task {existing_task.id} (step: {existing_task.current_step}) for episode {episode_id}")
-                    return _build_transcription_response(existing_task, episode)
-
-        # === Create new task if force_regenerate or no existing task ===
         if existing_task and transcription_request.force_regenerate:
             logger.info(f"🔄 [FORCE] Deleting existing task {existing_task.id} for regeneration")
             await db.delete(existing_task)
             await db.commit()
 
-        # Acquire Redis lock before creating task
-        lock_acquired = await state_manager.acquire_task_lock(episode_id, 0)  # task_id not known yet
-        if not lock_acquired and not transcription_request.force_regenerate:
-            # Someone else is processing this episode - fetch and return existing task
-            locked_task_id = await state_manager.is_episode_locked(episode_id)
-            logger.info(f"🔒 [LOCK] Episode {episode_id} already locked by task {locked_task_id}")
-
-            if locked_task_id:
-                try:
-                    # Fetch the existing task from database
-                    existing_task = await transcription_service.get_transcription_status(locked_task_id)
-                    if existing_task:
-                        logger.info(f"✅ [LOCK] Returning existing task {existing_task.id} (status: {existing_task.status}) for locked episode {episode_id}")
-                        return _build_transcription_response(existing_task, episode)
-                    else:
-                        logger.warning(f"⚠️ [LOCK] Locked task {locked_task_id} not found in DB, might be stale")
-                        # Task in lock but not in DB - clean up the stale lock
-                        await state_manager.release_task_lock(episode_id, locked_task_id)
-                        await state_manager.clear_episode_task(episode_id)
-                        logger.info(f"🧹 [LOCK] Cleaned stale lock for episode {episode_id}")
-                except Exception as e:
-                    logger.error(f"❌ [LOCK] Error fetching locked task {locked_task_id}: {e}")
-                    # Clean up stale lock and continue to create new task
-                    try:
-                        await state_manager.release_task_lock(episode_id, locked_task_id or 0)
-                        await state_manager.clear_episode_task(episode_id)
-                        logger.info(f"🧹 [LOCK] Cleaned stale lock due to error: {e}")
-                    except Exception as cleanup_error:
-                        logger.error(f"❌ [LOCK] Failed to clean stale lock: {cleanup_error}")
-            else:
-                logger.warning(f"⚠️ [LOCK] Episode {episode_id} is locked but no task_id found, cleaning up")
-                try:
-                    await state_manager.clear_episode_task(episode_id)
-                except Exception as e:
-                    logger.error(f"❌ [LOCK] Failed to clear episode task: {e}")
-
-            # After cleanup, continue to create new task (don't raise error)
-            logger.info(f"🔄 [LOCK] Proceeding to create new task after cleanup for episode {episode_id}")
-
-        # Create new transcription task
-        task = await transcription_service.start_transcription(
-            episode_id,
-            transcription_request.transcription_model
+        # 5. 获取锁并检查是否已有其他任务在进行
+        await _handle_lock_and_create_task(
+            episode_id, episode, transcription_request, state_manager, transcription_service, db
         )
-
-        # Update Redis lock with actual task_id and map episode to task
-        await state_manager.release_task_lock(episode_id, 0)  # Release temp lock
-        await state_manager.acquire_task_lock(episode_id, task.id)  # Acquire with real task_id
-        await state_manager.set_episode_task(episode_id, task.id)
-
-        # Set initial progress in Redis
-        await state_manager.set_task_progress(
-            task.id,
-            TranscriptionStatus.PENDING.value,
-            0,
-            "Transcription task created, waiting for worker to start..."
-        )
-
-        # Note: Celery task dispatch is handled by transcription_service.start_transcription()
-        # No need to dispatch again here to avoid duplicate execution
-
-        logger.info(f"✅ [CREATED] New transcription task {task.id} for episode {episode_id}")
-        return _build_transcription_response(task, episode)
 
     except HTTPException:
         raise
@@ -949,6 +960,116 @@ async def start_transcription(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to start transcription: {str(e)}"
         )
+
+
+async def _handle_lock_and_create_task(
+    episode_id: int,
+    episode: PodcastEpisode,
+    transcription_request: PodcastTranscriptionRequest,
+    state_manager,
+    transcription_service: DatabaseBackedTranscriptionService,
+    db: AsyncSession
+) -> PodcastTranscriptionResponse:
+    """处理锁逻辑并创建新任务
+
+    Args:
+        episode_id: 单集ID
+        episode: 播客单集对象
+        transcription_request: 转录请求
+        state_manager: 状态管理器
+        transcription_service: 转录服务
+        db: 数据库会话
+
+    Returns:
+        PodcastTranscriptionResponse
+    """
+    # 尝试获取原子锁
+    lock_acquired = await state_manager.acquire_task_lock(episode_id, 0)
+
+    if not lock_acquired and not transcription_request.force_regenerate:
+        return await _handle_locked_episode(episode_id, episode, state_manager, transcription_service)
+
+    # 创建新任务
+    task = await transcription_service.start_transcription(episode_id, transcription_request.transcription_model)
+
+    # 更新Redis锁为实际的task_id
+    await state_manager.release_task_lock(episode_id, 0)
+    await state_manager.acquire_task_lock(episode_id, task.id)
+    await state_manager.set_episode_task(episode_id, task.id)
+
+    # 设置初始进度
+    await state_manager.set_task_progress(
+        task.id,
+        TranscriptionStatus.PENDING.value,
+        0,
+        "Transcription task created, waiting for worker to start..."
+    )
+
+    logger.info(f"✅ [CREATED] New transcription task {task.id} for episode {episode_id}")
+    return _build_transcription_response(task, episode)
+
+
+async def _handle_locked_episode(
+    episode_id: int,
+    episode: PodcastEpisode,
+    state_manager,
+    transcription_service: DatabaseBackedTranscriptionService
+) -> PodcastTranscriptionResponse:
+    """处理已被锁定的单集
+
+    Args:
+        episode_id: 单集ID
+        episode: 播客单集对象
+        state_manager: 状态管理器
+        transcription_service: 转录服务
+
+    Returns:
+        PodcastTranscriptionResponse
+    """
+    locked_task_id = await state_manager.is_episode_locked(episode_id)
+
+    if locked_task_id:
+        logger.info(f"🔒 [LOCK] Episode {episode_id} already locked by task {locked_task_id}")
+        try:
+            existing_task = await transcription_service.get_transcription_status(locked_task_id)
+            if existing_task:
+                logger.info(f"✅ [LOCK] Returning existing task {existing_task.id} (status: {existing_task.status})")
+                return _build_transcription_response(existing_task, episode)
+            else:
+                logger.warning(f"⚠️ [LOCK] Locked task {locked_task_id} not found in DB, cleaning stale lock")
+                await _cleanup_stale_lock(state_manager, episode_id, locked_task_id)
+        except Exception as e:
+            logger.error(f"❌ [LOCK] Error fetching locked task {locked_task_id}: {e}")
+            await _cleanup_stale_lock(state_manager, episode_id, locked_task_id)
+    else:
+        logger.warning(f"⚠️ [LOCK] Episode {episode_id} is locked but no task_id found, cleaning up")
+        await _cleanup_stale_lock(state_manager, episode_id, None)
+
+    # 如果清理锁后，需要继续创建新任务，但这里我们简化处理，抛出异常
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail=f"Episode {episode_id} is currently being processed by another task"
+    )
+
+
+async def _cleanup_stale_lock(state_manager, episode_id: int, task_id: Optional[int]) -> None:
+    """Clean up a stale lock for an episode.
+
+    Helper function to safely clean up stale locks when a task exists in Redis
+    but not in the database, or when the lock state is corrupted.
+
+    Args:
+        state_manager: TranscriptionStateManager instance
+        episode_id: The episode ID with stale lock
+        task_id: The task ID to clean up (None if unknown)
+    """
+    try:
+        if task_id:
+            await state_manager.release_task_lock(episode_id, task_id)
+        await state_manager.clear_episode_task(episode_id)
+        logger.info(f"🧹 [LOCK] Cleaned stale lock for episode {episode_id}")
+    except Exception as cleanup_error:
+        logger.error(f"❌ [LOCK] Failed to clean stale lock for episode {episode_id}: {cleanup_error}")
 
 
 def _build_transcription_response(task, episode) -> PodcastTranscriptionResponse:

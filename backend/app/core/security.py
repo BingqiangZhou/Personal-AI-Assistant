@@ -296,34 +296,81 @@ async def get_token_from_request(
             # If authorization header doesn't start with Bearer, treat it as raw token
             token = authorization
 
-    # Special handling for test token in development
-    if token == "test" and settings.ENVIRONMENT == "development":
-        return {
-            "sub": 1,  # Mock user ID as integer
-            "email": "test@example.com",
-            "type": "access",
-            "exp": int(time.time()) + 3600  # 1 hour from now
-        }
-
-    # If no token found
+    # If no token found, require authentication
+    # Note: For testing, use proper JWT tokens generated via the test endpoints
     if token is None:
-        if settings.ENVIRONMENT == "development":
-            # Development: return mock user
-            return {
-                "sub": 1,  # Mock user ID as integer
-                "email": "test@example.com",
-                "type": "access",
-                "exp": int(time.time()) + 3600  # 1 hour from now
-            }
-        else:
-            # Production: require authentication
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required"
-            )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
 
     # Verify the token
     return verify_token(token, token_type="access")
+
+
+# === Type Safety Helpers ===
+
+# Type alias for user_id - always an integer in the application
+# JWT token returns user["sub"] as string, but we convert it to int everywhere
+UserId = int
+
+
+def get_user_id_from_token(token_payload: dict) -> UserId:
+    """
+    Extract and convert user_id from JWT token payload.
+
+    JWT tokens store user ID as string in the "sub" claim.
+    This function converts it to int for type consistency throughout the application.
+
+    Args:
+        token_payload: The decoded JWT token payload (dict from verify_token)
+
+    Returns:
+        UserId: The user ID as an integer
+
+    Raises:
+        KeyError: If "sub" claim is missing
+        ValueError: If "sub" claim is not a valid integer
+    """
+    sub = token_payload.get("sub")
+    if sub is None:
+        raise KeyError("Token payload missing 'sub' claim")
+
+    try:
+        return int(sub)
+    except (ValueError, TypeError) as e:
+        raise ValueError(f"Token 'sub' claim '{sub}' is not a valid integer") from e
+
+
+async def require_user_id(
+    user: dict = Depends(get_token_from_request)
+) -> UserId:
+    """
+    FastAPI dependency that extracts and validates user_id from JWT token.
+
+    This is a type-safe alternative to manually calling int(user["sub"]).
+
+    Usage:
+        ```python
+        @router.get("/example")
+        async def example_endpoint(user_id: UserId = Depends(require_user_id)):
+            # user_id is already an int
+            service = SomeService(db, user_id)
+        ```
+
+    Returns:
+        UserId: The user ID as an integer
+
+    Raises:
+        HTTPException: If token is invalid or missing required claims
+    """
+    try:
+        return get_user_id_from_token(user)
+    except (KeyError, ValueError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token: {str(e)}"
+        )
 
 
 # === Data Encryption/Decryption for API Keys and Sensitive Data ===
