@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:personal_ai_assistant/features/auth/presentation/pages/login_page.dart';
-import 'package:personal_ai_assistant/shared/widgets/custom_text_field.dart';
 
 void main() {
   group('Login Page Widget Tests (Simple)', () {

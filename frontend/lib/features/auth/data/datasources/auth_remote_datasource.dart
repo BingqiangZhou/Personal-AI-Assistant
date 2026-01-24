@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 import '../../../../core/utils/app_logger.dart' as logger;
 import '../../domain/models/auth_request.dart';
 import '../../domain/models/auth_response.dart';

@@ -523,7 +523,6 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
   /// 显示附件选项
   void _showAttachmentOptions(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(

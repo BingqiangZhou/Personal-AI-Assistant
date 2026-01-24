@@ -4,8 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:personal_ai_assistant/features/auth/presentation/pages/login_page.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/pages/register_page.dart';
-import 'package:personal_ai_assistant/features/splash/presentation/pages/splash_page.dart';
-import 'package:personal_ai_assistant/shared/widgets/custom_text_field.dart';
 
 void main() {
   group('Authentication Flow Tests (Simple)', () {

@@ -406,7 +406,6 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
         } else if (success && context.mounted) {
           // Download started, close dialog and show message
           Navigator.of(context).pop();
-          final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('Downloading in background...'),

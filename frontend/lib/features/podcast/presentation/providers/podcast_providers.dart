@@ -43,7 +43,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   StreamSubscription? _durationSubscription;
   bool? _lastPlayingState; // Track last playing state to reduce log spam
 
-  PodcastAudioHandler get _audioHandler => main_app.audioHandler as PodcastAudioHandler;
+  PodcastAudioHandler get _audioHandler => main_app.audioHandler;
 
   @override
   AudioPlayerState build() {

@@ -65,7 +65,6 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   }
 
   void _submitResetPassword() {
-    final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate()) {
       if (widget.token == null || widget.token!.isEmpty) {
         _showErrorDialog('Invalid reset link. Please request a new password reset.', context);

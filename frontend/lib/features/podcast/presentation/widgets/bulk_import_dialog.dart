@@ -651,32 +651,6 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
     );
   }
 
-  Widget _buildStatusChip(String label, Color color, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color, width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color), // Smaller icon
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11, // Smaller text
-              color: color,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
   Widget _buildUrlListItem(UrlValidationItem item, int index) {
     final l10n = AppLocalizations.of(context)!;
     Color statusColor;

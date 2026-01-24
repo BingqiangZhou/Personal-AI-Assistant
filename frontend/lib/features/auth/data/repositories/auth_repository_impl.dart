@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../domain/models/auth_request.dart';
 import '../../domain/models/auth_response.dart';

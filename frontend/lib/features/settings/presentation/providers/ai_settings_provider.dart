@@ -119,10 +119,14 @@ class AISettingsController extends Notifier<AISettingsState> {
 
       // Refresh providers
       if (type == 'transcription') {
+        // ignore: unused_result
         ref.refresh(activeTranscriptionModelsProvider);
+        // ignore: unused_result
         ref.refresh(transcriptionModelsListProvider);
       } else {
+        // ignore: unused_result
         ref.refresh(activeTextModelsProvider);
+        // ignore: unused_result
         ref.refresh(textModelsListProvider);
       }
 
@@ -139,11 +143,15 @@ class AISettingsController extends Notifier<AISettingsState> {
 
     try {
       await apiService.deleteModel(modelId);
-      
+
       // Refresh all model providers
+      // ignore: unused_result
       ref.refresh(activeTranscriptionModelsProvider);
+      // ignore: unused_result
       ref.refresh(transcriptionModelsListProvider);
+      // ignore: unused_result
       ref.refresh(activeTextModelsProvider);
+      // ignore: unused_result
       ref.refresh(textModelsListProvider);
 
       state = state.copyWith(isLoading: false, success: true);
@@ -154,9 +162,13 @@ class AISettingsController extends Notifier<AISettingsState> {
       final int? statusCode = e.response?.statusCode;
       if (statusCode == 200 || statusCode == 204) {
          // Refresh all model providers
+        // ignore: unused_result
         ref.refresh(activeTranscriptionModelsProvider);
+        // ignore: unused_result
         ref.refresh(transcriptionModelsListProvider);
+        // ignore: unused_result
         ref.refresh(activeTextModelsProvider);
+        // ignore: unused_result
         ref.refresh(textModelsListProvider);
 
         state = state.copyWith(isLoading: false, success: true);
