@@ -174,15 +174,9 @@ class _PodcastEpisodeDetailPageState
 
   @override
   Widget build(BuildContext context) {
-    // Debug: Print current episode ID being loaded
-    logger.AppLogger.debug('🏗️ ===== Building PodcastEpisodeDetailPage =====');
-    logger.AppLogger.debug('🏗️ widget.episodeId: ${widget.episodeId}');
-
     final episodeDetailAsync = ref.watch(
       episodeDetailProvider(widget.episodeId),
     );
-
-    logger.AppLogger.debug('🏗️ episodeDetailAsync value: ${episodeDetailAsync.value?.id}');
 
     // Listen to transcription status changes to provide user feedback
     ref.listen(getTranscriptionProvider(widget.episodeId), (previous, next) {

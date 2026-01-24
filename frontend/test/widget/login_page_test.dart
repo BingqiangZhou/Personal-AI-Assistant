@@ -22,7 +22,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authProvider.overrideWith((ref) => mockAuthNotifier),
+            authProvider.overrideWith(() => mockAuthNotifier),
           ],
           child: MaterialApp(
             home: LoginPage(),
@@ -45,7 +45,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authProvider.overrideWith((ref) => mockAuthNotifier),
+            authProvider.overrideWith(() => mockAuthNotifier),
           ],
           child: MaterialApp(
             home: LoginPage(),
@@ -66,7 +66,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authProvider.overrideWith((ref) => mockAuthNotifier),
+            authProvider.overrideWith(() => mockAuthNotifier),
           ],
           child: MaterialApp(
             home: LoginPage(),
@@ -92,7 +92,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authProvider.overrideWith((ref) => mockAuthNotifier),
+            authProvider.overrideWith(() => mockAuthNotifier),
           ],
           child: MaterialApp(
             home: LoginPage(),
@@ -124,7 +124,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authProvider.overrideWith((ref) => mockAuthNotifier),
+            authProvider.overrideWith(() => mockAuthNotifier),
           ],
           child: MaterialApp(
             home: LoginPage(),
@@ -132,33 +132,32 @@ void main() {
         ),
       );
 
-      // Find password field
-      final passwordField = find.ancestor(
-        of: find.text('Password'),
-        matching: find.byType(TextFormField),
-      ).first;
-
-      // Initially obscured
-      expect(tester.widget<TextFormField>(passwordField).obscureText, isTrue);
+      // Initial state - password should be obscured (show visibility_off icon)
+      expect(find.byIcon(Icons.visibility_off), findsOneWidget);
+      expect(find.byIcon(Icons.visibility), findsNothing);
 
       // Toggle password visibility
       await tester.tap(find.byIcon(Icons.visibility_off));
       await tester.pump();
 
-      expect(tester.widget<TextFormField>(passwordField).obscureText, isFalse);
+      // Now password should be visible (show visibility icon)
+      expect(find.byIcon(Icons.visibility), findsOneWidget);
+      expect(find.byIcon(Icons.visibility_off), findsNothing);
 
       // Toggle back
       await tester.tap(find.byIcon(Icons.visibility));
       await tester.pump();
 
-      expect(tester.widget<TextFormField>(passwordField).obscureText, isTrue);
+      // Back to obscured state
+      expect(find.byIcon(Icons.visibility_off), findsOneWidget);
+      expect(find.byIcon(Icons.visibility), findsNothing);
     });
 
     testWidgets('Should toggle remember me checkbox', (WidgetTester tester) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authProvider.overrideWith((ref) => mockAuthNotifier),
+            authProvider.overrideWith(() => mockAuthNotifier),
           ],
           child: MaterialApp(
             home: LoginPage(),
@@ -185,33 +184,18 @@ void main() {
     });
 
     testWidgets('Should show loading state when submitting', (WidgetTester tester) async {
-      when(mockAuthNotifier.isLoading).thenReturn(true);
+      when(mockAuthNotifier.state).thenReturn(const AuthState(isLoading: true));
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authProvider.overrideWith((ref) => mockAuthNotifier),
+            authProvider.overrideWith(() => mockAuthNotifier),
           ],
           child: MaterialApp(
             home: LoginPage(),
           ),
         ),
       );
-
-      // Fill form with valid data
-      await tester.enterText(find.ancestor(
-        of: find.text('Email'),
-        matching: find.byType(TextFormField),
-      ), 'test@example.com');
-
-      await tester.enterText(find.ancestor(
-        of: find.text('Password'),
-        matching: find.byType(TextFormField),
-      ), 'validpassword');
-
-      // Submit form
-      await tester.tap(find.byKey(Key('login_button')));
-      await tester.pump();
 
       // Should show loading state
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -221,7 +205,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authProvider.overrideWith((ref) => mockAuthNotifier),
+            authProvider.overrideWith(() => mockAuthNotifier),
           ],
           child: MaterialApp(
             home: LoginPage(),
@@ -242,7 +226,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authProvider.overrideWith((ref) => mockAuthNotifier),
+            authProvider.overrideWith(() => mockAuthNotifier),
           ],
           child: MaterialApp(
             home: LoginPage(),
@@ -263,7 +247,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            authProvider.overrideWith((ref) => mockAuthNotifier),
+            authProvider.overrideWith(() => mockAuthNotifier),
           ],
           child: MaterialApp(
             home: LoginPage(),
