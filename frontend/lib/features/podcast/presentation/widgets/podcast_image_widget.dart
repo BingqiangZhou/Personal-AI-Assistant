@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 /// 播客图片加载组件，专门处理CloudFront 403等CDN访问问题
 class PodcastImageWidget extends StatefulWidget {
@@ -59,7 +60,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
   }
 
   void _handleImageError() {
-    debugPrint('❌ Failed to load image: ${widget.imageUrl} (attempt ${_retryCount + 1})');
+    logger.AppLogger.debug('❌ Failed to load image: ${widget.imageUrl} (attempt ${_retryCount + 1})');
 
     // 如果当前使用的是 fallbackImageUrl 且已经出错，直接显示图标
     if (_useFallback && widget.fallbackImageUrl != null && _currentImageUrl == widget.fallbackImageUrl) {

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+import '../utils/app_logger.dart' as logger;
+
 /// Connection status enum for server health check
 enum ConnectionStatus {
   /// Initial state, not yet verified
@@ -94,7 +96,7 @@ class ServerHealthService {
     final normalizedUrl = normalizeBaseUrl(baseUrl);
     final healthCheckUrl = '$normalizedUrl$_healthEndpoint';
 
-    debugPrint('🔍 [HealthCheck] Verifying: $healthCheckUrl');
+    logger.AppLogger.debug('🔍 [HealthCheck] Verifying: $healthCheckUrl');
 
     final stopwatch = Stopwatch()..start();
 
@@ -111,13 +113,13 @@ class ServerHealthService {
 
       // Check if response is successful (HTTP 200-299)
       if (response.statusCode == 200) {
-        debugPrint('✅ [HealthCheck] Success (${stopwatch.elapsedMilliseconds}ms)');
+        logger.AppLogger.debug('✅ [HealthCheck] Success (${stopwatch.elapsedMilliseconds}ms)');
         yield HealthCheckResult.success(
           message: 'Connected',
           responseTimeMs: stopwatch.elapsedMilliseconds,
         );
       } else {
-        debugPrint('❌ [HealthCheck] Failed: HTTP ${response.statusCode}');
+        logger.AppLogger.debug('❌ [HealthCheck] Failed: HTTP ${response.statusCode}');
         yield HealthCheckResult.failed(
           message: 'Server returned HTTP ${response.statusCode}',
         );
@@ -126,7 +128,7 @@ class ServerHealthService {
       stopwatch.stop();
 
       if (e.type == DioExceptionType.cancel) {
-        debugPrint('⚠️ [HealthCheck] Cancelled');
+        logger.AppLogger.debug('⚠️ [HealthCheck] Cancelled');
         return; // Don't yield anything if cancelled
       }
 
@@ -147,11 +149,11 @@ class ServerHealthService {
           errorMessage = 'Connection failed: ${e.message}';
       }
 
-      debugPrint('❌ [HealthCheck] Failed: $errorMessage');
+      logger.AppLogger.debug('❌ [HealthCheck] Failed: $errorMessage');
       yield HealthCheckResult.failed(message: errorMessage);
     } catch (e) {
       stopwatch.stop();
-      debugPrint('❌ [HealthCheck] Failed: $e');
+      logger.AppLogger.debug('❌ [HealthCheck] Failed: $e');
       yield HealthCheckResult.failed(message: 'Unexpected error: $e');
     }
   }

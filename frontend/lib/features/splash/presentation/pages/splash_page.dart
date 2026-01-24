@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 /// Minimal splash page that immediately redirects
 /// The native splash screen (with app icon) is shown during Flutter initialization
@@ -51,7 +52,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
       }
     } catch (e) {
       // Don't block app startup if permission request fails
-      debugPrint('⚠️ Failed to request notification permission: $e');
+      logger.AppLogger.debug('⚠️ Failed to request notification permission: $e');
     }
   }
 

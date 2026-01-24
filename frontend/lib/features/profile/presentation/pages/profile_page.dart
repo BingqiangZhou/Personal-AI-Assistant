@@ -9,6 +9,7 @@ import 'package:personal_ai_assistant/features/settings/presentation/widgets/upd
 
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 /// Material Design 3自适应Profile页面
 class ProfilePage extends ConsumerStatefulWidget {
@@ -38,7 +39,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         });
       }
     } catch (e) {
-      debugPrint('Error loading version: $e');
+      logger.AppLogger.debug('Error loading version: $e');
       if (mounted) {
         setState(() {
           _appVersion = 'Unknown';

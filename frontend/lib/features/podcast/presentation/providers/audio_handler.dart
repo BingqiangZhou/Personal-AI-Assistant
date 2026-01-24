@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 /// AudioHandler for podcast playback with system media controls
 ///
@@ -68,7 +69,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     // Reject asset://, file://, content://, and other schemes
     if (uri.scheme != 'http' && uri.scheme != 'https') {
       if (kDebugMode) {
-        debugPrint(
+        logger.AppLogger.debug(
           '⚠️ [ART_URI] Invalid scheme: ${uri.scheme} (only http/https allowed)',
         );
       }
@@ -113,7 +114,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     );
 
     if (kDebugMode) {
-      debugPrint('🎵 PodcastAudioHandler initialized (audioplayers)');
+      logger.AppLogger.debug('🎵 PodcastAudioHandler initialized (audioplayers)');
     }
   }
 
@@ -122,7 +123,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     _subs.add(_player.onPlayerStateChanged.listen((state) {
       if (_isDisposed) return;
       if (kDebugMode) {
-        debugPrint('🎧 PlayerState: $state');
+        logger.AppLogger.debug('🎧 PlayerState: $state');
       }
       _broadcastState();
     }));
@@ -131,7 +132,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     _subs.add(_player.onPlayerComplete.listen((_) {
       if (_isDisposed) return;
       if (kDebugMode) {
-        debugPrint('🎧 Player completed');
+        logger.AppLogger.debug('🎧 Player completed');
       }
       // Reset to beginning when complete
       _currentPosition = Duration.zero;
@@ -158,7 +159,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     _subs.add(_player.onDurationChanged.listen((duration) {
       if (_isDisposed) return;
       if (kDebugMode) {
-        debugPrint('⏱️ [DURATION] Duration changed: ${duration.inMilliseconds}ms');
+        logger.AppLogger.debug('⏱️ [DURATION] Duration changed: ${duration.inMilliseconds}ms');
       }
 
       final mi = mediaItem.value;
@@ -168,7 +169,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
         if (mi.duration != duration) {
           mediaItem.add(mi.copyWith(duration: duration));
           if (kDebugMode) {
-            debugPrint('✅ [DURATION] Updated MediaItem duration: ${duration.inMilliseconds}ms');
+            logger.AppLogger.debug('✅ [DURATION] Updated MediaItem duration: ${duration.inMilliseconds}ms');
           }
         }
       }
@@ -217,16 +218,16 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
         : const [0]; // Show only play button
 
     if (kDebugMode) {
-      debugPrint(
+      logger.AppLogger.debug(
         '🎵 [BROADCAST STATE] ========================================',
       );
-      debugPrint('  playing: $playing');
-      debugPrint('  processingState: $processingState');
-      debugPrint('  position: ${_currentPosition.inMilliseconds}ms');
-      debugPrint('  duration: ${_currentDuration?.inMilliseconds ?? 0}ms');
-      debugPrint('  speed: ${_player.playbackRate}x');
-      debugPrint('  updateTime: $updateTime');
-      debugPrint(
+      logger.AppLogger.debug('  playing: $playing');
+      logger.AppLogger.debug('  processingState: $processingState');
+      logger.AppLogger.debug('  position: ${_currentPosition.inMilliseconds}ms');
+      logger.AppLogger.debug('  duration: ${_currentDuration?.inMilliseconds ?? 0}ms');
+      logger.AppLogger.debug('  speed: ${_player.playbackRate}x');
+      logger.AppLogger.debug('  updateTime: $updateTime');
+      logger.AppLogger.debug(
         '🎵 [BROADCAST STATE] ========================================',
       );
     }
@@ -283,7 +284,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     final validArtUri = artUri != null ? _validateArtUri(artUri) : null;
 
     if (artUri != null && validArtUri == null && kDebugMode) {
-      debugPrint(
+      logger.AppLogger.debug(
         '⚠️ [SET_EPISODE] Invalid artUri format: "$artUri" (must be http/https)',
       );
     }
@@ -305,24 +306,24 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     mediaItem.add(newMediaItem);
 
     if (kDebugMode) {
-      debugPrint('📋 [MediaItem] Set:');
-      debugPrint('  id: ${newMediaItem.id}');
-      debugPrint('  title: ${newMediaItem.title}');
-      debugPrint('  artist: ${newMediaItem.artist}');
-      debugPrint('  artUri: ${newMediaItem.artUri ?? "NULL"}');
-      debugPrint('  duration: ${newMediaItem.duration?.inMilliseconds ?? "NULL"}ms');
-      debugPrint('  url: $url');
+      logger.AppLogger.debug('📋 [MediaItem] Set:');
+      logger.AppLogger.debug('  id: ${newMediaItem.id}');
+      logger.AppLogger.debug('  title: ${newMediaItem.title}');
+      logger.AppLogger.debug('  artist: ${newMediaItem.artist}');
+      logger.AppLogger.debug('  artUri: ${newMediaItem.artUri ?? "NULL"}');
+      logger.AppLogger.debug('  duration: ${newMediaItem.duration?.inMilliseconds ?? "NULL"}ms');
+      logger.AppLogger.debug('  url: $url');
     }
 
     // 2) Set source URL
     try {
       await _player.setSourceUrl(url);
       if (kDebugMode) {
-        debugPrint('✅ Audio source set: $url${validArtUri != null ? ' with cover' : ' (no cover)'}');
+        logger.AppLogger.debug('✅ Audio source set: $url${validArtUri != null ? ' with cover' : ' (no cover)'}');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ Failed to set audio source: $e');
+        logger.AppLogger.debug('❌ Failed to set audio source: $e');
       }
       rethrow;
     }
@@ -354,11 +355,11 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       _broadcastState();
 
       if (kDebugMode) {
-        debugPrint('✅ Audio source set: $url');
+        logger.AppLogger.debug('✅ Audio source set: $url');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ Failed to set audio source: $e');
+        logger.AppLogger.debug('❌ Failed to set audio source: $e');
       }
       rethrow;
     }
@@ -368,7 +369,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> play() async {
     if (_isDisposed) {
       if (kDebugMode) {
-        debugPrint('⚠️ play() called after disposal, ignoring');
+        logger.AppLogger.debug('⚠️ play() called after disposal, ignoring');
       }
       return;
     }
@@ -376,12 +377,12 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     try {
       await _player.resume();
       if (kDebugMode) {
-        debugPrint('▶️ Playback started');
+        logger.AppLogger.debug('▶️ Playback started');
       }
       _broadcastState();
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ Failed to start playback: $e');
+        logger.AppLogger.debug('❌ Failed to start playback: $e');
       }
       rethrow;
     }
@@ -391,7 +392,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> pause() async {
     if (_isDisposed) {
       if (kDebugMode) {
-        debugPrint('⚠️ pause() called after disposal, ignoring');
+        logger.AppLogger.debug('⚠️ pause() called after disposal, ignoring');
       }
       return;
     }
@@ -399,7 +400,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     await _player.pause();
 
     if (kDebugMode) {
-      debugPrint('⏸️ Playback paused');
+      logger.AppLogger.debug('⏸️ Playback paused');
     }
 
     _broadcastState();
@@ -409,20 +410,20 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   Future<void> stop() async {
     if (_isDisposed) {
       if (kDebugMode) {
-        debugPrint('⚠️ stop() called after disposal, ignoring');
+        logger.AppLogger.debug('⚠️ stop() called after disposal, ignoring');
       }
       return;
     }
 
     if (kDebugMode) {
-      debugPrint('⏹️ stop() called - stopping playback');
+      logger.AppLogger.debug('⏹️ stop() called - stopping playback');
     }
 
     await _player.stop();
     _currentPosition = Duration.zero;
 
     if (kDebugMode) {
-      debugPrint('✅ stop() completed');
+      logger.AppLogger.debug('✅ stop() completed');
     }
   }
 
@@ -432,7 +433,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     _isDisposed = true;
 
     if (kDebugMode) {
-      debugPrint('🛑 stopService() called - stopping audio playback');
+      logger.AppLogger.debug('🛑 stopService() called - stopping audio playback');
     }
 
     // Cancel all subscriptions FIRST
@@ -447,7 +448,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       await _player.dispose();
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('⚠️ Error disposing player: $e');
+        logger.AppLogger.debug('⚠️ Error disposing player: $e');
       }
     }
 
@@ -455,11 +456,11 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     try {
       await super.stop();
       if (kDebugMode) {
-        debugPrint('✅ AudioService stopped (mobile)');
+        logger.AppLogger.debug('✅ AudioService stopped (mobile)');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('ℹ️ AudioService stop skipped (desktop or already stopped): $e');
+        logger.AppLogger.debug('ℹ️ AudioService stop skipped (desktop or already stopped): $e');
       }
     }
 
@@ -476,12 +477,12 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
       mediaItem.add(null);
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('ℹ️ State clearing after stop (expected): $e');
+        logger.AppLogger.debug('ℹ️ State clearing after stop (expected): $e');
       }
     }
 
     if (kDebugMode) {
-      debugPrint('✅ stopService() completed');
+      logger.AppLogger.debug('✅ stopService() completed');
     }
   }
 
@@ -540,7 +541,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> onTaskRemoved() async {
     if (kDebugMode) {
-      debugPrint('🗑️ Task removed - stopping service and cleaning up');
+      logger.AppLogger.debug('🗑️ Task removed - stopping service and cleaning up');
     }
     await stopService();
   }
@@ -553,7 +554,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     _isDisposed = true;
 
     if (kDebugMode) {
-      debugPrint('🗑️ Disposing AudioHandler...');
+      logger.AppLogger.debug('🗑️ Disposing AudioHandler...');
     }
 
     // Cancel all stream subscriptions
@@ -564,23 +565,23 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     _subs.clear();
 
     if (kDebugMode) {
-      debugPrint('   - $subCount subscriptions cancelled');
+      logger.AppLogger.debug('   - $subCount subscriptions cancelled');
     }
 
     // Release AudioPlayer
     try {
       await _player.dispose();
       if (kDebugMode) {
-        debugPrint('   - Audio player disposed');
+        logger.AppLogger.debug('   - Audio player disposed');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('   - Error disposing player: $e');
+        logger.AppLogger.debug('   - Error disposing player: $e');
       }
     }
 
     if (kDebugMode) {
-      debugPrint('✅ AudioHandler disposed');
+      logger.AppLogger.debug('✅ AudioHandler disposed');
     }
   }
 }

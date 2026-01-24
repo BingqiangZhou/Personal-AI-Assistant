@@ -9,6 +9,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../../../../core/storage/secure_storage_service.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource _remoteDatasource;
@@ -57,14 +58,14 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return Left(UnknownException(e.message ?? 'Unknown Dio error'));
     } on AppException catch (e) {
-      debugPrint('=== Repository Accepts AppException ===');
-      debugPrint('Exception type: ${e.runtimeType}');
-      debugPrint('Exception message: ${e.message}');
+      logger.AppLogger.debug('=== Repository Accepts AppException ===');
+      logger.AppLogger.debug('Exception type: ${e.runtimeType}');
+      logger.AppLogger.debug('Exception message: ${e.message}');
       return Left(e);
     } catch (e) {
-      debugPrint('=== Repository Falls to UnknownException ===');
-      debugPrint('Error type: ${e.runtimeType}');
-      debugPrint('Error: $e');
+      logger.AppLogger.debug('=== Repository Falls to UnknownException ===');
+      logger.AppLogger.debug('Error type: ${e.runtimeType}');
+      logger.AppLogger.debug('Error: $e');
       return Left(UnknownException(e.toString()));
     }
   }

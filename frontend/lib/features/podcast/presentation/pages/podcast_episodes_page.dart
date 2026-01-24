@@ -8,6 +8,7 @@ import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../widgets/simplified_episode_card.dart';
 import '../widgets/side_floating_player_widget.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 class PodcastEpisodesPage extends ConsumerStatefulWidget {
   final int subscriptionId;
@@ -74,10 +75,10 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     super.didUpdateWidget(oldWidget);
     // Check if subscriptionId has changed
     if (oldWidget.subscriptionId != widget.subscriptionId) {
-      debugPrint('🔄 ===== didUpdateWidget: Subscription ID changed =====');
-      debugPrint('🔄 Old Subscription ID: ${oldWidget.subscriptionId}');
-      debugPrint('🔄 New Subscription ID: ${widget.subscriptionId}');
-      debugPrint('🔄 Reloading episodes for new subscription');
+      logger.AppLogger.debug('🔄 ===== didUpdateWidget: Subscription ID changed =====');
+      logger.AppLogger.debug('🔄 Old Subscription ID: ${oldWidget.subscriptionId}');
+      logger.AppLogger.debug('🔄 New Subscription ID: ${widget.subscriptionId}');
+      logger.AppLogger.debug('🔄 Reloading episodes for new subscription');
 
       // Reset filters
       _selectedFilter = 'all';
@@ -86,13 +87,13 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
       // Reload episodes for the new subscription
       _loadEpisodesForSubscription();
 
-      debugPrint('🔄 ===== didUpdateWidget complete =====');
+      logger.AppLogger.debug('🔄 ===== didUpdateWidget complete =====');
     }
   }
 
   Future<void> _loadEpisodesForSubscription() {
     return Future.microtask(() {
-      debugPrint('📋 Loading episodes for subscription: ${widget.subscriptionId}');
+      logger.AppLogger.debug('📋 Loading episodes for subscription: ${widget.subscriptionId}');
       ref
           .read(podcastEpisodesProvider.notifier)
           .loadEpisodesForSubscription(subscriptionId: widget.subscriptionId);
@@ -191,13 +192,13 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     // Debug: 输出分集图像链接信息（已注释）
     // if (episodesState.episodes.isNotEmpty) {
     //   final firstEpisode = episodesState.episodes.first;
-    //   debugPrint('📺 PodcastEpisodesPage - First episode image debug:');
-    //   debugPrint('  Episode ID: ${firstEpisode.id}');
-    //   debugPrint('  Episode Title: ${firstEpisode.title}');
-    //   debugPrint('  Image URL: ${firstEpisode.imageUrl}');
-    //   debugPrint('  Subscription Image URL: ${firstEpisode.subscriptionImageUrl}');
-    //   debugPrint('  Has episode image: ${firstEpisode.imageUrl != null}');
-    //   debugPrint('  Has subscription image: ${firstEpisode.subscriptionImageUrl != null}');
+    //   logger.AppLogger.debug('📺 PodcastEpisodesPage - First episode image debug:');
+    //   logger.AppLogger.debug('  Episode ID: ${firstEpisode.id}');
+    //   logger.AppLogger.debug('  Episode Title: ${firstEpisode.title}');
+    //   logger.AppLogger.debug('  Image URL: ${firstEpisode.imageUrl}');
+    //   logger.AppLogger.debug('  Subscription Image URL: ${firstEpisode.subscriptionImageUrl}');
+    //   logger.AppLogger.debug('  Has episode image: ${firstEpisode.imageUrl != null}');
+    //   logger.AppLogger.debug('  Has subscription image: ${firstEpisode.subscriptionImageUrl != null}');
     // }
 
     return Scaffold(

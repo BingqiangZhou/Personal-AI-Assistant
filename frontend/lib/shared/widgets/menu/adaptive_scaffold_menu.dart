@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/breakpoints.dart';
+import '../../../core/localization/app_localizations.dart';
 import 'adaptive_menu.dart';
 
 /// 使用 flutter_adaptive_scaffold 的自适应菜单布局
@@ -302,39 +303,42 @@ class _AdaptiveScaffoldMenuState extends State<AdaptiveScaffoldMenu> {
                     color: Theme.of(context).colorScheme.onSurface,
                     size: 20,
                   ),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'profile',
-                      child: Row(
-                        children: [
-                          Icon(Icons.person_outline),
-                          SizedBox(width: 8),
-                          Text('Profile'),
-                        ],
+                  itemBuilder: (context) {
+                    final l10n = AppLocalizations.of(context)!;
+                    return [
+                      PopupMenuItem(
+                        value: 'profile',
+                        child: Row(
+                          children: [
+                            Icon(Icons.person_outline),
+                            SizedBox(width: 8),
+                            Text(l10n.profile),
+                          ],
+                        ),
                       ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'settings',
-                      child: Row(
-                        children: [
-                          Icon(Icons.settings_outlined),
-                          SizedBox(width: 8),
-                          Text('Settings'),
-                        ],
+                      PopupMenuItem(
+                        value: 'settings',
+                        child: Row(
+                          children: [
+                            Icon(Icons.settings_outlined),
+                            SizedBox(width: 8),
+                            Text(l10n.settings),
+                          ],
+                        ),
                       ),
-                    ),
-                    const PopupMenuDivider(),
-                    const PopupMenuItem(
-                      value: 'logout',
-                      child: Row(
-                        children: [
-                          Icon(Icons.logout_outlined, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Logout', style: TextStyle(color: Colors.red)),
-                        ],
+                      PopupMenuDivider(),
+                      PopupMenuItem(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout_outlined, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text(l10n.logout, style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ];
+                  },
                   onSelected: (value) => _handleUserMenuSelection(value),
                 ),
               ],
@@ -351,39 +355,42 @@ class _AdaptiveScaffoldMenuState extends State<AdaptiveScaffoldMenu> {
                     size: 16,
                   ),
                 ),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'profile',
-                    child: Row(
-                      children: [
-                        Icon(Icons.person_outline),
-                        SizedBox(width: 8),
-                        Text('Profile'),
-                      ],
+                itemBuilder: (context) {
+                  final l10n = AppLocalizations.of(context)!;
+                  return [
+                    PopupMenuItem(
+                      value: 'profile',
+                      child: Row(
+                        children: [
+                          Icon(Icons.person_outline),
+                          SizedBox(width: 8),
+                          Text(l10n.profile),
+                        ],
+                      ),
                     ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'settings',
-                    child: Row(
-                      children: [
-                        Icon(Icons.settings_outlined),
-                        SizedBox(width: 8),
-                        Text('Settings'),
-                      ],
+                    PopupMenuItem(
+                      value: 'settings',
+                      child: Row(
+                        children: [
+                          Icon(Icons.settings_outlined),
+                          SizedBox(width: 8),
+                          Text(l10n.settings),
+                        ],
+                      ),
                     ),
-                  ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem(
-                    value: 'logout',
-                    child: Row(
-                      children: [
-                        Icon(Icons.logout_outlined, color: Colors.red),
-                        SizedBox(width: 8),
-                        Text('Logout', style: TextStyle(color: Colors.red)),
-                      ],
+                    PopupMenuDivider(),
+                    PopupMenuItem(
+                      value: 'logout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout_outlined, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text(l10n.logout, style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ];
+                },
                 onSelected: (value) => _handleUserMenuSelection(value),
               ),
             ),

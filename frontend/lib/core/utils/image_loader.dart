@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_logger.dart' as logger;
+
 /// 统一的图片加载工具，处理CloudFront 403等CDN访问问题
 class ImageLoader {
   /// 创建一个带有错误处理和回退机制的图片Widget
@@ -28,7 +30,7 @@ class ImageLoader {
         return loadingWidget ?? _buildLoadingWidget(width, height);
       },
       errorBuilder: (context, error, stackTrace) {
-        debugPrint('❌ Image load failed for $imageUrl: $error');
+        logger.AppLogger.debug('❌ Image load failed for $imageUrl: $error');
         return _buildFallbackWidget(errorWidget, width, height);
       },
     );
@@ -120,10 +122,10 @@ class ImageLoader {
   static Future<bool> isImageUrlAccessible(String url) async {
     try {
       // 简单的HEAD请求检查
-      debugPrint('🌐 Checking URL accessibility: $url');
+      logger.AppLogger.debug('🌐 Checking URL accessibility: $url');
       return true; // 简化实现，实际使用时需要添加http包依赖
     } catch (e) {
-      debugPrint('❌ URL accessibility check failed: $e');
+      logger.AppLogger.debug('❌ URL accessibility check failed: $e');
       return false;
     }
   }
@@ -178,7 +180,7 @@ class _RetryableImageState extends State<_RetryableImage> {
         _retryCount++;
         // 添加时间戳重试
         _currentUrl = '${widget.imageUrl}${widget.imageUrl.contains('?') ? '&' : '?'}retry=$_retryCount&ts=${DateTime.now().millisecondsSinceEpoch}';
-        debugPrint('🔄 Retrying image load: $_currentUrl (attempt $_retryCount)');
+        logger.AppLogger.debug('🔄 Retrying image load: $_currentUrl (attempt $_retryCount)');
       });
     } else {
       setState(() {
@@ -199,7 +201,7 @@ class _RetryableImageState extends State<_RetryableImage> {
       height: widget.height,
       fit: widget.fit,
       errorBuilder: (context, error, stackTrace) {
-        debugPrint('❌ Image load error (attempt ${_retryCount + 1}/${widget.maxRetries + 1}): $error');
+        logger.AppLogger.debug('❌ Image load error (attempt ${_retryCount + 1}/${widget.maxRetries + 1}): $error');
         // 延迟重试，避免立即重试导致UI卡顿
         WidgetsBinding.instance.addPostFrameCallback((_) {
           Future.delayed(Duration(milliseconds: 200 * (_retryCount + 1)), () {

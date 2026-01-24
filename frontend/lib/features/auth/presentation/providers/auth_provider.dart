@@ -12,6 +12,7 @@ import '../../../../core/auth/auth_event.dart';
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../core/providers/core_providers.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 // Token refresh constants
 const int _tokenRefreshBufferMinutes = 5; // Refresh 5 minutes before expiry
@@ -108,7 +109,7 @@ class AuthNotifier extends Notifier<AuthState> {
         if (event.type == AuthEventType.tokenCleared) {
           // Sync auth state when tokens are cleared by DioClient
           if (state.isAuthenticated) {
-            debugPrint('🔔 [AuthProvider] Received tokenCleared event, clearing auth state');
+            logger.AppLogger.debug('🔔 [AuthProvider] Received tokenCleared event, clearing auth state');
             state = state.copyWith(
               isAuthenticated: false,
               user: null,
@@ -285,22 +286,22 @@ class AuthNotifier extends Notifier<AuthState> {
     result.fold(
       (error) {
         // Debug logging
-        debugPrint('=== Register Error Debug ===');
-        debugPrint('Error type: ${error.runtimeType}');
-        debugPrint('Error message: ${error.message}');
-        debugPrint('Error statusCode: ${error.statusCode}');
+        logger.AppLogger.debug('=== Register Error Debug ===');
+        logger.AppLogger.debug('Error type: ${error.runtimeType}');
+        logger.AppLogger.debug('Error message: ${error.message}');
+        logger.AppLogger.debug('Error statusCode: ${error.statusCode}');
 
         if (error is ValidationException) {
-          debugPrint('Field errors: ${error.fieldErrors}');
-          debugPrint('Error details: ${error.details}');
+          logger.AppLogger.debug('Field errors: ${error.fieldErrors}');
+          logger.AppLogger.debug('Error details: ${error.details}');
         }
 
         String userMessage = _getErrorMessage(error);
         Map<String, String>? fieldErrors = _getFieldErrors(error);
 
-        debugPrint('User message: $userMessage');
-        debugPrint('Field errors: $fieldErrors');
-        debugPrint('========================');
+        logger.AppLogger.debug('User message: $userMessage');
+        logger.AppLogger.debug('Field errors: $fieldErrors');
+        logger.AppLogger.debug('========================');
 
         state = state.copyWith(
           isLoading: false,
@@ -423,11 +424,11 @@ class AuthNotifier extends Notifier<AuthState> {
 
   // Helper methods
   String _getErrorMessage(AppException error) {
-    debugPrint('=== _getErrorMessage Debug ===');
-    debugPrint('Error runtimeType: ${error.runtimeType}');
-    debugPrint('Error message: ${error.message}');
-    debugPrint('Error type check: ${error is ConflictException}');
-    debugPrint('ConflictException type: ${ConflictException}');
+    logger.AppLogger.debug('=== _getErrorMessage Debug ===');
+    logger.AppLogger.debug('Error runtimeType: ${error.runtimeType}');
+    logger.AppLogger.debug('Error message: ${error.message}');
+    logger.AppLogger.debug('Error type check: ${error is ConflictException}');
+    logger.AppLogger.debug('ConflictException type: ${ConflictException}');
 
     String result;
     switch (error.runtimeType) {
@@ -441,7 +442,7 @@ class AuthNotifier extends Notifier<AuthState> {
       case ValidationException:
         final validationError = error as ValidationException;
         result = validationError.message;
-        debugPrint('ValidationException message: $result');
+        logger.AppLogger.debug('ValidationException message: $result');
         break;
       case ServerException:
         result = 'Server error. Please try again later.';
@@ -454,24 +455,24 @@ class AuthNotifier extends Notifier<AuthState> {
         break;
       case ConflictException:
         result = error.message;
-        debugPrint('ConflictException message: $result');
+        logger.AppLogger.debug('ConflictException message: $result');
         break;
       default:
         result = 'An unexpected error occurred. Please try again.';
-        debugPrint('Default error case triggered');
+        logger.AppLogger.debug('Default error case triggered');
     }
 
-    debugPrint('Result message: $result');
-    debugPrint('==========================');
+    logger.AppLogger.debug('Result message: $result');
+    logger.AppLogger.debug('==========================');
     return result;
   }
 
   Map<String, String>? _getFieldErrors(AppException error) {
     if (error is ValidationException) {
-      debugPrint('=== _getFieldErrors Debug ===');
-      debugPrint('error.fieldErrors: ${error.fieldErrors}');
-      debugPrint('error.details: ${error.details}');
-      debugPrint('=============================');
+      logger.AppLogger.debug('=== _getFieldErrors Debug ===');
+      logger.AppLogger.debug('error.fieldErrors: ${error.fieldErrors}');
+      logger.AppLogger.debug('error.details: ${error.details}');
+      logger.AppLogger.debug('=============================');
 
       // Try fieldErrors first (from our updated code)
       if (error.fieldErrors != null && error.fieldErrors!.isNotEmpty) {
@@ -609,14 +610,14 @@ class AuthNotifier extends Notifier<AuthState> {
       (_) => _checkAndRefreshToken(),
     );
 
-    debugPrint('✅ [Auth] Token refresh timer started');
+    logger.AppLogger.debug('✅ [Auth] Token refresh timer started');
   }
 
   /// Stop automatic token refresh timer
   void _stopTokenRefreshTimer() {
     _tokenRefreshTimer?.cancel();
     _tokenRefreshTimer = null;
-    debugPrint('⏹️ [Auth] Token refresh timer stopped');
+    logger.AppLogger.debug('⏹️ [Auth] Token refresh timer stopped');
   }
 
   /// Check if token needs refresh and refresh if necessary
@@ -637,11 +638,11 @@ class AuthNotifier extends Notifier<AuthState> {
 
       // Refresh if token expires in less than buffer time
       if (timeUntilExpiry <= Duration(minutes: _tokenRefreshBufferMinutes)) {
-        debugPrint('🔄 [Auth] Token expiring in ${timeUntilExpiry.inMinutes} minutes, auto-refreshing...');
+        logger.AppLogger.debug('🔄 [Auth] Token expiring in ${timeUntilExpiry.inMinutes} minutes, auto-refreshing...');
         await refreshToken();
       }
     } catch (e) {
-      debugPrint('⚠️ [Auth] Error checking token expiry: $e');
+      logger.AppLogger.debug('⚠️ [Auth] Error checking token expiry: $e');
     }
   }
 

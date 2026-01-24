@@ -8,6 +8,7 @@ import 'package:xml/xml.dart';
 import 'package:dio/dio.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 /// Model to represent URL validation status
 class UrlValidationItem {
@@ -168,9 +169,9 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
         ));
       }
 
-      debugPrint('== OPML parsing: found ${urlsWithTitles.length} RSS feeds with titles ==');
+      logger.AppLogger.debug('== OPML parsing: found ${urlsWithTitles.length} RSS feeds with titles ==');
     } catch (e) {
-      debugPrint('Error parsing OPML: $e');
+      logger.AppLogger.debug('Error parsing OPML: $e');
       // If OPML parsing fails, fall back to regex extraction (without titles)
       final urls = _extractUrls(content);
       return urls.map((url) => UrlWithTitle(url: url, title: null)).toList();
@@ -209,7 +210,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
       return hasRssTag || hasAtomTag || (hasXmlDecl && (hasRssTag || hasAtomTag));
     } catch (e) {
-      debugPrint('Error validating RSS URL $url: $e');
+      logger.AppLogger.debug('Error validating RSS URL $url: $e');
       return false;
     }
   }
@@ -386,7 +387,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
   Future<void> _processFile(String path) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      debugPrint('== Processing file: $path ==');
+      logger.AppLogger.debug('== Processing file: $path ==');
       final file = File(path);
       final content = await file.readAsString();
 
@@ -394,7 +395,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       final isOpmlFile = path.toLowerCase().endsWith('.opml');
 
       if (isOpmlFile) {
-        debugPrint('== Detected OPML file, using OPML parser ==');
+        logger.AppLogger.debug('== Detected OPML file, using OPML parser ==');
         final urlsWithTitles = _extractOpmlUrls(content);
 
         if (urlsWithTitles.isEmpty) {
@@ -422,7 +423,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
           );
         }
       } else {
-        debugPrint('== Detected text file, using regex parser ==');
+        logger.AppLogger.debug('== Detected text file, using regex parser ==');
         final urls = _extractUrls(content);
 
         if (urls.isEmpty) {
@@ -451,7 +452,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
         }
       }
     } catch (e) {
-      debugPrint('Error reading file: $e');
+      logger.AppLogger.debug('Error reading file: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.podcast_bulk_import_file_error(e.toString())), backgroundColor: Colors.red),
@@ -471,7 +472,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
         await _processFile(result.files.single.path!);
       }
     } catch (e) {
-      debugPrint('Error picking file: $e');
+      logger.AppLogger.debug('Error picking file: $e');
     }
   }
 

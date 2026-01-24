@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/podcast_search_model.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 /// iTunes Search Service
 ///
@@ -69,7 +70,7 @@ class ITunesSearchService {
     // 检查缓存
     final cachedResponse = _getCachedResponse(cacheKey);
     if (cachedResponse != null) {
-      debugPrint('📦 Cache hit for iTunes search: $term');
+      logger.AppLogger.debug('📦 Cache hit for iTunes search: $term');
       return cachedResponse;
     }
 
@@ -83,10 +84,10 @@ class ITunesSearchService {
         'limit': limit,
       };
 
-      debugPrint('🔍 Searching iTunes for: "$term"');
-      debugPrint('   URL: $url');
-      debugPrint('   Country: ${country.code}');
-      debugPrint('   Limit: $limit');
+      logger.AppLogger.debug('🔍 Searching iTunes for: "$term"');
+      logger.AppLogger.debug('   URL: $url');
+      logger.AppLogger.debug('   Country: ${country.code}');
+      logger.AppLogger.debug('   Limit: $limit');
 
       final response = await _dio.get(
         url,
@@ -95,13 +96,13 @@ class ITunesSearchService {
 
       if (response.statusCode == 200) {
         // Debug: 打印原始响应类型
-        debugPrint('📦 Response data type: ${response.data.runtimeType}');
+        logger.AppLogger.debug('📦 Response data type: ${response.data.runtimeType}');
 
         // 处理响应数据（可能是 String 或 Map）
         final Map<String, dynamic> data;
         if (response.data is String) {
           // 如果是字符串，需要手动解析 JSON
-          debugPrint('📦 Parsing JSON from string...');
+          logger.AppLogger.debug('📦 Parsing JSON from string...');
           data = jsonDecode(response.data as String) as Map<String, dynamic>;
         } else if (response.data is Map) {
           // 如果已经是 Map，直接使用
@@ -112,7 +113,7 @@ class ITunesSearchService {
 
         final itunesResponse = iTunesSearchResponse.fromJson(data);
 
-        debugPrint('✅ Found ${itunesResponse.resultCount} podcasts');
+        logger.AppLogger.debug('✅ Found ${itunesResponse.resultCount} podcasts');
 
         // 缓存响应
         _setCachedResponse(cacheKey, itunesResponse);
@@ -120,7 +121,7 @@ class ITunesSearchService {
         return itunesResponse;
       } else {
         final errorMsg = 'iTunes API returned status ${response.statusCode}';
-        debugPrint('❌ $errorMsg');
+        logger.AppLogger.debug('❌ $errorMsg');
         throw Exception(errorMsg);
       }
     } on DioException catch (dioError) {
@@ -129,36 +130,36 @@ class ITunesSearchService {
       switch (dioError.type) {
         case DioExceptionType.connectionTimeout:
           errorMsg = 'Connection timeout. Please check your network or try using a VPN.';
-          debugPrint('❌ Connection Timeout: ${dioError.message}');
+          logger.AppLogger.debug('❌ Connection Timeout: ${dioError.message}');
           break;
         case DioExceptionType.sendTimeout:
           errorMsg = 'Send timeout. Please try again.';
-          debugPrint('❌ Send Timeout: ${dioError.message}');
+          logger.AppLogger.debug('❌ Send Timeout: ${dioError.message}');
           break;
         case DioExceptionType.receiveTimeout:
           errorMsg = 'Receive timeout. Server response too slow.';
-          debugPrint('❌ Receive Timeout: ${dioError.message}');
+          logger.AppLogger.debug('❌ Receive Timeout: ${dioError.message}');
           break;
         case DioExceptionType.badResponse:
           errorMsg = 'Server error: ${dioError.response?.statusCode}';
-          debugPrint('❌ Bad Response: ${dioError.response?.statusCode}');
+          logger.AppLogger.debug('❌ Bad Response: ${dioError.response?.statusCode}');
           break;
         case DioExceptionType.cancel:
           errorMsg = 'Request was cancelled.';
-          debugPrint('❌ Request Cancelled');
+          logger.AppLogger.debug('❌ Request Cancelled');
           break;
         case DioExceptionType.connectionError:
           errorMsg = 'Connection failed. iTunes API may be blocked in your region. Try using a VPN.';
-          debugPrint('❌ Connection Error: ${dioError.message}');
-          debugPrint('   In China, iTunes API may require a VPN to access.');
+          logger.AppLogger.debug('❌ Connection Error: ${dioError.message}');
+          logger.AppLogger.debug('   In China, iTunes API may require a VPN to access.');
           break;
         default:
           errorMsg = 'Network error: ${dioError.message}';
-          debugPrint('❌ Network Error: ${dioError.message}');
+          logger.AppLogger.debug('❌ Network Error: ${dioError.message}');
       }
       throw Exception(errorMsg);
     } catch (error) {
-      debugPrint('❌ iTunes search failed: $error');
+      logger.AppLogger.debug('❌ iTunes search failed: $error');
       rethrow;
     }
   }
@@ -180,12 +181,12 @@ class ITunesSearchService {
     // 检查缓存
     final cachedResponse = _getCachedResponse(cacheKey);
     if (cachedResponse != null && cachedResponse.results.isNotEmpty) {
-      debugPrint('📦 Cache hit for iTunes lookup: $itunesId');
+      logger.AppLogger.debug('📦 Cache hit for iTunes lookup: $itunesId');
       return cachedResponse.results.first;
     }
 
     try {
-      debugPrint('🔍 Looking up iTunes ID: $itunesId (country: ${country.code})');
+      logger.AppLogger.debug('🔍 Looking up iTunes ID: $itunesId (country: ${country.code})');
 
       final response = await _dio.get(
         'https://itunes.apple.com/lookup',
@@ -201,21 +202,21 @@ class ITunesSearchService {
 
         if (itunesResponse.results.isNotEmpty) {
           final result = itunesResponse.results.first;
-          debugPrint('✅ Found podcast: ${result.collectionName}');
+          logger.AppLogger.debug('✅ Found podcast: ${result.collectionName}');
 
           // 缓存响应
           _setCachedResponse(cacheKey, itunesResponse);
 
           return result;
         } else {
-          debugPrint('⚠️ No podcast found for iTunes ID: $itunesId');
+          logger.AppLogger.debug('⚠️ No podcast found for iTunes ID: $itunesId');
           return null;
         }
       } else {
         throw Exception('iTunes API returned status ${response.statusCode}');
       }
     } catch (error) {
-      debugPrint('❌ iTunes lookup failed: $error');
+      logger.AppLogger.debug('❌ iTunes lookup failed: $error');
       rethrow;
     }
   }
@@ -242,7 +243,7 @@ class ITunesSearchService {
   /// 清除所有缓存
   void clearCache() {
     _cache.clear();
-    debugPrint('🗑️ iTunes search cache cleared');
+    logger.AppLogger.debug('🗑️ iTunes search cache cleared');
   }
 
   /// 清除过期缓存
@@ -251,7 +252,7 @@ class ITunesSearchService {
     _cache.removeWhere((key, cached) {
       final isExpired = now.difference(cached.timestamp) > _cacheExpiration;
       if (isExpired) {
-        debugPrint('🗑️ Removed expired cache: $key');
+        logger.AppLogger.debug('🗑️ Removed expired cache: $key');
       }
       return isExpired;
     });

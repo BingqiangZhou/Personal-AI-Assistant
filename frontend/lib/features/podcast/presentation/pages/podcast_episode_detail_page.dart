@@ -18,6 +18,7 @@ import '../widgets/conversation_chat_widget.dart';
 import '../widgets/podcast_image_widget.dart';
 import '../widgets/side_floating_player_widget.dart';
 import '../widgets/scrollable_content_wrapper.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
   final int episodeId;
@@ -103,8 +104,8 @@ class _PodcastEpisodeDetailPageState
   }
 
   Future<void> _loadAndPlayEpisode() async {
-    debugPrint('🎵 ===== _loadAndPlayEpisode called =====');
-    debugPrint('🎵 widget.episodeId: ${widget.episodeId}');
+    logger.AppLogger.debug('🎵 ===== _loadAndPlayEpisode called =====');
+    logger.AppLogger.debug('🎵 widget.episodeId: ${widget.episodeId}');
 
     try {
       // Wait for episode detail to be loaded
@@ -112,11 +113,11 @@ class _PodcastEpisodeDetailPageState
         episodeDetailProvider(widget.episodeId).future,
       );
 
-      debugPrint('🎵 Loaded episode detail: ID=${episodeDetailAsync?.id}, Title=${episodeDetailAsync?.title}');
+      logger.AppLogger.debug('🎵 Loaded episode detail: ID=${episodeDetailAsync?.id}, Title=${episodeDetailAsync?.title}');
 
       // Debug: Log itemLink from API response
       if (episodeDetailAsync != null) {
-        debugPrint('🔗 [API Response] itemLink: ${episodeDetailAsync.itemLink ?? "NULL"}');
+        logger.AppLogger.debug('🔗 [API Response] itemLink: ${episodeDetailAsync.itemLink ?? "NULL"}');
       }
 
       if (episodeDetailAsync != null) {
@@ -153,11 +154,11 @@ class _PodcastEpisodeDetailPageState
           updatedAt: episodeDetailAsync.updatedAt,
         );
 
-        debugPrint('🎵 Auto-playing episode: ${episodeModel.title}');
+        logger.AppLogger.debug('🎵 Auto-playing episode: ${episodeModel.title}');
         await ref.read(audioPlayerProvider.notifier).playEpisode(episodeModel);
       }
     } catch (error) {
-      debugPrint('❌ Failed to auto-play episode: $error');
+      logger.AppLogger.debug('❌ Failed to auto-play episode: $error');
     }
   }
 
@@ -167,21 +168,21 @@ class _PodcastEpisodeDetailPageState
       // Automatically check/start transcription if missing
       await ref.read(transcriptionProvider.notifier).checkOrStartTranscription();
     } catch (error) {
-      debugPrint('❌ Failed to load transcription status: $error');
+      logger.AppLogger.debug('❌ Failed to load transcription status: $error');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     // Debug: Print current episode ID being loaded
-    debugPrint('🏗️ ===== Building PodcastEpisodeDetailPage =====');
-    debugPrint('🏗️ widget.episodeId: ${widget.episodeId}');
+    logger.AppLogger.debug('🏗️ ===== Building PodcastEpisodeDetailPage =====');
+    logger.AppLogger.debug('🏗️ widget.episodeId: ${widget.episodeId}');
 
     final episodeDetailAsync = ref.watch(
       episodeDetailProvider(widget.episodeId),
     );
 
-    debugPrint('🏗️ episodeDetailAsync value: ${episodeDetailAsync.value?.id}');
+    logger.AppLogger.debug('🏗️ episodeDetailAsync value: ${episodeDetailAsync.value?.id}');
 
     // Listen to transcription status changes to provide user feedback
     ref.listen(getTranscriptionProvider(widget.episodeId), (previous, next) {
@@ -551,7 +552,7 @@ class _PodcastEpisodeDetailPageState
                                     await ref.read(audioPlayerProvider.notifier).playEpisode(episodeModel);
                                   }
                                 } catch (error) {
-                                  debugPrint('❌ Failed to play episode: $error');
+                                  logger.AppLogger.debug('❌ Failed to play episode: $error');
                                 }
                               },
                               child: Container(
@@ -894,7 +895,7 @@ class _PodcastEpisodeDetailPageState
             await ref.read(audioPlayerProvider.notifier).playEpisode(episodeModel);
           }
         } catch (error) {
-          debugPrint('❌ Failed to play episode: $error');
+          logger.AppLogger.debug('❌ Failed to play episode: $error');
         }
       },
       child: Container(
@@ -1665,13 +1666,13 @@ class _PodcastEpisodeDetailPageState
     super.didUpdateWidget(oldWidget);
     // Check if episodeId has changed
     if (oldWidget.episodeId != widget.episodeId) {
-      debugPrint('🔄 ===== didUpdateWidget: Episode ID changed =====');
-      debugPrint('🔄 Old Episode ID: ${oldWidget.episodeId}');
-      debugPrint('🔄 New Episode ID: ${widget.episodeId}');
-      debugPrint('🔄 Reloading episode data and auto-playing new episode');
+      logger.AppLogger.debug('🔄 ===== didUpdateWidget: Episode ID changed =====');
+      logger.AppLogger.debug('🔄 Old Episode ID: ${oldWidget.episodeId}');
+      logger.AppLogger.debug('🔄 New Episode ID: ${widget.episodeId}');
+      logger.AppLogger.debug('🔄 Reloading episode data and auto-playing new episode');
 
       // Invalidate old episode detail provider to force refresh
-      debugPrint('🔄 Invalidating old episode detail provider');
+      logger.AppLogger.debug('🔄 Invalidating old episode detail provider');
       ref.invalidate(episodeDetailProvider(oldWidget.episodeId));
 
       // Reset tab selection
@@ -1683,11 +1684,11 @@ class _PodcastEpisodeDetailPageState
 
       // Reload data for the new episode
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        debugPrint('🔄 Calling _loadAndPlayEpisode for new episode');
+        logger.AppLogger.debug('🔄 Calling _loadAndPlayEpisode for new episode');
         _loadAndPlayEpisode();
         _loadTranscriptionStatus();
       });
-      debugPrint('🔄 ===== didUpdateWidget complete =====');
+      logger.AppLogger.debug('🔄 ===== didUpdateWidget complete =====');
     }
   }
 
@@ -1703,16 +1704,16 @@ class _PodcastEpisodeDetailPageState
       if (episodeDetailAsync != null &&
           episodeDetailAsync.aiSummary != null &&
           episodeDetailAsync.aiSummary!.isNotEmpty) {
-        debugPrint('✅ [AI SUMMARY] Summary already exists, skipping polling');
+        logger.AppLogger.debug('✅ [AI SUMMARY] Summary already exists, skipping polling');
         return;
       }
     } catch (e) {
-      debugPrint('⚠️ [AI SUMMARY] Failed to check initial summary state: $e');
+      logger.AppLogger.debug('⚠️ [AI SUMMARY] Failed to check initial summary state: $e');
     }
 
     // 开始轮询
     _isPolling = true;
-    debugPrint('🔄 [AI SUMMARY] Starting polling...');
+    logger.AppLogger.debug('🔄 [AI SUMMARY] Starting polling...');
 
     // 每5秒轮询一次，检查AI摘要是否已生成
     _summaryPollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
@@ -1728,7 +1729,7 @@ class _PodcastEpisodeDetailPageState
         if (episodeDetailAsync != null) {
           // 如果AI摘要已存在，停止轮询
           if (episodeDetailAsync.aiSummary != null && episodeDetailAsync.aiSummary!.isNotEmpty) {
-            debugPrint('✅ [AI SUMMARY] Summary generated, stopping polling');
+            logger.AppLogger.debug('✅ [AI SUMMARY] Summary generated, stopping polling');
             _stopSummaryPolling();
             return;
           }
@@ -1737,7 +1738,7 @@ class _PodcastEpisodeDetailPageState
         // 刷新episode detail数据
         ref.invalidate(episodeDetailProvider(widget.episodeId));
       } catch (e) {
-        debugPrint('⚠️ [AI SUMMARY] Error during polling: $e');
+        logger.AppLogger.debug('⚠️ [AI SUMMARY] Error during polling: $e');
       }
     });
   }
@@ -1747,7 +1748,7 @@ class _PodcastEpisodeDetailPageState
     _summaryPollingTimer?.cancel();
     _summaryPollingTimer = null;
     _isPolling = false;
-    debugPrint('⏹️ [AI SUMMARY] Stopped polling');
+    logger.AppLogger.debug('⏹️ [AI SUMMARY] Stopped polling');
   }
 
   /// 检测是否是真正的移动设备平台

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../core/utils/app_logger.dart' as logger;
 import '../../domain/models/auth_request.dart';
 import '../../domain/models/auth_response.dart';
 import '../../domain/models/user.dart';
@@ -33,17 +34,17 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
 
   @override
   Future<AuthResponse> register(RegisterRequest request) async {
-    debugPrint('=== AuthRemoteDatasource register ===');
-    debugPrint('Request data: ${request.toJson()}');
+    logger.AppLogger.debug('=== AuthRemoteDatasource register ===');
+    logger.AppLogger.debug('Request data: ${request.toJson()}');
 
     final response = await _apiClient.post(
       '/auth/register',
       data: request.toJson(),
     );
 
-    debugPrint('Response status: ${response.statusCode}');
-    debugPrint('Response data type: ${response.data.runtimeType}');
-    debugPrint('Response data keys: ${(response.data as Map<String, dynamic>).keys.toList()}');
+    logger.AppLogger.debug('Response status: ${response.statusCode}');
+    logger.AppLogger.debug('Response data type: ${response.data.runtimeType}');
+    logger.AppLogger.debug('Response data keys: ${(response.data as Map<String, dynamic>).keys.toList()}');
 
     // Check if response contains user object instead of token
     final responseData = response.data as Map<String, dynamic>;
@@ -53,7 +54,7 @@ class AuthRemoteDatasourceImpl implements AuthRemoteDatasource {
     if (responseData.containsKey('id') &&
         responseData.containsKey('email') &&
         !responseData.containsKey('access_token')) {
-      debugPrint('!!! Received User object instead of Token, attempting login...');
+      logger.AppLogger.debug('!!! Received User object instead of Token, attempting login...');
 
       // Try to login with the newly created user credentials
       return await login(LoginRequest(

@@ -18,6 +18,7 @@ import '../../data/models/audio_player_state_model.dart';
 import '../../data/models/podcast_state_models.dart';
 import '../../data/repositories/podcast_repository.dart';
 import '../../data/services/podcast_api_service.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 // === API Service & Repository Providers ===
 
@@ -69,7 +70,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       // Only log when state actually changes
       if (kDebugMode && _lastPlayingState != playbackState.playing) {
-        debugPrint('🎵 Playback state changed: ${_lastPlayingState == null ? "initial" : _lastPlayingState! ? "playing" : "paused"} -> ${playbackState.playing ? "playing" : "paused"}');
+        logger.AppLogger.debug('🎵 Playback state changed: ${_lastPlayingState == null ? "initial" : _lastPlayingState! ? "playing" : "paused"} -> ${playbackState.playing ? "playing" : "paused"}');
         _lastPlayingState = playbackState.playing;
       }
 
@@ -110,7 +111,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
         if (shouldUpdate && newDuration != currentDuration) {
           if (kDebugMode) {
-            debugPrint('🎵 [DURATION UPDATE] ${currentDuration}ms -> ${newDuration}ms (from audio stream)');
+            logger.AppLogger.debug('🎵 [DURATION UPDATE] ${currentDuration}ms -> ${newDuration}ms (from audio stream)');
           }
           state = state.copyWith(duration: newDuration);
         }
@@ -118,24 +119,24 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     });
 
     if (kDebugMode) {
-      debugPrint('🎵 Audio listeners set up successfully');
+      logger.AppLogger.debug('🎵 Audio listeners set up successfully');
     }
   }
 
   Future<void> playEpisode(PodcastEpisodeModel episode) async {
     if (_isPlayingEpisode) {
-      debugPrint('⚠️ playEpisode already in progress, ignoring duplicate call');
+      logger.AppLogger.debug('⚠️ playEpisode already in progress, ignoring duplicate call');
       return;
     }
 
     _isPlayingEpisode = true;
 
     try {
-      debugPrint('🎵 ===== playEpisode called =====');
-      debugPrint('🎵 Episode ID: ${episode.id}');
-      debugPrint('🎵 Episode Title: ${episode.title}');
-      debugPrint('🎵 Audio URL: ${episode.audioUrl}');
-      debugPrint('🎵 Subscription ID: ${episode.subscriptionId}');
+      logger.AppLogger.debug('🎵 ===== playEpisode called =====');
+      logger.AppLogger.debug('🎵 Episode ID: ${episode.id}');
+      logger.AppLogger.debug('🎵 Episode Title: ${episode.title}');
+      logger.AppLogger.debug('🎵 Audio URL: ${episode.audioUrl}');
+      logger.AppLogger.debug('🎵 Subscription ID: ${episode.subscriptionId}');
 
       if (!ref.mounted || _isDisposed) {
         _isPlayingEpisode = false;
@@ -147,12 +148,12 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       // ===== STEP 1: Pause current playback instead of stop =====
       // Using pause() instead of stop() to avoid clearing the audio source
       // This maintains the media session state better
-      debugPrint('⏸️ Step 1: Pausing current playback');
+      logger.AppLogger.debug('⏸️ Step 1: Pausing current playback');
       try {
         await _audioHandler.pause();
-        debugPrint('  ✅ Paused');
+        logger.AppLogger.debug('  ✅ Paused');
       } catch (e) {
-        debugPrint('  ⚠️ Pause error (ignorable): $e');
+        logger.AppLogger.debug('  ⚠️ Pause error (ignorable): $e');
       }
 
       state = const AudioPlayerState().copyWith(
@@ -162,10 +163,10 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       if (!ref.mounted || _isDisposed) return;
 
       // ===== STEP 2: Set new episode info with duration from backend =====
-      debugPrint('📝 Step 2: Setting new episode info');
+      logger.AppLogger.debug('📝 Step 2: Setting new episode info');
       // CRITICAL: Backend audioDuration is in SECONDS, convert to MILLISECONDS
       final durationMs = (episode.audioDuration ?? 0) * 1000;
-      debugPrint('  📊 Using backend duration: ${episode.audioDuration}s = ${durationMs}ms');
+      logger.AppLogger.debug('  📊 Using backend duration: ${episode.audioDuration}s = ${durationMs}ms');
       state = state.copyWith(
         currentEpisode: episode,
         isLoading: true,
@@ -177,9 +178,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       // ===== STEP 3: Set new episode with metadata =====
       // CRITICAL: Use setEpisode() to properly set MediaItem, validate artUri, and load audio
       // artUri validation is built into setEpisode() - only http/https URLs are accepted
-      debugPrint('🔄 Step 3: Setting new episode with metadata');
-      debugPrint('  📊 Backend duration already set: ${state.duration}ms');
-      debugPrint('  🖼️ Image URL: ${episode.imageUrl ?? "NULL"}');
+      logger.AppLogger.debug('🔄 Step 3: Setting new episode with metadata');
+      logger.AppLogger.debug('  📊 Backend duration already set: ${state.duration}ms');
+      logger.AppLogger.debug('  🖼️ Image URL: ${episode.imageUrl ?? "NULL"}');
 
       try {
         await _audioHandler.setEpisode(
@@ -190,9 +191,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           artUri: episode.imageUrl, // Will be validated inside setEpisode()
           autoPlay: false, // We'll manually start playback after restoring position/speed
         );
-        debugPrint('  ✅ Episode loaded successfully');
+        logger.AppLogger.debug('  ✅ Episode loaded successfully');
       } catch (loadError) {
-        debugPrint('  ❌ Failed to load episode: $loadError');
+        logger.AppLogger.debug('  ❌ Failed to load episode: $loadError');
         throw Exception('Failed to load audio: $loadError');
       }
 
@@ -200,12 +201,12 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       // ===== STEP 4: Restore playback position =====
       if (episode.playbackPosition != null && episode.playbackPosition! > 0) {
-        debugPrint('⏩ Step 4: Seeking to saved position: ${episode.playbackPosition}ms');
+        logger.AppLogger.debug('⏩ Step 4: Seeking to saved position: ${episode.playbackPosition}ms');
         try {
           await _audioHandler.seek(Duration(milliseconds: episode.playbackPosition!));
-          debugPrint('  ✅ Seek completed');
+          logger.AppLogger.debug('  ✅ Seek completed');
         } catch (e) {
-          debugPrint('  ⚠️ Seek error: $e');
+          logger.AppLogger.debug('  ⚠️ Seek error: $e');
         }
       }
 
@@ -213,20 +214,20 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       // ===== STEP 5: Restore playback rate =====
       if (savedPlaybackRate != 1.0) {
-        debugPrint('⚙️ Step 5: Restoring playback rate: ${savedPlaybackRate}x');
+        logger.AppLogger.debug('⚙️ Step 5: Restoring playback rate: ${savedPlaybackRate}x');
         try {
           await _audioHandler.setSpeed(savedPlaybackRate);
-          debugPrint('  ✅ Playback rate restored');
+          logger.AppLogger.debug('  ✅ Playback rate restored');
         } catch (e) {
-          debugPrint('  ⚠️ Failed to restore playback rate: $e');
+          logger.AppLogger.debug('  ⚠️ Failed to restore playback rate: $e');
         }
       }
 
       // ===== STEP 6: Start playback =====
-      debugPrint('▶️ Step 6: Starting playback');
+      logger.AppLogger.debug('▶️ Step 6: Starting playback');
       try {
         await _audioHandler.play();
-        debugPrint('  ✅ Playback started');
+        logger.AppLogger.debug('  ✅ Playback started');
 
         if (ref.mounted && !_isDisposed) {
           state = state.copyWith(
@@ -237,27 +238,27 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           );
         }
       } catch (playError) {
-        debugPrint('  ❌ Failed to start playback: $playError');
+        logger.AppLogger.debug('  ❌ Failed to start playback: $playError');
         _isPlayingEpisode = false;
         throw Exception('Failed to start playback: $playError');
       }
 
-      debugPrint('🎵 ===== playEpisode completed =====');
+      logger.AppLogger.debug('🎵 ===== playEpisode completed =====');
 
       // Update playback state on server (non-blocking)
       if (ref.mounted && !_isDisposed) {
         _updatePlaybackStateOnServer().catchError((error) {
-          debugPrint('⚠️ Server update failed: $error');
+          logger.AppLogger.debug('⚠️ Server update failed: $error');
         });
       }
 
       // Release the lock
       _isPlayingEpisode = false;
     } catch (error) {
-      debugPrint('❌ ===== Failed to play episode =====');
-      debugPrint('❌ Episode ID: ${episode.id}');
-      debugPrint('❌ Audio URL: ${episode.audioUrl}');
-      debugPrint('❌ Error: $error');
+      logger.AppLogger.debug('❌ ===== Failed to play episode =====');
+      logger.AppLogger.debug('❌ Episode ID: ${episode.id}');
+      logger.AppLogger.debug('❌ Audio URL: ${episode.audioUrl}');
+      logger.AppLogger.debug('❌ Error: $error');
 
       // Release the lock on error
       _isPlayingEpisode = false;
@@ -277,20 +278,20 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     if (_isDisposed) return;
 
     try {
-      debugPrint('🔴 pause() called, current isPlaying: ${state.isPlaying}');
+      logger.AppLogger.debug('🔴 pause() called, current isPlaying: ${state.isPlaying}');
 
       // IMPORTANT: Don't manually update state here - let the playbackState listener handle it
       // The listener will update the state when playbackState.playing changes
       // This avoids race conditions where manual state gets overwritten
 
       await _audioHandler.pause();
-      debugPrint('🔴 AudioHandler.pause() completed, waiting for playbackState listener to update UI');
+      logger.AppLogger.debug('🔴 AudioHandler.pause() completed, waiting for playbackState listener to update UI');
 
       if (ref.mounted && !_isDisposed) {
         await _updatePlaybackStateOnServer();
       }
     } catch (error) {
-      debugPrint('❌ pause() error: $error');
+      logger.AppLogger.debug('❌ pause() error: $error');
       if (ref.mounted && !_isDisposed) {
         state = state.copyWith(error: error.toString());
       }
@@ -301,20 +302,20 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     if (_isDisposed) return;
 
     try {
-      debugPrint('🟢 resume() called, current isPlaying: ${state.isPlaying}');
+      logger.AppLogger.debug('🟢 resume() called, current isPlaying: ${state.isPlaying}');
 
       // IMPORTANT: Don't manually update state here - let the playbackState listener handle it
       // The listener will update the state when playbackState.playing changes
       // This avoids race conditions where manual state gets overwritten
 
       await _audioHandler.play();
-      debugPrint('🟢 AudioHandler.play() completed, waiting for playbackState listener to update UI');
+      logger.AppLogger.debug('🟢 AudioHandler.play() completed, waiting for playbackState listener to update UI');
 
       if (ref.mounted && !_isDisposed) {
         await _updatePlaybackStateOnServer();
       }
     } catch (error) {
-      debugPrint('❌ resume() error: $error');
+      logger.AppLogger.debug('❌ resume() error: $error');
       if (ref.mounted && !_isDisposed) {
         state = state.copyWith(isPlaying: false, error: error.toString());
       }
@@ -395,15 +396,15 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       );
     } catch (error) {
       // Log more detailed error for debugging
-      debugPrint('⚠️ Failed to update playback state on server: $error');
-      debugPrint('📍 Episode ID: ${episode.id}');
-      debugPrint('📍 Position: ${state.position}ms (${(state.position / 1000).round()}s)');
-      debugPrint('📍 Is Playing: ${state.isPlaying}');
-      debugPrint('📍 Playback Rate: ${state.playbackRate}');
+      logger.AppLogger.debug('⚠️ Failed to update playback state on server: $error');
+      logger.AppLogger.debug('📍 Episode ID: ${episode.id}');
+      logger.AppLogger.debug('📍 Position: ${state.position}ms (${(state.position / 1000).round()}s)');
+      logger.AppLogger.debug('📍 Is Playing: ${state.isPlaying}');
+      logger.AppLogger.debug('📍 Playback Rate: ${state.playbackRate}');
 
       // Check if it's an authentication error
       if (error.toString().contains('401') || error.toString().contains('authentication')) {
-        debugPrint('🔑 Authentication error - user may need to log in again');
+        logger.AppLogger.debug('🔑 Authentication error - user may need to log in again');
       }
 
       // Don't update the UI state for server errors - continue playback
@@ -566,21 +567,21 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
   }) async {
     try {
       // Debug log
-      debugPrint('🗑️ Bulk delete request: subscriptionIds=$subscriptionIds');
-      debugPrint('🗑️ Subscription IDs type: ${subscriptionIds.runtimeType}');
+      logger.AppLogger.debug('🗑️ Bulk delete request: subscriptionIds=$subscriptionIds');
+      logger.AppLogger.debug('🗑️ Subscription IDs type: ${subscriptionIds.runtimeType}');
 
       final response = await _repository.bulkDeleteSubscriptions(
         subscriptionIds: subscriptionIds,
       );
 
-      debugPrint('✅ Bulk delete success: ${response.successCount} deleted, ${response.failedCount} failed');
+      logger.AppLogger.debug('✅ Bulk delete success: ${response.successCount} deleted, ${response.failedCount} failed');
 
       // Refresh the list
       await refreshSubscriptions();
 
       return response;
     } catch (error) {
-      debugPrint('❌ Bulk delete failed: $error');
+      logger.AppLogger.debug('❌ Bulk delete failed: $error');
       rethrow;
     }
   }
@@ -636,11 +637,11 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
         isLoading: false,
       );
     } catch (error) {
-      debugPrint('❌ 加载最新内容失败: $error');
+      logger.AppLogger.debug('❌ 加载最新内容失败: $error');
 
       // Check if this is an authentication error
       if (error is AuthenticationException) {
-        debugPrint('🔓 认证失败，触发认证状态检查');
+        logger.AppLogger.debug('🔓 认证失败，触发认证状态检查');
         // Trigger auth status check to update state and redirect to login
         ref.read(authProvider.notifier).checkAuthStatus();
       }
@@ -672,11 +673,11 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
         isLoadingMore: false,
       );
     } catch (error) {
-      debugPrint('❌ 加载更多内容失败: $error');
+      logger.AppLogger.debug('❌ 加载更多内容失败: $error');
 
       // Check if this is an authentication error
       if (error is AuthenticationException) {
-        debugPrint('🔓 认证失败，触发认证状态检查');
+        logger.AppLogger.debug('🔓 认证失败，触发认证状态检查');
         // Trigger auth status check to update state and redirect to login
         ref.read(authProvider.notifier).checkAuthStatus();
       }
@@ -771,7 +772,7 @@ final episodeDetailProvider = FutureProvider.family<PodcastEpisodeDetailResponse
   try {
     return await repository.getEpisode(episodeId);
   } catch (error) {
-    debugPrint('Failed to load episode detail: $error');
+    logger.AppLogger.debug('Failed to load episode detail: $error');
     return null;
   }
 });
@@ -796,11 +797,11 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
     int size = 20,
     String? status,
   }) async {
-    debugPrint('📋 Loading episodes for subscription $subscriptionId, page $page');
+    logger.AppLogger.debug('📋 Loading episodes for subscription $subscriptionId, page $page');
 
     // When loading first page, clear existing episodes immediately to avoid showing old data
     if (page == 1) {
-      debugPrint('📋 Clearing old episodes and showing loading state');
+      logger.AppLogger.debug('📋 Clearing old episodes and showing loading state');
       state = state.copyWith(
         isLoading: true,
         episodes: [], // Clear immediately
@@ -818,7 +819,7 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
         isPlayed: status == 'played' ? true : (status == 'unplayed' ? false : null),
       );
 
-      debugPrint('📋 Loaded ${response.episodes.length} episodes for subscription $subscriptionId');
+      logger.AppLogger.debug('📋 Loaded ${response.episodes.length} episodes for subscription $subscriptionId');
 
       state = state.copyWith(
         episodes: page == 1 ? response.episodes : [...state.episodes, ...response.episodes],
@@ -829,7 +830,7 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
         isLoading: false,
       );
     } catch (error) {
-      debugPrint('❌ Failed to load episodes: $error');
+      logger.AppLogger.debug('❌ Failed to load episodes: $error');
       state = state.copyWith(
         isLoading: false,
         error: error.toString(),

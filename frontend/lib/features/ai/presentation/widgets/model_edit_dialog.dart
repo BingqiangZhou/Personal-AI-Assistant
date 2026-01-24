@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 import '../../models/ai_model_config_model.dart';
 import '../providers/ai_model_provider.dart';
 
@@ -55,7 +56,7 @@ class _ModelEditDialogState extends ConsumerState<ModelEditDialog> {
          _apiKeyController.text = fullModel.apiKey!;
       }
     } catch (e) {
-      debugPrint('Failed to load decrypted API key: $e');
+      logger.AppLogger.debug('Failed to load decrypted API key: $e');
     }
   }
 

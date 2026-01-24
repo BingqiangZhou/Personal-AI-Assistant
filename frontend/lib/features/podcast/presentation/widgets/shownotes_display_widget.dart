@@ -6,6 +6,7 @@ import '../../../../core/localization/app_localizations.dart';
 
 import '../../data/models/podcast_episode_model.dart';
 import '../../core/utils/html_sanitizer.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 class ShownotesDisplayWidget extends ConsumerStatefulWidget {
   final PodcastEpisodeDetailResponse episode;
@@ -49,31 +50,31 @@ class ShownotesDisplayWidgetState extends ConsumerState<ShownotesDisplayWidget> 
       final preview = widget.episode.description!.length > 100
           ? '${widget.episode.description!.substring(0, 100)}...'
           : widget.episode.description!;
-      debugPrint('📝 [Shownotes] Description: $preview');
+      logger.AppLogger.debug('📝 [Shownotes] Description: $preview');
     } else {
-      debugPrint('📝 [Shownotes] Description: NULL or EMPTY');
+      logger.AppLogger.debug('📝 [Shownotes] Description: NULL or EMPTY');
     }
 
     if (widget.episode.aiSummary != null && widget.episode.aiSummary!.isNotEmpty) {
       final preview = widget.episode.aiSummary!.length > 100
           ? '${widget.episode.aiSummary!.substring(0, 100)}...'
           : widget.episode.aiSummary!;
-      debugPrint('📝 [Shownotes] AI Summary: $preview');
+      logger.AppLogger.debug('📝 [Shownotes] AI Summary: $preview');
     } else {
-      debugPrint('📝 [Shownotes] AI Summary: NULL or EMPTY');
+      logger.AppLogger.debug('📝 [Shownotes] AI Summary: NULL or EMPTY');
     }
 
-    debugPrint('📝 [Shownotes] Metadata shownotes: ${widget.episode.metadata?['shownotes']}');
-    debugPrint('📝 [Shownotes] Final content length: ${shownotes.length}');
+    logger.AppLogger.debug('📝 [Shownotes] Metadata shownotes: ${widget.episode.metadata?['shownotes']}');
+    logger.AppLogger.debug('📝 [Shownotes] Final content length: ${shownotes.length}');
 
     if (shownotes.isEmpty) {
-      debugPrint('📝 [Shownotes] No content found, showing empty state');
+      logger.AppLogger.debug('📝 [Shownotes] No content found, showing empty state');
       return _buildEmptyState(context);
     }
 
     // Sanitize HTML to prevent XSS attacks
     final sanitizedHtml = HtmlSanitizer.sanitize(shownotes);
-    debugPrint('📝 [Shownotes] Sanitized HTML length: ${sanitizedHtml.length}');
+    logger.AppLogger.debug('📝 [Shownotes] Sanitized HTML length: ${sanitizedHtml.length}');
 
     return Container(
       padding: const EdgeInsets.all(16),

@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../providers/podcast_providers.dart';
 import '../../data/models/audio_player_state_model.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
 
 class AudioPlayerWidget extends ConsumerWidget {
   const AudioPlayerWidget({super.key});
@@ -346,7 +347,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                       builder: (context) {
                         if (const bool.fromEnvironment('dart.vm.product') == false) {
                           // Only log in debug mode
-                          debugPrint('🎵 [EXPANDED PLAYER] state.duration=${state.duration}ms, formatted=${state.formattedDuration}');
+                          logger.AppLogger.debug('🎵 [EXPANDED PLAYER] state.duration=${state.duration}ms, formatted=${state.formattedDuration}');
                         }
                         return Text(state.formattedDuration);
                       },
