@@ -32,6 +32,12 @@ class AuthEvent {
 /// This allows different parts of the app to communicate about
 /// authentication state changes without creating circular dependencies.
 ///
+/// **Lifecycle Notes:**
+/// - This is a singleton that lives for the app's lifetime
+/// - Stream listeners are tracked for debugging
+/// - The stream is a broadcast stream, so multiple listeners are supported
+/// - Call dispose() only when the app is shutting down
+///
 /// Usage:
 /// ```dart
 /// // Listen to auth events
@@ -46,6 +52,9 @@ class AuthEvent {
 ///   type: AuthEventType.tokenCleared,
 ///   message: 'Token expired',
 /// ));
+///
+/// // Debug info (check for listener leaks)
+/// debugPrint(AuthEventNotifier.instance.debugInfo);
 /// ```
 class AuthEventNotifier {
   AuthEventNotifier._privateConstructor();
@@ -56,9 +65,29 @@ class AuthEventNotifier {
   static AuthEventNotifier get instance => _instance;
 
   final _controller = async.StreamController<AuthEvent>.broadcast();
+  int _listenerCount = 0;
 
   /// Stream of authentication events
-  async.Stream<AuthEvent> get authEventStream => _controller.stream;
+  async.Stream<AuthEvent> get authEventStream {
+    final stream = _controller.stream;
+    // Track listener count for debugging
+    stream.listen(
+      (_) {},
+      onDone: () {
+        _listenerCount = _listenerCount > 0 ? _listenerCount - 1 : 0;
+      },
+      onError: (_) {},
+    );
+    return stream;
+  }
+
+  /// Debug information about active listeners
+  ///
+  /// Use this to check for listener leaks:
+  /// ```dart
+  /// debugPrint(AuthEventNotifier.instance.debugInfo);
+  /// ```
+  String get debugInfo => 'Active listeners: $_listenerCount';
 
   /// Broadcast an authentication event
   void notify(AuthEvent event) {

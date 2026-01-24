@@ -38,15 +38,3 @@ export 'material3_menu.dart'
         M3MenuItem,
         M3MenuDivider,
         M3MenuGroup;
-
-// 演示页面
-export 'demo_page.dart'
-    show
-        AdaptiveMenuDemoPage,
-        CustomAdaptiveMenuPage,
-        ScaffoldAdaptiveMenuPage;
-
-export 'material3_demo.dart'
-    show
-        M3MenuDemoPage,
-        M3MenuStandalonePage;

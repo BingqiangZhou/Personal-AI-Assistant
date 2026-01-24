@@ -5,8 +5,43 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
 /// AudioHandler for podcast playback with system media controls
+///
 /// Migrated from just_audio to audioplayers 6.5.1
 /// Optimized for Android 15 + Vivo OriginOS with proper state synchronization
+///
+/// ## Lifecycle Management
+///
+/// This handler is a global singleton that lives for the app's lifetime.
+/// Proper cleanup is important to prevent memory leaks:
+///
+/// ```dart
+/// // Create the handler (usually done once at app startup)
+/// final handler = PodcastAudioHandler();
+///
+/// // Use it throughout the app
+/// await handler.setEpisode(id: '1', url: '...', title: 'Episode 1');
+/// await handler.play();
+///
+/// // When the app is shutting down OR when switching to a different
+/// // audio context (like playing a different podcast), call stopService():
+/// await handler.stopService();
+///
+/// // For complete cleanup (app shutdown):
+/// await handler.dispose();
+/// ```
+///
+/// ## Memory Leak Prevention
+///
+/// - All stream subscriptions are tracked in `_subs` list
+/// - Subscriptions are cancelled in both `stopService()` and `dispose()`
+/// - `_isDisposed` flag prevents operations after disposal
+/// - Both methods check the disposal flag before proceeding
+///
+/// ## Platform Compatibility
+///
+/// - **Android/OriginOS**: Full lock screen controls with artUri support (http/https only)
+/// - **iOS**: Background playback with lock screen controls
+/// - **Desktop**: Basic playback controls (no lock screen)
 class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   final AudioPlayer _player = AudioPlayer();
   Duration _currentPosition = Duration.zero;
