@@ -89,6 +89,7 @@ class Subscription(Base):
     __table_args__ = (
         Index('idx_user_status', 'user_id', 'status'),
         Index('idx_source_type', 'source_type'),
+        Index('idx_user_latest_published', 'user_id', 'latest_item_published_at'),
     )
 
     def _parse_local_time(self) -> tuple[int, int]:

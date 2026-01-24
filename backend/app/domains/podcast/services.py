@@ -262,10 +262,14 @@ class PodcastService:
             filters=filters
         )
 
+        # Batch fetch all playback states to avoid N+1 query problem
+        episode_ids = [ep.id for ep in episodes]
+        playback_states = await self.repo.get_playback_states_batch(self.user_id, episode_ids)
+
         results = []
         for ep in episodes:
-            # 获取用户播放状态
-            playback = await self.repo.get_playback_state(self.user_id, ep.id)
+            # 获取用户播放状态 (from batch-fetched states)
+            playback = playback_states.get(ep.id)
 
             # 从订阅配置中提取图片URL
             subscription_image_url = None
@@ -1240,17 +1244,21 @@ class PodcastService:
 
     async def _get_episode_count(self, subscription_id: int) -> int:
         """获取订阅的单集数量"""
-        # 简化实现，实际可缓存
-        episodes = await self.repo.get_subscription_episodes(subscription_id, limit=9999)
-        return len(episodes)
+        return await self.repo.count_subscription_episodes(subscription_id)
 
     async def _get_unplayed_count(self, subscription_id: int) -> int:
         """获取未播放的单集数量"""
         episodes = await self.repo.get_subscription_episodes(subscription_id, limit=None)
-        unplayed = 0
+        if not episodes:
+            return 0
 
+        # Batch fetch all playback states to avoid N+1 query problem
+        episode_ids = [ep.id for ep in episodes]
+        playback_states = await self.repo.get_playback_states_batch(self.user_id, episode_ids)
+
+        unplayed = 0
         for ep in episodes:
-            playback = await self.repo.get_playback_state(self.user_id, ep.id)
+            playback = playback_states.get(ep.id)
             if not playback or not playback.current_position or \
                (ep.audio_duration and playback.current_position < ep.audio_duration * 0.9):
                 unplayed += 1

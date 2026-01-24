@@ -130,6 +130,7 @@ class Settings(BaseSettings):
     SMTP_USE_TLS: bool = True
     FROM_EMAIL: str = "noreply@personalai.com"
     FROM_NAME: str = "Personal AI Assistant"
+    EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 24
     ALLOWED_AUDIO_SCHEMES: list[str] = ["http", "https"]
 
     # External APIs
@@ -159,7 +160,6 @@ class Settings(BaseSettings):
     SUPPORTED_TRANSCRIPTION_MODELS: str = "FunAudioLLM/SenseVoiceSmall,whisper-1,whisper-large-v3"  # Comma-separated list
 
     # AI Summary Configuration
-    OPENAI_API_BASE_URL: str = "https://api.openai.com/v1"
     SUMMARY_MODEL: str = "gpt-4o-mini"  # Default AI summary model
     SUPPORTED_SUMMARY_MODELS: str = "gpt-4o-mini,gpt-4o,gpt-3.5-turbo"  # Comma-separated list
 

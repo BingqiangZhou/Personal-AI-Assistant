@@ -337,7 +337,7 @@ class SecureRSSParser:
             # Handle RFC 2822 format (common in RSS)
             from email.utils import parsedate_to_datetime
             return parsedate_to_datetime(date_str)
-        except:
+        except (ValueError, TypeError, OSError):
             return datetime.utcnow()
 
     def _parse_duration(self, duration_text: Optional[str]) -> Optional[int]:
@@ -355,7 +355,7 @@ class SecureRSSParser:
                     return int(parts[0]) * 60 + int(parts[1])
             else:
                 return int(duration_text)
-        except:
+        except (ValueError, AttributeError, IndexError):
             return None
 
     def _extract_first_image_from_text(self, text: str) -> Optional[str]:

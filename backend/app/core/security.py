@@ -128,8 +128,7 @@ def verify_token(token: str, token_type: str = "access") -> dict:
     logger = logging.getLogger(__name__)
 
     try:
-        logger.debug(f"[DEBUG] Verifying token (first 30 chars): {token[:30]}...")
-        logger.debug(f"[DEBUG] SECRET_KEY (first 10 chars): {settings.SECRET_KEY[:10]}...")
+        logger.debug(f"[DEBUG] Verifying token")
 
         payload = jwt.decode(
             token,
@@ -137,7 +136,7 @@ def verify_token(token: str, token_type: str = "access") -> dict:
             algorithms=[settings.ALGORITHM]
         )
 
-        logger.debug(f"[DEBUG] Token decoded successfully, payload: {payload}")
+        logger.debug(f"[DEBUG] Token decoded successfully")
 
         # Check token type if present
         if "type" in payload and payload["type"] != token_type:
@@ -250,86 +249,30 @@ def generate_random_string(length: int = 32) -> str:
     return secrets.token_urlsafe(length)
 
 
-async def get_current_user(
-    token: str = Depends(OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")),
-    db: AsyncSession = Depends(get_db_session)
-) -> Any:
-    """Get current authenticated user from token."""
-    from app.domains.user.models import User
-
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-    try:
-        payload = verify_token(token, token_type="access")
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except Exception:
-        raise credentials_exception
-
-    # Get user from database
-    result = await db.execute(
-        select(User).where(User.id == int(user_id))
-    )
-    user = result.scalar_one_or_none()
-
-    if user is None:
-        raise credentials_exception
-
-    # Check if user is active
-    if user.status != "active":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User account is inactive"
-        )
-
-    return user
-
-
-async def get_current_active_user(
-    current_user: Any = Depends(get_current_user)
-) -> Any:
-    """Get current active user."""
-    if current_user.status != "active":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inactive user"
-        )
-    return current_user
-
-
-async def get_current_superuser(
-    current_user: Any = Depends(get_current_user)
-) -> Any:
-    """Get current superuser."""
-    if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
-    return current_user
-
-
 def verify_token_optional(
     token: Optional[str] = None,
     token_type: str = "access"
 ) -> dict:
     """
-    Verify token if provided, otherwise return a mock user for testing.
-    This is a temporary solution for development/testing purposes.
+    Verify token if provided.
+    In development mode, returns a mock user for testing when no token is provided.
+    In production, raises an exception when no token is provided.
     """
     if token is None:
-        # For testing purposes, return a mock user
-        return {
-            "sub": "1",  # Mock user ID
-            "email": "test@example.com",
-            "type": token_type,
-            "exp": int(time.time()) + 3600  # 1 hour from now
-        }
+        # Only return mock user in development mode
+        if settings.ENVIRONMENT == "development":
+            return {
+                "sub": "1",  # Mock user ID
+                "email": "test@example.com",
+                "type": token_type,
+                "exp": int(time.time()) + 3600  # 1 hour from now
+            }
+        else:
+            # Production: require authentication
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required"
+            )
 
     return verify_token(token, token_type)
 
@@ -340,19 +283,11 @@ async def get_token_from_request(
 ) -> dict:
     """
     Extract token from query parameter or Authorization header.
-    For development/testing purposes - allows token to be passed as query parameter.
+    In development mode, allows token to be passed as query parameter and returns mock user for testing.
+    In production, requires valid authentication.
 
     This function can be used directly as a FastAPI dependency.
     """
-    # If no token found, return mock user for testing
-    if token is None and authorization is None:
-        return {
-            "sub": 1,  # Mock user ID as integer
-            "email": "test@example.com",
-            "type": "access",
-            "exp": int(time.time()) + 3600  # 1 hour from now
-        }
-
     # Try to get token from Authorization header first
     if authorization:
         if authorization.startswith("Bearer "):
@@ -361,8 +296,8 @@ async def get_token_from_request(
             # If authorization header doesn't start with Bearer, treat it as raw token
             token = authorization
 
-    # If still no token, return mock user for testing
-    if token is None:
+    # Special handling for test token in development
+    if token == "test" and settings.ENVIRONMENT == "development":
         return {
             "sub": 1,  # Mock user ID as integer
             "email": "test@example.com",
@@ -370,14 +305,22 @@ async def get_token_from_request(
             "exp": int(time.time()) + 3600  # 1 hour from now
         }
 
-    # Special handling for test token
-    if token == "test":
-        return {
-            "sub": 1,  # Mock user ID as integer
-            "email": "test@example.com",
-            "type": "access",
-            "exp": int(time.time()) + 3600  # 1 hour from now
-        }
+    # If no token found
+    if token is None:
+        if settings.ENVIRONMENT == "development":
+            # Development: return mock user
+            return {
+                "sub": 1,  # Mock user ID as integer
+                "email": "test@example.com",
+                "type": "access",
+                "exp": int(time.time()) + 3600  # 1 hour from now
+            }
+        else:
+            # Production: require authentication
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication required"
+            )
 
     # Verify the token
     return verify_token(token, token_type="access")

@@ -28,34 +28,27 @@ async def get_current_user(
     """Get current authenticated user."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="[DEPS] Could not validate credentials",
+        detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
     try:
-        logger.debug(f"[DEBUG] Starting token verification")
         payload = verify_token(token)
-        logger.debug(f"[DEBUG] Token payload: {payload}")
         user_id_str: str = payload.get("sub")
-        logger.debug(f"[DEBUG] user_id_str: {user_id_str}")
         if user_id_str is None:
-            logger.debug("[DEBUG] user_id_str is None")
             raise credentials_exception
         user_id = int(user_id_str)
-        logger.debug(f"[DEBUG] user_id: {user_id}")
     except HTTPException as e:
         # This is already handled by verify_token, just re-raise
         raise
     except (JWTError, ValueError) as e:
         # This is an actual error
-        logger.error(f"[ERROR] Exception in token verification: {e}")
+        logger.error(f"Exception in token verification: {e}")
         raise credentials_exception
 
     user_repo = UserRepository(db)
     user = await user_repo.get_by_id(user_id)
-    logger.debug(f"[DEBUG] User found: {user is not None}")
     if user is None:
-        logger.debug("[DEBUG] User is None")
         raise credentials_exception
 
     if not user.is_active:

@@ -19,6 +19,7 @@ class TimestampedSchema(BaseSchema):
 class UserBase(BaseSchema):
     email: EmailStr
     username: Optional[str] = Field(None, min_length=3, max_length=50)
+    account_name: Optional[str] = Field(None, max_length=255)
     is_active: bool = True
     is_superuser: bool = False
 
@@ -58,7 +59,7 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseSchema):
-    full_name: Optional[str] = None
+    account_name: Optional[str] = None
     avatar_url: Optional[str] = None
     settings: Optional[Dict[str, Any]] = None
 
@@ -73,7 +74,7 @@ class UserResponse(UserBase):
     id: int
     is_verified: bool
     avatar_url: Optional[str] = None
-    full_name: Optional[str] = None
+    account_name: Optional[str] = None
     created_at: datetime
 
 

@@ -203,6 +203,14 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
+    async def count_subscription_episodes(self, subscription_id: int) -> int:
+        """Count episodes for a subscription using efficient COUNT query."""
+        stmt = select(func.count(PodcastEpisode.id)).where(
+            PodcastEpisode.subscription_id == subscription_id
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar() or 0
+
     async def get_episode_by_id(self, episode_id: int, user_id: Optional[int] = None) -> Optional[PodcastEpisode]:
         """获取单集详情"""
         stmt = select(PodcastEpisode).options(
@@ -284,6 +292,32 @@ class PodcastRepository:
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def get_playback_states_batch(
+        self,
+        user_id: int,
+        episode_ids: List[int]
+    ) -> Dict[int, PodcastPlaybackState]:
+        """
+        Batch fetch playback states for multiple episodes.
+
+        Returns a dictionary mapping episode_id to PodcastPlaybackState.
+        Episodes without a playback state will not be in the dictionary.
+        """
+        if not episode_ids:
+            return {}
+
+        stmt = select(PodcastPlaybackState).where(
+            and_(
+                PodcastPlaybackState.user_id == user_id,
+                PodcastPlaybackState.episode_id.in_(episode_ids)
+            )
+        )
+        result = await self.db.execute(stmt)
+        states = result.scalars().all()
+
+        # Create a dictionary mapping episode_id to state
+        return {state.episode_id: state for state in states}
 
     async def update_playback_progress(
         self,

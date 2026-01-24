@@ -3,12 +3,15 @@ Email utilities for sending password reset emails and other notifications.
 """
 
 import os
+import logging
 from typing import Optional, Dict, Any
 from datetime import datetime
 import secrets
 import uuid
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class EmailService:
@@ -143,11 +146,11 @@ class EmailService:
 
             # For development, just log the email content
             if settings.ENVIRONMENT == "development":
-                print(f"\n{'='*50}")
-                print(f"TO: {email}")
-                print(f"SUBJECT: {subject}")
-                print(f"\n{text_body}")
-                print(f"{'='*50}\n")
+                logger.info(f"{'='*50}")
+                logger.info(f"TO: {email}")
+                logger.info(f"SUBJECT: {subject}")
+                logger.info(f"\n{text_body}")
+                logger.info(f"{'='*50}")
                 return True
 
             # TODO: Implement actual email sending using SMTP
@@ -157,7 +160,7 @@ class EmailService:
             return True
 
         except Exception as e:
-            print(f"Failed to send password reset email: {str(e)}")
+            logger.error(f"Failed to send password reset email: {str(e)}")
             return False
 
     async def send_verification_email(
@@ -267,17 +270,17 @@ class EmailService:
 
             # For development, just log the email content
             if settings.ENVIRONMENT == "development":
-                print(f"\n{'='*50}")
-                print(f"TO: {email}")
-                print(f"SUBJECT: {subject}")
-                print(f"\n{text_body}")
-                print(f"{'='*50}\n")
+                logger.info(f"{'='*50}")
+                logger.info(f"TO: {email}")
+                logger.info(f"SUBJECT: {subject}")
+                logger.info(f"\n{text_body}")
+                logger.info(f"{'='*50}")
                 return True
 
             return True
 
         except Exception as e:
-            print(f"Failed to send verification email: {str(e)}")
+            logger.error(f"Failed to send verification email: {str(e)}")
             return False
 
 
