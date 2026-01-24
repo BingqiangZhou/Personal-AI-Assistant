@@ -427,32 +427,31 @@ class AuthNotifier extends Notifier<AuthState> {
     logger.AppLogger.debug('Error runtimeType: ${error.runtimeType}');
     logger.AppLogger.debug('Error message: ${error.message}');
     logger.AppLogger.debug('Error type check: ${error is ConflictException}');
-    logger.AppLogger.debug('ConflictException type: ${ConflictException}');
+    logger.AppLogger.debug('ConflictException type: $ConflictException');
 
     String result;
-    switch (error.runtimeType) {
-      case NetworkException:
+    switch (error) {
+      case NetworkException():
         result = 'Network error. Please check your connection and try again.';
         break;
-      case AuthenticationException:
+      case AuthenticationException():
         // Use the already user-friendly message from AuthenticationException
         result = error.message;
         break;
-      case ValidationException:
-        final validationError = error as ValidationException;
-        result = validationError.message;
+      case ValidationException():
+        result = error.message;
         logger.AppLogger.debug('ValidationException message: $result');
         break;
-      case ServerException:
+      case ServerException():
         result = 'Server error. Please try again later.';
         break;
-      case AuthorizationException:
+      case AuthorizationException():
         result = 'You do not have permission to perform this action.';
         break;
-      case NotFoundException:
+      case NotFoundException():
         result = 'The requested resource was not found.';
         break;
-      case ConflictException:
+      case ConflictException():
         result = error.message;
         logger.AppLogger.debug('ConflictException message: $result');
         break;

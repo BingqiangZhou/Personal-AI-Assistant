@@ -81,7 +81,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                 // AI模型选择器
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: 'claude-3-5-sonnet',
+                    initialValue: 'claude-3-5-sonnet',
                     decoration: InputDecoration(
                       labelText: l10n.assistant_model,
                       prefixIcon: const Icon(Icons.psychology),

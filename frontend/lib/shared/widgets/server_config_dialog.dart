@@ -367,6 +367,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
 
   Future<void> _saveServerConfig(BuildContext dialogContext) async {
     final l10n = AppLocalizations.of(context)!;
+    final messenger = ScaffoldMessenger.of(context);
     final baseUrl = _serverUrlController.text.trim();
     if (baseUrl.isEmpty) return;
 
@@ -377,19 +378,19 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
       // Add to history after successful save
       await _addToServerHistory(baseUrl);
 
-      if (context.mounted) {
-        Navigator.of(dialogContext).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.restore_defaults_success),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 80),
-            duration: const Duration(milliseconds: 1500),
-          ),
-        );
-        widget.onSave?.call();
-      }
+      if (!context.mounted) return;
+      Navigator.of(dialogContext).pop();
+      if (!context.mounted) return;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.restore_defaults_success),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 80),
+          duration: const Duration(milliseconds: 1500),
+        ),
+      );
+      widget.onSave?.call();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

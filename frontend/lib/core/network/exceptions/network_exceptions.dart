@@ -11,7 +11,7 @@ abstract class AppException implements Exception {
 }
 
 class NetworkException extends AppException {
-  const NetworkException(String message) : super(message);
+  const NetworkException(super.message);
 
   static NetworkException fromDioError(DioException error) {
     switch (error.type) {
@@ -45,7 +45,7 @@ class NetworkException extends AppException {
 }
 
 class ServerException extends AppException {
-  const ServerException(String message, {int? statusCode}) : super(message, statusCode: statusCode);
+  const ServerException(super.message, {super.statusCode});
 
   static ServerException fromDioError(DioException error) {
     // Handle different response data formats
@@ -68,7 +68,7 @@ class ServerException extends AppException {
 }
 
 class AuthenticationException extends AppException {
-  const AuthenticationException(String message) : super(message, statusCode: 401);
+  const AuthenticationException(super.message) : super(statusCode: 401);
 
   static AuthenticationException fromDioError(DioException error) {
     final data = error.response?.data;
@@ -98,7 +98,7 @@ class AuthenticationException extends AppException {
 }
 
 class AuthorizationException extends AppException {
-  const AuthorizationException(String message) : super(message, statusCode: 403);
+  const AuthorizationException(super.message) : super(statusCode: 403);
 
   static AuthorizationException fromDioError(DioException error) {
     final data = error.response?.data;
@@ -117,7 +117,7 @@ class AuthorizationException extends AppException {
 }
 
 class NotFoundException extends AppException {
-  const NotFoundException(String message) : super(message, statusCode: 404);
+  const NotFoundException(super.message) : super(statusCode: 404);
 
   static NotFoundException fromDioError(DioException error) {
     final data = error.response?.data;
@@ -136,7 +136,7 @@ class NotFoundException extends AppException {
 }
 
 class ConflictException extends AppException {
-  const ConflictException(String message) : super(message, statusCode: 409);
+  const ConflictException(super.message) : super(statusCode: 409);
 
   static ConflictException fromDioError(DioException error) {
     final data = error.response?.data;
@@ -157,8 +157,7 @@ class ConflictException extends AppException {
 class ValidationException extends AppException {
   final Map<String, dynamic>? fieldErrors;
 
-  const ValidationException(String message, {this.fieldErrors})
-      : super(message, statusCode: 422);
+  const ValidationException(super.message, {this.fieldErrors}) : super(statusCode: 422);
 
   static ValidationException fromDioError(DioException error) {
     final data = error.response?.data;
@@ -204,5 +203,5 @@ class ValidationException extends AppException {
 }
 
 class UnknownException extends AppException {
-  const UnknownException(String message) : super(message);
+  const UnknownException(super.message);
 }

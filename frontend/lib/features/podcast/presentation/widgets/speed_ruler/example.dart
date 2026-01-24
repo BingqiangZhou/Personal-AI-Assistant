@@ -24,13 +24,15 @@ class BasicUsageExample extends StatelessWidget {
               context: context,
               initialValue: 1.5,
               onSpeedChanged: (speed) {
-                print('Speed changed: $speed');
+                // TODO: Handle speed change
+                // print('Speed changed: $speed');
               },
             );
 
             // 处理用户选择
             if (selectedSpeed != null) {
-              print('Final speed: $selectedSpeed');
+              // TODO: Handle final speed selection
+              // print('Final speed: $selectedSpeed');
             }
           },
           child: const Text('选择倍速 / Select Speed'),
@@ -112,7 +114,8 @@ class CustomRangeExample extends StatelessWidget {
               step: 0.2,       // 自定义步长
               majorStep: 0.4,  // 自定义主要刻度间隔
               onSpeedChanged: (speed) {
-                print('Custom speed: $speed');
+                // TODO: Handle custom speed change
+                // print('Custom speed: $speed');
               },
             );
           },
@@ -159,7 +162,8 @@ class _AudioPlayerIntegrationExampleState
     );
 
     if (selectedSpeed != null) {
-      print('Speed confirmed: $selectedSpeed');
+      // TODO: Handle speed confirmation
+      // print('Speed confirmed: $selectedSpeed');
     }
   }
 

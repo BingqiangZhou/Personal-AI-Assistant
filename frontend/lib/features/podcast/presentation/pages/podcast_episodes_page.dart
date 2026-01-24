@@ -415,7 +415,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                               .read(audioPlayerProvider.notifier)
                                               .playEpisode(episode);
                                           // 跳转到详情页
-                                          if (mounted) {
+                                          if (context.mounted) {
                                             context.push(
                                               '/podcast/episode/detail/${episode.id}',
                                             );
@@ -606,39 +606,27 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
             children: [
               Text(l10n.podcast_playback_status),
               const SizedBox(height: 8),
-              Column(
-                children: [
-                  RadioListTile<String>(
-                    title: Text(l10n.podcast_all_episodes),
+              SegmentedButton<String>(
+                segments: [
+                  ButtonSegment(
                     value: 'all',
-                    groupValue: _selectedFilter,
-                    onChanged: (value) {
-                      setDialogState(() {
-                        _selectedFilter = value!;
-                      });
-                    },
+                    label: Text(l10n.podcast_all_episodes),
                   ),
-                  RadioListTile<String>(
-                    title: Text(l10n.podcast_unplayed_only),
+                  ButtonSegment(
                     value: 'unplayed',
-                    groupValue: _selectedFilter,
-                    onChanged: (value) {
-                      setDialogState(() {
-                        _selectedFilter = value!;
-                      });
-                    },
+                    label: Text(l10n.podcast_unplayed_only),
                   ),
-                  RadioListTile<String>(
-                    title: Text(l10n.podcast_played_only),
+                  ButtonSegment(
                     value: 'played',
-                    groupValue: _selectedFilter,
-                    onChanged: (value) {
-                      setDialogState(() {
-                        _selectedFilter = value!;
-                      });
-                    },
+                    label: Text(l10n.podcast_played_only),
                   ),
                 ],
+                selected: {_selectedFilter},
+                onSelectionChanged: (Set<String> selection) {
+                  setDialogState(() {
+                    _selectedFilter = selection.first;
+                  });
+                },
               ),
               const SizedBox(height: 16),
               CheckboxListTile(

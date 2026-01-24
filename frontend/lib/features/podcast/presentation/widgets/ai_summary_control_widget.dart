@@ -48,7 +48,7 @@ class _AISummaryControlWidgetState
           }
         },
         loading: () {},
-        error: (_, __) {},
+        error: (_, _) {},
       );
     });
   }
@@ -109,7 +109,7 @@ class _AISummaryControlWidgetState
         );
       },
       loading: () => _buildLoadingState(context),
-      error: (_, __) => _buildLoadingState(context),
+      error: (_, _) => _buildLoadingState(context),
     );
   }
 
@@ -304,7 +304,7 @@ class _AISummaryControlWidgetState
           // 模型选择器
           if (models.length > 1)
             DropdownButtonFormField<SummaryModelInfo>(
-              value: _selectedModel,
+              initialValue: _selectedModel,
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.podcast_ai_model,
                 border: OutlineInputBorder(

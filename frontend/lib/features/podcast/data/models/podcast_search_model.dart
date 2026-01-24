@@ -98,19 +98,19 @@ class PodcastSearchResult extends Equatable {
 
 /// iTunes Search API 响应模型
 @JsonSerializable()
-class iTunesSearchResponse extends Equatable {
+class ITunesSearchResponse extends Equatable {
   final int resultCount;
   final List<PodcastSearchResult> results;
 
-  const iTunesSearchResponse({
+  const ITunesSearchResponse({
     required this.resultCount,
     required this.results,
   });
 
-  factory iTunesSearchResponse.fromJson(Map<String, dynamic> json) =>
-      _$iTunesSearchResponseFromJson(json);
+  factory ITunesSearchResponse.fromJson(Map<String, dynamic> json) =>
+      _$ITunesSearchResponseFromJson(json);
 
-  Map<String, dynamic> toJson() => _$iTunesSearchResponseToJson(this);
+  Map<String, dynamic> toJson() => _$ITunesSearchResponseToJson(this);
 
   @override
   List<Object?> get props => [resultCount, results];

@@ -35,17 +35,17 @@ Map<String, dynamic> _$PodcastSearchResultToJson(
   'releaseDate': instance.releaseDate,
 };
 
-iTunesSearchResponse _$iTunesSearchResponseFromJson(
+ITunesSearchResponse _$ITunesSearchResponseFromJson(
   Map<String, dynamic> json,
-) => iTunesSearchResponse(
+) => ITunesSearchResponse(
   resultCount: (json['resultCount'] as num).toInt(),
   results: (json['results'] as List<dynamic>)
       .map((e) => PodcastSearchResult.fromJson(e as Map<String, dynamic>))
       .toList(),
 );
 
-Map<String, dynamic> _$iTunesSearchResponseToJson(
-  iTunesSearchResponse instance,
+Map<String, dynamic> _$ITunesSearchResponseToJson(
+  ITunesSearchResponse instance,
 ) => <String, dynamic>{
   'resultCount': instance.resultCount,
   'results': instance.results,

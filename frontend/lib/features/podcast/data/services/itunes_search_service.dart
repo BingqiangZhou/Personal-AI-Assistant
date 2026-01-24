@@ -21,7 +21,7 @@ class ITunesSearchService {
 
   ITunesSearchService({Dio? dio}) : _dio = dio ?? Dio() {
     // 配置 Dio
-    this._dio.options = BaseOptions(
+    _dio.options = BaseOptions(
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       sendTimeout: const Duration(seconds: 30),
@@ -46,14 +46,14 @@ class ITunesSearchService {
   /// - [term] 搜索关键词（必需，会自动 URL 编码）
   /// - [country] 国家代码（默认 'cn'）
   /// - [limit] 返回结果数量（默认 25，最大 50）
-  Future<iTunesSearchResponse> searchPodcasts({
+  Future<ITunesSearchResponse> searchPodcasts({
     required String term,
     PodcastCountry country = PodcastCountry.china,
     int limit = 25,
   }) async {
     // 参数验证
     if (term.trim().isEmpty) {
-      return const iTunesSearchResponse(
+      return const ITunesSearchResponse(
         resultCount: 0,
         results: [],
       );
@@ -110,7 +110,7 @@ class ITunesSearchService {
           throw Exception('Unexpected response type: ${response.data.runtimeType}');
         }
 
-        final itunesResponse = iTunesSearchResponse.fromJson(data);
+        final itunesResponse = ITunesSearchResponse.fromJson(data);
 
         logger.AppLogger.debug('✅ Found ${itunesResponse.resultCount} podcasts');
 
@@ -197,7 +197,7 @@ class ITunesSearchService {
 
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
-        final itunesResponse = iTunesSearchResponse.fromJson(data);
+        final itunesResponse = ITunesSearchResponse.fromJson(data);
 
         if (itunesResponse.results.isNotEmpty) {
           final result = itunesResponse.results.first;
@@ -221,7 +221,7 @@ class ITunesSearchService {
   }
 
   /// 从缓存获取响应
-  iTunesSearchResponse? _getCachedResponse(String key) {
+  ITunesSearchResponse? _getCachedResponse(String key) {
     final cached = _cache[key];
     if (cached != null && !cached.isExpired) {
       return cached.response;
@@ -232,7 +232,7 @@ class ITunesSearchService {
   }
 
   /// 设置缓存
-  void _setCachedResponse(String key, iTunesSearchResponse response) {
+  void _setCachedResponse(String key, ITunesSearchResponse response) {
     _cache[key] = _CachedResponse(
       response: response,
       timestamp: DateTime.now(),
@@ -260,7 +260,7 @@ class ITunesSearchService {
 
 /// 缓存响应包装类
 class _CachedResponse {
-  final iTunesSearchResponse response;
+  final ITunesSearchResponse response;
   final DateTime timestamp;
 
   _CachedResponse({

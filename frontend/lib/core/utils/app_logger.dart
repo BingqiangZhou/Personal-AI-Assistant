@@ -97,4 +97,4 @@ class AppLogger {
 }
 
 /// Shorthand for AppLogger.debug / AppLogger.debug 的简写
-typedef log = AppLogger;
+typedef Log = AppLogger;

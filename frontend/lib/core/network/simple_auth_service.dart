@@ -140,7 +140,7 @@ class SimpleAuthService {
       }
     } catch (e) {
       // 即使服务器失败也继续清除本地数据
-      print('Server logout failed: $e');
+      // Ignored: Server logout failed
     }
 
     // 清除本地存储

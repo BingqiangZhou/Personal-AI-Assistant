@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../core/utils/episode_description_helper.dart';
 import '../../data/models/podcast_subscription_model.dart';
-import 'platform_badge.dart';
 import 'podcast_image_widget.dart';
 
 class PodcastSubscriptionCard extends ConsumerWidget {
@@ -103,7 +102,6 @@ class PodcastSubscriptionCard extends ConsumerWidget {
                                 runSpacing: 4,
                                 children: [
                                   _buildStatusChip(context, subscription.status),
-                                  PlatformBadge(platform: subscription.platform),
                                   // Episodes count
                                   _buildInlineStatItem(
                                     context,
