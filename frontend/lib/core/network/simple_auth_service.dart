@@ -1,9 +1,6 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../../../features/auth/domain/models/auth_request.dart';
 import '../../../features/auth/domain/models/auth_response.dart';
 import '../../../features/auth/domain/models/user.dart';
 import '../app/config/app_config.dart';
@@ -39,7 +36,7 @@ class SimpleAuthService {
     };
 
     try {
-      final response = await _dio.post('/register', data: data);
+      await _dio.post('/register', data: data);
       // After registration, automatically login to get tokens
       return await login(email, password);
     } on DioException catch (e) {

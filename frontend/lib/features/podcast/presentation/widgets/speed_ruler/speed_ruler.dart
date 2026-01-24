@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../../../../../core/localization/app_localizations.dart';
 
 /// ============================================
 /// SpeedRuler - 倍速播放刻度尺控件
@@ -413,7 +414,7 @@ class _SpeedRulerPainter extends CustomPainter {
 /// Bottom sheet displaying speed selector with title, current value, and ruler
 class SpeedRulerSheet extends StatefulWidget {
   /// 弹窗标题 / Sheet title
-  final String title;
+  final String? title;
 
   /// 初始值 / Initial value
   final double initialValue;

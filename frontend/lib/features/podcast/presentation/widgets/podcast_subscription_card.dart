@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../core/utils/episode_description_helper.dart';
@@ -25,29 +24,9 @@ class PodcastSubscriptionCard extends ConsumerWidget {
     this.onReparse,
   });
 
-  /// Helper method to safely get shade colors from MaterialColor or regular Color
-  Color? _getShadeColor(Color color, int shade) {
-    if (color is MaterialColor) {
-      switch (shade) {
-        case 600:
-          return color.shade600;
-        case 700:
-          return color.shade700;
-        case 800:
-          return color.shade800;
-        case 50:
-          return color.shade50;
-        default:
-          return null;
-      }
-    }
-    return null;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final lastFetched = subscription.lastFetchedAt;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

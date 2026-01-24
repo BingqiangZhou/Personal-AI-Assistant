@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
-import '../../../../core/providers/core_providers.dart';
 import '../../data/models/podcast_search_model.dart';
 
 part 'country_selector_provider.g.dart';

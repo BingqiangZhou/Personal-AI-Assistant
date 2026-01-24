@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../pages/home_page.dart';
+/// Navigation item data model for bottom navigation bar
+class NavigationItem {
+  final IconData icon;
+  final IconData? activeIcon;
+  final String label;
+
+  const NavigationItem({
+    required this.icon,
+    this.activeIcon,
+    required this.label,
+  });
+}
 
 class BottomNavigation extends ConsumerWidget {
   final List<NavigationItem> items;

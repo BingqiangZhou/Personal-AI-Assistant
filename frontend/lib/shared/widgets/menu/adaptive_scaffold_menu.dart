@@ -423,7 +423,7 @@ class _AdaptiveScaffoldMenuState extends State<AdaptiveScaffoldMenu> {
   }
 
   /// 构建应用栏
-  Widget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar() {
     return AppBar(
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

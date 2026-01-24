@@ -377,7 +377,7 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
       // Add to history after successful save
       await _addToServerHistory(baseUrl);
 
-      if (mounted) {
+      if (context.mounted) {
         Navigator.of(dialogContext).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

@@ -366,7 +366,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                                 .read(audioPlayerProvider.notifier)
                                                 .playEpisode(episode);
                                             // 跳转到详情页
-                                            if (mounted) {
+                                            if (context.mounted) {
                                               context.push(
                                                 '/podcast/episode/detail/${episode.id}',
                                               );

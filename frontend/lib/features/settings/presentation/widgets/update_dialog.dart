@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/services/app_update_service.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
@@ -396,7 +395,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           fileName: _extractFileName(downloadUrl),
         );
 
-        if (!success && mounted) {
+        if (!success && context.mounted) {
           final l10n = AppLocalizations.of(context)!;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -404,7 +403,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
-        } else if (success && mounted) {
+        } else if (success && context.mounted) {
           // Download started, close dialog and show message
           Navigator.of(context).pop();
           final l10n = AppLocalizations.of(context)!;
@@ -429,7 +428,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
         }
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -439,7 +438,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
         );
       }
     } finally {
-      if (mounted) {
+      if (context.mounted) {
         setState(() {
           _isDownloading = false;
         });
