@@ -235,14 +235,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           const SizedBox(height: 12),
           _buildActivityCard(
             context,
-            Icons.article,
-            l10n.nav_knowledge,
-            '128',
-            Theme.of(context).colorScheme.secondary,
-          ),
-          const SizedBox(height: 12),
-          _buildActivityCard(
-            context,
             Icons.chat,
             l10n.nav_assistant,
             '1,024',
@@ -262,16 +254,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             l10n.nav_podcast,
             '42',
             Theme.of(context).colorScheme.primary,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildActivityCard(
-            context,
-            Icons.article,
-            l10n.nav_knowledge,
-            '128',
-            Theme.of(context).colorScheme.secondary,
           ),
         ),
         const SizedBox(width: 16),

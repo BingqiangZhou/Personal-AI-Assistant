@@ -608,84 +608,6 @@ abstract class AppLocalizations {
   /// **'Maximum length of response'**
   String get assistant_max_tokens_desc;
 
-  /// Knowledge base page title
-  ///
-  /// In en, this message translates to:
-  /// **'Knowledge Base'**
-  String get knowledge_base;
-
-  /// My knowledge bases section
-  ///
-  /// In en, this message translates to:
-  /// **'My Knowledge Bases'**
-  String get knowledge_my_bases;
-
-  /// Create knowledge base button
-  ///
-  /// In en, this message translates to:
-  /// **'Create Knowledge Base'**
-  String get knowledge_create_base;
-
-  /// Knowledge base name field
-  ///
-  /// In en, this message translates to:
-  /// **'Knowledge Base Name'**
-  String get knowledge_base_name;
-
-  /// Knowledge base name placeholder
-  ///
-  /// In en, this message translates to:
-  /// **'Enter knowledge base name'**
-  String get knowledge_enter_name;
-
-  /// Description field label
-  ///
-  /// In en, this message translates to:
-  /// **'Description'**
-  String get knowledge_description;
-
-  /// Description placeholder
-  ///
-  /// In en, this message translates to:
-  /// **'Enter description'**
-  String get knowledge_enter_description;
-
-  /// Upload document button
-  ///
-  /// In en, this message translates to:
-  /// **'Upload Document'**
-  String get knowledge_upload_document;
-
-  /// Empty knowledge bases state
-  ///
-  /// In en, this message translates to:
-  /// **'No knowledge bases yet'**
-  String get knowledge_no_bases;
-
-  /// Create first knowledge base prompt
-  ///
-  /// In en, this message translates to:
-  /// **'Create your first knowledge base'**
-  String get knowledge_create_first;
-
-  /// Documents section label
-  ///
-  /// In en, this message translates to:
-  /// **'Documents'**
-  String get knowledge_documents;
-
-  /// No documents state
-  ///
-  /// In en, this message translates to:
-  /// **'No documents uploaded'**
-  String get knowledge_no_documents;
-
-  /// Upload first document prompt
-  ///
-  /// In en, this message translates to:
-  /// **'Upload your first document'**
-  String get knowledge_upload_first;
-
   /// Podcast subscriptions page title
   ///
   /// In en, this message translates to:
@@ -841,12 +763,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Assistant'**
   String get nav_assistant;
-
-  /// Navigation item: Knowledge
-  ///
-  /// In en, this message translates to:
-  /// **'Knowledge'**
-  String get nav_knowledge;
 
   /// Navigation item: Feed
   ///

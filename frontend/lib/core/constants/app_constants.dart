@@ -10,7 +10,6 @@ class AppConstants {
   // Endpoints (use with configured baseUrl)
   static const String authPath = '$apiPath/auth';
   static const String subscriptionPath = '$apiPath/subscriptions';
-  static const String knowledgePath = '$apiPath/knowledge';
   static const String assistantPath = '$apiPath/assistant';
   static const String multimediaPath = '$apiPath/multimedia';
 

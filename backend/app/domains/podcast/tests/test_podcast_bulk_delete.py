@@ -18,7 +18,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 # This is required to avoid mapper initialization errors during test execution
 # The issue is that SQLAlchemy needs all related models to be imported before any delete() operations
 from app.domains.user.models import User
-from app.domains.knowledge.models import KnowledgeBase, SearchHistory, DocumentTag
 from app.domains.assistant.models import Conversation, AssistantTask, PromptTemplate
 from app.domains.multimedia.models import MediaFile, ProcessingJob
 from app.domains.subscription.models import Subscription, SubscriptionCategory

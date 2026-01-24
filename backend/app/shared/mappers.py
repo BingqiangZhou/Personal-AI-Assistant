@@ -164,10 +164,6 @@ def create_paginated_response(
 
 
 # Common field mappings for different domains
-KNOWLEDGE_BASE_FIELD_MAPPING = {
-    "doc_metadata": "metadata",
-}
-
 DOCUMENT_FIELD_MAPPING = {
     "doc_metadata": "metadata",
     "metadata_json": "metadata",

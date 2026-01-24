@@ -48,7 +48,6 @@ class User(Base):
 
     # Relationships
     subscriptions = relationship("Subscription", back_populates="user", cascade="all, delete-orphan")
-    knowledge_bases = relationship("KnowledgeBase", back_populates="user", cascade="all, delete-orphan")
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
     assistant_tasks = relationship("AssistantTask", back_populates="user", cascade="all, delete-orphan")
     media_files = relationship("MediaFile", back_populates="user", cascade="all, delete-orphan")

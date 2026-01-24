@@ -19,7 +19,6 @@ from app.domains.subscription.models import (
     SubscriptionCategory,
     SubscriptionCategoryMapping,
 )
-from app.domains.knowledge.models import KnowledgeBase
 from app.domains.assistant.models import Conversation, AssistantTask
 from app.domains.multimedia.models import MediaFile, ProcessingJob
 from app.admin.models import SystemSettings

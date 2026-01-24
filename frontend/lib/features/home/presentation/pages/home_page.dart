@@ -7,7 +7,6 @@ import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
 import '../../../podcast/presentation/widgets/side_floating_player_widget.dart';
 import '../../../assistant/presentation/pages/assistant_chat_page.dart';
-import '../../../knowledge/presentation/pages/knowledge_base_page.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 
 /// Material Design 3自适应主页
@@ -44,11 +43,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         icon: Icon(Icons.chat_outlined),
         selectedIcon: Icon(Icons.chat),
         label: l10n.nav_chat,
-      ),
-      NavigationDestination(
-        icon: Icon(Icons.folder_outlined),
-        selectedIcon: Icon(Icons.folder),
-        label: l10n.nav_knowledge,
       ),
       NavigationDestination(
         icon: Icon(Icons.person_outline),
@@ -129,8 +123,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       case 2:
         return const AssistantChatPage();
       case 3:
-        return const KnowledgeBasePage();
-      case 4:
         return const ProfilePage();
       default:
         return const Center(

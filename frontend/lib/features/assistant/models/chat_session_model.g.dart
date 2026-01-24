@@ -12,9 +12,6 @@ ChatSessionModel _$ChatSessionModelFromJson(Map<String, dynamic> json) =>
       title: json['title'] as String,
       description: json['description'] as String?,
       userId: json['userId'] as String,
-      knowledgeBaseIds: (json['knowledgeBaseIds'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
       settings: json['settings'] as Map<String, dynamic>?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -32,7 +29,6 @@ Map<String, dynamic> _$ChatSessionModelToJson(ChatSessionModel instance) =>
       'title': instance.title,
       'description': instance.description,
       'userId': instance.userId,
-      'knowledgeBaseIds': instance.knowledgeBaseIds,
       'settings': instance.settings,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
@@ -47,9 +43,6 @@ CreateChatSessionRequest _$CreateChatSessionRequestFromJson(
 ) => CreateChatSessionRequest(
   title: json['title'] as String,
   description: json['description'] as String?,
-  knowledgeBaseIds: (json['knowledgeBaseIds'] as List<dynamic>?)
-      ?.map((e) => e as String)
-      .toList(),
   settings: json['settings'] as Map<String, dynamic>?,
 );
 
@@ -58,7 +51,6 @@ Map<String, dynamic> _$CreateChatSessionRequestToJson(
 ) => <String, dynamic>{
   'title': instance.title,
   'description': instance.description,
-  'knowledgeBaseIds': instance.knowledgeBaseIds,
   'settings': instance.settings,
 };
 
@@ -67,9 +59,6 @@ UpdateChatSessionRequest _$UpdateChatSessionRequestFromJson(
 ) => UpdateChatSessionRequest(
   title: json['title'] as String?,
   description: json['description'] as String?,
-  knowledgeBaseIds: (json['knowledgeBaseIds'] as List<dynamic>?)
-      ?.map((e) => e as String)
-      .toList(),
   settings: json['settings'] as Map<String, dynamic>?,
   isActive: json['isActive'] as bool?,
 );
@@ -79,7 +68,6 @@ Map<String, dynamic> _$UpdateChatSessionRequestToJson(
 ) => <String, dynamic>{
   'title': instance.title,
   'description': instance.description,
-  'knowledgeBaseIds': instance.knowledgeBaseIds,
   'settings': instance.settings,
   'isActive': instance.isActive,
 };

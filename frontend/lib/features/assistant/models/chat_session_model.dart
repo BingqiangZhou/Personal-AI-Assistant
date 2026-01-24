@@ -8,7 +8,6 @@ class ChatSessionModel {
   final String title;
   final String? description;
   final String userId;
-  final List<String> knowledgeBaseIds;
   final Map<String, dynamic>? settings;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -22,7 +21,6 @@ class ChatSessionModel {
     required this.title,
     this.description,
     required this.userId,
-    required this.knowledgeBaseIds,
     this.settings,
     required this.createdAt,
     required this.updatedAt,
@@ -42,7 +40,6 @@ class ChatSessionModel {
     String? title,
     String? description,
     String? userId,
-    List<String>? knowledgeBaseIds,
     Map<String, dynamic>? settings,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -56,7 +53,6 @@ class ChatSessionModel {
       title: title ?? this.title,
       description: description ?? this.description,
       userId: userId ?? this.userId,
-      knowledgeBaseIds: knowledgeBaseIds ?? this.knowledgeBaseIds,
       settings: settings ?? this.settings,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -89,13 +85,11 @@ class ChatSessionModel {
 class CreateChatSessionRequest {
   final String title;
   final String? description;
-  final List<String>? knowledgeBaseIds;
   final Map<String, dynamic>? settings;
 
   const CreateChatSessionRequest({
     required this.title,
     this.description,
-    this.knowledgeBaseIds,
     this.settings,
   });
 
@@ -109,14 +103,12 @@ class CreateChatSessionRequest {
 class UpdateChatSessionRequest {
   final String? title;
   final String? description;
-  final List<String>? knowledgeBaseIds;
   final Map<String, dynamic>? settings;
   final bool? isActive;
 
   const UpdateChatSessionRequest({
     this.title,
     this.description,
-    this.knowledgeBaseIds,
     this.settings,
     this.isActive,
   });

@@ -264,45 +264,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get assistant_max_tokens_desc => '响应的最大长度';
 
   @override
-  String get knowledge_base => '知识库';
-
-  @override
-  String get knowledge_my_bases => '我的知识库';
-
-  @override
-  String get knowledge_create_base => '创建知识库';
-
-  @override
-  String get knowledge_base_name => '知识库名称';
-
-  @override
-  String get knowledge_enter_name => '输入知识库名称';
-
-  @override
-  String get knowledge_description => '描述';
-
-  @override
-  String get knowledge_enter_description => '输入描述';
-
-  @override
-  String get knowledge_upload_document => '上传文档';
-
-  @override
-  String get knowledge_no_bases => '还没有知识库';
-
-  @override
-  String get knowledge_create_first => '创建您的第一个知识库';
-
-  @override
-  String get knowledge_documents => '文档';
-
-  @override
-  String get knowledge_no_documents => '未上传文档';
-
-  @override
-  String get knowledge_upload_first => '上传您的第一个文档';
-
-  @override
   String get podcast_subscriptions => '播客订阅';
 
   @override
@@ -379,9 +340,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get nav_assistant => '助手';
-
-  @override
-  String get nav_knowledge => '知识库';
 
   @override
   String get nav_feed => '信息流';

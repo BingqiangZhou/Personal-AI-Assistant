@@ -267,45 +267,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get assistant_max_tokens_desc => 'Maximum length of response';
 
   @override
-  String get knowledge_base => 'Knowledge Base';
-
-  @override
-  String get knowledge_my_bases => 'My Knowledge Bases';
-
-  @override
-  String get knowledge_create_base => 'Create Knowledge Base';
-
-  @override
-  String get knowledge_base_name => 'Knowledge Base Name';
-
-  @override
-  String get knowledge_enter_name => 'Enter knowledge base name';
-
-  @override
-  String get knowledge_description => 'Description';
-
-  @override
-  String get knowledge_enter_description => 'Enter description';
-
-  @override
-  String get knowledge_upload_document => 'Upload Document';
-
-  @override
-  String get knowledge_no_bases => 'No knowledge bases yet';
-
-  @override
-  String get knowledge_create_first => 'Create your first knowledge base';
-
-  @override
-  String get knowledge_documents => 'Documents';
-
-  @override
-  String get knowledge_no_documents => 'No documents uploaded';
-
-  @override
-  String get knowledge_upload_first => 'Upload your first document';
-
-  @override
   String get podcast_subscriptions => 'Podcast Subscriptions';
 
   @override
@@ -382,9 +343,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nav_assistant => 'Assistant';
-
-  @override
-  String get nav_knowledge => 'Knowledge';
 
   @override
   String get nav_feed => 'Feed';

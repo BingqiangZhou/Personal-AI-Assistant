@@ -175,65 +175,6 @@ class SubscriptionResponse(SubscriptionBase, TimestampedSchema):
     error_message: Optional[str] = None
 
 
-# Knowledge Base schemas
-class KnowledgeBaseBase(BaseSchema):
-    name: str
-    description: Optional[str] = None
-    is_public: bool = False
-    settings: Optional[Dict[str, Any]] = {}
-
-
-class KnowledgeBaseCreate(KnowledgeBaseBase):
-    pass
-
-
-class KnowledgeBaseUpdate(BaseSchema):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    is_public: Optional[bool] = None
-    settings: Optional[Dict[str, Any]] = None
-
-
-class KnowledgeBaseResponse(KnowledgeBaseBase, TimestampedSchema):
-    id: int
-    user_id: int
-    is_default: bool
-    document_count: Optional[int] = 0
-
-
-# Document schemas
-class DocumentBase(BaseSchema):
-    title: str
-    content: Optional[str] = None
-    content_type: str
-    metadata: Optional[Dict[str, Any]] = {}
-    tags: Optional[List[str]] = []
-
-
-class DocumentCreate(DocumentBase):
-    knowledge_base_id: int
-
-
-class DocumentUpdate(BaseSchema):
-    title: Optional[str] = None
-    content: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
-    tags: Optional[List[str]] = None
-
-
-class DocumentResponse(DocumentBase, TimestampedSchema):
-    id: int
-    knowledge_base_id: int
-    file_path: Optional[str] = None
-    file_size: Optional[int] = None
-    indexed_at: Optional[datetime] = None
-
-
-class KnowledgeSearchRequest(BaseSchema):
-    query: str
-    kb_ids: Optional[List[int]] = None
-
-
 # Message schemas
 class MessageBase(BaseSchema):
     content: str

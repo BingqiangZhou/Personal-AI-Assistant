@@ -426,71 +426,6 @@
     "description": "最大令牌描述"
   },
 
-  "knowledge_base": "知识库",
-  "@knowledge_base": {
-    "description": "知识库页面标题"
-  },
-
-  "knowledge_my_bases": "我的知识库",
-  "@knowledge_my_bases": {
-    "description": "我的知识库部分"
-  },
-
-  "knowledge_create_base": "创建知识库",
-  "@knowledge_create_base": {
-    "description": "创建知识库按钮"
-  },
-
-  "knowledge_base_name": "知识库名称",
-  "@knowledge_base_name": {
-    "description": "知识库名称字段"
-  },
-
-  "knowledge_enter_name": "输入知识库名称",
-  "@knowledge_enter_name": {
-    "description": "知识库名称占位符"
-  },
-
-  "knowledge_description": "描述",
-  "@knowledge_description": {
-    "description": "描述字段标签"
-  },
-
-  "knowledge_enter_description": "输入描述",
-  "@knowledge_enter_description": {
-    "description": "描述占位符"
-  },
-
-  "knowledge_upload_document": "上传文档",
-  "@knowledge_upload_document": {
-    "description": "上传文档按钮"
-  },
-
-  "knowledge_no_bases": "还没有知识库",
-  "@knowledge_no_bases": {
-    "description": "空知识库状态"
-  },
-
-  "knowledge_create_first": "创建您的第一个知识库",
-  "@knowledge_create_first": {
-    "description": "创建第一个知识库提示"
-  },
-
-  "knowledge_documents": "文档",
-  "@knowledge_documents": {
-    "description": "文档部分标签"
-  },
-
-  "knowledge_no_documents": "未上传文档",
-  "@knowledge_no_documents": {
-    "description": "无文档状态"
-  },
-
-  "knowledge_upload_first": "上传您的第一个文档",
-  "@knowledge_upload_first": {
-    "description": "上传第一个文档提示"
-  },
-
   "podcast_subscriptions": "播客订阅",
   "@podcast_subscriptions": {
     "description": "播客订阅页面标题"
@@ -621,11 +556,6 @@
     "description": "导航项：助手"
   },
 
-  "nav_knowledge": "知识库",
-  "@nav_knowledge": {
-    "description": "导航项：知识库"
-  },
-
   "nav_feed": "信息流",
   "@nav_feed": {
     "description": "导航项：信息流"
@@ -639,11 +569,6 @@
   "nav_chat": "对话",
   "@nav_chat": {
     "description": "导航项：对话"
-  },
-
-  "nav_knowledge": "知识库",
-  "@nav_knowledge": {
-    "description": "导航项：知识库"
   },
 
   "nav_profile": "个人资料",

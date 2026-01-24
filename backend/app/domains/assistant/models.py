@@ -40,7 +40,6 @@ class Conversation(Base):
     system_prompt = Column(Text, nullable=True)
     temperature = Column(Integer, default=70)  # 0-100
     max_tokens = Column(Integer, nullable=True)
-    knowledge_base_ids = Column(JSON, nullable=True, default=[])  # Linked KBs
     settings = Column(JSON, nullable=True, default={})
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

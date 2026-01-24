@@ -157,18 +157,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // Knowledge routes
-      GoRoute(
-        path: '/knowledge',
-        name: 'knowledge',
-        builder: (context, state) => const HomePage(initialTab: 3),
-      ),
-
       // Profile routes
       GoRoute(
         path: '/profile',
         name: 'profile',
-        builder: (context, state) => const HomePage(initialTab: 4),
+        builder: (context, state) => const HomePage(initialTab: 3),
         routes: [
           GoRoute(
             path: 'settings',

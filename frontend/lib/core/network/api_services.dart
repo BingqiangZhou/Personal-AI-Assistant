@@ -6,7 +6,6 @@ import '../../features/auth/models/user_model.dart';
 import '../../features/auth/models/auth_response.dart';
 import '../../features/assistant/models/chat_message_model.dart';
 import '../../features/assistant/models/chat_session_model.dart';
-import '../../features/knowledge/models/knowledge_item_model.dart';
 import '../../features/subscription/models/subscription_model.dart';
 
 part 'api_services.g.dart';
@@ -65,44 +64,6 @@ abstract class ApiServices {
 
   @POST('/assistant/chat/stream')
   Future<void> streamChat(@Body() Map<String, dynamic> request);
-
-  // Knowledge Base endpoints
-  @GET('/knowledge/items')
-  Future<PaginatedResponse<KnowledgeItemModel>> getKnowledgeItems({
-    @Query('page') int? page,
-    @Query('limit') int? limit,
-    @Query('category') String? category,
-    @Query('search') String? search,
-  });
-
-  @POST('/knowledge/items')
-  Future<KnowledgeItemModel> createKnowledgeItem(@Body() Map<String, dynamic> request);
-
-  @GET('/knowledge/items/{itemId}')
-  Future<KnowledgeItemModel> getKnowledgeItem(@Path() String itemId);
-
-  @PUT('/knowledge/items/{itemId}')
-  Future<KnowledgeItemModel> updateKnowledgeItem(
-    @Path() String itemId,
-    @Body() Map<String, dynamic> request,
-  );
-
-  @DELETE('/knowledge/items/{itemId}')
-  Future<void> deleteKnowledgeItem(@Path() String itemId);
-
-  @POST('/knowledge/items/{itemId}/files')
-  Future<KnowledgeItemModel> uploadFile(
-    @Path() String itemId,
-    @Part(name: 'file') Map<String, dynamic> file,
-  );
-
-  @GET('/knowledge/categories')
-  Future<void> getKnowledgeCategories();
-
-  @POST('/knowledge/search')
-  Future<SearchResponse<KnowledgeItemModel>> searchKnowledge(
-    @Body() Map<String, dynamic> request,
-  );
 
   // Subscription endpoints
   @GET('/subscriptions')

@@ -83,7 +83,6 @@ async def init_db() -> None:
     # Import all models here to ensure they are registered with Base
     from app.domains.user.models import User
     from app.domains.subscription.models import Subscription, SubscriptionItem
-    from app.domains.knowledge.models import KnowledgeBase, Document
     from app.domains.assistant.models import Conversation, Message
     from app.domains.multimedia.models import MediaFile, ProcessingJob
     from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState

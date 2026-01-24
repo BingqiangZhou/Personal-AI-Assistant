@@ -120,10 +120,6 @@ class ApiConstants {
   static const String chat = '/assistant/chat';
   static const String conversations = '/assistant/conversations';
 
-  static const String knowledge = '/knowledge';
-  static const String documents = '/knowledge/documents';
-  static const String search = '/knowledge/search';
-
   static const String podcast = '/podcast';
   static const String feeds = '/podcast/feeds';
   static const String episodes = '/podcast/episodes';

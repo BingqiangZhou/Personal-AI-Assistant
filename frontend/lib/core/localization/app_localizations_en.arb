@@ -426,71 +426,6 @@
     "description": "Max tokens description"
   },
 
-  "knowledge_base": "Knowledge Base",
-  "@knowledge_base": {
-    "description": "Knowledge base page title"
-  },
-
-  "knowledge_my_bases": "My Knowledge Bases",
-  "@knowledge_my_bases": {
-    "description": "My knowledge bases section"
-  },
-
-  "knowledge_create_base": "Create Knowledge Base",
-  "@knowledge_create_base": {
-    "description": "Create knowledge base button"
-  },
-
-  "knowledge_base_name": "Knowledge Base Name",
-  "@knowledge_base_name": {
-    "description": "Knowledge base name field"
-  },
-
-  "knowledge_enter_name": "Enter knowledge base name",
-  "@knowledge_enter_name": {
-    "description": "Knowledge base name placeholder"
-  },
-
-  "knowledge_description": "Description",
-  "@knowledge_description": {
-    "description": "Description field label"
-  },
-
-  "knowledge_enter_description": "Enter description",
-  "@knowledge_enter_description": {
-    "description": "Description placeholder"
-  },
-
-  "knowledge_upload_document": "Upload Document",
-  "@knowledge_upload_document": {
-    "description": "Upload document button"
-  },
-
-  "knowledge_no_bases": "No knowledge bases yet",
-  "@knowledge_no_bases": {
-    "description": "Empty knowledge bases state"
-  },
-
-  "knowledge_create_first": "Create your first knowledge base",
-  "@knowledge_create_first": {
-    "description": "Create first knowledge base prompt"
-  },
-
-  "knowledge_documents": "Documents",
-  "@knowledge_documents": {
-    "description": "Documents section label"
-  },
-
-  "knowledge_no_documents": "No documents uploaded",
-  "@knowledge_no_documents": {
-    "description": "No documents state"
-  },
-
-  "knowledge_upload_first": "Upload your first document",
-  "@knowledge_upload_first": {
-    "description": "Upload first document prompt"
-  },
-
   "podcast_subscriptions": "Podcast Subscriptions",
   "@podcast_subscriptions": {
     "description": "Podcast subscriptions page title"
@@ -621,11 +556,6 @@
     "description": "Navigation item: Assistant"
   },
 
-  "nav_knowledge": "Knowledge",
-  "@nav_knowledge": {
-    "description": "Navigation item: Knowledge"
-  },
-
   "nav_feed": "Feed",
   "@nav_feed": {
     "description": "Navigation item: Feed"
@@ -639,11 +569,6 @@
   "nav_chat": "Chat",
   "@nav_chat": {
     "description": "Navigation item: Chat"
-  },
-
-  "nav_knowledge": "Knowledge",
-  "@nav_knowledge": {
-    "description": "Navigation item: Knowledge"
   },
 
   "nav_profile": "Profile",

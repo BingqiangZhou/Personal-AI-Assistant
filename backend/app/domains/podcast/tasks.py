@@ -32,9 +32,6 @@ from app.domains.subscription.models import (
     SubscriptionCategoryMapping, SubscriptionType, SubscriptionStatus,
     UpdateFrequency
 )
-from app.domains.knowledge.models import (
-    KnowledgeBase, Document, DocumentTag, SearchHistory
-)
 from app.domains.assistant.models import (
     Conversation, Message, PromptTemplate, AssistantTask
 )
