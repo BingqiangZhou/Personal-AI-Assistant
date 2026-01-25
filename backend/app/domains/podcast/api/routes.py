@@ -2070,4 +2070,7 @@ async def batch_update_subscription_schedules(
     ]
 
 # Export router
-__all__ = ["router"]
+__all__ = ["router", "podcast_router"]
+
+# Alias for backward compatibility
+podcast_router = router

@@ -22,7 +22,7 @@ class TestPodcastServicePlatform:
     @pytest.fixture
     def mock_repo(self):
         """Mock repository"""
-        with patch('app.domains.podcast.services.PodcastRepository') as mock:
+        with patch('app.domains.podcast.repositories.PodcastRepository') as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
             yield repo_instance
@@ -30,7 +30,7 @@ class TestPodcastServicePlatform:
     @pytest.fixture
     def mock_parser(self):
         """Mock RSS parser"""
-        with patch('app.domains.podcast.services.SecureRSSParser') as mock:
+        with patch('app.integration.podcast.secure_rss_parser.SecureRSSParser') as mock:
             parser_instance = AsyncMock()
             mock.return_value = parser_instance
             yield parser_instance

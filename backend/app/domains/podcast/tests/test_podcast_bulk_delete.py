@@ -67,7 +67,7 @@ class TestPodcastBulkDelete:
     @pytest.fixture
     def mock_repo(self):
         """模拟仓储层 / Mock repository layer"""
-        with patch('app.domains.podcast.services.PodcastRepository') as mock:
+        with patch('app.domains.podcast.repositories.PodcastRepository') as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
             yield repo_instance
@@ -77,10 +77,10 @@ class TestPodcastBulkDelete:
         """创建播客服务实例 / Create podcast service instance"""
         # The DatabaseBackedTranscriptionService is imported inside __init__,
         # so we need to patch it at the correct location
-        with patch('app.domains.podcast.services.PodcastRedis'), \
-             patch('app.domains.podcast.services.ContentSanitizer'), \
-             patch('app.domains.podcast.services.PodcastSecurityValidator'), \
-             patch('app.domains.podcast.services.SecureRSSParser'):
+        with patch('app.core.redis.PodcastRedis'), \
+             patch('app.domains.ai.llm_privacy.ContentSanitizer'), \
+             patch('app.integration.podcast.security.PodcastSecurityValidator'), \
+             patch('app.integration.podcast.secure_rss_parser.SecureRSSParser'):
             service = PodcastService(mock_db, user_id=1)
             return service
 

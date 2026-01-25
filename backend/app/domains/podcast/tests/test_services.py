@@ -22,7 +22,7 @@ class TestPodcastService:
     @pytest.fixture
     def mock_repo(self):
         """模拟仓储层"""
-        with patch('app.domains.podcast.services.PodcastRepository') as mock:
+        with patch('app.domains.podcast.repositories.PodcastRepository') as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
             yield repo_instance
@@ -30,7 +30,7 @@ class TestPodcastService:
     @pytest.fixture
     def mock_parser(self):
         """模拟RSS解析器"""
-        with patch('app.domains.podcast.services.SecureRSSParser') as mock:
+        with patch('app.integration.podcast.secure_rss_parser.SecureRSSParser') as mock:
             parser_instance = AsyncMock()
             mock.return_value = parser_instance
             yield parser_instance
@@ -38,7 +38,7 @@ class TestPodcastService:
     @pytest.fixture
     def mock_redis(self):
         """模拟Redis"""
-        with patch('app.domains.podcast.services.PodcastRedis') as mock:
+        with patch('app.core.redis.PodcastRedis') as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
             yield redis_instance
@@ -46,11 +46,12 @@ class TestPodcastService:
     @pytest.fixture
     def podcast_service(self, mock_db, mock_repo, mock_parser, mock_redis):
         """创建播客服务实例"""
-        service = PodcastService(mock_db, user_id=1)
-        service.repo = mock_repo
-        service.parser = mock_parser
-        service.redis = mock_redis
-        return service
+        # Patch the SecureRSSParser in subscription_service
+        with patch('app.domains.podcast.services.subscription_service.SecureRSSParser', return_value=mock_parser):
+            service = PodcastService(mock_db, user_id=1)
+            service.repo = mock_repo
+            service.redis = mock_redis
+            return service
 
     @pytest.mark.asyncio
     async def test_add_subscription_success(self, podcast_service, mock_repo, mock_parser):
@@ -95,8 +96,7 @@ class TestPodcastService:
 
         # 执行测试
         result_subscription, result_episodes = await podcast_service.add_subscription(
-            feed_url=feed_url,
-            custom_name=custom_name
+            feed_url=feed_url
         )
 
         # 验证结果
