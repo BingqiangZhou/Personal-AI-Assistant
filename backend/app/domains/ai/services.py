@@ -2,31 +2,27 @@
 AI模型配置服务层
 """
 
-import asyncio
-import hashlib
-import json
 import logging
 import time
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import aiohttp
-from sqlalchemy import select, update
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.exceptions import DatabaseError, ValidationError
+from app.core.exceptions import ValidationError
 from app.domains.ai.models import AIModelConfig, ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
 from app.domains.ai.schemas import (
     AIModelConfigCreate,
     AIModelConfigUpdate,
-    APIKeyValidationRequest,
     APIKeyValidationResponse,
     ModelTestResponse,
     ModelUsageStats,
     PresetModelConfig,
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +94,7 @@ class AIModelConfigService:
         provider: Optional[str] = None,
         page: int = 1,
         size: int = 20,
-    ) -> Tuple[List[AIModelConfig], int]:
+    ) -> tuple[list[AIModelConfig], int]:
         """获取模型配置列表"""
         return await self.repo.get_list(
             model_type=model_type,
@@ -114,7 +110,7 @@ class AIModelConfigService:
         model_type: Optional[ModelType] = None,
         page: int = 1,
         size: int = 20,
-    ) -> Tuple[List[AIModelConfig], int]:
+    ) -> tuple[list[AIModelConfig], int]:
         """搜索模型配置"""
         return await self.repo.search_models(
             query=query, model_type=model_type, page=page, size=size
@@ -171,12 +167,12 @@ class AIModelConfigService:
 
     async def get_active_models(
         self, model_type: Optional[ModelType] = None
-    ) -> List[AIModelConfig]:
+    ) -> list[AIModelConfig]:
         """获取活跃模型"""
         return await self.repo.get_active_models(model_type)
 
     async def test_model(
-        self, model_id: int, test_data: Optional[Dict[str, Any]] = None
+        self, model_id: int, test_data: Optional[dict[str, Any]] = None
     ) -> ModelTestResponse:
         """测试模型连接"""
         # 统一处理 None 的情况
@@ -247,13 +243,13 @@ class AIModelConfigService:
 
     async def get_type_stats(
         self, model_type: ModelType, limit: int = 20
-    ) -> List[ModelUsageStats]:
+    ) -> list[ModelUsageStats]:
         """获取模型类型的使用统计"""
         stats_data = await self.repo.get_usage_stats(model_type, limit)
 
         return [ModelUsageStats(**stat) for stat in stats_data]
 
-    async def init_default_models(self) -> List[AIModelConfig]:
+    async def init_default_models(self) -> list[AIModelConfig]:
         """初始化默认模型配置 - 已禁用系统预设"""
         return []
 
@@ -279,7 +275,7 @@ class AIModelConfigService:
             raise ValidationError(f"Failed to decrypt API key for model {model.name}")
 
     async def _test_transcription_model(
-        self, model: AIModelConfig, api_key: str, test_data: Optional[Dict[str, Any]]
+        self, model: AIModelConfig, api_key: str, test_data: Optional[dict[str, Any]]
     ) -> str:
         """
         测试转录模型
@@ -302,14 +298,14 @@ class AIModelConfigService:
 
         # 读取期望文本
         if not os.path.exists(example_txt_path):
-            return f"⚠️ 测试文件缺失: example.txt 未找到"
+            return "⚠️ 测试文件缺失: example.txt 未找到"
 
-        with open(example_txt_path, "r", encoding="utf-8") as f:
+        with open(example_txt_path, encoding="utf-8") as f:
             expected_text = f.read().strip()
 
         # 检查音频文件是否存在
         if not os.path.exists(example_mp3_path):
-            return f"⚠️ 测试文件缺失: example.mp3 未找到，无法进行实际测试"
+            return "⚠️ 测试文件缺失: example.mp3 未找到，无法进行实际测试"
 
         # 进行实际的转录测试
         try:
@@ -346,7 +342,7 @@ class AIModelConfigService:
                         result = await response.json()
 
                         if "text" not in result:
-                            return f"❌ API 响应格式错误: 未包含 'text' 字段"
+                            return "❌ API 响应格式错误: 未包含 'text' 字段"
 
                         transcribed_text = result["text"].strip()
 
@@ -373,7 +369,7 @@ class AIModelConfigService:
                             f"\n期望文本: {expected_text}",
                             f"\n转录结果: {transcribed_text}",
                             f"\n相似度: {similarity_percent:.1f}%",
-                            f"\n阈值: 90.0%",
+                            "\n阈值: 90.0%",
                         ]
 
                         return "".join(result_parts)
@@ -384,7 +380,7 @@ class AIModelConfigService:
             return f"❌ 测试失败: {str(e)}"
 
     async def _test_text_generation_model(
-        self, model: AIModelConfig, api_key: str, test_data: Optional[Dict[str, Any]]
+        self, model: AIModelConfig, api_key: str, test_data: Optional[dict[str, Any]]
     ) -> str:
         """测试文本生成模型"""
         # 修复：如果 test_data 为 None，使用空字典
@@ -514,7 +510,7 @@ class AIModelConfigService:
                                         "Connection successful but no content returned"
                                     )
                                     logger.info(
-                                        f"Validation successful but no content returned"
+                                        "Validation successful but no content returned"
                                     )
                             elif response.status in [401, 403, 400, 404]:
                                 # 2. 失败则尝试 api-key header (Azure/MIMO style)
@@ -546,7 +542,7 @@ class AIModelConfigService:
                                         else:
                                             result = "Connection successful (via api-key) but no content returned"
                                             logger.info(
-                                                f"Validation successful via api-key but no content returned"
+                                                "Validation successful via api-key but no content returned"
                                             )
                                     else:
                                         text = await response2.text()
@@ -598,7 +594,7 @@ class AIModelConfigService:
 
     async def call_transcription_with_fallback(
         self, audio_file_path: str, language: str = "zh", model_id: Optional[str] = None
-    ) -> Tuple[str, Optional[AIModelConfig]]:
+    ) -> tuple[str, Optional[AIModelConfig]]:
         """
         使用优先级fallback机制调用转录API
 
@@ -656,11 +652,11 @@ class AIModelConfigService:
 
     async def call_text_generation_with_fallback(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
         model_id: Optional[str] = None,
-    ) -> Tuple[str, Optional[AIModelConfig]]:
+    ) -> tuple[str, Optional[AIModelConfig]]:
         """
         使用优先级fallback机制调用文本生成API
 
@@ -766,7 +762,7 @@ class AIModelConfigService:
     async def _call_text_generation_model(
         self,
         model: AIModelConfig,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         max_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
     ) -> str:
@@ -854,10 +850,16 @@ class TextGenerationService:
             ValidationError: When content is too short
             ExternalServiceError: When all external services fail
         """
-        from openai import AsyncOpenAI
+        from openai import (
+            APIConnectionError,
+            APIError,
+            AsyncOpenAI,
+            AuthenticationError,
+            RateLimitError,
+        )
+
         from app.core.security import decrypt_data
         from app.domains.ai.models import ModelType
-        from openai import AuthenticationError, APIError, APIConnectionError, RateLimitError
 
         # Get active text generation models ordered by priority
         model_configs = await self.repo.get_active_models_by_priority(ModelType.TEXT_GENERATION)

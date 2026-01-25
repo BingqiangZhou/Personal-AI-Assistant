@@ -8,17 +8,21 @@ and follows the architecture defined in security.py.
 """
 
 import logging
-from typing import List, Optional, Tuple
-from datetime import datetime
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Optional
 
 import aiohttp
 from defusedxml.ElementTree import fromstring
 
 from app.core.config import settings
 from app.core.llm_privacy import ContentSanitizer
-from app.integration.podcast.security import PodcastSecurityValidator, PodcastContentValidator
 from app.integration.podcast.platform_detector import PlatformDetector
+from app.integration.podcast.security import (
+    PodcastContentValidator,
+    PodcastSecurityValidator,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -43,11 +47,11 @@ class PodcastFeed:
     title: str
     link: str
     description: str
-    episodes: List[PodcastEpisode]
+    episodes: list[PodcastEpisode]
     last_fetched: datetime
     author: Optional[str] = None
     language: Optional[str] = None
-    categories: List[str] = None
+    categories: list[str] = None
     explicit: Optional[bool] = None
     image_url: Optional[str] = None
     podcast_type: Optional[str] = None
@@ -64,7 +68,7 @@ class SecureRSSParser:
         self.security = PodcastSecurityValidator()
         self.privacy = ContentSanitizer(mode=settings.LLM_CONTENT_SANITIZE_MODE)
 
-    async def fetch_and_parse_feed(self, feed_url: str) -> Tuple[bool, Optional[PodcastFeed], Optional[str]]:
+    async def fetch_and_parse_feed(self, feed_url: str) -> tuple[bool, Optional[PodcastFeed], Optional[str]]:
         """
         Complete pipeline: fetch → validate → parse
 
@@ -102,7 +106,7 @@ class SecureRSSParser:
             logger.error(f"Parsing error: {e}")
             return False, None, f"Failed to parse feed: {e}"
 
-    async def _safe_fetch(self, url: str) -> Tuple[Optional[str], Optional[str]]:
+    async def _safe_fetch(self, url: str) -> tuple[Optional[str], Optional[str]]:
         """Fetch with size and timeout limits"""
         try:
             timeout = aiohttp.ClientTimeout(total=60, connect=10)

@@ -1,6 +1,7 @@
 """Pydantic schemas for admin forms and validation."""
-from pydantic import BaseModel, Field, validator
 from typing import Optional
+
+from pydantic import BaseModel, Field, validator
 
 
 class AdminLoginForm(BaseModel):

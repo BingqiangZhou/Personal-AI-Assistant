@@ -1,7 +1,8 @@
 """Admin domain models."""
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Index
 from datetime import datetime
+
+from sqlalchemy import JSON, Column, DateTime, Index, Integer, String, Text
 
 from app.core.database import Base
 

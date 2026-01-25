@@ -2,12 +2,12 @@
 Unit tests for RSS parser platform integration
 """
 
-import pytest
-from unittest.mock import AsyncMock, patch, Mock
-from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
 
-from app.integration.podcast.secure_rss_parser import SecureRSSParser, PodcastFeed
+import pytest
+
 from app.integration.podcast.platform_detector import PodcastPlatform
+from app.integration.podcast.secure_rss_parser import PodcastFeed, SecureRSSParser
 
 
 class TestRSSParserPlatform:

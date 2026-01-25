@@ -4,11 +4,24 @@
 基于现有subscription实体进行扩展，新增播客特定字段
 """
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, Float, Boolean, ForeignKey, JSON, Index, Enum
-from sqlalchemy.orm import relationship
-from datetime import datetime
-from typing import List, Optional
 import enum
+from datetime import datetime
+from typing import Optional
+
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
+from sqlalchemy.orm import relationship
 
 from app.core.database import Base
 from app.domains.subscription.models import Subscription
@@ -97,6 +110,8 @@ def _add_podcast_relationship():
 
 # 直接用赋值方式添加
 from app.domains.subscription.models import Subscription
+
+
 Subscription.podcast_episodes = relationship(
     "PodcastEpisode",
     back_populates="subscription",

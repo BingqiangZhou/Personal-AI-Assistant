@@ -1,27 +1,20 @@
 """Test fixtures for subscription domain tests."""
 
-import pytest
 import asyncio
-from typing import AsyncGenerator
-from unittest.mock import AsyncMock
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import declarative_base
+from collections.abc import AsyncGenerator
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 # Import all models to ensure proper registration with SQLAlchemy
 # This is required for tests to work with relationships
-from app.core.database import Base
-from app.domains.user.models import User, UserStatus
 from app.core.security import get_password_hash
 from app.domains.subscription.models import (
     Subscription,
     SubscriptionStatus,
-    SubscriptionItem,
-    SubscriptionCategory,
-    SubscriptionCategoryMapping,
 )
-from app.domains.assistant.models import Conversation, AssistantTask
-from app.domains.multimedia.models import MediaFile, ProcessingJob
-from app.admin.models import SystemSettings
+from app.domains.user.models import User, UserStatus
+
 
 # Use in-memory SQLite for testing
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
@@ -107,8 +100,8 @@ async def another_user(db_session: AsyncSession) -> User:
 @pytest.fixture
 async def active_subscription(db_session: AsyncSession, test_user: User) -> Subscription:
     """Create an active subscription for testing."""
-    from app.shared.schemas import SubscriptionCreate
     from app.domains.subscription.repositories import SubscriptionRepository
+    from app.shared.schemas import SubscriptionCreate
 
     repo = SubscriptionRepository(db_session)
     sub_data = SubscriptionCreate(
@@ -124,8 +117,8 @@ async def active_subscription(db_session: AsyncSession, test_user: User) -> Subs
 @pytest.fixture
 async def error_subscription(db_session: AsyncSession, test_user: User) -> Subscription:
     """Create an ERROR status subscription for testing."""
-    from app.shared.schemas import SubscriptionCreate
     from app.domains.subscription.repositories import SubscriptionRepository
+    from app.shared.schemas import SubscriptionCreate
 
     repo = SubscriptionRepository(db_session)
     sub_data = SubscriptionCreate(

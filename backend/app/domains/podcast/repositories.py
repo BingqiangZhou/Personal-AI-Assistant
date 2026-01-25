@@ -3,16 +3,18 @@
 """
 
 import logging
-from typing import List, Optional, Tuple, Dict, Any, Set
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, desc, func, or_, text
-from sqlalchemy.orm import joinedload
-from datetime import datetime, date, timedelta
+from datetime import date, datetime, timedelta
+from typing import Any, Optional
 
-from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
-from app.domains.subscription.models import Subscription, SubscriptionItem
-from app.core.redis import PodcastRedis
+from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
+
 from app.core.datetime_utils import sanitize_published_date
+from app.core.redis import PodcastRedis
+from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
+from app.domains.subscription.models import Subscription
+
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +81,7 @@ class PodcastRepository:
         await self.db.refresh(subscription)
         return subscription
 
-    async def get_user_subscriptions(self, user_id: int) -> List[Subscription]:
+    async def get_user_subscriptions(self, user_id: int) -> list[Subscription]:
         """获取用户所有播客订阅"""
         stmt = select(Subscription).where(
             and_(
@@ -178,7 +180,7 @@ class PodcastRepository:
 
         return episode, is_new
 
-    async def get_unsummarized_episodes(self, subscription_id: Optional[int] = None) -> List[PodcastEpisode]:
+    async def get_unsummarized_episodes(self, subscription_id: Optional[int] = None) -> list[PodcastEpisode]:
         """获取待AI总结的单集"""
         stmt = select(PodcastEpisode).where(
             and_(
@@ -193,7 +195,7 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_subscription_episodes(self, subscription_id: int, limit: int = 20) -> List[PodcastEpisode]:
+    async def get_subscription_episodes(self, subscription_id: int, limit: int = 20) -> list[PodcastEpisode]:
         """获取订阅的所有单集"""
         stmt = select(PodcastEpisode).options(
             joinedload(PodcastEpisode.subscription)
@@ -297,8 +299,8 @@ class PodcastRepository:
     async def get_playback_states_batch(
         self,
         user_id: int,
-        episode_ids: List[int]
-    ) -> Dict[int, PodcastPlaybackState]:
+        episode_ids: list[int]
+    ) -> dict[int, PodcastPlaybackState]:
         """
         Batch fetch playback states for multiple episodes.
 
@@ -322,8 +324,8 @@ class PodcastRepository:
 
     async def get_episodes_counts_batch(
         self,
-        subscription_ids: List[int]
-    ) -> Dict[int, int]:
+        subscription_ids: list[int]
+    ) -> dict[int, int]:
         """
         Batch fetch episode counts for multiple subscriptions.
 
@@ -351,9 +353,9 @@ class PodcastRepository:
 
     async def get_subscription_episodes_batch(
         self,
-        subscription_ids: List[int],
+        subscription_ids: list[int],
         limit_per_subscription: int = 3
-    ) -> Dict[int, List[PodcastEpisode]]:
+    ) -> dict[int, list[PodcastEpisode]]:
         """
         Batch fetch recent episodes for multiple subscriptions.
 
@@ -451,7 +453,7 @@ class PodcastRepository:
         page: int = 1,
         size: int = 20,
         filters: Optional[dict] = None
-    ) -> Tuple[List[Subscription], int]:
+    ) -> tuple[list[Subscription], int]:
         """分页获取用户订阅"""
         query = select(Subscription).where(
             and_(
@@ -490,7 +492,7 @@ class PodcastRepository:
         page: int = 1,
         size: int = 20,
         filters: Optional[dict] = None
-    ) -> Tuple[List[PodcastEpisode], int]:
+    ) -> tuple[list[PodcastEpisode], int]:
         """分页获取用户播客单集"""
         query = select(PodcastEpisode).join(Subscription).options(
             joinedload(PodcastEpisode.subscription)
@@ -546,7 +548,7 @@ class PodcastRepository:
         search_in: str = "all",
         page: int = 1,
         size: int = 20
-    ) -> Tuple[List[PodcastEpisode], int]:
+    ) -> tuple[list[PodcastEpisode], int]:
         """搜索播客单集"""
         # 构建搜索条件
         search_conditions = []
@@ -590,7 +592,7 @@ class PodcastRepository:
     async def update_subscription_categories(
         self,
         subscription_id: int,
-        category_ids: List[int]
+        category_ids: list[int]
     ):
         """更新订阅的分类关联"""
         # TODO: 实现订阅与分类的多对多关系更新
@@ -627,7 +629,7 @@ class PodcastRepository:
         self,
         user_id: int,
         limit: int = 5
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """获取最近播放的单集"""
         stmt = select(
             PodcastEpisode,
@@ -660,7 +662,7 @@ class PodcastRepository:
         self,
         user_id: int,
         limit: int = 20
-    ) -> List[PodcastEpisode]:
+    ) -> list[PodcastEpisode]:
         """获取用户喜欢的单集（播放完成率高的）"""
         # 播放完成率 > 80% 的单集
         stmt = select(PodcastEpisode).join(PodcastPlaybackState).join(Subscription).where(
@@ -678,7 +680,7 @@ class PodcastRepository:
         self,
         user_id: int,
         days: int = 30
-    ) -> Set[date]:
+    ) -> set[date]:
         """获取最近播放的日期集合"""
         stmt = select(PodcastPlaybackState.last_updated_at).where(
             and_(
@@ -694,7 +696,7 @@ class PodcastRepository:
 
         return dates
 
-    async def get_user_stats_aggregated(self, user_id: int) -> Dict[str, Any]:
+    async def get_user_stats_aggregated(self, user_id: int) -> dict[str, Any]:
         """
         Get aggregated user statistics using efficient single-query approach.
 

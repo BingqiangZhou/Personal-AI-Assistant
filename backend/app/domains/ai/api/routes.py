@@ -2,27 +2,28 @@
 AI模型配置管理API路由
 """
 
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
+from app.core.exceptions import DatabaseError, ValidationError
 from app.core.security import get_token_from_request
-from app.domains.ai.repositories import AIModelConfigRepository
 from app.domains.ai.models import ModelType
 from app.domains.ai.schemas import (
     AIModelConfigCreate,
-    AIModelConfigUpdate,
-    AIModelConfigResponse,
     AIModelConfigList,
-    ModelUsageStats,
+    AIModelConfigResponse,
+    AIModelConfigUpdate,
+    APIKeyValidationRequest,
+    APIKeyValidationResponse,
     ModelTestRequest,
     ModelTestResponse,
-    APIKeyValidationRequest,
-    APIKeyValidationResponse
+    ModelUsageStats,
 )
 from app.domains.ai.services import AIModelConfigService
-from app.core.exceptions import ValidationError, DatabaseError
+
 
 router = APIRouter()
 
@@ -194,7 +195,7 @@ async def get_model(
                 decrypted_key = await service._get_decrypted_api_key(model)
                 model.api_key = decrypted_key
                 model.api_key_encrypted = False
-            except Exception as e:
+            except Exception:
                 # Log error but don't fail the request, just return encrypted key
                 # or raise error if critical?
                 # User wants to SEE the key, so failing might be better?
@@ -332,7 +333,7 @@ async def get_default_model(
 
 @router.get(
     "/models/active/{model_type}",
-    response_model=List[AIModelConfigResponse],
+    response_model=list[AIModelConfigResponse],
     summary="获取活跃模型列表"
 )
 async def get_active_models(
@@ -406,7 +407,7 @@ async def get_model_stats(
 
 @router.get(
     "/models/stats/{model_type}",
-    response_model=List[ModelUsageStats],
+    response_model=list[ModelUsageStats],
     summary="获取模型类型使用统计"
 )
 async def get_type_stats(
@@ -427,7 +428,7 @@ async def get_type_stats(
 
 @router.post(
     "/models/init-defaults",
-    response_model=List[AIModelConfigResponse],
+    response_model=list[AIModelConfigResponse],
     summary="初始化默认模型配置"
 )
 async def init_default_models(

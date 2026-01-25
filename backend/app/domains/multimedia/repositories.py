@@ -1,17 +1,21 @@
 """Multimedia domain repositories."""
 
-from typing import List, Optional, Tuple
-from sqlalchemy import select, func, update, delete, and_
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from datetime import datetime
 import hashlib
 import os
+from datetime import datetime
+from typing import Optional
+
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.multimedia.models import (
-    MediaFile, ProcessingJob, TranscriptionResult,
-    ImageAnalysis, VideoAnalysis,
-    MediaType, ProcessingStatus
+    ImageAnalysis,
+    MediaFile,
+    MediaType,
+    ProcessingJob,
+    ProcessingStatus,
+    TranscriptionResult,
+    VideoAnalysis,
 )
 
 
@@ -28,7 +32,7 @@ class MultimediaRepository:
         page: int = 1,
         size: int = 20,
         media_type: Optional[str] = None
-    ) -> Tuple[List[MediaFile], int]:
+    ) -> tuple[list[MediaFile], int]:
         """Get user's media files with pagination."""
         skip = (page - 1) * size
 
@@ -156,7 +160,7 @@ class MultimediaRepository:
             try:
                 if os.path.exists(media_file.file_path):
                     os.remove(media_file.file_path)
-            except Exception as e:
+            except Exception:
                 # Log error but continue with database deletion
                 pass
 
@@ -172,7 +176,7 @@ class MultimediaRepository:
         size: int = 20,
         status: Optional[str] = None,
         media_file_id: Optional[int] = None
-    ) -> Tuple[List[ProcessingJob], int]:
+    ) -> tuple[list[ProcessingJob], int]:
         """Get user's processing jobs."""
         skip = (page - 1) * size
 
@@ -297,7 +301,7 @@ class MultimediaRepository:
         language: Optional[str] = None,
         segments: Optional[list] = None,
         summary: Optional[str] = None,
-        keywords: Optional[List[str]] = None
+        keywords: Optional[list[str]] = None
     ) -> TranscriptionResult:
         """Create transcription result."""
         result = TranscriptionResult(
@@ -334,7 +338,7 @@ class MultimediaRepository:
         faces: Optional[list] = None,
         text_detected: Optional[list] = None,
         emotions: Optional[list] = None,
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
         confidence: Optional[float] = None
     ) -> ImageAnalysis:
         """Create image analysis result."""

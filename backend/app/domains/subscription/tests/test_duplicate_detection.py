@@ -3,9 +3,9 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domains.subscription.models import SubscriptionStatus
 from app.domains.subscription.repositories import SubscriptionRepository
 from app.domains.subscription.services import SubscriptionService
-from app.domains.subscription.models import Subscription, SubscriptionStatus
 from app.shared.schemas import SubscriptionCreate
 
 
@@ -122,8 +122,9 @@ class TestDuplicateDetection:
         created = await service.create_subscription(sub_data)
 
         # Set status to ERROR
-        from app.domains.subscription.models import Subscription
         from sqlalchemy import select
+
+        from app.domains.subscription.models import Subscription
 
         result = await db_session.execute(
             select(Subscription).where(Subscription.id == created.id)
@@ -174,8 +175,9 @@ class TestDuplicateDetection:
         )
 
         # Set error_sub to ERROR status
-        from app.domains.subscription.models import Subscription
         from sqlalchemy import select
+
+        from app.domains.subscription.models import Subscription
 
         result = await db_session.execute(
             select(Subscription).where(Subscription.id == error_sub.id)

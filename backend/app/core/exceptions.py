@@ -3,13 +3,14 @@
 自定义异常处理器
 """
 
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from typing import Union, Optional, Dict, Any
 import logging
-import traceback
+from typing import Any, Optional, Union
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class BaseCustomException(Exception):
         message: str,
         status_code: int = 500,
         error_code: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None
+        details: Optional[dict[str, Any]] = None
     ):
         self.message = message
         self.status_code = status_code

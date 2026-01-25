@@ -1,27 +1,27 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi import HTTPException, status
-from fastapi.responses import RedirectResponse
+import json
+
+# from app.core.security_middleware import SecurityHeadersMiddleware
+import logging
 from contextlib import asynccontextmanager
-import uvicorn
-from starlette.responses import Response
 from typing import Any
+
+import uvicorn
+from fastapi import FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.exceptions import setup_exception_handlers
+from app.core.json_encoder import CustomJSONEncoder
 from app.core.logging_config import setup_logging_from_env
 from app.core.logging_middleware import setup_logging_middleware
-from app.core.json_encoder import CustomJSONEncoder
 from app.core.middleware import (
     PerformanceMonitoringMiddleware,
     get_performance_middleware,
-    set_performance_middleware
+    set_performance_middleware,
 )
-# from app.core.security_middleware import SecurityHeadersMiddleware
-import logging
-import json
+
 
 # 初始化日志系统
 setup_logging_from_env()
@@ -51,7 +51,9 @@ async def lifespan(app: FastAPI):
     # Reset stale transcription tasks
     try:
         from app.core.database import async_session_factory
-        from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+        from app.domains.podcast.transcription_manager import (
+            DatabaseBackedTranscriptionService,
+        )
 
         async with async_session_factory() as session:
             service = DatabaseBackedTranscriptionService(session)
@@ -146,15 +148,15 @@ def create_application() -> FastAPI:
         return await http_exception_handler(request, exc)
 
     # Include routers
-    from app.domains.user.api.routes import router as user_router
-    from app.domains.subscription.api.routes import router as subscription_router
+    from app.admin.csrf import CSRFException
+    from app.admin.exception_handlers import csrf_exception_handler
+    from app.admin.router import router as admin_router
+    from app.domains.ai.api.routes import router as ai_model_router
     from app.domains.assistant.api.routes import router as assistant_router
     from app.domains.multimedia.api.routes import router as multimedia_router
     from app.domains.podcast.api.routes import router as podcast_router
-    from app.domains.ai.api.routes import router as ai_model_router
-    from app.admin.router import router as admin_router
-    from app.admin.exception_handlers import csrf_exception_handler
-    from app.admin.csrf import CSRFException
+    from app.domains.subscription.api.routes import router as subscription_router
+    from app.domains.user.api.routes import router as user_router
 
     app.include_router(
         user_router,

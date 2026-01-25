@@ -1,9 +1,9 @@
 """User repository implementation."""
 
-from typing import Optional, List
+from typing import Optional
+
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
-from sqlalchemy.orm import selectinload
 
 from app.domains.user.models import User, UserSession, UserStatus
 from app.shared.schemas import UserCreate, UserUpdate
@@ -93,7 +93,7 @@ class UserRepository:
         skip: int = 0,
         limit: int = 100,
         active_only: bool = True
-    ) -> List[User]:
+    ) -> list[User]:
         """List users."""
         query = select(User)
 

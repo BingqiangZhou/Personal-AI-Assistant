@@ -4,45 +4,34 @@
 """
 
 import logging
-from typing import List, Optional
 from datetime import datetime, timedelta
+from typing import Optional
+
 from celery import Celery
 from celery.schedules import crontab
-from celery.signals import after_setup_logger
-from sqlalchemy import select, delete
+from sqlalchemy import delete, select
 
 # 初始化日志系统
 from app.core.logging_config import setup_logging_from_env
+
+
 setup_logging_from_env()
 
+import asyncio
+
 from app.core.config import settings
-from app.domains.podcast.services import PodcastService
 from app.domains.podcast.repositories import PodcastRepository
-from app.core.database import get_db_session
-from app.integration.podcast.secure_rss_parser import SecureRSSParser
+from app.domains.podcast.services import PodcastService
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
 from app.domains.podcast.transcription_state import get_transcription_state_manager
-from app.core.database import async_session_factory
+from app.domains.subscription.models import (
+    Subscription,
+)
 
 # Import all models to ensure SQLAlchemy relationships are properly resolved
 # This is critical for Celery workers which don't call init_db()
-from app.domains.user.models import User, UserSession, UserStatus
-from app.domains.subscription.models import (
-    Subscription, SubscriptionItem, SubscriptionCategory,
-    SubscriptionCategoryMapping, SubscriptionType, SubscriptionStatus,
-    UpdateFrequency
-)
-from app.domains.assistant.models import (
-    Conversation, Message, PromptTemplate, AssistantTask
-)
-from app.domains.multimedia.models import MediaFile, ProcessingJob
-from app.domains.podcast.models import (
-    PodcastEpisode, PodcastPlaybackState, TranscriptionTask,
-    TranscriptionStatus
-)
-from app.domains.ai.models import AIModelConfig
+from app.domains.user.models import UserStatus
 
-import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +43,14 @@ async def get_task_statistics():
     获取转录任务统计信息
     Returns dict with counts by status
     """
-    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-    from app.domains.podcast.models import TranscriptionTask
     from sqlalchemy import func
+    from sqlalchemy.ext.asyncio import (
+        AsyncSession,
+        async_sessionmaker,
+        create_async_engine,
+    )
+
+    from app.domains.podcast.models import TranscriptionTask
 
     # 创建独立的数据库引擎
     worker_engine = create_async_engine(
@@ -195,11 +189,15 @@ def worker_ready_hook(sender=None, **kwargs):
     logger.info("Celery Worker 启动，验证 AI API 配置...")
 
     async def validate_api_configs():
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
+
+        from app.domains.ai.models import ModelType
         from app.domains.ai.repositories import AIModelConfigRepository
         from app.domains.ai.services import AIModelConfigService
-        from app.domains.ai.models import ModelType
-        from app.core.security import decrypt_data
 
         # 创建独立的数据库引擎
         engine = create_async_engine(
@@ -298,7 +296,11 @@ def refresh_all_podcast_feeds(self):
 
     async def _do_refresh():
         # 创建独立的数据库引擎，避免fork进程后连接池问题
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
 
         worker_engine = create_async_engine(
             settings.DATABASE_URL,
@@ -407,7 +409,11 @@ def generate_pending_summaries(self):
     async def _do_generate():
         # 创建独立的数据库引擎和 session factory
         # 避免与主进程的连接池冲突
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
 
         worker_engine = create_async_engine(
             settings.DATABASE_URL,
@@ -522,7 +528,12 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
 
     async def _do_transcription():
         # 创建新的数据库引擎（避免fork进程后事件循环冲突）
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
+
         from app.core.config import settings
 
         # 为Celery worker创建独立的数据库引擎（使用NullPool避免fork后连接池问题）
@@ -673,7 +684,11 @@ def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] 
         # Try to update Redis state one more time
         async def _mark_failed():
             # 创建独立的数据库引擎，避免fork进程后连接池问题
-            from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+            from sqlalchemy.ext.asyncio import (
+                AsyncSession,
+                async_sessionmaker,
+                create_async_engine,
+            )
 
             worker_engine = create_async_engine(
                 settings.DATABASE_URL,
@@ -728,7 +743,11 @@ def generate_summary_for_episode(episode_id: int, user_id: int):
 
     async def _do_generate():
         # 创建独立的数据库引擎，避免fork进程后连接池问题
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
 
         worker_engine = create_async_engine(
             settings.DATABASE_URL,
@@ -793,7 +812,11 @@ def cleanup_old_playback_states():
 
     async def _do_cleanup():
         # 创建独立的数据库引擎，避免fork进程后连接池问题
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
 
         worker_engine = create_async_engine(
             settings.DATABASE_URL,
@@ -865,7 +888,11 @@ def generate_podcast_recommendations():
 
     async def _do_generate():
         # 创建独立的数据库引擎，避免fork进程后连接池问题
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
 
         worker_engine = create_async_engine(
             settings.DATABASE_URL,
@@ -949,7 +976,11 @@ def cleanup_old_transcription_temp_files(days: int = 7):
 
     async def _do_cleanup():
         # 创建独立的数据库引擎，避免fork进程后连接池问题
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
 
         worker_engine = create_async_engine(
             settings.DATABASE_URL,
@@ -975,7 +1006,9 @@ def cleanup_old_transcription_temp_files(days: int = 7):
         try:
             async with worker_session_factory() as db:
                 try:
-                    from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+                    from app.domains.podcast.transcription_manager import (
+                        DatabaseBackedTranscriptionService,
+                    )
 
                     service = DatabaseBackedTranscriptionService(db)
                     result = await service.cleanup_old_temp_files(days=days)
@@ -1107,7 +1140,11 @@ def auto_cleanup_cache_files():
 
     async def _do_auto_cleanup():
         # 创建独立的数据库引擎，避免fork进程后连接池问题
-        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
 
         worker_engine = create_async_engine(
             settings.DATABASE_URL,

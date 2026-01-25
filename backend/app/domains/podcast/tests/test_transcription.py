@@ -2,31 +2,25 @@
 转录功能测试
 """
 
-import pytest
-import asyncio
-import tempfile
 import os
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime
+import tempfile
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.podcast.models import TranscriptionTask, PodcastEpisode, TranscriptionStatus
-from app.domains.podcast.schemas import (
-    PodcastTranscriptionRequest,
-    PodcastTranscriptionResponse,
-    PodcastTranscriptionDetailResponse,
-    PodcastTranscriptionStatusResponse
+from app.core.exceptions import HTTPException, ValidationError
+from app.domains.podcast.models import (
+    TranscriptionStatus,
 )
 from app.domains.podcast.transcription import (
-    PodcastTranscriptionService,
-    AudioDownloader,
+    AudioChunk,
     AudioConverter,
+    AudioDownloader,
     AudioSplitter,
+    PodcastTranscriptionService,
     SiliconFlowTranscriber,
-    AudioChunk
 )
-from app.core.exceptions import ValidationError, HTTPException
 
 
 class TestAudioDownloader:

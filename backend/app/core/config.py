@@ -1,10 +1,11 @@
-from functools import lru_cache
-from typing import List, Optional
-from pydantic_settings import BaseSettings
-from pydantic import AnyHttpUrl, validator
-import secrets
 import os
+import secrets
+from functools import lru_cache
 from pathlib import Path
+from typing import Optional
+
+from pydantic import validator
+from pydantic_settings import BaseSettings
 
 
 # Secret Key Management (moved here to avoid circular imports)
@@ -34,10 +35,10 @@ class SecretKeyManager:
         # Try to load existing key
         if self.secret_key_file.exists():
             try:
-                with open(self.secret_key_file, 'r') as f:
+                with open(self.secret_key_file) as f:
                     self._secret_key = f.read().strip()
                 return self._secret_key
-            except (IOError, OSError):
+            except OSError:
                 pass
 
         # Generate new key if none exists
@@ -51,7 +52,7 @@ class SecretKeyManager:
             self.ensure_data_dir()
             with open(self.secret_key_file, 'w') as f:
                 f.write(secret_key)
-        except (IOError, OSError, PermissionError):
+        except (OSError, PermissionError):
             # Silently fail if we can't write to disk (e.g., in Docker with read-only volume)
             # The secret key will still be available in memory for this session
             pass
@@ -100,7 +101,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379"
 
     # CORS
-    ALLOWED_HOSTS: List[str] = ["*"]
+    ALLOWED_HOSTS: list[str] = ["*"]
 
     # JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
@@ -189,7 +190,7 @@ class Settings(BaseSettings):
         extra = "ignore"  # Allow extra environment variables from Docker compose
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
     return Settings()

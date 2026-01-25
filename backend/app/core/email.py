@@ -2,14 +2,14 @@
 Email utilities for sending password reset emails and other notifications.
 """
 
-import os
 import logging
-from typing import Optional, Dict, Any
-from datetime import datetime
 import secrets
 import uuid
+from datetime import datetime
+from typing import Optional
 
 from app.core.config import settings
+
 
 logger = logging.getLogger(__name__)
 

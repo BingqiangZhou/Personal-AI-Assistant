@@ -1,9 +1,9 @@
 """Subscription domain repositories."""
 
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
-from sqlalchemy import and_, delete, func, or_, select, update
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -13,7 +13,6 @@ from app.domains.subscription.models import (
     SubscriptionCategoryMapping,
     SubscriptionItem,
     SubscriptionStatus,
-    SubscriptionType,
 )
 from app.shared.schemas import SubscriptionCreate, SubscriptionUpdate
 
@@ -32,7 +31,7 @@ class SubscriptionRepository:
         size: int = 20,
         status: Optional[str] = None,
         source_type: Optional[str] = None,
-    ) -> Tuple[List[Subscription], int, Dict[int, int]]:
+    ) -> tuple[list[Subscription], int, dict[int, int]]:
         """
         Get user's subscriptions with pagination and filters.
 
@@ -270,7 +269,7 @@ class SubscriptionRepository:
         size: int = 20,
         unread_only: bool = False,
         bookmarked_only: bool = False,
-    ) -> Tuple[List[SubscriptionItem], int]:
+    ) -> tuple[list[SubscriptionItem], int]:
         """Get items from a subscription."""
         skip = (page - 1) * size
 
@@ -311,7 +310,7 @@ class SubscriptionRepository:
         size: int = 50,
         unread_only: bool = False,
         bookmarked_only: bool = False,
-    ) -> Tuple[List[SubscriptionItem], int]:
+    ) -> tuple[list[SubscriptionItem], int]:
         """Get all items from all user's subscriptions."""
         skip = (page - 1) * size
 
@@ -370,7 +369,7 @@ class SubscriptionRepository:
         author: Optional[str] = None,
         source_url: Optional[str] = None,
         image_url: Optional[str] = None,
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
         metadata: Optional[dict] = None,
         published_at: Optional[datetime] = None,
     ) -> SubscriptionItem:
@@ -467,7 +466,7 @@ class SubscriptionRepository:
         return True
 
     # Category operations
-    async def get_user_categories(self, user_id: int) -> List[SubscriptionCategory]:
+    async def get_user_categories(self, user_id: int) -> list[SubscriptionCategory]:
         """Get all user's categories."""
         query = (
             select(SubscriptionCategory)

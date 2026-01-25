@@ -2,13 +2,12 @@
 播客服务层测试用例
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from app.domains.podcast.services import PodcastService
-from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
-from app.domains.subscription.models import Subscription
 
 
 class TestPodcastService:

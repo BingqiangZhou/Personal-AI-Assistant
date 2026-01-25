@@ -2,11 +2,11 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
-from xml.sax.saxutils import escape
+from typing import Any, Optional
 from urllib.parse import urlparse
+from xml.sax.saxutils import escape
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -14,7 +14,6 @@ from app.core.feed_parser import FeedParseOptions, FeedParser, FeedParserConfig
 from app.core.feed_schemas import FeedParseResult, ParseErrorCode
 from app.domains.subscription.models import (
     Subscription,
-    SubscriptionItem,
     SubscriptionStatus,
 )
 from app.domains.subscription.repositories import SubscriptionRepository
@@ -24,6 +23,7 @@ from app.shared.schemas import (
     SubscriptionResponse,
     SubscriptionUpdate,
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -172,8 +172,8 @@ class SubscriptionService:
         )
 
     async def create_subscriptions_batch(
-        self, subscriptions_data: List[SubscriptionCreate]
-    ) -> List[Dict[str, Any]]:
+        self, subscriptions_data: list[SubscriptionCreate]
+    ) -> list[dict[str, Any]]:
         """
         Batch create subscriptions with enhanced duplicate detection.
 
@@ -317,7 +317,7 @@ class SubscriptionService:
         """Delete subscription."""
         return await self.repo.delete_subscription(self.user_id, sub_id)
 
-    async def fetch_subscription(self, sub_id: int) -> Dict[str, Any]:
+    async def fetch_subscription(self, sub_id: int) -> dict[str, Any]:
         """
         Manually trigger subscription fetch (for RSS feeds).
 
@@ -438,7 +438,7 @@ class SubscriptionService:
         finally:
             await parser.close()
 
-    async def fetch_all_subscriptions(self) -> List[Dict[str, Any]]:
+    async def fetch_all_subscriptions(self) -> list[dict[str, Any]]:
         """Fetch all active RSS subscriptions."""
         subs, _ = await self.repo.get_user_subscriptions(
             self.user_id,
@@ -539,7 +539,7 @@ class SubscriptionService:
             size=size
         )
 
-    async def mark_item_as_read(self, item_id: int) -> Optional[Dict[str, Any]]:
+    async def mark_item_as_read(self, item_id: int) -> Optional[dict[str, Any]]:
         """Mark an item as read."""
         item = await self.repo.mark_item_as_read(item_id, self.user_id)
         if not item:
@@ -550,7 +550,7 @@ class SubscriptionService:
             "read_at": item.read_at.isoformat() if item.read_at else None,
         }
 
-    async def mark_item_as_unread(self, item_id: int) -> Optional[Dict[str, Any]]:
+    async def mark_item_as_unread(self, item_id: int) -> Optional[dict[str, Any]]:
         """Mark an item as unread."""
         item = await self.repo.mark_item_as_unread(item_id, self.user_id)
         if not item:
@@ -558,7 +558,7 @@ class SubscriptionService:
 
         return {"id": item.id, "read_at": None}
 
-    async def toggle_bookmark(self, item_id: int) -> Optional[Dict[str, Any]]:
+    async def toggle_bookmark(self, item_id: int) -> Optional[dict[str, Any]]:
         """Toggle item bookmark status."""
         item = await self.repo.toggle_bookmark(item_id, self.user_id)
         if not item:
@@ -575,7 +575,7 @@ class SubscriptionService:
         return await self.repo.get_unread_count(self.user_id)
 
     # Category operations
-    async def list_categories(self) -> List[Dict[str, Any]]:
+    async def list_categories(self) -> list[dict[str, Any]]:
         """Get all user's categories."""
         categories = await self.repo.get_user_categories(self.user_id)
 
@@ -592,7 +592,7 @@ class SubscriptionService:
 
     async def create_category(
         self, name: str, description: Optional[str] = None, color: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a new category."""
         cat = await self.repo.create_category(self.user_id, name, description, color)
 
@@ -606,7 +606,7 @@ class SubscriptionService:
 
     async def update_category(
         self, category_id: int, **kwargs
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Update category."""
         cat = await self.repo.update_category(category_id, self.user_id, **kwargs)
         if not cat:
@@ -665,7 +665,7 @@ class SubscriptionService:
 
         生成OPML 2.0格式的RSS订阅XML内容。
         """
-        from app.domains.subscription.models import Subscription, SubscriptionType
+        from app.domains.subscription.models import Subscription
 
         # Query all subscriptions (no source_type filter)
         # 查询所有订阅（不限制source_type）
@@ -708,8 +708,8 @@ class SubscriptionService:
         opml_lines.append('  <body>')
 
         # Group subscriptions by category
-        categorized_subs: Dict[str, List[Subscription]] = {}
-        uncategorized_subs: List[Subscription] = []
+        categorized_subs: dict[str, list[Subscription]] = {}
+        uncategorized_subs: list[Subscription] = []
 
         for sub in subscriptions:
             if sub.categories:

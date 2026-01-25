@@ -1,12 +1,19 @@
 """AI Assistant domain models."""
 
+import enum
+from datetime import datetime
+
 from sqlalchemy import (
-    Column, Integer, String, Text, DateTime,
-    ForeignKey, Boolean, JSON, Index, Enum
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
 )
 from sqlalchemy.orm import relationship
-from datetime import datetime
-import enum
 
 from app.core.database import Base
 

@@ -4,10 +4,12 @@ Response builder utilities for consistent API responses.
 响应构建器，用于创建一致的API响应
 """
 
-from typing import TypeVar, Type, Optional, List, Dict, Any
-from pydantic import BaseModel
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Any, Optional, TypeVar
+
+from pydantic import BaseModel
+
 
 logger = logging.getLogger(__name__)
 
@@ -31,8 +33,8 @@ class ResponseBuilder:
     def success(
         data: Any = None,
         message: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        metadata: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """
         Build a success response.
 
@@ -60,9 +62,9 @@ class ResponseBuilder:
     @staticmethod
     def error(
         message: str,
-        errors: Optional[Dict[str, List[str]]] = None,
+        errors: Optional[dict[str, list[str]]] = None,
         error_code: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Build an error response.
 
@@ -89,12 +91,12 @@ class ResponseBuilder:
 
     @staticmethod
     def paginated(
-        items: List[Any],
+        items: list[Any],
         total: int,
         page: int,
         size: int,
-        response_type: Optional[Type[T]] = None
-    ) -> Dict[str, Any]:
+        response_type: Optional[type[T]] = None
+    ) -> dict[str, Any]:
         """
         Build a paginated response.
 
@@ -134,9 +136,9 @@ class ResponseBuilder:
     @staticmethod
     def to_schema(
         model: M,
-        schema_class: Type[T],
-        field_mapping: Optional[Dict[str, str]] = None,
-        additional_fields: Optional[Dict[str, Any]] = None
+        schema_class: type[T],
+        field_mapping: Optional[dict[str, str]] = None,
+        additional_fields: Optional[dict[str, Any]] = None
     ) -> T:
         """
         Convert database model to Pydantic schema.
@@ -192,11 +194,11 @@ class ResponseBuilder:
 
     @staticmethod
     def to_schemas(
-        models: List[M],
-        schema_class: Type[T],
-        field_mapping: Optional[Dict[str, str]] = None,
-        additional_fields_map: Optional[Dict[int, Dict[str, Any]]] = None
-    ) -> List[T]:
+        models: list[M],
+        schema_class: type[T],
+        field_mapping: Optional[dict[str, str]] = None,
+        additional_fields_map: Optional[dict[int, dict[str, Any]]] = None
+    ) -> list[T]:
         """
         Convert list of database models to Pydantic schemas.
 
@@ -228,10 +230,10 @@ class ResponseBuilder:
     @staticmethod
     def build_detail_response(
         item: Any,
-        response_type: Type[T],
-        field_mapping: Optional[Dict[str, str]] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        response_type: type[T],
+        field_mapping: Optional[dict[str, str]] = None,
+        metadata: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """
         Build a detail response for a single item.
 
@@ -255,12 +257,12 @@ class ResponseBuilder:
 
     @staticmethod
     def build_list_response(
-        items: List[Any],
-        response_type: Type[T],
-        field_mapping: Optional[Dict[str, str]] = None,
+        items: list[Any],
+        response_type: type[T],
+        field_mapping: Optional[dict[str, str]] = None,
         total: Optional[int] = None,
-        metadata: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        metadata: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """
         Build a list response for multiple items.
 

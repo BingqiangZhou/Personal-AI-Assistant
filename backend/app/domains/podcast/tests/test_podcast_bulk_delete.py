@@ -8,27 +8,22 @@
 4. 权限测试 - 未认证、删除其他用户订阅
 """
 
-import pytest
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from datetime import datetime
-from sqlalchemy import delete, and_
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.domains.podcast.models import (
+    PodcastEpisode,
+)
+from app.domains.podcast.services import PodcastService
+from app.domains.subscription.models import Subscription
+
 
 # Import ALL models BEFORE importing PodcastService to ensure SQLAlchemy relationships are properly initialized
 # This is required to avoid mapper initialization errors during test execution
 # The issue is that SQLAlchemy needs all related models to be imported before any delete() operations
-from app.domains.user.models import User
-from app.domains.assistant.models import Conversation, AssistantTask, PromptTemplate
-from app.domains.multimedia.models import MediaFile, ProcessingJob
-from app.domains.subscription.models import Subscription, SubscriptionCategory
-from app.domains.podcast.models import (
-    PodcastEpisode,
-    PodcastPlaybackState,
-    TranscriptionTask,
-    PodcastConversation
-)
-
-from app.domains.podcast.services import PodcastService
 
 
 class TestPodcastBulkDelete:
@@ -811,8 +806,9 @@ class TestPodcastBulkDeleteSchema:
 
     def test_empty_subscription_ids_raises_error(self):
         """测试空列表抛出错误 / Test empty list raises error"""
-        from app.domains.podcast.schemas import PodcastSubscriptionBulkDelete
         from pydantic import ValidationError
+
+        from app.domains.podcast.schemas import PodcastSubscriptionBulkDelete
 
         # Empty list should fail validation
         with pytest.raises(ValidationError):
@@ -820,8 +816,9 @@ class TestPodcastBulkDeleteSchema:
 
     def test_exceeds_100_limit_raises_error(self):
         """测试超过100条限制抛出错误 / Test exceeds 100 limit raises error"""
-        from app.domains.podcast.schemas import PodcastSubscriptionBulkDelete
         from pydantic import ValidationError
+
+        from app.domains.podcast.schemas import PodcastSubscriptionBulkDelete
 
         # More than 100 IDs should fail validation
         with pytest.raises(ValidationError):

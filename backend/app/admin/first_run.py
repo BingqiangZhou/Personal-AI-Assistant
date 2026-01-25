@@ -1,13 +1,14 @@
 """First-run setup middleware for admin panel."""
 
 import logging
-from fastapi import Request, Response
+
+from fastapi import Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import async_session_factory
 from app.domains.user.models import User
+
 
 logger = logging.getLogger(__name__)
 

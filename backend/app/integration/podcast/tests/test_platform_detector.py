@@ -2,7 +2,6 @@
 Unit tests for podcast platform detection
 """
 
-import pytest
 from app.integration.podcast.platform_detector import (
     PlatformDetector,
     PodcastPlatform,

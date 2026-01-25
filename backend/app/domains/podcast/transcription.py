@@ -5,34 +5,31 @@
 """
 
 import asyncio
-import aiohttp
-import aiofiles
-import os
-import pathlib
-import tempfile
 import hashlib
-import json
-import time
-import shutil
-import ssl
-from typing import List, Dict, Optional, Tuple, AsyncGenerator
-from dataclasses import dataclass
-from urllib.parse import urlparse
 import logging
+import os
+import time
+from dataclasses import dataclass
 from datetime import datetime
-from collections import defaultdict
+from typing import Optional
 
+import aiofiles
+import aiohttp
 import ffmpeg
 from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.database import async_session_factory
-from app.domains.podcast.models import TranscriptionTask, PodcastEpisode, TranscriptionStatus, TranscriptionStep
-from app.core.exceptions import ValidationError, DatabaseError
-from app.domains.ai.repositories import AIModelConfigRepository
+from app.core.exceptions import ValidationError
 from app.domains.ai.models import ModelType
+from app.domains.ai.repositories import AIModelConfigRepository
+from app.domains.podcast.models import (
+    PodcastEpisode,
+    TranscriptionStatus,
+    TranscriptionStep,
+    TranscriptionTask,
+)
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
 
@@ -124,7 +121,7 @@ class AudioDownloader:
         if self.session:
             await self.session.close()
 
-    async def download_file(self, url: str, destination: str, progress_callback=None) -> Tuple[str, int]:
+    async def download_file(self, url: str, destination: str, progress_callback=None) -> tuple[str, int]:
         """
         下载文件到指定位置
 
@@ -153,7 +150,7 @@ class AudioDownloader:
         # 为 lizhi.fm 添加 Referer
         if 'lizhi.fm' in original_url or 'lizhi.fm' in url or 'gzlzfm.com' in url:
             request_headers['Referer'] = 'https://www.lizhi.fm/'
-            logger.info(f"📋 [HEADERS] Added Referer for lizhi.fm: https://www.lizhi.fm/")
+            logger.info("📋 [HEADERS] Added Referer for lizhi.fm: https://www.lizhi.fm/")
 
         # 输出请求头信息用于调试
         logger.info(f"📤 [HTTP REQUEST] URL: {url}")
@@ -216,7 +213,7 @@ class AudioDownloader:
         url: str,
         destination: str,
         progress_callback=None
-    ) -> Tuple[str, int]:
+    ) -> tuple[str, int]:
         """
         文件下载（直接使用 aiohttp，无回退）
 
@@ -257,7 +254,7 @@ class AudioConverter:
     """音频格式转换器"""
 
     @staticmethod
-    async def convert_to_mp3(input_path: str, output_path: str, progress_callback=None) -> Tuple[str, float]:
+    async def convert_to_mp3(input_path: str, output_path: str, progress_callback=None) -> tuple[str, float]:
         """
         将音频文件转换为MP3格式
 
@@ -363,7 +360,7 @@ class AudioSplitter:
         output_dir: str,
         chunk_duration_seconds: int = 300,
         progress_callback=None
-    ) -> List[AudioChunk]:
+    ) -> list[AudioChunk]:
         """
         将MP3文件按时间长度切割成片段（推荐用于转录）
 
@@ -455,7 +452,7 @@ class AudioSplitter:
         output_dir: str,
         chunk_size_mb: int = 10,
         progress_callback=None
-    ) -> List[AudioChunk]:
+    ) -> list[AudioChunk]:
         """
         将MP3文件切割成指定大小的片段
 
@@ -735,12 +732,12 @@ class SiliconFlowTranscriber:
 
     async def transcribe_chunks(
         self,
-        chunks: List[AudioChunk],
+        chunks: list[AudioChunk],
         model: str = "FunAudioLLM/SenseVoiceSmall",
         progress_callback=None,
         ai_repo=None,
         config_db_id: Optional[int] = None
-    ) -> List[AudioChunk]:
+    ) -> list[AudioChunk]:
         """
         并发转录多个音频片段
 
@@ -798,7 +795,7 @@ class PodcastTranscriptionService:
     def __init__(self, db: AsyncSession):
         self.db = db
         # 进度缓存，减少数据库操作频率
-        self._progress_cache: Dict[str, Dict[str, float]] = {}
+        self._progress_cache: dict[str, dict[str, float]] = {}
 
         # Get path from settings - use absolute path if configured, otherwise resolve relative path
         temp_dir_config = getattr(settings, 'TRANSCRIPTION_TEMP_DIR', './temp/transcription')
@@ -1002,7 +999,7 @@ class PodcastTranscriptionService:
 
         logger.info(f"Set task {task_id} final status: {status}")
 
-    async def create_transcription_task_record(self, episode_id: int, model: Optional[str] = None, force: bool = False) -> Tuple[TranscriptionTask, Optional[int]]:
+    async def create_transcription_task_record(self, episode_id: int, model: Optional[str] = None, force: bool = False) -> tuple[TranscriptionTask, Optional[int]]:
         """
         创建转录任务记录（不立即执行）
         
@@ -1036,7 +1033,7 @@ class PodcastTranscriptionService:
                 await self.db.delete(existing_task)
                 await self.db.flush()
                 await self.db.commit()  # Commit the delete to release the unique constraint
-                logger.info(f"✅ [TRANSCRIPTION] Failed/cancelled task removed, ready to create new one")
+                logger.info("✅ [TRANSCRIPTION] Failed/cancelled task removed, ready to create new one")
 
         # 获取播客单集信息
         stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
@@ -1076,7 +1073,7 @@ class PodcastTranscriptionService:
         logger.info(f"🤖 [TRANSCRIPTION] Final model to use: '{transcription_model}'")
 
         # 创建新的转录任务
-        logger.info(f"📝 [TRANSCRIPTION] Creating TranscriptionTask in database...")
+        logger.info("📝 [TRANSCRIPTION] Creating TranscriptionTask in database...")
         task = TranscriptionTask(
             episode_id=episode_id,
             original_audio_url=episode.audio_url,
@@ -1105,7 +1102,7 @@ class PodcastTranscriptionService:
 
     async def execute_transcription_task(self, task_id: int, session, config_db_id: Optional[int] = None):
         """执行转录任务（后台运行）"""
-        log_with_timestamp("INFO", f"🎬 [EXECUTE START] Transcription task starting...", task_id)
+        log_with_timestamp("INFO", "🎬 [EXECUTE START] Transcription task starting...", task_id)
         log_with_timestamp("INFO", f"📋 [EXECUTE] config_db_id={config_db_id}", task_id)
         log_with_timestamp("INFO", f"📋 [EXECUTE] asyncio event loop running: {asyncio.get_event_loop().is_running()}", task_id)
 
@@ -1209,9 +1206,9 @@ class PodcastTranscriptionService:
             if os.path.exists(original_file) and os.path.getsize(original_file) > 0:
                 file_size = os.path.getsize(original_file)
                 log_with_timestamp("INFO", f"⏭️ [STEP 1/6 DOWNLOAD] Skip! File already exists: {original_file} ({file_size/1024/1024:.2f} MB)", task_id)
-                log_with_timestamp("INFO", f"✅ [STEP 1/6 DOWNLOAD] Using existing downloaded file", task_id)
+                log_with_timestamp("INFO", "✅ [STEP 1/6 DOWNLOAD] Using existing downloaded file", task_id)
             else:
-                log_with_timestamp("INFO", f"📥 [STEP 1/6 DOWNLOAD] Starting audio download with fallback...", task_id)
+                log_with_timestamp("INFO", "📥 [STEP 1/6 DOWNLOAD] Starting audio download with fallback...", task_id)
                 log_with_timestamp("INFO", f"📥 [STEP 1/6 DOWNLOAD] Source URL: {task.original_audio_url[:100]}...", task_id)
                 await self._update_task_progress_with_session(
                     session,
@@ -1279,7 +1276,7 @@ class PodcastTranscriptionService:
                         if duration:
                             skip_conversion = True
                             log_with_timestamp("INFO", f"⏭️ [STEP 2/6 CONVERT] Skip! Valid MP3 file already exists: {converted_file} ({converted_size/1024/1024:.2f} MB, {duration}s)", task_id)
-                            log_with_timestamp("INFO", f"✅ [STEP 2/6 CONVERT] Using existing converted file", task_id)
+                            log_with_timestamp("INFO", "✅ [STEP 2/6 CONVERT] Using existing converted file", task_id)
                         else:
                             log_with_timestamp("WARNING", f"⚠️ [STEP 2/6 CONVERT] File exists but invalid (no duration), re-converting: {converted_file}", task_id)
                     except Exception as e:
@@ -1287,10 +1284,10 @@ class PodcastTranscriptionService:
                     else:
                         log_with_timestamp("WARNING", f"⚠️ [STEP 2/6 CONVERT] File exists but too small ({converted_size} bytes), re-converting", task_id)
                 else:
-                    log_with_timestamp("INFO", f"🔍 [STEP 2/6 CONVERT] File does not exist, will convert", task_id)
+                    log_with_timestamp("INFO", "🔍 [STEP 2/6 CONVERT] File does not exist, will convert", task_id)
 
             if not skip_conversion:
-                log_with_timestamp("INFO", f"🔄 [STEP 2/6 CONVERT] Starting MP3 conversion...", task_id)
+                log_with_timestamp("INFO", "🔄 [STEP 2/6 CONVERT] Starting MP3 conversion...", task_id)
                 await self._update_task_progress_with_session(
                     session,
                     task_id,
@@ -1335,7 +1332,7 @@ class PodcastTranscriptionService:
 
             # === 步骤3：切割音频文件（支持增量恢复） ===
             # 首先验证converted_file确实存在且有效
-            log_with_timestamp("INFO", f"📋 [STEP 3/6 SPLIT] Starting split verification...", task_id)
+            log_with_timestamp("INFO", "📋 [STEP 3/6 SPLIT] Starting split verification...", task_id)
 
             if not os.path.exists(converted_file):
                 error_msg = f"Converted file not found: {converted_file}. Cannot proceed with split."
@@ -1373,7 +1370,7 @@ class PodcastTranscriptionService:
                 chunk_files = [f for f in os.listdir(split_dir) if f.startswith('chunk_') and f.endswith('.mp3')]
                 if chunk_files:
                     log_with_timestamp("INFO", f"⏭️ [STEP 3/6 SPLIT] Skip! Chunks already exist: {len(chunk_files)} files found", task_id)
-                    log_with_timestamp("INFO", f"✅ [STEP 3/6 SPLIT] Using existing chunks", task_id)
+                    log_with_timestamp("INFO", "✅ [STEP 3/6 SPLIT] Using existing chunks", task_id)
                     # 重建chunks对象列表
                     chunks = []
                     for chunk_file in sorted(chunk_files):
@@ -1512,7 +1509,7 @@ class PodcastTranscriptionService:
                 # 合并已有转录和新转录
                 all_chunks = already_transcribed + transcribed_chunks
 
-                log_with_timestamp("INFO", f"✅ [STEP 4/6 TRANSCRIBE] Transcription chunks finished!", task_id)
+                log_with_timestamp("INFO", "✅ [STEP 4/6 TRANSCRIBE] Transcription chunks finished!", task_id)
 
                 # Log transcription results summary
                 success_count = sum(1 for c in all_chunks if c.transcript)
@@ -1524,13 +1521,13 @@ class PodcastTranscriptionService:
             else:
                 # 所有片段都已转录
                 all_chunks = already_transcribed
-                log_with_timestamp("INFO", f"✅ [STEP 4/6 TRANSCRIBE] All chunks already transcribed! Skipping transcription", task_id)
+                log_with_timestamp("INFO", "✅ [STEP 4/6 TRANSCRIBE] All chunks already transcribed! Skipping transcription", task_id)
                 success_count = len(all_chunks)
                 failed_count = 0
                 transcription_time = 0
 
             # 步骤5：合并转录结果
-            log_with_timestamp("INFO", f"🔗 [STEP 5/6 MERGE] Merging transcription results...", task_id)
+            log_with_timestamp("INFO", "🔗 [STEP 5/6 MERGE] Merging transcription results...", task_id)
             await self._update_task_progress_with_session(
                 session,
                 task_id,
@@ -1731,7 +1728,7 @@ class PodcastTranscriptionService:
             # 我们需要刷新当前session中的task对象
             try:
                 await session.refresh(task)
-                log_with_timestamp("INFO", f"🔄 [AI SUMMARY] Refreshed task object from database, summary_content is now available", task_id)
+                log_with_timestamp("INFO", "🔄 [AI SUMMARY] Refreshed task object from database, summary_content is now available", task_id)
             except Exception as refresh_error:
                 log_with_timestamp("WARNING", f"⚠️ [AI SUMMARY] Failed to refresh task: {refresh_error}", task_id)
             

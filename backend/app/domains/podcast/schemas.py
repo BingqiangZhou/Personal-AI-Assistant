@@ -2,9 +2,10 @@
 播客相关的Pydantic schemas - API请求和响应模型
 """
 
-from typing import Optional, List, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 # === Base Schemas ===
@@ -25,7 +26,7 @@ class PodcastTimestampedSchema(PodcastBaseSchema):
 class PodcastSubscriptionCreate(PodcastBaseSchema):
     """创建播客订阅请求"""
     feed_url: str = Field(..., description="RSS feed URL", min_length=10, max_length=500)
-    category_ids: Optional[List[int]] = Field(default_factory=list, description="分类ID列表")
+    category_ids: Optional[list[int]] = Field(default_factory=list, description="分类ID列表")
 
     @field_validator('feed_url')
     @classmethod
@@ -44,7 +45,7 @@ class PodcastSubscriptionUpdate(PodcastBaseSchema):
     custom_name: Optional[str] = Field(None, max_length=255)
     fetch_interval: Optional[int] = Field(None, ge=300, le=86400, description="抓取间隔(秒)")
     is_active: Optional[bool] = None
-    category_ids: Optional[List[int]] = None
+    category_ids: Optional[list[int]] = None
 
 
 class PodcastSubscriptionResponse(PodcastTimestampedSchema):
@@ -60,8 +61,8 @@ class PodcastSubscriptionResponse(PodcastTimestampedSchema):
     fetch_interval: Optional[int] = None
     episode_count: Optional[int] = 0
     unplayed_count: Optional[int] = 0
-    latest_episode: Optional[Dict[str, Any]] = None
-    categories: Optional[List[Dict[str, Any]]] = []
+    latest_episode: Optional[dict[str, Any]] = None
+    categories: Optional[list[dict[str, Any]]] = []
     image_url: Optional[str] = None
     author: Optional[str] = None
 
@@ -119,7 +120,7 @@ class PodcastSubscriptionResponse(PodcastTimestampedSchema):
 
 class PodcastSubscriptionListResponse(PodcastBaseSchema):
     """播客订阅列表响应"""
-    subscriptions: List[PodcastSubscriptionResponse]
+    subscriptions: list[PodcastSubscriptionResponse]
     total: int
     page: int
     size: int
@@ -152,7 +153,7 @@ class PodcastEpisodeResponse(PodcastTimestampedSchema):
     episode_number: Optional[int] = None
     explicit: bool = False
     status: str
-    metadata: Optional[Dict[str, Any]] = {}
+    metadata: Optional[dict[str, Any]] = {}
 
     # 播放状态（如果用户有收听记录）
     subscription_title: Optional[str] = None
@@ -164,7 +165,7 @@ class PodcastEpisodeResponse(PodcastTimestampedSchema):
 
 class PodcastEpisodeListResponse(PodcastBaseSchema):
     """播客单集列表响应"""
-    episodes: List[PodcastEpisodeResponse]
+    episodes: list[PodcastEpisodeResponse]
     total: int
     page: int
     size: int
@@ -174,13 +175,13 @@ class PodcastEpisodeListResponse(PodcastBaseSchema):
 
 class PodcastEpisodeDetailResponse(PodcastEpisodeResponse):
     """播客单集详情响应（包含更多信息）"""
-    subscription: Optional[Dict[str, Any]] = None
-    related_episodes: Optional[List[Dict[str, Any]]] = []
+    subscription: Optional[dict[str, Any]] = None
+    related_episodes: Optional[list[dict[str, Any]]] = []
 
 
 class PodcastFeedResponse(PodcastBaseSchema):
     """播客信息流响应"""
-    items: List[PodcastEpisodeResponse]
+    items: list[PodcastEpisodeResponse]
     has_more: bool
     next_page: Optional[int] = None
     total: int
@@ -270,14 +271,14 @@ class SummaryModelInfo(PodcastBaseSchema):
 
 class SummaryModelsResponse(PodcastBaseSchema):
     """可用总结模型列表响应"""
-    models: List[SummaryModelInfo]
+    models: list[SummaryModelInfo]
     total: int
 
 
 class PodcastSummaryPendingResponse(PodcastBaseSchema):
     """待总结列表响应"""
     count: int
-    episodes: List[Dict[str, Any]]
+    episodes: list[dict[str, Any]]
 
 
 # === Search/Filter相关 ===
@@ -309,8 +310,8 @@ class PodcastStatsResponse(PodcastBaseSchema):
     total_playtime: int  # 总播放时间(秒)
     summaries_generated: int
     pending_summaries: int
-    recently_played: List[Dict[str, Any]]
-    top_categories: List[Dict[str, Any]]
+    recently_played: list[dict[str, Any]]
+    top_categories: list[dict[str, Any]]
     listening_streak: int  # 连续收听天数
 
 
@@ -319,7 +320,7 @@ class PodcastStatsResponse(PodcastBaseSchema):
 class PodcastOPMLImport(PodcastBaseSchema):
     """OPML导入请求"""
     opml_content: str = Field(..., description="OPML格式内容")
-    category_mapping: Optional[Dict[str, int]] = Field(default_factory=dict, description="分类映射")
+    category_mapping: Optional[dict[str, int]] = Field(default_factory=dict, description="分类映射")
 
 
 class PodcastOPMLExport(PodcastBaseSchema):
@@ -334,20 +335,20 @@ class PodcastOPMLExport(PodcastBaseSchema):
 class PodcastBulkAction(PodcastBaseSchema):
     """批量操作请求"""
     action: str = Field(..., description="操作类型: refresh, delete, mark_played, mark_unplayed")
-    subscription_ids: List[int] = Field(..., description="订阅ID列表")
-    episode_ids: Optional[List[int]] = Field(None, description="单集ID列表（用于单集操作）")
+    subscription_ids: list[int] = Field(..., description="订阅ID列表")
+    episode_ids: Optional[list[int]] = Field(None, description="单集ID列表（用于单集操作）")
 
 
 class PodcastBulkActionResponse(PodcastBaseSchema):
     """批量操作响应"""
     success_count: int
     failed_count: int
-    errors: List[str] = []
+    errors: list[str] = []
 
 
 class PodcastSubscriptionBatchResponse(PodcastBaseSchema):
     """播客批量订阅响应"""
-    results: List[Dict[str, Any]]
+    results: list[dict[str, Any]]
     total_requested: int
     success_count: int
     skipped_count: int
@@ -401,7 +402,7 @@ class PodcastTranscriptionResponse(PodcastBaseSchema):
     total_processing_time: Optional[float] = None
 
     # 关联信息
-    episode: Optional[Dict[str, Any]] = None
+    episode: Optional[dict[str, Any]] = None
 
     @field_validator('status', mode='before')
     @classmethod
@@ -414,7 +415,7 @@ class PodcastTranscriptionResponse(PodcastBaseSchema):
 
 class PodcastTranscriptionDetailResponse(PodcastTranscriptionResponse):
     """转录任务详情响应"""
-    chunk_info: Optional[Dict[str, Any]] = None
+    chunk_info: Optional[dict[str, Any]] = None
     transcript_content: Optional[str] = None
     original_file_path: Optional[str] = None
 
@@ -428,7 +429,7 @@ class PodcastTranscriptionDetailResponse(PodcastTranscriptionResponse):
 
 class PodcastTranscriptionListResponse(PodcastBaseSchema):
     """转录任务列表响应"""
-    tasks: List[PodcastTranscriptionResponse]
+    tasks: list[PodcastTranscriptionResponse]
     total: int
     page: int
     size: int
@@ -494,7 +495,7 @@ class PodcastConversationSendResponse(PodcastBaseSchema):
 class PodcastConversationHistoryResponse(PodcastBaseSchema):
     """对话历史响应"""
     episode_id: int
-    messages: List[PodcastConversationMessage]
+    messages: list[PodcastConversationMessage]
     total: int
 
 
@@ -561,7 +562,7 @@ class ScheduleConfigResponse(PodcastBaseSchema):
 
 class PodcastSubscriptionBulkDelete(PodcastBaseSchema):
     """批量删除播客订阅请求"""
-    subscription_ids: List[int] = Field(..., description="订阅ID列表", min_length=1, max_length=100)
+    subscription_ids: list[int] = Field(..., description="订阅ID列表", min_length=1, max_length=100)
 
     @field_validator('subscription_ids')
     @classmethod
@@ -583,5 +584,5 @@ class PodcastSubscriptionBulkDeleteResponse(PodcastBaseSchema):
     """批量删除播客订阅响应"""
     success_count: int = Field(..., description="成功删除的订阅数量")
     failed_count: int = Field(..., description="删除失败的订阅数量")
-    errors: List[Dict[str, Any]] = Field(default_factory=list, description="删除失败的错误信息列表")
-    deleted_subscription_ids: List[int] = Field(default_factory=list, description="成功删除的订阅ID列表")
+    errors: list[dict[str, Any]] = Field(default_factory=list, description="删除失败的错误信息列表")
+    deleted_subscription_ids: list[int] = Field(default_factory=list, description="成功删除的订阅ID列表")

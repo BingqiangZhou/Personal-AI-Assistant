@@ -3,25 +3,25 @@
 使用 feedparser 的健壮 RSS/Atom 解析器。
 """
 
+import html
 import logging
 import re
-import html
-import httpx
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Tuple
+from typing import Any, Optional
 from urllib.parse import urlparse
 
 import feedparser
+import httpx
 
 from app.domains.subscription.parsers.feed_schemas import (
-    FeedParseResult,
-    FeedInfo,
     FeedEntry,
-    ParseErrorCode,
-    ParseError,
-    FeedParserConfig,
+    FeedInfo,
     FeedParseOptions,
+    FeedParserConfig,
+    FeedParseResult,
+    ParseErrorCode,
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -448,7 +448,7 @@ class FeedParser:
 
         return None
 
-    def _extract_tags(self, entry: Any) -> List[str]:
+    def _extract_tags(self, entry: Any) -> list[str]:
         """Extract tags/categories / 提取标签/分类"""
         tags = []
 
@@ -503,7 +503,7 @@ class FeedParser:
 
         return None
 
-    def _get_field(self, obj: Any, fields: List[str], default: Any = None) -> Any:
+    def _get_field(self, obj: Any, fields: list[str], default: Any = None) -> Any:
         """Get first available field from object / 从对象获取第一个可用字段"""
         for field in fields:
             value = getattr(obj, field, None)

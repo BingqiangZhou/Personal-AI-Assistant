@@ -4,14 +4,14 @@ Podcast Sync Service - Handles background synchronization tasks.
 播客同步服务 - 处理后台同步任务
 """
 
-import logging
 import asyncio
+import logging
 from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.podcast.repositories import PodcastRepository
-from app.domains.podcast.models import PodcastEpisode
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,9 @@ class PodcastSyncService:
         self.repo = PodcastRepository(db)
 
         # Import transcription service
-        from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+        from app.domains.podcast.transcription_manager import (
+            DatabaseBackedTranscriptionService,
+        )
         self.transcription_service = DatabaseBackedTranscriptionService(db)
 
     async def trigger_transcription(self, episode_id: int) -> Optional[dict]:

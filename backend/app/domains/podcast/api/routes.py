@@ -17,66 +17,63 @@ GET    /podcasts/summary/pending        待总结列表
 """
 
 import logging
-from typing import List, Optional, Dict, Any
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, Header, status, Body
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
 from app.core.security import get_token_from_request
-from app.domains.podcast.services import PodcastService
-from app.domains.podcast.repositories import PodcastRepository
-from app.domains.podcast.transcription import PodcastTranscriptionService
 from app.domains.podcast.models import TranscriptionStatus
-from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+from app.domains.podcast.services import PodcastService
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
+from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
 from app.domains.podcast.transcription_state import get_transcription_state_manager
 
+
 logger = logging.getLogger(__name__)
-from app.domains.podcast.transcription_scheduler import (
-    TranscriptionScheduler,
-    AutomatedTranscriptionScheduler,
-    ScheduleFrequency,
-    schedule_episode_transcription,
-    get_episode_transcript,
-    batch_transcribe_subscription
-)
 from app.domains.podcast.schemas import (
-    PodcastSubscriptionCreate,
-    PodcastSubscriptionResponse,
-    PodcastSubscriptionListResponse,
-    PodcastEpisodeResponse,
-    PodcastEpisodeListResponse,
-    PodcastEpisodeDetailResponse,
-    PodcastFeedResponse,
-    PodcastPlaybackUpdate,
-    PodcastPlaybackStateResponse,
-    PodcastSummaryRequest,
-    PodcastSummaryResponse,
-    PodcastSummaryPendingResponse,
-    SummaryModelInfo,
-    SummaryModelsResponse,
-    PodcastEpisodeFilter,
-    PodcastSearchFilter,
-    PodcastStatsResponse,
-    PodcastTranscriptionRequest,
-    PodcastTranscriptionResponse,
-    PodcastTranscriptionDetailResponse,
-    PodcastTranscriptionListResponse,
-    PodcastTranscriptionStatusResponse,
-    PodcastTranscriptionChunkInfo,
+    PodcastConversationClearResponse,
+    PodcastConversationHistoryResponse,
+    PodcastConversationMessage,
     PodcastConversationSendRequest,
     PodcastConversationSendResponse,
-    PodcastConversationHistoryResponse,
-    PodcastConversationClearResponse,
-    PodcastConversationMessage,
-    ScheduleConfigUpdate,
-    ScheduleConfigResponse,
+    PodcastEpisodeDetailResponse,
+    PodcastEpisodeFilter,
+    PodcastEpisodeListResponse,
+    PodcastEpisodeResponse,
+    PodcastFeedResponse,
+    PodcastPlaybackStateResponse,
+    PodcastPlaybackUpdate,
+    PodcastSearchFilter,
+    PodcastStatsResponse,
     PodcastSubscriptionBatchResponse,
     PodcastSubscriptionBulkDelete,
-    PodcastSubscriptionBulkDeleteResponse
+    PodcastSubscriptionBulkDeleteResponse,
+    PodcastSubscriptionCreate,
+    PodcastSubscriptionListResponse,
+    PodcastSubscriptionResponse,
+    PodcastSummaryPendingResponse,
+    PodcastSummaryRequest,
+    PodcastSummaryResponse,
+    PodcastTranscriptionDetailResponse,
+    PodcastTranscriptionRequest,
+    PodcastTranscriptionResponse,
+    PodcastTranscriptionStatusResponse,
+    ScheduleConfigResponse,
+    ScheduleConfigUpdate,
+    SummaryModelInfo,
+    SummaryModelsResponse,
 )
+from app.domains.podcast.transcription_scheduler import (
+    ScheduleFrequency,
+    TranscriptionScheduler,
+    batch_transcribe_subscription,
+    get_episode_transcript,
+)
+
 
 router = APIRouter(prefix="")
 
@@ -238,7 +235,7 @@ async def add_subscription(
     summary="批量添加播客订阅"
 )
 async def create_subscriptions_batch(
-    subscriptions_data: List[PodcastSubscriptionCreate],
+    subscriptions_data: list[PodcastSubscriptionCreate],
     user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -395,8 +392,9 @@ async def get_subscription_schedule(
     db: AsyncSession = Depends(get_db_session)
 ):
     """Get subscription schedule configuration"""
-    from app.domains.subscription.models import Subscription
     from sqlalchemy import select
+
+    from app.domains.subscription.models import Subscription
 
     stmt = select(Subscription).where(
         Subscription.id == subscription_id
@@ -438,8 +436,9 @@ async def update_subscription_schedule(
     db: AsyncSession = Depends(get_db_session)
 ):
     """Update subscription schedule configuration"""
-    from app.domains.subscription.models import Subscription
     from sqlalchemy import select
+
+    from app.domains.subscription.models import Subscription
 
     stmt = select(Subscription).where(
         Subscription.id == subscription_id
@@ -876,7 +875,7 @@ async def reparse_subscription(
 
 @router.get(
     "/recommendations",
-    response_model=List[dict],
+    response_model=list[dict],
     summary="获取播客推荐"
 )
 async def get_recommendations(
@@ -1978,7 +1977,7 @@ async def clear_conversation_history(
 
 @router.get(
     "/subscriptions/schedule/all",
-    response_model=List[ScheduleConfigResponse],
+    response_model=list[ScheduleConfigResponse],
     summary="Get all subscription schedules",
     description="Get schedule configuration for all user subscriptions"
 )
@@ -2015,12 +2014,12 @@ async def get_all_subscription_schedules(
 
 @router.post(
     "/subscriptions/schedule/batch-update",
-    response_model=List[ScheduleConfigResponse],
+    response_model=list[ScheduleConfigResponse],
     summary="Batch update subscription schedules",
     description="Update schedule configuration for multiple subscriptions"
 )
 async def batch_update_subscription_schedules(
-    subscription_ids: List[int] = Body(..., embed=True),
+    subscription_ids: list[int] = Body(..., embed=True),
     schedule_data: ScheduleConfigUpdate = Body(...),
     user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)

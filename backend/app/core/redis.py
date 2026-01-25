@@ -23,8 +23,10 @@ Recommended naming conventions:
 import hashlib
 import json
 from datetime import datetime
-from typing import Optional, Any, List
+from typing import Any, Optional
+
 from redis import asyncio as aioredis
+
 from app.core.config import settings
 
 
@@ -161,7 +163,7 @@ class PodcastRedis:
         try:
             json_str = json.dumps(value, cls=RedisJSONEncoder)
             return await self.cache_set(key, json_str, ttl)
-        except (TypeError, ValueError) as e:
+        except (TypeError, ValueError):
             return False
 
     # === Subscription List Cache ===

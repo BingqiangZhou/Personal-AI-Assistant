@@ -1,11 +1,12 @@
 """Exception handlers for Admin Panel."""
 import logging
-from typing import Dict, Any
+from typing import Any
 
 from fastapi import Request, Response
 from fastapi.templating import Jinja2Templates
 
 from app.admin.csrf import CSRFException, generate_csrf_token
+
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ async def csrf_exception_handler(request: Request, exc: CSRFException) -> Respon
             break
 
     # Prepare context for template
-    context: Dict[str, Any] = {
+    context: dict[str, Any] = {
         "request": request,
         "csrf_token": new_csrf_token,
         "messages": [

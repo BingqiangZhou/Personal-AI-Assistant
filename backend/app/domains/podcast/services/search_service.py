@@ -5,13 +5,14 @@ Podcast Search Service - Handles podcast content search and recommendations.
 """
 
 import logging
-from typing import List, Tuple, Dict, Any
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import PodcastRedis
-from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.models import PodcastEpisode
+from app.domains.podcast.repositories import PodcastRepository
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class PodcastSearchService:
         search_in: str = "all",
         page: int = 1,
         size: int = 20
-    ) -> Tuple[List[dict], int]:
+    ) -> tuple[list[dict], int]:
         """
         Search podcast content.
 
@@ -92,7 +93,7 @@ class PodcastSearchService:
 
         return results, total
 
-    async def get_recommendations(self, limit: int = 10) -> List[dict]:
+    async def get_recommendations(self, limit: int = 10) -> list[dict]:
         """
         Get podcast recommendations based on user history.
 
@@ -123,9 +124,9 @@ class PodcastSearchService:
 
     def _build_episode_response(
         self,
-        episodes: List[PodcastEpisode],
-        playback_states: Dict[int, Any]
-    ) -> List[dict]:
+        episodes: list[PodcastEpisode],
+        playback_states: dict[int, Any]
+    ) -> list[dict]:
         """
         Build episode response list with playback states.
 

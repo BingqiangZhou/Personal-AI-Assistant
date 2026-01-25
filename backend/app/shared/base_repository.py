@@ -4,11 +4,12 @@ Base repository class for common data access operations.
 基础仓储类，提供通用的数据访问操作
 """
 
-from typing import TypeVar, Generic, Type, Optional, List, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, and_, or_
-from sqlalchemy.orm import joinedload
 import logging
+from typing import Any, Generic, Optional, TypeVar
+
+from sqlalchemy import and_, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class BaseRepository(Generic[ModelType]):
     - Batch operations
     """
 
-    def __init__(self, db: AsyncSession, model: Type[ModelType]):
+    def __init__(self, db: AsyncSession, model: type[ModelType]):
         """
         Initialize base repository.
 
@@ -66,9 +67,9 @@ class BaseRepository(Generic[ModelType]):
 
     async def get_by_ids(
         self,
-        ids: List[int],
+        ids: list[int],
         options: Optional[list] = None
-    ) -> List[ModelType]:
+    ) -> list[ModelType]:
         """
         Get multiple entities by IDs.
 
@@ -94,10 +95,10 @@ class BaseRepository(Generic[ModelType]):
         self,
         skip: int = 0,
         limit: int = 100,
-        filters: Optional[Dict[str, Any]] = None,
+        filters: Optional[dict[str, Any]] = None,
         order_by: Optional[Any] = None,
         options: Optional[list] = None
-    ) -> List[ModelType]:
+    ) -> list[ModelType]:
         """
         Get list of entities with pagination and filters.
 
@@ -140,7 +141,7 @@ class BaseRepository(Generic[ModelType]):
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def count(self, filters: Optional[Dict[str, Any]] = None) -> int:
+    async def count(self, filters: Optional[dict[str, Any]] = None) -> int:
         """
         Count entities with optional filters.
 
@@ -184,7 +185,7 @@ class BaseRepository(Generic[ModelType]):
         await self.db.refresh(entity)
         return entity
 
-    async def create_many(self, items: List[Dict[str, Any]]) -> List[ModelType]:
+    async def create_many(self, items: list[dict[str, Any]]) -> list[ModelType]:
         """
         Create multiple entities in batch.
 
@@ -228,7 +229,7 @@ class BaseRepository(Generic[ModelType]):
 
     async def update_many(
         self,
-        ids: List[int],
+        ids: list[int],
         **kwargs
     ) -> int:
         """
@@ -277,7 +278,7 @@ class BaseRepository(Generic[ModelType]):
         await self.db.commit()
         return True
 
-    async def delete_many(self, ids: List[int]) -> int:
+    async def delete_many(self, ids: list[int]) -> int:
         """
         Delete multiple entities by IDs.
 
@@ -317,10 +318,10 @@ class BaseRepository(Generic[ModelType]):
         self,
         page: int = 1,
         size: int = 20,
-        filters: Optional[Dict[str, Any]] = None,
+        filters: Optional[dict[str, Any]] = None,
         order_by: Optional[Any] = None,
         options: Optional[list] = None
-    ) -> tuple[List[ModelType], int]:
+    ) -> tuple[list[ModelType], int]:
         """
         Get paginated list of entities.
 

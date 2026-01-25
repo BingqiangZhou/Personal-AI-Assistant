@@ -1,8 +1,9 @@
 """Shared Pydantic schemas."""
 
-from typing import Optional, List, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, ConfigDict, Field, field_validator
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 # Base schemas
@@ -61,7 +62,7 @@ class UserCreate(UserBase):
 class UserUpdate(BaseSchema):
     account_name: Optional[str] = None
     avatar_url: Optional[str] = None
-    settings: Optional[Dict[str, Any]] = None
+    settings: Optional[dict[str, Any]] = None
 
 
 class UserInDB(UserBase, TimestampedSchema):
@@ -106,7 +107,7 @@ class PaginationParams(BaseSchema):
 
 
 class PaginatedResponse(BaseSchema):
-    items: List[Any]
+    items: list[Any]
     total: int
     page: int
     size: int
@@ -115,7 +116,7 @@ class PaginatedResponse(BaseSchema):
     @classmethod
     def create(
         cls,
-        items: List[Any],
+        items: list[Any],
         total: int,
         page: int,
         size: int
@@ -140,7 +141,7 @@ class APIResponse(BaseSchema):
 class ErrorResponse(BaseSchema):
     success: bool = False
     message: str
-    errors: Optional[Dict[str, List[str]]] = None
+    errors: Optional[dict[str, list[str]]] = None
 
 
 # Subscription schemas
@@ -149,7 +150,7 @@ class SubscriptionBase(BaseSchema):
     description: Optional[str] = None
     source_type: str
     source_url: str
-    config: Optional[Dict[str, Any]] = {}
+    config: Optional[dict[str, Any]] = {}
     fetch_interval: int = 3600
 
 
@@ -160,7 +161,7 @@ class SubscriptionCreate(SubscriptionBase):
 class SubscriptionUpdate(BaseSchema):
     title: Optional[str] = None
     description: Optional[str] = None
-    config: Optional[Dict[str, Any]] = None
+    config: Optional[dict[str, Any]] = None
     fetch_interval: Optional[int] = None
     is_active: Optional[bool] = None
 
@@ -190,7 +191,7 @@ class MessageResponse(MessageBase, TimestampedSchema):
     conversation_id: int
     tokens: Optional[int] = None
     model_name: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = {}
+    metadata: Optional[dict[str, Any]] = {}
 
 
 # Conversation schemas
@@ -200,7 +201,7 @@ class ConversationBase(BaseSchema):
     model_name: str = "gpt-3.5-turbo"
     system_prompt: Optional[str] = None
     temperature: int = 70
-    settings: Optional[Dict[str, Any]] = {}
+    settings: Optional[dict[str, Any]] = {}
 
 
 class ConversationCreate(ConversationBase):
@@ -212,7 +213,7 @@ class ConversationUpdate(BaseSchema):
     description: Optional[str] = None
     system_prompt: Optional[str] = None
     temperature: Optional[int] = None
-    settings: Optional[Dict[str, Any]] = None
+    settings: Optional[dict[str, Any]] = None
 
 
 class ConversationResponse(ConversationBase, TimestampedSchema):

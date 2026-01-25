@@ -2,7 +2,7 @@
 import secrets
 from typing import Optional
 
-from fastapi import Cookie, Form, HTTPException, Request, status
+from fastapi import Form, HTTPException, Request, status
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 from app.core.config import settings

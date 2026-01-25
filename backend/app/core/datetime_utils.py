@@ -6,9 +6,10 @@ including timezone management, formatting, and conversions.
 日期时间工具函数
 """
 
-from datetime import datetime, timezone
-from typing import Optional, Union
 import logging
+from datetime import datetime, timezone
+from typing import Optional
+
 
 logger = logging.getLogger(__name__)
 

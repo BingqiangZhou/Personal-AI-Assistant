@@ -1,13 +1,21 @@
 """Subscription domain models."""
 
-from sqlalchemy import (
-    Column, Integer, String, Text, DateTime,
-    ForeignKey, Boolean, JSON, Index
-)
-from sqlalchemy.orm import relationship
+import enum
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-import enum
+
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+)
+from sqlalchemy.orm import relationship
 
 from app.core.database import Base
 

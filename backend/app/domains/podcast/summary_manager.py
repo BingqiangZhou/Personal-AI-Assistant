@@ -3,21 +3,21 @@
 使用数据库中的AI模型配置
 """
 
-import logging
-from typing import Optional, Dict, Any
-import time
 import asyncio
-import aiohttp
+import logging
+import time
 from datetime import datetime
+from typing import Any, Optional
 
+import aiohttp
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.ai.repositories import AIModelConfigRepository
-from app.domains.ai.models import ModelType
-from app.domains.podcast.models import TranscriptionTask, PodcastEpisode
-from app.core.exceptions import ValidationError, HTTPException
+from app.core.exceptions import HTTPException, ValidationError
 from app.core.feed_parser import strip_html_tags
-from sqlalchemy import update
+from app.domains.ai.models import ModelType
+from app.domains.ai.repositories import AIModelConfigRepository
+from app.domains.podcast.models import PodcastEpisode
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,10 +48,10 @@ class SummaryModelManager:
     async def generate_summary(
         self,
         transcript: str,
-        episode_info: Dict[str, Any],
+        episode_info: dict[str, Any],
         model_name: Optional[str] = None,
         custom_prompt: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         生成AI摘要（支持模型fallback机制）
 
@@ -134,7 +134,7 @@ class SummaryModelManager:
         model_config,
         api_key: str,
         prompt: str,
-        episode_info: Dict[str, Any]
+        episode_info: dict[str, Any]
     ) -> tuple[str, float, int]:
         """
         调用AI API生成摘要（带重试机制）
@@ -207,7 +207,7 @@ class SummaryModelManager:
         model_config,
         api_key: str,
         prompt: str,
-        episode_info: Dict[str, Any]
+        episode_info: dict[str, Any]
     ) -> str:
         """调用AI API生成摘要"""
         # 检查并处理过长的转录文本
@@ -264,7 +264,7 @@ class SummaryModelManager:
             async with session.post(api_url, headers=headers, json=data) as response:
                 if response.status != 200:
                     error_text = await response.text()
-                    logger.error(f"❌ [AI API] Request failed:")
+                    logger.error("❌ [AI API] Request failed:")
                     logger.error(f"  - Status: {response.status}")
                     logger.error(f"  - Error: {error_text}")
                     logger.error(f"  - Request data keys: {list(data.keys())}")
@@ -279,7 +279,7 @@ class SummaryModelManager:
                     elif response.status == 401:
                         raise HTTPException(
                             status_code=500,
-                            detail=f"AI API authentication failed (401). Check API key configuration."
+                            detail="AI API authentication failed (401). Check API key configuration."
                         )
                     else:
                         raise HTTPException(
@@ -316,7 +316,7 @@ class SummaryModelManager:
                 logger.info(f"✅ [AI API] Summary generated successfully: {len(cleaned_content)} chars")
                 return cleaned_content.strip()
 
-    def _build_default_prompt(self, episode_info: Dict[str, Any], transcript: str) -> str:
+    def _build_default_prompt(self, episode_info: dict[str, Any], transcript: str) -> str:
         """构建默认的摘要提示词"""
         title = episode_info.get('title', '未知标题')
         raw_description = episode_info.get('description', '')
@@ -472,7 +472,7 @@ Shownotes: {description}
             f"Please configure a valid API key for at least one TEXT_GENERATION model."
         )
 
-    async def get_model_info(self, model_name: Optional[str] = None) -> Dict[str, Any]:
+    async def get_model_info(self, model_name: Optional[str] = None) -> dict[str, Any]:
         """获取模型信息"""
         model_config = await self.get_active_summary_model(model_name)
         return {
@@ -515,7 +515,7 @@ class DatabaseBackedAISummaryService:
         episode_id: int,
         model_name: Optional[str] = None,
         custom_prompt: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """为播客单集生成AI摘要"""
         # 获取播客单集信息
         from sqlalchemy import select
@@ -551,7 +551,7 @@ class DatabaseBackedAISummaryService:
 
         return summary_result
 
-    async def _update_episode_summary(self, episode_id: int, summary_result: Dict[str, Any]):
+    async def _update_episode_summary(self, episode_id: int, summary_result: dict[str, Any]):
         """更新播客单集的摘要信息"""
         import logging
         logger = logging.getLogger(__name__)
@@ -630,7 +630,7 @@ class DatabaseBackedAISummaryService:
         episode_id: int,
         model_name: Optional[str] = None,
         custom_prompt: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """重新生成AI摘要"""
         return await self.generate_summary(episode_id, model_name, custom_prompt)
 

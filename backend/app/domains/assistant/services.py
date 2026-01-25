@@ -1,20 +1,24 @@
 """Assistant domain services."""
 
 import logging
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domains.assistant.models import (
+    MessageRole,
+)
 from app.domains.assistant.repositories import AssistantRepository
-from app.domains.assistant.models import Conversation, Message, ConversationStatus, MessageRole
 from app.shared.schemas import (
     ConversationCreate,
-    ConversationUpdate,
     ConversationResponse,
+    ConversationUpdate,
     MessageCreate,
     MessageResponse,
-    PaginatedResponse
+    PaginatedResponse,
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -276,7 +280,7 @@ class AssistantService:
         model_name: str = "gpt-3.5-turbo",
         temperature: int = 70,
         system_prompt: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Send a message and get AI response.
         This is a skeleton implementation that would integrate with AI models.
@@ -328,7 +332,7 @@ class AssistantService:
     async def get_conversation_for_ai(
         self,
         conv_id: int
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """
         Get conversation context for AI processing.
         Returns conversation details and message history.
@@ -361,7 +365,7 @@ class AssistantService:
     async def get_prompt_templates(
         self,
         category: Optional[str] = None
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Get available prompt templates."""
         templates = await self.repo.get_prompt_templates(
             self.user_id,
@@ -389,9 +393,9 @@ class AssistantService:
         template: str,
         description: Optional[str] = None,
         category: Optional[str] = None,
-        variables: Optional[List[str]] = None,
+        variables: Optional[list[str]] = None,
         is_public: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a new prompt template."""
         t = await self.repo.create_prompt_template(
             self.user_id,
@@ -464,7 +468,7 @@ class AssistantService:
         priority: str = "medium",
         due_date: Optional[datetime] = None,
         metadata: Optional[dict] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a new assistant task."""
         task = await self.repo.create_task(
             self.user_id,
@@ -492,7 +496,7 @@ class AssistantService:
         self,
         task_id: int,
         result: Optional[str] = None
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Mark a task as completed."""
         task = await self.repo.update_task_status(
             task_id,
@@ -518,7 +522,7 @@ class AssistantService:
         message_id: int,
         tool_name: str,
         arguments: dict
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Record a tool call initiated by the assistant."""
         tool_call = await self.repo.create_tool_call(message_id, tool_name, arguments)
 
@@ -535,7 +539,7 @@ class AssistantService:
         tool_call_id: int,
         result: dict,
         execution_time_ms: int
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Mark a tool call as completed with result."""
         tool_call = await self.repo.update_tool_call_result(
             tool_call_id,
@@ -559,7 +563,7 @@ class AssistantService:
         self,
         tool_call_id: int,
         error_message: str
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Mark a tool call as failed."""
         tool_call = await self.repo.update_tool_call_result(
             tool_call_id,

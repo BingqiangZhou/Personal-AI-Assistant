@@ -14,27 +14,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.database import async_session_factory
 from app.core.redis import PodcastRedis
-from app.domains.user.repositories import UserRepository
-from app.domains.user.services.auth_service import AuthenticationService
+from app.domains.ai.llm_privacy import ContentSanitizer
+
+# AI domain
+from app.domains.ai.services import TextGenerationService
+from app.domains.podcast.podcast_service_facade import PodcastService
 
 # Podcast domain
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.services import (
-    PodcastSubscriptionService,
     PodcastEpisodeService,
     PodcastPlaybackService,
-    PodcastSummaryService,
     PodcastSearchService,
+    PodcastSubscriptionService,
+    PodcastSummaryService,
     PodcastSyncService,
 )
-from app.domains.podcast.podcast_service_facade import PodcastService
-
-# AI domain
-from app.domains.ai.services import TextGenerationService
-from app.domains.ai.llm_privacy import ContentSanitizer
 
 # Subscription domain
 from app.domains.subscription.repositories import SubscriptionRepository
+from app.domains.user.repositories import UserRepository
+from app.domains.user.services.auth_service import AuthenticationService
 
 
 class ApplicationContainer(containers.DeclarativeContainer):

@@ -2,17 +2,14 @@
 播客API测试用例
 """
 
+from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime
 
 from app.main import app
-from app.domains.podcast.schemas import (
-    PodcastSubscriptionCreate,
-    PodcastPlaybackUpdate,
-    PodcastSummaryRequest
-)
+
 
 client = TestClient(app)
 

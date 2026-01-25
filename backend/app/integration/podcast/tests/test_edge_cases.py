@@ -2,12 +2,13 @@
 Edge case and backward compatibility tests for platform support
 """
 
-import pytest
-from unittest.mock import AsyncMock, patch, Mock
 from datetime import datetime
+from unittest.mock import patch
+
+import pytest
 
 from app.integration.podcast.platform_detector import PlatformDetector, PodcastPlatform
-from app.integration.podcast.secure_rss_parser import SecureRSSParser, PodcastFeed
+from app.integration.podcast.secure_rss_parser import PodcastFeed, SecureRSSParser
 
 
 class TestPlatformEdgeCases:

@@ -5,13 +5,14 @@ Podcast Playback Service - Manages playback progress and state.
 """
 
 import logging
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta, date
+from datetime import date, timedelta
+from typing import Any, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
+from app.domains.podcast.repositories import PodcastRepository
+
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,6 @@ class PodcastPlaybackService:
             ValueError: If episode not found
         """
         # Get episode to verify access
-        from app.shared.base_repository import BaseRepository
         episode = await self.repo.get_episode_by_id(episode_id, self.user_id)
         if not episode:
             raise ValueError("Episode not found")
@@ -119,8 +119,8 @@ class PodcastPlaybackService:
 
     async def get_playback_states_batch(
         self,
-        episode_ids: List[int]
-    ) -> Dict[int, PodcastPlaybackState]:
+        episode_ids: list[int]
+    ) -> dict[int, PodcastPlaybackState]:
         """
         Batch fetch playback states for multiple episodes.
 
@@ -175,7 +175,7 @@ class PodcastPlaybackService:
     async def get_recently_played(
         self,
         limit: int = 5
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get recently played episodes.
 
@@ -190,7 +190,7 @@ class PodcastPlaybackService:
     async def get_liked_episodes(
         self,
         limit: int = 20
-    ) -> List[PodcastEpisode]:
+    ) -> list[PodcastEpisode]:
         """
         Get user's liked episodes (high completion rate).
 

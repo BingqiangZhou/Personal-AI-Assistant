@@ -2,14 +2,15 @@
 
 from .feed_parser import FeedParser, strip_html_tags
 from .feed_schemas import (
-    ParseErrorCode,
-    ParseError,
-    FeedInfo,
     FeedEntry,
-    FeedParseResult,
-    FeedParserConfig,
+    FeedInfo,
     FeedParseOptions,
+    FeedParserConfig,
+    FeedParseResult,
+    ParseError,
+    ParseErrorCode,
 )
+
 
 __all__ = [
     "FeedParser",

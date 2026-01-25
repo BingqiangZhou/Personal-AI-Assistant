@@ -1,17 +1,17 @@
 """Test authentication endpoints and services."""
 
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from datetime import datetime, timedelta
 
-from app.main import app
-from app.core.database import get_db_session
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
-from app.domains.user.models import User, UserSession
+from app.domains.user.models import UserSession
 from app.domains.user.services import AuthenticationService
-from app.shared.schemas import UserCreate
+from app.main import app
+
 
 client = TestClient(app)
 

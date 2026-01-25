@@ -14,16 +14,16 @@ Podcast Security Module - XXE/SSRF Protection & Content Validation
 - Malicious content injection
 """
 
-import re
 import logging
-from typing import Optional, Tuple
-from urllib.parse import urlparse, urljoin
-from defusedxml import ElementTree as ET
-from defusedxml.common import NotSupportedError
+import re
+from typing import Optional
+from urllib.parse import urlparse
+
 import aiohttp
-from fastapi import HTTPException, status
+from defusedxml.common import NotSupportedError
 
 from app.core.config import settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class PodcastSecurityValidator:
     }
 
     @classmethod
-    def validate_rss_xml(cls, xml_content: str) -> Tuple[bool, Optional[str]]:
+    def validate_rss_xml(cls, xml_content: str) -> tuple[bool, Optional[str]]:
         """
         Safe RSS XML validation using defusedxml
 
@@ -77,10 +77,8 @@ class PodcastSecurityValidator:
 
         try:
             # Use defusedxml for safe parsing
-            from defusedxml.ElementTree import fromstring
-
             # Additional entity expansion limit
-            from defusedxml import DefusedXmlException
+            from defusedxml.ElementTree import fromstring
 
             root = fromstring(xml_content)
 
@@ -98,7 +96,7 @@ class PodcastSecurityValidator:
             return False, "Invalid XML structure"
 
     @classmethod
-    def validate_audio_url(cls, url: str) -> Tuple[bool, Optional[str]]:
+    def validate_audio_url(cls, url: str) -> tuple[bool, Optional[str]]:
         """
         Validate audio URL for SSRF protection
 
@@ -159,7 +157,7 @@ class PodcastSecurityValidator:
         return False
 
     @classmethod
-    async def validate_audio_download(cls, url: str) -> Tuple[bool, Optional[str], Optional[bytes]]:
+    async def validate_audio_download(cls, url: str) -> tuple[bool, Optional[str], Optional[bytes]]:
         """
         Safely download audio with size limits and validation
 

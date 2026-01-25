@@ -4,9 +4,10 @@ RSS/Atom feed 解析的数据模型定义。
 """
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Set
-from pydantic import BaseModel, Field, field_validator, ConfigDict
 from enum import Enum
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ParseErrorCode(str, Enum):
@@ -23,7 +24,7 @@ class ParseError(BaseModel):
     code: ParseErrorCode
     message: str
     entry_id: Optional[str] = None
-    details: Optional[Dict[str, Any]] = None
+    details: Optional[dict[str, Any]] = None
 
 
 class FeedInfo(BaseModel):
@@ -35,7 +36,7 @@ class FeedInfo(BaseModel):
     icon_url: Optional[str] = None
     updated_at: Optional[datetime] = None
     language: Optional[str] = None
-    raw_metadata: Dict[str, Any] = Field(default_factory=dict)
+    raw_metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("title", mode="before")
     @classmethod
@@ -60,14 +61,14 @@ class FeedEntry(BaseModel):
     author: Optional[str] = None
     link: Optional[str] = None
     image_url: Optional[str] = None
-    tags: List[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
 
     # Dates
     published_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
     # Raw data for debugging
-    raw_metadata: Dict[str, Any] = Field(default_factory=dict)
+    raw_metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("id", mode="before")
     @classmethod
@@ -99,13 +100,13 @@ class FeedEntry(BaseModel):
 
     @field_validator("tags", mode="before")
     @classmethod
-    def validate_tags(cls, v: Any) -> List[str]:
+    def validate_tags(cls, v: Any) -> list[str]:
         """Normalize tags to list of strings / 将标签规范化为字符串列表"""
         if isinstance(v, list):
             return [str(tag.term) if hasattr(tag, "term") else str(tag) for tag in v]
         return []
 
-    def get_unique_tags(self) -> Set[str]:
+    def get_unique_tags(self) -> set[str]:
         """Get unique tags as set / 获取唯一标签集合"""
         return set(self.tags)
 
@@ -114,12 +115,12 @@ class FeedParseResult(BaseModel):
     """Complete feed parse result / Feed 解析结果"""
     # Feed metadata
     feed_info: FeedInfo
-    entries: List[FeedEntry] = Field(default_factory=list)
+    entries: list[FeedEntry] = Field(default_factory=list)
 
     # Parse status
     success: bool = True
-    errors: List[ParseError] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
+    errors: list[ParseError] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
 
     # Statistics
     total_entries: int = 0
@@ -127,7 +128,7 @@ class FeedParseResult(BaseModel):
     skipped_entries: int = 0
 
     # Raw feedparser result for debugging
-    raw_feed: Optional[Dict[str, Any]] = None
+    raw_feed: Optional[dict[str, Any]] = None
 
     def add_error(self, code: ParseErrorCode, message: str, **kwargs) -> None:
         """Add an error / 添加错误"""
@@ -177,7 +178,7 @@ class FeedParserConfig(BaseModel):
 class FeedParseOptions(BaseModel):
     """Options for a single parse operation / 单次解析选项"""
     max_entries: Optional[int] = None  # Override default max_entries
-    fields: Optional[List[str]] = None  # Specific fields to extract (None = all)
+    fields: Optional[list[str]] = None  # Specific fields to extract (None = all)
 
     # Content options
     include_raw_metadata: bool = False

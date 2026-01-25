@@ -4,9 +4,10 @@ Pagination helper utilities.
 分页辅助工具类
 """
 
-from typing import TypeVar, Generic, List, Optional, Dict, Any
-from pydantic import BaseModel, Field
 from math import ceil
+from typing import Any, Generic, Optional, TypeVar
+
+from pydantic import BaseModel, Field
 
 
 T = TypeVar("T")
@@ -30,7 +31,7 @@ class PaginationParams(BaseModel):
 
 class PaginatedResponse(BaseModel, Generic[T]):
     """Generic paginated response."""
-    items: List[T] = Field(default_factory=list, description="List of items")
+    items: list[T] = Field(default_factory=list, description="List of items")
     total: int = Field(0, ge=0, description="Total number of items")
     page: int = Field(1, ge=1, description="Current page number")
     size: int = Field(20, ge=1, le=100, description="Items per page")
@@ -39,7 +40,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
     @classmethod
     def create(
         cls,
-        items: List[Any],
+        items: list[Any],
         total: int,
         page: int,
         size: int,
@@ -141,12 +142,12 @@ class PaginationHelper:
 
     @staticmethod
     def create_response(
-        items: List[Any],
+        items: list[Any],
         total: int,
         page: int,
         size: int,
         response_type: Optional[type] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a paginated response dictionary.
 

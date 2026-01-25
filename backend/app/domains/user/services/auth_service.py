@@ -1,32 +1,33 @@
 """Authentication service for user management."""
 
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_
-from sqlalchemy.exc import IntegrityError
-import secrets
-import uuid
 import logging
+import uuid
+from datetime import datetime, timedelta
+from typing import Any, Optional
+
+from sqlalchemy import and_, or_, select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 logger = logging.getLogger(__name__)
 
-from app.core.security import (
-    get_password_hash,
-    verify_password,
-    create_access_token,
-    create_refresh_token,
-    verify_token
-)
 from app.core.config import settings
+from app.core.email import email_service
 from app.core.exceptions import (
     BadRequestError,
-    UnauthorizedError,
     ConflictError,
-    NotFoundError
+    NotFoundError,
+    UnauthorizedError,
 )
-from app.domains.user.models import User, UserSession, PasswordReset
-from app.core.email import email_service
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    get_password_hash,
+    verify_password,
+    verify_token,
+)
+from app.domains.user.models import PasswordReset, User, UserSession
 
 
 class AuthenticationService:
@@ -96,7 +97,7 @@ class AuthenticationService:
             await self.db.commit()
             await self.db.refresh(user)
             return user
-        except IntegrityError as e:
+        except IntegrityError:
             await self.db.rollback()
             raise ConflictError("User registration failed")
 
@@ -138,11 +139,11 @@ class AuthenticationService:
     async def create_user_session(
         self,
         user: User,
-        device_info: Optional[Dict[str, Any]] = None,
+        device_info: Optional[dict[str, Any]] = None,
         ip_address: Optional[str] = None,
         user_agent: Optional[str] = None,
         remember_me: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create user session with tokens and concurrent session limit.
 
@@ -232,7 +233,7 @@ class AuthenticationService:
             "session_id": session.id
         }
 
-    async def refresh_access_token(self, refresh_token: str) -> Dict[str, Any]:
+    async def refresh_access_token(self, refresh_token: str) -> dict[str, Any]:
         """
         Refresh access token using refresh token with sliding session expiration.
 
@@ -405,7 +406,7 @@ class AuthenticationService:
         await self.db.commit()
         return count
 
-    async def create_password_reset_token(self, email: str) -> Dict[str, Any]:
+    async def create_password_reset_token(self, email: str) -> dict[str, Any]:
         """
         Create a password reset token for the given email.
 
@@ -464,7 +465,7 @@ class AuthenticationService:
             await self.db.rollback()
             raise BadRequestError("Failed to create password reset token")
 
-    async def reset_password(self, token: str, new_password: str) -> Dict[str, Any]:
+    async def reset_password(self, token: str, new_password: str) -> dict[str, Any]:
         """
         Reset user password using the given token.
 

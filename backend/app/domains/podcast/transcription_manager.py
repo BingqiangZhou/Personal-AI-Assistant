@@ -4,23 +4,21 @@
 """
 
 import logging
-from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from typing import Any, Optional
 
-from app.domains.ai.repositories import AIModelConfigRepository
-from app.domains.ai.models import ModelType
-from app.domains.podcast.transcription import (
-    SiliconFlowTranscriber,
-    AudioDownloader,
-    AudioConverter,
-    AudioSplitter,
-    PodcastTranscriptionService
-)
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.exceptions import ValidationError
-from app.core.database import async_session_factory
+from app.domains.ai.models import ModelType
+from app.domains.ai.repositories import AIModelConfigRepository
+from app.domains.podcast.transcription import (
+    PodcastTranscriptionService,
+    SiliconFlowTranscriber,
+)
 from app.domains.podcast.transcription_state import get_transcription_state_manager
+
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +85,7 @@ class TranscriptionModelManager:
                 max_concurrent=model_config.max_concurrent_requests
             )
 
-    async def get_model_info(self, model_name: Optional[str] = None) -> Dict[str, Any]:
+    async def get_model_info(self, model_name: Optional[str] = None) -> dict[str, Any]:
         """获取模型信息"""
         model_config = await self.get_active_transcription_model(model_name)
         return {
@@ -233,8 +231,9 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
             await self.model_manager.get_active_transcription_model(model_name)
 
         # 检查是否有失败的任务可以重试（增量恢复）
-        from app.domains.podcast.models import TranscriptionTask, TranscriptionStatus
         from sqlalchemy import select
+
+        from app.domains.podcast.models import TranscriptionTask
 
         stmt = select(TranscriptionTask).where(
             TranscriptionTask.episode_id == episode_id
@@ -360,8 +359,9 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
         注意：只重置已实际开始执行的任务（started_at 不为空）
         未开始执行的 PENDING 任务保持原状态，可以被重新调度
         """
-        from app.domains.podcast.models import TranscriptionTask, TranscriptionStatus
-        from sqlalchemy import update, and_
+        from sqlalchemy import and_, update
+
+        from app.domains.podcast.models import TranscriptionTask
 
         # 任务状态阈值：只重置超过这个时间的任务（5分钟）
         # 避免重置刚刚创建但还没执行的任务
@@ -434,11 +434,13 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
         Args:
             days: 保留天数，默认7天
         """
-        from app.domains.podcast.models import TranscriptionTask, TranscriptionStatus
-        from sqlalchemy import and_
         import os
         import shutil
+
+        from sqlalchemy import and_
+
         from app.core.config import settings
+        from app.domains.podcast.models import TranscriptionTask
 
         temp_dir = getattr(settings, 'TRANSCRIPTION_TEMP_DIR', './temp/transcription')
         temp_dir_abs = os.path.abspath(temp_dir)

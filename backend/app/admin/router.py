@@ -1,33 +1,52 @@
 """Admin panel routes."""
 import logging
 import secrets
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request, Response, status
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    Form,
+    HTTPException,
+    Request,
+    Response,
+    status,
+)
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from passlib.context import CryptContext
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import encrypt_data, decrypt_data
-
-from app.admin.dependencies import admin_required, admin_required_no_2fa, create_admin_session
-from app.admin.schemas import AdminLoginForm
-from app.admin.csrf import generate_csrf_token, validate_csrf_token, CSRFException
 from app.admin.audit import log_admin_action
-from app.admin.models import AdminAuditLog, SystemSettings
-from app.admin.twofa import generate_totp_secret, generate_qr_code, verify_totp_token
+from app.admin.csrf import generate_csrf_token, validate_csrf_token
+from app.admin.dependencies import (
+    admin_required,
+    admin_required_no_2fa,
+    create_admin_session,
+)
 from app.admin.first_run import check_admin_exists
+from app.admin.models import AdminAuditLog, SystemSettings
 from app.admin.monitoring import get_monitor_service
+from app.admin.twofa import generate_qr_code, generate_totp_secret, verify_totp_token
 from app.core.database import get_db_session
-from app.core.security import verify_password, get_password_hash
-from app.core.config import settings
+from app.core.security import (
+    decrypt_data,
+    encrypt_data,
+    get_password_hash,
+    verify_password,
+)
 from app.domains.ai.models import AIModelConfig, ModelType
-from app.domains.subscription.models import Subscription, UpdateFrequency, SubscriptionStatus
+from app.domains.subscription.models import (
+    Subscription,
+    SubscriptionStatus,
+    UpdateFrequency,
+)
 from app.domains.user.models import User, UserStatus
 from app.domains.user.repositories import UserRepository
+
 
 logger = logging.getLogger(__name__)
 
@@ -1367,7 +1386,7 @@ async def edit_subscription(
             subscription.source_url = source_url
 
         # Always test the connection after editing to ensure feed is valid
-        from app.core.feed_parser import parse_feed_url, FeedParserConfig
+        from app.core.feed_parser import FeedParserConfig, parse_feed_url
         
         config = FeedParserConfig(
             max_entries=10,
@@ -1438,8 +1457,9 @@ async def test_subscription_url(
 ):
     """Test RSS feed URL before saving."""
     try:
-        from app.core.feed_parser import FeedParser, FeedParserConfig, FeedParseOptions
         import time
+
+        from app.core.feed_parser import FeedParseOptions, FeedParser, FeedParserConfig
 
         # Configure parser (same as backend subscription service, uses default user_agent)
         config = FeedParserConfig(
@@ -1506,8 +1526,9 @@ async def test_all_subscriptions(
 ):
     """Test all RSS subscriptions and disable failed ones."""
     try:
-        from app.core.feed_parser import parse_feed_url, FeedParserConfig
         import time
+
+        from app.core.feed_parser import FeedParserConfig, parse_feed_url
 
         # Get all subscriptions (admin page only shows RSS subscriptions)
         result = await db.execute(
@@ -1659,7 +1680,7 @@ async def test_all_subscriptions(
             username=user.username,
             action="test_all",
             resource_type="subscription",
-            resource_name=f"All RSS subscriptions",
+            resource_name="All RSS subscriptions",
             details={
                 "total_count": total_count,
                 "success_count": success_count,
@@ -1697,7 +1718,7 @@ async def delete_subscription(
     db: AsyncSession = Depends(get_db_session),
 ):
     """Delete a subscription (with proper handling of podcast-related data)."""
-    from sqlalchemy import delete, and_, select
+    from sqlalchemy import delete, select
     try:
         result = await db.execute(select(Subscription).where(Subscription.id == sub_id))
         subscription = result.scalar_one_or_none()
@@ -1712,10 +1733,10 @@ async def delete_subscription(
         # If it's a podcast subscription, delete related data first
         if is_podcast:
             from app.domains.podcast.models import (
+                PodcastConversation,
                 PodcastEpisode,
                 PodcastPlaybackState,
                 TranscriptionTask,
-                PodcastConversation
             )
 
             # Get all episode IDs for this subscription
@@ -1992,6 +2013,7 @@ async def export_subscriptions_opml(
     导出所有RSS订阅为OPML格式。
     """
     from fastapi.responses import Response
+
     from app.domains.subscription.services import SubscriptionService
 
     try:
@@ -2743,7 +2765,7 @@ async def update_frequency_settings(
 
         if setting:
             setting.value = settings_data
-            logger.info(f"Updated RSS frequency settings in SystemSettings")
+            logger.info("Updated RSS frequency settings in SystemSettings")
         else:
             setting = SystemSettings(
                 key="rss.frequency_settings",
@@ -2752,7 +2774,7 @@ async def update_frequency_settings(
                 category="subscription"
             )
             db.add(setting)
-            logger.info(f"Created RSS frequency settings in SystemSettings")
+            logger.info("Created RSS frequency settings in SystemSettings")
 
         # Then update all existing subscriptions with the new frequency settings
         update_count_result = await db.execute(

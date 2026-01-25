@@ -10,11 +10,12 @@ Provides fast state management for podcast transcription tasks:
 import json
 import logging
 import time
-from typing import Optional, Dict, Any
-from datetime import datetime, timedelta
+from datetime import datetime
+from typing import Any, Optional
 
 from app.core.redis import PodcastRedis
 from app.domains.podcast.models import TranscriptionStatus
+
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +29,8 @@ class ProgressLogThrottle:
             min_interval_seconds: 最小日志间隔时间（秒）
         """
         self.min_interval = min_interval_seconds
-        self._last_log_time: Dict[str, float] = {}
-        self._last_log_progress: Dict[str, float] = {}
+        self._last_log_time: dict[str, float] = {}
+        self._last_log_progress: dict[str, float] = {}
 
     def should_log(self, task_id: int, status: str, progress: float) -> bool:
         """
@@ -314,7 +315,7 @@ class TranscriptionStateManager:
         if _progress_throttle.should_log(task_id, status, progress):
             logger.info(f"📊 [PROGRESS] Task {task_id}: {progress:.1f}% - {message}")
 
-    async def get_task_progress(self, task_id: int) -> Optional[Dict[str, Any]]:
+    async def get_task_progress(self, task_id: int) -> Optional[dict[str, Any]]:
         """
         Get cached task progress
 
@@ -379,7 +380,7 @@ class TranscriptionStateManager:
 
         await self.redis.cache_set(key, json.dumps(status_data), ttl=ttl_seconds)
 
-    async def get_task_status(self, task_id: int) -> Optional[Dict[str, Any]]:
+    async def get_task_status(self, task_id: int) -> Optional[dict[str, Any]]:
         """
         Get lightweight task status
 

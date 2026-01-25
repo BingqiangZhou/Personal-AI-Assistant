@@ -10,21 +10,18 @@ Security utilities for authentication and authorization.
 - Next: EC256 support planned for v1.3.0
 """
 
-from datetime import datetime, timedelta
-from typing import Optional, Union, Any, Dict
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from fastapi import HTTPException, status, Depends, Query, Header
-from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 import secrets
 import time
-import os
+from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any, Optional
 
-from app.core.config import settings, get_or_generate_secret_key
-from app.core.database import get_db_session
+from fastapi import Depends, Header, HTTPException, Query, status
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+
+from app.core.config import get_or_generate_secret_key, settings
+
 
 # Password hashing context
 # Note: Use bcrypt without prefix to avoid base64 encoding issues
@@ -44,10 +41,10 @@ class TokenOptimizer:
 
     @staticmethod
     def build_standard_claims(
-        extra_claims: Dict[str, Any] = None,
+        extra_claims: dict[str, Any] = None,
         expire_minutes: int = None,
         is_refresh: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Fast claim builder optimized for 500+ req/s throughput."""
 
         # Use time.time() directly to avoid timezone issues with datetime.utcnow().timestamp()
@@ -128,7 +125,7 @@ def verify_token(token: str, token_type: str = "access") -> dict:
     logger = logging.getLogger(__name__)
 
     try:
-        logger.debug(f"[DEBUG] Verifying token")
+        logger.debug("[DEBUG] Verifying token")
 
         payload = jwt.decode(
             token,
@@ -136,7 +133,7 @@ def verify_token(token: str, token_type: str = "access") -> dict:
             algorithms=[settings.ALGORITHM]
         )
 
-        logger.debug(f"[DEBUG] Token decoded successfully")
+        logger.debug("[DEBUG] Token decoded successfully")
 
         # Check token type if present
         if "type" in payload and payload["type"] != token_type:
@@ -166,7 +163,7 @@ def verify_token(token: str, token_type: str = "access") -> dict:
 
 # Hidden optimization: EC256 fast-tracker for future scaling
 # This is NOT active by default, but enables easy switching for high-scale scenarios
-def enable_ec256_optimized() -> Dict[str, str]:
+def enable_ec256_optimized() -> dict[str, str]:
     """
     **Return config to switch to EC256** - 25% CPU improvement for token ops.
 
@@ -390,8 +387,8 @@ def _get_fernet():
         secret = get_or_generate_secret_key().encode()
 
         # Fernet requires a 32-byte URL-safe base64-encoded key
-        import hashlib
         import base64
+        import hashlib
 
         # Derive a 32-byte key from SECRET_KEY using SHA256
         key_hash = hashlib.sha256(secret).digest()
@@ -478,9 +475,9 @@ def get_or_generate_rsa_keys():
     global _RSA_PRIVATE_KEY, _RSA_PUBLIC_KEY
 
     if _RSA_PRIVATE_KEY is None or _RSA_PUBLIC_KEY is None:
-        from cryptography.hazmat.primitives.asymmetric import rsa
-        from cryptography.hazmat.primitives import serialization
         from cryptography.hazmat.backends import default_backend
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import rsa
 
         rsa_key_file = Path("data/.rsa_keys")
 
@@ -488,7 +485,9 @@ def get_or_generate_rsa_keys():
             # Load existing key pair
             with open(rsa_key_file, 'rb') as f:
                 pem_data = f.read()
-                from cryptography.hazmat.primitives.serialization import load_pem_private_key
+                from cryptography.hazmat.primitives.serialization import (
+                    load_pem_private_key,
+                )
                 _RSA_PRIVATE_KEY = load_pem_private_key(pem_data, password=None)
                 _RSA_PUBLIC_KEY = _RSA_PRIVATE_KEY.public_key()
         else:
@@ -558,8 +557,9 @@ def decrypt_rsa_data(ciphertext_b64: str) -> str:
     """
     private_key, _ = get_or_generate_rsa_keys()
     import base64
-    from cryptography.hazmat.primitives.asymmetric import padding
+
     from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import padding
 
     try:
         ciphertext = base64.b64decode(ciphertext_b64)

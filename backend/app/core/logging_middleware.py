@@ -4,14 +4,15 @@ API 日志中间件
 记录所有 API 请求和响应的详细信息
 """
 
-import time
 import logging
-from typing import Callable
+import time
+from collections.abc import Callable
+
 from fastapi import Request, Response
+from itsdangerous import BadSignature, SignatureExpired
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-from urllib.parse import parse_qs
-from itsdangerous import BadSignature, SignatureExpired
+
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +77,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 admin_session = request.cookies.get("admin_session")
                 if admin_session:
                     from itsdangerous import URLSafeTimedSerializer
+
                     from app.core.config import settings
 
                     # 解析 session cookie
@@ -92,7 +94,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             user_id = "admin_session_expired"
         except BadSignature:
             user_id = "admin_session_invalid"
-        except Exception as e:
+        except Exception:
             # Token/Session 无效，保持 anonymous
             # 后续的路由守卫会处理认证问题
             pass

@@ -1,13 +1,14 @@
 """Tests for password reset functionality."""
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
+
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.user.models import User, PasswordReset
+from app.core.exceptions import BadRequestError
+from app.domains.user.models import PasswordReset, User
 from app.domains.user.services.auth_service import AuthenticationService
-from app.core.exceptions import BadRequestError, NotFoundError
 from app.shared.schemas import ForgotPasswordRequest, ResetPasswordRequest
 
 

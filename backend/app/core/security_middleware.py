@@ -1,9 +1,11 @@
 """Security middleware for XSS protection and secure headers."""
 
-from fastapi import Request, Response
+import logging
+
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
-import logging
+
 
 logger = logging.getLogger(__name__)
 

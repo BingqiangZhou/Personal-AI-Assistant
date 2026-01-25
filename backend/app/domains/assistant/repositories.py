@@ -1,19 +1,21 @@
 """Assistant domain repositories."""
 
-from typing import List, Optional, Tuple, Dict
-from sqlalchemy import select, func, update, delete, and_, or_
+from typing import Optional
+
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.domains.assistant.models import (
-    Conversation, Message, PromptTemplate,
-    AssistantTask, ToolCall,
-    ConversationStatus, MessageRole
+    AssistantTask,
+    Conversation,
+    ConversationStatus,
+    Message,
+    MessageRole,
+    PromptTemplate,
+    ToolCall,
 )
-from app.shared.schemas import (
-    ConversationCreate, ConversationUpdate,
-    MessageCreate
-)
+from app.shared.schemas import ConversationCreate, ConversationUpdate, MessageCreate
 
 
 class AssistantRepository:
@@ -29,7 +31,7 @@ class AssistantRepository:
         page: int = 1,
         size: int = 20,
         status: Optional[str] = None
-    ) -> Tuple[List[Conversation], int]:
+    ) -> tuple[list[Conversation], int]:
         """Get user's conversations with pagination."""
         skip = (page - 1) * size
 
@@ -160,7 +162,7 @@ class AssistantRepository:
         user_id: int,
         page: int = 1,
         size: int = 50
-    ) -> Tuple[List[Message], int]:
+    ) -> tuple[list[Message], int]:
         """Get messages in a conversation with pagination."""
         skip = (page - 1) * size
 
@@ -249,7 +251,7 @@ class AssistantRepository:
         )
         return await self.db.scalar(query) or 0
 
-    async def get_message_counts_for_conversations(self, conv_ids: List[int]) -> Dict[int, int]:
+    async def get_message_counts_for_conversations(self, conv_ids: list[int]) -> dict[int, int]:
         """Get message counts for multiple conversations in a single query.
 
         Args:
@@ -277,7 +279,7 @@ class AssistantRepository:
         user_id: int,
         category: Optional[str] = None,
         is_public: Optional[bool] = None
-    ) -> List[PromptTemplate]:
+    ) -> list[PromptTemplate]:
         """Get prompt templates (user's and public)."""
         query = select(PromptTemplate).where(
             or_(
@@ -313,7 +315,7 @@ class AssistantRepository:
         template: str,
         description: Optional[str] = None,
         category: Optional[str] = None,
-        variables: Optional[List[str]] = None,
+        variables: Optional[list[str]] = None,
         is_public: bool = False
     ) -> PromptTemplate:
         """Create a new prompt template."""
@@ -393,7 +395,7 @@ class AssistantRepository:
         status: Optional[str] = None,
         page: int = 1,
         size: int = 20
-    ) -> Tuple[List[AssistantTask], int]:
+    ) -> tuple[list[AssistantTask], int]:
         """Get user's assistant tasks."""
         skip = (page - 1) * size
 
@@ -523,7 +525,7 @@ class AssistantRepository:
     async def get_message_tool_calls(
         self,
         message_id: int
-    ) -> List[ToolCall]:
+    ) -> list[ToolCall]:
         """Get all tool calls for a message."""
         query = select(ToolCall).where(
             ToolCall.message_id == message_id

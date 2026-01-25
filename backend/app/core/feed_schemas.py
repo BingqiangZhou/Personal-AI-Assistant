@@ -7,14 +7,15 @@ This shim maintains backward compatibility by re-exporting the moved classes.
 
 # Re-export from new location for backward compatibility
 from app.domains.subscription.parsers.feed_schemas import (
-    ParseErrorCode,
-    ParseError,
-    FeedInfo,
     FeedEntry,
-    FeedParseResult,
-    FeedParserConfig,
+    FeedInfo,
     FeedParseOptions,
+    FeedParserConfig,
+    FeedParseResult,
+    ParseError,
+    ParseErrorCode,
 )
+
 
 __all__ = [
     "ParseErrorCode",

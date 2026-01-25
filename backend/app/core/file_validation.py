@@ -7,12 +7,13 @@ This shim maintains backward compatibility by re-exporting the moved classes.
 
 # Re-export from new location for backward compatibility
 from app.shared.file_validation import (
-    FileValidator,
     FileSizeValidator,
     FileTypeError,
+    FileValidator,
     validate_file_size,
     validate_file_type,
 )
+
 
 __all__ = [
     "FileValidator",

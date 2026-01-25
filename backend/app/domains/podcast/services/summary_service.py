@@ -6,17 +6,16 @@ Podcast Summary Service - Manages AI-generated summaries for podcast episodes.
 
 import asyncio
 import logging
-from typing import List, Tuple, Optional
-from datetime import datetime
+from typing import Optional
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.redis import PodcastRedis
-from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.models import PodcastEpisode
-from app.domains.subscription.models import Subscription
+from app.domains.podcast.repositories import PodcastRepository
+
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +98,7 @@ class PodcastSummaryService:
 
         return await self._generate_summary(episode, version="v2")
 
-    async def get_pending_summaries(self) -> List[dict]:
+    async def get_pending_summaries(self) -> list[dict]:
         """
         Get list of episodes pending summary generation.
 
@@ -294,7 +293,7 @@ class PodcastSummaryService:
             max_tokens=500
         )
 
-    def _prepare_episode_content(self, episode: PodcastEpisode) -> Tuple[str, str, bool]:
+    def _prepare_episode_content(self, episode: PodcastEpisode) -> tuple[str, str, bool]:
         """
         Prepare episode content for summarization.
 

@@ -4,16 +4,15 @@
 Unit tests for Podcast specialized services
 """
 
-import pytest
 from unittest.mock import AsyncMock, Mock, patch
-from datetime import datetime
+
+import pytest
 
 from app.domains.podcast.services import (
-    PodcastSubscriptionService,
     PodcastEpisodeService,
     PodcastPlaybackService,
-    PodcastSummaryService,
     PodcastSearchService,
+    PodcastSubscriptionService,
     PodcastSyncService,
 )
 

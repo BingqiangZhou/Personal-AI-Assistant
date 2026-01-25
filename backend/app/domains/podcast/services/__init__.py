@@ -9,15 +9,16 @@ For backward compatibility, PodcastService facade is available from:
 Or use specialized services directly for better separation of concerns.
 """
 
-from .subscription_service import PodcastSubscriptionService
-from .episode_service import PodcastEpisodeService
-from .playback_service import PodcastPlaybackService
-from .summary_service import PodcastSummaryService
-from .search_service import PodcastSearchService
-from .sync_service import PodcastSyncService
-
 # Import backward-compatible facade
 from app.domains.podcast.podcast_service_facade import PodcastService
+
+from .episode_service import PodcastEpisodeService
+from .playback_service import PodcastPlaybackService
+from .search_service import PodcastSearchService
+from .subscription_service import PodcastSubscriptionService
+from .summary_service import PodcastSummaryService
+from .sync_service import PodcastSyncService
+
 
 __all__ = [
     "PodcastService",  # Backward-compatible facade

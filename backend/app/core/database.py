@@ -17,13 +17,16 @@ This module provides production-ready PostgreSQL configuration for the Personal 
 """
 
 import logging
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-from typing import AsyncGenerator, Dict, Any
+from collections.abc import AsyncGenerator
+from typing import Any
+
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError, ProgrammingError
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.declarative import declarative_base
 
 from app.core.config import settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -81,13 +84,6 @@ async def init_db() -> None:
     We handle this by creating them manually first with existence checks.
     """
     # Import all models here to ensure they are registered with Base
-    from app.domains.user.models import User
-    from app.domains.subscription.models import Subscription, SubscriptionItem
-    from app.domains.assistant.models import Conversation, Message
-    from app.domains.multimedia.models import MediaFile, ProcessingJob
-    from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
-    from app.domains.podcast.models import TranscriptionTask
-    from app.domains.ai.models import AIModelConfig
 
     # Define ENUM types that need to be created if they don't exist
     enum_definitions = [
@@ -156,7 +152,7 @@ async def close_db() -> None:
     await asyncio.sleep(0.1)
 
 
-async def check_db_health() -> Dict[str, Any]:
+async def check_db_health() -> dict[str, Any]:
     """
     Check database connection health and performance metrics.
     Returns runtime health status for monitoring.

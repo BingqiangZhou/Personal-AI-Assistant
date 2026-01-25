@@ -1,15 +1,17 @@
 """Multimedia API routes."""
 
-from typing import List, Optional
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
 from app.core.dependencies import get_current_active_user
-from app.domains.user.models import User
 from app.domains.multimedia.services import MultimediaService
+from app.domains.user.models import User
 from app.shared.schemas import PaginatedResponse, PaginationParams
+
 
 router = APIRouter()
 

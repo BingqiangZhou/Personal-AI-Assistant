@@ -2,22 +2,27 @@
 
 import logging
 import os
-import aiofiles
-from typing import List, Optional, Dict, Any, Tuple
 from datetime import datetime
-from pathlib import Path
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import UploadFile
+from typing import Any, Optional
 
-from app.domains.multimedia.repositories import MultimediaRepository
-from app.domains.multimedia.models import MediaFile, ProcessingJob, MediaType, ProcessingStatus
-from app.shared.schemas import PaginatedResponse
-from app.core.file_validation import (
-    validate_file_upload,
-    get_allowed_types_for_media,
-    FileValidationError
-)
+import aiofiles
+from fastapi import UploadFile
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.config import settings
+from app.core.file_validation import (
+    FileValidationError,
+    get_allowed_types_for_media,
+    validate_file_upload,
+)
+from app.domains.multimedia.models import (
+    MediaType,
+    ProcessingJob,
+    ProcessingStatus,
+)
+from app.domains.multimedia.repositories import MultimediaRepository
+from app.shared.schemas import PaginatedResponse
+
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +79,7 @@ class MultimediaService:
         self,
         file: UploadFile,
         description: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Upload a media file with comprehensive security validation."""
         # Determine expected media type from file extension/MIME
         declared_mime = file.content_type or "application/octet-stream"
@@ -169,7 +174,7 @@ class MultimediaService:
     async def get_media_file(
         self,
         file_id: int
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get media file details."""
         media_file = await self.repo.get_media_file_by_id(self.user_id, file_id)
         if not media_file:
@@ -243,7 +248,7 @@ class MultimediaService:
     async def get_processing_job(
         self,
         job_id: int
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Get processing job details."""
         job = await self.repo.get_processing_job_by_id(job_id, self.user_id)
         if not job:
@@ -293,7 +298,7 @@ class MultimediaService:
     async def cancel_processing_job(
         self,
         job_id: int
-    ) -> Optional[Dict[str, Any]]:
+    ) -> Optional[dict[str, Any]]:
         """Cancel a processing job."""
         job = await self.repo.cancel_job(job_id, self.user_id)
         if not job:
@@ -317,7 +322,7 @@ class MultimediaService:
         self,
         file_id: int,
         language: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a transcription job for audio/video."""
         # Verify media file exists and belongs to user
         media_file = await self.repo.get_media_file_by_id(self.user_id, file_id)
@@ -350,7 +355,7 @@ class MultimediaService:
         self,
         file_id: int,
         analysis_type: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create an image analysis job."""
         # Verify media file exists
         media_file = await self.repo.get_media_file_by_id(self.user_id, file_id)
@@ -383,7 +388,7 @@ class MultimediaService:
         file_id: int,
         extract_keyframes: bool = False,
         extract_audio: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a video processing job."""
         # Verify media file exists
         media_file = await self.repo.get_media_file_by_id(self.user_id, file_id)
@@ -434,7 +439,7 @@ class MultimediaService:
         language: Optional[str] = None,
         segments: Optional[list] = None,
         summary: Optional[str] = None,
-        keywords: Optional[List[str]] = None
+        keywords: Optional[list[str]] = None
     ) -> ProcessingJob:
         """Complete a transcription job with results."""
         # Create transcription result
@@ -458,7 +463,7 @@ class MultimediaService:
         faces: Optional[list] = None,
         text_detected: Optional[list] = None,
         emotions: Optional[list] = None,
-        tags: Optional[List[str]] = None,
+        tags: Optional[list[str]] = None,
         confidence: Optional[float] = None
     ) -> ProcessingJob:
         """Complete an image analysis job with results."""

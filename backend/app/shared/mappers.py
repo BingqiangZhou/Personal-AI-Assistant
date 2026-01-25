@@ -6,9 +6,9 @@ service layers when mapping database models to response schemas.
 通用响应映射器，用于将数据库模型转换为 API 响应
 """
 
-from typing import TypeVar, Type, Optional, Dict, Any
+from typing import Any, Optional, TypeVar
+
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 T = TypeVar('T', bound=BaseModel)
@@ -17,9 +17,9 @@ M = TypeVar('M')  # Model type
 
 def map_model_to_response(
     model: M,
-    response_class: Type[T],
-    field_mapping: Optional[Dict[str, str]] = None,
-    additional_fields: Optional[Dict[str, Any]] = None
+    response_class: type[T],
+    field_mapping: Optional[dict[str, str]] = None,
+    additional_fields: Optional[dict[str, Any]] = None
 ) -> T:
     """
     Generic mapper to convert database model to response schema.
@@ -77,9 +77,9 @@ def map_model_to_response(
 
 def map_models_to_responses(
     models: list[M],
-    response_class: Type[T],
-    field_mapping: Optional[Dict[str, str]] = None,
-    additional_fields_map: Optional[Dict[int, Dict[str, Any]]] = None
+    response_class: type[T],
+    field_mapping: Optional[dict[str, str]] = None,
+    additional_fields_map: Optional[dict[int, dict[str, Any]]] = None
 ) -> list[T]:
     """
     Generic mapper to convert list of database models to response schemas.
@@ -122,8 +122,8 @@ def create_paginated_response(
     total: int,
     page: int,
     size: int,
-    response_class: Optional[Type[T]] = None
-) -> Dict[str, Any]:
+    response_class: Optional[type[T]] = None
+) -> dict[str, Any]:
     """
     Create a standardized paginated response.
 

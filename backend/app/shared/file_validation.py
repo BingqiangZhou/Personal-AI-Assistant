@@ -5,18 +5,18 @@ security issues such as MIME type spoofing, malicious file uploads,
 and excessive file sizes.
 """
 
-import os
-import mimetypes
-from typing import Optional, Set, Tuple
-from pathlib import Path
-from fastapi import UploadFile
 import logging
+from pathlib import Path
+from typing import Optional
+
+from fastapi import UploadFile
+
 
 logger = logging.getLogger(__name__)
 
 
 # Allowed MIME types by media category
-ALLOWED_IMAGE_TYPES: Set[str] = {
+ALLOWED_IMAGE_TYPES: set[str] = {
     "image/jpeg",
     "image/jpg",
     "image/png",
@@ -27,7 +27,7 @@ ALLOWED_IMAGE_TYPES: Set[str] = {
     "image/tiff"
 }
 
-ALLOWED_AUDIO_TYPES: Set[str] = {
+ALLOWED_AUDIO_TYPES: set[str] = {
     "audio/mpeg",
     "audio/mp3",
     "audio/wav",
@@ -39,7 +39,7 @@ ALLOWED_AUDIO_TYPES: Set[str] = {
     "audio/mp4"
 }
 
-ALLOWED_VIDEO_TYPES: Set[str] = {
+ALLOWED_VIDEO_TYPES: set[str] = {
     "video/mp4",
     "video/webm",
     "video/ogg",
@@ -48,7 +48,7 @@ ALLOWED_VIDEO_TYPES: Set[str] = {
     "video/mpeg"
 }
 
-ALLOWED_DOCUMENT_TYPES: Set[str] = {
+ALLOWED_DOCUMENT_TYPES: set[str] = {
     "application/pdf",
     "text/plain",
     "text/markdown",
@@ -124,7 +124,7 @@ def validate_file_size(file: UploadFile, max_size: int) -> None:
         )
 
 
-def validate_file_extension(filename: str, allowed_extensions: Optional[Set[str]] = None) -> str:
+def validate_file_extension(filename: str, allowed_extensions: Optional[set[str]] = None) -> str:
     """Validate and extract file extension.
 
     Args:
@@ -164,7 +164,7 @@ def validate_file_extension(filename: str, allowed_extensions: Optional[Set[str]
 def validate_mime_type(
     filename: str,
     declared_mime: str,
-    allowed_types: Set[str],
+    allowed_types: set[str],
     strict: bool = True
 ) -> str:
     """Validate MIME type against allowed types and file extension.
@@ -249,10 +249,10 @@ def sanitize_filename(filename: str) -> str:
 
 async def validate_file_upload(
     file: UploadFile,
-    allowed_types: Set[str],
+    allowed_types: set[str],
     max_size: int,
     strict_mime_check: bool = True
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """Comprehensive file upload validation.
 
     This function validates:
@@ -300,7 +300,7 @@ async def validate_file_upload(
     return sanitized_name, validated_mime
 
 
-def get_allowed_types_for_media(media_type: str) -> Set[str]:
+def get_allowed_types_for_media(media_type: str) -> set[str]:
     """Get allowed MIME types for a media category.
 
     Args:

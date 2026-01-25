@@ -1,14 +1,11 @@
 """User domain models."""
 
+import enum
+from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import (
-    Column, Integer, String, Text, DateTime,
-    Boolean, JSON, Index
-)
+from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime
-import enum
 
 from app.core.database import Base
 

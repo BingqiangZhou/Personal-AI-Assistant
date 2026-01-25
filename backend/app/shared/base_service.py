@@ -4,11 +4,13 @@ Base service class for common CRUD operations.
 基础服务类，提供通用的CRUD操作
 """
 
-from typing import TypeVar, Generic, Type, Optional, List, Dict, Any
-from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
-from sqlalchemy import select, func
 import logging
+from typing import Any, Generic, Optional, TypeVar
+
+from pydantic import BaseModel
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +32,7 @@ class BaseService(Generic[ModelType]):
     - Delete
     """
 
-    def __init__(self, db: AsyncSession, model: Type[ModelType], user_id: Optional[int] = None):
+    def __init__(self, db: AsyncSession, model: type[ModelType], user_id: Optional[int] = None):
         """
         Initialize base service.
 
@@ -61,8 +63,8 @@ class BaseService(Generic[ModelType]):
         self,
         skip: int = 0,
         limit: int = 100,
-        filters: Optional[Dict[str, Any]] = None
-    ) -> List[ModelType]:
+        filters: Optional[dict[str, Any]] = None
+    ) -> list[ModelType]:
         """
         Get list of entities with pagination.
 
@@ -90,7 +92,7 @@ class BaseService(Generic[ModelType]):
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def count(self, filters: Optional[Dict[str, Any]] = None) -> int:
+    async def count(self, filters: Optional[dict[str, Any]] = None) -> int:
         """
         Count entities with optional filters.
 

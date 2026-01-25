@@ -1,23 +1,25 @@
 """AI Assistant API routes."""
 
-from typing import List, Optional
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
 from app.core.dependencies import get_current_active_user
-from app.domains.user.models import User
 from app.domains.assistant.services import AssistantService
+from app.domains.user.models import User
 from app.shared.schemas import (
     ConversationCreate,
-    ConversationUpdate,
     ConversationResponse,
+    ConversationUpdate,
     MessageCreate,
     MessageResponse,
     PaginatedResponse,
-    PaginationParams
+    PaginationParams,
 )
+
 
 router = APIRouter()
 
@@ -46,7 +48,7 @@ class PromptTemplateCreate(BaseModel):
     template: str = Field(..., min_length=1)
     description: Optional[str] = None
     category: Optional[str] = None
-    variables: Optional[List[str]] = []
+    variables: Optional[list[str]] = []
     is_public: bool = False
 
 
@@ -57,7 +59,7 @@ class PromptTemplateResponse(BaseModel):
     description: Optional[str]
     category: Optional[str]
     template: str
-    variables: List[str]
+    variables: list[str]
     is_public: bool
     is_system: bool
     usage_count: int
@@ -232,7 +234,7 @@ async def chat(
 
 
 # Prompt templates
-@router.get("/prompts/", response_model=List[PromptTemplateResponse])
+@router.get("/prompts/", response_model=list[PromptTemplateResponse])
 async def list_prompt_templates(
     category: Optional[str] = Query(None, description="Filter by category"),
     current_user: User = Depends(get_current_active_user),

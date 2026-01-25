@@ -1,26 +1,23 @@
 """User authentication and management API routes."""
 
-from datetime import timedelta
 from typing import Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from fastapi.security import OAuth2PasswordRequestForm
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.core.database import get_db_session
 from app.core.dependencies import get_current_user
-from app.core.exceptions import (
-    BaseCustomException,
-    ConflictError,
-    BadRequestError,
-    UnauthorizedError,
-    NotFoundError
-)
-from app.shared.schemas import (
-    Token, UserCreate, UserResponse,
-    ForgotPasswordRequest, ResetPasswordRequest, PasswordResetResponse
-)
+from app.core.exceptions import BaseCustomException, UnauthorizedError
 from app.domains.user.services import AuthenticationService
+from app.shared.schemas import (
+    ForgotPasswordRequest,
+    PasswordResetResponse,
+    ResetPasswordRequest,
+    Token,
+    UserResponse,
+)
+
 
 router = APIRouter()
 

@@ -9,10 +9,11 @@ import logging
 import os
 import platform
 from datetime import datetime, timezone
-from typing import Dict, List, Optional
+from typing import Optional
 
 import psutil
 from pydantic import BaseModel, Field
+
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,7 @@ class CPUMetrics(BaseModel):
     """CPU metrics / CPU 指标"""
 
     usage_percent: float = Field(..., description="Overall CPU usage % / CPU 总体使用率")
-    per_cpu_percent: List[float] = Field(..., description="Per-core CPU usage % / 各核心使用率")
+    per_cpu_percent: list[float] = Field(..., description="Per-core CPU usage % / 各核心使用率")
     user_time: float = Field(..., description="User CPU time (seconds) / 用户态时间")
     system_time: float = Field(..., description="System CPU time (seconds) / 系统态时间")
     idle_time: float = Field(..., description="Idle CPU time (seconds) / 空闲时间")
@@ -81,7 +82,7 @@ class DiskPartition(BaseModel):
 class DiskMetrics(BaseModel):
     """Disk metrics / 磁盘指标"""
 
-    partitions: List[DiskPartition] = Field(default_factory=list, description="Disk partitions / 磁盘分区列表")
+    partitions: list[DiskPartition] = Field(default_factory=list, description="Disk partitions / 磁盘分区列表")
     read_bytes: int = Field(..., description="Total bytes read / 读取字节数")
     write_bytes: int = Field(..., description="Total bytes written / 写入字节数")
     read_count: int = Field(..., description="Number of read operations / 读取操作次数")
@@ -108,7 +109,7 @@ class NetworkInterface(BaseModel):
 class NetworkMetrics(BaseModel):
     """Network metrics / 网络指标"""
 
-    interfaces: List[NetworkInterface] = Field(default_factory=list, description="Network interfaces / 网络接口列表")
+    interfaces: list[NetworkInterface] = Field(default_factory=list, description="Network interfaces / 网络接口列表")
     total_bytes_sent: int = Field(..., description="Total bytes sent / 总发送字节数")
     total_bytes_recv: int = Field(..., description="Total bytes received / 总接收字节数")
 

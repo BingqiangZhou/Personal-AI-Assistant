@@ -5,18 +5,19 @@ Podcast Subscription Service - Manages podcast subscriptions.
 """
 
 import logging
-from typing import List, Tuple, Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.redis import PodcastRedis
-from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.models import PodcastEpisode
+from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.schemas import PodcastSubscriptionCreate
 from app.domains.subscription.models import Subscription
-from app.integration.podcast.secure_rss_parser import SecureRSSParser, PodcastFeed
+from app.integration.podcast.secure_rss_parser import SecureRSSParser
+
 
 logger = logging.getLogger(__name__)
 
@@ -49,8 +50,8 @@ class PodcastSubscriptionService:
     async def add_subscription(
         self,
         feed_url: str,
-        category_ids: Optional[List[int]] = None
-    ) -> Tuple[Subscription, List[PodcastEpisode]]:
+        category_ids: Optional[list[int]] = None
+    ) -> tuple[Subscription, list[PodcastEpisode]]:
         """
         Add a new podcast subscription.
 
@@ -123,8 +124,8 @@ class PodcastSubscriptionService:
 
     async def add_subscriptions_batch(
         self,
-        subscriptions_data: List[PodcastSubscriptionCreate]
-    ) -> List[Dict[str, Any]]:
+        subscriptions_data: list[PodcastSubscriptionCreate]
+    ) -> list[dict[str, Any]]:
         """
         Batch add podcast subscriptions.
 
@@ -183,7 +184,7 @@ class PodcastSubscriptionService:
         filters: Optional[dict] = None,
         page: int = 1,
         size: int = 20
-    ) -> Tuple[List[dict], int]:
+    ) -> tuple[list[dict], int]:
         """
         List user subscriptions with pagination.
 
@@ -343,7 +344,7 @@ class PodcastSubscriptionService:
             } for ep in episodes]
         }
 
-    async def refresh_subscription(self, subscription_id: int) -> List[PodcastEpisode]:
+    async def refresh_subscription(self, subscription_id: int) -> list[PodcastEpisode]:
         """
         Refresh podcast subscription to get latest episodes.
 
@@ -541,8 +542,8 @@ class PodcastSubscriptionService:
 
     async def remove_subscriptions_bulk(
         self,
-        subscription_ids: List[int]
-    ) -> Dict[str, Any]:
+        subscription_ids: list[int]
+    ) -> dict[str, Any]:
         """
         Bulk remove subscriptions.
 
@@ -554,8 +555,8 @@ class PodcastSubscriptionService:
         """
         success_count = 0
         failed_count = 0
-        errors: List[Dict[str, Any]] = []
-        deleted_subscription_ids: List[int] = []
+        errors: list[dict[str, Any]] = []
+        deleted_subscription_ids: list[int] = []
 
         for subscription_id in subscription_ids:
             try:
@@ -597,7 +598,7 @@ class PodcastSubscriptionService:
 
     # === Private helper methods ===
 
-    def _normalize_categories(self, raw_categories: List) -> List[Dict[str, str]]:
+    def _normalize_categories(self, raw_categories: list) -> list[dict[str, str]]:
         """Normalize categories to list of dicts."""
         categories = []
         for cat in raw_categories:
@@ -632,7 +633,7 @@ class PodcastSubscriptionService:
     async def _get_episode_ids_for_subscription(
         self,
         subscription_id: int
-    ) -> List[int]:
+    ) -> list[int]:
         """Get all episode IDs for a subscription."""
         from sqlalchemy import select
 
@@ -645,15 +646,16 @@ class PodcastSubscriptionService:
     async def _delete_subscription_related_entities(
         self,
         subscription_id: int,
-        episode_ids: List[int]
+        episode_ids: list[int]
     ) -> None:
         """Delete all related entities in dependency order."""
         from sqlalchemy import delete
+
         from app.domains.podcast.models import (
+            PodcastConversation,
             PodcastEpisode,
             PodcastPlaybackState,
             TranscriptionTask,
-            PodcastConversation
         )
 
         # Delete in dependency order: conversations -> playback -> transcriptions -> episodes -> subscription

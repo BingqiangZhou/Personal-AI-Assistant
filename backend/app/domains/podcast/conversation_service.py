@@ -4,18 +4,18 @@
 """
 
 import logging
-from typing import Optional, List, Dict, Any
 import time
 from datetime import datetime
+from typing import Any, Optional
 
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_
-from sqlalchemy.orm import selectinload
 
-from app.domains.podcast.models import PodcastEpisode, PodcastConversation
-from app.domains.ai.repositories import AIModelConfigRepository
-from app.domains.ai.models import ModelType
 from app.core.exceptions import ValidationError
+from app.domains.ai.models import ModelType
+from app.domains.ai.repositories import AIModelConfigRepository
+from app.domains.podcast.models import PodcastConversation, PodcastEpisode
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class ConversationService:
         episode_id: int,
         user_id: int,
         limit: int = 50
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """获取对话历史"""
         stmt = (
             select(PodcastConversation)
@@ -65,7 +65,7 @@ class ConversationService:
         user_id: int,
         user_message: str,
         model_name: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """发送消息并获取AI回复"""
         # 获取播客单集信息
         stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
@@ -134,9 +134,9 @@ class ConversationService:
     def _build_conversation_context(
         self,
         episode: PodcastEpisode,
-        conversation_history: List[Dict[str, Any]],
+        conversation_history: list[dict[str, Any]],
         user_message: str
-    ) -> List[Dict[str, str]]:
+    ) -> list[dict[str, str]]:
         """构建对话上下文"""
         messages = []
 
@@ -178,7 +178,7 @@ class ConversationService:
 
     async def _call_ai_api(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model_name: Optional[str] = None
     ) -> str:
         """

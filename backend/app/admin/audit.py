@@ -1,12 +1,12 @@
 """Admin audit log utilities."""
 import logging
-from typing import Optional, Dict, Any
-from datetime import datetime
+from typing import Any, Optional
 
 from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.models import AdminAuditLog
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ async def log_admin_action(
     resource_type: str,
     resource_id: Optional[int] = None,
     resource_name: Optional[str] = None,
-    details: Optional[Dict[str, Any]] = None,
+    details: Optional[dict[str, Any]] = None,
     request: Optional[Request] = None,
     status: str = "success",
     error_message: Optional[str] = None,

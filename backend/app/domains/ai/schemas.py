@@ -3,7 +3,8 @@ AI模型配置的Pydantic模式定义
 """
 
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Any, Optional
+
 from pydantic import BaseModel, Field, validator
 
 from app.domains.ai.models import ModelType
@@ -28,7 +29,7 @@ class AIModelConfigBase(BaseModel):
     rate_limit_per_minute: int = Field(default=60, gt=0, description="每分钟请求限制")
     cost_per_input_token: Optional[str] = Field(None, description="每输入令牌成本")
     cost_per_output_token: Optional[str] = Field(None, description="每输出令牌成本")
-    extra_config: Optional[Dict[str, Any]] = Field(default_factory=dict, description="额外配置参数")
+    extra_config: Optional[dict[str, Any]] = Field(default_factory=dict, description="额外配置参数")
     is_active: bool = Field(default=True, description="是否启用")
     is_default: bool = Field(default=False, description="是否为默认模型")
 
@@ -76,7 +77,7 @@ class AIModelConfigUpdate(BaseModel):
     rate_limit_per_minute: Optional[int] = Field(None, gt=0)
     cost_per_input_token: Optional[str] = None
     cost_per_output_token: Optional[str] = None
-    extra_config: Optional[Dict[str, Any]] = None
+    extra_config: Optional[dict[str, Any]] = None
     is_active: Optional[bool] = None
     is_default: Optional[bool] = None
 
@@ -124,7 +125,7 @@ class AIModelConfigResponse(AIModelConfigBase):
 
 class AIModelConfigList(BaseModel):
     """AI模型配置列表响应模式"""
-    models: List[AIModelConfigResponse]
+    models: list[AIModelConfigResponse]
     total: int
     page: int
     size: int
@@ -150,7 +151,7 @@ class ModelUsageStats(BaseModel):
 class ModelTestRequest(BaseModel):
     """模型测试请求模式"""
     model_id: int
-    test_data: Optional[Dict[str, Any]] = Field(default=dict, description="测试数据")
+    test_data: Optional[dict[str, Any]] = Field(default=dict, description="测试数据")
 
 
 class ModelTestResponse(BaseModel):
@@ -173,20 +174,20 @@ class PresetModelConfig(BaseModel):
     api_url: str
     max_tokens: Optional[int] = None
     temperature: Optional[str] = None
-    extra_config: Optional[Dict[str, Any]] = None
+    extra_config: Optional[dict[str, Any]] = None
 
 
 # 导出配置
 class ModelExportConfig(BaseModel):
     """模型配置导出格式"""
-    models: List[Dict[str, Any]]
+    models: list[dict[str, Any]]
     export_time: datetime
     version: str = "1.0"
 
 
 class ModelImportConfig(BaseModel):
     """模型配置导入格式"""
-    models: List[AIModelConfigCreate]
+    models: list[AIModelConfigCreate]
     overwrite_existing: bool = Field(default=False, description="是否覆盖已存在的模型")
     mark_as_system: bool = Field(default=False, description="是否标记为系统预设")
 

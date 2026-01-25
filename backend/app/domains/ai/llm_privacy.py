@@ -15,15 +15,14 @@ and sanitization for content sent to external LLM services.
 - User consent tracking
 """
 
-import re
 import hashlib
 import logging
-from typing import Dict, List, Optional, Set
-from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
+import re
 from collections import defaultdict
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from typing import Optional
 
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class PrivacyAuditEntry:
     timestamp: str
     content_hash: str
     sanitize_mode: str
-    pii_types_detected: List[str]
+    pii_types_detected: list[str]
     original_size: int
     sanitized_size: int
 
@@ -44,7 +43,7 @@ class PrivacyAuditEntry:
 class _BatchLogStats:
     """批量日志统计器 - 使用时间窗口聚合相似日志"""
     def __init__(self):
-        self._stats: Dict[str, Dict] = defaultdict(lambda: {
+        self._stats: dict[str, dict] = defaultdict(lambda: {
             'count': 0,
             'pii_types': set(),
             'first_time': None,
@@ -53,7 +52,7 @@ class _BatchLogStats:
         })
         self._window_seconds = 30  # 时间窗口：30秒内相同日志合并
 
-    def add(self, user_id: int, pii_types: List[str], mode: str, timestamp: str):
+    def add(self, user_id: int, pii_types: list[str], mode: str, timestamp: str):
         """添加日志记录"""
         key = f"{user_id}_{mode}"
         stats = self._stats[key]
@@ -89,7 +88,7 @@ class _BatchLogStats:
 
         return False
 
-    def get_and_reset(self, user_id: int, mode: str) -> Optional[Dict]:
+    def get_and_reset(self, user_id: int, mode: str) -> Optional[dict]:
         """获取统计信息并重置"""
         key = f"{user_id}_{mode}"
         if key not in self._stats or self._stats[key]['count'] == 0:
@@ -141,7 +140,7 @@ class ContentSanitizer:
         if mode not in ['strict', 'standard', 'none']:
             raise ValueError(f"Invalid mode: {mode}")
         self.mode = mode
-        self.audit_log: List[PrivacyAuditEntry] = []
+        self.audit_log: list[PrivacyAuditEntry] = []
 
     def sanitize(self, text: str, user_id: int, context: str = "rss_description") -> str:
         """
@@ -160,7 +159,7 @@ class ContentSanitizer:
             return text
 
         original_size = len(text)
-        detected_types: Set[str] = set()
+        detected_types: set[str] = set()
         sanitized = text
 
         # Step 1: Pattern-based PII removal
@@ -309,7 +308,7 @@ Instructions:
                         f"Duration: {(datetime.fromisoformat(stats['last_time']) - datetime.fromisoformat(stats['first_time'])).total_seconds():.1f}s"
                     )
 
-    def export_audit_log(self, user_id: int) -> List[Dict]:
+    def export_audit_log(self, user_id: int) -> list[dict]:
         """Export user's audit trail for GDPR compliance"""
         return [
             asdict(entry)
@@ -317,7 +316,7 @@ Instructions:
             if entry.user_id == user_id
         ]
 
-    def get_usage_stats(self) -> Dict[str, int]:
+    def get_usage_stats(self) -> dict[str, int]:
         """Get privacy filter usage statistics"""
         stats = {
             'total_sanitizations': len(self.audit_log),
@@ -343,7 +342,7 @@ class PodcastSummarySanitizer(ContentSanitizer):
     Specialized sanitizer for podcast summaries with podcast-specific logic
     """
 
-    def summarize_episode(self, title: str, description: str, transcript: Optional[str], user_id: int) -> Dict:
+    def summarize_episode(self, title: str, description: str, transcript: Optional[str], user_id: int) -> dict:
         """
         Helper method to sanitize and summarize podcast episode for LLM processing
 

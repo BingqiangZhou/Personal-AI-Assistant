@@ -3,10 +3,11 @@ Utility functions for the application.
 通用工具函数
 """
 
+import html
 import logging
 import re
-import html
 from typing import Optional
+
 
 logger = logging.getLogger(__name__)
 

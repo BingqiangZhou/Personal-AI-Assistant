@@ -5,18 +5,17 @@
 Provides storage information query and cache file cleanup functionality
 """
 
-import os
 import logging
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-from typing import Dict, List, Tuple
+import os
 import shutil
+from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.models import SystemSettings
 from app.core.config import settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ class StorageCleanupService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    def _get_directory_size(self, directory_path: str) -> Tuple[int, int]:
+    def _get_directory_size(self, directory_path: str) -> tuple[int, int]:
         """
         获取目录大小和文件数量
 
@@ -62,7 +61,7 @@ class StorageCleanupService:
 
         return file_count, total_size
 
-    def _get_disk_usage(self, path: str) -> Dict:
+    def _get_disk_usage(self, path: str) -> dict:
         """
         获取磁盘使用情况
 
@@ -111,7 +110,7 @@ class StorageCleanupService:
             bytes_size /= 1024.0
         return f"{bytes_size:.1f} PB"
 
-    async def get_storage_info(self) -> Dict:
+    async def get_storage_info(self) -> dict:
         """
         获取存储信息
 
@@ -157,7 +156,7 @@ class StorageCleanupService:
 
         return result
 
-    async def get_cleanup_config(self) -> Dict:
+    async def get_cleanup_config(self) -> dict:
         """
         获取自动清理配置
 
@@ -189,7 +188,7 @@ class StorageCleanupService:
                 "last_cleanup": None
             }
 
-    async def update_cleanup_config(self, enabled: bool) -> Dict:
+    async def update_cleanup_config(self, enabled: bool) -> dict:
         """
         更新自动清理配置
 
@@ -245,7 +244,7 @@ class StorageCleanupService:
                 "message": f"更新失败: {str(e)}"
             }
 
-    def _cleanup_directory(self, directory_path: str, keep_days: int = 1) -> Dict:
+    def _cleanup_directory(self, directory_path: str, keep_days: int = 1) -> dict:
         """
         清理指定目录中的旧文件
 
@@ -317,7 +316,7 @@ class StorageCleanupService:
             "freed_space_human": self._format_bytes(freed_space)
         }
 
-    async def execute_cleanup(self, keep_days: int = 1) -> Dict:
+    async def execute_cleanup(self, keep_days: int = 1) -> dict:
         """
         执行清理操作
 
@@ -345,7 +344,7 @@ class StorageCleanupService:
         total_freed = storage_result["freed_space"] + temp_result["freed_space"]
 
         logger.info("-" * 70)
-        logger.info(f"📊 清理统计:")
+        logger.info("📊 清理统计:")
         logger.info(f"  Storage 目录: {storage_result['deleted_count']} 文件, {self._format_bytes(storage_result['freed_space'])}")
         logger.info(f"  Temp 目录: {temp_result['deleted_count']} 文件, {self._format_bytes(temp_result['freed_space'])}")
         logger.info("-" * 70)

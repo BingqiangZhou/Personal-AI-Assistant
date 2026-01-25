@@ -5,11 +5,12 @@ AI模型配置数据模型
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Dict, Any
+from typing import Any, Optional
 
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, JSON, Index
-from sqlalchemy.sql import func
 from pydantic import BaseModel, Field, validator
+from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Integer, String, Text
+from sqlalchemy.sql import func
+
 from app.core.database import Base
 
 
@@ -132,7 +133,7 @@ class AIModelConfigBase(BaseModel):
     rate_limit_per_minute: int = Field(default=60, gt=0, description="每分钟请求限制")
     cost_per_input_token: Optional[str] = Field(None, description="每输入令牌成本")
     cost_per_output_token: Optional[str] = Field(None, description="每输出令牌成本")
-    extra_config: Optional[Dict[str, Any]] = Field(default=dict, description="额外配置参数")
+    extra_config: Optional[dict[str, Any]] = Field(default=dict, description="额外配置参数")
     is_active: bool = Field(default=True, description="是否启用")
     is_default: bool = Field(default=False, description="是否为默认模型")
     priority: int = Field(default=1, ge=1, le=100, description="优先级（数字越小优先级越高）")
@@ -180,7 +181,7 @@ class AIModelConfigUpdate(BaseModel):
     rate_limit_per_minute: Optional[int] = Field(None, gt=0)
     cost_per_input_token: Optional[str] = None
     cost_per_output_token: Optional[str] = None
-    extra_config: Optional[Dict[str, Any]] = None
+    extra_config: Optional[dict[str, Any]] = None
     is_active: Optional[bool] = None
     is_default: Optional[bool] = None
     priority: Optional[int] = Field(None, ge=1, le=100)
@@ -269,7 +270,7 @@ class ModelUsageStats(BaseModel):
 class ModelTestRequest(BaseModel):
     """模型测试请求"""
     model_id: int
-    test_data: Optional[Dict[str, Any]] = Field(default=dict, description="测试数据")
+    test_data: Optional[dict[str, Any]] = Field(default=dict, description="测试数据")
 
 
 class ModelTestResponse(BaseModel):

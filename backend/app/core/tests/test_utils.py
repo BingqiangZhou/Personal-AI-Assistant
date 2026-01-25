@@ -3,7 +3,6 @@ Unit tests for utility functions.
 工具函数单元测试
 """
 
-import pytest
 from app.core.utils import filter_thinking_content
 
 

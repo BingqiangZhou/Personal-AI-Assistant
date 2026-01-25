@@ -1,17 +1,18 @@
 """Admin security settings utilities."""
 
 import logging
-from typing import Tuple
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.models import SystemSettings
 from app.core.config import settings
 
+
 logger = logging.getLogger(__name__)
 
 
-async def get_admin_2fa_enabled(db: AsyncSession) -> Tuple[bool, str]:
+async def get_admin_2fa_enabled(db: AsyncSession) -> tuple[bool, str]:
     """
     Get admin 2FA enabled status with priority: database > environment variable.
 

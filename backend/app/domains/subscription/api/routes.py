@@ -1,21 +1,23 @@
 """Subscription API routes."""
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
 from app.core.dependencies import get_current_active_user
-from app.domains.user.models import User
 from app.domains.subscription.services import SubscriptionService
+from app.domains.user.models import User
 from app.shared.schemas import (
-    SubscriptionCreate,
-    SubscriptionUpdate,
-    SubscriptionResponse,
     PaginatedResponse,
-    PaginationParams
+    PaginationParams,
+    SubscriptionCreate,
+    SubscriptionResponse,
+    SubscriptionUpdate,
 )
+
 
 router = APIRouter()
 
@@ -56,7 +58,7 @@ class FetchResponse(BaseModel):
 
 class BatchSubscriptionResponse(BaseModel):
     """Response model for batch subscription creation."""
-    results: List[Dict[str, Any]]
+    results: list[dict[str, Any]]
     total_requested: int
     success_count: int
     skipped_count: int
@@ -96,6 +98,7 @@ async def create_subscription(
 
     # Check for duplicate before creation
     from sqlalchemy import func, select
+
     from app.domains.subscription.models import Subscription
 
     # Check by URL first (exact match)
@@ -118,7 +121,7 @@ async def create_subscription(
             config=existing_by_url.config,
             status=existing_by_url.status,
             last_fetched_at=existing_by_url.last_fetched_at,
-            error_message=f"该RSS链接已存在 / This RSS URL already exists",
+            error_message="该RSS链接已存在 / This RSS URL already exists",
             fetch_interval=existing_by_url.fetch_interval,
             item_count=0,
             created_at=existing_by_url.created_at,
@@ -145,7 +148,7 @@ async def create_subscription(
             config=existing_by_title.config,
             status=existing_by_title.status,
             last_fetched_at=existing_by_title.last_fetched_at,
-            error_message=f"该订阅标题已存在 / Subscription with this title already exists",
+            error_message="该订阅标题已存在 / Subscription with this title already exists",
             fetch_interval=existing_by_title.fetch_interval,
             item_count=0,
             created_at=existing_by_title.created_at,
@@ -161,7 +164,7 @@ async def create_subscription(
 
 @router.post("/batch", response_model=BatchSubscriptionResponse)
 async def create_subscriptions_batch(
-    subscriptions_data: List[SubscriptionCreate],
+    subscriptions_data: list[SubscriptionCreate],
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db_session)
 ):
@@ -242,7 +245,7 @@ async def fetch_subscription_items(
         raise HTTPException(status_code=500, detail=f"Fetch failed: {str(e)}")
 
 
-@router.post("/fetch-all", response_model=List[FetchResponse])
+@router.post("/fetch-all", response_model=list[FetchResponse])
 async def fetch_all_subscriptions(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db_session)
@@ -360,7 +363,7 @@ async def get_unread_count(
 
 
 # Category endpoints
-@router.get("/categories/", response_model=List[CategoryResponse])
+@router.get("/categories/", response_model=list[CategoryResponse])
 async def list_categories(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db_session)

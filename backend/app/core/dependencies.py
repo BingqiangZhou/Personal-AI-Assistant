@@ -1,17 +1,18 @@
 """Authentication dependencies."""
 
 import logging
-from typing import Optional
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import get_db_session
 from app.core.security import verify_token
 from app.domains.user.models import User
 from app.domains.user.repositories import UserRepository
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ async def get_current_user(
         if user_id_str is None:
             raise credentials_exception
         user_id = int(user_id_str)
-    except HTTPException as e:
+    except HTTPException:
         # This is already handled by verify_token, just re-raise
         raise
     except (JWTError, ValueError) as e:

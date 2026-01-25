@@ -10,21 +10,21 @@
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
 from enum import Enum
+from typing import Any, Optional
 
+from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, or_
 
+from app.core.exceptions import ValidationError
 from app.domains.podcast.models import (
     PodcastEpisode,
-    TranscriptionTask,
     TranscriptionStatus,
-    is_podcast_subscription
+    TranscriptionTask,
 )
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
 from app.domains.subscription.models import Subscription
-from app.core.exceptions import ValidationError
+
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class TranscriptionScheduler:
         self.db = db
         self.transcription_service = DatabaseBackedTranscriptionService(db)
         self._running = False
-        self._tasks: Dict[int, asyncio.Task] = {}  # episode_id -> task
+        self._tasks: dict[int, asyncio.Task] = {}  # episode_id -> task
 
     async def schedule_transcription(
         self,
@@ -52,7 +52,7 @@ class TranscriptionScheduler:
         frequency: ScheduleFrequency = ScheduleFrequency.MANUAL,
         custom_interval: Optional[int] = None,  # 自定义间隔（分钟）
         force: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         为指定分集安排转录任务
 
@@ -158,7 +158,7 @@ class TranscriptionScheduler:
         frequency: ScheduleFrequency = ScheduleFrequency.DAILY,
         limit: Optional[int] = None,
         skip_existing: bool = True
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         批量为订阅的所有分集安排转录
 
@@ -223,7 +223,7 @@ class TranscriptionScheduler:
         self,
         subscription_id: int,
         hours_since_published: int = 24
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         检查并转录新发布的分集
 
@@ -292,7 +292,7 @@ class TranscriptionScheduler:
             "details": results
         }
 
-    async def get_transcription_status(self, episode_id: int) -> Dict[str, Any]:
+    async def get_transcription_status(self, episode_id: int) -> dict[str, Any]:
         """获取指定分集的转录状态"""
         episode = await self._get_episode(episode_id)
         if not episode:
@@ -330,7 +330,7 @@ class TranscriptionScheduler:
 
         return result
 
-    async def get_pending_transcriptions(self) -> List[Dict[str, Any]]:
+    async def get_pending_transcriptions(self) -> list[dict[str, Any]]:
         """获取所有待处理的转录任务"""
         stmt = select(TranscriptionTask).where(
             TranscriptionTask.status.in_([
@@ -478,7 +478,7 @@ async def schedule_episode_transcription(
     db: AsyncSession,
     episode_id: int,
     force: bool = False
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """便捷函数：为单个分集安排转录"""
     scheduler = TranscriptionScheduler(db)
     return await scheduler.schedule_transcription(episode_id, force=force)
@@ -497,7 +497,7 @@ async def batch_transcribe_subscription(
     db: AsyncSession,
     subscription_id: int,
     skip_existing: bool = True
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """便捷函数：批量转录订阅的所有分集"""
     scheduler = TranscriptionScheduler(db)
     results = await scheduler.batch_schedule_transcription(

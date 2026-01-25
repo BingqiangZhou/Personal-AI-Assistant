@@ -11,14 +11,15 @@ from app.domains.subscription.parsers.feed_parser import (
     strip_html_tags,
 )
 from app.domains.subscription.parsers.feed_schemas import (
-    ParseErrorCode,
-    ParseError,
-    FeedInfo,
     FeedEntry,
-    FeedParseResult,
-    FeedParserConfig,
+    FeedInfo,
     FeedParseOptions,
+    FeedParserConfig,
+    FeedParseResult,
+    ParseError,
+    ParseErrorCode,
 )
+
 
 __all__ = [
     "FeedParser",

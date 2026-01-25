@@ -2,13 +2,13 @@
 AI模型配置数据访问层
 """
 
-from typing import List, Optional
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, delete, func, and_, or_
-from sqlalchemy.orm import selectinload
+from typing import Optional
 
+from sqlalchemy import and_, delete, func, or_, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.exceptions import DatabaseError
 from app.domains.ai.models import AIModelConfig, ModelType
-from app.core.exceptions import DatabaseError, ValidationError
 
 
 class AIModelConfigRepository:
@@ -53,7 +53,7 @@ class AIModelConfigRepository:
         provider: Optional[str] = None,
         page: int = 1,
         size: int = 20
-    ) -> tuple[List[AIModelConfig], int]:
+    ) -> tuple[list[AIModelConfig], int]:
         """获取模型配置列表"""
         try:
             # 构建查询条件
@@ -105,7 +105,7 @@ class AIModelConfigRepository:
     async def get_active_models(
         self,
         model_type: Optional[ModelType] = None
-    ) -> List[AIModelConfig]:
+    ) -> list[AIModelConfig]:
         """获取所有活跃的模型，按优先级排序"""
         try:
             stmt = select(AIModelConfig).where(AIModelConfig.is_active == True)
@@ -123,7 +123,7 @@ class AIModelConfigRepository:
     async def get_active_models_by_priority(
         self,
         model_type: Optional[ModelType] = None
-    ) -> List[AIModelConfig]:
+    ) -> list[AIModelConfig]:
         """获取所有活跃的模型，按优先级排序（用于API调用fallback）"""
         return await self.get_active_models(model_type)
 
@@ -222,7 +222,7 @@ class AIModelConfigRepository:
         self,
         model_type: Optional[ModelType] = None,
         limit: int = 50
-    ) -> List[dict]:
+    ) -> list[dict]:
         """获取使用统计"""
         try:
             stmt = select(
@@ -274,7 +274,7 @@ class AIModelConfigRepository:
         model_type: Optional[ModelType] = None,
         page: int = 1,
         size: int = 20
-    ) -> tuple[List[AIModelConfig], int]:
+    ) -> tuple[list[AIModelConfig], int]:
         """搜索模型配置"""
         try:
             # 构建搜索条件

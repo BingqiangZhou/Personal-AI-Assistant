@@ -5,15 +5,14 @@ Podcast Episode Service - Manages podcast episodes.
 """
 
 import logging
-from typing import List, Tuple, Optional, Dict, Any
-from datetime import datetime, timedelta, date
+from typing import Any, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.redis import PodcastRedis
+from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastRepository
-from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
+
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ class PodcastEpisodeService:
         filters: Optional[dict] = None,
         page: int = 1,
         size: int = 20
-    ) -> Tuple[List[dict], int]:
+    ) -> tuple[list[dict], int]:
         """
         List podcast episodes with pagination.
 
@@ -184,7 +183,7 @@ class PodcastEpisodeService:
         self,
         user_id: int,
         limit: int = 5
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get recently played episodes.
 
@@ -201,7 +200,7 @@ class PodcastEpisodeService:
         self,
         user_id: int,
         limit: int = 20
-    ) -> List[PodcastEpisode]:
+    ) -> list[PodcastEpisode]:
         """
         Get user's liked episodes (high completion rate).
 
@@ -216,9 +215,9 @@ class PodcastEpisodeService:
 
     def _build_episode_response(
         self,
-        episodes: List[PodcastEpisode],
-        playback_states: Dict[int, Any]
-    ) -> List[dict]:
+        episodes: list[PodcastEpisode],
+        playback_states: dict[int, Any]
+    ) -> list[dict]:
         """
         Build episode response list with playback states.
 

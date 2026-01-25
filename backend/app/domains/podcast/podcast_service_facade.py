@@ -8,20 +8,21 @@ while delegating to the new specialized services.
 """
 
 import logging
-from typing import List, Tuple, Optional, Dict, Any
+from typing import Any, Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.services import (
-    PodcastSubscriptionService,
     PodcastEpisodeService,
     PodcastPlaybackService,
-    PodcastSummaryService,
     PodcastSearchService,
+    PodcastSubscriptionService,
+    PodcastSummaryService,
     PodcastSyncService,
 )
-from app.domains.podcast.models import PodcastEpisode
 from app.domains.subscription.models import Subscription
+
 
 logger = logging.getLogger(__name__)
 
@@ -71,15 +72,15 @@ class PodcastService:
     async def add_subscription(
         self,
         feed_url: str,
-        category_ids: Optional[List[int]] = None
-    ) -> Tuple[Subscription, List[PodcastEpisode]]:
+        category_ids: Optional[list[int]] = None
+    ) -> tuple[Subscription, list[PodcastEpisode]]:
         """添加播客订阅 - Delegates to SubscriptionService"""
         return await self.subscription_service.add_subscription(feed_url, category_ids)
 
     async def add_subscriptions_batch(
         self,
-        subscriptions_data: List
-    ) -> List[Dict[str, Any]]:
+        subscriptions_data: list
+    ) -> list[dict[str, Any]]:
         """批量添加播客订阅 - Delegates to SubscriptionService"""
         return await self.subscription_service.add_subscriptions_batch(subscriptions_data)
 
@@ -88,7 +89,7 @@ class PodcastService:
         filters: Optional[dict] = None,
         page: int = 1,
         size: int = 20
-    ) -> Tuple[List[dict], int]:
+    ) -> tuple[list[dict], int]:
         """列出用户的所有播客订阅 - Delegates to SubscriptionService"""
         return await self.subscription_service.list_subscriptions(filters, page, size)
 
@@ -96,7 +97,7 @@ class PodcastService:
         """获取订阅详情及单集列表 - Delegates to SubscriptionService"""
         return await self.subscription_service.get_subscription_details(subscription_id)
 
-    async def refresh_subscription(self, subscription_id: int) -> List[PodcastEpisode]:
+    async def refresh_subscription(self, subscription_id: int) -> list[PodcastEpisode]:
         """刷新播客订阅 - Delegates to SubscriptionService"""
         return await self.subscription_service.refresh_subscription(subscription_id)
 
@@ -114,8 +115,8 @@ class PodcastService:
 
     async def remove_subscriptions_bulk(
         self,
-        subscription_ids: List[int]
-    ) -> Dict[str, Any]:
+        subscription_ids: list[int]
+    ) -> dict[str, Any]:
         """批量删除订阅 - Delegates to SubscriptionService"""
         return await self.subscription_service.remove_subscriptions_bulk(subscription_ids)
 
@@ -126,7 +127,7 @@ class PodcastService:
         filters: Optional[dict] = None,
         page: int = 1,
         size: int = 20
-    ) -> Tuple[List[dict], int]:
+    ) -> tuple[list[dict], int]:
         """获取播客单集列表 - Delegates to EpisodeService"""
         return await self.episode_service.list_episodes(filters, page, size)
 
@@ -171,7 +172,7 @@ class PodcastService:
         """重新生成总结 - Delegates to SummaryService"""
         return await self.summary_service.regenerate_summary(episode_id, force)
 
-    async def get_pending_summaries(self) -> List[dict]:
+    async def get_pending_summaries(self) -> list[dict]:
         """获取待总结的单集 - Delegates to SummaryService"""
         return await self.summary_service.get_pending_summaries()
 
@@ -183,11 +184,11 @@ class PodcastService:
         search_in: str = "all",
         page: int = 1,
         size: int = 20
-    ) -> Tuple[List[dict], int]:
+    ) -> tuple[list[dict], int]:
         """搜索播客内容 - Delegates to SearchService"""
         return await self.search_service.search_podcasts(query, search_in, page, size)
 
-    async def get_recommendations(self, limit: int = 10) -> List[dict]:
+    async def get_recommendations(self, limit: int = 10) -> list[dict]:
         """获取播客推荐 - Delegates to SearchService"""
         return await self.search_service.get_recommendations(limit)
 
@@ -200,7 +201,6 @@ class PodcastService:
         This method combines data from multiple services.
         """
         from app.core.redis import PodcastRedis
-        from app.core.config import settings
 
         redis = PodcastRedis()
 
@@ -252,14 +252,14 @@ class PodcastService:
     async def _get_episode_ids_for_subscription(
         self,
         subscription_id: int
-    ) -> List[int]:
+    ) -> list[int]:
         """获取订阅的所有episode_id - Delegates to SubscriptionService"""
         return await self.subscription_service._get_episode_ids_for_subscription(subscription_id)
 
     async def _delete_subscription_related_entities(
         self,
         subscription_id: int,
-        episode_ids: List[int]
+        episode_ids: list[int]
     ) -> None:
         """删除订阅相关的所有实体 - Delegates to SubscriptionService"""
         await self.subscription_service._delete_subscription_related_entities(
@@ -285,9 +285,9 @@ class PodcastService:
 
     def _build_episode_response(
         self,
-        episodes: List[PodcastEpisode],
-        playback_states: Dict[int, Any]
-    ) -> List[dict]:
+        episodes: list[PodcastEpisode],
+        playback_states: dict[int, Any]
+    ) -> list[dict]:
         """Build episode response - Delegates to EpisodeService"""
         return self.episode_service._build_episode_response(episodes, playback_states)
 

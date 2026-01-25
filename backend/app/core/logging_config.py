@@ -11,10 +11,9 @@
 import logging
 import logging.handlers
 import os
-from pathlib import Path
-from datetime import datetime, timezone, timedelta
-from typing import Optional
 import sys
+from datetime import datetime, timedelta
+from pathlib import Path
 
 
 # 默认配置

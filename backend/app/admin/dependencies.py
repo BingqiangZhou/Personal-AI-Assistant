@@ -1,11 +1,9 @@
 """Admin authentication dependencies and utilities."""
-from datetime import datetime, timedelta
-from typing import Optional
 import logging
+from datetime import datetime
+from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException, Request, status
-from fastapi.responses import RedirectResponse
-from fastapi.security import HTTPBearer
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +11,7 @@ from app.core.config import settings
 from app.core.database import get_db_session
 from app.domains.user.models import User
 from app.domains.user.repositories import UserRepository
+
 
 logger = logging.getLogger(__name__)
 

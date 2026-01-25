@@ -1,22 +1,23 @@
 """Tests for FeedParser component."""
 
-import pytest
-import httpx
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
+import pytest
+
 from app.core.feed_parser import (
     FeedParser,
-    parse_feed_url,
     parse_feed_bytes,
+    parse_feed_url,
 )
 from app.core.feed_schemas import (
-    FeedParseResult,
-    FeedInfo,
     FeedEntry,
-    ParseErrorCode,
-    FeedParserConfig,
+    FeedInfo,
     FeedParseOptions,
+    FeedParserConfig,
+    FeedParseResult,
+    ParseErrorCode,
 )
 
 

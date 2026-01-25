@@ -1,10 +1,10 @@
 """Two-Factor Authentication utilities for admin panel."""
 
-import io
 import base64
+import io
+
 import pyotp
 import qrcode
-from typing import Tuple
 
 
 def generate_totp_secret() -> str:

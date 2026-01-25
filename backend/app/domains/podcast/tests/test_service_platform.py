@@ -2,12 +2,12 @@
 Integration tests for podcast service platform support
 """
 
-import pytest
-from unittest.mock import AsyncMock, Mock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
 
 from app.domains.podcast.services import PodcastService
-from app.domains.subscription.models import Subscription
 from app.integration.podcast.platform_detector import PodcastPlatform
 
 

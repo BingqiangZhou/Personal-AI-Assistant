@@ -4,12 +4,14 @@ Performance Monitoring Middleware
 Tracks API response times, cache hit rates, and slow queries.
 """
 
-import time
 import logging
-from typing import Callable, Awaitable
+import time
+from collections.abc import Callable
+
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
+
 
 logger = logging.getLogger(__name__)
 
