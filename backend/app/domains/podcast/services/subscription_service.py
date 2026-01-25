@@ -16,7 +16,7 @@ from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.schemas import PodcastSubscriptionCreate
 from app.domains.subscription.models import Subscription
-from app.integration.podcast.secure_rss_parser import SecureRSSParser
+from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 
 
 logger = logging.getLogger(__name__)

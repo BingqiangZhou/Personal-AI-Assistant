@@ -16,7 +16,7 @@ class TestPodcastAPI:
 
     def test_xxe_protection(self):
         """Security Test: XXE attacks must be blocked"""
-        from app.integration.podcast.security import PodcastSecurityValidator
+        from app.domains.podcast.integration.security import PodcastSecurityValidator
         validator = PodcastSecurityValidator()
 
         # Test XXE attack
@@ -60,7 +60,7 @@ class TestPodcastAPI:
 
     def test_rss_security_validations(self):
         """Security Test: RSS URL and content validation"""
-        from app.integration.podcast.security import PodcastSecurityValidator
+        from app.domains.podcast.integration.security import PodcastSecurityValidator
         validator = PodcastSecurityValidator()
 
         # Test dangerous URLs
@@ -120,7 +120,7 @@ class TestPodcastAPI:
     def test_service_workflow_logic(self):
         """Logic Test: Service workflow patterns"""
         # Test that our mocked service can handle workflow
-        from app.integration.podcast.security import PodcastSecurityValidator
+        from app.domains.podcast.integration.security import PodcastSecurityValidator
 
         validator = PodcastSecurityValidator()
 

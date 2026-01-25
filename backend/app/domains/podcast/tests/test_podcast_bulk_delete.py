@@ -74,8 +74,8 @@ class TestPodcastBulkDelete:
         # so we need to patch it at the correct location
         with patch('app.core.redis.PodcastRedis'), \
              patch('app.domains.ai.llm_privacy.ContentSanitizer'), \
-             patch('app.integration.podcast.security.PodcastSecurityValidator'), \
-             patch('app.integration.podcast.secure_rss_parser.SecureRSSParser'):
+             patch('app.domains.podcast.integration.security.PodcastSecurityValidator'), \
+             patch('app.domains.podcast.integration.secure_rss_parser.SecureRSSParser'):
             service = PodcastService(mock_db, user_id=1)
             return service
 

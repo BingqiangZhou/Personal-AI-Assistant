@@ -35,7 +35,7 @@ def test_security():
     print("2. 安全机制测试...")
     try:
         from app.core.llm_privacy import ContentSanitizer
-        from app.integration.podcast.security import PodcastSecurityValidator
+        from app.domains.podcast.integration.security import PodcastSecurityValidator
 
         # 测试隐私净化
         sanitizer = ContentSanitizer('standard')
@@ -150,7 +150,7 @@ def test_service_files():
         "app/domains/podcast/services.py",
         "app/domains/podcast/api/routes.py",
         "app/core/llm_privacy.py",
-        "app/integration/podcast/security.py",
+        "app/domains/podcast/integration/security.py",
     ]
 
     all_exist = True

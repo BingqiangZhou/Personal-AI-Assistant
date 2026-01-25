@@ -13,7 +13,7 @@ try:
     print('[PASS] Service imports successfully')
 
     from app.core.llm_privacy import ContentSanitizer
-    from app.integration.podcast.security import PodcastSecurityValidator
+    from app.domains.podcast.integration.security import PodcastSecurityValidator
     print('[PASS] Security components work')
 
     print('\n[FIX SUCCESS] metadata reserved attribute issue resolved')

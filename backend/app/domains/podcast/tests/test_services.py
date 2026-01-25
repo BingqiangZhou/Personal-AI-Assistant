@@ -29,7 +29,7 @@ class TestPodcastService:
     @pytest.fixture
     def mock_parser(self):
         """模拟RSS解析器"""
-        with patch('app.integration.podcast.secure_rss_parser.SecureRSSParser') as mock:
+        with patch('app.domains.podcast.integration.secure_rss_parser.SecureRSSParser') as mock:
             parser_instance = AsyncMock()
             mock.return_value = parser_instance
             yield parser_instance

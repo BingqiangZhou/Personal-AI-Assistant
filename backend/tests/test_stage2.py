@@ -41,7 +41,7 @@ def test_stage2():
 
     # Check 3: Critical security - XXE protection
     try:
-        from app.integration.podcast.security import PodcastSecurityValidator
+        from app.domains.podcast.integration.security import PodcastSecurityValidator
         validator = PodcastSecurityValidator()
 
         malicious_xml = '''<?xml version="1.0"?>
@@ -91,7 +91,7 @@ def test_stage2():
 
     # Check 6: Secure RSS parser
     try:
-        from app.integration.podcast.secure_rss_parser import SecureRSSParser, PodcastFeed
+        from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser, PodcastFeed
         print('[PASS] Secure RSS parser components')
     except Exception as e:
         print(f'[FAIL] RSS parser: {e}')

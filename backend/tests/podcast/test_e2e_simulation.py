@@ -18,7 +18,7 @@ async def test_complete_workflow():
 
     # 1. Security Components
     try:
-        from app.integration.podcast.security import PodcastSecurityValidator, PodcastContentValidator
+        from app.domains.podcast.integration.security import PodcastSecurityValidator, PodcastContentValidator
         from app.core.llm_privacy import ContentSanitizer
 
         validator = PodcastSecurityValidator()
@@ -77,7 +77,7 @@ async def test_complete_workflow():
         # Create service with mocked components
         with patch('app.core.redis.PodcastRedis') as mock_redis_class, \
              patch('app.domains.podcast.repositories.PodcastRepository') as mock_repo_class, \
-             patch('app.integration.podcast.secure_rss_parser.SecureRSSParser') as mock_parser_class, \
+             patch('app.domains.podcast.integration.secure_rss_parser.SecureRSSParser') as mock_parser_class, \
              patch('app.core.llm_privacy.ContentSanitizer') as mock_sanitizer_class:
 
             # Configure mocks

@@ -92,64 +92,8 @@ class ApplicationContainer(containers.DeclarativeContainer):
     )
 
     # === Podcast Domain Services ===
-    # These are designed to be created with user_id at runtime,
-    # but we can provide factory methods
-
-    @providers.Factory
-    def podcast_subscription_service(
-        db: AsyncSession,
-        user_id: int
-    ) -> PodcastSubscriptionService:
-        """Create podcast subscription service for a specific user."""
-        return PodcastSubscriptionService(db, user_id)
-
-    @providers.Factory
-    def podcast_episode_service(
-        db: AsyncSession,
-        user_id: int
-    ) -> PodcastEpisodeService:
-        """Create podcast episode service for a specific user."""
-        return PodcastEpisodeService(db, user_id)
-
-    @providers.Factory
-    def podcast_playback_service(
-        db: AsyncSession,
-        user_id: int
-    ) -> PodcastPlaybackService:
-        """Create podcast playback service for a specific user."""
-        return PodcastPlaybackService(db, user_id)
-
-    @providers.Factory
-    def podcast_summary_service(
-        db: AsyncSession,
-        user_id: int
-    ) -> PodcastSummaryService:
-        """Create podcast summary service for a specific user."""
-        return PodcastSummaryService(db, user_id)
-
-    @providers.Factory
-    def podcast_search_service(
-        db: AsyncSession,
-        user_id: int
-    ) -> PodcastSearchService:
-        """Create podcast search service for a specific user."""
-        return PodcastSearchService(db, user_id)
-
-    @providers.Factory
-    def podcast_sync_service(
-        db: AsyncSession,
-        user_id: int
-    ) -> PodcastSyncService:
-        """Create podcast sync service for a specific user."""
-        return PodcastSyncService(db, user_id)
-
-    @providers.Factory
-    def podcast_service(
-        db: AsyncSession,
-        user_id: int
-    ) -> PodcastService:
-        """Create main podcast service facade for a specific user."""
-        return PodcastService(db, user_id)
+    # Podcast services are created via factory functions below (lines 169+)
+    # because they require user_id at runtime
 
 
 # Global container instance

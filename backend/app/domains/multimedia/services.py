@@ -10,7 +10,7 @@ from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.file_validation import (
+from app.shared.file_validation import (
     FileValidationError,
     get_allowed_types_for_media,
     validate_file_upload,

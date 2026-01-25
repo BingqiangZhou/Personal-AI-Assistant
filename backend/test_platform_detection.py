@@ -2,7 +2,7 @@
 Quick test script for platform detection
 """
 
-from app.integration.podcast.platform_detector import PlatformDetector, PodcastPlatform
+from app.domains.podcast.integration.platform_detector import PlatformDetector, PodcastPlatform
 
 # Test cases
 test_urls = [

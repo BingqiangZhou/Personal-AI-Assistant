@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from app.domains.podcast.services import PodcastService
-from app.integration.podcast.platform_detector import PodcastPlatform
+from app.domains.podcast.integration.platform_detector import PodcastPlatform
 
 
 class TestPodcastServicePlatform:
@@ -30,7 +30,7 @@ class TestPodcastServicePlatform:
     @pytest.fixture
     def mock_parser(self):
         """Mock RSS parser"""
-        with patch('app.integration.podcast.secure_rss_parser.SecureRSSParser') as mock:
+        with patch('app.domains.podcast.integration.secure_rss_parser.SecureRSSParser') as mock:
             parser_instance = AsyncMock()
             mock.return_value = parser_instance
             yield parser_instance
