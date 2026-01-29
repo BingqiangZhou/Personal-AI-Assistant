@@ -1,8 +1,8 @@
 # Personal AI Assistant
 
-一个可扩展的私人AI助手，集成了播客订阅、音频播放、知识库管理和 AI 功能。旨在通过本地化部署和 AI 能力，打造个人化的信息处理中心。
+一个可扩展的私人AI助手，集成了播客订阅、音频播放和 AI 功能。旨在通过本地化部署和 AI 能力，打造个人化的信息处理中心。
 
-An extensible personal AI assistant that integrates podcast subscription, audio playback, knowledge base management, and AI features. Designed to create a personalized information processing center through local deployment and AI capabilities.
+An extensible personal AI assistant that integrates podcast subscription, audio playback, and AI features. Designed to create a personalized information processing center through local deployment and AI capabilities.
 
 ## 📋 [更新日志 / Changelog](CHANGELOG.md)
 
@@ -69,15 +69,6 @@ Check the latest version updates and feature improvements.
 
 ---
 
-### 📚 知识库 / Knowledge Base
-
-- **知识库管理**: 创建和删除知识库
-- **文档上传**: 支持 PDF、DOCX、TXT、MD 等格式文档上传
-- **文档列表**: 查看知识库中的文档
-- **搜索功能**: 跨知识库搜索文档
-
----
-
 ### 🎨 用户界面 / User Interface
 
 - **Material 3 设计**: 采用最新 Material Design 3 规范
@@ -107,7 +98,6 @@ backend/app/
 └── domains/               # 领域层（按业务功能划分）
     ├── user/              # 用户认证和会话管理
     ├── podcast/           # 播客订阅、单集、转录
-    ├── knowledge/         # 知识库管理
     ├── assistant/         # AI 助手对话
     └── ai/                # AI 服务集成和模型管理
 ```
@@ -145,7 +135,6 @@ frontend/lib/
     ├── home/              # 首页
     ├── podcast/           # 播客订阅、单集、播放器
     ├── ai/                # AI 模型配置
-    ├── knowledge/         # 知识库
     └── profile/           # 用户资料
 ```
 
@@ -188,14 +177,6 @@ frontend/lib/
 - `PUT /models/{id}` - 更新模型
 - `DELETE /models/{id}` - 删除模型
 - `POST /models/{id}/test` - 测试连接
-
-### 知识库 / Knowledge (`/api/v1/knowledge/`)
-- `GET /bases/` - 列出知识库
-- `POST /bases/` - 创建知识库
-- `DELETE /bases/{id}` - 删除知识库
-- `GET /bases/{id}/documents/` - 列出文档
-- `POST /bases/{id}/documents/upload` - 上传文档
-- `POST /search` - 搜索
 
 ---
 
@@ -295,7 +276,6 @@ personal-ai-assistant/
 - [x] 播客订阅和单集管理
 - [x] 音频播放器（完整实现）
 - [x] AI 模型配置管理
-- [x] 知识库基础功能
 - [x] Material 3 UI 实现
 - [x] Docker 部署配置
 
@@ -305,7 +285,6 @@ personal-ai-assistant/
 
 ### 📅 计划中 / Planned
 - [ ] AI 转录和摘要的完整配置
-- [ ] 知识库搜索增强
 - [ ] 更多播客发现功能
 
 ---

@@ -49,9 +49,7 @@ class User(Base):
     assistant_tasks = relationship("AssistantTask", back_populates="user", cascade="all, delete-orphan")
     media_files = relationship("MediaFile", back_populates="user", cascade="all, delete-orphan")
     processing_jobs = relationship("ProcessingJob", back_populates="user", cascade="all, delete-orphan")
-    search_history = relationship("SearchHistory", back_populates="user", cascade="all, delete-orphan")
     subscription_categories = relationship("SubscriptionCategory", back_populates="user", cascade="all, delete-orphan")
-    document_tags = relationship("DocumentTag", back_populates="user", cascade="all, delete-orphan")
     prompt_templates = relationship("PromptTemplate", back_populates="user", cascade="all, delete-orphan")
 
     # Indexes
