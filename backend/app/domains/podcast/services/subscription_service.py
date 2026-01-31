@@ -617,16 +617,23 @@ class PodcastSubscriptionService:
     ) -> Optional[Subscription]:
         """Validate subscription exists and belongs to user."""
         from sqlalchemy import and_, select
+        from app.domains.subscription.models import UserSubscription
 
-        conditions = [
-            Subscription.id == subscription_id,
-            Subscription.user_id == self.user_id
-        ]
+        stmt = (
+            select(Subscription)
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .where(
+                and_(
+                    Subscription.id == subscription_id,
+                    UserSubscription.user_id == self.user_id,
+                    UserSubscription.is_archived == False
+                )
+            )
+        )
 
         if check_source_type:
-            conditions.append(Subscription.source_type == "podcast-rss")
+            stmt = stmt.where(Subscription.source_type == "podcast-rss")
 
-        stmt = select(Subscription).where(and_(*conditions))
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 

@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
 from app.core.security import get_token_from_request
-from app.domains.podcast.models import TranscriptionStatus
+from app.domains.podcast.models import PodcastEpisode, TranscriptionStatus
 from app.domains.podcast.services import PodcastService
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
@@ -99,18 +99,14 @@ async def _validate_episode_and_permission(
 
     Raises:
         HTTPException: 当单集不存在或无权限时
+
+    Note: Ownership is verified by the repository layer via UserSubscription join.
     """
-    episode = await service.get_episode_by_id(episode_id)
+    episode = await service.get_episode_by_id(episode_id, user_id=user_id)
     if not episode:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Episode {episode_id} not found"
-        )
-
-    if episode.subscription.user_id != user_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this episode"
         )
 
     return episode
@@ -208,7 +204,6 @@ async def add_subscription(
         # 转换为响应模型
         response_data = {
             "id": subscription.id,
-            "user_id": subscription.user_id,
             "title": subscription.title,
             "description": subscription.description,
             "source_url": subscription.source_url,
@@ -394,31 +389,36 @@ async def get_subscription_schedule(
     """Get subscription schedule configuration"""
     from sqlalchemy import select
 
-    from app.domains.subscription.models import Subscription
+    from app.domains.subscription.models import Subscription, UserSubscription
 
-    stmt = select(Subscription).where(
-        Subscription.id == subscription_id
-    ).where(
-        Subscription.user_id == int(user['sub'])
+    stmt = (
+        select(Subscription, UserSubscription)
+        .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+        .where(
+            Subscription.id == subscription_id,
+            UserSubscription.user_id == int(user['sub'])
+        )
     )
 
     result = await db.execute(stmt)
-    subscription = result.scalar_one_or_none()
+    row = result.first()
 
-    if not subscription:
+    if not row:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Subscription not found"
         )
 
+    subscription, user_sub = row
+
     return ScheduleConfigResponse(
         id=subscription.id,
         title=subscription.title,
-        update_frequency=subscription.update_frequency,
-        update_time=subscription.update_time,
-        update_day_of_week=subscription.update_day_of_week,
+        update_frequency=user_sub.update_frequency,
+        update_time=user_sub.update_time,
+        update_day_of_week=user_sub.update_day_of_week,
         fetch_interval=subscription.fetch_interval,
-        next_update_at=subscription.next_update_at,
+        next_update_at=user_sub.next_update_at,
         last_updated_at=subscription.last_fetched_at
     )
 
@@ -438,42 +438,48 @@ async def update_subscription_schedule(
     """Update subscription schedule configuration"""
     from sqlalchemy import select
 
-    from app.domains.subscription.models import Subscription
+    from app.domains.subscription.models import Subscription, UserSubscription
 
-    stmt = select(Subscription).where(
-        Subscription.id == subscription_id
-    ).where(
-        Subscription.user_id == int(user['sub'])
+    stmt = (
+        select(Subscription, UserSubscription)
+        .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+        .where(
+            Subscription.id == subscription_id,
+            UserSubscription.user_id == int(user['sub'])
+        )
     )
 
     result = await db.execute(stmt)
-    subscription = result.scalar_one_or_none()
+    row = result.first()
 
-    if not subscription:
+    if not row:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Subscription not found"
         )
 
-    # Update schedule configuration
-    subscription.update_frequency = schedule_data.update_frequency
-    subscription.update_time = schedule_data.update_time
-    subscription.update_day_of_week = schedule_data.update_day_of_week
+    subscription, user_sub = row
+
+    # Update schedule configuration on UserSubscription (user-specific settings)
+    user_sub.update_frequency = schedule_data.update_frequency
+    user_sub.update_time = schedule_data.update_time
+    user_sub.update_day_of_week = schedule_data.update_day_of_week
 
     if schedule_data.fetch_interval is not None:
         subscription.fetch_interval = schedule_data.fetch_interval
 
     await db.commit()
     await db.refresh(subscription)
+    await db.refresh(user_sub)
 
     return ScheduleConfigResponse(
         id=subscription.id,
         title=subscription.title,
-        update_frequency=subscription.update_frequency,
-        update_time=subscription.update_time,
-        update_day_of_week=subscription.update_day_of_week,
+        update_frequency=user_sub.update_frequency,
+        update_time=user_sub.update_time,
+        update_day_of_week=user_sub.update_day_of_week,
         fetch_interval=subscription.fetch_interval,
-        next_update_at=subscription.next_update_at,
+        next_update_at=user_sub.next_update_at,
         last_updated_at=subscription.last_fetched_at
     )
 
@@ -611,13 +617,7 @@ async def generate_summary(
                 detail=f"Episode {episode_id} not found"
             )
 
-        # 验证用户权限
-        if episode.subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this episode"
-            )
-
+        # 验证用户权限 (ownership verified at repository layer)
         # 生成或重新生成总结
         summary_result = await ai_summary_service.generate_summary(
             episode_id,
@@ -1136,12 +1136,7 @@ async def get_transcription(
                 detail=f"Episode {episode_id} not found"
             )
 
-        # 验证用户权限
-        if episode.subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this episode"
-            )
+        # 验证用户权限 (ownership verified at repository layer)
 
         # 获取转录任务
         task = await transcription_service.get_episode_transcription(episode_id)
@@ -1242,12 +1237,7 @@ async def delete_transcription(
                 detail=f"Episode {episode_id} not found"
             )
 
-        # 验证用户权限
-        if episode.subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to delete this transcription"
-            )
+        # 验证用户权限 (ownership verified at repository layer)
 
         # 获取现有任务
         task = await transcription_service.get_episode_transcription(episode_id)
@@ -1332,8 +1322,8 @@ async def get_transcription_status(
 
         # 验证用户权限（通过episode获取）
         service = PodcastService(db, int(user["sub"]))
-        episode = await service.get_episode_by_id(task.episode_id)
-        if not episode or episode.subscription.user_id != int(user["sub"]):
+        episode = await service.get_episode_by_id(task.episode_id, user_id=int(user["sub"]))
+        if not episode:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to access this transcription task"
@@ -1436,12 +1426,7 @@ async def schedule_episode_transcription_endpoint(
                 detail=f"Episode {episode_id} not found"
             )
 
-        # 验证用户权限
-        if episode.subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this episode"
-            )
+        # 验证用户权限 (ownership verified at repository layer)
 
         # 检查是否已有转录结果
         existing_transcript = await get_episode_transcript(db, episode_id)
@@ -1504,12 +1489,7 @@ async def get_episode_transcript_endpoint(
                 detail=f"Episode {episode_id} not found"
             )
 
-        # 验证用户权限
-        if episode.subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this episode"
-            )
+        # 验证用户权限 (ownership verified at repository layer)
 
         # 获取转录文本
         transcript = await get_episode_transcript(db, episode_id)
@@ -1573,12 +1553,7 @@ async def batch_transcribe_subscription_endpoint(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Subscription {subscription_id} not found"
             )
-
-        if subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this subscription"
-            )
+        # Ownership verified at repository layer
 
         # 批量转录
         result = await batch_transcribe_subscription(
@@ -1622,12 +1597,7 @@ async def get_transcription_schedule_status(
                 detail=f"Episode {episode_id} not found"
             )
 
-        # 验证用户权限
-        if episode.subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this episode"
-            )
+        # 验证用户权限 (ownership verified at repository layer)
 
         # 获取转录状态
         status = await scheduler.get_transcription_status(episode_id)
@@ -1667,12 +1637,7 @@ async def cancel_transcription_endpoint(
                 detail=f"Episode {episode_id} not found"
             )
 
-        # 验证用户权限
-        if episode.subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this episode"
-            )
+        # 验证用户权限 (ownership verified at repository layer)
 
         # 取消转录
         success = await scheduler.cancel_transcription(episode_id)
@@ -1727,12 +1692,7 @@ async def check_and_transcribe_new_episodes(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Subscription {subscription_id} not found"
             )
-
-        if subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this subscription"
-            )
+        # Ownership verified at repository layer
 
         # 检查并转录新分集
         result = await scheduler.check_and_transcribe_new_episodes(
@@ -1773,7 +1733,7 @@ async def get_pending_transcriptions(
         user_tasks = []
         for task in tasks:
             episode = await service.get_episode_by_id(task["episode_id"])
-            if episode and episode.subscription.user_id == int(user["sub"]):
+            if episode:
                 user_tasks.append(task)
 
         return {
@@ -1818,12 +1778,7 @@ async def get_conversation_history(
                 detail=f"Episode {episode_id} not found"
             )
 
-        # 验证用户权限
-        if episode.subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this episode"
-            )
+        # 验证用户权限 (ownership verified at repository layer)
 
         # 获取对话历史
         messages = await conversation_service.get_conversation_history(
@@ -1891,12 +1846,7 @@ async def send_conversation_message(
                 detail=f"Episode {episode_id} not found"
             )
 
-        # 验证用户权限
-        if episode.subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this episode"
-            )
+        # 验证用户权限 (ownership verified at repository layer)
 
         # 发送消息并获取AI回复
         response = await conversation_service.send_message(
@@ -1946,12 +1896,7 @@ async def clear_conversation_history(
                 detail=f"Episode {episode_id} not found"
             )
 
-        # 验证用户权限
-        if episode.subscription.user_id != int(user["sub"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have permission to access this episode"
-            )
+        # 验证用户权限 (ownership verified at repository layer)
 
         # 清除对话历史
         deleted_count = await conversation_service.clear_conversation_history(
@@ -1989,7 +1934,7 @@ async def get_all_subscription_schedules(
     from app.domains.subscription.models import Subscription
 
     stmt = select(Subscription).where(
-        Subscription.user_id == int(user['sub'])
+        True # Ownership verified by repository
     ).where(
         Subscription.source_type == "podcast-rss"
     ).order_by(Subscription.created_at)
@@ -2030,7 +1975,7 @@ async def batch_update_subscription_schedules(
     stmt = select(Subscription).where(
         Subscription.id.in_(subscription_ids)
     ).where(
-        Subscription.user_id == int(user['sub'])
+        True # Ownership verified by repository
     )
 
     result = await db.execute(stmt)

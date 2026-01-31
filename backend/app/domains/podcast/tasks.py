@@ -450,18 +450,24 @@ def generate_pending_summaries(self):
 
                     for episode in pending_episodes:
                         try:
-                            # 获取订阅信息以获取user_id
-                            from app.domains.subscription.models import Subscription
-                            stmt = select(Subscription).where(Subscription.id == episode.subscription_id)
-                            result = await db.execute(stmt)
-                            subscription = result.scalar_one_or_none()
+                            # Get a user_id from UserSubscription for this subscription
+                            # (Summaries are shared across users, any subscriber will do)
+                            from app.domains.subscription.models import UserSubscription
+                            from sqlalchemy import select
 
-                            if not subscription:
-                                logger.error(f"找不到订阅 {episode.subscription_id}")
+                            user_sub_stmt = select(UserSubscription).where(
+                                UserSubscription.subscription_id == episode.subscription_id,
+                                UserSubscription.is_archived == False
+                            ).limit(1)
+                            user_sub_result = await db.execute(user_sub_stmt)
+                            user_sub = user_sub_result.scalar_one_or_none()
+
+                            if not user_sub:
+                                logger.warning(f"No active users for subscription {episode.subscription_id}, skipping episode {episode.id}")
                                 continue
 
                             # 创建服务实例
-                            service = PodcastService(db, subscription.user_id)
+                            service = PodcastService(db, user_sub.user_id)
 
                             # 生成摘要
                             summary = await service._generate_summary(episode)

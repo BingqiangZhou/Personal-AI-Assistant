@@ -1163,6 +1163,262 @@ async def delete_apikey(
         )
 
 
+@router.get("/api/apikeys/export/json")
+async def export_apikeys_json(
+    request: Request,
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Export all API keys to JSON format.
+
+    API keys remain encrypted in the export for security.
+    """
+    try:
+        from fastapi.responses import Response
+        import json
+        from datetime import datetime
+
+        # Get all API keys
+        result = await db.execute(
+            select(AIModelConfig).order_by(AIModelConfig.priority.asc(), AIModelConfig.created_at.desc())
+        )
+        apikeys = result.scalars().all()
+
+        # Build export data
+        export_data = {
+            "version": "1.0",
+            "exported_at": datetime.utcnow().isoformat(),
+            "exported_by": user.username,
+            "total_count": len(apikeys),
+            "apikeys": []
+        }
+
+        for key in apikeys:
+            # API key is already encrypted in the database
+            key_data = {
+                "name": key.name,
+                "display_name": key.display_name,
+                "provider": key.provider,
+                "model_type": key.model_type,
+                "api_url": key.api_url,
+                "api_key_encrypted": key.api_key,  # Already encrypted
+                "api_key_encrypted_flag": key.api_key_encrypted,
+                "priority": key.priority,
+                "description": key.description,
+                "is_active": key.is_active,
+                "created_at": key.created_at.isoformat() if key.created_at else None,
+            }
+            export_data["apikeys"].append(key_data)
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="export_json",
+            resource_type="apikey",
+            details={"count": len(apikeys)},
+            request=request,
+        )
+
+        logger.info(f"Exported {len(apikeys)} API keys to JSON by user {user.username}")
+
+        return Response(
+            content=json.dumps(export_data, indent=2, ensure_ascii=False),
+            media_type="application/json",
+            headers={
+                "Content-Disposition": f"attachment; filename=apikeys_export_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+            }
+        )
+    except Exception as e:
+        logger.error(f"JSON export error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to export JSON: {str(e)}",
+        )
+
+
+@router.post("/api/apikeys/import/json")
+async def import_apikeys_json(
+    request: Request,
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+    file: bytes = Body(...),
+    mode: str = Body(default="skip"),  # skip, update, replace
+    test_before_import: bool = Body(default=False),
+):
+    """Import API keys from JSON format.
+
+    Args:
+        file: JSON file content as bytes
+        mode: Import mode - 'skip' (skip if exists), 'update' (update if exists), 'replace' (replace all)
+        test_before_import: Whether to test API keys before importing (requires decryption)
+
+    Returns:
+        JSON response with import statistics
+    """
+    try:
+        import json
+        from datetime import datetime
+
+        # Parse JSON
+        try:
+            import_data = json.loads(file)
+        except json.JSONDecodeError as e:
+            return JSONResponse(
+                content={"success": False, "message": f"Invalid JSON format: {str(e)}"},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate JSON structure
+        if "apikeys" not in import_data:
+            return JSONResponse(
+                content={"success": False, "message": "Invalid format: missing 'apikeys' field"},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        apikeys_list = import_data["apikeys"]
+        if not isinstance(apikeys_list, list):
+            return JSONResponse(
+                content={"success": False, "message": "Invalid format: 'apikeys' must be a list"},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Import statistics
+        success_count = 0
+        updated_count = 0
+        skipped_count = 0
+        error_count = 0
+        errors = []
+
+        # Get existing API keys for comparison
+        existing_result = await db.execute(select(AIModelConfig))
+        existing_keys = {k.name: k for k in existing_result.scalars().all()}
+
+        for idx, key_data in enumerate(apikeys_list):
+            try:
+                # Validate required fields
+                required_fields = ["name", "display_name", "model_type", "api_url"]
+                missing_fields = [f for f in required_fields if not key_data.get(f)]
+                if missing_fields:
+                    error_msg = f"Row {idx + 1}: Missing required fields: {', '.join(missing_fields)}"
+                    errors.append(error_msg)
+                    error_count += 1
+                    continue
+
+                # Validate model_type
+                model_type = key_data.get("model_type")
+                if model_type not in ["transcription", "text_generation"]:
+                    error_msg = f"Row {idx + 1}: Invalid model_type '{model_type}'"
+                    errors.append(error_msg)
+                    error_count += 1
+                    continue
+
+                name = key_data["name"]
+
+                # Check if key already exists
+                existing_key = existing_keys.get(name)
+
+                if existing_key:
+                    if mode == "skip":
+                        skipped_count += 1
+                        continue
+                    elif mode == "update" or mode == "replace":
+                        # Update existing key
+                        if "display_name" in key_data:
+                            existing_key.display_name = key_data["display_name"]
+                        if "provider" in key_data:
+                            existing_key.provider = key_data["provider"]
+                        if "model_type" in key_data:
+                            existing_key.model_type = key_data["model_type"]
+                        if "api_url" in key_data:
+                            existing_key.api_url = key_data["api_url"]
+                        if "priority" in key_data:
+                            existing_key.priority = key_data["priority"]
+                        if "description" in key_data:
+                            existing_key.description = key_data["description"]
+                        if "is_active" in key_data:
+                            existing_key.is_active = key_data["is_active"]
+                        # Update API key if provided and encrypted
+                        if "api_key_encrypted" in key_data and key_data["api_key_encrypted"]:
+                            existing_key.api_key = key_data["api_key_encrypted"]
+                            existing_key.api_key_encrypted = key_data.get("api_key_encrypted_flag", True)
+
+                        updated_count += 1
+                    else:
+                        skipped_count += 1
+                        continue
+                else:
+                    # Create new API key
+                    new_key = AIModelConfig(
+                        name=key_data["name"],
+                        display_name=key_data["display_name"],
+                        provider=key_data.get("provider", "custom"),
+                        model_type=key_data["model_type"],
+                        api_url=key_data["api_url"],
+                        api_key=key_data.get("api_key_encrypted", ""),
+                        api_key_encrypted=key_data.get("api_key_encrypted_flag", True),
+                        model_id=key_data["name"],
+                        priority=key_data.get("priority", 1),
+                        description=key_data.get("description"),
+                        is_active=key_data.get("is_active", True),
+                    )
+                    db.add(new_key)
+                    success_count += 1
+
+            except Exception as e:
+                error_msg = f"Row {idx + 1}: {str(e)}"
+                errors.append(error_msg)
+                error_count += 1
+
+        # Commit all changes
+        await db.commit()
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="import_json",
+            resource_type="apikey",
+            details={
+                "mode": mode,
+                "success_count": success_count,
+                "updated_count": updated_count,
+                "skipped_count": skipped_count,
+                "error_count": error_count,
+            },
+            request=request,
+        )
+
+        logger.info(
+            f"Imported API keys JSON for user {user.username}: "
+            f"{success_count} added, {updated_count} updated, {skipped_count} skipped, {error_count} failed"
+        )
+
+        return JSONResponse(content={
+            "success": True,
+            "message": (
+                f"Import completed: {success_count} added, {updated_count} updated, "
+                f"{skipped_count} skipped, {error_count} failed"
+            ),
+            "stats": {
+                "success_count": success_count,
+                "updated_count": updated_count,
+                "skipped_count": skipped_count,
+                "error_count": error_count,
+                "errors": errors[:10],  # Return first 10 errors
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"JSON import error: {e}")
+        return JSONResponse(
+            content={"success": False, "message": f"Import failed: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
 # ==================== RSS Subscription Management ====================
 
 
@@ -1175,11 +1431,18 @@ async def subscriptions_page(
     per_page: int = 10,
     status_filter: Optional[str] = None,
     search_query: Optional[str] = None,
+    user_filter: Optional[str] = None,
 ):
     """Display RSS subscriptions management page with pagination and status filter."""
+    from app.domains.subscription.models import UserSubscription
+
     try:
-        # Build base query
-        query = select(Subscription)
+        # Build base query - now always with user_subscriptions join
+        query = (
+            select(Subscription, func.count(UserSubscription.id).label('subscriber_count'))
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .group_by(Subscription.id)
+        )
 
         # Apply status filter if specified
         if status_filter and status_filter in ['active', 'inactive', 'error', 'pending']:
@@ -1191,11 +1454,44 @@ async def subscriptions_page(
                 'pending': SubscriptionStatus.PENDING,
             }
             query = query.where(Subscription.status == status_map[status_filter])
-        
+
         # Apply title search if specified
         if search_query and search_query.strip():
             search_term = f"%{search_query.strip()}%"
             query = query.where(Subscription.title.ilike(search_term))
+
+        # Apply user filter if specified
+        if user_filter and user_filter.strip():
+            # Filter by user's subscriptions
+            user_term = f"%{user_filter.strip()}%"
+            # Get user IDs matching the search
+            user_query = select(User.id).where(User.username.ilike(user_term))
+            user_result = await db.execute(user_query)
+            user_ids = [row[0] for row in user_result.fetchall()]
+
+            if user_ids:
+                query = query.where(UserSubscription.user_id.in_(user_ids))
+            else:
+                # No matching users, return empty results
+                return templates.TemplateResponse(
+                    "subscriptions.html",
+                    {
+                        "request": request,
+                        "user": user,
+                        "subscriptions": [],
+                        "page": page,
+                        "per_page": per_page,
+                        "total_count": 0,
+                        "total_pages": 0,
+                        "default_frequency": UpdateFrequency.HOURLY.value,
+                        "default_update_time": "00:00",
+                        "default_day_of_week": 1,
+                        "status_filter": status_filter or "",
+                        "search_query": search_query or "",
+                        "user_filter": user_filter or "",
+                        "messages": [],
+                    },
+                )
 
         # Get total count (with filter applied)
         count_query = select(func.count()).select_from(query.subquery())
@@ -1212,7 +1508,7 @@ async def subscriptions_page(
             .limit(per_page)
             .offset(offset)
         )
-        subscriptions = result.scalars().all()
+        subscriptions = result.all()  # Using all() since we have grouped columns
 
         # Get default frequency settings from the first subscription (if any)
         # This is a simple approach - could be stored in a settings table instead
@@ -1220,18 +1516,23 @@ async def subscriptions_page(
         default_update_time = "00:00"
         default_day_of_week = 1
 
+        # Get default frequency settings from UserSubscription (moved from Subscription)
+        default_frequency = UpdateFrequency.HOURLY.value
+        default_update_time = "00:00"
+        default_day_of_week = 1
+
         if total_count > 0:
-            # Get most common frequency settings from existing subscriptions
+            # Get most common frequency settings from UserSubscription
             freq_result = await db.execute(
-                select(Subscription.update_frequency, Subscription.update_time, Subscription.update_day_of_week)
-                .where(Subscription.source_type == "rss")
-                .group_by(Subscription.update_frequency, Subscription.update_time, Subscription.update_day_of_week)
+                select(UserSubscription.update_frequency, UserSubscription.update_time, UserSubscription.update_day_of_week)
+                .where(UserSubscription.update_frequency.isnot(None))
+                .group_by(UserSubscription.update_frequency, UserSubscription.update_time, UserSubscription.update_day_of_week)
                 .order_by(func.count().desc())
                 .limit(1)
             )
             row = freq_result.first()
             if row:
-                default_frequency = row[0]
+                default_frequency = row[0] or UpdateFrequency.HOURLY.value
                 default_update_time = row[1] or "00:00"
                 default_day_of_week = row[2] or 1
 
@@ -1250,6 +1551,7 @@ async def subscriptions_page(
                 "default_day_of_week": default_day_of_week,
                 "status_filter": status_filter or "",
                 "search_query": search_query or "",
+                "user_filter": user_filter or "",
                 "messages": [],
             },
         )
@@ -1871,6 +2173,9 @@ async def batch_refresh_subscriptions(
         if not ids:
             raise HTTPException(status_code=400, detail="No subscription IDs provided")
 
+        # Convert all IDs to integers to ensure type matching
+        ids = [int(id_) for id_ in ids]
+
         # Update last_fetched_at for all selected subscriptions
         from datetime import datetime
         result = await db.execute(
@@ -1920,6 +2225,9 @@ async def batch_toggle_subscriptions(
         if not ids:
             raise HTTPException(status_code=400, detail="No subscription IDs provided")
 
+        # Convert all IDs to integers to ensure type matching
+        ids = [int(id_) for id_ in ids]
+
         # Toggle is_active for all selected subscriptions
         result = await db.execute(
             select(Subscription).where(Subscription.id.in_(ids))
@@ -1967,6 +2275,9 @@ async def batch_delete_subscriptions(
 
         if not ids:
             raise HTTPException(status_code=400, detail="No subscription IDs provided")
+
+        # Convert all IDs to integers to ensure type matching
+        ids = [int(id_) for id_ in ids]
 
         # Delete all selected subscriptions
         result = await db.execute(
@@ -2050,6 +2361,242 @@ async def export_subscriptions_opml(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export OPML: {str(e)}",
+        )
+
+
+@router.post("/api/subscriptions/import/opml")
+async def import_subscriptions_opml(
+    request: Request,
+    opml_content: str = Body(..., embed=True, description="OPML file content"),
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """
+    Import RSS subscriptions from OPML format using ElementTree.
+
+    从OPML格式导入RSS订阅，使用ElementTree解析。
+    """
+    import html
+    import re
+    from urllib.parse import urlparse
+    import xml.etree.ElementTree as ET
+
+    from app.domains.subscription.services import SubscriptionService
+    from app.shared.schemas import SubscriptionCreate
+
+    # Constants
+    MAX_TITLE_LENGTH = 255
+    MAX_DESCRIPTION_LENGTH = 2000
+
+    def parse_outline_element(outline: ET.Element) -> Optional[SubscriptionCreate]:
+        """Parse a single outline element into SubscriptionCreate."""
+        xml_url = outline.get('xmlUrl', '').strip()
+        if not xml_url:
+            return None
+
+        # Get title - try title first, then text attribute
+        title = outline.get('title') or outline.get('text') or ''
+        description = outline.get('description') or ''
+
+        # Decode HTML entities
+        if title:
+            title = html.unescape(title)
+        if description:
+            description = html.unescape(description)
+
+        # Generate title from URL if empty
+        if not title:
+            try:
+                parsed = urlparse(xml_url)
+                title = parsed.netloc or xml_url
+            except Exception:
+                title = xml_url
+
+        # Validate URL
+        if not xml_url.startswith(('http://', 'https://', 'feed://')):
+            logger.warning(f"Skipping invalid URL: {xml_url}")
+            return None
+
+        # Truncate to DB limits
+        title = title.strip()[:MAX_TITLE_LENGTH]
+        description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ''
+
+        return SubscriptionCreate(
+            source_url=xml_url,
+            title=title,
+            source_type="rss",
+            description=description,
+        )
+
+    def parse_opml_with_etree(content: str) -> list[SubscriptionCreate]:
+        """Parse OPML using ElementTree (primary method)."""
+        subscriptions = []
+
+        try:
+            root = ET.fromstring(content)
+
+            # Handle potential namespaces - try common OPML namespaces
+            namespaces = {
+                'opml': 'http://opml.org/spec2',
+                '': '',  # Default namespace
+            }
+
+            # Try to find body element with and without namespace
+            body = root.find('.//opml:body', namespaces) or root.find('.//body')
+
+            if body is None:
+                logger.warning("No body element found in OPML")
+                return []
+
+            # Process all outline elements recursively
+            for outline in body.iter():
+                tag_name = outline.tag
+                # Remove namespace if present
+                if '}' in tag_name:
+                    tag_name = tag_name.split('}')[1]
+
+                if tag_name == 'outline':
+                    sub_data = parse_outline_element(outline)
+                    if sub_data:
+                        subscriptions.append(sub_data)
+
+        except ET.ParseError as e:
+            logger.warning(f"ElementTree parsing failed: {e}")
+            raise
+
+        return subscriptions
+
+    def parse_opml_with_regex(content: str) -> list[SubscriptionCreate]:
+        """Fallback regex-based OPML parser for malformed XML."""
+        subscriptions = []
+
+        def extract_attr(tag: str, attr_name: str) -> str:
+            """Extract attribute value from XML tag using regex."""
+            # Handle both single and double quotes
+            pattern = rf'{attr_name}\s*=\s*(["\'])([^\1]*?)\1(?=\s|/?>)'
+            match = re.search(pattern, tag, re.IGNORECASE)
+            return match.group(2) if match else ''
+
+        # Match outline elements with xmlUrl
+        outline_pattern = re.compile(
+            r'<outline\s+[^>]*?xmlUrl\s*=\s*["\'][^"\']+["\'][^>]*?/?>',
+            re.IGNORECASE
+        )
+
+        for match in outline_pattern.finditer(content):
+            tag = match.group(0)
+            xml_url = extract_attr(tag, "xmlUrl").strip()
+
+            if not xml_url:
+                continue
+
+            # Validate URL
+            if not xml_url.startswith(('http://', 'https://', 'feed://')):
+                continue
+
+            # Extract attributes
+            title = extract_attr(tag, "title") or extract_attr(tag, "text")
+            description = extract_attr(tag, "description")
+
+            # Decode HTML entities
+            if title:
+                title = html.unescape(title)
+            if description:
+                description = html.unescape(description)
+
+            # Generate title from URL if empty
+            if not title:
+                try:
+                    parsed = urlparse(xml_url)
+                    title = parsed.netloc or xml_url
+                except Exception:
+                    title = xml_url
+
+            # Truncate to DB limits
+            title = title.strip()[:MAX_TITLE_LENGTH]
+            description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ''
+
+            subscriptions.append(
+                SubscriptionCreate(
+                    source_url=xml_url,
+                    title=title,
+                    source_type="rss",
+                    description=description,
+                )
+            )
+
+        return subscriptions
+
+    try:
+        subscriptions_data = []
+
+        # Try ElementTree first (recommended)
+        try:
+            subscriptions_data = parse_opml_with_etree(opml_content)
+            logger.info(f"Parsed {len(subscriptions_data)} subscriptions using ElementTree")
+        except ET.ParseError:
+            # Fallback to regex for malformed XML
+            logger.info("ElementTree failed, using regex fallback")
+            subscriptions_data = parse_opml_with_regex(opml_content)
+            logger.info(f"Parsed {len(subscriptions_data)} subscriptions using regex fallback")
+
+        if not subscriptions_data:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"success": False, "message": "No valid RSS subscriptions found in OPML file"},
+            )
+
+        # Import subscriptions using batch create
+        service = SubscriptionService(db, user_id=user.id)
+        results = await service.create_subscriptions_batch(subscriptions_data)
+
+        # Count results
+        success_count = sum(1 for r in results if r["status"] == "success")
+        updated_count = sum(1 for r in results if r["status"] == "updated")
+        skipped_count = sum(1 for r in results if r["status"] == "skipped")
+        error_count = sum(1 for r in results if r["status"] == "error")
+
+        # Log the import action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="import_opml",
+            resource_type="subscription",
+            details={
+                "total": len(subscriptions_data),
+                "success": success_count,
+                "updated": updated_count,
+                "skipped": skipped_count,
+                "errors": error_count,
+            },
+            request=request,
+        )
+
+        logger.info(
+            f"Imported OPML for user {user.username}: "
+            f"{success_count} added, {updated_count} updated, {skipped_count} skipped, {error_count} failed"
+        )
+
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": f"Import completed: {success_count} added, {updated_count} updated, {skipped_count} skipped, {error_count} failed",
+                "results": {
+                    "total": len(subscriptions_data),
+                    "success": success_count,
+                    "updated": updated_count,
+                    "skipped": skipped_count,
+                    "errors": error_count,
+                },
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"OPML import error: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"success": False, "message": f"Import failed: {str(e)}"},
         )
 
 

@@ -86,6 +86,69 @@ class ProcessingJob(Base):
     # Relationships
     user = relationship("User", back_populates="processing_jobs")
     media_file = relationship("MediaFile", back_populates="processing_jobs")
+    transcription_result = relationship("TranscriptionResult", back_populates="processing_job", uselist=False)
+    image_analysis = relationship("ImageAnalysis", back_populates="processing_job", uselist=False)
+    video_analysis = relationship("VideoAnalysis", back_populates="processing_job", uselist=False)
 
     # Indexes are created automatically by SQLAlchemy
+
+
+class TranscriptionResult(Base):
+    """Transcription result model."""
+
+    __tablename__ = "transcription_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    processing_job_id = Column(Integer, ForeignKey("processing_jobs.id"), nullable=False)
+    text = Column(Text, nullable=False)
+    confidence = Column(Float, nullable=True)
+    language = Column(String(10), nullable=True)
+    segments = Column(JSON, nullable=True, default=[])
+    summary = Column(Text, nullable=True)
+    keywords = Column(JSON, nullable=True, default=[])
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    processing_job = relationship("ProcessingJob", back_populates="transcription_result")
+
+
+class ImageAnalysis(Base):
+    """Image analysis result model."""
+
+    __tablename__ = "image_analyses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    processing_job_id = Column(Integer, ForeignKey("processing_jobs.id"), nullable=False)
+    description = Column(Text, nullable=True)
+    objects = Column(JSON, nullable=True, default=[])
+    faces = Column(JSON, nullable=True, default=[])
+    text_detected = Column(JSON, nullable=True, default=[])
+    emotions = Column(JSON, nullable=True, default=[])
+    tags = Column(JSON, nullable=True, default=[])
+    confidence = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    processing_job = relationship("ProcessingJob", back_populates="image_analysis")
+
+
+class VideoAnalysis(Base):
+    """Video analysis result model."""
+
+    __tablename__ = "video_analyses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    processing_job_id = Column(Integer, ForeignKey("processing_jobs.id"), nullable=False)
+    duration = Column(Float, nullable=False)
+    thumbnail_path = Column(String(500), nullable=True)
+    key_frames = Column(JSON, nullable=True, default=[])
+    scenes = Column(JSON, nullable=True, default=[])
+    objects = Column(JSON, nullable=True, default=[])
+    text_detected = Column(JSON, nullable=True, default=[])
+    summary = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    processing_job = relationship("ProcessingJob", back_populates="video_analysis")
 

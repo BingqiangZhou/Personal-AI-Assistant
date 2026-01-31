@@ -45,12 +45,15 @@ class UpdateFrequency(str, enum.Enum):
 
 
 class Subscription(Base):
-    """Subscription model for managing information sources."""
+    """Subscription model for managing information sources.
+
+    Represents a subscription source (e.g., RSS feed) that can be
+    subscribed to by multiple users via the UserSubscription mapping table.
+    """
 
     __tablename__ = "subscriptions"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     source_type = Column(String(50), nullable=False)
@@ -66,9 +69,41 @@ class Subscription(Base):
     error_message = Column(Text, nullable=True)
     fetch_interval = Column(Integer, default=3600)
 
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user_subscriptions = relationship("UserSubscription", back_populates="subscription", cascade="all, delete-orphan")
+    items = relationship("SubscriptionItem", back_populates="subscription", cascade="all, delete-orphan")
+    categories = relationship(
+        "SubscriptionCategory",
+        secondary="subscription_category_mappings",
+        back_populates="subscriptions"
+    )
+
+    __table_args__ = (
+        Index('idx_source_type', 'source_type'),
+        Index('idx_source_url', 'source_url'),
+    )
+
+
+class UserSubscription(Base):
+    """Many-to-many mapping between users and subscriptions.
+
+    Allows multiple users to subscribe to the same subscription source
+    while maintaining user-specific settings like update frequency,
+    archive status, and pinned status.
+    """
+
+    __tablename__ = "user_subscriptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    subscription_id = Column(Integer, ForeignKey("subscriptions.id", ondelete="CASCADE"), nullable=False)
+
+    # User-specific settings
     update_frequency = Column(
         String(10),
-        nullable=False,
+        nullable=True,
         default=UpdateFrequency.HOURLY.value,
         comment="Update frequency type: HOURLY, DAILY, WEEKLY"
     )
@@ -83,21 +118,19 @@ class Subscription(Base):
         comment="Day of week for WEEKLY frequency (1=Monday, 7=Sunday)"
     )
 
+    # User-specific state
+    is_archived = Column(Boolean, default=False, comment="User has archived this subscription")
+    is_pinned = Column(Boolean, default=False, comment="User has pinned this subscription")
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    user = relationship("User", back_populates="subscriptions")
-    items = relationship("SubscriptionItem", back_populates="subscription", cascade="all, delete-orphan")
-    categories = relationship(
-        "SubscriptionCategory",
-        secondary="subscription_category_mappings",
-        back_populates="subscriptions"
-    )
+    user = relationship("User", back_populates="user_subscriptions")
+    subscription = relationship("Subscription", back_populates="user_subscriptions")
 
     __table_args__ = (
-        Index('idx_user_status', 'user_id', 'status'),
-        Index('idx_source_type', 'source_type'),
-        Index('idx_user_latest_published', 'user_id', 'latest_item_published_at'),
+        Index('idx_user_subscription', 'user_id', 'subscription_id', unique=True),
+        Index('idx_user_archived', 'user_id', 'is_archived'),
     )
 
     def _parse_local_time(self) -> tuple[int, int]:
@@ -131,12 +164,14 @@ class Subscription(Base):
         shanghai_tz = ZoneInfo('Asia/Shanghai')
         base_local = base_time.astimezone(shanghai_tz)
 
-        if self.update_frequency == UpdateFrequency.HOURLY.value:
+        frequency = self.update_frequency or UpdateFrequency.HOURLY.value
+
+        if frequency == UpdateFrequency.HOURLY.value:
             # Next top of the hour in local time, then convert to UTC
             next_local = (base_local + timedelta(hours=1)).replace(minute=0, second=0, microsecond=0)
             return next_local.astimezone(timezone.utc)
 
-        elif self.update_frequency == UpdateFrequency.DAILY.value:
+        elif frequency == UpdateFrequency.DAILY.value:
             # Get local hour/minute from stored time
             local_hour, local_minute = self._parse_local_time()
 
@@ -150,7 +185,7 @@ class Subscription(Base):
             # Convert back to UTC
             return scheduled_local.astimezone(timezone.utc)
 
-        elif self.update_frequency == UpdateFrequency.WEEKLY.value:
+        elif frequency == UpdateFrequency.WEEKLY.value:
             # Get local hour/minute from stored time
             local_hour, local_minute = self._parse_local_time()
 
@@ -182,12 +217,13 @@ class Subscription(Base):
     def should_update_now(self) -> bool:
         """
         Check if we should update now based on time passed since last fetch.
+        Uses the subscription's last_fetched_at but user's update frequency.
         """
-        if not self.last_fetched_at:
+        if not self.subscription.last_fetched_at:
             return True
 
         # Convert naive datetime to aware datetime (assume UTC)
-        last_fetched_aware = self.last_fetched_at.replace(tzinfo=timezone.utc)
+        last_fetched_aware = self.subscription.last_fetched_at.replace(tzinfo=timezone.utc)
 
         # Calculate the Earliest next scheduled time AFTER the last fetch
         next_possible = self._get_next_scheduled_time(last_fetched_aware)
@@ -229,12 +265,16 @@ class SubscriptionItem(Base):
 
 
 class SubscriptionCategory(Base):
-    """Categories for organizing subscriptions."""
+    """Categories for organizing subscriptions.
+
+    user_id is nullable to allow shared/system categories.
+    If user_id is NULL, the category can be used by any user.
+    """
 
     __tablename__ = "subscription_categories"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
     color = Column(String(7), nullable=True)
@@ -246,6 +286,10 @@ class SubscriptionCategory(Base):
         "Subscription",
         secondary="subscription_category_mappings",
         back_populates="categories"
+    )
+
+    __table_args__ = (
+        Index('idx_user_category', 'user_id', 'name'),
     )
 
 

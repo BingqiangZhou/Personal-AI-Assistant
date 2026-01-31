@@ -4,6 +4,7 @@ import logging
 from datetime import datetime
 from typing import Any, Optional
 from urllib.parse import urlparse
+from xml.etree.ElementTree import Element, SubElement, tostring
 from xml.sax.saxutils import escape
 
 from sqlalchemy import select
@@ -15,6 +16,7 @@ from app.core.feed_schemas import FeedParseResult, ParseErrorCode
 from app.domains.subscription.models import (
     Subscription,
     SubscriptionStatus,
+    UserSubscription,
 )
 from app.domains.subscription.repositories import SubscriptionRepository
 from app.shared.schemas import (
@@ -61,7 +63,6 @@ class SubscriptionService:
             response_items.append(
                 SubscriptionResponse(
                     id=sub.id,
-                    user_id=sub.user_id,
                     title=sub.title,
                     description=sub.description,
                     source_type=sub.source_type,
@@ -93,49 +94,73 @@ class SubscriptionService:
 
         创建新订阅，带有增强的重复检测。
 
-        Duplicate detection logic:
-        1. Check by URL (exact match)
-        2. Check by title (case-insensitive)
-
-        If duplicate found:
-        - If existing status is ACTIVE: skip creation
-        - If existing status is ERROR/INACTIVE/PENDING: update URL and reactivate
+        With many-to-many relationship:
+        1. Check if subscription exists globally by URL
+        2. If exists and user already subscribed: raise error
+        3. If exists but user not subscribed: create UserSubscription mapping
+        4. If not exists: create Subscription + UserSubscription
         """
-        # Check for duplicate by URL or title
-        existing = await self.repo.get_duplicate_subscription(
-            self.user_id, sub_data.source_url, sub_data.title
+        # Check for existing subscription by URL (global lookup)
+        existing = await self.repo.get_subscription_by_url(
+            self.user_id, sub_data.source_url
         )
 
         if existing:
-            # Check if existing subscription is active
-            if existing.status == SubscriptionStatus.ACTIVE:
-                # Active subscription - skip creation
-                raise ValueError(
-                    f"Subscription already exists: {existing.title} "
-                    f"(status: {existing.status})"
+            # Check if user is already subscribed to this subscription
+            existing_user_sub = await self.db.execute(
+                select(UserSubscription).where(
+                    UserSubscription.user_id == self.user_id,
+                    UserSubscription.subscription_id == existing.id
                 )
-
-            # Non-active subscription - update URL and reactivate
-            logger.info(
-                f"Updating non-active subscription: {existing.title} "
-                f"(old_url: {existing.source_url}, new_url: {sub_data.source_url}, "
-                f"status: {existing.status} -> ACTIVE)"
             )
+            user_sub = existing_user_sub.scalar_one_or_none()
 
-            # Update the existing subscription
-            existing.source_url = sub_data.source_url
-            existing.title = sub_data.title  # Also update title in case it changed
-            existing.description = sub_data.description
-            existing.status = SubscriptionStatus.ACTIVE
-            existing.error_message = None  # Clear any previous errors
-            existing.updated_at = datetime.utcnow()
+            if user_sub:
+                # User already subscribed - check status
+                if user_sub.is_archived:
+                    # Unarchive the existing subscription
+                    user_sub.is_archived = False
+                    await self.db.commit()
+                    await self.db.refresh(existing)
+                elif existing.status == SubscriptionStatus.ACTIVE:
+                    # Active and not archived - skip creation
+                    raise ValueError(
+                        f"Already subscribed to: {existing.title}"
+                    )
+            else:
+                # Subscription exists but user not subscribed - create mapping
+                from app.admin.models import SystemSettings
+                from app.domains.subscription.models import UpdateFrequency
 
-            await self.db.commit()
-            await self.db.refresh(existing)
+                # Get global settings
+                update_frequency = UpdateFrequency.HOURLY.value
+                update_time = None
+                update_day_of_week = None
 
+                settings_result = await self.db.execute(
+                    select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
+                )
+                setting = settings_result.scalar_one_or_none()
+                if setting and setting.value:
+                    update_frequency = setting.value.get("update_frequency", UpdateFrequency.HOURLY.value)
+                    update_time = setting.value.get("update_time")
+                    update_day_of_week = setting.value.get("update_day_of_week")
+
+                # Create UserSubscription mapping
+                new_user_sub = UserSubscription(
+                    user_id=self.user_id,
+                    subscription_id=existing.id,
+                    update_frequency=update_frequency,
+                    update_time=update_time,
+                    update_day_of_week=update_day_of_week,
+                )
+                self.db.add(new_user_sub)
+                await self.db.commit()
+                await self.db.refresh(existing)
+
+            # Return the existing subscription
             return SubscriptionResponse(
                 id=existing.id,
-                user_id=existing.user_id,
                 title=existing.title,
                 description=existing.description,
                 source_type=existing.source_type,
@@ -146,16 +171,15 @@ class SubscriptionService:
                 latest_item_published_at=existing.latest_item_published_at,
                 error_message=existing.error_message,
                 fetch_interval=existing.fetch_interval,
-                item_count=0,  # Will be updated if needed
+                item_count=0,
                 created_at=existing.created_at,
                 updated_at=existing.updated_at,
             )
 
-        # No duplicate found - create new subscription
+        # No existing subscription - create new Subscription + UserSubscription
         sub = await self.repo.create_subscription(self.user_id, sub_data)
         return SubscriptionResponse(
             id=sub.id,
-            user_id=sub.user_id,
             title=sub.title,
             description=sub.description,
             source_type=sub.source_type,
@@ -287,7 +311,6 @@ class SubscriptionService:
 
         return SubscriptionResponse(
             id=sub.id,
-            user_id=sub.user_id,
             title=sub.title,
             description=sub.description,
             source_type=sub.source_type,
@@ -652,7 +675,7 @@ class SubscriptionService:
         status_filter: Optional[str] = SubscriptionStatus.ACTIVE,
     ) -> str:
         """
-        Generate OPML 2.0 format XML content for RSS subscriptions.
+        Generate OPML 2.0 format XML content for RSS subscriptions using ElementTree.
 
         生成符合OPML 2.0规范的RSS订阅XML内容。
 
@@ -661,51 +684,41 @@ class SubscriptionService:
             status_filter: Subscription status filter (default: ACTIVE)
 
         Returns:
-            OPML format XML string
-
-        生成OPML 2.0格式的RSS订阅XML内容。
+            OPML format XML string with proper formatting
         """
-        from app.domains.subscription.models import Subscription
+        # Create root OPML element
+        opml = Element("opml", version="2.0")
 
-        # Query all subscriptions (no source_type filter)
-        # 查询所有订阅（不限制source_type）
-        query = (
-            select(Subscription)
-            .options(selectinload(Subscription.categories))
-        )
+        # Create head section
+        head = SubElement(opml, "head")
+        SubElement(head, "title").text = "Stella RSS Subscriptions"
+        SubElement(head, "dateCreated").text = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
+        SubElement(head, "ownerName").text = "Stella Admin"
 
-        # Filter by user_id if specified (for normal users)
-        # 如果指定了user_id则过滤（普通用户）
+        # Query all subscriptions
         if user_id is not None:
-            query = query.where(Subscription.user_id == user_id)
+            # Filter by user's subscriptions
+            query = (
+                select(Subscription)
+                .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+                .options(selectinload(Subscription.categories))
+                .where(UserSubscription.user_id == user_id, UserSubscription.is_archived == False)
+            )
+        else:
+            # Get all subscriptions
+            query = select(Subscription).options(selectinload(Subscription.categories))
 
-        # Apply status filter if specified
         if status_filter:
             query = query.where(Subscription.status == status_filter)
 
-        # Order by title
         query = query.order_by(Subscription.title)
-
         result = await self.db.execute(query)
         subscriptions = result.scalars().all()
 
-        # Start building OPML XML
-        opml_lines = []
-        opml_lines.append('<?xml version="1.0" encoding="UTF-8"?>')
-        opml_lines.append('<opml version="2.0">')
+        SubElement(head, "totalSubscriptions").text = str(len(subscriptions))
 
-        # Head section
-        opml_lines.append('  <head>')
-        opml_lines.append('    <title>Stella RSS Subscriptions</title>')
-        opml_lines.append(
-            f'    <dateCreated>{datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")}</dateCreated>'
-        )
-        opml_lines.append('    <ownerName>Stella Admin</ownerName>')
-        opml_lines.append(f'    <totalSubscriptions>{len(subscriptions)}</totalSubscriptions>')
-        opml_lines.append('  </head>')
-
-        # Body section
-        opml_lines.append('  <body>')
+        # Create body section
+        body = SubElement(opml, "body")
 
         # Group subscriptions by category
         categorized_subs: dict[str, list[Subscription]] = {}
@@ -713,7 +726,6 @@ class SubscriptionService:
 
         for sub in subscriptions:
             if sub.categories:
-                # Use first category name as group
                 category_name = sub.categories[0].name
                 if category_name not in categorized_subs:
                     categorized_subs[category_name] = []
@@ -721,54 +733,45 @@ class SubscriptionService:
             else:
                 uncategorized_subs.append(sub)
 
-        # Add categorized subscriptions
+        # Add categorized subscriptions under category folders
         for category_name in sorted(categorized_subs.keys()):
-            opml_lines.append(f'    <outline text="{escape(category_name)}" title="{escape(category_name)}">')
+            category_outline = SubElement(body, "outline")
+            category_outline.set("text", category_name)
+            category_outline.set("title", category_name)
+
             for sub in categorized_subs[category_name]:
-                opml_lines.append(self._subscription_to_opml_outline(sub, indent="      "))
-            opml_lines.append("    </outline>")
+                self._add_subscription_to_opml(category_outline, sub)
 
-        # Add uncategorized subscriptions
+        # Add uncategorized subscriptions directly to body
         for sub in uncategorized_subs:
-            opml_lines.append(self._subscription_to_opml_outline(sub, indent="    "))
+            self._add_subscription_to_opml(body, sub)
 
-        # Close body and opml tags
-        opml_lines.append("  </body>")
-        opml_lines.append("</opml>")
+        # Convert to string with proper formatting
+        return tostring(opml, encoding="unicode", xml_declaration=True)
 
-        return "\n".join(opml_lines)
-
-    def _subscription_to_opml_outline(self, subscription: Subscription, indent: str = "    ") -> str:
+    def _add_subscription_to_opml(self, parent: Element, subscription: Subscription) -> None:
         """
-        Convert a Subscription to OPML outline element.
+        Add a subscription as an outline element to the given parent.
 
-        将订阅转换为OPML outline元素。
+        将订阅作为 outline 元素添加到给定的父元素。
 
         Args:
+            parent: Parent Element to add the outline to
             subscription: Subscription model instance
-            indent: Indentation string
-
-        Returns:
-            OPML outline XML string
         """
-        # Build outline attributes
-        attrs = [
-            f'text="{escape(subscription.title or "Untitled")}"',
-            f'title="{escape(subscription.title or "Untitled")}"',
-            f'xmlUrl="{escape(subscription.source_url)}"',
-        ]
+        outline = SubElement(parent, "outline")
+        outline.set("text", subscription.title or "Untitled")
+        outline.set("title", subscription.title or "Untitled")
+        outline.set("xmlUrl", subscription.source_url)
 
         # Try to extract htmlUrl from source_url
         try:
             parsed = urlparse(subscription.source_url)
-            # Reconstruct URL without path (scheme://netloc/)
             html_url = f"{parsed.scheme}://{parsed.netloc}/"
-            attrs.append(f'htmlUrl="{escape(html_url)}"')
+            outline.set("htmlUrl", html_url)
         except Exception:
             pass
 
-        # Add description if available
+        # Add description if available (truncated if too long)
         if subscription.description:
-            attrs.append(f'description="{escape(subscription.description)}"')
-
-        return f'{indent}<outline {" ".join(attrs)}/>'
+            outline.set("description", subscription.description[:500])

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.redis import PodcastRedis
+from app.domains.ai.llm_privacy import ContentSanitizer
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastRepository
 
@@ -44,7 +45,6 @@ class PodcastSummaryService:
         self.redis = PodcastRedis()
 
         # AI text generation service
-        from app.domains.ai.llm_privacy import ContentSanitizer
         from app.domains.ai.services import TextGenerationService
         self.sanitizer = ContentSanitizer(mode=settings.LLM_CONTENT_SANITIZE_MODE)
         self.text_generation = TextGenerationService(db)

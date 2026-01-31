@@ -15,10 +15,10 @@
 
     <!-- Filter Bar -->
     <div class="mt-4 bg-white shadow sm:rounded-lg p-4">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-4">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center gap-4 flex-wrap">
                 <div class="flex items-center gap-2">
-                    <label for="status-filter" class="text-sm font-medium text-gray-700">状态筛选:</label>
+                    <label for="status-filter" class="text-sm font-medium text-gray-700">状态:</label>
                     <select id="status-filter" onchange="applyStatusFilter()"
                             class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         <option value="">全部</option>
@@ -29,47 +29,64 @@
                     </select>
                 </div>
                 <div class="flex items-center gap-2">
-                    <label for="search-input" class="text-sm font-medium text-gray-700">搜索标题:</label>
-                    <input type="text" 
-                           id="search-input" 
-                           placeholder="输入关键词搜索..."
-                           value="{{ search_query or '' }}"
-                           onkeypress="if(event.key === 'Enter') { applySearch(); }"
-                           class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border">
-                    <button onclick="applySearch()"
-                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                        搜索
-                    </button>
-                    {% if search_query %}
-                    <button onclick="clearSearch()"
-                            class="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <label for="user-filter" class="text-sm font-medium text-gray-700">用户:</label>
+                    <input type="text"
+                           id="user-filter"
+                           placeholder="按回车搜索用户名..."
+                           value="{{ user_filter or '' }}"
+                           onkeypress="if(event.key === 'Enter') { applyUserFilter(); }"
+                           class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border w-40">
+                    {% if user_filter %}
+                    <button onclick="clearUserFilter()"
+                            class="inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
-                        清除
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="search-input" class="text-sm font-medium text-gray-700">标题:</label>
+                    <input type="text"
+                           id="search-input"
+                           placeholder="按回车搜索标题..."
+                           value="{{ search_query or '' }}"
+                           onkeypress="if(event.key === 'Enter') { applySearch(); }"
+                           class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border w-48">
+                    {% if search_query %}
+                    <button onclick="clearSearch()"
+                            class="inline-flex items-center px-2 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                     </button>
                     {% endif %}
                 </div>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
                 <button onclick="exportOPML()"
                         id="export-opml-btn"
-                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                     </svg>
-                    导出所有订阅
+                    导出OPML
+                </button>
+                <button onclick="openImportModal()"
+                        id="import-opml-btn"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4 4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    导入OPML
                 </button>
                 <button onclick="testAllSubscriptions()"
                         id="test-all-btn"
-                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    测试全部链接
+                    测试全部
                 </button>
             </div>
         </div>
@@ -136,6 +153,7 @@
                                 </th>
                                 <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">标题</th>
                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">URL</th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">订阅用户</th>
                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">状态</th>
                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">最后更新</th>
                                 <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">下次刷新</th>
@@ -145,7 +163,9 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white" id="subscriptions-tbody">
-                            {% for sub in subscriptions %}
+                            {% for sub_row in subscriptions %}
+                            {% set sub = sub_row[0] %}
+                            {% set subscriber_count = sub_row[1] %}
                             <tr id="subscription-{{ sub.id }}">
                                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
                                     <input type="checkbox" class="subscription-checkbox h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
@@ -159,6 +179,11 @@
                                     <a href="{{ sub.source_url }}" target="_blank" class="text-indigo-600 hover:text-indigo-900">
                                         {{ sub.source_url }}
                                     </a>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
+                                        {{ subscriber_count }} 用户
+                                    </span>
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm">
                                     {% if sub.status == 'active' %}
@@ -218,13 +243,13 @@
         <div class="flex flex-1 justify-between sm:hidden">
             {% if total_pages > 1 %}
             {% if page > 1 %}
-            <a href="?page={{ page - 1 }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}"
+            <a href="?page={{ page - 1 }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}{% if user_filter %}&user_filter={{ user_filter }}{% endif %}"
                class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                 上一页
             </a>
             {% endif %}
             {% if page < total_pages %}
-            <a href="?page={{ page + 1 }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}"
+            <a href="?page={{ page + 1 }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}{% if user_filter %}&user_filter={{ user_filter }}{% endif %}"
                class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
                 下一页
             </a>
@@ -259,11 +284,11 @@
                 <!-- Pagination - only show when more than 1 page -->
                 {% if total_pages > 1 %}
                 <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                    <a href="?page=1&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}"
+                    <a href="?page=1&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}{% if user_filter %}&user_filter={{ user_filter }}{% endif %}"
                        class="relative inline-flex items-center rounded-l-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
                         首页
                     </a>
-                    <a href="?page={{ page - 1 if page > 1 else 1 }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}"
+                    <a href="?page={{ page - 1 if page > 1 else 1 }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}{% if user_filter %}&user_filter={{ user_filter }}{% endif %}"
                        class="relative inline-flex items-center border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
                         上一页
                     </a>
@@ -274,7 +299,7 @@
                             {{ p }}
                         </span>
                         {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
-                        <a href="?page={{ p }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}"
+                        <a href="?page={{ p }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}{% if user_filter %}&user_filter={{ user_filter }}{% endif %}"
                            class="relative inline-flex items-center border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
                             {{ p }}
                         </a>
@@ -285,11 +310,11 @@
                         {% endif %}
                     {% endfor %}
 
-                    <a href="?page={{ page + 1 if page < total_pages else total_pages }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}"
+                    <a href="?page={{ page + 1 if page < total_pages else total_pages }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}{% if user_filter %}&user_filter={{ user_filter }}{% endif %}"
                        class="relative inline-flex items-center border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
                         下一页
                     </a>
-                    <a href="?page={{ total_pages }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}"
+                    <a href="?page={{ total_pages }}&per_page={{ per_page }}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if search_query %}&search_query={{ search_query }}{% endif %}{% if user_filter %}&user_filter={{ user_filter }}{% endif %}"
                        class="relative inline-flex items-center rounded-r-md border border-gray-300 bg-white px-2 py-2 text-sm font-medium text-gray-500 hover:bg-gray-50">
                         末页
                     </a>
@@ -347,12 +372,62 @@
     </div>
 </div>
 
+<!-- Import OPML Modal -->
+<div id="import-modal" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="import-modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onclick="closeImportModal()"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div>
+                <h3 class="text-lg leading-6 font-medium text-gray-900" id="import-modal-title">
+                    批量导入订阅 (OPML)
+                </h3>
+                <div class="mt-4 space-y-4">
+                    <div>
+                        <label for="import-file" class="block text-sm font-medium text-gray-700">选择OPML文件</label>
+                        <input type="file" id="import-file" accept=".opml,.xml"
+                               class="mt-1 block w-full text-sm text-gray-500
+                                      file:mr-4 file:py-2 file:px-4
+                                      file:rounded-md file:border-0
+                                      file:text-sm file:font-semibold
+                                      file:bg-indigo-50 file:text-indigo-700
+                                      hover:file:bg-indigo-100"
+                               onchange="handleImportFile(this)">
+                        <p class="mt-1 text-xs text-gray-500">支持 .opml 和 .xml 格式文件</p>
+                    </div>
+                    <div id="import-preview" class="hidden">
+                        <div class="bg-gray-50 rounded-md p-3">
+                            <p class="text-sm font-medium text-gray-700">文件信息:</p>
+                            <p id="import-filename" class="text-sm text-gray-600 mt-1"></p>
+                            <p id="import-filesize" class="text-sm text-gray-600"></p>
+                        </div>
+                    </div>
+                    <div id="import-result" class="hidden mt-2"></div>
+                </div>
+                <div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+                    <button type="button" id="import-submit-btn"
+                            onclick="submitImport()"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:col-start-2 sm:text-sm"
+                            disabled>
+                        导入
+                    </button>
+                    <button type="button"
+                            onclick="closeImportModal()"
+                            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:col-start-1 sm:text-sm">
+                        取消
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function changePerPage(perPage) {
     const url = new URL(window.location);
     url.searchParams.set('per_page', perPage);
     url.searchParams.set('page', '1');
-    // Preserve both status_filter and search_query
+    // Preserve both status_filter and search_query (they are already in url from window.location)
     window.location = url.toString();
 }
 
@@ -516,7 +591,7 @@ async function deleteSubscription(id) {
 // Batch operations
 function getSelectedIds() {
     const checkboxes = document.querySelectorAll('.subscription-checkbox:checked');
-    return Array.from(checkboxes).map(cb => cb.value);
+    return Array.from(checkboxes).map(cb => parseInt(cb.value, 10));
 }
 
 function updateBatchOperations() {
@@ -656,11 +731,32 @@ function applyStatusFilter() {
     } else {
         url.searchParams.delete('status_filter');
     }
-    // Preserve search query
-    const searchQuery = url.searchParams.get('search_query');
     url.searchParams.set('page', '1');
     window.location = url.toString();
 }
+
+// User filter function
+function applyUserFilter() {
+    const userFilter = document.getElementById('user-filter').value.trim();
+    const url = new URL(window.location);
+    if (userFilter) {
+        url.searchParams.set('user_filter', userFilter);
+    } else {
+        url.searchParams.delete('user_filter');
+    }
+    url.searchParams.set('page', '1');
+    window.location = url.toString();
+}
+
+// Clear user filter function
+function clearUserFilter() {
+    document.getElementById('user-filter').value = '';
+    const url = new URL(window.location);
+    url.searchParams.delete('user_filter');
+    url.searchParams.set('page', '1');
+    window.location = url.toString();
+}
+
 // Search function
 function applySearch() {
     const searchQuery = document.getElementById('search-input').value.trim();
@@ -670,7 +766,6 @@ function applySearch() {
     } else {
         url.searchParams.delete('search_query');
     }
-    // Preserve status filter
     url.searchParams.set('page', '1');
     window.location = url.toString();
 }
@@ -681,7 +776,6 @@ function clearSearch() {
     const url = new URL(window.location);
     url.searchParams.delete('search_query');
     url.searchParams.set('page', '1');
-    // Preserve status filter
     window.location = url.toString();
 }
 
@@ -965,6 +1059,160 @@ function displayTestResults(result) {
     }
 
     testResultsContent.innerHTML = html;
+}
+
+// Import OPML functions
+let importOpmlContent = null;
+
+function openImportModal() {
+    document.getElementById('import-modal').classList.remove('hidden');
+    // Reset form
+    document.getElementById('import-file').value = '';
+    document.getElementById('import-preview').classList.add('hidden');
+    document.getElementById('import-result').classList.add('hidden');
+    document.getElementById('import-result').innerHTML = '';
+    document.getElementById('import-submit-btn').disabled = true;
+    importOpmlContent = null;
+}
+
+function closeImportModal() {
+    document.getElementById('import-modal').classList.add('hidden');
+    importOpmlContent = null;
+}
+
+function handleImportFile(input) {
+    const file = input.files[0];
+    if (!file) {
+        document.getElementById('import-preview').classList.add('hidden');
+        document.getElementById('import-submit-btn').disabled = true;
+        importOpmlContent = null;
+        return;
+    }
+
+    // Show file info
+    document.getElementById('import-filename').textContent = `文件名: ${file.name}`;
+    document.getElementById('import-filesize').textContent = `大小: ${(file.size / 1024).toFixed(2)} KB`;
+    document.getElementById('import-preview').classList.remove('hidden');
+    document.getElementById('import-result').classList.add('hidden');
+    document.getElementById('import-result').innerHTML = '';
+
+    // Read file content
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        importOpmlContent = e.target.result;
+        document.getElementById('import-submit-btn').disabled = false;
+    };
+    reader.onerror = function() {
+        document.getElementById('import-result').classList.remove('hidden');
+        document.getElementById('import-result').innerHTML = `
+            <div class="bg-red-50 border-l-4 border-red-400 p-4">
+                <p class="text-sm text-red-700">读取文件失败，请重试</p>
+            </div>
+        `;
+        document.getElementById('import-submit-btn').disabled = true;
+        importOpmlContent = null;
+    };
+    reader.readAsText(file);
+}
+
+async function submitImport() {
+    if (!importOpmlContent) {
+        alert('请先选择OPML文件');
+        return;
+    }
+
+    const submitBtn = document.getElementById('import-submit-btn');
+    const resultDiv = document.getElementById('import-result');
+
+    // Store original button content
+    const originalContent = submitBtn.innerHTML;
+
+    try {
+        // Disable button and show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+            <svg class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            导入中...
+        `;
+
+        const response = await fetch('/super/api/subscriptions/import/opml', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ opml_content: importOpmlContent }),
+        });
+
+        const result = await response.json();
+
+        resultDiv.classList.remove('hidden');
+
+        if (result.success) {
+            resultDiv.innerHTML = `
+                <div class="bg-green-50 border-l-4 border-green-400 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-green-800">导入成功!</p>
+                            <p class="text-sm text-green-700 mt-1">${result.message}</p>
+                            <p class="text-sm text-gray-600 mt-2">页面将在2秒后自动刷新...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Auto refresh after 2 seconds
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            resultDiv.innerHTML = `
+                <div class="bg-red-50 border-l-4 border-red-400 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-red-800">导入失败</p>
+                            <p class="text-sm text-red-700 mt-1">${result.message}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            submitBtn.innerHTML = originalContent;
+            submitBtn.disabled = false;
+        }
+
+    } catch (error) {
+        console.error('Import error:', error);
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+            <div class="bg-red-50 border-l-4 border-red-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-red-800">导入失败</p>
+                        <p class="text-sm text-red-700 mt-1">网络错误: ${error.message}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        submitBtn.innerHTML = originalContent;
+        submitBtn.disabled = false;
+    }
 }
 </script>
 {% endblock %}

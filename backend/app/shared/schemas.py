@@ -168,12 +168,12 @@ class SubscriptionUpdate(BaseSchema):
 
 class SubscriptionResponse(SubscriptionBase, TimestampedSchema):
     id: int
-    user_id: int
     status: str
     last_fetched_at: Optional[datetime] = None
     latest_item_published_at: Optional[datetime] = None
     next_update_at: Optional[datetime] = None
     error_message: Optional[str] = None
+    item_count: int = 0
 
 
 # Message schemas

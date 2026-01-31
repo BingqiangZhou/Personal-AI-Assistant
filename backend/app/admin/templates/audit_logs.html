@@ -13,37 +13,33 @@
         </div>
     </div>
 
-    <!-- Filters -->
+    <!-- Filter Bar -->
     <div class="mt-4 bg-white shadow sm:rounded-lg p-4">
-        <form method="get" action="/super/audit-logs" class="flex gap-4">
-            <div class="flex-1">
-                <label for="action" class="block text-sm font-medium text-gray-700">操作类型</label>
-                <select name="action" id="action"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <option value="">全部</option>
-                    <option value="create" {% if action_filter == 'create' %}selected{% endif %}>创建</option>
-                    <option value="update" {% if action_filter == 'update' %}selected{% endif %}>更新</option>
-                    <option value="delete" {% if action_filter == 'delete' %}selected{% endif %}>删除</option>
-                    <option value="toggle" {% if action_filter == 'toggle' %}selected{% endif %}>切换状态</option>
-                </select>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label for="action" class="text-sm font-medium text-gray-700">操作类型:</label>
+                    <select id="action" onchange="applyFilters()"
+                            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="">全部</option>
+                        <option value="create" {% if action_filter == 'create' %}selected{% endif %}>创建</option>
+                        <option value="update" {% if action_filter == 'update' %}selected{% endif %}>更新</option>
+                        <option value="delete" {% if action_filter == 'delete' %}selected{% endif %}>删除</option>
+                        <option value="toggle" {% if action_filter == 'toggle' %}selected{% endif %}>切换状态</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="resource_type" class="text-sm font-medium text-gray-700">资源类型:</label>
+                    <select id="resource_type" onchange="applyFilters()"
+                            class="rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <option value="">全部</option>
+                        <option value="apikey" {% if resource_type_filter == 'apikey' %}selected{% endif %}>API Key</option>
+                        <option value="subscription" {% if resource_type_filter == 'subscription' %}selected{% endif %}>订阅</option>
+                        <option value="user" {% if resource_type_filter == 'user' %}selected{% endif %}>用户</option>
+                    </select>
+                </div>
             </div>
-            <div class="flex-1">
-                <label for="resource_type" class="block text-sm font-medium text-gray-700">资源类型</label>
-                <select name="resource_type" id="resource_type"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <option value="">全部</option>
-                    <option value="apikey" {% if resource_type_filter == 'apikey' %}selected{% endif %}>API Key</option>
-                    <option value="subscription" {% if resource_type_filter == 'subscription' %}selected{% endif %}>订阅</option>
-                    <option value="user" {% if resource_type_filter == 'user' %}selected{% endif %}>用户</option>
-                </select>
-            </div>
-            <div class="flex items-end">
-                <button type="submit"
-                        class="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                    筛选
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
 
     <!-- Audit Logs Table -->
@@ -276,6 +272,27 @@
 function changePerPage(perPage) {
     const url = new URL(window.location);
     url.searchParams.set('per_page', perPage);
+    url.searchParams.set('page', '1');
+    window.location = url.toString();
+}
+
+function applyFilters() {
+    const action = document.getElementById('action').value;
+    const resourceType = document.getElementById('resource_type').value;
+    const url = new URL(window.location);
+
+    if (action) {
+        url.searchParams.set('action', action);
+    } else {
+        url.searchParams.delete('action');
+    }
+
+    if (resourceType) {
+        url.searchParams.set('resource_type', resourceType);
+    } else {
+        url.searchParams.delete('resource_type');
+    }
+
     url.searchParams.set('page', '1');
     window.location = url.toString();
 }

@@ -13,6 +13,7 @@ from app.domains.subscription.models import (
     SubscriptionCategoryMapping,
     SubscriptionItem,
     SubscriptionStatus,
+    UserSubscription,
 )
 from app.shared.schemas import SubscriptionCreate, SubscriptionUpdate
 
@@ -42,12 +43,19 @@ class SubscriptionRepository:
         """
         skip = (page - 1) * size
 
-        # Build base query
-        base_query = select(Subscription).where(Subscription.user_id == user_id)
+        # Build base query with join to user_subscriptions
+        base_query = (
+            select(Subscription)
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .where(UserSubscription.user_id == user_id)
+        )
         if status:
             base_query = base_query.where(Subscription.status == status)
         if source_type:
             base_query = base_query.where(Subscription.source_type == source_type)
+
+        # Exclude archived subscriptions
+        base_query = base_query.where(UserSubscription.is_archived == False)
 
         # Get total count
         count_query = select(func.count()).select_from(base_query.subquery())
@@ -86,8 +94,13 @@ class SubscriptionRepository:
         """Get subscription by ID with user ownership verification."""
         query = (
             select(Subscription)
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .options(selectinload(Subscription.categories))
-            .where(Subscription.id == sub_id, Subscription.user_id == user_id)
+            .where(
+                Subscription.id == sub_id,
+                UserSubscription.user_id == user_id,
+                UserSubscription.is_archived == False
+            )
         )
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
@@ -95,10 +108,8 @@ class SubscriptionRepository:
     async def get_subscription_by_url(
         self, user_id: int, url: str
     ) -> Optional[Subscription]:
-        """Get subscription by source URL."""
-        query = select(Subscription).where(
-            Subscription.user_id == user_id, Subscription.source_url == url
-        )
+        """Get subscription by source URL (global lookup)."""
+        query = select(Subscription).where(Subscription.source_url == url)
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
@@ -106,12 +117,11 @@ class SubscriptionRepository:
         self, user_id: int, title: str
     ) -> Optional[Subscription]:
         """
-        Get subscription by title (case-insensitive).
+        Get subscription by title (case-insensitive, global lookup).
 
         按标题查找订阅（不区分大小写）。
         """
         query = select(Subscription).where(
-            Subscription.user_id == user_id,
             func.lower(Subscription.title) == func.lower(title),
         )
         result = await self.db.execute(query)
@@ -124,29 +134,46 @@ class SubscriptionRepository:
         Check for duplicate subscription by URL or title.
 
         Returns the first matching subscription found.
+        Now checks globally since subscriptions are shared.
 
         检查重复订阅（通过URL或标题）。
         返回第一个匹配的订阅。
         """
-        # First check by URL (exact match)
-        query_url = select(Subscription).where(
-            Subscription.user_id == user_id, Subscription.source_url == url
-        )
+        # First check by URL (exact match) - global lookup
+        query_url = select(Subscription).where(Subscription.source_url == url)
 
         result = await self.db.execute(query_url)
         sub = result.scalar_one_or_none()
 
         if sub:
-            return sub
+            # Verify user doesn't already have this subscription
+            user_sub_query = select(UserSubscription).where(
+                UserSubscription.user_id == user_id,
+                UserSubscription.subscription_id == sub.id
+            )
+            user_sub_result = await self.db.execute(user_sub_query)
+            if user_sub_result.scalar_one_or_none():
+                return sub  # User already subscribed
 
-        # Then check by title (case-insensitive)
+        # Then check by title (case-insensitive) - global lookup
         query_title = select(Subscription).where(
-            Subscription.user_id == user_id,
             func.lower(Subscription.title) == func.lower(title),
         )
 
         result = await self.db.execute(query_title)
-        return result.scalar_one_or_none()
+        sub = result.scalar_one_or_none()
+
+        if sub:
+            # Verify user doesn't already have this subscription
+            user_sub_query = select(UserSubscription).where(
+                UserSubscription.user_id == user_id,
+                UserSubscription.subscription_id == sub.id
+            )
+            user_sub_result = await self.db.execute(user_sub_query)
+            if user_sub_result.scalar_one_or_none():
+                return sub  # User already subscribed
+
+        return None
 
     async def create_subscription(
         self, user_id: int, sub_data: SubscriptionCreate
@@ -174,7 +201,6 @@ class SubscriptionRepository:
             update_day_of_week = setting.value.get("update_day_of_week")
 
         sub = Subscription(
-            user_id=user_id,
             title=sub_data.title,
             description=sub_data.description,
             source_type=sub_data.source_type,
@@ -182,12 +208,20 @@ class SubscriptionRepository:
             config=sub_data.config,
             fetch_interval=sub_data.fetch_interval,
             status=SubscriptionStatus.ACTIVE,
-            # Use global frequency settings
+        )
+        self.db.add(sub)
+        await self.db.flush()  # Get the ID without committing
+
+        # Create UserSubscription mapping
+        user_sub = UserSubscription(
+            user_id=user_id,
+            subscription_id=sub.id,
             update_frequency=update_frequency,
             update_time=update_time,
             update_day_of_week=update_day_of_week,
         )
-        self.db.add(sub)
+        self.db.add(user_sub)
+
         await self.db.commit()
         await self.db.refresh(sub)
         return sub
@@ -216,12 +250,43 @@ class SubscriptionRepository:
         return sub
 
     async def delete_subscription(self, user_id: int, sub_id: int) -> bool:
-        """Delete subscription."""
-        sub = await self.get_subscription_by_id(user_id, sub_id)
-        if not sub:
+        """
+        Delete subscription for user.
+
+        This removes the UserSubscription mapping. If no other users
+        are subscribed to this subscription, the subscription itself
+        is also deleted.
+        """
+        # Get the UserSubscription mapping
+        user_sub_query = select(UserSubscription).where(
+            UserSubscription.user_id == user_id,
+            UserSubscription.subscription_id == sub_id
+        )
+        result = await self.db.execute(user_sub_query)
+        user_sub = result.scalar_one_or_none()
+
+        if not user_sub:
             return False
 
-        await self.db.delete(sub)
+        # Delete the UserSubscription mapping
+        await self.db.delete(user_sub)
+
+        # Check if other users are subscribed to this subscription
+        other_subs_query = select(func.count()).select_from(
+            select(UserSubscription).where(
+                UserSubscription.subscription_id == sub_id
+            ).subquery()
+        )
+        remaining_count = await self.db.scalar(other_subs_query) or 0
+
+        # If no other users, delete the subscription itself
+        if remaining_count == 0:
+            sub_query = select(Subscription).where(Subscription.id == sub_id)
+            sub_result = await self.db.execute(sub_query)
+            sub = sub_result.scalar_one_or_none()
+            if sub:
+                await self.db.delete(sub)
+
         await self.db.commit()
         return True
 
@@ -273,9 +338,14 @@ class SubscriptionRepository:
         """Get items from a subscription."""
         skip = (page - 1) * size
 
-        # First verify subscription ownership
-        sub = await self.get_subscription_by_id(user_id, subscription_id)
-        if not sub:
+        # First verify subscription ownership via user_subscriptions
+        user_sub_query = select(UserSubscription).where(
+            UserSubscription.user_id == user_id,
+            UserSubscription.subscription_id == subscription_id,
+            UserSubscription.is_archived == False
+        )
+        user_sub_result = await self.db.execute(user_sub_query)
+        if not user_sub_result.scalar_one_or_none():
             return [], 0
 
         # Build query
@@ -314,8 +384,12 @@ class SubscriptionRepository:
         """Get all items from all user's subscriptions."""
         skip = (page - 1) * size
 
-        # Get user's subscription IDs
-        sub_query = select(Subscription.id).where(Subscription.user_id == user_id)
+        # Get user's subscription IDs via user_subscriptions
+        sub_query = (
+            select(Subscription.id)
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .where(UserSubscription.user_id == user_id, UserSubscription.is_archived == False)
+        )
         sub_result = await self.db.execute(sub_query)
         sub_ids = [row[0] for row in sub_result.fetchall()]
 
@@ -353,8 +427,13 @@ class SubscriptionRepository:
         """Get item by ID with user ownership verification."""
         query = (
             select(SubscriptionItem)
-            .join(Subscription)
-            .where(SubscriptionItem.id == item_id, Subscription.user_id == user_id)
+            .join(Subscription, SubscriptionItem.subscription_id == Subscription.id)
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .where(
+                SubscriptionItem.id == item_id,
+                UserSubscription.user_id == user_id,
+                UserSubscription.is_archived == False
+            )
         )
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
@@ -572,8 +651,12 @@ class SubscriptionRepository:
 
     async def get_unread_count(self, user_id: int) -> int:
         """Get total unread items count for user."""
-        # Get user's subscription IDs
-        sub_query = select(Subscription.id).where(Subscription.user_id == user_id)
+        # Get user's subscription IDs via user_subscriptions
+        sub_query = (
+            select(Subscription.id)
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .where(UserSubscription.user_id == user_id, UserSubscription.is_archived == False)
+        )
         sub_result = await self.db.execute(sub_query)
         sub_ids = [row[0] for row in sub_result.fetchall()]
 

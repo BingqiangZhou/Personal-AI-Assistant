@@ -44,7 +44,8 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    subscriptions = relationship("Subscription", back_populates="user", cascade="all, delete-orphan")
+    user_subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan")
+    subscriptions = relationship("Subscription", secondary="user_subscriptions", viewonly=True)
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
     assistant_tasks = relationship("AssistantTask", back_populates="user", cascade="all, delete-orphan")
     media_files = relationship("MediaFile", back_populates="user", cascade="all, delete-orphan")
