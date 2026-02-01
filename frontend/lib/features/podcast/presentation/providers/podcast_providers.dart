@@ -942,6 +942,7 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
     await loadEpisodesForSubscription(
       subscriptionId: subscriptionId,
       status: status,
+      forceRefresh: true,  // Bypass 5-minute cache check on explicit refresh
     );
   }
 }

@@ -347,6 +347,7 @@ def refresh_all_podcast_feeds(self):
                     # IMPORTANT: Refresh ALL podcast RSS subscriptions regardless of user subscriptions
                     # The Subscription table stores podcasts globally, and they should be refreshed
                     # even if no user is currently subscribed to them.
+                    repo = PodcastRepository(db)
 
                     from app.domains.subscription.models import UserSubscription
 
@@ -400,18 +401,54 @@ def refresh_all_podcast_feeds(self):
                             continue
 
                         try:
+                            # Use the subscription object directly instead of fetching through user relationship
                             # Find a user_id for this subscription (any active subscriber will do)
                             user_sub = next((us for us in user_subscriptions if us.subscription_id == sub_id), None)
                             user_id = user_sub.user_id if user_sub else 1  # Default to user 1 if no subscribers
 
-                            # 为每个订阅创建服务实例
-                            service = PodcastService(db, user_id)
+                            # Directly use repository and parser for refresh, bypassing user subscription check
+                            from app.domains.podcast.integration.secure_rss_parser import (
+                                SecureRSSParser,
+                            )
+                            parser = SecureRSSParser(user_id)
 
-                            # 刷新订阅
-                            new_episodes = await service.refresh_subscription(sub.id)
+                            # Parse RSS feed
+                            success, feed, error = await parser.fetch_and_parse_feed(sub.source_url)
+                            if not success:
+                                logger.error(f"刷新订阅 {sub.id} ({sub.title}) 失败: {error}")
+                                continue
+
+                            # Save new episodes directly using repository
+                            new_episodes = []
+                            for episode in feed.episodes:
+                                saved_episode, is_new = await repo.create_or_update_episode(
+                                    subscription_id=sub.id,
+                                    title=episode.title,
+                                    description=episode.description,
+                                    audio_url=episode.audio_url,
+                                    published_at=episode.published_at,
+                                    audio_duration=episode.duration,
+                                    transcript_url=episode.transcript_url,
+                                    item_link=episode.link,
+                                    metadata={"feed_title": feed.title, "refreshed_at": datetime.utcnow().isoformat()}
+                                )
+
+                                if is_new:
+                                    new_episodes.append(saved_episode)
+                                    # Trigger transcription task for new episodes
+                                    from app.domains.podcast.services.sync_service import (
+                                        PodcastSyncService,
+                                    )
+                                    sync_service = PodcastSyncService(db, user_id)
+                                    await sync_service.trigger_transcription(saved_episode.id)
+
+                            # Update last fetch time
+                            await repo.update_subscription_fetch_time(sub.id, feed.last_fetched)
 
                             refreshed_count += 1
                             new_episodes_count += len(new_episodes)
+                            if len(new_episodes) > 0:
+                                logger.info(f"刷新订阅 {sub.id} ({sub.title}): {len(new_episodes)} 期新节目")
 
                         except Exception as e:
                             logger.error(f"刷新订阅 {sub.id} 失败: {e}")
@@ -501,11 +538,46 @@ def generate_pending_summaries(self):
                     # 获取所有待总结的单集
                     pending_episodes = await repo.get_unsummarized_episodes()
 
+                    # Limit the number of episodes processed per task run
+                    # This prevents overwhelming the system when there are many pending episodes
+                    MAX_EPISODES_PER_RUN = 10
+                    episodes_to_process = pending_episodes[:MAX_EPISODES_PER_RUN]
+
+                    if len(pending_episodes) > MAX_EPISODES_PER_RUN:
+                        logger.info(f"Found {len(pending_episodes)} pending episodes, processing {MAX_EPISODES_PER_RUN} this run")
+
                     processed_count = 0
                     failed_count = 0
 
-                    for episode in pending_episodes:
+                    for episode in episodes_to_process:
                         try:
+                            # Check if there's a pending or in-progress transcription task for this episode
+                            # We should wait for transcription to complete before generating summary
+                            from sqlalchemy import or_
+
+                            from app.domains.podcast.models import TranscriptionTask
+
+                            trans_check_stmt = select(TranscriptionTask).where(
+                                and_(
+                                    TranscriptionTask.episode_id == episode.id,
+                                    or_(
+                                        TranscriptionTask.status == 'pending',
+                                        TranscriptionTask.status == 'in_progress'
+                                    )
+                                )
+                            )
+                            trans_result = await db.execute(trans_check_stmt)
+                            pending_transcription = trans_result.scalar_one_or_none()
+
+                            if pending_transcription:
+                                logger.debug(f"Skipping episode {episode.id} - transcription is {pending_transcription.status}")
+                                continue
+
+                            # If episode doesn't have transcript content and no pending transcription,
+                            # still process it (will use description instead of transcript)
+                            if not episode.transcript_content:
+                                logger.debug(f"Processing episode {episode.id} without transcript (will use description)")
+
                             # Get a user_id from UserSubscription for this subscription
                             # (Summaries are shared across users, any subscriber will do)
                             # If no users are subscribed, use a default user_id (e.g., 1) for summary generation
@@ -586,6 +658,33 @@ def process_audio_transcription(self, task_id: int, config_db_id: int | None = N
     - 完成或失败时清理Redis状态
     """
     logger.info(f"🎬 [CELERY] 开始处理音频转录任务: task_id={task_id}, config_id={config_db_id}")
+
+    # === EARLY LOCK CHECK - Prevent duplicate execution ===
+    # Check dispatched flag BEFORE doing any expensive work
+    # This prevents multiple workers from processing the same task
+    async def check_dispatched_flag():
+        from app.core.redis import PodcastRedis
+        redis = PodcastRedis()
+        dispatched_key = f"podcast:transcription:dispatched:{task_id}"
+        client = await redis._get_client()
+        # Use SET with NX to atomically check and set the flag
+        # Returns True if flag was set (first worker), False if already exists
+        result = await client.set(dispatched_key, "1", nx=True, ex=7200)  # 2 hour TTL
+        return result is not None
+
+    # Check if we're the first worker to claim this task
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        is_first_worker = loop.run_until_complete(check_dispatched_flag())
+        loop.close()
+
+        if not is_first_worker:
+            logger.info(f"🔄 [CELERY] Task {task_id} already being processed by another worker, skipping")
+            return {"status": "skipped", "reason": "task_already_dispatched", "task_id": task_id}
+    except Exception as e:
+        logger.warning(f"⚠️ [CELERY] Failed to check dispatched flag for task {task_id}: {e}, continuing anyway")
+
     # 打印任务统计信息
     log_task_statistics()
 
@@ -641,6 +740,7 @@ def process_audio_transcription(self, task_id: int, config_db_id: int | None = N
                     episode_id = task.episode_id
 
                     # Try to acquire lock - only one worker should execute this task
+                    # This is a second layer of protection after the dispatched flag check
                     lock_acquired = await state_manager.acquire_task_lock(episode_id, task_id, expire_seconds=3600)
                     if not lock_acquired:
                         # Another worker already owns the lock
@@ -1023,6 +1123,150 @@ def generate_podcast_recommendations():
 
     except Exception as e:
         logger.error(f"生成推荐失败: {e}")
+        raise
+
+
+@celery_app.task(bind=True, max_retries=3)
+def process_podcast_episode_with_transcription(episode_id: int, user_id: int):
+    """
+    完整的播客单集处理任务：先转录，再总结
+    用于podcast-rss订阅的新分集处理
+
+    Args:
+        episode_id: 分集ID
+        user_id: 用户ID
+    """
+    logger.info(f"🎙️ Starting complete episode processing: episode_id={episode_id}")
+
+    async def _do_process():
+        from sqlalchemy.ext.asyncio import (
+            AsyncSession,
+            async_sessionmaker,
+            create_async_engine,
+        )
+
+        worker_engine = create_async_engine(
+            settings.DATABASE_URL,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=3600,
+            connect_args={
+                "server_settings": {
+                    "application_name": "celery-episode-processor",
+                    "client_encoding": "utf8"
+                },
+                "timeout": settings.DATABASE_CONNECT_TIMEOUT
+            }
+        )
+
+        worker_session_factory = async_sessionmaker(
+            worker_engine,
+            class_=AsyncSession,
+            expire_on_commit=False
+        )
+
+        try:
+            async with worker_session_factory() as db:
+                # Get episode details
+                from sqlalchemy import select
+
+                from app.domains.podcast.models import PodcastEpisode, TranscriptionTask
+
+                stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
+                result = await db.execute(stmt)
+                episode = result.scalar_one_or_none()
+
+                if not episode:
+                    logger.error(f"Episode {episode_id} not found")
+                    return {"status": "error", "message": "Episode not found"}
+
+                # Step 1: Trigger transcription task
+                logger.info(f"📝 Step 1/3: Triggering transcription for episode {episode_id}")
+                from app.domains.podcast.services.sync_service import PodcastSyncService
+                sync_service = PodcastSyncService(db, user_id)
+
+                transcription_task = await sync_service.trigger_transcription(episode_id)
+                logger.info(f"📝 Transcription task created: {transcription_task.id if transcription_task else 'existing'}")
+
+                # Step 2: Wait for transcription to complete
+                logger.info("⏳ Step 2/3: Waiting for transcription to complete...")
+                max_wait_time = 1800  # 30 minutes max wait
+                check_interval = 10   # Check every 10 seconds
+                waited_time = 0
+
+                while waited_time < max_wait_time:
+                    # Check transcription status
+                    trans_stmt = select(TranscriptionTask).where(
+                        TranscriptionTask.episode_id == episode_id
+                    ).order_by(TranscriptionTask.created_at.desc())
+                    trans_result = await db.execute(trans_stmt)
+                    trans_task = trans_result.scalar_one_or_none()
+
+                    if not trans_task:
+                        logger.info("✓ No transcription task found, assuming already complete or not needed")
+                        break
+
+                    if trans_task.status == "completed":
+                        logger.info(f"✓ Transcription completed for episode {episode_id}")
+                        # Refresh episode data to get transcript_content
+                        await db.refresh(episode)
+                        break
+
+                    if trans_task.status in ["failed", "cancelled"]:
+                        logger.warning(f"⚠ Transcription failed/cancelled: {trans_task.status}")
+                        break
+
+                    if trans_task.status == "in_progress":
+                        logger.debug(f"Transcription in progress... ({waited_time}/{max_wait_time}s)")
+
+                    await asyncio.sleep(check_interval)
+                    waited_time += check_interval
+
+                # Step 3: Generate AI summary
+                logger.info(f"🤖 Step 3/3: Generating AI summary for episode {episode_id}")
+                service = PodcastService(db, user_id)
+
+                # Check if summary already exists
+                await db.refresh(episode)
+                if episode.ai_summary:
+                    logger.info(f"✓ Summary already exists for episode {episode_id}")
+                else:
+                    summary = await service._generate_summary(episode)
+                    logger.info(f"✓ Summary generated for episode {episode_id}")
+
+                return {
+                    "status": "success",
+                    "episode_id": episode_id,
+                    "transcription_completed": episode.transcript_content is not None,
+                    "summary_generated": episode.ai_summary is not None,
+                    "processed_at": datetime.utcnow().isoformat()
+                }
+
+        except Exception as e:
+            logger.error(f"❌ Error processing episode {episode_id}: {e}")
+            raise
+        finally:
+            await worker_engine.dispose()
+
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            loop.run_until_complete(_do_process())
+            loop.run_until_complete(asyncio.sleep(0))
+        finally:
+            pass
+        return {
+            "status": "success",
+            "episode_id": episode_id,
+            "processed_at": datetime.utcnow().isoformat()
+        }
+
+    except Exception as e:
+        logger.error(f"❌ Complete episode processing failed for episode {episode_id}: {e}")
+        if self.request.retries < self.max_retries:
+            raise self.retry(countdown=60 * (2 ** self.request.retries))
         raise
 
 

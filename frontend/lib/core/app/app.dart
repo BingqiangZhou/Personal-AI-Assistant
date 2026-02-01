@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -146,14 +148,36 @@ class _PersonalAIAssistantAppState
   }
 
   Future<void> _initializeApp() async {
-    // Load saved locale from storage
-    await ref.read(localeProvider.notifier).loadSavedLocale();
+    // Wrap auth check in timeout to prevent infinite loading
+    bool authCheckCompleted = false;
+    try {
+      // Load saved locale from storage
+      await ref.read(localeProvider.notifier).loadSavedLocale();
 
-    // Load saved theme mode from storage
-    await ref.read(themeModeProvider.notifier).loadSavedThemeMode();
+      // Load saved theme mode from storage
+      await ref.read(themeModeProvider.notifier).loadSavedThemeMode();
 
-    // Check authentication status
-    await ref.read(authProvider.notifier).checkAuthStatus();
+      // Check authentication status with timeout to prevent infinite loading
+      // If backend is down, we still want the app to load
+      await ref.read(authProvider.notifier).checkAuthStatus().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          debugPrint('⚠️ [AppInit] Auth check timed out after 5 seconds');
+          // Mark as incomplete - the background task will complete eventually
+          // but we won't wait for it
+          throw TimeoutException('Auth check timed out');
+        },
+      );
+      authCheckCompleted = true;
+    } on TimeoutException catch (_) {
+      debugPrint('⚠️ [AppInit] Auth check timed out - continuing anyway');
+      // The router will redirect to login since isAuthenticated defaults to false
+      // Background auth check may complete later but won't affect UI
+    } catch (e) {
+      debugPrint('⚠️ [AppInit] Auth check failed: $e, continuing initialization');
+      // Don't block app initialization on auth errors
+      // The router will handle redirecting to login if needed
+    }
 
     // Small delay to ensure the splash screen is visible
     await Future.delayed(const Duration(milliseconds: 600));

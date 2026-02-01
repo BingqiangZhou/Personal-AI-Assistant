@@ -375,7 +375,6 @@ class PodcastSubscriptionService:
 
         # Save new episodes
         new_episodes = []
-        summary_service = PodcastSummaryService(self.db, self.user_id)
 
         for episode in feed.episodes:
             saved_episode, is_new = await self.repo.create_or_update_episode(
@@ -392,17 +391,40 @@ class PodcastSubscriptionService:
 
             if is_new:
                 new_episodes.append(saved_episode)
-                # Trigger transcription task
-                from app.domains.podcast.services.sync_service import PodcastSyncService
-                sync_service = PodcastSyncService(self.db, self.user_id)
-                await sync_service.trigger_transcription(saved_episode.id)
+                # For podcast-rss subscriptions, trigger complete processing task (transcription + summary)
+                # This ensures the flow: transcription → wait → summary
+                from app.celery_app import celery_app
+                celery_app.send_task(
+                    'app.domains.podcast.tasks.process_podcast_episode_with_transcription',
+                    args=[saved_episode.id, self.user_id],
+                    queue='transcription'
+                )
+                logger.debug(f"Triggered complete processing task for episode {saved_episode.id}")
 
-                # Trigger AI summary asynchronously
-                import asyncio
-                asyncio.create_task(summary_service._generate_summary_task(saved_episode))
+        # Update subscription metadata (including image_url) from feed
+        # This ensures the subscription has correct metadata even on first refresh
+        metadata = {
+            "author": feed.author,
+            "language": feed.language,
+            "categories": feed.categories,
+            "explicit": feed.explicit,
+            "image_url": feed.image_url,
+            "podcast_type": feed.podcast_type,
+            "link": feed.link,
+            "total_episodes": len(feed.episodes),
+            "platform": feed.platform,
+        }
+
+        # Only update metadata if the feed provided valid data
+        if feed.image_url or feed.author or feed.categories:
+            await self.repo.update_subscription_metadata(subscription_id, metadata)
+            logger.debug(f"Updated subscription {subscription_id} metadata: image_url={feed.image_url}")
 
         # Update last fetch time
         await self.repo.update_subscription_fetch_time(subscription_id, feed.last_fetched)
+
+        # Invalidate episode list cache since we've added new episodes
+        await self.redis.invalidate_episode_list(subscription_id)
 
         if len(new_episodes) > 0:
             logger.info(f"User {self.user_id} refreshed subscription: {sub.title}, found {len(new_episodes)} new episodes")
@@ -496,6 +518,9 @@ class PodcastSubscriptionService:
 
         await self.repo.update_subscription_metadata(subscription_id, metadata)
         await self.repo.update_subscription_fetch_time(subscription_id, feed.last_fetched)
+
+        # Invalidate episode list cache since we've updated episodes
+        await self.redis.invalidate_episode_list(subscription_id)
 
         result = {
             "subscription_id": subscription_id,

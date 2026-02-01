@@ -190,6 +190,20 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_subscription_by_id_direct(self, subscription_id: int) -> Optional[Subscription]:
+        """
+        Get subscription by ID directly, without user subscription filtering.
+        This is used by background tasks that need to access subscriptions globally.
+        """
+        stmt = select(Subscription).where(
+            and_(
+                Subscription.id == subscription_id,
+                Subscription.source_type.in_(["podcast-rss", "rss"])
+            )
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
     # === 单集管理 ===
 
     async def create_or_update_episode(
@@ -224,6 +238,9 @@ class PodcastRepository:
             episode.audio_duration = audio_duration
             episode.transcript_url = transcript_url
             episode.updated_at = datetime.utcnow()
+            # Also update subscription_id if different (handles duplicate subscriptions)
+            if episode.subscription_id != subscription_id:
+                episode.subscription_id = subscription_id
             if metadata:
                 episode.metadata_json = {**episode.metadata_json, **metadata}
             is_new = False

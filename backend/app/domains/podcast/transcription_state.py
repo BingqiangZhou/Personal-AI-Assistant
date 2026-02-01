@@ -11,7 +11,7 @@ import json
 import logging
 import time
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from app.core.redis import PodcastRedis
 from app.domains.podcast.models import TranscriptionStatus
@@ -106,7 +106,7 @@ class TranscriptionStateManager:
 
     # === Redis Cache Access (convenience methods) ===
 
-    async def cache_get(self, key: str) -> Optional[str]:
+    async def cache_get(self, key: str) -> str | None:
         """
         Get value from Redis cache
 
@@ -207,7 +207,7 @@ class TranscriptionStateManager:
             logger.error(f"Failed to release lock for episode {episode_id}: {e}")
             return False
 
-    async def is_episode_locked(self, episode_id: int) -> Optional[int]:
+    async def is_episode_locked(self, episode_id: int) -> int | None:
         """
         Check if an episode is locked and return the owning task ID
 
@@ -245,7 +245,7 @@ class TranscriptionStateManager:
         await self.redis.cache_set(key, str(task_id), ttl=ttl_seconds)
         logger.debug(f"Mapped episode {episode_id} to task {task_id}")
 
-    async def get_episode_task(self, episode_id: int) -> Optional[int]:
+    async def get_episode_task(self, episode_id: int) -> int | None:
         """
         Get the active task ID for an episode
 
@@ -315,7 +315,7 @@ class TranscriptionStateManager:
         if _progress_throttle.should_log(task_id, status, progress):
             logger.info(f"📊 [PROGRESS] Task {task_id}: {progress:.1f}% - {message}")
 
-    async def get_task_progress(self, task_id: int) -> Optional[dict[str, Any]]:
+    async def get_task_progress(self, task_id: int) -> dict[str, Any] | None:
         """
         Get cached task progress
 
@@ -380,7 +380,7 @@ class TranscriptionStateManager:
 
         await self.redis.cache_set(key, json.dumps(status_data), ttl=ttl_seconds)
 
-    async def get_task_status(self, task_id: int) -> Optional[dict[str, Any]]:
+    async def get_task_status(self, task_id: int) -> dict[str, Any] | None:
         """
         Get lightweight task status
 
@@ -458,6 +458,12 @@ class TranscriptionStateManager:
 
         # Clear locks immediately
         await self.release_task_lock(episode_id, task_id)
+
+        # Clear dispatched flag to allow re-processing if needed
+        client = await self.redis._get_client()
+        dispatched_key = f"podcast:transcription:dispatched:{task_id}"
+        await client.delete(dispatched_key)
+        logger.debug(f"Cleared dispatched flag for failed task {task_id}")
 
         logger.error(f"❌ [STATE] Task {task_id} failed: {error_message}")
 
