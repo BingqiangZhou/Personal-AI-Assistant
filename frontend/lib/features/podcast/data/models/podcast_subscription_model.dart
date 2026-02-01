@@ -168,8 +168,18 @@ class PodcastSubscriptionListResponse extends Equatable {
     required this.pages,
   });
 
-  factory PodcastSubscriptionListResponse.fromJson(Map<String, dynamic> json) =>
-      _$PodcastSubscriptionListResponseFromJson(json);
+  factory PodcastSubscriptionListResponse.fromJson(Map<String, dynamic> json) {
+    if (json['subscriptions'] == null) {
+      final items = json['items'] ?? json['data'];
+      if (items is List) {
+        json = {
+          ...json,
+          'subscriptions': items,
+        };
+      }
+    }
+    return _$PodcastSubscriptionListResponseFromJson(json);
+  }
 
   Map<String, dynamic> toJson() => _$PodcastSubscriptionListResponseToJson(this);
 

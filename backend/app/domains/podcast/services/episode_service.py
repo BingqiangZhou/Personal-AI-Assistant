@@ -42,7 +42,7 @@ class PodcastEpisodeService:
 
     async def list_episodes(
         self,
-        filters: Optional[dict] = None,
+        filters: Optional[Any] = None,
         page: int = 1,
         size: int = 20
     ) -> tuple[list[dict], int]:
@@ -50,14 +50,21 @@ class PodcastEpisodeService:
         List podcast episodes with pagination.
 
         Args:
-            filters: Optional filters (subscription_id, has_summary, is_played)
+            filters: Optional PodcastEpisodeFilter Pydantic model (subscription_id, has_summary, is_played)
             page: Page number
             size: Items per page
 
         Returns:
             Tuple of (episodes list, total count)
         """
-        subscription_id = filters.get('subscription_id') if filters else None
+        # Handle both dict and Pydantic model inputs
+        if filters is None:
+            subscription_id = None
+        elif isinstance(filters, dict):
+            subscription_id = filters.get('subscription_id')
+        else:
+            # Pydantic model - access attributes directly
+            subscription_id = getattr(filters, 'subscription_id', None)
 
         # Try cache first
         if subscription_id:

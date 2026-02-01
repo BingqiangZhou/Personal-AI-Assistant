@@ -131,9 +131,9 @@ class PodcastService:
         """获取播客单集列表 - Delegates to EpisodeService"""
         return await self.episode_service.list_episodes(filters, page, size)
 
-    async def get_episode_by_id(self, episode_id: int) -> Optional[PodcastEpisode]:
-        """获取单集详情 - Delegates to EpisodeService"""
-        return await self.episode_service.get_episode_by_id(episode_id)
+    async def get_episode_by_id(self, episode_id: int, user_id: Optional[int] = None) -> Optional[PodcastEpisode]:
+        """获取单集详情 - Delegates to Repository for user permission check"""
+        return await self.repo.get_episode_by_id(episode_id, user_id)
 
     async def get_episode_with_summary(self, episode_id: int) -> Optional[dict]:
         """获取单集详情和AI总结 - Delegates to EpisodeService"""

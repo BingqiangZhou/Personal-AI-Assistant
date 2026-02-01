@@ -289,8 +289,7 @@ class PodcastSummaryService:
         return await self.text_generation.generate_podcast_summary(
             episode_title=episode_title,
             content=content,
-            content_type=content_type,
-            max_tokens=500
+            content_type=content_type
         )
 
     def _prepare_episode_content(self, episode: PodcastEpisode) -> tuple[str, str, bool]:

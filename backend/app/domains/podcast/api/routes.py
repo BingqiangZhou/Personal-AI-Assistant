@@ -20,11 +20,12 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
+from app.core.etag_response import ETagResponse, check_etag_precondition
 from app.core.security import get_token_from_request
 from app.domains.podcast.models import PodcastEpisode, TranscriptionStatus
 from app.domains.podcast.services import PodcastService
@@ -257,6 +258,7 @@ async def create_subscriptions_batch(
     summary="列出所有播客订阅"
 )
 async def list_subscriptions(
+    request: Request,
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页数量"),
     category_id: Optional[int] = Query(None, description="分类ID筛选"),
@@ -285,12 +287,29 @@ async def list_subscriptions(
         subscription_responses.append(PodcastSubscriptionResponse(**sub))
 
     pages = (total + size - 1) // size
-    return PodcastSubscriptionListResponse(
+    response_data = PodcastSubscriptionListResponse(
         subscriptions=subscription_responses,
         total=total,
         page=page,
         size=size,
         pages=pages
+    )
+
+    # Check ETag - return 304 if match
+    etag_response = await check_etag_precondition(
+        request,
+        response_data.dict(),
+        max_age=900,
+        cache_control='private, max-age=900'
+    )
+    if etag_response:
+        return etag_response
+
+    # Return full response with ETag
+    return ETagResponse(
+        content=response_data.dict(),
+        max_age=900,
+        cache_control='private, max-age=900'
     )
 
 
@@ -346,6 +365,7 @@ async def delete_subscriptions_bulk(
     summary="获取订阅详情"
 )
 async def get_subscription(
+    request: Request,
     subscription_id: int,
     user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
@@ -355,7 +375,25 @@ async def get_subscription(
     details = await service.get_subscription_details(subscription_id)
     if not details:
         raise HTTPException(status_code=404, detail="订阅不存在或无权限")
-    return PodcastSubscriptionResponse(**details)
+
+    response_data = PodcastSubscriptionResponse(**details)
+
+    # Check ETag - return 304 if match
+    etag_response = await check_etag_precondition(
+        request,
+        response_data.dict(),
+        max_age=1800,
+        cache_control='private, max-age=1800'
+    )
+    if etag_response:
+        return etag_response
+
+    # Return full response with ETag
+    return ETagResponse(
+        content=response_data.dict(),
+        max_age=1800,
+        cache_control='private, max-age=1800'
+    )
 
 
 @router.delete(
@@ -492,6 +530,7 @@ async def update_subscription_schedule(
     summary="获取播客信息流"
 )
 async def get_podcast_feed(
+    request: Request,
     page: int = Query(1, ge=1, description="页码"),
     page_size: int = Query(10, ge=1, le=50, description="每页数量"),
     user=Depends(get_token_from_request),
@@ -516,11 +555,28 @@ async def get_podcast_feed(
     has_more = (page * page_size) < total
     next_page = page + 1 if has_more else None
 
-    return PodcastFeedResponse(
+    response_data = PodcastFeedResponse(
         items=episode_responses,
         has_more=has_more,
         next_page=next_page,
         total=total
+    )
+
+    # Check ETag - return 304 if match
+    etag_response = await check_etag_precondition(
+        request,
+        response_data.dict(),
+        max_age=600,
+        cache_control='private, max-age=600'
+    )
+    if etag_response:
+        return etag_response
+
+    # Return full response with ETag
+    return ETagResponse(
+        content=response_data.dict(),
+        max_age=600,
+        cache_control='private, max-age=600'
     )
 
 
@@ -576,6 +632,7 @@ async def list_episodes(
     summary="获取单集详情"
 )
 async def get_episode(
+    request: Request,
     episode_id: int,
     user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
@@ -585,7 +642,25 @@ async def get_episode(
     episode = await service.get_episode_with_summary(episode_id)
     if not episode:
         raise HTTPException(status_code=404, detail="单集不存在或无权限")
-    return PodcastEpisodeDetailResponse(**episode)
+
+    response_data = PodcastEpisodeDetailResponse(**episode)
+
+    # Check ETag - return 304 if match
+    etag_response = await check_etag_precondition(
+        request,
+        response_data.dict(),
+        max_age=1800,
+        cache_control='private, max-age=1800'
+    )
+    if etag_response:
+        return etag_response
+
+    # Return full response with ETag
+    return ETagResponse(
+        content=response_data.dict(),
+        max_age=1800,
+        cache_control='private, max-age=1800'
+    )
 
 
 @router.post(
@@ -807,13 +882,35 @@ async def search_podcasts(
     summary="获取播客统计信息"
 )
 async def get_podcast_stats(
+    request: Request,
     user=Depends(get_token_from_request),
     db: AsyncSession = Depends(get_db_session)
 ):
     """获取用户的播客收听统计"""
     service = PodcastService(db, int(user["sub"]))
     stats = await service.get_user_stats()
-    return PodcastStatsResponse(**stats)
+    response_data = PodcastStatsResponse(**stats)
+
+    # Check ETag (weak) - return 304 if match
+    from app.core.etag import generate_etag, matches_any_etag
+    if_none_match = request.headers.get('if-none-match')
+    if if_none_match:
+        current_etag = generate_etag(response_data.dict(), weak=True)
+        if matches_any_etag(current_etag, if_none_match):
+            from fastapi import Response
+            return Response(
+                status_code=304,
+                headers={'ETag': current_etag, 'Cache-Control': 'private, max-age=300'}
+            )
+
+    # Return full response with weak ETag
+    from app.core.etag_response import ETagResponse
+    return ETagResponse(
+        content=response_data.dict(),
+        max_age=300,
+        weak=True,
+        cache_control='private, max-age=300'
+    )
 
 
 # === 批量操作 ===
@@ -947,7 +1044,7 @@ async def start_transcription(
             await db.commit()
 
         # 5. 获取锁并检查是否已有其他任务在进行
-        await _handle_lock_and_create_task(
+        return await _handle_lock_and_create_task(
             episode_id, episode, transcription_request, state_manager, transcription_service, db
         )
 

@@ -70,6 +70,9 @@ class ErrorNotifier extends Notifier<String?> {
   }
 }
 
+// ETag Configuration Provider
+final etagEnabledProvider = Provider<bool>((ref) => true);
+
 // Server Config Provider - Manages backend server address configuration
 class ServerConfigState {
   final String serverUrl;
@@ -135,6 +138,7 @@ class ServerConfigNotifier extends Notifier<ServerConfigState> {
       // Update DioClient
       final dioClient = ref.read(dioClientProvider);
       dioClient.updateBaseUrl('$normalizedUrl/api/v1');
+      dioClient.clearETagCache();
 
       // Invalidate apiServiceProvider to force recreation with new baseUrl
       ref.invalidate(apiServiceProvider);
@@ -226,4 +230,3 @@ class ServerConfigNotifier extends Notifier<ServerConfigState> {
 }
 
 final serverConfigProvider = NotifierProvider<ServerConfigNotifier, ServerConfigState>(ServerConfigNotifier.new);
-

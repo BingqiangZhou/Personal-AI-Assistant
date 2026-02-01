@@ -2424,7 +2424,7 @@ async def import_subscriptions_opml(
         return SubscriptionCreate(
             source_url=xml_url,
             title=title,
-            source_type="rss",
+            source_type="podcast-rss",
             description=description,
         )
 
@@ -2520,7 +2520,7 @@ async def import_subscriptions_opml(
                 SubscriptionCreate(
                     source_url=xml_url,
                     title=title,
-                    source_type="rss",
+                    source_type="podcast-rss",
                     description=description,
                 )
             )

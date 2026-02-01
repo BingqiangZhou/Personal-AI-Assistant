@@ -167,6 +167,12 @@ class Settings(BaseSettings):
     PODCAST_EPISODE_BATCH_SIZE: int = 50  # Default batch size for episode processing
     PODCAST_RECENT_EPISODES_LIMIT: int = 3  # Number of recent episodes to fetch by default
 
+    # ETag Configuration
+    ETAG_ENABLED: bool = True  # Enable ETag caching for GET endpoints
+    ETAG_DEFAULT_TTL: int = 300  # Default max-age for ETag responses (5 minutes)
+    ETAG_CACHE_IN_REDIS: bool = True  # Cache ETags in Redis for cross-instance validation
+    ETAG_REDIS_PREFIX: str = "etag:"  # Redis key prefix for ETag storage
+
     @validator("ALLOWED_HOSTS", pre=True)
     def assemble_cors_origins(cls, v):
         if isinstance(v, str) and not v.startswith("["):

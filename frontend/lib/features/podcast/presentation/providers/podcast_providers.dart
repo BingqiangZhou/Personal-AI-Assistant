@@ -477,7 +477,9 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
         isLoading: false,
         lastRefreshTime: DateTime.now(), // Record refresh time
       );
-      logger.AppLogger.debug('✅ Subscription data loaded at ${DateTime.now()}');
+      logger.AppLogger.debug(
+        '✅ Subscription data loaded at ${DateTime.now()} (total=${response.total}, count=${response.subscriptions.length})',
+      );
     } catch (error) {
       state = state.copyWith(
         isLoading: false,

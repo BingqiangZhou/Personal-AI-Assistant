@@ -831,7 +831,7 @@ class TextGenerationService:
         episode_title: str,
         content: str,
         content_type: str = "transcript",
-        max_tokens: int = 500
+        max_tokens: int | None = None
     ) -> str:
         """Generate a summary for podcast content using AI models.
 
@@ -927,15 +927,19 @@ class TextGenerationService:
 请提供详细总结（150-300字）。
 """
 
-                response = await client.chat.completions.create(
-                    model=model_config.model_id if model_config.model_id else "gpt-4o-mini",
-                    messages=[
+                # Build API call parameters
+                api_params = {
+                    "model": model_config.model_id if model_config.model_id else "gpt-4o-mini",
+                    "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
                     ],
-                    temperature=0.7,
-                    max_tokens=max_tokens
-                )
+                    "temperature": 0.7
+                }
+                if max_tokens is not None:
+                    api_params["max_tokens"] = max_tokens
+
+                response = await client.chat.completions.create(**api_params)
 
                 # Success - log and return
                 logger.info(

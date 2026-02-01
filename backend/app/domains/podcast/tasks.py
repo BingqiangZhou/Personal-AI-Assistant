@@ -5,11 +5,10 @@
 
 import logging
 from datetime import datetime, timedelta
-from typing import Optional
 
 from celery import Celery
 from celery.schedules import crontab
-from sqlalchemy import delete, select
+from sqlalchemy import and_, delete, select
 
 # 初始化日志系统
 from app.core.logging_config import setup_logging_from_env
@@ -20,6 +19,10 @@ setup_logging_from_env()
 import asyncio
 
 from app.core.config import settings
+
+# Import all models to ensure SQLAlchemy relationships are properly resolved
+# This is critical for Celery workers which don't call init_db()
+# User model references these models, so they must be imported first
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.services import PodcastService
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
@@ -27,9 +30,6 @@ from app.domains.podcast.transcription_state import get_transcription_state_mana
 from app.domains.subscription.models import (
     Subscription,
 )
-
-# Import all models to ensure SQLAlchemy relationships are properly resolved
-# This is critical for Celery workers which don't call init_db()
 from app.domains.user.models import UserStatus
 
 
@@ -109,10 +109,26 @@ def log_task_statistics():
     在日志中显示当前任务队列状态
     """
     try:
-        # 在 Celery 环境中，事件循环已经在运行，不能使用 asyncio.run()
+        # 在 Celery worker 中正确处理 async 函数
         try:
             loop = asyncio.get_running_loop()
-            stats = loop.run_until_complete(get_task_statistics())
+            # 如果有运行中的事件循环，使用 run_coroutine_threadsafe
+            import concurrent.futures
+            import threading
+            result_future = concurrent.futures.Future()
+
+            def run_in_thread():
+                new_loop = asyncio.new_event_loop()
+                try:
+                    asyncio.set_event_loop(new_loop)
+                    result = new_loop.run_until_complete(get_task_statistics())
+                    result_future.set_result(result)
+                finally:
+                    new_loop.close()
+
+            thread = threading.Thread(target=run_in_thread, daemon=True)
+            thread.start()
+            stats = result_future.result(timeout=5)
         except RuntimeError:
             # 如果没有运行中的事件循环，使用 asyncio.run()
             stats = asyncio.run(get_task_statistics())
@@ -328,28 +344,68 @@ def refresh_all_podcast_feeds(self):
             async with worker_session_factory() as db:
                 try:
                     # 获取所有需要刷新的订阅
-                    repo = PodcastRepository(db)
+                    # IMPORTANT: Refresh ALL podcast RSS subscriptions regardless of user subscriptions
+                    # The Subscription table stores podcasts globally, and they should be refreshed
+                    # even if no user is currently subscribed to them.
 
-                    # Get active podcast subscriptions that should be updated now
-                    stmt = select(Subscription).where(
-                        Subscription.source_type == "podcast-rss"
-                    ).where(
-                        Subscription.status == "active"
+                    from app.domains.subscription.models import UserSubscription
+
+                    # Get ALL active podcast-rss subscriptions directly from Subscription table
+                    # NOT filtered by whether users are subscribed
+                    stmt = (
+                        select(Subscription)
+                        .where(
+                            and_(
+                                Subscription.source_type == "podcast-rss",
+                                Subscription.status == "active"
+                            )
+                        )
                     )
 
                     result = await db.execute(stmt)
                     all_subscriptions = list(result.scalars().all())
 
-                    # Filter subscriptions that should be updated now based on their schedule
-                    subscriptions = [sub for sub in all_subscriptions if sub.should_update_now()]
+                    # For subscription-level scheduling, we need to check if ANY user wants this updated now
+                    # Get all active user subscriptions for scheduling info
+                    user_sub_stmt = (
+                        select(UserSubscription)
+                        .join(Subscription, UserSubscription.subscription_id == Subscription.id)
+                        .where(
+                            and_(
+                                Subscription.source_type == "podcast-rss",
+                                Subscription.status == "active",
+                                UserSubscription.is_archived == False
+                            )
+                        )
+                    )
+                    user_sub_result = await db.execute(user_sub_stmt)
+                    user_subscriptions = list(user_sub_result.scalars().all())
+
+                    # Build a set of subscription IDs that should be updated based on user schedules
+                    subscriptions_to_update = set()
+                    for us in user_subscriptions:
+                        if us.should_update_now():
+                            subscriptions_to_update.add(us.subscription_id)
+
+                    # Refresh all subscriptions that match the schedule
+                    # If no user subscriptions exist yet, still refresh all subscriptions (default behavior)
+                    subscriptions_to_refresh = subscriptions_to_update if subscriptions_to_update else {sub.id for sub in all_subscriptions}
 
                     refreshed_count = 0
                     new_episodes_count = 0
 
-                    for sub in subscriptions:
+                    for sub_id in subscriptions_to_refresh:
+                        sub = next((s for s in all_subscriptions if s.id == sub_id), None)
+                        if not sub:
+                            continue
+
                         try:
+                            # Find a user_id for this subscription (any active subscriber will do)
+                            user_sub = next((us for us in user_subscriptions if us.subscription_id == sub_id), None)
+                            user_id = user_sub.user_id if user_sub else 1  # Default to user 1 if no subscribers
+
                             # 为每个订阅创建服务实例
-                            service = PodcastService(db, sub.user_id)
+                            service = PodcastService(db, user_id)
 
                             # 刷新订阅
                             new_episodes = await service.refresh_subscription(sub.id)
@@ -452,8 +508,10 @@ def generate_pending_summaries(self):
                         try:
                             # Get a user_id from UserSubscription for this subscription
                             # (Summaries are shared across users, any subscriber will do)
-                            from app.domains.subscription.models import UserSubscription
+                            # If no users are subscribed, use a default user_id (e.g., 1) for summary generation
                             from sqlalchemy import select
+
+                            from app.domains.subscription.models import UserSubscription
 
                             user_sub_stmt = select(UserSubscription).where(
                                 UserSubscription.subscription_id == episode.subscription_id,
@@ -462,12 +520,11 @@ def generate_pending_summaries(self):
                             user_sub_result = await db.execute(user_sub_stmt)
                             user_sub = user_sub_result.scalar_one_or_none()
 
-                            if not user_sub:
-                                logger.warning(f"No active users for subscription {episode.subscription_id}, skipping episode {episode.id}")
-                                continue
+                            # Use any active subscriber's user_id, or default to user 1 if no subscribers
+                            user_id = user_sub.user_id if user_sub else 1
 
                             # 创建服务实例
-                            service = PodcastService(db, user_sub.user_id)
+                            service = PodcastService(db, user_id)
 
                             # 生成摘要
                             summary = await service._generate_summary(episode)
@@ -518,7 +575,7 @@ def generate_pending_summaries(self):
 
 
 @celery_app.task(bind=True, max_retries=3)
-def process_audio_transcription(self, task_id: int, config_db_id: Optional[int] = None):
+def process_audio_transcription(self, task_id: int, config_db_id: int | None = None):
     """
     处理音频转录任务
     使用外部转录服务（如OpenAI Whisper）转录音频

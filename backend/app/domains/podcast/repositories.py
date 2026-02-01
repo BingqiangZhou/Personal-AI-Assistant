@@ -147,7 +147,7 @@ class PodcastRepository:
                 and_(
                     UserSubscription.user_id == user_id,
                     UserSubscription.is_archived == False,
-                    Subscription.source_type == "podcast-rss"
+                    Subscription.source_type.in_(["podcast-rss", "rss"])
                 )
             )
             .order_by(Subscription.created_at.desc())
@@ -166,7 +166,7 @@ class PodcastRepository:
                     UserSubscription.user_id == user_id,
                     UserSubscription.is_archived == False,
                     Subscription.id == sub_id,
-                    Subscription.source_type == "podcast-rss"
+                    Subscription.source_type.in_(["podcast-rss", "rss"])
                 )
             )
         )
@@ -183,7 +183,7 @@ class PodcastRepository:
                     UserSubscription.user_id == user_id,
                     UserSubscription.is_archived == False,
                     Subscription.source_url == feed_url,
-                    Subscription.source_type == "podcast-rss"
+                    Subscription.source_type.in_(["podcast-rss", "rss"])
                 )
             )
         )
@@ -542,7 +542,7 @@ class PodcastRepository:
                 and_(
                     UserSubscription.user_id == user_id,
                     UserSubscription.is_archived == False,
-                    Subscription.source_type == "podcast-rss"
+                    Subscription.source_type.in_(["podcast-rss", "rss"])
                 )
             )
         )

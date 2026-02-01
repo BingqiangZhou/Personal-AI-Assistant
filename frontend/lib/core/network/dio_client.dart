@@ -6,6 +6,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Import ETag interceptor
+import 'etag_interceptor.dart';
+
 // Import the new AppConfig with dynamic baseUrl support
 import '../../core/app/config/app_config.dart' as config;
 import '../constants/app_constants.dart' as constants;
@@ -29,6 +32,9 @@ class DioClient {
   late final CacheStore _cacheStore;
   late final DioCacheInterceptor _cacheInterceptor;
 
+  // ETag interceptor
+  late final ETagInterceptor _etagInterceptor;
+
   DioClient() {
     // Initialize cache store
     _cacheStore = MemCacheStore();
@@ -47,6 +53,9 @@ class DioClient {
       ),
     );
 
+    // Initialize ETag interceptor
+    _etagInterceptor = ETagInterceptor();
+
     // Initialize with default/empty baseUrl first
     // The actual baseUrl will be applied by _applySavedBaseUrl()
     _dio = Dio(BaseOptions(
@@ -59,6 +68,9 @@ class DioClient {
 
     // Add cache interceptor FIRST (before auth interceptor)
     _dio.interceptors.add(_cacheInterceptor);
+
+    // Add ETag interceptor AFTER cache interceptor
+    _dio.interceptors.add(_etagInterceptor);
 
     // Add interceptors
     _dio.interceptors.add(
@@ -174,6 +186,20 @@ class DioClient {
     Response response,
     ResponseInterceptorHandler handler,
   ) {
+    // Debug subscriptions list response shape
+    if (response.requestOptions.path == '/podcasts/subscriptions') {
+      final data = response.data;
+      if (data is Map) {
+        logger.AppLogger.debug(
+          '?? [Subscriptions Response] keys=${data.keys.toList()} '
+          'subscriptions=${(data['subscriptions'] as List?)?.length} '
+          'items=${(data['items'] as List?)?.length} '
+          'total=${data['total']}',
+        );
+      } else {
+        logger.AppLogger.debug('?? [Subscriptions Response] type=${data.runtimeType}');
+      }
+    }
     // 🔍 Debug: 打印AI Summary相关响应
     if (response.requestOptions.path.contains('/episodes/')) {
       final data = response.data;
@@ -531,6 +557,16 @@ class DioClient {
   Future<void> clearCache() async {
     await _cacheStore.clean();
     logger.AppLogger.debug('🗑️ [DioClient] Cache cleared');
+  }
+
+  /// Clear ETag cache
+  void clearETagCache() {
+    _etagInterceptor.clearCache();
+  }
+
+  /// Clear ETag cache for specific key pattern
+  void clearETagPattern(String pattern) {
+    _etagInterceptor.clearPattern(pattern);
   }
 
   // Static factory method for ServiceLocator

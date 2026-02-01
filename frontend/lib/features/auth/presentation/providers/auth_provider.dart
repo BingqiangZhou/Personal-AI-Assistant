@@ -114,6 +114,7 @@ class AuthNotifier extends Notifier<AuthState> {
               user: null,
             );
           }
+          ref.read(dioClientProvider).clearETagCache();
         }
       },
     );
@@ -361,6 +362,7 @@ class AuthNotifier extends Notifier<AuthState> {
       (error) {
         // Even if logout API fails, clear local state
         _clearAuthState();
+        ref.read(dioClientProvider).clearETagCache();
         state = state.copyWith(
           isLoading: false,
           currentOperation: null,
@@ -368,6 +370,7 @@ class AuthNotifier extends Notifier<AuthState> {
       },
       (_) {
         _clearAuthState();
+        ref.read(dioClientProvider).clearETagCache();
         state = const AuthState(
           isAuthenticated: false,
           isLoading: false,

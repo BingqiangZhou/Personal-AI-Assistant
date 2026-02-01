@@ -237,6 +237,10 @@ class PodcastSubscriptionService:
             image_url = config.get("image_url")
             author = config.get("author")
             platform = config.get("platform")
+
+            # Debug logging for missing image_url
+            if not image_url:
+                logger.warning(f"[DEBUG] Subscription {sub.id} ({sub.title}) has no image_url. config keys: {list(config.keys()) if config else 'config is None'}")
             categories = self._normalize_categories(config.get("categories") or [])
             podcast_type = config.get("podcast_type")
             language = config.get("language")
@@ -260,7 +264,7 @@ class PodcastSubscriptionService:
 
             results.append({
                 "id": sub.id,
-                "user_id": sub.user_id,
+                "user_id": self.user_id,
                 "title": sub.title,
                 "description": sub.description,
                 "source_url": sub.source_url,
@@ -448,8 +452,7 @@ class PodcastSubscriptionService:
                 continue
 
             try:
-                logger.info(f"Re-parsing episode: {episode.title[:50]}...")
-                logger.info(f"   - episode.link: {episode.link}")
+                logger.debug(f"Re-parsing episode: {episode.title[:50]}... (link: {episode.link})")
 
                 saved_episode, is_new = await self.repo.create_or_update_episode(
                     subscription_id=subscription_id,
