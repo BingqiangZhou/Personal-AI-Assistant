@@ -148,9 +148,9 @@ def create_application() -> FastAPI:
         return await http_exception_handler(request, exc)
 
     # Include routers
-    from app.admin.api.router import router as admin_router
     from app.admin.csrf import CSRFException
     from app.admin.exception_handlers import csrf_exception_handler
+    from app.admin.router import router as admin_router
     from app.domains.ai.api.routes import router as ai_model_router
     from app.domains.assistant.api.routes import router as assistant_router
     from app.domains.multimedia.api.routes import router as multimedia_router

@@ -1,4 +1,4 @@
-"""Helpers for modularizing legacy admin routes without behavior changes."""
+"""Helpers for composing admin route groups from legacy implementation."""
 
 from collections.abc import Callable
 
