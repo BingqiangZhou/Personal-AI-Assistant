@@ -1,26 +1,8 @@
 """Shared utilities for admin routes."""
 
-from collections.abc import Callable
 from datetime import datetime, timezone
 
-from fastapi import APIRouter
-from fastapi.responses import HTMLResponse
-from fastapi.routing import APIRoute
 from fastapi.templating import Jinja2Templates
-
-
-# ==================== Migrated Routes ====================
-# Routes that have been migrated to independent modules and should be excluded
-MIGRATED_ROUTES = {
-    "/",  # dashboard.py
-    "/setup",  # setup_auth.py
-    "/login",  # setup_auth.py
-    "/logout",  # setup_auth.py
-    "/login/2fa",  # setup_auth.py
-    "/2fa/setup",  # setup_auth.py
-    "/2fa/verify",  # setup_auth.py
-    "/2fa/disable",  # setup_auth.py
-}
 
 
 # ==================== Template Setup ====================
@@ -97,21 +79,4 @@ def format_number(value: int) -> str:
     if value is None:
         return '-'
     return f"{value:,}"
-
-
-# ==================== Router Helpers ====================
-
-def build_filtered_router(
-    source_router: APIRouter,
-    path_predicate: Callable[[str], bool],
-) -> APIRouter:
-    """Clone selected APIRoutes from a source router, excluding migrated routes."""
-    router = APIRouter()
-    for route in source_router.routes:
-        if isinstance(route, APIRoute) and path_predicate(route.path):
-            # Skip migrated routes
-            if route.path in MIGRATED_ROUTES:
-                continue
-            router.routes.append(route)
-    return router
 
