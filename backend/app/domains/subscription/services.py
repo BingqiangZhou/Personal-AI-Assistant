@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import Any, Optional
 from urllib.parse import urlparse
 from xml.etree.ElementTree import Element, SubElement, tostring
-from xml.sax.saxutils import escape
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -100,100 +99,12 @@ class SubscriptionService:
         3. If exists but user not subscribed: create UserSubscription mapping
         4. If not exists: create Subscription + UserSubscription
         """
-        # Check for existing subscription by URL (global lookup)
-        existing = await self.repo.get_subscription_by_url(
-            self.user_id, sub_data.source_url
+        status, sub, _ = await self._subscribe_or_attach(
+            sub_data, raise_on_active_duplicate=True
         )
-
-        if existing:
-            # Check if user is already subscribed to this subscription
-            existing_user_sub = await self.db.execute(
-                select(UserSubscription).where(
-                    UserSubscription.user_id == self.user_id,
-                    UserSubscription.subscription_id == existing.id
-                )
-            )
-            user_sub = existing_user_sub.scalar_one_or_none()
-
-            if user_sub:
-                # User already subscribed - check status
-                if user_sub.is_archived:
-                    # Unarchive the existing subscription
-                    user_sub.is_archived = False
-                    await self.db.commit()
-                    await self.db.refresh(existing)
-                elif existing.status == SubscriptionStatus.ACTIVE:
-                    # Active and not archived - skip creation
-                    raise ValueError(
-                        f"Already subscribed to: {existing.title}"
-                    )
-            else:
-                # Subscription exists but user not subscribed - create mapping
-                from app.admin.models import SystemSettings
-                from app.domains.subscription.models import UpdateFrequency
-
-                # Get global settings
-                update_frequency = UpdateFrequency.HOURLY.value
-                update_time = None
-                update_day_of_week = None
-
-                settings_result = await self.db.execute(
-                    select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
-                )
-                setting = settings_result.scalar_one_or_none()
-                if setting and setting.value:
-                    update_frequency = setting.value.get("update_frequency", UpdateFrequency.HOURLY.value)
-                    update_time = setting.value.get("update_time")
-                    update_day_of_week = setting.value.get("update_day_of_week")
-
-                # Create UserSubscription mapping
-                new_user_sub = UserSubscription(
-                    user_id=self.user_id,
-                    subscription_id=existing.id,
-                    update_frequency=update_frequency,
-                    update_time=update_time,
-                    update_day_of_week=update_day_of_week,
-                )
-                self.db.add(new_user_sub)
-                await self.db.commit()
-                await self.db.refresh(existing)
-
-            # Return the existing subscription
-            return SubscriptionResponse(
-                id=existing.id,
-                title=existing.title,
-                description=existing.description,
-                source_type=existing.source_type,
-                source_url=existing.source_url,
-                config=existing.config,
-                status=existing.status,
-                last_fetched_at=existing.last_fetched_at,
-                latest_item_published_at=existing.latest_item_published_at,
-                error_message=existing.error_message,
-                fetch_interval=existing.fetch_interval,
-                item_count=0,
-                created_at=existing.created_at,
-                updated_at=existing.updated_at,
-            )
-
-        # No existing subscription - create new Subscription + UserSubscription
-        sub = await self.repo.create_subscription(self.user_id, sub_data)
-        return SubscriptionResponse(
-            id=sub.id,
-            title=sub.title,
-            description=sub.description,
-            source_type=sub.source_type,
-            source_url=sub.source_url,
-            config=sub.config,
-            status=sub.status,
-            last_fetched_at=sub.last_fetched_at,
-            latest_item_published_at=sub.latest_item_published_at,
-            error_message=sub.error_message,
-            fetch_interval=sub.fetch_interval,
-            item_count=0,
-            created_at=sub.created_at,
-            updated_at=sub.updated_at,
-        )
+        if status == "skipped":
+            raise ValueError(f"Already subscribed to: {sub.title}")
+        return self._to_response(sub)
 
     async def create_subscriptions_batch(
         self, subscriptions_data: list[SubscriptionCreate]
@@ -212,60 +123,14 @@ class SubscriptionService:
         results = []
         for sub_data in subscriptions_data:
             try:
-                # Check for duplicate by URL or title
-                existing = await self.repo.get_duplicate_subscription(
-                    self.user_id, sub_data.source_url, sub_data.title
-                )
-
-                if existing:
-                    # Check if existing subscription is active
-                    if existing.status == SubscriptionStatus.ACTIVE:
-                        results.append(
-                            {
-                                "source_url": sub_data.source_url,
-                                "title": sub_data.title,
-                                "status": "skipped",
-                                "message": f"Subscription already exists: {existing.title}",
-                                "existing_id": existing.id,
-                            }
-                        )
-                        continue
-
-                    # Non-active subscription - update URL and reactivate
-                    logger.info(
-                        f"Updating non-active subscription in batch: {existing.title} "
-                        f"(old_url: {existing.source_url}, new_url: {sub_data.source_url})"
-                    )
-
-                    existing.source_url = sub_data.source_url
-                    existing.title = sub_data.title
-                    existing.description = sub_data.description
-                    existing.status = SubscriptionStatus.ACTIVE
-                    existing.error_message = None
-                    existing.updated_at = datetime.utcnow()
-
-                    await self.db.commit()
-                    await self.db.refresh(existing)
-
-                    results.append(
-                        {
-                            "source_url": sub_data.source_url,
-                            "title": sub_data.title,
-                            "status": "updated",
-                            "id": existing.id,
-                            "message": f"Updated existing subscription: {existing.title}",
-                        }
-                    )
-                    continue
-
-                # No duplicate - create new subscription
-                sub = await self.repo.create_subscription(self.user_id, sub_data)
+                status, sub, message = await self._subscribe_or_attach(sub_data)
                 results.append(
                     {
                         "source_url": sub_data.source_url,
                         "title": sub_data.title,
-                        "status": "success",
+                        "status": status,
                         "id": sub.id,
+                        "message": message,
                     }
                 )
 
@@ -292,6 +157,135 @@ class SubscriptionService:
                     }
                 )
         return results
+
+    async def _subscribe_or_attach(
+        self,
+        sub_data: SubscriptionCreate,
+        raise_on_active_duplicate: bool = False,
+    ) -> tuple[str, Subscription, Optional[str]]:
+        """Create a global subscription or attach current user mapping."""
+        existing = await self.repo.get_duplicate_subscription(
+            self.user_id, sub_data.source_url, sub_data.title
+        )
+
+        if not existing:
+            created = await self.repo.create_subscription(self.user_id, sub_data)
+            return "success", created, "Subscription created"
+
+        user_sub_result = await self.db.execute(
+            select(UserSubscription).where(
+                UserSubscription.user_id == self.user_id,
+                UserSubscription.subscription_id == existing.id,
+            )
+        )
+        user_sub = user_sub_result.scalar_one_or_none()
+
+        # Existing source + user already mapped.
+        if user_sub:
+            if user_sub.is_archived:
+                user_sub.is_archived = False
+                if not user_sub.update_frequency:
+                    (
+                        user_sub.update_frequency,
+                        user_sub.update_time,
+                        user_sub.update_day_of_week,
+                    ) = await self._get_default_schedule_settings()
+                await self.db.commit()
+                await self.db.refresh(existing)
+                return "updated", existing, "Subscription restored"
+
+            if existing.status == SubscriptionStatus.ACTIVE:
+                if raise_on_active_duplicate:
+                    raise ValueError(f"Already subscribed to: {existing.title}")
+                return (
+                    "skipped",
+                    existing,
+                    f"Subscription already exists: {existing.title}",
+                )
+
+            existing.source_url = sub_data.source_url
+            existing.title = sub_data.title
+            existing.description = sub_data.description
+            existing.status = SubscriptionStatus.ACTIVE
+            existing.error_message = None
+            existing.updated_at = datetime.utcnow()
+            await self.db.commit()
+            await self.db.refresh(existing)
+            return "updated", existing, f"Updated existing subscription: {existing.title}"
+
+        # Existing source + user not mapped: create user mapping only.
+        (
+            update_frequency,
+            update_time,
+            update_day_of_week,
+        ) = await self._get_default_schedule_settings()
+        self.db.add(
+            UserSubscription(
+                user_id=self.user_id,
+                subscription_id=existing.id,
+                update_frequency=update_frequency,
+                update_time=update_time,
+                update_day_of_week=update_day_of_week,
+            )
+        )
+
+        status = "success"
+        message = f"Subscribed to existing source: {existing.title}"
+        if existing.status != SubscriptionStatus.ACTIVE:
+            existing.source_url = sub_data.source_url
+            existing.title = sub_data.title
+            existing.description = sub_data.description
+            existing.status = SubscriptionStatus.ACTIVE
+            existing.error_message = None
+            existing.updated_at = datetime.utcnow()
+            status = "updated"
+            message = f"Updated and subscribed to existing source: {existing.title}"
+
+        await self.db.commit()
+        await self.db.refresh(existing)
+        return status, existing, message
+
+    async def _get_default_schedule_settings(self) -> tuple[str, Optional[str], Optional[int]]:
+        from app.admin.models import SystemSettings
+        from app.domains.subscription.models import UpdateFrequency
+
+        update_frequency = UpdateFrequency.HOURLY.value
+        update_time = None
+        update_day_of_week = None
+
+        settings_result = await self.db.execute(
+            select(SystemSettings).where(
+                SystemSettings.key == "rss.frequency_settings"
+            )
+        )
+        setting = settings_result.scalar_one_or_none()
+        if setting and setting.value:
+            update_frequency = setting.value.get(
+                "update_frequency", UpdateFrequency.HOURLY.value
+            )
+            update_time = setting.value.get("update_time")
+            update_day_of_week = setting.value.get("update_day_of_week")
+
+        return update_frequency, update_time, update_day_of_week
+
+    @staticmethod
+    def _to_response(sub: Subscription) -> SubscriptionResponse:
+        return SubscriptionResponse(
+            id=sub.id,
+            title=sub.title,
+            description=sub.description,
+            source_type=sub.source_type,
+            source_url=sub.source_url,
+            config=sub.config,
+            status=sub.status,
+            last_fetched_at=sub.last_fetched_at,
+            latest_item_published_at=sub.latest_item_published_at,
+            error_message=sub.error_message,
+            fetch_interval=sub.fetch_interval,
+            item_count=0,
+            created_at=sub.created_at,
+            updated_at=sub.updated_at,
+        )
 
     async def get_subscription(self, sub_id: int) -> Optional[SubscriptionResponse]:
         """Get subscription details."""

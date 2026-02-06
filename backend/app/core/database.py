@@ -77,14 +77,13 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-async def init_db() -> None:
+async def init_db(run_metadata_sync: bool = False) -> None:
     """Initialize database tables.
 
     Note: PostgreSQL ENUM types may already exist from previous deployments.
     We handle this by creating them manually first with existence checks.
     """
-    # Import all models here to ensure they are registered with Base
-    # This is critical for SQLAlchemy to resolve string-based relationships
+    # Import all models to register relationships and metadata.
     from app.admin.models import AdminAuditLog, SystemSettings
     from app.domains.assistant.models import (
         AssistantTask,
@@ -134,30 +133,42 @@ async def init_db() -> None:
             except Exception as e:
                 logger.warning(f"Could not create/check ENUM type {enum_name}: {e}")
 
-        # Now create all tables - SQLAlchemy may still try to create ENUM types
-        # even though we manually created them above, so we handle this gracefully
+        if not run_metadata_sync:
+            logger.info(
+                "Database connectivity and ENUM checks completed; "
+                "skipping Base.metadata.create_all (schema is migration-managed)."
+            )
+            return
+
+        # Optional compatibility path for environments that still need metadata sync.
         try:
             await conn.run_sync(Base.metadata.create_all, checkfirst=True)
-            logger.info("Database tables initialized successfully")
+            logger.info("Database tables initialized successfully via metadata sync")
         except (IntegrityError, ProgrammingError) as e:
             error_msg = str(e).lower()
-            # If it's just about duplicate ENUM types, it's non-critical
-            if 'duplicate key' in error_msg and ('enum' in error_msg or 'pg_type' in error_msg or 'typname' in error_msg):
+            if "duplicate key" in error_msg and (
+                "enum" in error_msg or "pg_type" in error_msg or "typname" in error_msg
+            ):
                 logger.warning(f"ENUM type conflict detected (non-critical): {e}")
-                # Verify tables exist by checking if a key table exists
                 try:
-                    result = await conn.execute(text(
-                        "SELECT 1 FROM information_schema.tables WHERE table_name = 'users'"
-                    ))
+                    result = await conn.execute(
+                        text(
+                            "SELECT 1 FROM information_schema.tables WHERE table_name = 'users'"
+                        )
+                    )
                     if result.first():
-                        logger.info("Database tables verified to exist (ignoring ENUM duplicate error)")
+                        logger.info(
+                            "Database tables verified to exist "
+                            "(ignoring ENUM duplicate error)"
+                        )
                     else:
                         raise ValueError("Tables do not exist after ENUM error") from e
                 except Exception as verify_error:
-                    logger.error(f"Could not verify tables after ENUM error: {verify_error}")
+                    logger.error(
+                        f"Could not verify tables after ENUM error: {verify_error}"
+                    )
                     raise e
             else:
-                # Re-raise if it's a different error
                 logger.error(f"Failed to initialize database: {e}")
                 raise
 

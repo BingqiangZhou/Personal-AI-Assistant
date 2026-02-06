@@ -208,7 +208,7 @@
                                     {{ sub.last_fetched_at | to_local('%Y-%m-%d %H:%M') if sub.last_fetched_at else '从未' }}
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {% set next_update = sub.computed_next_update_at %}
+                                    {% set next_update = next_update_by_subscription.get(sub.id) %}
                                     {% if next_update %}
                                         {{ next_update | to_local('%Y-%m-%d %H:%M') }}
                                     {% else %}

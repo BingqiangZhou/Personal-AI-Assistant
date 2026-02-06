@@ -456,7 +456,7 @@ async def get_subscription_schedule(
         update_time=user_sub.update_time,
         update_day_of_week=user_sub.update_day_of_week,
         fetch_interval=subscription.fetch_interval,
-        next_update_at=user_sub.next_update_at,
+        next_update_at=user_sub.computed_next_update_at,
         last_updated_at=subscription.last_fetched_at
     )
 
@@ -517,7 +517,7 @@ async def update_subscription_schedule(
         update_time=user_sub.update_time,
         update_day_of_week=user_sub.update_day_of_week,
         fetch_interval=subscription.fetch_interval,
-        next_update_at=user_sub.next_update_at,
+        next_update_at=user_sub.computed_next_update_at,
         last_updated_at=subscription.last_fetched_at
     )
 
@@ -2028,29 +2028,38 @@ async def get_all_subscription_schedules(
     db: AsyncSession = Depends(get_db_session)
 ):
     """Get all subscription schedule configurations"""
-    from app.domains.subscription.models import Subscription
+    from sqlalchemy import and_
 
-    stmt = select(Subscription).where(
-        True # Ownership verified by repository
-    ).where(
-        Subscription.source_type == "podcast-rss"
-    ).order_by(Subscription.created_at)
+    from app.domains.subscription.models import Subscription, UserSubscription
+
+    stmt = (
+        select(Subscription, UserSubscription)
+        .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+        .where(
+            and_(
+                UserSubscription.user_id == int(user["sub"]),
+                UserSubscription.is_archived == False,
+                Subscription.source_type.in_(["podcast-rss", "rss"]),
+            )
+        )
+        .order_by(Subscription.created_at)
+    )
 
     result = await db.execute(stmt)
-    subscriptions = list(result.scalars().all())
+    rows = list(result.all())
 
     return [
         ScheduleConfigResponse(
             id=sub.id,
             title=sub.title,
-            update_frequency=sub.update_frequency,
-            update_time=sub.update_time,
-            update_day_of_week=sub.update_day_of_week,
+            update_frequency=user_sub.update_frequency,
+            update_time=user_sub.update_time,
+            update_day_of_week=user_sub.update_day_of_week,
             fetch_interval=sub.fetch_interval,
-            next_update_at=sub.computed_next_update_at,
+            next_update_at=user_sub.computed_next_update_at,
             last_updated_at=sub.last_fetched_at
         )
-        for sub in subscriptions
+        for sub, user_sub in rows
     ]
 
 
@@ -2067,47 +2076,57 @@ async def batch_update_subscription_schedules(
     db: AsyncSession = Depends(get_db_session)
 ):
     """Batch update schedule configuration for multiple subscriptions"""
-    from app.domains.subscription.models import Subscription
+    from sqlalchemy import and_
 
-    stmt = select(Subscription).where(
-        Subscription.id.in_(subscription_ids)
-    ).where(
-        True # Ownership verified by repository
+    from app.domains.subscription.models import Subscription, UserSubscription
+
+    stmt = (
+        select(Subscription, UserSubscription)
+        .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+        .where(
+            and_(
+                Subscription.id.in_(subscription_ids),
+                UserSubscription.user_id == int(user["sub"]),
+                UserSubscription.is_archived == False,
+                Subscription.source_type.in_(["podcast-rss", "rss"]),
+            )
+        )
     )
 
     result = await db.execute(stmt)
-    subscriptions = list(result.scalars().all())
+    rows = list(result.all())
 
-    updated_subs = []
-    for sub in subscriptions:
+    updated_rows: list[tuple] = []
+    for sub, user_sub in rows:
         # Update schedule configuration
-        sub.update_frequency = schedule_data.update_frequency
-        sub.update_time = schedule_data.update_time
-        sub.update_day_of_week = schedule_data.update_day_of_week
+        user_sub.update_frequency = schedule_data.update_frequency
+        user_sub.update_time = schedule_data.update_time
+        user_sub.update_day_of_week = schedule_data.update_day_of_week
 
         if schedule_data.fetch_interval is not None:
             sub.fetch_interval = schedule_data.fetch_interval
 
-        updated_subs.append(sub)
+        updated_rows.append((sub, user_sub))
 
     await db.commit()
 
     # Refresh to get computed properties
-    for sub in updated_subs:
+    for sub, user_sub in updated_rows:
         await db.refresh(sub)
+        await db.refresh(user_sub)
 
     return [
         ScheduleConfigResponse(
             id=sub.id,
             title=sub.title,
-            update_frequency=sub.update_frequency,
-            update_time=sub.update_time,
-            update_day_of_week=sub.update_day_of_week,
+            update_frequency=user_sub.update_frequency,
+            update_time=user_sub.update_time,
+            update_day_of_week=user_sub.update_day_of_week,
             fetch_interval=sub.fetch_interval,
-            next_update_at=sub.computed_next_update_at,
+            next_update_at=user_sub.computed_next_update_at,
             last_updated_at=sub.last_fetched_at
         )
-        for sub in updated_subs
+        for sub, user_sub in updated_rows
     ]
 
 # Export router

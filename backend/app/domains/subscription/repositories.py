@@ -141,19 +141,10 @@ class SubscriptionRepository:
         """
         # First check by URL (exact match) - global lookup
         query_url = select(Subscription).where(Subscription.source_url == url)
-
         result = await self.db.execute(query_url)
         sub = result.scalar_one_or_none()
-
         if sub:
-            # Verify user doesn't already have this subscription
-            user_sub_query = select(UserSubscription).where(
-                UserSubscription.user_id == user_id,
-                UserSubscription.subscription_id == sub.id
-            )
-            user_sub_result = await self.db.execute(user_sub_query)
-            if user_sub_result.scalar_one_or_none():
-                return sub  # User already subscribed
+            return sub
 
         # Then check by title (case-insensitive) - global lookup
         query_title = select(Subscription).where(
@@ -163,17 +154,7 @@ class SubscriptionRepository:
         result = await self.db.execute(query_title)
         sub = result.scalar_one_or_none()
 
-        if sub:
-            # Verify user doesn't already have this subscription
-            user_sub_query = select(UserSubscription).where(
-                UserSubscription.user_id == user_id,
-                UserSubscription.subscription_id == sub.id
-            )
-            user_sub_result = await self.db.execute(user_sub_query)
-            if user_sub_result.scalar_one_or_none():
-                return sub  # User already subscribed
-
-        return None
+        return sub
 
     async def create_subscription(
         self, user_id: int, sub_data: SubscriptionCreate

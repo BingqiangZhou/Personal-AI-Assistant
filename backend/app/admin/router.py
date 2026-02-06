@@ -1489,6 +1489,7 @@ async def subscriptions_page(
                         "status_filter": status_filter or "",
                         "search_query": search_query or "",
                         "user_filter": user_filter or "",
+                        "next_update_by_subscription": {},
                         "messages": [],
                     },
                 )
@@ -1509,6 +1510,31 @@ async def subscriptions_page(
             .offset(offset)
         )
         subscriptions = result.all()  # Using all() since we have grouped columns
+
+        # Build next-update map using latest user-specific schedule per subscription.
+        next_update_by_subscription: dict[int, Optional[datetime]] = {}
+        if subscriptions:
+            subscription_ids = [sub_row[0].id for sub_row in subscriptions]
+            user_sub_rows = (
+                await db.execute(
+                    select(UserSubscription)
+                    .where(
+                        UserSubscription.subscription_id.in_(subscription_ids),
+                        UserSubscription.is_archived == False,
+                    )
+                    .order_by(
+                        UserSubscription.subscription_id,
+                        UserSubscription.updated_at.desc(),
+                        UserSubscription.id.desc(),
+                    )
+                )
+            ).scalars().all()
+
+            for user_sub in user_sub_rows:
+                if user_sub.subscription_id not in next_update_by_subscription:
+                    next_update_by_subscription[user_sub.subscription_id] = (
+                        user_sub.computed_next_update_at
+                    )
 
         # Get default frequency settings from the first subscription (if any)
         # This is a simple approach - could be stored in a settings table instead
@@ -1552,6 +1578,7 @@ async def subscriptions_page(
                 "status_filter": status_filter or "",
                 "search_query": search_query or "",
                 "user_filter": user_filter or "",
+                "next_update_by_subscription": next_update_by_subscription,
                 "messages": [],
             },
         )
@@ -1574,83 +1601,107 @@ async def update_subscription_frequency(
 ):
     """Update update frequency settings for all RSS subscriptions."""
     try:
-        # Validate frequency
-        if update_frequency not in [UpdateFrequency.HOURLY.value, UpdateFrequency.DAILY.value, UpdateFrequency.WEEKLY.value]:
+        from app.domains.subscription.models import UserSubscription
+
+        if update_frequency not in [
+            UpdateFrequency.HOURLY.value,
+            UpdateFrequency.DAILY.value,
+            UpdateFrequency.WEEKLY.value,
+        ]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid update frequency"
+                detail="Invalid update frequency",
             )
 
-        # Validate time format for DAILY and WEEKLY
         if update_frequency in [UpdateFrequency.DAILY.value, UpdateFrequency.WEEKLY.value]:
             if not update_time:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Update time is required for DAILY and WEEKLY frequency"
+                    detail="Update time is required for DAILY and WEEKLY frequency",
                 )
             try:
-                hour, minute = map(int, update_time.split(':'))
+                hour, minute = map(int, update_time.split(":"))
                 if not (0 <= hour <= 23 and 0 <= minute <= 59):
                     raise ValueError
             except (ValueError, AttributeError):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid time format. Use HH:MM"
+                    detail="Invalid time format. Use HH:MM",
                 )
 
-        # Validate day of week for WEEKLY
         day_of_week = None
         if update_frequency == UpdateFrequency.WEEKLY.value:
             if not update_day or not (1 <= update_day <= 7):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid day of week. Must be 1-7"
+                    detail="Invalid day of week. Must be 1-7",
                 )
             day_of_week = update_day
 
-        # Update all RSS subscriptions
-        stmt = select(Subscription).where(Subscription.source_type == "rss")
-        result = await db.execute(stmt)
-        subscriptions = result.scalars().all()
+        settings_data = {
+            "update_frequency": update_frequency,
+            "update_time": (
+                update_time
+                if update_frequency
+                in [UpdateFrequency.DAILY.value, UpdateFrequency.WEEKLY.value]
+                else None
+            ),
+            "update_day_of_week": (
+                day_of_week if update_frequency == UpdateFrequency.WEEKLY.value else None
+            ),
+        }
+
+        setting_result = await db.execute(
+            select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
+        )
+        setting = setting_result.scalar_one_or_none()
+        if setting:
+            setting.value = settings_data
+        else:
+            db.add(
+                SystemSettings(
+                    key="rss.frequency_settings",
+                    value=settings_data,
+                    description="RSS subscription update frequency settings",
+                    category="subscription",
+                )
+            )
+
+        user_subscriptions = (
+            await db.execute(
+                select(UserSubscription)
+                .join(Subscription, Subscription.id == UserSubscription.subscription_id)
+                .where(Subscription.source_type.in_(["rss", "podcast-rss"]))
+            )
+        ).scalars().all()
 
         update_count = 0
-        for sub in subscriptions:
-            sub.update_frequency = update_frequency
-            if update_frequency in [UpdateFrequency.DAILY.value, UpdateFrequency.WEEKLY.value]:
-                sub.update_time = update_time
-            else:
-                sub.update_time = None
-
-            if update_frequency == UpdateFrequency.WEEKLY.value:
-                sub.update_day_of_week = day_of_week
-            else:
-                sub.update_day_of_week = None
+        for user_sub in user_subscriptions:
+            user_sub.update_frequency = settings_data["update_frequency"]
+            user_sub.update_time = settings_data["update_time"]
+            user_sub.update_day_of_week = settings_data["update_day_of_week"]
             update_count += 1
 
         await db.commit()
 
-        logger.info(f"Updated frequency settings for {update_count} RSS subscriptions by user {user.username}")
-
-        # Log audit action
         await log_admin_action(
             db=db,
             user_id=user.id,
             username=user.username,
             action="update",
             resource_type="subscription_frequency",
-            resource_name=f"All RSS subscriptions ({update_count})",
-            details={
-                "update_frequency": update_frequency,
-                "update_time": update_time,
-                "update_day_of_week": day_of_week,
-            },
+            resource_name=f"All user subscriptions ({update_count})",
+            details=settings_data,
             request=request,
         )
 
-        return JSONResponse(content={
-            "success": True,
-            "message": f"已更新 {update_count} 个RSS订阅的更新频率设置"
-        })
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": f"Updated frequency settings for {update_count} user subscriptions",
+            }
+        )
+
     except HTTPException:
         raise
     except Exception as e:
@@ -3210,29 +3261,38 @@ async def get_frequency_settings(
 ):
     """Get RSS subscription update frequency settings."""
     try:
-        # Default values
+        from app.domains.subscription.models import UserSubscription
+
         default_frequency = UpdateFrequency.HOURLY.value
         default_update_time = "00:00"
         default_day_of_week = 1
         source = "default"
 
-        # First, try to get from SystemSettings (persisted settings)
-        from app.admin.models import SystemSettings
         settings_result = await db.execute(
             select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
         )
         setting = settings_result.scalar_one_or_none()
         if setting and setting.value:
-            default_frequency = setting.value.get("update_frequency", UpdateFrequency.HOURLY.value)
+            default_frequency = setting.value.get(
+                "update_frequency", UpdateFrequency.HOURLY.value
+            )
             default_update_time = setting.value.get("update_time", "00:00")
             default_day_of_week = setting.value.get("update_day_of_week", 1)
             source = "database"
-            logger.debug(f"RSS frequency settings from database: {default_frequency}")
         else:
-            # Fall back to the most recently updated subscription
             recent_result = await db.execute(
-                select(Subscription.update_frequency, Subscription.update_time, Subscription.update_day_of_week)
-                .order_by(Subscription.updated_at.desc())
+                select(
+                    UserSubscription.update_frequency,
+                    UserSubscription.update_time,
+                    UserSubscription.update_day_of_week,
+                )
+                .where(UserSubscription.update_frequency.isnot(None))
+                .group_by(
+                    UserSubscription.update_frequency,
+                    UserSubscription.update_time,
+                    UserSubscription.update_day_of_week,
+                )
+                .order_by(func.count().desc())
                 .limit(1)
             )
             row = recent_result.first()
@@ -3240,15 +3300,17 @@ async def get_frequency_settings(
                 default_frequency = row[0]
                 default_update_time = row[1] or "00:00"
                 default_day_of_week = row[2] or 1
-                source = "subscription"
-                logger.debug(f"RSS frequency settings from subscription: {default_frequency}")
+                source = "user_subscription"
 
-        return JSONResponse(content={
-            "update_frequency": default_frequency,
-            "update_time": default_update_time,
-            "update_day_of_week": default_day_of_week,
-            "source": source,
-        })
+        return JSONResponse(
+            content={
+                "update_frequency": default_frequency,
+                "update_time": default_update_time,
+                "update_day_of_week": default_day_of_week,
+                "source": source,
+            }
+        )
+
     except Exception as e:
         logger.error(f"Get frequency settings error: {e}")
         raise HTTPException(
@@ -3268,43 +3330,39 @@ async def update_frequency_settings(
 ):
     """Update RSS subscription update frequency settings."""
     try:
-        # Validate frequency value
-        valid_frequencies = ['HOURLY', 'DAILY', 'WEEKLY']
+        from app.domains.subscription.models import UserSubscription
+
+        valid_frequencies = ["HOURLY", "DAILY", "WEEKLY"]
         if update_frequency not in valid_frequencies:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid frequency. Must be one of: {valid_frequencies}"
+                detail=f"Invalid frequency. Must be one of: {valid_frequencies}",
             )
 
-        # Validate time if DAILY or WEEKLY
-        if update_frequency in ['DAILY', 'WEEKLY'] and not update_time:
+        if update_frequency in ["DAILY", "WEEKLY"] and not update_time:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="update_time is required for DAILY and WEEKLY frequencies"
+                detail="update_time is required for DAILY and WEEKLY frequencies",
             )
 
-        # Validate day if WEEKLY
-        if update_frequency == 'WEEKLY' and not update_day:
+        if update_frequency == "WEEKLY" and not update_day:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="update_day is required for WEEKLY frequency"
+                detail="update_day is required for WEEKLY frequency",
             )
 
         if update_day is not None and not (1 <= update_day <= 7):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="update_day must be between 1 and 7"
+                detail="update_day must be between 1 and 7",
             )
 
-        # Prepare the settings data
         settings_data = {
             "update_frequency": update_frequency,
-            "update_time": update_time if update_frequency in ['DAILY', 'WEEKLY'] else None,
-            "update_day_of_week": update_day if update_frequency == 'WEEKLY' else None,
+            "update_time": update_time if update_frequency in ["DAILY", "WEEKLY"] else None,
+            "update_day_of_week": update_day if update_frequency == "WEEKLY" else None,
         }
 
-        # First, save to SystemSettings (this persists the settings even with no subscriptions)
-        from app.admin.models import SystemSettings
         existing_setting = await db.execute(
             select(SystemSettings).where(SystemSettings.key == "rss.frequency_settings")
         )
@@ -3312,61 +3370,54 @@ async def update_frequency_settings(
 
         if setting:
             setting.value = settings_data
-            logger.info("Updated RSS frequency settings in SystemSettings")
         else:
-            setting = SystemSettings(
-                key="rss.frequency_settings",
-                value=settings_data,
-                description="RSS subscription update frequency settings / RSS订阅更新频率设置",
-                category="subscription"
+            db.add(
+                SystemSettings(
+                    key="rss.frequency_settings",
+                    value=settings_data,
+                    description="RSS subscription update frequency settings",
+                    category="subscription",
+                )
             )
-            db.add(setting)
-            logger.info("Created RSS frequency settings in SystemSettings")
 
-        # Then update all existing subscriptions with the new frequency settings
-        update_count_result = await db.execute(
-            select(func.count()).select_from(Subscription)
-        )
-        total_count = update_count_result.scalar() or 0
+        user_subscriptions = (
+            await db.execute(
+                select(UserSubscription)
+                .join(Subscription, Subscription.id == UserSubscription.subscription_id)
+                .where(Subscription.source_type.in_(["rss", "podcast-rss"]))
+            )
+        ).scalars().all()
 
-        if total_count > 0:
-            subscriptions = (await db.execute(
-                select(Subscription)
-            )).scalars().all()
+        total_count = 0
+        for user_sub in user_subscriptions:
+            user_sub.update_frequency = settings_data["update_frequency"]
+            user_sub.update_time = settings_data["update_time"]
+            user_sub.update_day_of_week = settings_data["update_day_of_week"]
+            total_count += 1
 
-            for sub in subscriptions:
-                sub.update_frequency = update_frequency
-                # Set or clear update_time based on frequency
-                if update_frequency in ['DAILY', 'WEEKLY']:
-                    sub.update_time = update_time
-                else:
-                    sub.update_time = None
-                # Set or clear update_day_of_week based on frequency
-                if update_frequency == 'WEEKLY':
-                    sub.update_day_of_week = update_day
-                else:
-                    sub.update_day_of_week = None
+        await db.commit()
 
-            await db.commit()
-
-        logger.info(f"Frequency settings updated by user {user.username}: {settings_data}, affected {total_count} subscriptions")
-
-        # Log audit action
         await log_admin_action(
             db=db,
             user_id=user.id,
             username=user.username,
             action="update",
             resource_type="subscription_frequency",
-            resource_name=f"All subscriptions (affected {total_count})",
+            resource_name=f"All user subscriptions (affected {total_count})",
             details=settings_data,
             request=request,
         )
 
-        return JSONResponse(content={
-            "success": True,
-            "message": f"RSS订阅设置已保存 (更新了 {total_count} 个现有订阅)"
-        })
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": (
+                    f"RSS settings saved (updated {total_count} "
+                    "user-subscription mappings)"
+                ),
+            }
+        )
+
     except HTTPException:
         raise
     except Exception as e:
@@ -3574,5 +3625,3 @@ async def execute_cleanup(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to execute cleanup",
         )
-
-

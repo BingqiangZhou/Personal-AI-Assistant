@@ -9,13 +9,10 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.multimedia.models import (
-    ImageAnalysis,
     MediaFile,
     MediaType,
     ProcessingJob,
     ProcessingStatus,
-    TranscriptionResult,
-    VideoAnalysis,
 )
 
 
@@ -291,121 +288,6 @@ class MultimediaRepository:
         await self.db.delete(job)
         await self.db.commit()
         return True
-
-    # Transcription Result operations
-    async def create_transcription_result(
-        self,
-        processing_job_id: int,
-        text: str,
-        confidence: Optional[float] = None,
-        language: Optional[str] = None,
-        segments: Optional[list] = None,
-        summary: Optional[str] = None,
-        keywords: Optional[list[str]] = None
-    ) -> TranscriptionResult:
-        """Create transcription result."""
-        result = TranscriptionResult(
-            processing_job_id=processing_job_id,
-            text=text,
-            confidence=confidence,
-            language=language,
-            segments=segments or [],
-            summary=summary,
-            keywords=keywords or []
-        )
-        self.db.add(result)
-        await self.db.commit()
-        await self.db.refresh(result)
-        return result
-
-    async def get_transcription_result(
-        self,
-        processing_job_id: int
-    ) -> Optional[TranscriptionResult]:
-        """Get transcription result by processing job ID."""
-        query = select(TranscriptionResult).where(
-            TranscriptionResult.processing_job_id == processing_job_id
-        )
-        result = await self.db.execute(query)
-        return result.scalar_one_or_none()
-
-    # Image Analysis operations
-    async def create_image_analysis(
-        self,
-        processing_job_id: int,
-        description: Optional[str] = None,
-        objects: Optional[list] = None,
-        faces: Optional[list] = None,
-        text_detected: Optional[list] = None,
-        emotions: Optional[list] = None,
-        tags: Optional[list[str]] = None,
-        confidence: Optional[float] = None
-    ) -> ImageAnalysis:
-        """Create image analysis result."""
-        analysis = ImageAnalysis(
-            processing_job_id=processing_job_id,
-            description=description,
-            objects=objects or [],
-            faces=faces or [],
-            text_detected=text_detected or [],
-            emotions=emotions or [],
-            tags=tags or [],
-            confidence=confidence
-        )
-        self.db.add(analysis)
-        await self.db.commit()
-        await self.db.refresh(analysis)
-        return analysis
-
-    async def get_image_analysis(
-        self,
-        processing_job_id: int
-    ) -> Optional[ImageAnalysis]:
-        """Get image analysis by processing job ID."""
-        query = select(ImageAnalysis).where(
-            ImageAnalysis.processing_job_id == processing_job_id
-        )
-        result = await self.db.execute(query)
-        return result.scalar_one_or_none()
-
-    # Video Analysis operations
-    async def create_video_analysis(
-        self,
-        processing_job_id: int,
-        duration: float,
-        thumbnail_path: Optional[str] = None,
-        key_frames: Optional[list] = None,
-        scenes: Optional[list] = None,
-        objects: Optional[list] = None,
-        text_detected: Optional[list] = None,
-        summary: Optional[str] = None
-    ) -> VideoAnalysis:
-        """Create video analysis result."""
-        analysis = VideoAnalysis(
-            processing_job_id=processing_job_id,
-            duration=duration,
-            thumbnail_path=thumbnail_path,
-            key_frames=key_frames or [],
-            scenes=scenes or [],
-            objects=objects or [],
-            text_detected=text_detected or [],
-            summary=summary
-        )
-        self.db.add(analysis)
-        await self.db.commit()
-        await self.db.refresh(analysis)
-        return analysis
-
-    async def get_video_analysis(
-        self,
-        processing_job_id: int
-    ) -> Optional[VideoAnalysis]:
-        """Get video analysis by processing job ID."""
-        query = select(VideoAnalysis).where(
-            VideoAnalysis.processing_job_id == processing_job_id
-        )
-        result = await self.db.execute(query)
-        return result.scalar_one_or_none()
 
     # Utility methods
     @staticmethod

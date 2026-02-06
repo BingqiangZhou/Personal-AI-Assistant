@@ -268,30 +268,12 @@ class MultimediaService:
             "created_at": job.created_at.isoformat()
         }
 
-        # Include specific results based on job type
-        if job.job_type == "transcribe":
-            transcription = await self.repo.get_transcription_result(job.id)
-            if transcription:
-                response["transcription"] = {
-                    "text": transcription.text,
-                    "confidence": transcription.confidence,
-                    "language": transcription.language,
-                    "segments": transcription.segments,
-                    "summary": transcription.summary,
-                    "keywords": transcription.keywords
-                }
-        elif job.job_type == "analyze":
-            analysis = await self.repo.get_image_analysis(job.id)
-            if analysis:
-                response["analysis"] = {
-                    "description": analysis.description,
-                    "objects": analysis.objects,
-                    "faces": analysis.faces,
-                    "text_detected": analysis.text_detected,
-                    "emotions": analysis.emotions,
-                    "tags": analysis.tags,
-                    "confidence": analysis.confidence
-                }
+        # Backward-compatible payload fields sourced from processing_jobs.result.
+        if isinstance(job.result, dict):
+            if job.job_type == "transcribe":
+                response["transcription"] = job.result
+            elif job.job_type == "analyze":
+                response["analysis"] = job.result
 
         return response
 
@@ -442,17 +424,20 @@ class MultimediaService:
         keywords: Optional[list[str]] = None
     ) -> ProcessingJob:
         """Complete a transcription job with results."""
-        # Create transcription result
-        await self.repo.create_transcription_result(
-            job_id, text, confidence, language, segments, summary, keywords
-        )
+        payload = {
+            "text": text,
+            "confidence": confidence,
+            "language": language,
+            "segments": segments or [],
+            "summary": summary,
+            "keywords": keywords or [],
+        }
 
-        # Update job status
         return await self.repo.update_job_status(
             job_id,
             ProcessingStatus.COMPLETED,
             progress=100,
-            result={"text": text, "summary": summary, "keywords": keywords}
+            result=payload,
         )
 
     async def complete_image_analysis_job(
@@ -467,21 +452,21 @@ class MultimediaService:
         confidence: Optional[float] = None
     ) -> ProcessingJob:
         """Complete an image analysis job with results."""
-        # Create analysis result
-        await self.repo.create_image_analysis(
-            job_id, description, objects, faces, text_detected, emotions, tags, confidence
-        )
+        payload = {
+            "description": description,
+            "objects": objects or [],
+            "faces": faces or [],
+            "text_detected": text_detected or [],
+            "emotions": emotions or [],
+            "tags": tags or [],
+            "confidence": confidence,
+        }
 
-        # Update job status
         return await self.repo.update_job_status(
             job_id,
             ProcessingStatus.COMPLETED,
             progress=100,
-            result={
-                "description": description,
-                "tags": tags,
-                "objects": len(objects) if objects else 0
-            }
+            result=payload,
         )
 
     async def fail_job(

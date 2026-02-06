@@ -214,6 +214,11 @@ class UserSubscription(Base):
         """
         return self._get_next_scheduled_time(datetime.now(timezone.utc))
 
+    @property
+    def next_update_at(self) -> Optional[datetime]:
+        """Backward-compatible alias for schedule APIs."""
+        return self.computed_next_update_at
+
     def should_update_now(self) -> bool:
         """
         Check if we should update now based on time passed since last fetch.

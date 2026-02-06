@@ -16,6 +16,7 @@ from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.schemas import PodcastSubscriptionCreate
 from app.domains.subscription.models import Subscription
+from app.domains.subscription.repositories import SubscriptionRepository
 from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 
 
@@ -538,30 +539,33 @@ class PodcastSubscriptionService:
 
     async def remove_subscription(self, subscription_id: int) -> bool:
         """
-        Remove a subscription and all related data.
+        Unsubscribe current user from a subscription.
+
+        If this was the last subscriber, the shared subscription source
+        and related data are deleted by cascade.
 
         Args:
             subscription_id: Subscription ID
 
         Returns:
-            True if removed successfully
+            True if unsubscribed successfully
         """
         try:
-            async with self.db.begin():
-                # Validate subscription
-                sub = await self._validate_and_get_subscription(subscription_id)
-                if not sub:
-                    return False
+            sub = await self._validate_and_get_subscription(subscription_id)
+            if not sub:
+                return False
 
-                sub_title = sub.title
+            removed = await SubscriptionRepository(self.db).delete_subscription(
+                user_id=self.user_id,
+                sub_id=subscription_id,
+            )
+            if not removed:
+                return False
 
-                # Get episode IDs
-                episode_ids = await self._get_episode_ids_for_subscription(subscription_id)
-
-                # Delete related entities
-                await self._delete_subscription_related_entities(subscription_id, episode_ids)
-
-            logger.info(f"User {self.user_id} removed subscription: {sub_title}")
+            await self.redis.invalidate_episode_list(subscription_id)
+            logger.info(
+                f"User {self.user_id} unsubscribed from subscription {subscription_id}"
+            )
             return True
 
         except Exception as e:
@@ -588,26 +592,22 @@ class PodcastSubscriptionService:
 
         for subscription_id in subscription_ids:
             try:
-                async with self.db.begin():
-                    subscription = await self._validate_and_get_subscription(
-                        subscription_id,
-                        check_source_type=True
-                    )
-
-                    if not subscription:
-                        errors.append({
+                removed = await self.remove_subscription(subscription_id)
+                if not removed:
+                    errors.append(
+                        {
                             "subscription_id": subscription_id,
-                            "error": f"Subscription {subscription_id} not found or access denied"
-                        })
-                        failed_count += 1
-                        continue
-
-                    episode_ids = await self._get_episode_ids_for_subscription(subscription_id)
-                    await self._delete_subscription_related_entities(subscription_id, episode_ids)
+                            "error": f"Subscription {subscription_id} not found or access denied",
+                        }
+                    )
+                    failed_count += 1
+                    continue
 
                 success_count += 1
                 deleted_subscription_ids.append(subscription_id)
-                logger.info(f"User {self.user_id} bulk removed subscription {subscription_id} successfully")
+                logger.info(
+                    f"User {self.user_id} bulk removed subscription {subscription_id} successfully"
+                )
 
             except Exception as e:
                 logger.error(f"Bulk remove subscription {subscription_id} failed: {e}")
