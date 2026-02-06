@@ -1,0 +1,39 @@
+"""Celery task registry and schedule snapshot checks."""
+
+from app.core.celery_app import celery_app
+
+
+def test_registered_task_names_snapshot() -> None:
+    registered_names = set(celery_app.tasks.keys())
+    expected_names = {
+        "app.domains.podcast.tasks.subscription_sync.refresh_all_podcast_feeds",
+        "app.domains.podcast.tasks.summary_generation.generate_pending_summaries",
+        "app.domains.podcast.tasks.summary_generation.generate_summary_for_episode",
+        "app.domains.podcast.tasks.transcription.process_audio_transcription",
+        "app.domains.podcast.tasks.transcription.process_podcast_episode_with_transcription",
+        "app.domains.podcast.tasks.maintenance.cleanup_old_playback_states",
+        "app.domains.podcast.tasks.maintenance.cleanup_old_transcription_temp_files",
+        "app.domains.podcast.tasks.maintenance.log_periodic_task_statistics",
+        "app.domains.podcast.tasks.maintenance.auto_cleanup_cache_files",
+        "app.domains.podcast.tasks.recommendation.generate_podcast_recommendations",
+    }
+    assert expected_names.issubset(registered_names)
+
+
+def test_task_routes_and_beat_reference_registered_tasks() -> None:
+    registered_names = set(celery_app.tasks.keys())
+    task_routes = celery_app.conf.task_routes
+    beat_schedule = celery_app.conf.beat_schedule
+
+    assert task_routes
+    assert beat_schedule
+
+    for task_name, route in task_routes.items():
+        assert task_name in registered_names
+        assert "queue" in route
+
+    for beat_name, beat_item in beat_schedule.items():
+        task_name = beat_item["task"]
+        assert task_name in registered_names, f"{beat_name} references unregistered task"
+        assert "options" in beat_item and "queue" in beat_item["options"]
+
