@@ -5,7 +5,7 @@
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +30,7 @@ class TranscriptionModelManager:
         self.db = db
         self.ai_model_repo = AIModelConfigRepository(db)
 
-    async def get_active_transcription_model(self, model_name: Optional[str] = None):
+    async def get_active_transcription_model(self, model_name: str | None = None):
         """获取活跃的转录模型配置（按优先级排序）"""
         if model_name:
             # 根据名称获取指定模型
@@ -46,7 +46,7 @@ class TranscriptionModelManager:
             # 返回优先级最高的模型（priority 数字最小的）
             return active_models[0]
 
-    async def create_transcriber(self, model_name: Optional[str] = None):
+    async def create_transcriber(self, model_name: str | None = None):
         """创建转录器实例"""
         model_config = await self.get_active_transcription_model(model_name)
 
@@ -85,7 +85,7 @@ class TranscriptionModelManager:
                 max_concurrent=model_config.max_concurrent_requests
             )
 
-    async def get_model_info(self, model_name: Optional[str] = None) -> dict[str, Any]:
+    async def get_model_info(self, model_name: str | None = None) -> dict[str, Any]:
         """获取模型信息"""
         model_config = await self.get_active_transcription_model(model_name)
         return {
@@ -142,7 +142,7 @@ class TranscriptionModelManager:
             return False
 
         # Helper to get and validate API key from a model
-        async def get_valid_key_from_model(model) -> Optional[str]:
+        async def get_valid_key_from_model(model) -> str | None:
             if not model or not model.api_key:
                 return None
 
@@ -222,7 +222,7 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
     async def start_transcription(
         self,
         episode_id: int,
-        model_name: Optional[str] = None,
+        model_name: str | None = None,
         force: bool = False
     ):
         """启动转录任务，支持指定模型和强制模式"""

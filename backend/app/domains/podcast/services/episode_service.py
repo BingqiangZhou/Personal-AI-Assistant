@@ -5,7 +5,7 @@ Podcast Episode Service - Manages podcast episodes.
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,7 +42,7 @@ class PodcastEpisodeService:
 
     async def list_episodes(
         self,
-        filters: Optional[Any] = None,
+        filters: Any | None = None,
         page: int = 1,
         size: int = 20
     ) -> tuple[list[dict], int]:
@@ -98,7 +98,7 @@ class PodcastEpisodeService:
 
         return results, total
 
-    async def get_episode_by_id(self, episode_id: int) -> Optional[PodcastEpisode]:
+    async def get_episode_by_id(self, episode_id: int) -> PodcastEpisode | None:
         """
         Get episode by ID.
 
@@ -110,7 +110,7 @@ class PodcastEpisodeService:
         """
         return await self.repo.get_episode_by_id(episode_id, self.user_id)
 
-    async def get_episode_with_summary(self, episode_id: int) -> Optional[dict]:
+    async def get_episode_with_summary(self, episode_id: int) -> dict | None:
         """
         Get episode details with AI summary.
 

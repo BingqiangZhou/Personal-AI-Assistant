@@ -3,7 +3,7 @@
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import IntegrityError
@@ -40,7 +40,7 @@ class AuthenticationService:
         self,
         email: str,
         password: str,
-        username: Optional[str] = None
+        username: str | None = None
     ) -> User:
         """
         Register a new user.
@@ -105,7 +105,7 @@ class AuthenticationService:
         self,
         email_or_username: str,
         password: str
-    ) -> Optional[User]:
+    ) -> User | None:
         """
         Authenticate user with email/username and password.
 
@@ -139,9 +139,9 @@ class AuthenticationService:
     async def create_user_session(
         self,
         user: User,
-        device_info: Optional[dict[str, Any]] = None,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
+        device_info: dict[str, Any] | None = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
         remember_me: bool = False
     ) -> dict[str, Any]:
         """
@@ -512,7 +512,7 @@ class AuthenticationService:
             "message": "Password has been successfully reset. Please login with your new password."
         }
 
-    async def _get_user_by_email(self, email: str) -> Optional[User]:
+    async def _get_user_by_email(self, email: str) -> User | None:
         """Get user by email."""
         result = await self.db.execute(
             select(User).where(User.email == email)
@@ -538,7 +538,7 @@ class AuthenticationService:
 
         await self.db.commit()
 
-    async def _get_valid_password_reset_token(self, token: str) -> Optional[PasswordReset]:
+    async def _get_valid_password_reset_token(self, token: str) -> PasswordReset | None:
         """Get valid password reset token."""
         result = await self.db.execute(
             select(PasswordReset).where(
@@ -551,7 +551,7 @@ class AuthenticationService:
         )
         return result.scalar_one_or_none()
 
-    async def _get_user_by_username(self, username: str) -> Optional[User]:
+    async def _get_user_by_username(self, username: str) -> User | None:
         """Get user by username."""
         result = await self.db.execute(
             select(User).where(User.username == username)
@@ -560,9 +560,9 @@ class AuthenticationService:
 
     async def _get_user_by_email_or_username(
         self,
-        email: Optional[str] = None,
-        username: Optional[str] = None
-    ) -> Optional[User]:
+        email: str | None = None,
+        username: str | None = None
+    ) -> User | None:
         """Get user by email or username."""
         conditions = []
         if email:
@@ -578,7 +578,7 @@ class AuthenticationService:
         )
         return result.scalar_one_or_none()
 
-    async def _get_user_by_id(self, user_id: int) -> Optional[User]:
+    async def _get_user_by_id(self, user_id: int) -> User | None:
         """Get user by ID."""
         result = await self.db.execute(
             select(User).where(User.id == user_id)
@@ -588,7 +588,7 @@ class AuthenticationService:
     async def _get_valid_session_by_refresh_token(
         self,
         refresh_token: str
-    ) -> Optional[UserSession]:
+    ) -> UserSession | None:
         """Get valid session by refresh token."""
         result = await self.db.execute(
             select(UserSession).where(

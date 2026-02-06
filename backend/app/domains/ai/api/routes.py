@@ -2,7 +2,6 @@
 AI模型配置管理API路由
 """
 
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -112,12 +111,12 @@ async def create_model(
     summary="获取AI模型配置列表"
 )
 async def get_models(
-    model_type: Optional[ModelType] = Query(None, description="模型类型"),
-    is_active: Optional[bool] = Query(None, description="是否启用"),
-    provider: Optional[str] = Query(None, description="提供商"),
+    model_type: ModelType | None = Query(None, description="模型类型"),
+    is_active: bool | None = Query(None, description="是否启用"),
+    provider: str | None = Query(None, description="提供商"),
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页数量"),
-    search: Optional[str] = Query(None, description="搜索关键词"),
+    search: str | None = Query(None, description="搜索关键词"),
     user=Depends(get_token_from_request),
     service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):

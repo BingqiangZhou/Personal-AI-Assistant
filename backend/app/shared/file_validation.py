@@ -7,7 +7,6 @@ and excessive file sizes.
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 from fastapi import UploadFile
 
@@ -98,7 +97,7 @@ SAFE_EXTENSIONS: dict[str, str] = {
 class FileValidationError(Exception):
     """Raised when file validation fails."""
 
-    def __init__(self, message: str, message_zh: Optional[str] = None):
+    def __init__(self, message: str, message_zh: str | None = None):
         self.message_en = message
         self.message_zh = message_zh or message
         super().__init__(message)
@@ -124,7 +123,7 @@ def validate_file_size(file: UploadFile, max_size: int) -> None:
         )
 
 
-def validate_file_extension(filename: str, allowed_extensions: Optional[set[str]] = None) -> str:
+def validate_file_extension(filename: str, allowed_extensions: set[str] | None = None) -> str:
     """Validate and extract file extension.
 
     Args:

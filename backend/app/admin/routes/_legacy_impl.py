@@ -2,7 +2,6 @@
 import logging
 import secrets
 from datetime import datetime, timezone
-from typing import Optional
 
 from fastapi import (
     APIRouter,
@@ -160,7 +159,7 @@ async def setup_admin(
     email: str = Form(...),
     password: str = Form(...),
     password_confirm: str = Form(...),
-    account_name: Optional[str] = Form(None),
+    account_name: str | None = Form(None),
     csrf_token: str = Form(...),
     db: AsyncSession = Depends(get_db_session),
 ):
@@ -782,7 +781,7 @@ async def apikeys_page(
     request: Request,
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
-    model_type_filter: Optional[str] = None,
+    model_type_filter: str | None = None,
     page: int = 1,
     per_page: int = 10,
 ):
@@ -854,7 +853,7 @@ async def test_apikey(
     api_url: str = Body(...),
     api_key: str = Body(...),
     model_type: str = Body(...),
-    name: Optional[str] = Body(None),
+    name: str | None = Body(None),
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
 ):
@@ -917,7 +916,7 @@ async def create_apikey(
     api_url: str = Form(...),
     api_key: str = Form(...),
     provider: str = Form(default="custom"),
-    description: Optional[str] = Form(None),
+    description: str | None = Form(None),
     priority: int = Form(default=1),
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
@@ -1029,14 +1028,14 @@ async def toggle_apikey(
 async def edit_apikey(
     key_id: int,
     request: Request,
-    name: Optional[str] = Body(None),
-    display_name: Optional[str] = Body(None),
-    model_type: Optional[str] = Body(None),
-    api_url: Optional[str] = Body(None),
-    api_key: Optional[str] = Body(None),
-    provider: Optional[str] = Body(None),
-    description: Optional[str] = Body(None),
-    priority: Optional[int] = Body(None),
+    name: str | None = Body(None),
+    display_name: str | None = Body(None),
+    model_type: str | None = Body(None),
+    api_url: str | None = Body(None),
+    api_key: str | None = Body(None),
+    provider: str | None = Body(None),
+    description: str | None = Body(None),
+    priority: int | None = Body(None),
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
 ):
@@ -1429,9 +1428,9 @@ async def subscriptions_page(
     db: AsyncSession = Depends(get_db_session),
     page: int = 1,
     per_page: int = 10,
-    status_filter: Optional[str] = None,
-    search_query: Optional[str] = None,
-    user_filter: Optional[str] = None,
+    status_filter: str | None = None,
+    search_query: str | None = None,
+    user_filter: str | None = None,
 ):
     """Display RSS subscriptions management page with pagination and status filter."""
     from app.domains.subscription.models import UserSubscription
@@ -1512,7 +1511,7 @@ async def subscriptions_page(
         subscriptions = result.all()  # Using all() since we have grouped columns
 
         # Build next-update map using latest user-specific schedule per subscription.
-        next_update_by_subscription: dict[int, Optional[datetime]] = {}
+        next_update_by_subscription: dict[int, datetime | None] = {}
         if subscriptions:
             subscription_ids = [sub_row[0].id for sub_row in subscriptions]
             user_sub_rows = (
@@ -1594,8 +1593,8 @@ async def subscriptions_page(
 async def update_subscription_frequency(
     request: Request,
     update_frequency: str = Body(...),
-    update_time: Optional[str] = Body(None),
-    update_day: Optional[int] = Body(None),
+    update_time: str | None = Body(None),
+    update_day: int | None = Body(None),
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
 ):
@@ -1716,8 +1715,8 @@ async def update_subscription_frequency(
 async def edit_subscription(
     sub_id: int,
     request: Request,
-    title: Optional[str] = Body(None),
-    source_url: Optional[str] = Body(None),
+    title: str | None = Body(None),
+    source_url: str | None = Body(None),
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
 ):
@@ -2449,7 +2448,7 @@ async def import_subscriptions_opml(
     MAX_TITLE_LENGTH = 255
     MAX_DESCRIPTION_LENGTH = 2000
 
-    def parse_outline_element(outline: ET.Element) -> Optional[SubscriptionCreate]:
+    def parse_outline_element(outline: ET.Element) -> SubscriptionCreate | None:
         """Parse a single outline element into SubscriptionCreate."""
         xml_url = outline.get('xmlUrl', '').strip()
         if not xml_url:
@@ -2671,8 +2670,8 @@ async def audit_logs_page(
     db: AsyncSession = Depends(get_db_session),
     page: int = 1,
     per_page: int = 10,
-    action: Optional[str] = None,
-    resource_type: Optional[str] = None,
+    action: str | None = None,
+    resource_type: str | None = None,
 ):
     """Display audit logs page with filtering and pagination."""
     try:
@@ -3397,8 +3396,8 @@ async def get_frequency_settings(
 async def update_frequency_settings(
     request: Request,
     update_frequency: str = Body(..., embed=True),
-    update_time: Optional[str] = Body(None, embed=True),
-    update_day: Optional[int] = Body(None, embed=True),
+    update_time: str | None = Body(None, embed=True),
+    update_day: int | None = Body(None, embed=True),
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
 ):

@@ -3,7 +3,7 @@
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -18,7 +18,7 @@ class PodcastBaseSchema(BaseModel):
 class PodcastTimestampedSchema(PodcastBaseSchema):
     """带时间戳的播客schema"""
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
 
 
 # === Subscription相关 ===
@@ -26,7 +26,6 @@ class PodcastTimestampedSchema(PodcastBaseSchema):
 class PodcastSubscriptionCreate(PodcastBaseSchema):
     """创建播客订阅请求"""
     feed_url: str = Field(..., description="RSS feed URL", min_length=10, max_length=500)
-    category_ids: Optional[list[int]] = Field(default_factory=list, description="分类ID列表")
 
     @field_validator('feed_url')
     @classmethod
@@ -42,10 +41,9 @@ class PodcastSubscriptionCreate(PodcastBaseSchema):
 
 class PodcastSubscriptionUpdate(PodcastBaseSchema):
     """更新播客订阅请求"""
-    custom_name: Optional[str] = Field(None, max_length=255)
-    fetch_interval: Optional[int] = Field(None, ge=300, le=86400, description="抓取间隔(秒)")
-    is_active: Optional[bool] = None
-    category_ids: Optional[list[int]] = None
+    custom_name: str | None = Field(None, max_length=255)
+    fetch_interval: int | None = Field(None, ge=300, le=86400, description="抓取间隔(秒)")
+    is_active: bool | None = None
 
 
 class PodcastSubscriptionResponse(PodcastTimestampedSchema):
@@ -53,18 +51,18 @@ class PodcastSubscriptionResponse(PodcastTimestampedSchema):
     id: int
     user_id: int
     title: str
-    description: Optional[str] = None
+    description: str | None = None
     source_url: str
     status: str
-    last_fetched_at: Optional[datetime] = None
-    error_message: Optional[str] = None
-    fetch_interval: Optional[int] = None
-    episode_count: Optional[int] = 0
-    unplayed_count: Optional[int] = 0
-    latest_episode: Optional[dict[str, Any]] = None
-    categories: Optional[list[dict[str, Any]]] = []
-    image_url: Optional[str] = None
-    author: Optional[str] = None
+    last_fetched_at: datetime | None = None
+    error_message: str | None = None
+    fetch_interval: int | None = None
+    episode_count: int | None = 0
+    unplayed_count: int | None = 0
+    latest_episode: dict[str, Any] | None = None
+    categories: list[dict[str, Any]] | None = []
+    image_url: str | None = None
+    author: str | None = None
 
     @field_validator('categories', mode='before')
     @classmethod
@@ -134,33 +132,33 @@ class PodcastEpisodeResponse(PodcastTimestampedSchema):
     id: int
     subscription_id: int
     title: str
-    description: Optional[str] = None
+    description: str | None = None
     audio_url: str
-    audio_duration: Optional[int] = None
-    audio_file_size: Optional[int] = None
+    audio_duration: int | None = None
+    audio_file_size: int | None = None
     published_at: datetime
-    image_url: Optional[str] = None
-    item_link: Optional[str] = None  # 分集详情页链接
-    subscription_image_url: Optional[str] = None
-    transcript_url: Optional[str] = None
-    transcript_content: Optional[str] = None
-    ai_summary: Optional[str] = None
-    summary_version: Optional[str] = None
-    ai_confidence_score: Optional[float] = None
+    image_url: str | None = None
+    item_link: str | None = None  # 分集详情页链接
+    subscription_image_url: str | None = None
+    transcript_url: str | None = None
+    transcript_content: str | None = None
+    ai_summary: str | None = None
+    summary_version: str | None = None
+    ai_confidence_score: float | None = None
     play_count: int = 0
-    last_played_at: Optional[datetime] = None
-    season: Optional[int] = None
-    episode_number: Optional[int] = None
+    last_played_at: datetime | None = None
+    season: int | None = None
+    episode_number: int | None = None
     explicit: bool = False
     status: str
-    metadata: Optional[dict[str, Any]] = {}
+    metadata: dict[str, Any] | None = {}
 
     # 播放状态（如果用户有收听记录）
-    subscription_title: Optional[str] = None
-    playback_position: Optional[int] = None
+    subscription_title: str | None = None
+    playback_position: int | None = None
     is_playing: bool = False
     playback_rate: float = 1.0
-    is_played: Optional[bool] = None
+    is_played: bool | None = None
 
 
 class PodcastEpisodeListResponse(PodcastBaseSchema):
@@ -175,15 +173,15 @@ class PodcastEpisodeListResponse(PodcastBaseSchema):
 
 class PodcastEpisodeDetailResponse(PodcastEpisodeResponse):
     """播客单集详情响应（包含更多信息）"""
-    subscription: Optional[dict[str, Any]] = None
-    related_episodes: Optional[list[dict[str, Any]]] = []
+    subscription: dict[str, Any] | None = None
+    related_episodes: list[dict[str, Any]] | None = []
 
 
 class PodcastFeedResponse(PodcastBaseSchema):
     """播客信息流响应"""
     items: list[PodcastEpisodeResponse]
     has_more: bool
-    next_page: Optional[int] = None
+    next_page: int | None = None
     total: int
 
 
@@ -215,15 +213,15 @@ class PodcastPlaybackStateResponse(PodcastBaseSchema):
 class PodcastCategoryCreate(PodcastBaseSchema):
     """创建播客分类请求"""
     name: str = Field(..., min_length=1, max_length=100, description="分类名称")
-    description: Optional[str] = Field(None, max_length=500, description="分类描述")
-    color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$', description="十六进制颜色代码")
+    description: str | None = Field(None, max_length=500, description="分类描述")
+    color: str | None = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$', description="十六进制颜色代码")
 
 
 class PodcastCategoryUpdate(PodcastBaseSchema):
     """更新播客分类请求"""
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-    color: Optional[str] = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
+    name: str | None = Field(None, min_length=1, max_length=100)
+    description: str | None = Field(None, max_length=500)
+    color: str | None = Field(None, pattern=r'^#[0-9A-Fa-f]{6}$')
 
 
 class PodcastCategoryResponse(PodcastTimestampedSchema):
@@ -231,9 +229,9 @@ class PodcastCategoryResponse(PodcastTimestampedSchema):
     id: int
     user_id: int
     name: str
-    description: Optional[str] = None
-    color: Optional[str] = None
-    subscription_count: Optional[int] = 0
+    description: str | None = None
+    color: str | None = None
+    subscription_count: int | None = 0
 
 
 # === Summary相关 ===
@@ -241,9 +239,9 @@ class PodcastCategoryResponse(PodcastTimestampedSchema):
 class PodcastSummaryRequest(PodcastBaseSchema):
     """生成AI总结请求"""
     force_regenerate: bool = Field(default=False, description="是否强制重新生成")
-    use_transcript: Optional[bool] = Field(None, description="是否使用转录文本（如果有）")
-    summary_model: Optional[str] = Field(None, description="AI总结模型名称")
-    custom_prompt: Optional[str] = Field(None, description="自定义提示词")
+    use_transcript: bool | None = Field(None, description="是否使用转录文本（如果有）")
+    summary_model: str | None = Field(None, description="AI总结模型名称")
+    custom_prompt: str | None = Field(None, description="自定义提示词")
 
 
 class PodcastSummaryResponse(PodcastBaseSchema):
@@ -251,12 +249,12 @@ class PodcastSummaryResponse(PodcastBaseSchema):
     episode_id: int
     summary: str
     version: str
-    confidence_score: Optional[float] = None
+    confidence_score: float | None = None
     transcript_used: bool
     generated_at: datetime
     word_count: int
-    model_used: Optional[str] = None  # 使用的模型名称
-    processing_time: Optional[float] = None  # 处理时间（秒）
+    model_used: str | None = None  # 使用的模型名称
+    processing_time: float | None = None  # 处理时间（秒）
 
 
 class SummaryModelInfo(PodcastBaseSchema):
@@ -285,20 +283,20 @@ class PodcastSummaryPendingResponse(PodcastBaseSchema):
 
 class PodcastSearchFilter(PodcastBaseSchema):
     """播客搜索过滤器"""
-    query: Optional[str] = Field(None, description="搜索关键词")
-    category_id: Optional[int] = Field(None, description="分类ID")
-    status: Optional[str] = Field(None, description="状态筛选")
-    has_summary: Optional[bool] = Field(None, description="是否有AI总结")
-    date_from: Optional[datetime] = Field(None, description="开始日期")
-    date_to: Optional[datetime] = Field(None, description="结束日期")
+    query: str | None = Field(None, description="搜索关键词")
+    category_id: int | None = Field(None, description="分类ID")
+    status: str | None = Field(None, description="状态筛选")
+    has_summary: bool | None = Field(None, description="是否有AI总结")
+    date_from: datetime | None = Field(None, description="开始日期")
+    date_to: datetime | None = Field(None, description="结束日期")
 
 
 class PodcastEpisodeFilter(PodcastSearchFilter):
     """播客单集过滤器"""
-    subscription_id: Optional[int] = Field(None, description="订阅ID")
-    is_played: Optional[bool] = Field(None, description="是否已播放")
-    duration_min: Optional[int] = Field(None, ge=0, description="最小时长(秒)")
-    duration_max: Optional[int] = Field(None, ge=0, description="最大时长(秒)")
+    subscription_id: int | None = Field(None, description="订阅ID")
+    is_played: bool | None = Field(None, description="是否已播放")
+    duration_min: int | None = Field(None, ge=0, description="最小时长(秒)")
+    duration_max: int | None = Field(None, ge=0, description="最大时长(秒)")
 
 
 # === Statistics相关 ===
@@ -320,7 +318,7 @@ class PodcastStatsResponse(PodcastBaseSchema):
 class PodcastOPMLImport(PodcastBaseSchema):
     """OPML导入请求"""
     opml_content: str = Field(..., description="OPML格式内容")
-    category_mapping: Optional[dict[str, int]] = Field(default_factory=dict, description="分类映射")
+    category_mapping: dict[str, int] | None = Field(default_factory=dict, description="分类映射")
 
 
 class PodcastOPMLExport(PodcastBaseSchema):
@@ -336,7 +334,7 @@ class PodcastBulkAction(PodcastBaseSchema):
     """批量操作请求"""
     action: str = Field(..., description="操作类型: refresh, delete, mark_played, mark_unplayed")
     subscription_ids: list[int] = Field(..., description="订阅ID列表")
-    episode_ids: Optional[list[int]] = Field(None, description="单集ID列表（用于单集操作）")
+    episode_ids: list[int] | None = Field(None, description="单集ID列表（用于单集操作）")
 
 
 class PodcastBulkActionResponse(PodcastBaseSchema):
@@ -360,8 +358,8 @@ class PodcastSubscriptionBatchResponse(PodcastBaseSchema):
 class PodcastTranscriptionRequest(PodcastBaseSchema):
     """启动转录请求"""
     force_regenerate: bool = Field(default=False, description="是否强制重新转录")
-    chunk_size_mb: Optional[int] = Field(None, ge=1, le=100, description="分片大小（MB）")
-    transcription_model: Optional[str] = Field(None, description="转录模型名称")
+    chunk_size_mb: int | None = Field(None, ge=1, le=100, description="分片大小（MB）")
+    transcription_model: str | None = Field(None, description="转录模型名称")
 
 
 class PodcastTranscriptionResponse(PodcastBaseSchema):
@@ -371,38 +369,38 @@ class PodcastTranscriptionResponse(PodcastBaseSchema):
     status: str
     progress_percentage: float = 0.0
     original_audio_url: str
-    original_file_size: Optional[int] = None
-    transcript_word_count: Optional[int] = None
-    transcript_duration: Optional[int] = None
-    transcript_content: Optional[str] = None  # ← 添加缺失的字段
-    error_message: Optional[str] = None
-    error_code: Optional[str] = None
-    download_time: Optional[float] = None
-    conversion_time: Optional[float] = None
-    transcription_time: Optional[float] = None
+    original_file_size: int | None = None
+    transcript_word_count: int | None = None
+    transcript_duration: int | None = None
+    transcript_content: str | None = None  # ← 添加缺失的字段
+    error_message: str | None = None
+    error_code: str | None = None
+    download_time: float | None = None
+    conversion_time: float | None = None
+    transcription_time: float | None = None
     chunk_size_mb: int = 10
-    model_used: Optional[str] = None
+    model_used: str | None = None
     created_at: datetime
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    updated_at: datetime | None = None
 
     # AI总结信息
-    summary_content: Optional[str] = None
-    summary_model_used: Optional[str] = None
-    summary_word_count: Optional[int] = None
-    summary_processing_time: Optional[float] = None
-    summary_error_message: Optional[str] = None
+    summary_content: str | None = None
+    summary_model_used: str | None = None
+    summary_word_count: int | None = None
+    summary_processing_time: float | None = None
+    summary_error_message: str | None = None
 
     # Debug info
-    debug_message: Optional[str] = None
+    debug_message: str | None = None
 
     # 计算字段
-    duration_seconds: Optional[int] = None
-    total_processing_time: Optional[float] = None
+    duration_seconds: int | None = None
+    total_processing_time: float | None = None
 
     # 关联信息
-    episode: Optional[dict[str, Any]] = None
+    episode: dict[str, Any] | None = None
 
     @field_validator('status', mode='before')
     @classmethod
@@ -415,16 +413,16 @@ class PodcastTranscriptionResponse(PodcastBaseSchema):
 
 class PodcastTranscriptionDetailResponse(PodcastTranscriptionResponse):
     """转录任务详情响应"""
-    chunk_info: Optional[dict[str, Any]] = None
-    transcript_content: Optional[str] = None
-    original_file_path: Optional[str] = None
+    chunk_info: dict[str, Any] | None = None
+    transcript_content: str | None = None
+    original_file_path: str | None = None
 
     # 格式化后的时间信息
-    formatted_duration: Optional[str] = None
-    formatted_processing_time: Optional[str] = None
-    formatted_created_at: Optional[str] = None
-    formatted_started_at: Optional[str] = None
-    formatted_completed_at: Optional[str] = None
+    formatted_duration: str | None = None
+    formatted_processing_time: str | None = None
+    formatted_created_at: str | None = None
+    formatted_started_at: str | None = None
+    formatted_completed_at: str | None = None
 
 
 class PodcastTranscriptionListResponse(PodcastBaseSchema):
@@ -445,7 +443,7 @@ class PodcastTranscriptionStatusResponse(PodcastBaseSchema):
     message: str = ""
     current_chunk: int = 0
     total_chunks: int = 0
-    eta_seconds: Optional[int] = None  # 预计剩余时间（秒）
+    eta_seconds: int | None = None  # 预计剩余时间（秒）
 
     @field_validator('status', mode='before')
     @classmethod
@@ -460,7 +458,7 @@ class PodcastTranscriptionChunkInfo(PodcastBaseSchema):
     index: int
     start_time: float
     duration: float
-    transcript: Optional[str] = None
+    transcript: str | None = None
     word_count: int = 0
 
 
@@ -473,13 +471,13 @@ class PodcastConversationMessage(PodcastBaseSchema):
     content: str
     conversation_turn: int
     created_at: str
-    parent_message_id: Optional[int] = None
+    parent_message_id: int | None = None
 
 
 class PodcastConversationSendRequest(PodcastBaseSchema):
     """发送对话消息请求"""
     message: str = Field(..., min_length=1, max_length=5000, description="用户消息内容")
-    model_name: Optional[str] = Field(None, description="使用的AI模型名称")
+    model_name: str | None = Field(None, description="使用的AI模型名称")
 
 
 class PodcastConversationSendResponse(PodcastBaseSchema):
@@ -488,7 +486,7 @@ class PodcastConversationSendResponse(PodcastBaseSchema):
     role: str
     content: str
     conversation_turn: int
-    processing_time: Optional[float] = None
+    processing_time: float | None = None
     created_at: str
 
 
@@ -509,9 +507,9 @@ class PodcastConversationClearResponse(PodcastBaseSchema):
 class ScheduleConfigUpdate(BaseModel):
     """Update subscription schedule configuration"""
     update_frequency: str = Field(..., description="Update frequency: HOURLY, DAILY, WEEKLY")
-    update_time: Optional[str] = Field(None, description="Update time in HH:MM format (24-hour)")
-    update_day_of_week: Optional[int] = Field(None, ge=1, le=7, description="Day of week (1=Monday, 7=Sunday)")
-    fetch_interval: Optional[int] = Field(None, ge=300, le=86400, description="Fetch interval in seconds (for HOURLY frequency)")
+    update_time: str | None = Field(None, description="Update time in HH:MM format (24-hour)")
+    update_day_of_week: int | None = Field(None, ge=1, le=7, description="Day of week (1=Monday, 7=Sunday)")
+    fetch_interval: int | None = Field(None, ge=300, le=86400, description="Fetch interval in seconds (for HOURLY frequency)")
 
     @field_validator('update_frequency')
     @classmethod
@@ -551,11 +549,11 @@ class ScheduleConfigResponse(PodcastBaseSchema):
     id: int
     title: str
     update_frequency: str
-    update_time: Optional[str] = None
-    update_day_of_week: Optional[int] = None
-    fetch_interval: Optional[int] = None
-    next_update_at: Optional[datetime] = None
-    last_updated_at: Optional[datetime] = None
+    update_time: str | None = None
+    update_day_of_week: int | None = None
+    fetch_interval: int | None = None
+    next_update_at: datetime | None = None
+    last_updated_at: datetime | None = None
 
 
 # === Bulk Delete Schemas ===

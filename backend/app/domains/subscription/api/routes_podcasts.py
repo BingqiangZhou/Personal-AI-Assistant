@@ -4,7 +4,6 @@ All endpoints here are mounted under:
     /api/v1/subscriptions/podcasts*
 """
 
-from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 
@@ -39,8 +38,7 @@ async def add_subscription(
 ):
     try:
         subscription, new_episodes = await service.add_subscription(
-            feed_url=subscription_data.feed_url,
-            category_ids=subscription_data.category_ids,
+            feed_url=subscription_data.feed_url
         )
         response_data = {
             "id": subscription.id,
@@ -96,8 +94,8 @@ async def list_subscriptions(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
-    category_id: Optional[int] = Query(None, description="Category filter"),
-    status_filter: Optional[str] = Query(None, alias="status", description="Status filter"),
+    category_id: int | None = Query(None, description="Category filter"),
+    status_filter: str | None = Query(None, alias="status", description="Status filter"),
     service: PodcastService = Depends(get_podcast_service),
 ):
     filters = PodcastSearchFilter(category_id=category_id, status=status_filter)

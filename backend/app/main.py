@@ -152,8 +152,6 @@ def create_application() -> FastAPI:
     from app.admin.exception_handlers import csrf_exception_handler
     from app.admin.router import router as admin_router
     from app.domains.ai.api.routes import router as ai_model_router
-    from app.domains.assistant.api.routes import router as assistant_router
-    from app.domains.multimedia.api.routes import router as multimedia_router
     from app.domains.podcast.api.routes import router as podcast_router
     from app.domains.subscription.api.routes import router as subscription_router
     from app.domains.user.api.routes import router as user_router
@@ -174,18 +172,6 @@ def create_application() -> FastAPI:
         podcast_router,
         prefix=f"{settings.API_V1_STR}/podcasts",
         tags=["podcasts"]
-    )
-
-    app.include_router(
-        assistant_router,
-        prefix=f"{settings.API_V1_STR}/assistant",
-        tags=["assistant"]
-    )
-
-    app.include_router(
-        multimedia_router,
-        prefix=f"{settings.API_V1_STR}/multimedia",
-        tags=["multimedia"]
     )
 
     app.include_router(

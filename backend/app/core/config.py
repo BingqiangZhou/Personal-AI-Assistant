@@ -2,7 +2,6 @@ import os
 import secrets
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
 
 from pydantic import validator
 from pydantic_settings import BaseSettings
@@ -15,7 +14,7 @@ class SecretKeyManager:
     def __init__(self, data_dir: str = "data"):
         self.data_dir = Path(data_dir)
         self.secret_key_file = self.data_dir / ".secret_key"
-        self._secret_key: Optional[str] = None
+        self._secret_key: str | None = None
 
     def ensure_data_dir(self):
         """Ensure data directory exists"""
@@ -83,7 +82,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Personal AI Assistant"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: Optional[str] = None  # Will be loaded dynamically
+    SECRET_KEY: str | None = None  # Will be loaded dynamically
     ENVIRONMENT: str = "development"
 
     # Database - Pool sizing adjusted for podcast-heavy workloads
@@ -124,10 +123,10 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
 
     # Email Configuration
-    SMTP_SERVER: Optional[str] = None
+    SMTP_SERVER: str | None = None
     SMTP_PORT: int = 587
-    SMTP_USERNAME: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
+    SMTP_USERNAME: str | None = None
+    SMTP_PASSWORD: str | None = None
     SMTP_USE_TLS: bool = True
     FROM_EMAIL: str = "noreply@personalai.com"
     FROM_NAME: str = "Personal AI Assistant"
@@ -135,7 +134,7 @@ class Settings(BaseSettings):
     ALLOWED_AUDIO_SCHEMES: list[str] = ["http", "https"]
 
     # External APIs
-    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: str | None = None
     OPENAI_API_BASE_URL: str = "https://api.openai.com/v1"
 
     # File storage
@@ -144,7 +143,7 @@ class Settings(BaseSettings):
 
     # Transcription API Configuration
     TRANSCRIPTION_API_URL: str = "https://api.siliconflow.cn/v1/audio/transcriptions"
-    TRANSCRIPTION_API_KEY: Optional[str] = None
+    TRANSCRIPTION_API_KEY: str | None = None
 
     # Transcription File Processing Configuration
     TRANSCRIPTION_CHUNK_SIZE_MB: int = 10  # 10MB per chunk

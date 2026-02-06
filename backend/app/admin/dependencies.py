@@ -1,7 +1,6 @@
 """Admin authentication dependencies and utilities."""
 import logging
 from datetime import datetime
-from typing import Optional
 
 from fastapi import Cookie, Depends, HTTPException, Request, status
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
@@ -37,7 +36,7 @@ class AdminAuthRequired:
     async def __call__(
         self,
         request: Request,
-        admin_session: Optional[str] = Cookie(None),
+        admin_session: str | None = Cookie(None),
         db: AsyncSession = Depends(get_db_session),
     ) -> User:
         """Verify admin session and return user."""

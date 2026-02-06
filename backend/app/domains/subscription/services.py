@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlparse
 from xml.etree.ElementTree import Element, SubElement, tostring
 
@@ -49,8 +49,8 @@ class SubscriptionService:
         self,
         page: int = 1,
         size: int = 20,
-        status: Optional[str] = None,
-        source_type: Optional[str] = None,
+        status: str | None = None,
+        source_type: str | None = None,
     ) -> PaginatedResponse:
         """
         List user's subscriptions.
@@ -167,7 +167,7 @@ class SubscriptionService:
         self,
         sub_data: SubscriptionCreate,
         raise_on_active_duplicate: bool = False,
-    ) -> tuple[str, Subscription, Optional[str]]:
+    ) -> tuple[str, Subscription, str | None]:
         """Create a global subscription or attach current user mapping."""
         existing = await self.repo.get_duplicate_subscription(
             self.user_id, sub_data.source_url, sub_data.title
@@ -250,7 +250,7 @@ class SubscriptionService:
         await self.db.refresh(existing)
         return status, existing, message
 
-    async def _get_default_schedule_settings(self) -> tuple[str, Optional[str], Optional[int]]:
+    async def _get_default_schedule_settings(self) -> tuple[str, str | None, int | None]:
         from app.admin.models import SystemSettings
         from app.domains.subscription.models import UpdateFrequency
 
@@ -292,7 +292,7 @@ class SubscriptionService:
             updated_at=sub.updated_at,
         )
 
-    async def get_subscription(self, sub_id: int) -> Optional[SubscriptionResponse]:
+    async def get_subscription(self, sub_id: int) -> SubscriptionResponse | None:
         """Get subscription details."""
         sub = await self.repo.get_subscription_by_id(self.user_id, sub_id)
         if not sub:
@@ -327,7 +327,7 @@ class SubscriptionService:
 
     async def update_subscription(
         self, sub_id: int, sub_data: SubscriptionUpdate
-    ) -> Optional[SubscriptionResponse]:
+    ) -> SubscriptionResponse | None:
         """Update subscription."""
         sub = await self.repo.update_subscription(self.user_id, sub_id, sub_data)
         if not sub:
@@ -388,7 +388,7 @@ class SubscriptionService:
             # Process feed entries
             new_items = 0
             updated_items = 0
-            latest_published_at: Optional[datetime] = None
+            latest_published_at: datetime | None = None
 
             for entry in result.entries:
                 try:
@@ -559,7 +559,7 @@ class SubscriptionService:
             size=size
         )
 
-    async def mark_item_as_read(self, item_id: int) -> Optional[dict[str, Any]]:
+    async def mark_item_as_read(self, item_id: int) -> dict[str, Any] | None:
         """Mark an item as read."""
         item = await self.repo.mark_item_as_read(item_id, self.user_id)
         if not item:
@@ -570,7 +570,7 @@ class SubscriptionService:
             "read_at": item.read_at.isoformat() if item.read_at else None,
         }
 
-    async def mark_item_as_unread(self, item_id: int) -> Optional[dict[str, Any]]:
+    async def mark_item_as_unread(self, item_id: int) -> dict[str, Any] | None:
         """Mark an item as unread."""
         item = await self.repo.mark_item_as_unread(item_id, self.user_id)
         if not item:
@@ -578,7 +578,7 @@ class SubscriptionService:
 
         return {"id": item.id, "read_at": None}
 
-    async def toggle_bookmark(self, item_id: int) -> Optional[dict[str, Any]]:
+    async def toggle_bookmark(self, item_id: int) -> dict[str, Any] | None:
         """Toggle item bookmark status."""
         item = await self.repo.toggle_bookmark(item_id, self.user_id)
         if not item:
@@ -611,7 +611,7 @@ class SubscriptionService:
         ]
 
     async def create_category(
-        self, name: str, description: Optional[str] = None, color: Optional[str] = None
+        self, name: str, description: str | None = None, color: str | None = None
     ) -> dict[str, Any]:
         """Create a new category."""
         cat = await self.repo.create_category(self.user_id, name, description, color)
@@ -626,7 +626,7 @@ class SubscriptionService:
 
     async def update_category(
         self, category_id: int, **kwargs
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Update category."""
         cat = await self.repo.update_category(category_id, self.user_id, **kwargs)
         if not cat:
@@ -668,8 +668,8 @@ class SubscriptionService:
 
     async def generate_opml_content(
         self,
-        user_id: Optional[int] = None,
-        status_filter: Optional[str] = SubscriptionStatus.ACTIVE,
+        user_id: int | None = None,
+        status_filter: str | None = SubscriptionStatus.ACTIVE,
     ) -> str:
         """
         Generate OPML 2.0 format XML content for RSS subscriptions using ElementTree.

@@ -4,7 +4,7 @@
 
 import logging
 from datetime import date, datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +24,7 @@ class PodcastRepository:
     播客数据持久化操作
     """
 
-    def __init__(self, db: AsyncSession, redis: Optional[PodcastRedis] = None):
+    def __init__(self, db: AsyncSession, redis: PodcastRedis | None = None):
         self.db = db
         self.redis = redis or PodcastRedis()
 
@@ -36,8 +36,8 @@ class PodcastRepository:
         feed_url: str,
         title: str,
         description: str = "",
-        custom_name: Optional[str] = None,
-        metadata: Optional[dict] = None
+        custom_name: str | None = None,
+        metadata: dict | None = None
     ) -> Subscription:
         """
         创建或更新播客订阅
@@ -156,7 +156,7 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_subscription_by_id(self, user_id: int, sub_id: int) -> Optional[Subscription]:
+    async def get_subscription_by_id(self, user_id: int, sub_id: int) -> Subscription | None:
         """获取特定订阅"""
         stmt = (
             select(Subscription)
@@ -173,7 +173,7 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_subscription_by_url(self, user_id: int, feed_url: str) -> Optional[Subscription]:
+    async def get_subscription_by_url(self, user_id: int, feed_url: str) -> Subscription | None:
         """通过URL获取订阅"""
         stmt = (
             select(Subscription)
@@ -190,7 +190,7 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_subscription_by_id_direct(self, subscription_id: int) -> Optional[Subscription]:
+    async def get_subscription_by_id_direct(self, subscription_id: int) -> Subscription | None:
         """
         Get subscription by ID directly, without user subscription filtering.
         This is used by background tasks that need to access subscriptions globally.
@@ -213,10 +213,10 @@ class PodcastRepository:
         description: str,
         audio_url: str,
         published_at: datetime,
-        audio_duration: Optional[int] = None,
-        transcript_url: Optional[str] = None,
-        item_link: Optional[str] = None,
-        metadata: Optional[dict] = None
+        audio_duration: int | None = None,
+        transcript_url: str | None = None,
+        item_link: str | None = None,
+        metadata: dict | None = None
     ) -> PodcastEpisode:
         """
         创建或更新播客单集
@@ -270,7 +270,7 @@ class PodcastRepository:
 
         return episode, is_new
 
-    async def get_unsummarized_episodes(self, subscription_id: Optional[int] = None) -> list[PodcastEpisode]:
+    async def get_unsummarized_episodes(self, subscription_id: int | None = None) -> list[PodcastEpisode]:
         """获取待AI总结的单集"""
         stmt = select(PodcastEpisode).where(
             and_(
@@ -304,7 +304,7 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return result.scalar() or 0
 
-    async def get_episode_by_id(self, episode_id: int, user_id: Optional[int] = None) -> Optional[PodcastEpisode]:
+    async def get_episode_by_id(self, episode_id: int, user_id: int | None = None) -> PodcastEpisode | None:
         """获取单集详情"""
         stmt = select(PodcastEpisode).options(
             joinedload(PodcastEpisode.subscription)
@@ -324,7 +324,7 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_episode_by_item_link(self, subscription_id: int, item_link: str) -> Optional[PodcastEpisode]:
+    async def get_episode_by_item_link(self, subscription_id: int, item_link: str) -> PodcastEpisode | None:
         """通过item_link查找单集"""
         stmt = select(PodcastEpisode).where(
             and_(
@@ -342,7 +342,7 @@ class PodcastRepository:
         episode_id: int,
         summary: str,
         version: str = "v1",
-        confidence: Optional[float] = None,
+        confidence: float | None = None,
         transcript_used: bool = False
     ) -> PodcastEpisode:
         """更新AI总结"""
@@ -382,7 +382,7 @@ class PodcastRepository:
 
     # === 播放状态管理 ===
 
-    async def get_playback_state(self, user_id: int, episode_id: int) -> Optional[PodcastPlaybackState]:
+    async def get_playback_state(self, user_id: int, episode_id: int) -> PodcastPlaybackState | None:
         """获取用户播放状态"""
         stmt = select(PodcastPlaybackState).where(
             and_(
@@ -549,7 +549,7 @@ class PodcastRepository:
         user_id: int,
         page: int = 1,
         size: int = 20,
-        filters: Optional[dict] = None
+        filters: dict | None = None
     ) -> tuple[list[Subscription], int]:
         """分页获取用户订阅"""
         query = (
@@ -566,9 +566,6 @@ class PodcastRepository:
 
         # 应用过滤器
         if filters:
-            if filters.category_id:
-                # TODO: 实现分类过滤
-                pass
             if filters.status:
                 query = query.where(Subscription.status == filters.status)
 
@@ -593,7 +590,7 @@ class PodcastRepository:
         user_id: int,
         page: int = 1,
         size: int = 20,
-        filters: Optional[dict] = None
+        filters: dict | None = None
     ) -> tuple[list[PodcastEpisode], int]:
         """分页获取用户播客单集"""
         query = (
@@ -703,17 +700,7 @@ class PodcastRepository:
 
         return episodes, total
 
-    async def update_subscription_categories(
-        self,
-        subscription_id: int,
-        category_ids: list[int]
-    ):
-        """更新订阅的分类关联"""
-        # TODO: 实现订阅与分类的多对多关系更新
-        # 这需要创建PodcastCategory模型和相关映射表
-        pass
-
-    async def update_subscription_fetch_time(self, subscription_id: int, fetch_time: Optional[datetime] = None):
+    async def update_subscription_fetch_time(self, subscription_id: int, fetch_time: datetime | None = None):
         """更新订阅的最后抓取时间"""
         stmt = select(Subscription).where(Subscription.id == subscription_id)
         result = await self.db.execute(stmt)

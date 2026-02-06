@@ -1,7 +1,7 @@
 """Shared Pydantic schemas."""
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
@@ -13,14 +13,14 @@ class BaseSchema(BaseModel):
 
 class TimestampedSchema(BaseSchema):
     created_at: datetime
-    updated_at: Optional[datetime] = None
+    updated_at: datetime | None = None
 
 
 # User schemas
 class UserBase(BaseSchema):
     email: EmailStr
-    username: Optional[str] = Field(None, min_length=3, max_length=50)
-    account_name: Optional[str] = Field(None, max_length=255)
+    username: str | None = Field(None, min_length=3, max_length=50)
+    account_name: str | None = Field(None, max_length=255)
     is_active: bool = True
     is_superuser: bool = False
 
@@ -60,22 +60,22 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseSchema):
-    account_name: Optional[str] = None
-    avatar_url: Optional[str] = None
-    settings: Optional[dict[str, Any]] = None
+    account_name: str | None = None
+    avatar_url: str | None = None
+    settings: dict[str, Any] | None = None
 
 
 class UserInDB(UserBase, TimestampedSchema):
     id: int
     is_verified: bool
-    last_login_at: Optional[datetime] = None
+    last_login_at: datetime | None = None
 
 
 class UserResponse(UserBase):
     id: int
     is_verified: bool
-    avatar_url: Optional[str] = None
-    account_name: Optional[str] = None
+    avatar_url: str | None = None
+    account_name: str | None = None
     created_at: datetime
 
 
@@ -93,7 +93,7 @@ class Token(BaseSchema):
 
 
 class TokenData(BaseSchema):
-    username: Optional[str] = None
+    username: str | None = None
 
 
 # Pagination schemas
@@ -134,23 +134,23 @@ class PaginatedResponse(BaseSchema):
 # API Response schemas
 class APIResponse(BaseSchema):
     success: bool = True
-    message: Optional[str] = None
-    data: Optional[Any] = None
+    message: str | None = None
+    data: Any | None = None
 
 
 class ErrorResponse(BaseSchema):
     success: bool = False
     message: str
-    errors: Optional[dict[str, list[str]]] = None
+    errors: dict[str, list[str]] | None = None
 
 
 # Subscription schemas
 class SubscriptionBase(BaseSchema):
     title: str
-    description: Optional[str] = None
+    description: str | None = None
     source_type: str
     source_url: str
-    config: Optional[dict[str, Any]] = {}
+    config: dict[str, Any] | None = {}
     fetch_interval: int = 3600
 
 
@@ -159,20 +159,20 @@ class SubscriptionCreate(SubscriptionBase):
 
 
 class SubscriptionUpdate(BaseSchema):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    config: Optional[dict[str, Any]] = None
-    fetch_interval: Optional[int] = None
-    is_active: Optional[bool] = None
+    title: str | None = None
+    description: str | None = None
+    config: dict[str, Any] | None = None
+    fetch_interval: int | None = None
+    is_active: bool | None = None
 
 
 class SubscriptionResponse(SubscriptionBase, TimestampedSchema):
     id: int
     status: str
-    last_fetched_at: Optional[datetime] = None
-    latest_item_published_at: Optional[datetime] = None
-    next_update_at: Optional[datetime] = None
-    error_message: Optional[str] = None
+    last_fetched_at: datetime | None = None
+    latest_item_published_at: datetime | None = None
+    next_update_at: datetime | None = None
+    error_message: str | None = None
     item_count: int = 0
 
 
@@ -189,19 +189,19 @@ class MessageCreate(MessageBase):
 class MessageResponse(MessageBase, TimestampedSchema):
     id: int
     conversation_id: int
-    tokens: Optional[int] = None
-    model_name: Optional[str] = None
-    metadata: Optional[dict[str, Any]] = {}
+    tokens: int | None = None
+    model_name: str | None = None
+    metadata: dict[str, Any] | None = {}
 
 
 # Conversation schemas
 class ConversationBase(BaseSchema):
     title: str
-    description: Optional[str] = None
+    description: str | None = None
     model_name: str = "gpt-3.5-turbo"
-    system_prompt: Optional[str] = None
+    system_prompt: str | None = None
     temperature: int = 70
-    settings: Optional[dict[str, Any]] = {}
+    settings: dict[str, Any] | None = {}
 
 
 class ConversationCreate(ConversationBase):
@@ -209,18 +209,18 @@ class ConversationCreate(ConversationBase):
 
 
 class ConversationUpdate(BaseSchema):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    system_prompt: Optional[str] = None
-    temperature: Optional[int] = None
-    settings: Optional[dict[str, Any]] = None
+    title: str | None = None
+    description: str | None = None
+    system_prompt: str | None = None
+    temperature: int | None = None
+    settings: dict[str, Any] | None = None
 
 
 class ConversationResponse(ConversationBase, TimestampedSchema):
     id: int
     user_id: int
     status: str
-    message_count: Optional[int] = 0
+    message_count: int | None = 0
 
 
 # Password Reset schemas
@@ -260,5 +260,5 @@ class PasswordResetResponse(BaseSchema):
     """Password reset response schema."""
     message: str = Field(..., description="Response message")
     # Include token only in development for testing
-    token: Optional[str] = Field(None, description="Reset token (development only)")
-    expires_at: Optional[str] = Field(None, description="Token expiry time (ISO format)")
+    token: str | None = Field(None, description="Reset token (development only)")
+    expires_at: str | None = Field(None, description="Token expiry time (ISO format)")

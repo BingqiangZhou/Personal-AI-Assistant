@@ -1,6 +1,6 @@
 """Admin audit log utilities."""
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,12 +17,12 @@ async def log_admin_action(
     username: str,
     action: str,
     resource_type: str,
-    resource_id: Optional[int] = None,
-    resource_name: Optional[str] = None,
-    details: Optional[dict[str, Any]] = None,
-    request: Optional[Request] = None,
+    resource_id: int | None = None,
+    resource_name: str | None = None,
+    details: dict[str, Any] | None = None,
+    request: Request | None = None,
     status: str = "success",
-    error_message: Optional[str] = None,
+    error_message: str | None = None,
 ) -> AdminAuditLog:
     """
     Log an admin action to the audit log.

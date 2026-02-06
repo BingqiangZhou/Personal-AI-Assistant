@@ -11,7 +11,6 @@ import os
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 import aiofiles
 import aiohttp
@@ -69,7 +68,7 @@ class AudioChunk:
     start_time: float  # 开始时间（秒）
     duration: float  # 时长（秒）
     file_size: int  # 文件大小（字节）
-    transcript: Optional[str] = None  # 转录结果
+    transcript: str | None = None  # 转录结果
 
 
 @dataclass
@@ -89,7 +88,7 @@ class AudioDownloader:
     def __init__(self, timeout: int = 300, chunk_size: int = 8192):
         self.timeout = timeout
         self.chunk_size = chunk_size
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
 
     async def __aenter__(self):
         """异步上下文管理器入口"""
@@ -591,7 +590,7 @@ class SiliconFlowTranscriber:
         self.api_url = api_url
         self.max_concurrent = max_concurrent
         self.semaphore = asyncio.Semaphore(max_concurrent)
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: aiohttp.ClientSession | None = None
 
     async def __aenter__(self):
         """异步上下文管理器入口"""
@@ -620,7 +619,7 @@ class SiliconFlowTranscriber:
         chunk: AudioChunk,
         model: str = "FunAudioLLM/SenseVoiceSmall",
         ai_repo=None,
-        config_db_id: Optional[int] = None
+        config_db_id: int | None = None
     ) -> AudioChunk:
         """
         转录单个音频片段
@@ -736,7 +735,7 @@ class SiliconFlowTranscriber:
         model: str = "FunAudioLLM/SenseVoiceSmall",
         progress_callback=None,
         ai_repo=None,
-        config_db_id: Optional[int] = None
+        config_db_id: int | None = None
     ) -> list[AudioChunk]:
         """
         并发转录多个音频片段
@@ -852,7 +851,7 @@ class PodcastTranscriptionService:
         status: TranscriptionStatus,
         progress: float,
         message: str,
-        error_message: Optional[str] = None
+        error_message: str | None = None
     ):
         """更新任务进度"""
         update_data = {
@@ -898,7 +897,7 @@ class PodcastTranscriptionService:
         step: TranscriptionStep,  # 现在是 step 而不是 status
         progress: float,
         message: str,
-        error_message: Optional[str] = None
+        error_message: str | None = None
     ):
         """使用指定的数据库会话更新任务进度和步骤"""
         from app.domains.podcast.models import TranscriptionStatus
@@ -974,7 +973,7 @@ class PodcastTranscriptionService:
         session: AsyncSession,
         task_id: int,
         status: TranscriptionStatus,  # COMPLETED 或 FAILED
-        error_message: Optional[str] = None
+        error_message: str | None = None
     ):
         """设置任务的最终状态（COMPLETED 或 FAILED）"""
         update_data = {
@@ -999,7 +998,7 @@ class PodcastTranscriptionService:
 
         logger.info(f"Set task {task_id} final status: {status}")
 
-    async def create_transcription_task_record(self, episode_id: int, model: Optional[str] = None, force: bool = False) -> tuple[TranscriptionTask, Optional[int]]:
+    async def create_transcription_task_record(self, episode_id: int, model: str | None = None, force: bool = False) -> tuple[TranscriptionTask, int | None]:
         """
         创建转录任务记录（不立即执行）
         
@@ -1090,7 +1089,7 @@ class PodcastTranscriptionService:
         config_db_id = model_config.id if model_config else None
         return task, config_db_id
 
-    async def start_transcription(self, episode_id: int, model: Optional[str] = None, force: bool = False) -> TranscriptionTask:
+    async def start_transcription(self, episode_id: int, model: str | None = None, force: bool = False) -> TranscriptionTask:
         """启动转录任务"""
         # 1. 创建任务记录
         task, config_db_id = await self.create_transcription_task_record(episode_id, model=model, force=force)
@@ -1100,7 +1099,7 @@ class PodcastTranscriptionService:
         return task
 
 
-    async def execute_transcription_task(self, task_id: int, session, config_db_id: Optional[int] = None):
+    async def execute_transcription_task(self, task_id: int, session, config_db_id: int | None = None):
         """执行转录任务（后台运行）"""
         log_with_timestamp("INFO", "🎬 [EXECUTE START] Transcription task starting...", task_id)
         log_with_timestamp("INFO", f"📋 [EXECUTE] config_db_id={config_db_id}", task_id)
@@ -1449,7 +1448,7 @@ class PodcastTranscriptionService:
                 transcript_file = chunk.file_path.replace('.mp3', '.txt')
                 if os.path.exists(transcript_file) and os.path.getsize(transcript_file) > 0:
                     # 加载已有的转录
-                    async with aiofiles.open(transcript_file, 'r', encoding='utf-8') as f:
+                    async with aiofiles.open(transcript_file, encoding='utf-8') as f:
                         content = await f.read()
                     if content.strip():
                         chunk.transcript = content
@@ -1679,13 +1678,13 @@ class PodcastTranscriptionService:
             except Exception as e:
                 logger.error(f"⚠️ [CLEANUP] Error during cleanup: {str(e)}")
 
-    async def get_transcription_status(self, task_id: int) -> Optional[TranscriptionTask]:
+    async def get_transcription_status(self, task_id: int) -> TranscriptionTask | None:
         """获取转录任务状态"""
         stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_episode_transcription(self, episode_id: int) -> Optional[TranscriptionTask]:
+    async def get_episode_transcription(self, episode_id: int) -> TranscriptionTask | None:
         """获取播客单集的转录信息"""
         stmt = select(TranscriptionTask).where(TranscriptionTask.episode_id == episode_id)
         result = await self.db.execute(stmt)

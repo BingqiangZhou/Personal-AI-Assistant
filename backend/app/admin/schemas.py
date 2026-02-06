@@ -1,5 +1,4 @@
 """Pydantic schemas for admin forms and validation."""
-from typing import Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -15,15 +14,15 @@ class APIKeyCreateForm(BaseModel):
     """API Key creation form schema."""
 
     name: str = Field(..., min_length=1, max_length=100, description="API Key name")
-    description: Optional[str] = Field(None, max_length=500, description="Description")
+    description: str | None = Field(None, max_length=500, description="Description")
 
 
 class SubscriptionEditForm(BaseModel):
     """RSS Subscription edit form schema."""
 
-    title: Optional[str] = Field(None, max_length=200)
-    feed_url: Optional[str] = Field(None, max_length=500)
-    update_frequency: Optional[int] = Field(None, ge=1, le=1440, description="Update frequency in minutes")
+    title: str | None = Field(None, max_length=200)
+    feed_url: str | None = Field(None, max_length=500)
+    update_frequency: int | None = Field(None, ge=1, le=1440, description="Update frequency in minutes")
 
     @validator("feed_url")
     def validate_url(cls, v):

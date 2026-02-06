@@ -23,7 +23,7 @@ Recommended naming conventions:
 import hashlib
 import json
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from redis import asyncio as aioredis
 
@@ -74,7 +74,7 @@ class PodcastRedis:
 
     # === Cache Operations ===
 
-    async def cache_get(self, key: str) -> Optional[str]:
+    async def cache_get(self, key: str) -> str | None:
         """Get cached value"""
         client = await self._get_client()
         return await client.get(key)
@@ -89,12 +89,12 @@ class PodcastRedis:
         client = await self._get_client()
         return await client.delete(key)
 
-    async def cache_hget(self, key: str, field: str) -> Optional[str]:
+    async def cache_hget(self, key: str, field: str) -> str | None:
         """Get hash field"""
         client = await self._get_client()
         return await client.hget(key, field)
 
-    async def cache_hset(self, key: str, mapping: dict, ttl: Optional[int] = None) -> int:
+    async def cache_hset(self, key: str, mapping: dict, ttl: int | None = None) -> int:
         """Set hash fields with optional TTL"""
         client = await self._get_client()
         result = await client.hset(key, mapping=mapping)
@@ -104,7 +104,7 @@ class PodcastRedis:
 
     # === Convenience Methods ===
 
-    async def get_episode_metadata(self, episode_id: int) -> Optional[dict]:
+    async def get_episode_metadata(self, episode_id: int) -> dict | None:
         """Get cached episode metadata"""
         key = f"podcast:meta:{episode_id}"
         data = await self.cache_hget(key, "*")
@@ -115,7 +115,7 @@ class PodcastRedis:
         key = f"podcast:meta:{episode_id}"
         await self.cache_hset(key, metadata, ttl=86400)
 
-    async def get_cached_feed(self, feed_url: str) -> Optional[str]:
+    async def get_cached_feed(self, feed_url: str) -> str | None:
         """Get cached RSS feed"""
         key = f"podcast:cache:{hash(feed_url)}"
         return await self.cache_get(key)
@@ -125,7 +125,7 @@ class PodcastRedis:
         key = f"podcast:cache:{hash(feed_url)}"
         await self.cache_set(key, xml_content, ttl=900)
 
-    async def get_ai_summary(self, episode_id: int, version: str = "v1") -> Optional[str]:
+    async def get_ai_summary(self, episode_id: int, version: str = "v1") -> str | None:
         """Get cached AI summary"""
         key = f"podcast:summary:{episode_id}:{version}"
         return await self.cache_get(key)
@@ -135,7 +135,7 @@ class PodcastRedis:
         key = f"podcast:summary:{episode_id}:{version}"
         await self.cache_set(key, summary, ttl=604800)
 
-    async def get_user_progress(self, user_id: int, episode_id: int) -> Optional[float]:
+    async def get_user_progress(self, user_id: int, episode_id: int) -> float | None:
         """Get user listening progress"""
         key = f"podcast:progress:{user_id}:{episode_id}"
         progress = await self.cache_get(key)
@@ -148,7 +148,7 @@ class PodcastRedis:
 
     # === JSON Cache Helpers ===
 
-    async def cache_get_json(self, key: str) -> Optional[Any]:
+    async def cache_get_json(self, key: str) -> Any | None:
         """Get and parse JSON from cache"""
         data = await self.cache_get(key)
         if data:
@@ -168,7 +168,7 @@ class PodcastRedis:
 
     # === Subscription List Cache ===
 
-    async def get_subscription_list(self, user_id: int, page: int, size: int) -> Optional[dict]:
+    async def get_subscription_list(self, user_id: int, page: int, size: int) -> dict | None:
         """Get cached subscription list (15 minutes TTL)"""
         key = f"podcast:subscriptions:{user_id}:{page}:{size}"
         return await self.cache_get_json(key)
@@ -188,7 +188,7 @@ class PodcastRedis:
 
     # === User Stats Cache ===
 
-    async def get_user_stats(self, user_id: int) -> Optional[dict]:
+    async def get_user_stats(self, user_id: int) -> dict | None:
         """Get cached user statistics (30 minutes TTL)"""
         key = f"podcast:stats:{user_id}"
         return await self.cache_get_json(key)
@@ -205,7 +205,7 @@ class PodcastRedis:
 
     # === Episode List Cache ===
 
-    async def get_episode_list(self, subscription_id: int, page: int, size: int) -> Optional[dict]:
+    async def get_episode_list(self, subscription_id: int, page: int, size: int) -> dict | None:
         """Get cached episode list (10 minutes TTL)"""
         key = f"podcast:episodes:{subscription_id}:{page}:{size}"
         return await self.cache_get_json(key)
@@ -230,7 +230,7 @@ class PodcastRedis:
         query_str = f"{query}:{search_in}:{page}:{size}".lower()
         return hashlib.md5(query_str.encode()).hexdigest()
 
-    async def get_search_results(self, query: str, search_in: str, page: int, size: int) -> Optional[dict]:
+    async def get_search_results(self, query: str, search_in: str, page: int, size: int) -> dict | None:
         """Get cached search results (5 minutes TTL)"""
         hash_key = self._hash_search_query(query, search_in, page, size)
         key = f"podcast:search:{hash_key}"

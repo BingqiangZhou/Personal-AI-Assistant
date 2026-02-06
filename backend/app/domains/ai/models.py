@@ -5,7 +5,7 @@ AI模型配置数据模型
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field, validator
 from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Integer, String, Text
@@ -85,21 +85,21 @@ class AIModelConfig(Base):
     def __repr__(self):
         return f"<AIModelConfig(id={self.id}, name={self.name}, type={self.model_type})>"
 
-    def get_cost_per_input_token_float(self) -> Optional[float]:
+    def get_cost_per_input_token_float(self) -> float | None:
         """获取输入令牌成本的浮点数"""
         try:
             return float(self.cost_per_input_token) if self.cost_per_input_token else None
         except (ValueError, TypeError):
             return None
 
-    def get_cost_per_output_token_float(self) -> Optional[float]:
+    def get_cost_per_output_token_float(self) -> float | None:
         """获取输出令牌成本的浮点数"""
         try:
             return float(self.cost_per_output_token) if self.cost_per_output_token else None
         except (ValueError, TypeError):
             return None
 
-    def get_temperature_float(self) -> Optional[float]:
+    def get_temperature_float(self) -> float | None:
         """获取温度参数的浮点数"""
         try:
             return float(self.temperature) if self.temperature else None
@@ -119,21 +119,21 @@ class AIModelConfigBase(BaseModel):
     """AI模型配置基础模型"""
     name: str = Field(..., min_length=1, max_length=100, description="模型名称")
     display_name: str = Field(..., min_length=1, max_length=200, description="显示名称")
-    description: Optional[str] = Field(None, description="模型描述")
+    description: str | None = Field(None, description="模型描述")
     model_type: ModelType = Field(..., description="模型类型")
     api_url: str = Field(..., min_length=1, max_length=500, description="API端点URL")
-    api_key: Optional[str] = Field(None, max_length=1000, description="API密钥")
+    api_key: str | None = Field(None, max_length=1000, description="API密钥")
     model_id: str = Field(..., min_length=1, max_length=200, description="模型标识符")
     provider: str = Field(default="custom", max_length=100, description="提供商")
-    max_tokens: Optional[int] = Field(None, gt=0, description="最大令牌数")
-    temperature: Optional[str] = Field(None, description="温度参数")
+    max_tokens: int | None = Field(None, gt=0, description="最大令牌数")
+    temperature: str | None = Field(None, description="温度参数")
     timeout_seconds: int = Field(default=300, gt=0, description="请求超时时间（秒）")
     max_retries: int = Field(default=3, ge=0, description="最大重试次数")
     max_concurrent_requests: int = Field(default=1, gt=0, description="最大并发请求数")
     rate_limit_per_minute: int = Field(default=60, gt=0, description="每分钟请求限制")
-    cost_per_input_token: Optional[str] = Field(None, description="每输入令牌成本")
-    cost_per_output_token: Optional[str] = Field(None, description="每输出令牌成本")
-    extra_config: Optional[dict[str, Any]] = Field(default=dict, description="额外配置参数")
+    cost_per_input_token: str | None = Field(None, description="每输入令牌成本")
+    cost_per_output_token: str | None = Field(None, description="每输出令牌成本")
+    extra_config: dict[str, Any] | None = Field(default=dict, description="额外配置参数")
     is_active: bool = Field(default=True, description="是否启用")
     is_default: bool = Field(default=False, description="是否为默认模型")
     priority: int = Field(default=1, ge=1, le=100, description="优先级（数字越小优先级越高）")
@@ -168,23 +168,23 @@ class AIModelConfigCreate(AIModelConfigBase):
 
 class AIModelConfigUpdate(BaseModel):
     """更新AI模型配置"""
-    display_name: Optional[str] = Field(None, min_length=1, max_length=200)
-    description: Optional[str] = None
-    api_url: Optional[str] = Field(None, min_length=1, max_length=500)
-    api_key: Optional[str] = Field(None, max_length=1000)
-    model_id: Optional[str] = Field(None, min_length=1, max_length=200)
-    max_tokens: Optional[int] = Field(None, gt=0)
-    temperature: Optional[str] = None
-    timeout_seconds: Optional[int] = Field(None, gt=0)
-    max_retries: Optional[int] = Field(None, ge=0)
-    max_concurrent_requests: Optional[int] = Field(None, gt=0)
-    rate_limit_per_minute: Optional[int] = Field(None, gt=0)
-    cost_per_input_token: Optional[str] = None
-    cost_per_output_token: Optional[str] = None
-    extra_config: Optional[dict[str, Any]] = None
-    is_active: Optional[bool] = None
-    is_default: Optional[bool] = None
-    priority: Optional[int] = Field(None, ge=1, le=100)
+    display_name: str | None = Field(None, min_length=1, max_length=200)
+    description: str | None = None
+    api_url: str | None = Field(None, min_length=1, max_length=500)
+    api_key: str | None = Field(None, max_length=1000)
+    model_id: str | None = Field(None, min_length=1, max_length=200)
+    max_tokens: int | None = Field(None, gt=0)
+    temperature: str | None = None
+    timeout_seconds: int | None = Field(None, gt=0)
+    max_retries: int | None = Field(None, ge=0)
+    max_concurrent_requests: int | None = Field(None, gt=0)
+    rate_limit_per_minute: int | None = Field(None, gt=0)
+    cost_per_input_token: str | None = None
+    cost_per_output_token: str | None = None
+    extra_config: dict[str, Any] | None = None
+    is_active: bool | None = None
+    is_default: bool | None = None
+    priority: int | None = Field(None, ge=1, le=100)
 
     @validator('temperature')
     def validate_temperature(cls, v):
@@ -220,7 +220,7 @@ class AIModelConfigResponse(AIModelConfigBase):
     success_rate: float = 0.0
     created_at: datetime
     updated_at: datetime
-    last_used_at: Optional[datetime]
+    last_used_at: datetime | None
     is_system: bool
     priority: int
 
@@ -263,19 +263,19 @@ class ModelUsageStats(BaseModel):
     error_count: int
     success_rate: float
     total_tokens_used: int
-    last_used_at: Optional[datetime]
-    total_cost: Optional[float] = None
+    last_used_at: datetime | None
+    total_cost: float | None = None
 
 
 class ModelTestRequest(BaseModel):
     """模型测试请求"""
     model_id: int
-    test_data: Optional[dict[str, Any]] = Field(default=dict, description="测试数据")
+    test_data: dict[str, Any] | None = Field(default=dict, description="测试数据")
 
 
 class ModelTestResponse(BaseModel):
     """模型测试响应"""
     success: bool
     response_time_ms: float
-    result: Optional[str] = None
-    error_message: Optional[str] = None
+    result: str | None = None
+    error_message: str | None = None

@@ -1,6 +1,6 @@
 """Subscription API routes."""
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -24,34 +24,34 @@ router = APIRouter()
 class CategoryCreate(BaseModel):
     """Request model for creating a category."""
     name: str = Field(..., min_length=1, max_length=100)
-    description: Optional[str] = None
-    color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    description: str | None = None
+    color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
 
 
 class CategoryResponse(BaseModel):
     """Response model for category."""
     id: int
     name: str
-    description: Optional[str]
-    color: Optional[str]
+    description: str | None
+    color: str | None
     created_at: str
 
 
 class CategoryUpdate(BaseModel):
     """Request model for updating a category."""
-    name: Optional[str] = Field(None, min_length=1, max_length=100)
-    description: Optional[str] = None
-    color: Optional[str] = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
+    name: str | None = Field(None, min_length=1, max_length=100)
+    description: str | None = None
+    color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
 
 
 class FetchResponse(BaseModel):
     """Response model for fetch operation."""
     subscription_id: int
     status: str
-    new_items: Optional[int] = None
-    updated_items: Optional[int] = None
-    total_items: Optional[int] = None
-    error: Optional[str] = None
+    new_items: int | None = None
+    updated_items: int | None = None
+    total_items: int | None = None
+    error: str | None = None
 
 
 class BatchSubscriptionResponse(BaseModel):
@@ -67,8 +67,8 @@ class BatchSubscriptionResponse(BaseModel):
 @router.get("/", response_model=PaginatedResponse)
 async def list_subscriptions(
     pagination: PaginationParams = Depends(),
-    status: Optional[str] = Query(None, description="Filter by status"),
-    source_type: Optional[str] = Query(None, description="Filter by source type"),
+    status: str | None = Query(None, description="Filter by status"),
+    source_type: str | None = Query(None, description="Filter by source type"),
     service: SubscriptionService = Depends(get_subscription_service)
 ):
     """List user's subscriptions."""

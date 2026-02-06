@@ -2,7 +2,6 @@
 AI模型配置数据访问层
 """
 
-from typing import Optional
 
 from sqlalchemy import and_, delete, func, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,7 +27,7 @@ class AIModelConfigRepository:
             await self.db.rollback()
             raise DatabaseError(f"Failed to create model config: {str(e)}")
 
-    async def get_by_id(self, model_id: int) -> Optional[AIModelConfig]:
+    async def get_by_id(self, model_id: int) -> AIModelConfig | None:
         """根据ID获取模型配置"""
         try:
             stmt = select(AIModelConfig).where(AIModelConfig.id == model_id)
@@ -37,7 +36,7 @@ class AIModelConfigRepository:
         except Exception as e:
             raise DatabaseError(f"Failed to get model config by id: {str(e)}")
 
-    async def get_by_name(self, name: str) -> Optional[AIModelConfig]:
+    async def get_by_name(self, name: str) -> AIModelConfig | None:
         """根据名称获取模型配置"""
         try:
             stmt = select(AIModelConfig).where(AIModelConfig.name == name)
@@ -48,9 +47,9 @@ class AIModelConfigRepository:
 
     async def get_list(
         self,
-        model_type: Optional[ModelType] = None,
-        is_active: Optional[bool] = None,
-        provider: Optional[str] = None,
+        model_type: ModelType | None = None,
+        is_active: bool | None = None,
+        provider: str | None = None,
         page: int = 1,
         size: int = 20
     ) -> tuple[list[AIModelConfig], int]:
@@ -87,7 +86,7 @@ class AIModelConfigRepository:
         except Exception as e:
             raise DatabaseError(f"Failed to get model config list: {str(e)}")
 
-    async def get_default_model(self, model_type: ModelType) -> Optional[AIModelConfig]:
+    async def get_default_model(self, model_type: ModelType) -> AIModelConfig | None:
         """获取指定类型的默认模型"""
         try:
             stmt = select(AIModelConfig).where(
@@ -104,7 +103,7 @@ class AIModelConfigRepository:
 
     async def get_active_models(
         self,
-        model_type: Optional[ModelType] = None
+        model_type: ModelType | None = None
     ) -> list[AIModelConfig]:
         """获取所有活跃的模型，按优先级排序"""
         try:
@@ -122,12 +121,12 @@ class AIModelConfigRepository:
 
     async def get_active_models_by_priority(
         self,
-        model_type: Optional[ModelType] = None
+        model_type: ModelType | None = None
     ) -> list[AIModelConfig]:
         """获取所有活跃的模型，按优先级排序（用于API调用fallback）"""
         return await self.get_active_models(model_type)
 
-    async def update(self, model_id: int, update_data: dict) -> Optional[AIModelConfig]:
+    async def update(self, model_id: int, update_data: dict) -> AIModelConfig | None:
         """更新模型配置"""
         try:
             stmt = update(AIModelConfig).where(AIModelConfig.id == model_id).values(**update_data)
@@ -220,7 +219,7 @@ class AIModelConfigRepository:
 
     async def get_usage_stats(
         self,
-        model_type: Optional[ModelType] = None,
+        model_type: ModelType | None = None,
         limit: int = 50
     ) -> list[dict]:
         """获取使用统计"""
@@ -271,7 +270,7 @@ class AIModelConfigRepository:
     async def search_models(
         self,
         query: str,
-        model_type: Optional[ModelType] = None,
+        model_type: ModelType | None = None,
         page: int = 1,
         size: int = 20
     ) -> tuple[list[AIModelConfig], int]:

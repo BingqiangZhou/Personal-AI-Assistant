@@ -16,7 +16,6 @@ Podcast Security Module - XXE/SSRF Protection & Content Validation
 
 import logging
 import re
-from typing import Optional
 from urllib.parse import urlparse
 
 import aiohttp
@@ -56,7 +55,7 @@ class PodcastSecurityValidator:
     }
 
     @classmethod
-    def validate_rss_xml(cls, xml_content: str) -> tuple[bool, Optional[str]]:
+    def validate_rss_xml(cls, xml_content: str) -> tuple[bool, str | None]:
         """
         Safe RSS XML validation using defusedxml
 
@@ -96,7 +95,7 @@ class PodcastSecurityValidator:
             return False, "Invalid XML structure"
 
     @classmethod
-    def validate_audio_url(cls, url: str) -> tuple[bool, Optional[str]]:
+    def validate_audio_url(cls, url: str) -> tuple[bool, str | None]:
         """
         Validate audio URL for SSRF protection
 
@@ -133,7 +132,7 @@ class PodcastSecurityValidator:
             return False, "Malformed URL"
 
     @classmethod
-    def _is_dangerous_host(cls, hostname: Optional[str]) -> bool:
+    def _is_dangerous_host(cls, hostname: str | None) -> bool:
         """Check if hostname resolves to dangerous address"""
         if not hostname:
             return True
@@ -157,7 +156,7 @@ class PodcastSecurityValidator:
         return False
 
     @classmethod
-    async def validate_audio_download(cls, url: str) -> tuple[bool, Optional[str], Optional[bytes]]:
+    async def validate_audio_download(cls, url: str) -> tuple[bool, str | None, bytes | None]:
         """
         Safely download audio with size limits and validation
 

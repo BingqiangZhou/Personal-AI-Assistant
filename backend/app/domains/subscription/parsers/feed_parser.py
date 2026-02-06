@@ -7,7 +7,7 @@ import html
 import logging
 import re
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlparse
 
 import feedparser
@@ -69,7 +69,7 @@ class FeedParser:
 
     def __init__(
         self,
-        config: Optional[FeedParserConfig] = None
+        config: FeedParserConfig | None = None
     ):
         """
         Initialize FeedParser.
@@ -78,7 +78,7 @@ class FeedParser:
             config: Parser configuration (uses defaults if not provided)
         """
         self.config = config or FeedParserConfig()
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     async def __aenter__(self):
         """Async context manager entry / 异步上下文管理器入口"""
@@ -112,7 +112,7 @@ class FeedParser:
     async def parse_feed(
         self,
         url: str,
-        options: Optional[FeedParseOptions] = None
+        options: FeedParseOptions | None = None
     ) -> FeedParseResult:
         """
         Parse a feed from URL.
@@ -170,8 +170,8 @@ class FeedParser:
     def parse_feed_content(
         self,
         content: bytes,
-        url: Optional[str] = None,
-        options: Optional[FeedParseOptions] = None
+        url: str | None = None,
+        options: FeedParseOptions | None = None
     ) -> FeedParseResult:
         """
         Parse feed from content bytes.
@@ -247,7 +247,7 @@ class FeedParser:
         self,
         feed: Any,
         result: FeedParseResult,
-        url: Optional[str] = None
+        url: str | None = None
     ) -> None:
         """Handle feedparser bozo error / 处理 feedparser 错误"""
         if hasattr(feed, 'bozo_exception'):
@@ -266,7 +266,7 @@ class FeedParser:
                 exception_type=type(exc).__name__
             )
 
-    def _parse_feed_info(self, feed: Any, url: Optional[str]) -> FeedInfo:
+    def _parse_feed_info(self, feed: Any, url: str | None) -> FeedInfo:
         """Parse feed metadata / 解析 feed 元数据"""
         feed_data = feed.get('feed', {})
 
@@ -415,7 +415,7 @@ class FeedParser:
 
         return ""
 
-    def _extract_summary(self, entry: Any, strip_html: bool) -> Optional[str]:
+    def _extract_summary(self, entry: Any, strip_html: bool) -> str | None:
         """Extract summary / 提取摘要"""
         summary = getattr(entry, 'summary', None)
         if summary and isinstance(summary, str):
@@ -424,7 +424,7 @@ class FeedParser:
             return summary.strip() or None
         return None
 
-    def _extract_image_url(self, entry: Any) -> Optional[str]:
+    def _extract_image_url(self, entry: Any) -> str | None:
         """Extract image URL / 提取图片 URL"""
         # Try multiple image fields
         image_fields = ['image', 'enclosure', 'media_thumbnail', 'media_content']
@@ -475,7 +475,7 @@ class FeedParser:
         # Deduplicate and return
         return list(dict.fromkeys(tags))  # Preserve order while deduplicating
 
-    def _parse_date(self, date_value: Any) -> Optional[datetime]:
+    def _parse_date(self, date_value: Any) -> datetime | None:
         """Parse date from feedparser format / 解析 feedparser 格式的日期"""
         if date_value is None:
             return None
@@ -534,8 +534,8 @@ class FeedParser:
 
 async def parse_feed_url(
     url: str,
-    config: Optional[FeedParserConfig] = None,
-    options: Optional[FeedParseOptions] = None
+    config: FeedParserConfig | None = None,
+    options: FeedParseOptions | None = None
 ) -> FeedParseResult:
     """
     Convenience function to parse a feed from URL.
@@ -559,8 +559,8 @@ async def parse_feed_url(
 
 def parse_feed_bytes(
     content: bytes,
-    config: Optional[FeedParserConfig] = None,
-    options: Optional[FeedParseOptions] = None
+    config: FeedParserConfig | None = None,
+    options: FeedParseOptions | None = None
 ) -> FeedParseResult:
     """
     Convenience function to parse feed from bytes.

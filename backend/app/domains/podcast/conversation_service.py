@@ -6,7 +6,7 @@
 import logging
 import time
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -64,7 +64,7 @@ class ConversationService:
         episode_id: int,
         user_id: int,
         user_message: str,
-        model_name: Optional[str] = None
+        model_name: str | None = None
     ) -> dict[str, Any]:
         """发送消息并获取AI回复"""
         # 获取播客单集信息
@@ -179,7 +179,7 @@ class ConversationService:
     async def _call_ai_api(
         self,
         messages: list[dict[str, str]],
-        model_name: Optional[str] = None
+        model_name: str | None = None
     ) -> str:
         """
         调用AI API进行对话

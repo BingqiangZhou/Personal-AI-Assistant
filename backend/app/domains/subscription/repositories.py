@@ -1,7 +1,6 @@
 """Subscription domain repositories."""
 
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,8 +29,8 @@ class SubscriptionRepository:
         user_id: int,
         page: int = 1,
         size: int = 20,
-        status: Optional[str] = None,
-        source_type: Optional[str] = None,
+        status: str | None = None,
+        source_type: str | None = None,
     ) -> tuple[list[Subscription], int, dict[int, int]]:
         """
         Get user's subscriptions with pagination and filters.
@@ -90,7 +89,7 @@ class SubscriptionRepository:
 
     async def get_subscription_by_id(
         self, user_id: int, sub_id: int
-    ) -> Optional[Subscription]:
+    ) -> Subscription | None:
         """Get subscription by ID with user ownership verification."""
         query = (
             select(Subscription)
@@ -107,7 +106,7 @@ class SubscriptionRepository:
 
     async def get_subscription_by_url(
         self, user_id: int, url: str
-    ) -> Optional[Subscription]:
+    ) -> Subscription | None:
         """Get subscription by source URL (global lookup)."""
         query = select(Subscription).where(Subscription.source_url == url)
         result = await self.db.execute(query)
@@ -115,7 +114,7 @@ class SubscriptionRepository:
 
     async def get_subscription_by_title(
         self, user_id: int, title: str
-    ) -> Optional[Subscription]:
+    ) -> Subscription | None:
         """
         Get subscription by title (case-insensitive, global lookup).
 
@@ -129,7 +128,7 @@ class SubscriptionRepository:
 
     async def get_duplicate_subscription(
         self, user_id: int, url: str, title: str
-    ) -> Optional[Subscription]:
+    ) -> Subscription | None:
         """
         Check for duplicate subscription by URL or title.
 
@@ -209,7 +208,7 @@ class SubscriptionRepository:
 
     async def update_subscription(
         self, user_id: int, sub_id: int, sub_data: SubscriptionUpdate
-    ) -> Optional[Subscription]:
+    ) -> Subscription | None:
         """Update subscription."""
         sub = await self.get_subscription_by_id(user_id, sub_id)
         if not sub:
@@ -275,9 +274,9 @@ class SubscriptionRepository:
         self,
         sub_id: int,
         status: str = SubscriptionStatus.ACTIVE,
-        error_message: Optional[str] = None,
-        latest_published_at: Optional[datetime] = None,
-    ) -> Optional[Subscription]:
+        error_message: str | None = None,
+        latest_published_at: datetime | None = None,
+    ) -> Subscription | None:
         """
         Update subscription fetch status.
 
@@ -404,7 +403,7 @@ class SubscriptionRepository:
 
     async def get_item_by_id(
         self, item_id: int, user_id: int
-    ) -> Optional[SubscriptionItem]:
+    ) -> SubscriptionItem | None:
         """Get item by ID with user ownership verification."""
         query = (
             select(SubscriptionItem)
@@ -424,14 +423,14 @@ class SubscriptionRepository:
         subscription_id: int,
         external_id: str,
         title: str,
-        content: Optional[str] = None,
-        summary: Optional[str] = None,
-        author: Optional[str] = None,
-        source_url: Optional[str] = None,
-        image_url: Optional[str] = None,
-        tags: Optional[list[str]] = None,
-        metadata: Optional[dict] = None,
-        published_at: Optional[datetime] = None,
+        content: str | None = None,
+        summary: str | None = None,
+        author: str | None = None,
+        source_url: str | None = None,
+        image_url: str | None = None,
+        tags: list[str] | None = None,
+        metadata: dict | None = None,
+        published_at: datetime | None = None,
     ) -> SubscriptionItem:
         """Create or update a subscription item (upsert by external_id)."""
         # Check if item exists
@@ -476,7 +475,7 @@ class SubscriptionRepository:
 
     async def mark_item_as_read(
         self, item_id: int, user_id: int
-    ) -> Optional[SubscriptionItem]:
+    ) -> SubscriptionItem | None:
         """Mark an item as read."""
         item = await self.get_item_by_id(item_id, user_id)
         if not item:
@@ -491,7 +490,7 @@ class SubscriptionRepository:
 
     async def mark_item_as_unread(
         self, item_id: int, user_id: int
-    ) -> Optional[SubscriptionItem]:
+    ) -> SubscriptionItem | None:
         """Mark an item as unread."""
         item = await self.get_item_by_id(item_id, user_id)
         if not item:
@@ -504,7 +503,7 @@ class SubscriptionRepository:
 
     async def toggle_bookmark(
         self, item_id: int, user_id: int
-    ) -> Optional[SubscriptionItem]:
+    ) -> SubscriptionItem | None:
         """Toggle item bookmark status."""
         item = await self.get_item_by_id(item_id, user_id)
         if not item:
@@ -538,7 +537,7 @@ class SubscriptionRepository:
 
     async def get_category_by_id(
         self, category_id: int, user_id: int
-    ) -> Optional[SubscriptionCategory]:
+    ) -> SubscriptionCategory | None:
         """Get category by ID."""
         query = select(SubscriptionCategory).where(
             SubscriptionCategory.id == category_id,
@@ -551,8 +550,8 @@ class SubscriptionRepository:
         self,
         user_id: int,
         name: str,
-        description: Optional[str] = None,
-        color: Optional[str] = None,
+        description: str | None = None,
+        color: str | None = None,
     ) -> SubscriptionCategory:
         """Create a new category."""
         category = SubscriptionCategory(
@@ -565,7 +564,7 @@ class SubscriptionRepository:
 
     async def update_category(
         self, category_id: int, user_id: int, **kwargs
-    ) -> Optional[SubscriptionCategory]:
+    ) -> SubscriptionCategory | None:
         """Update category."""
         category = await self.get_category_by_id(category_id, user_id)
         if not category:

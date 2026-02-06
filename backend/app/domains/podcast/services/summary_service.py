@@ -6,7 +6,6 @@ Podcast Summary Service - Manages AI-generated summaries for podcast episodes.
 
 import asyncio
 import logging
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -339,7 +338,7 @@ class PodcastSummaryService:
     async def _wait_for_existing_summary(
         self,
         episode: PodcastEpisode,
-        session: Optional[AsyncSession]
+        session: AsyncSession | None
     ) -> str:
         """
         Wait for existing summary task to complete.

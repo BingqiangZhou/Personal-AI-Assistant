@@ -21,7 +21,6 @@ import re
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Optional
 
 
 logger = logging.getLogger(__name__)
@@ -88,7 +87,7 @@ class _BatchLogStats:
 
         return False
 
-    def get_and_reset(self, user_id: int, mode: str) -> Optional[dict]:
+    def get_and_reset(self, user_id: int, mode: str) -> dict | None:
         """获取统计信息并重置"""
         key = f"{user_id}_{mode}"
         if key not in self._stats or self._stats[key]['count'] == 0:
@@ -342,7 +341,7 @@ class PodcastSummarySanitizer(ContentSanitizer):
     Specialized sanitizer for podcast summaries with podcast-specific logic
     """
 
-    def summarize_episode(self, title: str, description: str, transcript: Optional[str], user_id: int) -> dict:
+    def summarize_episode(self, title: str, description: str, transcript: str | None, user_id: int) -> dict:
         """
         Helper method to sanitize and summarize podcast episode for LLM processing
 

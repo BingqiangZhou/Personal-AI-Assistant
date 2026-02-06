@@ -5,7 +5,7 @@ Backward-compatible facade that delegates to specialized services.
 
 # ruff: noqa: UP007
 import warnings
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -56,22 +56,21 @@ class PodcastService:
     async def add_subscription(
         self,
         feed_url: str,
-        category_ids: Optional[list[int]] = None,
     ) -> tuple[Subscription, list[PodcastEpisode]]:
-        return await self.subscription_service.add_subscription(feed_url, category_ids)
+        return await self.subscription_service.add_subscription(feed_url)
 
     async def add_subscriptions_batch(self, subscriptions_data: list) -> list[dict[str, Any]]:
         return await self.subscription_service.add_subscriptions_batch(subscriptions_data)
 
     async def list_subscriptions(
         self,
-        filters: Optional[dict] = None,
+        filters: dict | None = None,
         page: int = 1,
         size: int = 20,
     ) -> tuple[list[dict], int]:
         return await self.subscription_service.list_subscriptions(filters, page, size)
 
-    async def get_subscription_details(self, subscription_id: int) -> Optional[dict]:
+    async def get_subscription_details(self, subscription_id: int) -> dict | None:
         return await self.subscription_service.get_subscription_details(subscription_id)
 
     async def refresh_subscription(self, subscription_id: int) -> list[PodcastEpisode]:
@@ -89,7 +88,7 @@ class PodcastService:
     # Episode management
     async def list_episodes(
         self,
-        filters: Optional[dict] = None,
+        filters: dict | None = None,
         page: int = 1,
         size: int = 20,
     ) -> tuple[list[dict], int]:
@@ -98,20 +97,20 @@ class PodcastService:
     async def get_episode_by_id(
         self,
         episode_id: int,
-        user_id: Optional[int] = None,
-    ) -> Optional[PodcastEpisode]:
+        user_id: int | None = None,
+    ) -> PodcastEpisode | None:
         return await self.repo.get_episode_by_id(episode_id, user_id)
 
-    async def get_episode_with_summary(self, episode_id: int) -> Optional[dict]:
+    async def get_episode_with_summary(self, episode_id: int) -> dict | None:
         return await self.episode_service.get_episode_with_summary(episode_id)
 
-    async def get_subscription_by_id(self, subscription_id: int) -> Optional[Subscription]:
+    async def get_subscription_by_id(self, subscription_id: int) -> Subscription | None:
         return await self.repo.get_subscription_by_id(self.user_id, subscription_id)
 
     # Schedule management
     async def get_subscription_schedule(
         self, subscription_id: int
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         return await self.schedule_service.get_subscription_schedule(subscription_id)
 
     async def update_subscription_schedule(
@@ -121,7 +120,7 @@ class PodcastService:
         update_time: str | None,
         update_day_of_week: int | None,
         fetch_interval: int | None,
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         return await self.schedule_service.update_subscription_schedule(
             subscription_id=subscription_id,
             update_frequency=update_frequency,
@@ -164,7 +163,7 @@ class PodcastService:
             playback_rate,
         )
 
-    async def get_playback_state(self, episode_id: int) -> Optional[dict]:
+    async def get_playback_state(self, episode_id: int) -> dict | None:
         return await self.playback_service.get_playback_state(episode_id)
 
     # Summary management

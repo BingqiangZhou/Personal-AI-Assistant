@@ -2,7 +2,6 @@
 
 import enum
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
@@ -65,7 +64,7 @@ class User(Base):
         return self.status == UserStatus.ACTIVE
 
     @property
-    def full_name(self) -> Optional[str]:
+    def full_name(self) -> str | None:
         """Alias for account_name for backward compatibility."""
         return self.account_name
 

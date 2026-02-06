@@ -14,7 +14,7 @@ import secrets
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import Depends, Header, HTTPException, Query, status
 from jose import JWTError, jwt
@@ -70,7 +70,7 @@ token_optimizer = TokenOptimizer()
 
 def create_access_token(
     data: dict,
-    expires_delta: Optional[timedelta] = None
+    expires_delta: timedelta | None = None
 ) -> str:
     """Create JWT access token - optimized performance version."""
 
@@ -96,7 +96,7 @@ def create_access_token(
 
 def create_refresh_token(
     data: dict,
-    expires_delta: Optional[timedelta] = None
+    expires_delta: timedelta | None = None
 ) -> str:
     """Create JWT refresh token - optimized performance version."""
     # Use REFRESH_TOKEN_EXPIRE_DAYS as default if no expires_delta provided
@@ -225,7 +225,7 @@ def generate_password_reset_token(email: str) -> str:
     return encoded_jwt
 
 
-def verify_password_reset_token(token: str) -> Optional[str]:
+def verify_password_reset_token(token: str) -> str | None:
     """Verify password reset token."""
     try:
         decoded_token = jwt.decode(
@@ -247,7 +247,7 @@ def generate_random_string(length: int = 32) -> str:
 
 
 def verify_token_optional(
-    token: Optional[str] = None,
+    token: str | None = None,
     token_type: str = "access"
 ) -> dict:
     """
@@ -275,8 +275,8 @@ def verify_token_optional(
 
 
 async def get_token_from_request(
-    token: Optional[str] = Query(None, description="Authentication token (for testing)"),
-    authorization: Optional[str] = Header(None, description="Bearer token in Authorization header")
+    token: str | None = Query(None, description="Authentication token (for testing)"),
+    authorization: str | None = Header(None, description="Bearer token in Authorization header")
 ) -> dict:
     """
     Extract token from query parameter or Authorization header.

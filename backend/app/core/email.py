@@ -6,7 +6,6 @@ import logging
 import secrets
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from app.core.config import settings
 
@@ -31,7 +30,7 @@ class EmailService:
         self,
         email: str,
         token: str,
-        expires_at: Optional[datetime] = None
+        expires_at: datetime | None = None
     ) -> bool:
         """
         Send password reset email to user.

@@ -11,7 +11,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -50,7 +50,7 @@ class TranscriptionScheduler:
         self,
         episode_id: int,
         frequency: ScheduleFrequency = ScheduleFrequency.MANUAL,
-        custom_interval: Optional[int] = None,  # 自定义间隔（分钟）
+        custom_interval: int | None = None,  # 自定义间隔（分钟）
         force: bool = False
     ) -> dict[str, Any]:
         """
@@ -156,7 +156,7 @@ class TranscriptionScheduler:
         self,
         subscription_id: int,
         frequency: ScheduleFrequency = ScheduleFrequency.DAILY,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         skip_existing: bool = True
     ) -> list[dict[str, Any]]:
         """
@@ -363,7 +363,7 @@ class TranscriptionScheduler:
 
         return await self.transcription_service.cancel_transcription(task.id)
 
-    async def get_transcript_from_existing(self, episode_id: int) -> Optional[str]:
+    async def get_transcript_from_existing(self, episode_id: int) -> str | None:
         """
         从已存在的转录结果中获取文本
 
@@ -381,13 +381,13 @@ class TranscriptionScheduler:
 
         return None
 
-    async def _get_episode(self, episode_id: int) -> Optional[PodcastEpisode]:
+    async def _get_episode(self, episode_id: int) -> PodcastEpisode | None:
         """获取播客单集"""
         stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def _get_existing_transcription_task(self, episode_id: int) -> Optional[TranscriptionTask]:
+    async def _get_existing_transcription_task(self, episode_id: int) -> TranscriptionTask | None:
         """获取已存在的转录任务"""
         stmt = select(TranscriptionTask).where(TranscriptionTask.episode_id == episode_id)
         result = await self.db.execute(stmt)
@@ -401,7 +401,7 @@ class AutomatedTranscriptionScheduler:
         self.db = db
         self.scheduler = TranscriptionScheduler(db)
         self._running = False
-        self._background_task: Optional[asyncio.Task] = None
+        self._background_task: asyncio.Task | None = None
 
     async def start(
         self,
@@ -487,7 +487,7 @@ async def schedule_episode_transcription(
 async def get_episode_transcript(
     db: AsyncSession,
     episode_id: int
-) -> Optional[str]:
+) -> str | None:
     """便捷函数：获取分集转录文本（避免重复转录）"""
     scheduler = TranscriptionScheduler(db)
     return await scheduler.get_transcript_from_existing(episode_id)

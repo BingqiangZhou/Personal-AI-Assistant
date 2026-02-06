@@ -4,7 +4,7 @@
 """
 
 import logging
-from typing import Any, Optional, Union
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -25,8 +25,8 @@ class BaseCustomException(Exception):
         self,
         message: str,
         status_code: int = 500,
-        error_code: Optional[str] = None,
-        details: Optional[dict[str, Any]] = None
+        error_code: str | None = None,
+        details: dict[str, Any] | None = None
     ):
         self.message = message
         self.status_code = status_code
@@ -188,7 +188,7 @@ async def custom_exception_handler(request: Request, exc: BaseCustomException) -
     return JSONResponse(status_code=exc.status_code, content=content)
 
 
-async def http_exception_handler(request: Request, exc: Union[HTTPException, StarletteHTTPException]) -> JSONResponse:
+async def http_exception_handler(request: Request, exc: HTTPException | StarletteHTTPException) -> JSONResponse:
     """Handle HTTP exceptions.
 
     处理 HTTP 异常
@@ -309,7 +309,7 @@ def raise_conflict(resource_type: str = "Resource", field: str = "field", value:
     )
 
 
-def raise_validation(message: str, field: Optional[str] = None) -> None:
+def raise_validation(message: str, field: str | None = None) -> None:
     """Raise a ValidationError with standardized message.
 
     抛出标准化的 ValidationError

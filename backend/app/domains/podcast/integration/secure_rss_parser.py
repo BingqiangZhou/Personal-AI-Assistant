@@ -10,7 +10,6 @@ and follows the architecture defined in security.py.
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 import aiohttp
 from defusedxml.ElementTree import fromstring
@@ -34,11 +33,11 @@ class PodcastEpisode:
     description: str
     audio_url: str
     published_at: datetime
-    duration: Optional[int] = None
-    transcript_url: Optional[str] = None
-    guid: Optional[str] = None
-    image_url: Optional[str] = None
-    link: Optional[str] = None  # <item><link> 标签，分集详情页链接
+    duration: int | None = None
+    transcript_url: str | None = None
+    guid: str | None = None
+    image_url: str | None = None
+    link: str | None = None  # <item><link> 标签，分集详情页链接
 
 
 @dataclass
@@ -49,13 +48,13 @@ class PodcastFeed:
     description: str
     episodes: list[PodcastEpisode]
     last_fetched: datetime
-    author: Optional[str] = None
-    language: Optional[str] = None
+    author: str | None = None
+    language: str | None = None
     categories: list[str] = None
-    explicit: Optional[bool] = None
-    image_url: Optional[str] = None
-    podcast_type: Optional[str] = None
-    platform: Optional[str] = None
+    explicit: bool | None = None
+    image_url: str | None = None
+    podcast_type: str | None = None
+    platform: str | None = None
 
 
 class SecureRSSParser:
@@ -68,7 +67,7 @@ class SecureRSSParser:
         self.security = PodcastSecurityValidator()
         self.privacy = ContentSanitizer(mode=settings.LLM_CONTENT_SANITIZE_MODE)
 
-    async def fetch_and_parse_feed(self, feed_url: str) -> tuple[bool, Optional[PodcastFeed], Optional[str]]:
+    async def fetch_and_parse_feed(self, feed_url: str) -> tuple[bool, PodcastFeed | None, str | None]:
         """
         Complete pipeline: fetch → validate → parse
 
@@ -106,7 +105,7 @@ class SecureRSSParser:
             logger.error(f"Parsing error: {e}")
             return False, None, f"Failed to parse feed: {e}"
 
-    async def _safe_fetch(self, url: str) -> tuple[Optional[str], Optional[str]]:
+    async def _safe_fetch(self, url: str) -> tuple[str | None, str | None]:
         """Fetch with size and timeout limits"""
         try:
             timeout = aiohttp.ClientTimeout(total=60, connect=10)
@@ -207,7 +206,7 @@ class SecureRSSParser:
             platform=platform
         )
 
-    def _parse_episode(self, item) -> Optional[PodcastEpisode]:
+    def _parse_episode(self, item) -> PodcastEpisode | None:
         """Parse a single episode item"""
         try:
             # Namespaces for iTunes and other extensions
@@ -305,7 +304,7 @@ class SecureRSSParser:
             logger.error(f"Error parsing episode: {e}")
             return None
 
-    def _safe_text(self, text: Optional[str]) -> str:
+    def _safe_text(self, text: str | None) -> str:
         """Clean and truncate text"""
         if not text:
             return ""
@@ -313,7 +312,7 @@ class SecureRSSParser:
         text = text.replace('\x00', '').replace('\r', '')
         return text.strip()[:500]  # Limit length
 
-    def _sanitize_description(self, text: Optional[str]) -> str:
+    def _sanitize_description(self, text: str | None) -> str:
         """
         Sanitize description for podcast episodes.
 
@@ -333,7 +332,7 @@ class SecureRSSParser:
         # Truncate to reasonable length
         return clean_text[:5000]  # Increased from 1000 to 5000 for HTML content
 
-    def _parse_date(self, date_str: Optional[str]) -> datetime:
+    def _parse_date(self, date_str: str | None) -> datetime:
         """Parse various date formats"""
         if not date_str:
             return datetime.utcnow()
@@ -344,7 +343,7 @@ class SecureRSSParser:
         except (ValueError, TypeError, OSError):
             return datetime.utcnow()
 
-    def _parse_duration(self, duration_text: Optional[str]) -> Optional[int]:
+    def _parse_duration(self, duration_text: str | None) -> int | None:
         """Parse duration text to seconds"""
         if not duration_text:
             return None
@@ -362,7 +361,7 @@ class SecureRSSParser:
         except (ValueError, AttributeError, IndexError):
             return None
 
-    def _extract_first_image_from_text(self, text: str) -> Optional[str]:
+    def _extract_first_image_from_text(self, text: str) -> str | None:
         """Extract the first image URL from text using regex patterns"""
         if not text:
             return None

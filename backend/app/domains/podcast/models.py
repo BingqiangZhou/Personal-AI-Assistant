@@ -6,7 +6,6 @@
 
 import enum
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import (
     JSON,
@@ -109,7 +108,6 @@ def _add_podcast_relationship():
     )
 
 # 直接用赋值方式添加
-from app.domains.subscription.models import Subscription
 
 
 Subscription.podcast_episodes = relationship(
@@ -254,14 +252,14 @@ class TranscriptionTask(Base):
     )
 
     @property
-    def duration_seconds(self) -> Optional[int]:
+    def duration_seconds(self) -> int | None:
         """获取任务执行时长（秒）"""
         if self.started_at and self.completed_at:
             return int((self.completed_at - self.started_at).total_seconds())
         return None
 
     @property
-    def total_processing_time(self) -> Optional[float]:
+    def total_processing_time(self) -> float | None:
         """获取总处理时间（秒）"""
         total = 0
         if self.download_time:

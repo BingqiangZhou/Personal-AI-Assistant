@@ -9,7 +9,6 @@ import logging
 import os
 import platform
 from datetime import datetime, timezone
-from typing import Optional
 
 import psutil
 from pydantic import BaseModel, Field
@@ -141,7 +140,7 @@ class SystemMonitorService:
 
     def __init__(self):
         """Initialize the monitoring service / 初始化监控服务"""
-        self._boot_time: Optional[float] = None
+        self._boot_time: float | None = None
 
     def get_system_info(self) -> SystemInfo:
         """
@@ -398,7 +397,7 @@ class SystemMonitorService:
 
 
 # Singleton instance
-_monitor_service: Optional[SystemMonitorService] = None
+_monitor_service: SystemMonitorService | None = None
 
 
 def get_monitor_service() -> SystemMonitorService:

@@ -5,7 +5,7 @@ RSS/Atom feed 解析的数据模型定义。
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -23,8 +23,8 @@ class ParseError(BaseModel):
     """Parse error details / 解析错误详情"""
     code: ParseErrorCode
     message: str
-    entry_id: Optional[str] = None
-    details: Optional[dict[str, Any]] = None
+    entry_id: str | None = None
+    details: dict[str, Any] | None = None
 
 
 class FeedInfo(BaseModel):
@@ -32,10 +32,10 @@ class FeedInfo(BaseModel):
     title: str = ""
     description: str = ""
     link: str = ""
-    author: Optional[str] = None
-    icon_url: Optional[str] = None
-    updated_at: Optional[datetime] = None
-    language: Optional[str] = None
+    author: str | None = None
+    icon_url: str | None = None
+    updated_at: datetime | None = None
+    language: str | None = None
     raw_metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("title", mode="before")
@@ -55,17 +55,17 @@ class FeedEntry(BaseModel):
 
     # Content fields
     content: str = ""
-    summary: Optional[str] = None
+    summary: str | None = None
 
     # Metadata
-    author: Optional[str] = None
-    link: Optional[str] = None
-    image_url: Optional[str] = None
+    author: str | None = None
+    link: str | None = None
+    image_url: str | None = None
     tags: list[str] = Field(default_factory=list)
 
     # Dates
-    published_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    published_at: datetime | None = None
+    updated_at: datetime | None = None
 
     # Raw data for debugging
     raw_metadata: dict[str, Any] = Field(default_factory=dict)
@@ -128,7 +128,7 @@ class FeedParseResult(BaseModel):
     skipped_entries: int = 0
 
     # Raw feedparser result for debugging
-    raw_feed: Optional[dict[str, Any]] = None
+    raw_feed: dict[str, Any] | None = None
 
     def add_error(self, code: ParseErrorCode, message: str, **kwargs) -> None:
         """Add an error / 添加错误"""
@@ -177,8 +177,8 @@ class FeedParserConfig(BaseModel):
 
 class FeedParseOptions(BaseModel):
     """Options for a single parse operation / 单次解析选项"""
-    max_entries: Optional[int] = None  # Override default max_entries
-    fields: Optional[list[str]] = None  # Specific fields to extract (None = all)
+    max_entries: int | None = None  # Override default max_entries
+    fields: list[str] | None = None  # Specific fields to extract (None = all)
 
     # Content options
     include_raw_metadata: bool = False

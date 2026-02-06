@@ -6,13 +6,12 @@ Utility functions for the application.
 import html
 import logging
 import re
-from typing import Optional
 
 
 logger = logging.getLogger(__name__)
 
 
-def sanitize_html(text: str, allow_tags: Optional[set] = None) -> str:
+def sanitize_html(text: str, allow_tags: set | None = None) -> str:
     """
     Sanitize HTML content to prevent XSS attacks.
 

@@ -6,7 +6,6 @@ Podcast Sync Service - Handles background synchronization tasks.
 
 import asyncio
 import logging
-from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,7 +42,7 @@ class PodcastSyncService:
         )
         self.transcription_service = DatabaseBackedTranscriptionService(db)
 
-    async def trigger_transcription(self, episode_id: int) -> Optional[dict]:
+    async def trigger_transcription(self, episode_id: int) -> dict | None:
         """
         Trigger transcription task for an episode.
 

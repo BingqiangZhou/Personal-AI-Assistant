@@ -35,8 +35,7 @@ class TestPodcastSubscriptionAPI:
         # 准备测试数据
         subscription_data = {
             "feed_url": "https://example.com/podcast.rss",
-            "custom_name": "测试播客",
-            "category_ids": [1, 2]
+            "custom_name": "测试播客"
         }
 
         # 模拟返回值
@@ -73,9 +72,7 @@ class TestPodcastSubscriptionAPI:
 
         # 验证服务调用
         mock_podcast_service.add_subscription.assert_called_once_with(
-            feed_url="https://example.com/podcast.rss",
-            custom_name="测试播客",
-            category_ids=[1, 2]
+            feed_url="https://example.com/podcast.rss"
         )
 
     def test_create_subscription_invalid_url(self, mock_user):

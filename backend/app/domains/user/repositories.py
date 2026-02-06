@@ -1,6 +1,5 @@
 """User repository implementation."""
 
-from typing import Optional
 
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,35 +35,35 @@ class UserRepository:
         await self.db.refresh(db_user)
         return db_user
 
-    async def get_by_id(self, user_id: int) -> Optional[User]:
+    async def get_by_id(self, user_id: int) -> User | None:
         """Get user by ID."""
         result = await self.db.execute(
             select(User).filter(User.id == user_id)
         )
         return result.scalar_one_or_none()
 
-    async def get_by_email(self, email: str) -> Optional[User]:
+    async def get_by_email(self, email: str) -> User | None:
         """Get user by email."""
         result = await self.db.execute(
             select(User).filter(User.email == email)
         )
         return result.scalar_one_or_none()
 
-    async def get_by_username(self, username: str) -> Optional[User]:
+    async def get_by_username(self, username: str) -> User | None:
         """Get user by username."""
         result = await self.db.execute(
             select(User).filter(User.username == username)
         )
         return result.scalar_one_or_none()
 
-    async def get_by_api_key(self, api_key: str) -> Optional[User]:
+    async def get_by_api_key(self, api_key: str) -> User | None:
         """Get user by API key."""
         result = await self.db.execute(
             select(User).filter(User.api_key == api_key)
         )
         return result.scalar_one_or_none()
 
-    async def update(self, user_id: int, user_data: UserUpdate) -> Optional[User]:
+    async def update(self, user_id: int, user_data: UserUpdate) -> User | None:
         """Update user."""
         user = await self.get_by_id(user_id)
         if not user:
@@ -125,7 +124,7 @@ class UserSessionRepository:
         await self.db.refresh(db_session)
         return db_session
 
-    async def get_by_token(self, session_token: str) -> Optional[UserSession]:
+    async def get_by_token(self, session_token: str) -> UserSession | None:
         """Get session by token."""
         result = await self.db.execute(
             select(UserSession).filter(

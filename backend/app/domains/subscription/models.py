@@ -2,7 +2,6 @@
 
 import enum
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 from sqlalchemy import (
     JSON,
@@ -207,7 +206,7 @@ class UserSubscription(Base):
         return base_time + timedelta(hours=1) # Fallback
 
     @property
-    def computed_next_update_at(self) -> Optional[datetime]:
+    def computed_next_update_at(self) -> datetime | None:
         """
         Calculate next update time based on frequency and user settings.
         Aligns to the next scheduled interval based on CURRENT time.
@@ -215,7 +214,7 @@ class UserSubscription(Base):
         return self._get_next_scheduled_time(datetime.now(timezone.utc))
 
     @property
-    def next_update_at(self) -> Optional[datetime]:
+    def next_update_at(self) -> datetime | None:
         """Backward-compatible alias for schedule APIs."""
         return self.computed_next_update_at
 

@@ -7,7 +7,7 @@ import asyncio
 import logging
 import time
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,7 +29,7 @@ class SummaryModelManager:
         self.db = db
         self.ai_model_repo = AIModelConfigRepository(db)
 
-    async def get_active_summary_model(self, model_name: Optional[str] = None):
+    async def get_active_summary_model(self, model_name: str | None = None):
         """获取活跃的文本生成模型配置（按优先级排序）"""
         if model_name:
             # 根据名称获取指定模型
@@ -49,8 +49,8 @@ class SummaryModelManager:
         self,
         transcript: str,
         episode_info: dict[str, Any],
-        model_name: Optional[str] = None,
-        custom_prompt: Optional[str] = None
+        model_name: str | None = None,
+        custom_prompt: str | None = None
     ) -> dict[str, Any]:
         """
         生成AI摘要（支持模型fallback机制）
@@ -426,7 +426,7 @@ Shownotes: {description}
             return False
 
         # Helper to get and validate API key from a model
-        async def get_valid_key_from_model(model) -> Optional[str]:
+        async def get_valid_key_from_model(model) -> str | None:
             if not model or not model.api_key:
                 return None
 
@@ -472,7 +472,7 @@ Shownotes: {description}
             f"Please configure a valid API key for at least one TEXT_GENERATION model."
         )
 
-    async def get_model_info(self, model_name: Optional[str] = None) -> dict[str, Any]:
+    async def get_model_info(self, model_name: str | None = None) -> dict[str, Any]:
         """获取模型信息"""
         model_config = await self.get_active_summary_model(model_name)
         return {
@@ -513,8 +513,8 @@ class DatabaseBackedAISummaryService:
     async def generate_summary(
         self,
         episode_id: int,
-        model_name: Optional[str] = None,
-        custom_prompt: Optional[str] = None
+        model_name: str | None = None,
+        custom_prompt: str | None = None
     ) -> dict[str, Any]:
         """为播客单集生成AI摘要"""
         # 获取播客单集信息
@@ -628,8 +628,8 @@ class DatabaseBackedAISummaryService:
     async def regenerate_summary(
         self,
         episode_id: int,
-        model_name: Optional[str] = None,
-        custom_prompt: Optional[str] = None
+        model_name: str | None = None,
+        custom_prompt: str | None = None
     ) -> dict[str, Any]:
         """重新生成AI摘要"""
         return await self.generate_summary(episode_id, model_name, custom_prompt)

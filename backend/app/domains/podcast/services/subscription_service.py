@@ -6,7 +6,7 @@ Podcast Subscription Service - Manages podcast subscriptions.
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -50,15 +50,13 @@ class PodcastSubscriptionService:
 
     async def add_subscription(
         self,
-        feed_url: str,
-        category_ids: Optional[list[int]] = None
+        feed_url: str
     ) -> tuple[Subscription, list[PodcastEpisode]]:
         """
         Add a new podcast subscription.
 
         Args:
             feed_url: RSS feed URL
-            category_ids: Optional category IDs
 
         Returns:
             Tuple of (subscription, new_episodes)
@@ -98,11 +96,7 @@ class PodcastSubscriptionService:
             metadata=metadata
         )
 
-        # 4. Handle categories
-        if category_ids:
-            await self.repo.update_subscription_categories(subscription.id, category_ids)
-
-        # 5. Save new episodes
+        # 4. Save new episodes
         new_episodes = []
         for episode in feed.episodes:
             saved_episode, is_new = await self.repo.create_or_update_episode(
@@ -153,8 +147,7 @@ class PodcastSubscriptionService:
 
                 # Add subscription
                 subscription, new_episodes = await self.add_subscription(
-                    sub_data.feed_url,
-                    sub_data.category_ids
+                    sub_data.feed_url
                 )
 
                 results.append({
@@ -182,7 +175,7 @@ class PodcastSubscriptionService:
 
     async def list_subscriptions(
         self,
-        filters: Optional[dict] = None,
+        filters: dict | None = None,
         page: int = 1,
         size: int = 20
     ) -> tuple[list[dict], int]:
@@ -291,7 +284,7 @@ class PodcastSubscriptionService:
 
         return results, total
 
-    async def get_subscription_details(self, subscription_id: int) -> Optional[dict]:
+    async def get_subscription_details(self, subscription_id: int) -> dict | None:
         """
         Get subscription details with episodes.
 
@@ -641,7 +634,7 @@ class PodcastSubscriptionService:
         self,
         subscription_id: int,
         check_source_type: bool = False
-    ) -> Optional[Subscription]:
+    ) -> Subscription | None:
         """Validate subscription exists and belongs to user."""
         from sqlalchemy import and_, select
 

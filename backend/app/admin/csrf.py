@@ -1,6 +1,5 @@
 """CSRF protection utilities for admin panel."""
 import secrets
-from typing import Optional
 
 from fastapi import Form, HTTPException, Request, status
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
@@ -58,7 +57,7 @@ def verify_csrf_token(token: str) -> bool:
         return False
 
 
-def get_csrf_token_from_request(request: Request) -> Optional[str]:
+def get_csrf_token_from_request(request: Request) -> str | None:
     """Get CSRF token from request cookies."""
     return request.cookies.get("csrf_token")
 

@@ -6,7 +6,7 @@ Podcast Playback Service - Manages playback progress and state.
 
 import logging
 from datetime import date, timedelta
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -82,7 +82,7 @@ class PodcastPlaybackService:
             "play_count": playback.play_count
         }
 
-    async def get_playback_state(self, episode_id: int) -> Optional[dict]:
+    async def get_playback_state(self, episode_id: int) -> dict | None:
         """
         Get playback state for an episode.
 

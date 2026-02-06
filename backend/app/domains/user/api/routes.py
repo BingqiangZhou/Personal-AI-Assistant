@@ -1,6 +1,6 @@
 """User authentication and management API routes."""
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field, model_validator
@@ -24,8 +24,8 @@ router = APIRouter()
 
 class LoginRequest(BaseModel):
     """Login request schema."""
-    username: Optional[str] = Field(None, description="Username for login (alternative to email_or_username)")
-    email_or_username: Optional[str] = Field(None, description="Email or username for login (alternative to username)")
+    username: str | None = Field(None, description="Username for login (alternative to email_or_username)")
+    email_or_username: str | None = Field(None, description="Email or username for login (alternative to username)")
     password: str
     remember_me: bool = False
 
@@ -46,14 +46,14 @@ class RefreshTokenRequest(BaseModel):
 
 class LogoutRequest(BaseModel):
     """Logout request schema."""
-    refresh_token: Optional[str] = None
+    refresh_token: str | None = None
 
 
 class RegisterRequest(BaseModel):
     """Register request schema."""
     email: str
     password: str
-    username: Optional[str] = None
+    username: str | None = None
     remember_me: bool = False
 
 

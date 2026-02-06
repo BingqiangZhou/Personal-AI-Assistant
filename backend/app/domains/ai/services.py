@@ -4,7 +4,7 @@ AI模型配置服务层
 
 import logging
 import time
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 from sqlalchemy import update
@@ -83,15 +83,15 @@ class AIModelConfigService:
 
         return await self.repo.create(model_config)
 
-    async def get_model_by_id(self, model_id: int) -> Optional[AIModelConfig]:
+    async def get_model_by_id(self, model_id: int) -> AIModelConfig | None:
         """根据ID获取模型配置"""
         return await self.repo.get_by_id(model_id)
 
     async def get_models(
         self,
-        model_type: Optional[ModelType] = None,
-        is_active: Optional[bool] = None,
-        provider: Optional[str] = None,
+        model_type: ModelType | None = None,
+        is_active: bool | None = None,
+        provider: str | None = None,
         page: int = 1,
         size: int = 20,
     ) -> tuple[list[AIModelConfig], int]:
@@ -107,7 +107,7 @@ class AIModelConfigService:
     async def search_models(
         self,
         query: str,
-        model_type: Optional[ModelType] = None,
+        model_type: ModelType | None = None,
         page: int = 1,
         size: int = 20,
     ) -> tuple[list[AIModelConfig], int]:
@@ -118,7 +118,7 @@ class AIModelConfigService:
 
     async def update_model(
         self, model_id: int, model_data: AIModelConfigUpdate
-    ) -> Optional[AIModelConfig]:
+    ) -> AIModelConfig | None:
         """更新模型配置"""
         # 获取现有模型
         existing_model = await self.repo.get_by_id(model_id)
@@ -154,25 +154,25 @@ class AIModelConfigService:
 
     async def set_default_model(
         self, model_id: int, model_type: ModelType
-    ) -> Optional[AIModelConfig]:
+    ) -> AIModelConfig | None:
         """设置默认模型"""
         success = await self.repo.set_default_model(model_id, model_type)
         if success:
             return await self.repo.get_by_id(model_id)
         return None
 
-    async def get_default_model(self, model_type: ModelType) -> Optional[AIModelConfig]:
+    async def get_default_model(self, model_type: ModelType) -> AIModelConfig | None:
         """获取默认模型"""
         return await self.repo.get_default_model(model_type)
 
     async def get_active_models(
-        self, model_type: Optional[ModelType] = None
+        self, model_type: ModelType | None = None
     ) -> list[AIModelConfig]:
         """获取活跃模型"""
         return await self.repo.get_active_models(model_type)
 
     async def test_model(
-        self, model_id: int, test_data: Optional[dict[str, Any]] = None
+        self, model_id: int, test_data: dict[str, Any] | None = None
     ) -> ModelTestResponse:
         """测试模型连接"""
         # 统一处理 None 的情况
@@ -219,7 +219,7 @@ class AIModelConfigService:
                 success=False, response_time_ms=response_time, error_message=str(e)
             )
 
-    async def get_model_stats(self, model_id: int) -> Optional[ModelUsageStats]:
+    async def get_model_stats(self, model_id: int) -> ModelUsageStats | None:
         """获取模型使用统计"""
         model = await self.repo.get_by_id(model_id)
         if not model:
@@ -275,7 +275,7 @@ class AIModelConfigService:
             raise ValidationError(f"Failed to decrypt API key for model {model.name}")
 
     async def _test_transcription_model(
-        self, model: AIModelConfig, api_key: str, test_data: Optional[dict[str, Any]]
+        self, model: AIModelConfig, api_key: str, test_data: dict[str, Any] | None
     ) -> str:
         """
         测试转录模型
@@ -380,7 +380,7 @@ class AIModelConfigService:
             return f"❌ 测试失败: {str(e)}"
 
     async def _test_text_generation_model(
-        self, model: AIModelConfig, api_key: str, test_data: Optional[dict[str, Any]]
+        self, model: AIModelConfig, api_key: str, test_data: dict[str, Any] | None
     ) -> str:
         """测试文本生成模型"""
         # 修复：如果 test_data 为 None，使用空字典
@@ -443,7 +443,7 @@ class AIModelConfigService:
 
         return []
 
-    def _get_preset_api_key(self, preset: PresetModelConfig) -> Optional[str]:
+    def _get_preset_api_key(self, preset: PresetModelConfig) -> str | None:
         """获取预设模型的API密钥"""
         if preset.provider == "openai":
             return getattr(settings, "OPENAI_API_KEY", None)
@@ -452,7 +452,7 @@ class AIModelConfigService:
         return None
 
     async def validate_api_key(
-        self, api_url: str, api_key: str, model_id: Optional[str], model_type: ModelType
+        self, api_url: str, api_key: str, model_id: str | None, model_type: ModelType
     ) -> APIKeyValidationResponse:
         """验证API密钥"""
         start_time = time.time()
@@ -584,7 +584,7 @@ class AIModelConfigService:
             response_time_ms=response_time,
         )
 
-    def _get_preset_api_key_from_env(self, model_name: str) -> Optional[str]:
+    def _get_preset_api_key_from_env(self, model_name: str) -> str | None:
         """从环境变量获取预设模型的API密钥"""
         if model_name in ["whisper-1", "gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"]:
             return getattr(settings, "OPENAI_API_KEY", None)
@@ -593,8 +593,8 @@ class AIModelConfigService:
         return None
 
     async def call_transcription_with_fallback(
-        self, audio_file_path: str, language: str = "zh", model_id: Optional[str] = None
-    ) -> tuple[str, Optional[AIModelConfig]]:
+        self, audio_file_path: str, language: str = "zh", model_id: str | None = None
+    ) -> tuple[str, AIModelConfig | None]:
         """
         使用优先级fallback机制调用转录API
 
@@ -653,10 +653,10 @@ class AIModelConfigService:
     async def call_text_generation_with_fallback(
         self,
         messages: list[dict[str, str]],
-        max_tokens: Optional[int] = None,
-        temperature: Optional[float] = None,
-        model_id: Optional[str] = None,
-    ) -> tuple[str, Optional[AIModelConfig]]:
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+        model_id: str | None = None,
+    ) -> tuple[str, AIModelConfig | None]:
         """
         使用优先级fallback机制调用文本生成API
 
@@ -763,8 +763,8 @@ class AIModelConfigService:
         self,
         model: AIModelConfig,
         messages: list[dict[str, str]],
-        max_tokens: Optional[int] = None,
-        temperature: Optional[float] = None,
+        max_tokens: int | None = None,
+        temperature: float | None = None,
     ) -> str:
         """调用单个文本生成模型"""
         import aiohttp
