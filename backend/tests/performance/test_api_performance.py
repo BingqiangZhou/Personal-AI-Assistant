@@ -35,7 +35,7 @@ class PerformanceMetrics:
         total = len(self.results)
 
         for result in self.results:
-            status = "✅ PASS" if result['passed'] else "❌ FAIL"
+            status = "�?PASS" if result['passed'] else "�?FAIL"
             print(f"{status} | {result['test']}: {result['duration_ms']:.2f}ms")
             if result['details']:
                 print(f"     Details: {result['details']}")
@@ -56,7 +56,7 @@ async def test_podcast_list_first_load_performance(async_client: AsyncClient):
     # Note: In real test, we'd clear Redis cache here
 
     start = time.time()
-    response = await async_client.get("/api/v1/podcasts/subscriptions")
+    response = await async_client.get("/api/v1/subscriptions/podcasts")
     duration_ms = (time.time() - start) * 1000
 
     passed = response.status_code == 200 and duration_ms < 500
@@ -71,11 +71,11 @@ async def test_podcast_list_first_load_performance(async_client: AsyncClient):
 async def test_podcast_list_cache_performance(async_client: AsyncClient):
     """Test podcast list cache hit performance"""
     # First request to populate cache
-    await async_client.get("/api/v1/podcasts/subscriptions")
+    await async_client.get("/api/v1/subscriptions/podcasts")
 
     # Second request should hit cache
     start = time.time()
-    response = await async_client.get("/api/v1/podcasts/subscriptions")
+    response = await async_client.get("/api/v1/subscriptions/podcasts")
     duration_ms = (time.time() - start) * 1000
 
     passed = response.status_code == 200 and duration_ms < 100
@@ -134,7 +134,7 @@ async def test_user_stats_performance(async_client: AsyncClient):
 async def test_episode_list_performance(async_client: AsyncClient, async_session):
     """Test episode list loading performance"""
     # First get a subscription ID
-    response = await async_client.get("/api/v1/podcasts/subscriptions")
+    response = await async_client.get("/api/v1/subscriptions/podcasts")
     if response.status_code != 200 or not response.json()['subscriptions']:
         pytest.skip("No subscriptions available")
 
@@ -155,7 +155,7 @@ async def test_concurrent_users(async_client: AsyncClient):
     """Test performance with 10 concurrent users"""
     async def make_request(client: AsyncClient, user_id: int):
         start = time.time()
-        response = await client.get("/api/v1/podcasts/subscriptions")
+        response = await client.get("/api/v1/subscriptions/podcasts")
         duration_ms = (time.time() - start) * 1000
         return user_id, duration_ms, response.status_code
 
@@ -183,14 +183,14 @@ async def test_cache_hit_rate_measurement(async_client: AsyncClient):
     num_requests = 10
 
     # Warm up cache
-    await async_client.get("/api/v1/podcasts/subscriptions")
+    await async_client.get("/api/v1/subscriptions/podcasts")
 
     cache_hits = 0
     total_time = 0
 
     for _ in range(num_requests):
         start = time.time()
-        response = await async_client.get("/api/v1/podcasts/subscriptions")
+        response = await async_client.get("/api/v1/subscriptions/podcasts")
         duration_ms = (time.time() - start) * 1000
         total_time += duration_ms
 

@@ -10,12 +10,19 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.core.feed_parser import FeedParseOptions, FeedParser, FeedParserConfig
-from app.core.feed_schemas import FeedParseResult, ParseErrorCode
 from app.domains.subscription.models import (
     Subscription,
     SubscriptionStatus,
     UserSubscription,
+)
+from app.domains.subscription.parsers.feed_parser import (
+    FeedParseOptions,
+    FeedParser,
+    FeedParserConfig,
+)
+from app.domains.subscription.parsers.feed_schemas import (
+    FeedParseResult,
+    ParseErrorCode,
 )
 from app.domains.subscription.repositories import SubscriptionRepository
 from app.shared.schemas import (
@@ -91,8 +98,7 @@ class SubscriptionService:
         """
         Create a new subscription with enhanced duplicate detection.
 
-        创建新订阅，带有增强的重复检测。
-
+        创建新订阅，带有增强的重复检测�?
         With many-to-many relationship:
         1. Check if subscription exists globally by URL
         2. If exists and user already subscribed: raise error
@@ -112,8 +118,7 @@ class SubscriptionService:
         """
         Batch create subscriptions with enhanced duplicate detection.
 
-        批量创建订阅，带有增强的重复检测。
-
+        批量创建订阅，带有增强的重复检测�?
         Returns results with status:
         - success: New subscription created
         - updated: Existing subscription updated (non-active status)
@@ -338,11 +343,9 @@ class SubscriptionService:
         """
         Manually trigger subscription fetch (for RSS feeds).
 
-        手动触发订阅获取（RSS 订阅）。
-
+        手动触发订阅获取（RSS 订阅）�?
         Uses the enhanced FeedParser component for robust parsing.
-        使用增强的 FeedParser 组件进行健壮解析。
-        """
+        使用增强�?FeedParser 组件进行健壮解析�?        """
         sub = await self.repo.get_subscription_by_id(self.user_id, sub_id)
         if not sub:
             raise ValueError("Subscription not found")
@@ -671,8 +674,7 @@ class SubscriptionService:
         """
         Generate OPML 2.0 format XML content for RSS subscriptions using ElementTree.
 
-        生成符合OPML 2.0规范的RSS订阅XML内容。
-
+        生成符合OPML 2.0规范的RSS订阅XML内容�?
         Args:
             user_id: Optional user ID to filter subscriptions. If None, exports all subscriptions.
             status_filter: Subscription status filter (default: ACTIVE)
@@ -747,8 +749,7 @@ class SubscriptionService:
         """
         Add a subscription as an outline element to the given parent.
 
-        将订阅作为 outline 元素添加到给定的父元素。
-
+        将订阅作�?outline 元素添加到给定的父元素�?
         Args:
             parent: Parent Element to add the outline to
             subscription: Subscription model instance

@@ -173,7 +173,7 @@ class DioClient {
       final token = await _secureStorage.read(key: config.AppConstants.accessTokenKey);
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
-        logger.AppLogger.debug('   ✅ Token added: ${token.substring(0, 20)}...');
+        logger.AppLogger.debug('   �?Token added: ${token.substring(0, 20)}...');
       } else {
         logger.AppLogger.debug('   ⚠️ No token found - skipping auth, will return 401 if protected route');
       }
@@ -187,7 +187,7 @@ class DioClient {
     ResponseInterceptorHandler handler,
   ) {
     // Debug subscriptions list response shape
-    if (response.requestOptions.path == '/podcasts/subscriptions') {
+    if (response.requestOptions.path == '/subscriptions/podcasts') {
       final data = response.data;
       if (data is Map) {
         logger.AppLogger.debug(
@@ -216,7 +216,7 @@ class DioClient {
   ) async {
     // 🔍 DEBUG: 输出错误请求的完整URL
     final errorUrl = '${error.requestOptions.baseUrl}/${error.requestOptions.path}';
-    logger.AppLogger.debug('❌ [API ERROR] ${error.requestOptions.method} $errorUrl');
+    logger.AppLogger.debug('�?[API ERROR] ${error.requestOptions.method} $errorUrl');
     logger.AppLogger.debug('   Type: ${error.type}');
     logger.AppLogger.debug('   Message: ${error.message}');
 
@@ -238,7 +238,7 @@ class DioClient {
         if (statusCode != null) {
           if (statusCode == 401) {
             // Log 401 error details
-            logger.AppLogger.debug('❌ 401 Error: ${error.requestOptions.method} ${error.requestOptions.path}');
+            logger.AppLogger.debug('�?401 Error: ${error.requestOptions.method} ${error.requestOptions.path}');
             logger.AppLogger.debug('   Response: ${error.response?.data}');
 
             // Check if this is a refresh token request to avoid infinite loop
@@ -257,7 +257,7 @@ class DioClient {
                 } on DioException catch (retryError) {
                   // Check if retry still fails with 401
                   if (retryError.response?.statusCode == 401) {
-                    logger.AppLogger.debug('❌ Retry still returns 401, clearing tokens');
+                    logger.AppLogger.debug('�?Retry still returns 401, clearing tokens');
                     await _clearTokens();
                     // Token was refreshed but request still fails - likely permission/resource issue
                     // Don't confuse user with authentication error when it's actually authorization
@@ -271,14 +271,14 @@ class DioClient {
                   return;
                 } catch (e) {
                   // Unexpected error during retry
-                  logger.AppLogger.debug('❌ Unexpected error during retry: $e');
+                  logger.AppLogger.debug('�?Unexpected error during retry: $e');
                   await _clearTokens();
                   handler.reject(error);
                   return;
                 }
               } else {
                 // Refresh failed, clear tokens and reject
-                logger.AppLogger.debug('❌ Token refresh failed, clearing tokens');
+                logger.AppLogger.debug('�?Token refresh failed, clearing tokens');
                 await _clearTokens();
               }
             }
@@ -395,7 +395,7 @@ class DioClient {
     try {
       final refreshToken = await _secureStorage.read(key: config.AppConstants.refreshTokenKey);
       if (refreshToken == null) {
-        logger.AppLogger.debug('❌ No refresh token found in storage');
+        logger.AppLogger.debug('�?No refresh token found in storage');
         currentCompleter.complete(false);
         await _clearTokens();
         return null;
@@ -421,13 +421,13 @@ class DioClient {
             await _secureStorage.write(key: config.AppConstants.refreshTokenKey, value: newRefreshToken);
           }
 
-          logger.AppLogger.debug('✅ Token refresh successful - New token: ${newAccessToken.substring(0, 20)}...');
+          logger.AppLogger.debug('�?Token refresh successful - New token: ${newAccessToken.substring(0, 20)}...');
           currentCompleter.complete(true);
           return newAccessToken;
         }
       }
 
-      logger.AppLogger.debug('❌ Token refresh failed: invalid response format');
+      logger.AppLogger.debug('�?Token refresh failed: invalid response format');
       currentCompleter.complete(false);
       await _clearTokens();
       return null;
@@ -437,7 +437,7 @@ class DioClient {
         final statusCode = e.response?.statusCode;
         final responseData = e.response?.data;
 
-        logger.AppLogger.debug('❌ Token refresh failed:');
+        logger.AppLogger.debug('�?Token refresh failed:');
         logger.AppLogger.debug('   Status: $statusCode');
         logger.AppLogger.debug('   Type: ${e.type}');
         logger.AppLogger.debug('   Response: $responseData');
@@ -449,7 +449,7 @@ class DioClient {
           await _clearTokens();
         }
       } else {
-        logger.AppLogger.debug('❌ Token refresh failed with unexpected error: $e');
+        logger.AppLogger.debug('�?Token refresh failed with unexpected error: $e');
         // Clear tokens on any unexpected error
         await _clearTokens();
       }
@@ -478,10 +478,10 @@ class DioClient {
 
     try {
       final response = await _dio.fetch(newOptions);
-      logger.AppLogger.debug('✅ Retry successful: ${response.statusCode}');
+      logger.AppLogger.debug('�?Retry successful: ${response.statusCode}');
       return response;
     } catch (e) {
-      logger.AppLogger.debug('❌ Retry failed: $e');
+      logger.AppLogger.debug('�?Retry failed: $e');
       rethrow;
     }
   }
@@ -556,7 +556,7 @@ class DioClient {
   /// Clear all cached responses
   Future<void> clearCache() async {
     await _cacheStore.clean();
-    logger.AppLogger.debug('🗑️ [DioClient] Cache cleared');
+    logger.AppLogger.debug('🗑�?[DioClient] Cache cleared');
   }
 
   /// Clear ETag cache

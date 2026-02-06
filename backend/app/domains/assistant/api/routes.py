@@ -4,12 +4,9 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db_session
-from app.core.dependencies import get_current_active_user
+from app.domains.assistant.api.dependencies import get_assistant_service
 from app.domains.assistant.services import AssistantService
-from app.domains.user.models import User
 from app.shared.schemas import (
     ConversationCreate,
     ConversationResponse,
@@ -94,11 +91,9 @@ class TaskResponse(BaseModel):
 async def list_conversations(
     pagination: PaginationParams = Depends(),
     status: Optional[str] = Query(None, description="Filter by status (active, archived, deleted)"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """List user's conversations."""
-    service = AssistantService(db, current_user.id)
     return await service.list_conversations(
         page=pagination.page,
         size=pagination.size,
@@ -109,22 +104,18 @@ async def list_conversations(
 @router.post("/conversations/", response_model=ConversationResponse)
 async def create_conversation(
     conversation_data: ConversationCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Create a new conversation."""
-    service = AssistantService(db, current_user.id)
     return await service.create_conversation(conversation_data)
 
 
 @router.get("/conversations/{conv_id}", response_model=ConversationResponse)
 async def get_conversation(
     conv_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Get conversation by ID."""
-    service = AssistantService(db, current_user.id)
     result = await service.get_conversation(conv_id)
     if not result:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -135,11 +126,9 @@ async def get_conversation(
 async def update_conversation(
     conv_id: int,
     conversation_data: ConversationUpdate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Update conversation."""
-    service = AssistantService(db, current_user.id)
     result = await service.update_conversation(conv_id, conversation_data)
     if not result:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -149,11 +138,9 @@ async def update_conversation(
 @router.delete("/conversations/{conv_id}")
 async def delete_conversation(
     conv_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Delete conversation (soft delete)."""
-    service = AssistantService(db, current_user.id)
     success = await service.delete_conversation(conv_id)
     if not success:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -163,11 +150,9 @@ async def delete_conversation(
 @router.post("/conversations/{conv_id}/archive", response_model=ConversationResponse)
 async def archive_conversation(
     conv_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Archive a conversation."""
-    service = AssistantService(db, current_user.id)
     result = await service.archive_conversation(conv_id)
     if not result:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -179,11 +164,9 @@ async def archive_conversation(
 async def get_conversation_messages(
     conv_id: int,
     pagination: PaginationParams = Depends(),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Get messages in a conversation."""
-    service = AssistantService(db, current_user.id)
     return await service.get_conversation_messages(
         conv_id,
         page=pagination.page,
@@ -195,11 +178,9 @@ async def get_conversation_messages(
 async def create_message(
     conv_id: int,
     message_data: MessageCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Create a new user message."""
-    service = AssistantService(db, current_user.id)
     result = await service.create_user_message(conv_id, message_data.content)
     if not result:
         raise HTTPException(status_code=404, detail="Conversation not found")
@@ -210,15 +191,13 @@ async def create_message(
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
     request: ChatRequest,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Send a message and get AI response.
 
     This endpoint creates or updates a conversation with AI-generated responses.
     Note: AI model integration is pending - currently returns placeholder responses.
     """
-    service = AssistantService(db, current_user.id)
 
     try:
         result = await service.chat(
@@ -237,22 +216,18 @@ async def chat(
 @router.get("/prompts/", response_model=list[PromptTemplateResponse])
 async def list_prompt_templates(
     category: Optional[str] = Query(None, description="Filter by category"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """List available prompt templates."""
-    service = AssistantService(db, current_user.id)
     return await service.get_prompt_templates(category=category)
 
 
 @router.post("/prompts/", response_model=PromptTemplateResponse)
 async def create_prompt_template(
     template_data: PromptTemplateCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Create a new prompt template."""
-    service = AssistantService(db, current_user.id)
     return await service.create_prompt_template(
         name=template_data.name,
         template=template_data.template,
@@ -266,11 +241,9 @@ async def create_prompt_template(
 @router.delete("/prompts/{template_id}")
 async def delete_prompt_template(
     template_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Delete a prompt template."""
-    service = AssistantService(db, current_user.id)
     success = await service.delete_prompt_template(template_id)
     if not success:
         raise HTTPException(status_code=404, detail="Template not found or access denied")
@@ -282,11 +255,9 @@ async def delete_prompt_template(
 async def list_tasks(
     pagination: PaginationParams = Depends(),
     status: Optional[str] = Query(None, description="Filter by status"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """List assistant tasks."""
-    service = AssistantService(db, current_user.id)
     return await service.list_tasks(
         status=status,
         page=pagination.page,
@@ -297,11 +268,9 @@ async def list_tasks(
 @router.post("/tasks/", response_model=TaskResponse)
 async def create_task(
     task_data: TaskCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Create a new assistant task."""
-    service = AssistantService(db, current_user.id)
     return await service.create_task(
         title=task_data.title,
         task_type=task_data.task_type,
@@ -315,11 +284,9 @@ async def create_task(
 async def complete_task(
     task_id: int,
     result: Optional[str] = None,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Mark a task as completed."""
-    service = AssistantService(db, current_user.id)
     task = await service.complete_task(task_id, result)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
@@ -330,11 +297,9 @@ async def complete_task(
 @router.get("/conversations/{conv_id}/context")
 async def get_conversation_context(
     conv_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: AssistantService = Depends(get_assistant_service)
 ):
     """Get conversation context including message history for AI processing."""
-    service = AssistantService(db, current_user.id)
     context = await service.get_conversation_for_ai(conv_id)
     if not context:
         raise HTTPException(status_code=404, detail="Conversation not found")

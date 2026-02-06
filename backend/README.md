@@ -44,17 +44,18 @@ Backend API service for the Personal AI Assistant application.
 
 4. **Start the development server**:
    ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   uv run gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --reload
    ```
+   Note: `gunicorn` requires Linux/WSL. On Windows, use Docker Compose or run inside WSL.
 
 5. **Start Celery worker** (in a separate terminal):
    ```bash
-   celery -A app.core.celery_app worker --loglevel=info
+   celery -A app.core.celery_app:celery_app worker --loglevel=info
    ```
 
 6. **Start Celery beat scheduler** (in another terminal):
    ```bash
-   celery -A app.core.celery_app beat --loglevel=info
+   celery -A app.core.celery_app:celery_app beat --loglevel=info
    ```
 
 ## 📚 Dependency Management
@@ -143,24 +144,24 @@ uv run pytest --cov=app --cov-report=html
 uv run pytest tests/test_example.py
 ```
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 backend/
-├── alembic/              # Database migrations
-├── app/
-│   ├── api/              # API routes
-│   ├── core/             # Core configuration, database, security
-│   ├── domains/          # Domain-driven design modules
-│   │   ├── ai/           # AI model management
-│   │   ├── auth/         # Authentication
-│   │   ├── podcast/      # Podcast features
-│   │   └── user/         # User management
-│   └── main.py           # FastAPI application entry point
-├── scripts/              # Utility scripts
-├── tests/                # Test suite
-├── pyproject.toml        # Project dependencies and configuration
-└── requirements.txt      # Auto-generated lock file for Docker
+|-- alembic/              # Database migrations
+|-- app/
+|   |-- api/              # API routes
+|   |-- core/             # Core configuration, database, security
+|   |-- domains/          # Domain-driven design modules
+|   |   |-- ai/           # AI model management
+|   |   |-- auth/         # Authentication
+|   |   |-- podcast/      # Podcast features
+|   |   `-- user/         # User management
+|   `-- main.py           # FastAPI application entry point
+|-- scripts/              # Utility scripts
+|-- tests/                # Test suite
+|-- pyproject.toml        # Project dependencies and configuration
+`-- requirements.txt      # Auto-generated lock file for Docker
 ```
 
 ## 🐳 Docker Deployment

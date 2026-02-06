@@ -10,6 +10,7 @@ requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.104.1",
     "uvicorn[standard]>=0.24.0",
+    "gunicorn>=23.0.0",
     "sqlalchemy>=2.0.23",
     "asyncpg>=0.29.0",
     "alembic>=1.12.1",
@@ -51,6 +52,9 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build]
+ignore-vcs = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
@@ -128,6 +132,7 @@ strict_equality = true
 dev = [
     "aiosqlite>=0.22.1",
     "pytest>=9.0.2",
+    "pytest-asyncio>=1.2.0",
 ]
 
 [tool.pytest.ini_options]

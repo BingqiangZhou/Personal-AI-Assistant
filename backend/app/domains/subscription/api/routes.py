@@ -4,12 +4,10 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db_session
-from app.core.dependencies import get_current_active_user
+from app.domains.subscription.api.dependencies import get_subscription_service
+from app.domains.subscription.api.routes_podcasts import router as podcast_router
 from app.domains.subscription.services import SubscriptionService
-from app.domains.user.models import User
 from app.shared.schemas import (
     PaginatedResponse,
     PaginationParams,
@@ -71,11 +69,9 @@ async def list_subscriptions(
     pagination: PaginationParams = Depends(),
     status: Optional[str] = Query(None, description="Filter by status"),
     source_type: Optional[str] = Query(None, description="Filter by source type"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """List user's subscriptions."""
-    service = SubscriptionService(db, current_user.id)
     return await service.list_subscriptions(
         page=pagination.page,
         size=pagination.size,
@@ -87,14 +83,12 @@ async def list_subscriptions(
 @router.post("/", response_model=SubscriptionResponse)
 async def create_subscription(
     subscription_data: SubscriptionCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Create a new subscription.
 
     If duplicate URL or title is found, returns the existing subscription with a message.
     """
-    service = SubscriptionService(db, current_user.id)
 
     # Check for duplicate before creation
 
@@ -110,11 +104,9 @@ async def create_subscription(
 @router.post("/batch", response_model=BatchSubscriptionResponse)
 async def create_subscriptions_batch(
     subscriptions_data: list[SubscriptionCreate],
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Batch create subscriptions."""
-    service = SubscriptionService(db, current_user.id)
     results = await service.create_subscriptions_batch(subscriptions_data)
     
     success_count = sum(1 for r in results if r["status"] == "success")
@@ -133,11 +125,9 @@ async def create_subscriptions_batch(
 @router.get("/{subscription_id}", response_model=SubscriptionResponse)
 async def get_subscription(
     subscription_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Get subscription by ID."""
-    service = SubscriptionService(db, current_user.id)
     result = await service.get_subscription(subscription_id)
     if not result:
         raise HTTPException(status_code=404, detail="Subscription not found")
@@ -148,11 +138,9 @@ async def get_subscription(
 async def update_subscription(
     subscription_id: int,
     subscription_data: SubscriptionUpdate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Update subscription."""
-    service = SubscriptionService(db, current_user.id)
     result = await service.update_subscription(subscription_id, subscription_data)
     if not result:
         raise HTTPException(status_code=404, detail="Subscription not found")
@@ -162,11 +150,9 @@ async def update_subscription(
 @router.delete("/{subscription_id}")
 async def delete_subscription(
     subscription_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Delete subscription."""
-    service = SubscriptionService(db, current_user.id)
     success = await service.delete_subscription(subscription_id)
     if not success:
         raise HTTPException(status_code=404, detail="Subscription not found")
@@ -176,11 +162,9 @@ async def delete_subscription(
 @router.post("/{subscription_id}/fetch", response_model=FetchResponse)
 async def fetch_subscription_items(
     subscription_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Manually trigger subscription fetch (RSS feeds only)."""
-    service = SubscriptionService(db, current_user.id)
     try:
         result = await service.fetch_subscription(subscription_id)
         return FetchResponse(**result)
@@ -192,11 +176,9 @@ async def fetch_subscription_items(
 
 @router.post("/fetch-all", response_model=list[FetchResponse])
 async def fetch_all_subscriptions(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Fetch all active RSS subscriptions."""
-    service = SubscriptionService(db, current_user.id)
     results = await service.fetch_all_subscriptions()
     return [FetchResponse(**r) for r in results]
 
@@ -208,11 +190,9 @@ async def get_subscription_items(
     pagination: PaginationParams = Depends(),
     unread_only: bool = Query(False, description="Only show unread items"),
     bookmarked_only: bool = Query(False, description="Only show bookmarked items"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Get items from a subscription."""
-    service = SubscriptionService(db, current_user.id)
     return await service.get_subscription_items(
         subscription_id,
         page=pagination.page,
@@ -227,11 +207,9 @@ async def get_all_items(
     pagination: PaginationParams = Depends(),
     unread_only: bool = Query(False, description="Only show unread items"),
     bookmarked_only: bool = Query(False, description="Only show bookmarked items"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Get all items from all subscriptions."""
-    service = SubscriptionService(db, current_user.id)
     return await service.get_all_items(
         page=pagination.page,
         size=pagination.size,
@@ -243,11 +221,9 @@ async def get_all_items(
 @router.post("/items/{item_id}/read")
 async def mark_item_as_read(
     item_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Mark an item as read."""
-    service = SubscriptionService(db, current_user.id)
     result = await service.mark_item_as_read(item_id)
     if not result:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -257,11 +233,9 @@ async def mark_item_as_read(
 @router.post("/items/{item_id}/unread")
 async def mark_item_as_unread(
     item_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Mark an item as unread."""
-    service = SubscriptionService(db, current_user.id)
     result = await service.mark_item_as_unread(item_id)
     if not result:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -271,11 +245,9 @@ async def mark_item_as_unread(
 @router.post("/items/{item_id}/bookmark")
 async def toggle_bookmark(
     item_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Toggle item bookmark status."""
-    service = SubscriptionService(db, current_user.id)
     result = await service.toggle_bookmark(item_id)
     if not result:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -285,11 +257,9 @@ async def toggle_bookmark(
 @router.delete("/items/{item_id}")
 async def delete_item(
     item_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Delete an item."""
-    service = SubscriptionService(db, current_user.id)
     success = await service.delete_item(item_id)
     if not success:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -298,11 +268,9 @@ async def delete_item(
 
 @router.get("/items/unread-count")
 async def get_unread_count(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Get total unread items count."""
-    service = SubscriptionService(db, current_user.id)
     count = await service.get_unread_count()
     return {"unread_count": count}
 
@@ -310,22 +278,18 @@ async def get_unread_count(
 # Category endpoints
 @router.get("/categories/", response_model=list[CategoryResponse])
 async def list_categories(
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Get all user's categories."""
-    service = SubscriptionService(db, current_user.id)
     return await service.list_categories()
 
 
 @router.post("/categories/", response_model=CategoryResponse)
 async def create_category(
     category_data: CategoryCreate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Create a new category."""
-    service = SubscriptionService(db, current_user.id)
     return await service.create_category(
         name=category_data.name,
         description=category_data.description,
@@ -337,11 +301,9 @@ async def create_category(
 async def update_category(
     category_id: int,
     category_data: CategoryUpdate,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Update category."""
-    service = SubscriptionService(db, current_user.id)
     update_data = category_data.model_dump(exclude_unset=True)
     result = await service.update_category(category_id, **update_data)
     if not result:
@@ -352,11 +314,9 @@ async def update_category(
 @router.delete("/categories/{category_id}")
 async def delete_category(
     category_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Delete category."""
-    service = SubscriptionService(db, current_user.id)
     success = await service.delete_category(category_id)
     if not success:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -367,11 +327,9 @@ async def delete_category(
 async def add_subscription_to_category(
     subscription_id: int,
     category_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Add subscription to category."""
-    service = SubscriptionService(db, current_user.id)
     success = await service.add_subscription_to_category(subscription_id, category_id)
     if not success:
         raise HTTPException(status_code=404, detail="Subscription or category not found")
@@ -382,12 +340,13 @@ async def add_subscription_to_category(
 async def remove_subscription_from_category(
     subscription_id: int,
     category_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Remove subscription from category."""
-    service = SubscriptionService(db, current_user.id)
     success = await service.remove_subscription_from_category(subscription_id, category_id)
     if not success:
         raise HTTPException(status_code=404, detail="Mapping not found")
     return {"message": "Subscription removed from category"}
+
+
+router.include_router(podcast_router)

@@ -5,11 +5,10 @@ AI模型配置管理API路由
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db_session
 from app.core.exceptions import DatabaseError, ValidationError
 from app.core.security import get_token_from_request
+from app.domains.ai.api.dependencies import get_ai_model_config_service
 from app.domains.ai.models import ModelType
 from app.domains.ai.schemas import (
     AIModelConfigCreate,
@@ -78,7 +77,7 @@ def _create_model_response(model) -> AIModelConfigResponse:
 async def create_model(
     model_data: AIModelConfigCreate,
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """
     创建新的AI模型配置
@@ -99,7 +98,6 @@ async def create_model(
     ```
     """
     try:
-        service = AIModelConfigService(db)
         model = await service.create_model(model_data)
         return _create_model_response(model)
     except ValidationError as e:
@@ -121,7 +119,7 @@ async def get_models(
     size: int = Query(20, ge=1, le=100, description="每页数量"),
     search: Optional[str] = Query(None, description="搜索关键词"),
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """
     获取AI模型配置列表，支持筛选和搜索
@@ -135,7 +133,6 @@ async def get_models(
     - search: 搜索关键词（搜索名称、显示名称、描述）
     """
     try:
-        service = AIModelConfigService(db)
 
         if search:
             models, total = await service.search_models(
@@ -176,11 +173,10 @@ async def get_model(
     model_id: int,
     decrypt_key: bool = Query(False, description="是否解密API密钥"),
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """获取指定AI模型配置的详细信息"""
     try:
-        service = AIModelConfigService(db)
         model = await service.get_model_by_id(model_id)
 
         if not model:
@@ -218,11 +214,10 @@ async def update_model(
     model_id: int,
     model_data: AIModelConfigUpdate,
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """更新指定AI模型配置"""
     try:
-        service = AIModelConfigService(db)
         model = await service.update_model(model_id, model_data)
 
         if not model:
@@ -248,11 +243,10 @@ async def update_model(
 async def delete_model(
     model_id: int,
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """删除指定的AI模型配置"""
     try:
-        service = AIModelConfigService(db)
         success = await service.delete_model(model_id)
 
         if not success:
@@ -277,7 +271,7 @@ async def set_default_model(
     model_id: int,
     model_type: ModelType = Query(..., description="模型类型"),
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """
     将指定模型设置为该类型的默认模型
@@ -287,7 +281,6 @@ async def set_default_model(
     - model_type: 模型类型 (transcription/text_generation)
     """
     try:
-        service = AIModelConfigService(db)
         model = await service.set_default_model(model_id, model_type)
 
         if not model:
@@ -313,11 +306,10 @@ async def set_default_model(
 async def get_default_model(
     model_type: ModelType,
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """获取指定类型的默认模型配置"""
     try:
-        service = AIModelConfigService(db)
         model = await service.get_default_model(model_type)
 
         if not model:
@@ -339,11 +331,10 @@ async def get_default_model(
 async def get_active_models(
     model_type: ModelType,
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """获取指定类型的所有活跃模型"""
     try:
-        service = AIModelConfigService(db)
         models = await service.get_active_models(model_type)
 
         return [_create_model_response(model) for model in models]
@@ -360,7 +351,7 @@ async def test_model(
     model_id: int,
     test_request: ModelTestRequest,
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """
     测试模型配置是否正确
@@ -369,7 +360,6 @@ async def test_model(
     对于文本生成模型：发送测试文本进行生成
     """
     try:
-        service = AIModelConfigService(db)
         test_result = await service.test_model(model_id, test_request.test_data)
 
         return test_result
@@ -387,11 +377,10 @@ async def test_model(
 async def get_model_stats(
     model_id: int,
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """获取指定模型的使用统计信息"""
     try:
-        service = AIModelConfigService(db)
         stats = await service.get_model_stats(model_id)
 
         if not stats:
@@ -414,11 +403,10 @@ async def get_type_stats(
     model_type: ModelType,
     limit: int = Query(20, ge=1, le=100, description="返回数量限制"),
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """获取指定模型类型的所有模型使用统计（按使用量排序）"""
     try:
-        service = AIModelConfigService(db)
         stats = await service.get_type_stats(model_type, limit)
 
         return stats
@@ -433,7 +421,7 @@ async def get_type_stats(
 )
 async def init_default_models(
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """
     初始化系统的默认模型配置
@@ -441,7 +429,6 @@ async def init_default_models(
     从环境变量中读取默认配置并创建系统预设模型
     """
     try:
-        service = AIModelConfigService(db)
         models = await service.init_default_models()
 
         return [_create_model_response(model) for model in models]
@@ -459,7 +446,7 @@ async def init_default_models(
 async def validate_api_key(
     request: APIKeyValidationRequest,
     user=Depends(get_token_from_request),
-    db: AsyncSession = Depends(get_db_session)
+    service: AIModelConfigService = Depends(get_ai_model_config_service)
 ):
     """
     验证API配置是否可以成功连接
@@ -468,7 +455,6 @@ async def validate_api_key(
     会尝试使用标准Bearer Token和api-key Header (Azure/MIMO)
     """
     try:
-        service = AIModelConfigService(db)
         result = await service.validate_api_key(
             api_url=request.api_url,
             api_key=request.api_key,

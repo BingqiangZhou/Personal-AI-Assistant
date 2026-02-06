@@ -194,7 +194,7 @@ def main():
         print("下一步:")
         print("1. docker run -d -p 6379:6379 redis:7-alpine")
         print("2. cd backend && uv run python database_migration.py")
-        print("3. uv run uvicorn app.main:app --reload --port 8000")
+        print("3. uv run gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --reload")
         print("4. 访问 http://localhost:8000/docs 查看 /podcasts 端点")
         return 0
     else:

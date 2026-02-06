@@ -79,4 +79,4 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 EXPOSE 8000
 
 # Default command (will be run as app user by entrypoint)
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["gunicorn", "app.main:app", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--workers", "4", "--timeout", "120", "--log-level", "info"]

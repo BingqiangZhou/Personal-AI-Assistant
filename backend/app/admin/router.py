@@ -28,7 +28,7 @@ from app.admin.dependencies import (
     create_admin_session,
 )
 from app.admin.first_run import check_admin_exists
-from app.admin.models import AdminAuditLog, SystemSettings
+from app.admin.models import AdminAuditLog, BackgroundTaskRun, SystemSettings
 from app.admin.monitoring import get_monitor_service
 from app.admin.twofa import generate_qr_code, generate_totp_secret, verify_totp_token
 from app.core.database import get_db_session
@@ -1739,7 +1739,10 @@ async def edit_subscription(
             subscription.source_url = source_url
 
         # Always test the connection after editing to ensure feed is valid
-        from app.core.feed_parser import FeedParserConfig, parse_feed_url
+        from app.domains.subscription.parsers.feed_parser import (
+            FeedParserConfig,
+            parse_feed_url,
+        )
         
         config = FeedParserConfig(
             max_entries=10,
@@ -1812,7 +1815,11 @@ async def test_subscription_url(
     try:
         import time
 
-        from app.core.feed_parser import FeedParseOptions, FeedParser, FeedParserConfig
+        from app.domains.subscription.parsers.feed_parser import (
+            FeedParseOptions,
+            FeedParser,
+            FeedParserConfig,
+        )
 
         # Configure parser (same as backend subscription service, uses default user_agent)
         config = FeedParserConfig(
@@ -1881,7 +1888,10 @@ async def test_all_subscriptions(
     try:
         import time
 
-        from app.core.feed_parser import FeedParserConfig, parse_feed_url
+        from app.domains.subscription.parsers.feed_parser import (
+            FeedParserConfig,
+            parse_feed_url,
+        )
 
         # Get all subscriptions (admin page only shows RSS subscriptions)
         result = await db.execute(
@@ -3092,6 +3102,70 @@ async def get_network_metrics_api(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get network metrics",
+        )
+
+
+@router.get("/api/monitoring/tasks")
+async def get_task_monitoring_api(
+    limit: int = 50,
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """Get background task queue and execution statistics as JSON."""
+    try:
+        limit = max(1, min(limit, 200))
+
+        total_stmt = select(func.count()).select_from(BackgroundTaskRun)
+        total_result = await db.execute(total_stmt)
+        total_runs = total_result.scalar_one()
+
+        recent_stmt = (
+            select(BackgroundTaskRun)
+            .order_by(BackgroundTaskRun.started_at.desc())
+            .limit(limit)
+        )
+        recent_result = await db.execute(recent_stmt)
+        recent_runs = recent_result.scalars().all()
+
+        status_stmt = (
+            select(BackgroundTaskRun.status, func.count())
+            .group_by(BackgroundTaskRun.status)
+        )
+        status_result = await db.execute(status_stmt)
+        status_stats = {status: count for status, count in status_result.all()}
+
+        queue_stmt = (
+            select(BackgroundTaskRun.queue_name, func.count())
+            .group_by(BackgroundTaskRun.queue_name)
+        )
+        queue_result = await db.execute(queue_stmt)
+        queue_stats = {queue: count for queue, count in queue_result.all()}
+
+        return JSONResponse(
+            content={
+                "total_runs": total_runs,
+                "status_stats": status_stats,
+                "queue_stats": queue_stats,
+                "recent_runs": [
+                    {
+                        "id": run.id,
+                        "task_name": run.task_name,
+                        "queue_name": run.queue_name,
+                        "status": run.status,
+                        "started_at": run.started_at.isoformat() if run.started_at else None,
+                        "finished_at": run.finished_at.isoformat() if run.finished_at else None,
+                        "duration_ms": run.duration_ms,
+                        "error_message": run.error_message,
+                    }
+                    for run in recent_runs
+                ],
+            }
+        )
+    except Exception as e:
+        logger.error(f"Get task monitoring API error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to get task monitoring metrics",
         )
 
 

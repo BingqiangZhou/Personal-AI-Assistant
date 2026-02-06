@@ -49,3 +49,24 @@ class SystemSettings(Base):
 
     def __repr__(self):
         return f"<SystemSettings(id={self.id}, key={self.key})>"
+
+
+class BackgroundTaskRun(Base):
+    """Background task execution log for monitoring."""
+
+    __tablename__ = "background_task_runs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    task_name = Column(String(255), nullable=False, index=True)
+    queue_name = Column(String(64), nullable=False, index=True)
+    status = Column(String(20), nullable=False, index=True)  # started, success, failed
+    started_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
+    finished_at = Column(DateTime, nullable=True)
+    duration_ms = Column(Integer, nullable=True)
+    error_message = Column(Text, nullable=True)
+    metadata_json = Column("metadata", JSON, nullable=True, default={})
+
+    __table_args__ = (
+        Index("idx_task_queue_started", "queue_name", "started_at"),
+        Index("idx_task_status_started", "status", "started_at"),
+    )

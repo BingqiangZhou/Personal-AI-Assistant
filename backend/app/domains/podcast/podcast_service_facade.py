@@ -1,4 +1,4 @@
-﻿"""Podcast facade service.
+"""Podcast facade service.
 
 Backward-compatible facade that delegates to specialized services.
 """

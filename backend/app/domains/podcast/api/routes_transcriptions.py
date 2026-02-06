@@ -1,4 +1,4 @@
-﻿"""Podcast transcription routes."""
+"""Podcast transcription routes."""
 # ruff: noqa
 
 import logging

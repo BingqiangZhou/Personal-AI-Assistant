@@ -171,6 +171,8 @@ def setup_logging(
     # 配置第三方库的日志级别 (减少噪音)
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
+    logging.getLogger("gunicorn.access").setLevel(logging.WARNING)
+    logging.getLogger("gunicorn.error").setLevel(logging.ERROR)
     logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
     logging.getLogger("celery").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)

@@ -392,10 +392,10 @@ class PodcastSubscriptionService:
             if is_new:
                 new_episodes.append(saved_episode)
                 # For podcast-rss subscriptions, trigger complete processing task (transcription + summary)
-                # This ensures the flow: transcription → wait → summary
+                # This ensures the flow: transcription �?wait �?summary
                 from app.celery_app import celery_app
                 celery_app.send_task(
-                    'app.domains.podcast.tasks.process_podcast_episode_with_transcription',
+                    'app.domains.podcast.tasks.transcription.process_podcast_episode_with_transcription',
                     args=[saved_episode.id, self.user_id],
                     queue='transcription'
                 )

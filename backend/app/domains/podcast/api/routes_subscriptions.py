@@ -1,4 +1,4 @@
-﻿"""Podcast subscription routes."""
+"""Podcast subscription routes."""
 # ruff: noqa
 
 from typing import Optional

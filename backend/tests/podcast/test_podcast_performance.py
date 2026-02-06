@@ -113,7 +113,7 @@ class TestPodcastAPIPerformance:
 
             start_time = time.time()
             response = await client.post(
-                "/api/v1/podcasts/subscriptions",
+                "/api/v1/subscriptions/podcasts",
                 json=subscription_data,
                 headers=auth_headers
             )
@@ -150,7 +150,7 @@ class TestPodcastAPIPerformance:
                 "custom_name": f"测试播客 {i}"
             }
             response = await client.post(
-                "/api/v1/podcasts/subscriptions",
+                "/api/v1/subscriptions/podcasts",
                 json=subscription_data,
                 headers=auth_headers
             )
@@ -218,7 +218,7 @@ class TestPodcastAPIPerformance:
                     "custom_name": f"并发测试播客 U{user_id}R{i}"
                 }
                 task = client.post(
-                    "/api/v1/podcasts/subscriptions",
+                    "/api/v1/subscriptions/podcasts",
                     json=subscription_data,
                     headers=auth_headers
                 )
@@ -373,14 +373,14 @@ class TestPodcastAPIPerformance:
                     "custom_name": f"内存测试播客 {batch}-{i}"
                 }
                 await client.post(
-                    "/api/v1/podcasts/subscriptions",
+                    "/api/v1/subscriptions/podcasts",
                     json=subscription_data,
                     headers=auth_headers
                 )
 
             # 查询单集
             await client.get("/api/v1/podcasts/episodes", headers=auth_headers)
-            await client.get("/api/v1/podcasts/subscriptions", headers=auth_headers)
+            await client.get("/api/v1/subscriptions/podcasts", headers=auth_headers)
 
             # 强制垃圾回收
             import gc

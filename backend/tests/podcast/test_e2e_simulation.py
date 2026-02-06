@@ -258,7 +258,7 @@ def main():
             print("\n🛠️  NEXT STEPS:")
             print("  1. Run: uv run alembic upgrade head")
             print("  2. Start Redis: docker run -d -p 6379:6379 redis")
-            print("  3. Start Backend: uvicorn app.main:app --reload")
+            print("  3. Start Backend: gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --reload")
             print("  4. Test endpoints with JWT auth")
 
             return 0

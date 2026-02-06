@@ -16,17 +16,17 @@ abstract class PodcastApiService {
 
   // === Subscription Management ===
 
-  @POST('/podcasts/subscriptions')
+  @POST('/subscriptions/podcasts')
   Future<PodcastSubscriptionModel> addSubscription(
     @Body() PodcastSubscriptionCreateRequest request,
   );
 
-  @POST('/podcasts/subscriptions/bulk')
+  @POST('/subscriptions/podcasts/bulk')
   Future<dynamic> addSubscriptionsBatch(
     @Body() List<PodcastSubscriptionCreateRequest> request,
   );
 
-  @GET('/podcasts/subscriptions')
+  @GET('/subscriptions/podcasts')
   Future<PodcastSubscriptionListResponse> listSubscriptions(
     @Query('page') int page,
     @Query('size') int size,
@@ -34,38 +34,38 @@ abstract class PodcastApiService {
     @Query('status') String? status,
   );
 
-  @GET('/podcasts/subscriptions/{subscriptionId}')
+  @GET('/subscriptions/podcasts/{subscriptionId}')
   Future<PodcastSubscriptionModel> getSubscription(
     @Path('subscriptionId') int subscriptionId,
   );
 
-  @DELETE('/podcasts/subscriptions/{subscriptionId}')
+  @DELETE('/subscriptions/podcasts/{subscriptionId}')
   Future<void> deleteSubscription(
     @Path('subscriptionId') int subscriptionId,
   );
 
-  @POST('/podcasts/subscriptions/bulk-delete')
+  @POST('/subscriptions/podcasts/bulk-delete')
   Future<PodcastSubscriptionBulkDeleteResponse> bulkDeleteSubscriptions(
     @Body() PodcastSubscriptionBulkDeleteRequest request,
   );
 
-  @POST('/podcasts/subscriptions/{subscriptionId}/refresh')
+  @POST('/subscriptions/podcasts/{subscriptionId}/refresh')
   Future<void> refreshSubscription(
     @Path('subscriptionId') int subscriptionId,
   );
 
-  @POST('/podcasts/subscriptions/{subscriptionId}/reparse')
+  @POST('/subscriptions/podcasts/{subscriptionId}/reparse')
   Future<ReparseResponse> reparseSubscription(
     @Path('subscriptionId') int subscriptionId,
     @Query('force_all') bool forceAll,
   );
 
-  @GET('/podcasts/subscriptions/{subscriptionId}/schedule')
+  @GET('/subscriptions/podcasts/{subscriptionId}/schedule')
   Future<ScheduleConfigResponse> getSubscriptionSchedule(
     @Path('subscriptionId') int subscriptionId,
   );
 
-  @PATCH('/podcasts/subscriptions/{subscriptionId}/schedule')
+  @PATCH('/subscriptions/podcasts/{subscriptionId}/schedule')
   Future<ScheduleConfigResponse> updateSubscriptionSchedule(
     @Path('subscriptionId') int subscriptionId,
     @Body() ScheduleConfigUpdateRequest request,
@@ -184,10 +184,10 @@ abstract class PodcastApiService {
     @Path('episodeId') int episodeId,
   );
 
-  @GET('/podcasts/subscriptions/schedule/all')
+  @GET('/subscriptions/podcasts/schedule/all')
   Future<List<ScheduleConfigResponse>> getAllSubscriptionSchedules();
 
-  @POST('/podcasts/subscriptions/schedule/batch-update')
+  @POST('/subscriptions/podcasts/schedule/batch-update')
   Future<List<ScheduleConfigResponse>> batchUpdateSubscriptionSchedules(
     @Body() Map<String, dynamic> requestData,
   );

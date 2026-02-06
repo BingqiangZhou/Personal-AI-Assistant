@@ -4,12 +4,9 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db_session
-from app.core.dependencies import get_current_active_user
+from app.domains.multimedia.api.dependencies import get_multimedia_service
 from app.domains.multimedia.services import MultimediaService
-from app.domains.user.models import User
 from app.shared.schemas import PaginatedResponse, PaginationParams
 
 
@@ -78,11 +75,9 @@ class JobCreateResponse(BaseModel):
 async def list_media_files(
     pagination: PaginationParams = Depends(),
     media_type: Optional[str] = Query(None, description="Filter by media type"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: MultimediaService = Depends(get_multimedia_service)
 ):
     """List user's media files."""
-    service = MultimediaService(db, current_user.id)
     return await service.list_media_files(
         page=pagination.page,
         size=pagination.size,
@@ -94,8 +89,7 @@ async def list_media_files(
 async def upload_media_file(
     file: UploadFile = File(...),
     description: Optional[str] = Form(None),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: MultimediaService = Depends(get_multimedia_service)
 ):
     """Upload a media file.
 
@@ -105,7 +99,6 @@ async def upload_media_file(
     - Video: mp4, mov, avi, mkv
     - Documents: pdf, doc, docx (metadata only)
     """
-    service = MultimediaService(db, current_user.id)
     try:
         result = await service.upload_media_file(file, description)
         return UploadResponse(**result)
@@ -116,11 +109,9 @@ async def upload_media_file(
 @router.get("/files/{file_id}", response_model=MediaFileResponse)
 async def get_media_file(
     file_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: MultimediaService = Depends(get_multimedia_service)
 ):
     """Get media file metadata."""
-    service = MultimediaService(db, current_user.id)
     result = await service.get_media_file(file_id)
     if not result:
         raise HTTPException(status_code=404, detail="Media file not found")
@@ -130,11 +121,9 @@ async def get_media_file(
 @router.delete("/files/{file_id}")
 async def delete_media_file(
     file_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: MultimediaService = Depends(get_multimedia_service)
 ):
     """Delete a media file."""
-    service = MultimediaService(db, current_user.id)
     success = await service.delete_media_file(file_id)
     if not success:
         raise HTTPException(status_code=404, detail="Media file not found")
@@ -146,15 +135,13 @@ async def delete_media_file(
 async def transcribe_audio(
     file_id: int,
     language: Optional[str] = Query(None, description="Language code for transcription"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: MultimediaService = Depends(get_multimedia_service)
 ):
     """Transcribe audio/video file.
 
     Creates a background job to transcribe the audio content.
     The job will process the file and extract text with timestamps.
     """
-    service = MultimediaService(db, current_user.id)
     try:
         result = await service.create_transcription_job(file_id, language)
         return JobCreateResponse(**result)
@@ -166,15 +153,13 @@ async def transcribe_audio(
 async def analyze_image(
     file_id: int,
     analysis_type: Optional[str] = Query(None, description="Type of analysis (objects, faces, text, emotions)"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: MultimediaService = Depends(get_multimedia_service)
 ):
     """Analyze image content.
 
     Creates a background job to analyze the image using AI.
     Can detect objects, faces, text, emotions, and generate descriptions.
     """
-    service = MultimediaService(db, current_user.id)
     try:
         result = await service.create_image_analysis_job(file_id, analysis_type)
         return JobCreateResponse(**result)
@@ -187,15 +172,13 @@ async def process_video(
     file_id: int,
     extract_keyframes: bool = Query(False, description="Extract key frames from video"),
     extract_audio: bool = Query(False, description="Extract audio track from video"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: MultimediaService = Depends(get_multimedia_service)
 ):
     """Process video file.
 
     Creates a background job for video processing operations
     like extracting key frames or audio tracks.
     """
-    service = MultimediaService(db, current_user.id)
     try:
         result = await service.create_video_processing_job(
             file_id, extract_keyframes, extract_audio
@@ -208,11 +191,9 @@ async def process_video(
 @router.get("/jobs/{job_id}")
 async def get_processing_job(
     job_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: MultimediaService = Depends(get_multimedia_service)
 ):
     """Get processing job status and results."""
-    service = MultimediaService(db, current_user.id)
     result = await service.get_processing_job(job_id)
     if not result:
         raise HTTPException(status_code=404, detail="Processing job not found")
@@ -224,11 +205,9 @@ async def list_processing_jobs(
     pagination: PaginationParams = Depends(),
     status: Optional[str] = Query(None, description="Filter by status"),
     media_file_id: Optional[int] = Query(None, description="Filter by media file"),
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: MultimediaService = Depends(get_multimedia_service)
 ):
     """List processing jobs."""
-    service = MultimediaService(db, current_user.id)
     return await service.list_processing_jobs(
         page=pagination.page,
         size=pagination.size,
@@ -240,11 +219,9 @@ async def list_processing_jobs(
 @router.post("/jobs/{job_id}/cancel")
 async def cancel_processing_job(
     job_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: MultimediaService = Depends(get_multimedia_service)
 ):
     """Cancel a processing job."""
-    service = MultimediaService(db, current_user.id)
     result = await service.cancel_processing_job(job_id)
     if not result:
         raise HTTPException(status_code=404, detail="Processing job not found")
@@ -254,11 +231,9 @@ async def cancel_processing_job(
 @router.delete("/jobs/{job_id}")
 async def delete_processing_job(
     job_id: int,
-    current_user: User = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db_session)
+    service: MultimediaService = Depends(get_multimedia_service)
 ):
     """Delete a processing job."""
-    service = MultimediaService(db, current_user.id)
     success = await service.delete_processing_job(job_id)
     if not success:
         raise HTTPException(status_code=404, detail="Processing job not found")

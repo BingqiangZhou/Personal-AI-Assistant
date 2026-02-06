@@ -2,10 +2,10 @@ import json
 
 # from app.core.security_middleware import SecurityHeadersMiddleware
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import Any
 
-import uvicorn
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -86,7 +86,7 @@ def create_application() -> FastAPI:
     perf_middleware = PerformanceMonitoringMiddleware(app)
     set_performance_middleware(perf_middleware)
     app.add_middleware(PerformanceMonitoringMiddleware)
-    logger.info("✅ Performance monitoring middleware enabled")
+    logger.info("Performance monitoring middleware enabled")
 
     # Set up CORS
     app.add_middleware(
@@ -148,9 +148,9 @@ def create_application() -> FastAPI:
         return await http_exception_handler(request, exc)
 
     # Include routers
+    from app.admin.api.router import router as admin_router
     from app.admin.csrf import CSRFException
     from app.admin.exception_handlers import csrf_exception_handler
-    from app.admin.router import router as admin_router
     from app.domains.ai.api.routes import router as ai_model_router
     from app.domains.assistant.api.routes import router as assistant_router
     from app.domains.multimedia.api.routes import router as multimedia_router
@@ -220,6 +220,10 @@ def create_application() -> FastAPI:
     async def health_check():
         return {"status": "healthy"}
 
+    @app.get(f"{settings.API_V1_STR}/health")
+    async def health_check_v1():
+        return {"status": "healthy"}
+
     # Performance metrics endpoint
     @app.get("/metrics", include_in_schema=False)
     async def get_metrics():
@@ -237,11 +241,17 @@ app = create_application()
 # raise Exception("TEST RELOAD")
 
 if __name__ == "__main__":
-    uvicorn.run(
+    command = [
+        "gunicorn",
         "app.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True if settings.ENVIRONMENT == "development" else False
-    )
-    # Trigger reload - Update 3
+        "--worker-class",
+        "uvicorn.workers.UvicornWorker",
+        "--bind",
+        "0.0.0.0:8000",
+    ]
+    if settings.ENVIRONMENT == "development":
+        command.append("--reload")
+    else:
+        command.extend(["--workers", "4", "--timeout", "120", "--log-level", "info"])
+    os.execvp(command[0], command)
  

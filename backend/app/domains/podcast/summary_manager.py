@@ -13,10 +13,10 @@ import aiohttp
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import HTTPException, ValidationError
-from app.core.feed_parser import strip_html_tags
 from app.domains.ai.models import ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
 from app.domains.podcast.models import PodcastEpisode
+from app.domains.subscription.parsers.feed_parser import strip_html_tags
 
 
 logger = logging.getLogger(__name__)

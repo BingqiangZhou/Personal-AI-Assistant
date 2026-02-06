@@ -1,4 +1,4 @@
-﻿"""Podcast stats service.
+"""Podcast stats service.
 
 Provides aggregated user-level podcast stats and cache handling.
 """

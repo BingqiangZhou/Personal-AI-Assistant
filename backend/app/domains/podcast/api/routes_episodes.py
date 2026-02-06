@@ -1,4 +1,4 @@
-﻿"""Podcast episode, summary, search, and recommendation routes."""
+"""Podcast episode, summary, search, and recommendation routes."""
 # ruff: noqa
 
 import logging
@@ -309,45 +309,6 @@ async def search_podcasts(
         pages=pages,
         subscription_id=0,
     )
-
-
-@router.post(
-    "/subscriptions/{subscription_id}/refresh",
-    summary="Refresh subscription",
-)
-async def refresh_subscription(
-    subscription_id: int,
-    service: PodcastService = Depends(get_podcast_service),
-):
-    try:
-        new_episodes = await service.refresh_subscription(subscription_id)
-        return {
-            "success": True,
-            "new_episodes": len(new_episodes),
-            "message": f"Updated, found {len(new_episodes)} new episodes",
-        }
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
-
-
-@router.post(
-    "/subscriptions/{subscription_id}/reparse",
-    summary="Reparse subscription",
-)
-async def reparse_subscription(
-    subscription_id: int,
-    force_all: bool = False,
-    service: PodcastService = Depends(get_podcast_service),
-):
-    try:
-        result = await service.reparse_subscription(subscription_id, force_all=force_all)
-        return {"success": True, "result": result}
-    except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.get(

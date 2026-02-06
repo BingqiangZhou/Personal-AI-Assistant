@@ -158,7 +158,7 @@ def main():
         print(f"\n[PASS] ALL ({passed}/{total}) ✓")
         print("\nNext steps:")
         print("1. python database_migration.py")
-        print("2. uvicorn app.main:app --reload")
+        print("2. gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --reload")
         print("3. http://localhost:8000/docs")
         return 0
     else:

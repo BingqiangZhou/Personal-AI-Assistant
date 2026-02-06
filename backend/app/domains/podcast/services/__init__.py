@@ -1,4 +1,4 @@
-﻿"""
+"""
 Podcast domain services - Refactored into specialized services.
 
 For backward compatibility, PodcastService facade is available from:

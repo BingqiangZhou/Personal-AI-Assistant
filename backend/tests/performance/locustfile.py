@@ -27,7 +27,7 @@ class PodcastUser(HttpUser):
     @task(3)
     def view_podcast_list(self):
         """View podcast subscription list (most common action)"""
-        self.client.get("/api/v1/podcasts/subscriptions")
+        self.client.get("/api/v1/subscriptions/podcasts")
 
     @task(2)
     def view_episodes(self):
@@ -70,7 +70,7 @@ class StressTestUser(HttpUser):
     @task
     def rapid_podcast_list_requests(self):
         """Rapidly request podcast list"""
-        self.client.get("/api/v1/podcasts/subscriptions")
+        self.client.get("/api/v1/subscriptions/podcasts")
 
     @task
     def rapid_search_requests(self):

@@ -59,7 +59,7 @@ class TestPodcastSubscriptionAPI:
 
         # 发送请求
         response = client.post(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             json=subscription_data,
             headers={"Authorization": "Bearer test_token"}
         )
@@ -86,7 +86,7 @@ class TestPodcastSubscriptionAPI:
         }
 
         response = client.post(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             json=subscription_data,
             headers={"Authorization": "Bearer test_token"}
         )
@@ -118,7 +118,7 @@ class TestPodcastSubscriptionAPI:
         )
 
         response = client.get(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             headers={"Authorization": "Bearer test_token"}
         )
 
@@ -141,7 +141,7 @@ class TestPodcastSubscriptionAPI:
         mock_podcast_service.get_subscription_details.return_value = mock_subscription_detail
 
         response = client.get(
-            "/api/v1/podcasts/subscriptions/1",
+            "/api/v1/subscriptions/podcasts/1",
             headers={"Authorization": "Bearer test_token"}
         )
 
@@ -155,7 +155,7 @@ class TestPodcastSubscriptionAPI:
         mock_podcast_service.remove_subscription.return_value = True
 
         response = client.delete(
-            "/api/v1/podcasts/subscriptions/1",
+            "/api/v1/subscriptions/podcasts/1",
             headers={"Authorization": "Bearer test_token"}
         )
 
@@ -371,7 +371,7 @@ class TestPodcastTaskAPI:
         mock_podcast_service.refresh_subscription.return_value = mock_episodes
 
         response = client.post(
-            "/api/v1/podcasts/subscriptions/1/refresh",
+            "/api/v1/subscriptions/podcasts/1/refresh",
             headers={"Authorization": "Bearer test_token"}
         )
 

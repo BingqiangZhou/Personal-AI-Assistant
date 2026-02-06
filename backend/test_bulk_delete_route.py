@@ -32,5 +32,5 @@ if not found:
 else:
     print("\n✅ 批量删除路由已正确注册")
     print("\n测试建议:")
-    print("   POST http://localhost:8000/api/v1/podcasts/subscriptions/bulk-delete")
+    print("   POST http://localhost:8000/api/v1/subscriptions/podcasts/bulk-delete")
     print("   Body: {\"subscription_ids\": [1, 2, 3]}")

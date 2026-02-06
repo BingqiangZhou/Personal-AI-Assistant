@@ -2,12 +2,12 @@
 # Docker Compose - 统一配置 / Unified Configuration
 # =============================================================================
 # 使用方法 / Usage:
-#   1. 复制 .env.example 为 .env / Copy .env.example to .env
-#   2. 根据需要修改 .env 配置 / Modify .env as needed
+#   1. 复制 .env.example .env / Copy .env.example to .env
+#   2. 根据需要修.env 配置 / Modify .env as needed
 #   3. 启动服务 / Start services: docker compose up -d
 #
-# 启动的服务 / Started Services:
-#   - PostgreSQL (数据库 / Database)
+# 启动的服/ Started Services:
+#   - PostgreSQL (数据/ Database)
 #   - Redis (缓存 / Cache)
 #   - Backend API (后端服务)
 #   - Celery Worker (后台任务处理 / Background tasks)
@@ -108,20 +108,20 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
-    # 本地开发使用 uvicorn --reload，云端使用 gunicorn
-    # Local: uvicorn --reload, Cloud: gunicorn
-    command: ${BACKEND_CMD:-uvicorn app.main:app --host 0.0.0.0 --port 8000}
+    # 本地与云端统一使用 gunicorn（本地可通过 BACKEND_CMD 增加 --reload）
+    # Unified: gunicorn for both local and cloud
+    command: ${BACKEND_CMD:-gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --workers 4 --timeout 120 --log-level info}
     # Use shared memory for Chromium
     shm_size: 2gb
 
   # =============================================================================
-  # Celery Worker
+  # Celery Core Worker
   # =============================================================================
-  celery_worker:
+  celery_worker_core:
     build:
       context: ${BACKEND_SRC_DIR:-../backend}
       dockerfile: Dockerfile
-    container_name: ${PROJECT_NAME:-personal_ai}_celery_worker
+    container_name: ${PROJECT_NAME:-personal_ai}_celery_worker_core
     env_file:
       - ${BACKEND_ENV_FILE:-../backend/.env}
     environment:
@@ -156,8 +156,49 @@ services:
         reservations:
           cpus: '0.5'
           memory: 512M
-    command: celery -A app.domains.podcast.tasks.celery_app worker --loglevel=${CELERY_LOG_LEVEL:-info} --concurrency=${CELERY_WORKERS:-2} -Q celery,podcast,ai,transcription,cleanup,recommendation
+    command: celery -A app.core.celery_app:celery_app worker --loglevel=${CELERY_LOG_LEVEL:-info} --concurrency=${CELERY_WORKERS_CORE:-2} -Q subscription_sync,ai_generation,maintenance
     # Use shared memory for Chromium
+    shm_size: 2gb
+
+  # =============================================================================
+  # Celery Transcription Worker
+  # =============================================================================
+  celery_worker_transcription:
+    build:
+      context: ${BACKEND_SRC_DIR:-../backend}
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME:-personal_ai}_celery_worker_transcription
+    env_file:
+      - ${BACKEND_ENV_FILE:-../backend/.env}
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-personal_ai}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - CELERY_BROKER_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+      - TZ=${TZ:-Asia/Shanghai}
+    volumes:
+      - backend_data:/app/data
+      - ${TRANSCRIPTION_STORAGE_DIR:-./storage/podcasts}:/app/storage/podcasts
+      - ${TRANSCRIPTION_TEMP_DIR:-./temp/transcription}:/app/temp/transcription
+      - ${LOG_DIR:-./logs}:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app_network
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    command: celery -A app.core.celery_app:celery_app worker --loglevel=${CELERY_LOG_LEVEL:-info} --concurrency=${CELERY_WORKERS_TRANSCRIPTION:-2} -Q transcription
     shm_size: 2gb
 
   # =============================================================================
@@ -185,12 +226,14 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      celery_worker:
+      celery_worker_core:
+        condition: service_started
+      celery_worker_transcription:
         condition: service_started
     networks:
       - app_network
     restart: always
-    command: celery -A app.domains.podcast.tasks.celery_app beat --loglevel=${CELERY_LOG_LEVEL:-info}
+    command: celery -A app.core.celery_app:celery_app beat --loglevel=${CELERY_LOG_LEVEL:-info}
 
   # =============================================================================
   # Nginx Reverse Proxy (反向代理)

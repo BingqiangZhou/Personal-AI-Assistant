@@ -67,7 +67,7 @@ print("\n最终结果: " + ("✅ 通过 - 准备部署" if r else "❌ 修复后
 print("\n部署步骤:")
 print("1. 启动Redis: docker run -d -p 6379:6379 redis:7-alpine")
 print("2. 运行迁移: uv run python database_migration.py")
-print("3. 启动服务: uv run uvicorn app.main:app --reload")
+print("3. 启动服务: uv run gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 --reload")
 print("4. 测试API: curl http://localhost:8000/api/v1/podcasts/subscription")
 print("\n访问文档: http://localhost:8000/docs")
 print("=" * 60)

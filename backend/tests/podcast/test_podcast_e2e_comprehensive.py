@@ -99,7 +99,7 @@ class TestPodcastSubscriptionWorkflow:
         }
 
         response = await client.post(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             json=subscription_data,
             headers=auth_headers
         )
@@ -118,7 +118,7 @@ class TestPodcastSubscriptionWorkflow:
     async def test_02_list_subscriptions(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试获取订阅列表"""
         response = await client.get(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             headers=auth_headers
         )
 
@@ -136,7 +136,7 @@ class TestPodcastSubscriptionWorkflow:
     async def test_03_get_subscription_details(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试获取订阅详情"""
         response = await client.get(
-            f"/api/v1/podcasts/subscriptions/{TestPodcastSubscriptionWorkflow.subscription_id}",
+            f"/api/v1/subscriptions/podcasts/{TestPodcastSubscriptionWorkflow.subscription_id}",
             headers=auth_headers
         )
 
@@ -283,7 +283,7 @@ class TestPodcastErrorHandling:
         }
 
         response = await client.post(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             json=subscription_data,
             headers=auth_headers
         )
@@ -302,14 +302,14 @@ class TestPodcastErrorHandling:
         }
 
         await client.post(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             json=subscription_data,
             headers=auth_headers
         )
 
         # 尝试再次添加相同的订阅
         response = await client.post(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             json=subscription_data,
             headers=auth_headers
         )
@@ -320,11 +320,11 @@ class TestPodcastErrorHandling:
 
     async def test_unauthorized_access(self, client: AsyncClient):
         """测试未授权访问"""
-        response = await client.get("/api/v1/podcasts/subscriptions")
+        response = await client.get("/api/v1/subscriptions/podcasts")
         assert response.status_code == 401
 
         response = await client.post(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             json={"feed_url": TEST_RSS_URL}
         )
         assert response.status_code == 401
@@ -389,7 +389,7 @@ class TestPodcastErrorHandling:
         }
 
         response = await client.post(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             json=subscription_data,
             headers=auth_headers
         )
@@ -411,7 +411,7 @@ class TestPodcastPerformance:
 
         start_time = time.time()
         response = await client.post(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             json=subscription_data,
             headers=auth_headers
         )
@@ -428,7 +428,7 @@ class TestPodcastPerformance:
         """测试单集列表查询性能"""
         # 先获取订阅列表
         response = await client.get(
-            "/api/v1/podcasts/subscriptions",
+            "/api/v1/subscriptions/podcasts",
             headers=auth_headers
         )
 
@@ -457,7 +457,7 @@ class TestPodcastPerformance:
         tasks = []
         for i in range(10):
             task = client.get(
-                "/api/v1/podcasts/subscriptions",
+                "/api/v1/subscriptions/podcasts",
                 headers=auth_headers
             )
             tasks.append(task)
