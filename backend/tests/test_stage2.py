@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import ast
-import io
 import pathlib
 import sys
 
 
 # Set UTF-8 output
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 def test_stage2():
     print('=== Stage 2: Database Integrity & Security Validation ===')
@@ -63,7 +63,7 @@ def test_stage2():
 
     # Check 4: Privacy filtering
     try:
-        from app.core.llm_privacy import ContentSanitizer
+        from app.domains.ai.llm_privacy import ContentSanitizer
 
         sanitizer = ContentSanitizer('standard')
         test_input = '联系张三 zhangsan@company.com 13800138000'

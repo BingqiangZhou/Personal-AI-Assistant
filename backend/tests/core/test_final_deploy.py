@@ -35,7 +35,7 @@ def test_security():
     '''测试安全机制'''
     print("2. 安全机制测试...")
     try:
-        from app.core.llm_privacy import ContentSanitizer
+        from app.domains.ai.llm_privacy import ContentSanitizer
         from app.domains.podcast.integration.security import PodcastSecurityValidator
 
         # 测试隐私净化

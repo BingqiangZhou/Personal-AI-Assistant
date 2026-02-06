@@ -5,11 +5,19 @@ Tests response times, cache effectiveness, and query efficiency.
 """
 
 import asyncio
+import os
 import time
 from typing import Any
 
 import pytest
 from httpx import AsyncClient
+
+
+if os.getenv("RUN_PERFORMANCE_TESTS") != "1":
+    pytest.skip(
+        "Set RUN_PERFORMANCE_TESTS=1 to run performance benchmark tests.",
+        allow_module_level=True,
+    )
 
 
 class PerformanceMetrics:

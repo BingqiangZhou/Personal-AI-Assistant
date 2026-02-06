@@ -1414,14 +1414,13 @@
         }
       }
     },
-    "/api/v1/podcasts/subscriptions": {
+    "/api/v1/subscriptions/podcasts": {
       "post": {
         "tags": [
-          "podcasts"
+          "subscriptions"
         ],
-        "summary": "添加播客订阅",
-        "description": "通过RSS链接添加播客订阅，并自动生成前几期音频的AI总结",
-        "operationId": "add_subscription_api_v1_podcasts_subscriptions_post",
+        "summary": "Add podcast subscription",
+        "operationId": "add_subscription_api_v1_subscriptions_podcasts_post",
         "parameters": [
           {
             "name": "token",
@@ -1495,11 +1494,10 @@
       },
       "get": {
         "tags": [
-          "podcasts"
+          "subscriptions"
         ],
-        "summary": "列出所有播客订阅",
-        "description": "返回用户的所有播客订阅及其最新节目",
-        "operationId": "list_subscriptions_api_v1_podcasts_subscriptions_get",
+        "summary": "List podcast subscriptions",
+        "operationId": "list_subscriptions_api_v1_subscriptions_podcasts_get",
         "parameters": [
           {
             "name": "page",
@@ -1508,11 +1506,11 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "description": "页码",
+              "description": "Page number",
               "default": 1,
               "title": "Page"
             },
-            "description": "页码"
+            "description": "Page number"
           },
           {
             "name": "size",
@@ -1522,11 +1520,11 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
-              "description": "每页数量",
+              "description": "Page size",
               "default": 20,
               "title": "Size"
             },
-            "description": "每页数量"
+            "description": "Page size"
           },
           {
             "name": "category_id",
@@ -1541,10 +1539,10 @@
                   "type": "null"
                 }
               ],
-              "description": "分类ID筛选",
+              "description": "Category filter",
               "title": "Category Id"
             },
-            "description": "分类ID筛选"
+            "description": "Category filter"
           },
           {
             "name": "status",
@@ -1559,10 +1557,10 @@
                   "type": "null"
                 }
               ],
-              "description": "状态筛选",
+              "description": "Status filter",
               "title": "Status"
             },
-            "description": "状态筛选"
+            "description": "Status filter"
           },
           {
             "name": "token",
@@ -1625,14 +1623,13 @@
         }
       }
     },
-    "/api/v1/podcasts/subscriptions/bulk": {
+    "/api/v1/subscriptions/podcasts/bulk": {
       "post": {
         "tags": [
-          "podcasts"
+          "subscriptions"
         ],
-        "summary": "批量添加播客订阅",
-        "description": "批量添加播客订阅",
-        "operationId": "create_subscriptions_batch_api_v1_podcasts_subscriptions_bulk_post",
+        "summary": "Bulk add podcast subscriptions",
+        "operationId": "create_subscriptions_batch_api_v1_subscriptions_podcasts_bulk_post",
         "parameters": [
           {
             "name": "token",
@@ -1709,14 +1706,13 @@
         }
       }
     },
-    "/api/v1/podcasts/subscriptions/bulk-delete": {
+    "/api/v1/subscriptions/podcasts/bulk-delete": {
       "post": {
         "tags": [
-          "podcasts"
+          "subscriptions"
         ],
-        "summary": "批量删除播客订阅",
-        "description": "批量删除多个播客订阅及其关联的单集、播放进度、转录和对话数据",
-        "operationId": "delete_subscriptions_bulk_api_v1_podcasts_subscriptions_bulk_delete_post",
+        "summary": "Bulk delete podcast subscriptions",
+        "operationId": "delete_subscriptions_bulk_api_v1_subscriptions_podcasts_bulk_delete_post",
         "parameters": [
           {
             "name": "token",
@@ -1789,14 +1785,13 @@
         }
       }
     },
-    "/api/v1/podcasts/subscriptions/{subscription_id}": {
+    "/api/v1/subscriptions/podcasts/{subscription_id}": {
       "get": {
         "tags": [
-          "podcasts"
+          "subscriptions"
         ],
-        "summary": "获取订阅详情",
-        "description": "获取订阅详情",
-        "operationId": "get_subscription_api_v1_podcasts_subscriptions__subscription_id__get",
+        "summary": "Get podcast subscription detail",
+        "operationId": "get_subscription_api_v1_subscriptions_podcasts__subscription_id__get",
         "parameters": [
           {
             "name": "subscription_id",
@@ -1869,11 +1864,10 @@
       },
       "delete": {
         "tags": [
-          "podcasts"
+          "subscriptions"
         ],
-        "summary": "删除订阅",
-        "description": "删除订阅和关联的单集数据",
-        "operationId": "delete_subscription_api_v1_podcasts_subscriptions__subscription_id__delete",
+        "summary": "Delete podcast subscription",
+        "operationId": "delete_subscription_api_v1_subscriptions_podcasts__subscription_id__delete",
         "parameters": [
           {
             "name": "subscription_id",
@@ -1943,14 +1937,175 @@
         }
       }
     },
-    "/api/v1/podcasts/subscriptions/{subscription_id}/schedule": {
+    "/api/v1/subscriptions/podcasts/{subscription_id}/refresh": {
+      "post": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Refresh podcast subscription",
+        "operationId": "refresh_subscription_api_v1_subscriptions_podcasts__subscription_id__refresh_post",
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Subscription Id"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Authentication token (for testing)",
+              "title": "Token"
+            },
+            "description": "Authentication token (for testing)"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer token in Authorization header",
+              "title": "Authorization"
+            },
+            "description": "Bearer token in Authorization header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions/podcasts/{subscription_id}/reparse": {
+      "post": {
+        "tags": [
+          "subscriptions"
+        ],
+        "summary": "Reparse podcast subscription",
+        "operationId": "reparse_subscription_api_v1_subscriptions_podcasts__subscription_id__reparse_post",
+        "parameters": [
+          {
+            "name": "subscription_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Subscription Id"
+            }
+          },
+          {
+            "name": "force_all",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Force All"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Authentication token (for testing)",
+              "title": "Token"
+            },
+            "description": "Authentication token (for testing)"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bearer token in Authorization header",
+              "title": "Authorization"
+            },
+            "description": "Bearer token in Authorization header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/subscriptions/podcasts/{subscription_id}/schedule": {
       "get": {
         "tags": [
-          "podcasts"
+          "subscriptions"
         ],
-        "summary": "Get subscription schedule configuration",
-        "description": "Get the current schedule configuration for a subscription",
-        "operationId": "get_subscription_schedule_api_v1_podcasts_subscriptions__subscription_id__schedule_get",
+        "summary": "Get podcast subscription schedule",
+        "operationId": "get_subscription_schedule_api_v1_subscriptions_podcasts__subscription_id__schedule_get",
         "parameters": [
           {
             "name": "subscription_id",
@@ -2023,11 +2178,10 @@
       },
       "patch": {
         "tags": [
-          "podcasts"
+          "subscriptions"
         ],
-        "summary": "Update subscription schedule configuration",
-        "description": "Update the schedule configuration for a subscription",
-        "operationId": "update_subscription_schedule_api_v1_podcasts_subscriptions__subscription_id__schedule_patch",
+        "summary": "Update podcast subscription schedule",
+        "operationId": "update_subscription_schedule_api_v1_subscriptions_podcasts__subscription_id__schedule_patch",
         "parameters": [
           {
             "name": "subscription_id",
@@ -2109,14 +2263,13 @@
         }
       }
     },
-    "/api/v1/podcasts/subscriptions/schedule/all": {
+    "/api/v1/subscriptions/podcasts/schedule/all": {
       "get": {
         "tags": [
-          "podcasts"
+          "subscriptions"
         ],
-        "summary": "Get all subscription schedules",
-        "description": "Get schedule configuration for all user subscriptions",
-        "operationId": "get_all_subscription_schedules_api_v1_podcasts_subscriptions_schedule_all_get",
+        "summary": "Get all podcast subscription schedules",
+        "operationId": "get_all_subscription_schedules_api_v1_subscriptions_podcasts_schedule_all_get",
         "parameters": [
           {
             "name": "token",
@@ -2165,7 +2318,7 @@
                   "items": {
                     "$ref": "#/components/schemas/ScheduleConfigResponse"
                   },
-                  "title": "Response Get All Subscription Schedules Api V1 Podcasts Subscriptions Schedule All Get"
+                  "title": "Response Get All Subscription Schedules Api V1 Subscriptions Podcasts Schedule All Get"
                 }
               }
             }
@@ -2183,14 +2336,13 @@
         }
       }
     },
-    "/api/v1/podcasts/subscriptions/schedule/batch-update": {
+    "/api/v1/subscriptions/podcasts/schedule/batch-update": {
       "post": {
         "tags": [
-          "podcasts"
+          "subscriptions"
         ],
-        "summary": "Batch update subscription schedules",
-        "description": "Update schedule configuration for multiple subscriptions",
-        "operationId": "batch_update_subscription_schedules_api_v1_podcasts_subscriptions_schedule_batch_update_post",
+        "summary": "Batch update podcast subscription schedules",
+        "operationId": "batch_update_subscription_schedules_api_v1_subscriptions_podcasts_schedule_batch_update_post",
         "parameters": [
           {
             "name": "token",
@@ -2234,7 +2386,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_batch_update_subscription_schedules_api_v1_podcasts_subscriptions_schedule_batch_update_post"
+                "$ref": "#/components/schemas/Body_batch_update_subscription_schedules_api_v1_subscriptions_podcasts_schedule_batch_update_post"
               }
             }
           }
@@ -2249,7 +2401,7 @@
                   "items": {
                     "$ref": "#/components/schemas/ScheduleConfigResponse"
                   },
-                  "title": "Response Batch Update Subscription Schedules Api V1 Podcasts Subscriptions Schedule Batch Update Post"
+                  "title": "Response Batch Update Subscription Schedules Api V1 Subscriptions Podcasts Schedule Batch Update Post"
                 }
               }
             }
@@ -2272,8 +2424,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "获取播客信息流",
-        "description": "获取用户订阅的所有播客分集，按发布时间倒序排列",
+        "summary": "Get podcast feed",
+        "description": "Return all subscribed episodes ordered by publish date desc.",
         "operationId": "get_podcast_feed_api_v1_podcasts_episodes_feed_get",
         "parameters": [
           {
@@ -2283,11 +2435,11 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "description": "页码",
+              "description": "Page number",
               "default": 1,
               "title": "Page"
             },
-            "description": "页码"
+            "description": "Page number"
           },
           {
             "name": "page_size",
@@ -2297,11 +2449,11 @@
               "type": "integer",
               "maximum": 50,
               "minimum": 1,
-              "description": "每页数量",
+              "description": "Page size",
               "default": 10,
               "title": "Page Size"
             },
-            "description": "每页数量"
+            "description": "Page size"
           },
           {
             "name": "token",
@@ -2369,8 +2521,7 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "获取单集列表",
-        "description": "获取播客单集列表",
+        "summary": "List podcast episodes",
         "operationId": "list_episodes_api_v1_podcasts_episodes_get",
         "parameters": [
           {
@@ -2386,10 +2537,10 @@
                   "type": "null"
                 }
               ],
-              "description": "订阅ID筛选",
+              "description": "Subscription ID filter",
               "title": "Subscription Id"
             },
-            "description": "订阅ID筛选"
+            "description": "Subscription ID filter"
           },
           {
             "name": "page",
@@ -2398,11 +2549,11 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "description": "页码",
+              "description": "Page number",
               "default": 1,
               "title": "Page"
             },
-            "description": "页码"
+            "description": "Page number"
           },
           {
             "name": "size",
@@ -2412,11 +2563,11 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
-              "description": "每页数量",
+              "description": "Page size",
               "default": 20,
               "title": "Size"
             },
-            "description": "每页数量"
+            "description": "Page size"
           },
           {
             "name": "has_summary",
@@ -2431,10 +2582,10 @@
                   "type": "null"
                 }
               ],
-              "description": "是否有AI总结",
+              "description": "Has AI summary",
               "title": "Has Summary"
             },
-            "description": "是否有AI总结"
+            "description": "Has AI summary"
           },
           {
             "name": "is_played",
@@ -2449,10 +2600,10 @@
                   "type": "null"
                 }
               ],
-              "description": "是否已播放",
+              "description": "Played status",
               "title": "Is Played"
             },
-            "description": "是否已播放"
+            "description": "Played status"
           },
           {
             "name": "token",
@@ -2520,8 +2671,7 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "获取单集详情",
-        "description": "获取单集详情，包含AI总结（如有）",
+        "summary": "Get episode detail",
         "operationId": "get_episode_api_v1_podcasts_episodes__episode_id__get",
         "parameters": [
           {
@@ -2599,8 +2749,7 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "生成(或重新生成)AI总结",
-        "description": "功能:\n- 如果没有总结，立即生成\n- 如果有总结，force=true时重新生成\n- 支持切换AI模型和自定义提示词",
+        "summary": "Generate or regenerate AI summary",
         "operationId": "generate_summary_api_v1_podcasts_episodes__episode_id__summary_post",
         "parameters": [
           {
@@ -2688,8 +2837,7 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "更新播放进度",
-        "description": "更新播客播放进度和状态",
+        "summary": "Update playback progress",
         "operationId": "update_playback_progress_api_v1_podcasts_episodes__episode_id__playback_put",
         "parameters": [
           {
@@ -2775,8 +2923,7 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "获取播放状态",
-        "description": "获取播客播放状态",
+        "summary": "Get playback state",
         "operationId": "get_playback_state_api_v1_podcasts_episodes__episode_id__playback_get",
         "parameters": [
           {
@@ -2854,8 +3001,7 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "待AI总结的单集",
-        "description": "列出所有需要AI总结的单集",
+        "summary": "List pending summaries",
         "operationId": "get_pending_summaries_api_v1_podcasts_summaries_pending_get",
         "parameters": [
           {
@@ -2924,47 +3070,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "获取可用的AI总结模型列表",
-        "description": "获取所有可用的AI总结模型",
+        "summary": "List available summary models",
         "operationId": "get_summary_models_api_v1_podcasts_summaries_models_get",
-        "parameters": [
-          {
-            "name": "token",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Authentication token (for testing)",
-              "title": "Token"
-            },
-            "description": "Authentication token (for testing)"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Bearer token in Authorization header",
-              "title": "Authorization"
-            },
-            "description": "Bearer token in Authorization header"
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2972,16 +3079,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SummaryModelsResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -2994,8 +3091,7 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "搜索播客内容",
-        "description": "搜索播客和单集内容",
+        "summary": "Search podcast content",
         "operationId": "search_podcasts_api_v1_podcasts_search_get",
         "parameters": [
           {
@@ -3005,10 +3101,10 @@
             "schema": {
               "type": "string",
               "minLength": 1,
-              "description": "搜索关键词",
+              "description": "Search keyword",
               "title": "Q"
             },
-            "description": "搜索关键词"
+            "description": "Search keyword"
           },
           {
             "name": "search_in",
@@ -3023,11 +3119,11 @@
                   "type": "null"
                 }
               ],
-              "description": "搜索范围: title, description, summary, all",
+              "description": "Search scope: title, description, summary, all",
               "default": "all",
               "title": "Search In"
             },
-            "description": "搜索范围: title, description, summary, all"
+            "description": "Search scope: title, description, summary, all"
           },
           {
             "name": "page",
@@ -3036,11 +3132,11 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "description": "页码",
+              "description": "Page number",
               "default": 1,
               "title": "Page"
             },
-            "description": "页码"
+            "description": "Page number"
           },
           {
             "name": "size",
@@ -3050,11 +3146,11 @@
               "type": "integer",
               "maximum": 100,
               "minimum": 1,
-              "description": "每页数量",
+              "description": "Page size",
               "default": 20,
               "title": "Size"
             },
-            "description": "每页数量"
+            "description": "Page size"
           },
           {
             "name": "token",
@@ -3117,177 +3213,12 @@
         }
       }
     },
-    "/api/v1/podcasts/subscriptions/{subscription_id}/refresh": {
-      "post": {
-        "tags": [
-          "podcasts"
-        ],
-        "summary": "刷新订阅",
-        "description": "手动刷新播客订阅，获取最新单集",
-        "operationId": "refresh_subscription_api_v1_podcasts_subscriptions__subscription_id__refresh_post",
-        "parameters": [
-          {
-            "name": "subscription_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Subscription Id"
-            }
-          },
-          {
-            "name": "token",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Authentication token (for testing)",
-              "title": "Token"
-            },
-            "description": "Authentication token (for testing)"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Bearer token in Authorization header",
-              "title": "Authorization"
-            },
-            "description": "Bearer token in Authorization header"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/podcasts/subscriptions/{subscription_id}/reparse": {
-      "post": {
-        "tags": [
-          "podcasts"
-        ],
-        "summary": "重新解析订阅（修复解析不全问题）",
-        "description": "重新解析订阅的所有单集，用于修复解析不全的问题\n\n- 默认只解析缺失的单集\n- force_all=true 时强制重新解析所有单集",
-        "operationId": "reparse_subscription_api_v1_podcasts_subscriptions__subscription_id__reparse_post",
-        "parameters": [
-          {
-            "name": "subscription_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Subscription Id"
-            }
-          },
-          {
-            "name": "force_all",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false,
-              "title": "Force All"
-            }
-          },
-          {
-            "name": "token",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Authentication token (for testing)",
-              "title": "Token"
-            },
-            "description": "Authentication token (for testing)"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Bearer token in Authorization header",
-              "title": "Authorization"
-            },
-            "description": "Bearer token in Authorization header"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/podcasts/recommendations": {
       "get": {
         "tags": [
           "podcasts"
         ],
-        "summary": "获取播客推荐",
-        "description": "基于用户收听历史获取播客推荐",
+        "summary": "Get podcast recommendations",
         "operationId": "get_recommendations_api_v1_podcasts_recommendations_get",
         "parameters": [
           {
@@ -3298,11 +3229,11 @@
               "type": "integer",
               "maximum": 50,
               "minimum": 1,
-              "description": "推荐数量",
+              "description": "Recommendation count",
               "default": 10,
               "title": "Limit"
             },
-            "description": "推荐数量"
+            "description": "Recommendation count"
           },
           {
             "name": "token",
@@ -3445,8 +3376,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "启动播客单集转录",
-        "description": "为指定的播客单集启动音频转录任务",
+        "summary": "Start episode transcription",
+        "description": "Start transcription for a podcast episode",
         "operationId": "start_transcription_api_v1_podcasts_episodes__episode_id__transcribe_post",
         "parameters": [
           {
@@ -3534,8 +3465,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "获取播客单集转录状态和结果",
-        "description": "查询指定播客单集的转录任务状态和转录结果",
+        "summary": "Get transcription detail",
+        "description": "Get transcription status and result for an episode",
         "operationId": "get_transcription_api_v1_podcasts_episodes__episode_id__transcription_get",
         "parameters": [
           {
@@ -3553,11 +3484,11 @@
             "required": false,
             "schema": {
               "type": "boolean",
-              "description": "是否包含完整转录文本",
+              "description": "Whether to include full transcript",
               "default": true,
               "title": "Include Content"
             },
-            "description": "是否包含完整转录文本"
+            "description": "Whether to include full transcript"
           },
           {
             "name": "token",
@@ -3623,8 +3554,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "删除播客单集转录任务",
-        "description": "删除指定播客单集的转录任务，清理数据库记录和Redis锁",
+        "summary": "Delete transcription task",
+        "description": "Delete episode transcription task and clean lock/cache",
         "operationId": "delete_transcription_api_v1_podcasts_episodes__episode_id__transcription_delete",
         "parameters": [
           {
@@ -3700,8 +3631,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "获取转录任务实时状态",
-        "description": "获取转录任务的实时进度状态",
+        "summary": "Get transcription task status",
+        "description": "Get real-time status for one transcription task",
         "operationId": "get_transcription_status_api_v1_podcasts_transcriptions__task_id__status_get",
         "parameters": [
           {
@@ -3779,8 +3710,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "安排播客单集转录（支持调度规则）",
-        "description": "为指定播客单集安排转录任务，支持自动调度和避免重复转录",
+        "summary": "Schedule episode transcription",
+        "description": "Schedule transcription task with frequency settings",
         "operationId": "schedule_episode_transcription_endpoint_api_v1_podcasts_episodes__episode_id__transcribe_schedule_post",
         "parameters": [
           {
@@ -3865,8 +3796,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "获取转录文本（避免重复转录）",
-        "description": "获取播客单集的转录文本，如果已存在则直接返回，避免重复转录",
+        "summary": "Get existing transcript",
+        "description": "Return transcript if already available",
         "operationId": "get_episode_transcript_endpoint_api_v1_podcasts_episodes__episode_id__transcript_get",
         "parameters": [
           {
@@ -3942,8 +3873,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "批量转录订阅的所有分集",
-        "description": "为订阅的所有分集批量安排转录，自动跳过已转录的内容",
+        "summary": "Batch transcribe subscription episodes",
+        "description": "Schedule transcription for all episodes in a subscription",
         "operationId": "batch_transcribe_subscription_endpoint_api_v1_podcasts_subscriptions__subscription_id__transcribe_batch_post",
         "parameters": [
           {
@@ -3997,7 +3928,7 @@
             "application/json": {
               "schema": {
                 "type": "boolean",
-                "description": "是否跳过已存在转录的分集",
+                "description": "Skip episodes already transcribed",
                 "default": true,
                 "title": "Skip Existing"
               }
@@ -4031,8 +3962,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "获取转录调度状态",
-        "description": "获取指定分集的转录任务状态和调度信息",
+        "summary": "Get transcription schedule status",
+        "description": "Get scheduling status for an episode",
         "operationId": "get_transcription_schedule_status_api_v1_podcasts_episodes__episode_id__transcription_schedule_status_get",
         "parameters": [
           {
@@ -4108,8 +4039,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "取消转录任务",
-        "description": "取消指定分集的转录任务",
+        "summary": "Cancel transcription task",
+        "description": "Cancel active transcription task for an episode",
         "operationId": "cancel_transcription_endpoint_api_v1_podcasts_episodes__episode_id__transcription_cancel_post",
         "parameters": [
           {
@@ -4185,8 +4116,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "检查并转录新分集",
-        "description": "检查订阅中的新分集并自动安排转录",
+        "summary": "Check and transcribe new episodes",
+        "description": "Check recently published episodes and schedule transcription",
         "operationId": "check_and_transcribe_new_episodes_api_v1_podcasts_subscriptions__subscription_id__check_new_episodes_post",
         "parameters": [
           {
@@ -4240,7 +4171,7 @@
             "application/json": {
               "schema": {
                 "type": "integer",
-                "description": "检查多少小时内发布的分集",
+                "description": "Hours window for new episodes",
                 "default": 24,
                 "title": "Hours Since Published"
               }
@@ -4274,8 +4205,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "获取待处理的转录任务",
-        "description": "获取所有待处理的转录任务列表",
+        "summary": "Get pending transcription tasks",
+        "description": "Get all pending tasks for current user",
         "operationId": "get_pending_transcriptions_api_v1_podcasts_transcriptions_pending_get",
         "parameters": [
           {
@@ -4342,8 +4273,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "获取对话历史",
-        "description": "获取指定播客单集的对话历史",
+        "summary": "Get conversation history",
+        "description": "Get conversation history for a podcast episode",
         "operationId": "get_conversation_history_api_v1_podcasts_episodes__episode_id__conversations_get",
         "parameters": [
           {
@@ -4363,11 +4294,11 @@
               "type": "integer",
               "maximum": 200,
               "minimum": 1,
-              "description": "返回的消息数量限制",
+              "description": "Number of messages",
               "default": 50,
               "title": "Limit"
             },
-            "description": "返回的消息数量限制"
+            "description": "Number of messages"
           },
           {
             "name": "token",
@@ -4433,8 +4364,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "发送对话消息",
-        "description": "向AI助手发送消息并获取回复，支持上下文保持",
+        "summary": "Send conversation message",
+        "description": "Send a message and get AI response with context",
         "operationId": "send_conversation_message_api_v1_podcasts_episodes__episode_id__conversations_post",
         "parameters": [
           {
@@ -4520,8 +4451,8 @@
         "tags": [
           "podcasts"
         ],
-        "summary": "清除对话历史",
-        "description": "清除指定播客单集的对话历史",
+        "summary": "Clear conversation history",
+        "description": "Clear conversation history for a podcast episode",
         "operationId": "clear_conversation_history_api_v1_podcasts_episodes__episode_id__conversations_delete",
         "parameters": [
           {
@@ -9594,6 +9525,64 @@
         }
       }
     },
+    "/super/api/monitoring/tasks": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Get Task Monitoring Api",
+        "description": "Get background task queue and execution statistics as JSON.",
+        "operationId": "get_task_monitoring_api_super_api_monitoring_tasks_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "admin_session",
+            "in": "cookie",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Admin Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/super/settings": {
       "get": {
         "tags": [
@@ -10185,6 +10174,22 @@
       "get": {
         "summary": "Health Check",
         "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "summary": "Health Check V1",
+        "operationId": "health_check_v1_api_v1_health_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -10970,7 +10975,7 @@
         "title": "BatchSubscriptionResponse",
         "description": "Response model for batch subscription creation."
       },
-      "Body_batch_update_subscription_schedules_api_v1_podcasts_subscriptions_schedule_batch_update_post": {
+      "Body_batch_update_subscription_schedules_api_v1_subscriptions_podcasts_schedule_batch_update_post": {
         "properties": {
           "subscription_ids": {
             "items": {
@@ -10988,7 +10993,7 @@
           "subscription_ids",
           "schedule_data"
         ],
-        "title": "Body_batch_update_subscription_schedules_api_v1_podcasts_subscriptions_schedule_batch_update_post"
+        "title": "Body_batch_update_subscription_schedules_api_v1_subscriptions_podcasts_schedule_batch_update_post"
       },
       "Body_create_apikey_super_apikeys_create_post": {
         "properties": {
@@ -11243,13 +11248,13 @@
           "force": {
             "type": "boolean",
             "title": "Force",
-            "description": "是否强制重新转录（即使已存在结果）",
+            "description": "Force retranscription",
             "default": false
           },
           "frequency": {
             "type": "string",
             "title": "Frequency",
-            "description": "调度频率: hourly, daily, weekly, manual",
+            "description": "hourly, daily, weekly, manual",
             "default": "manual"
           }
         },

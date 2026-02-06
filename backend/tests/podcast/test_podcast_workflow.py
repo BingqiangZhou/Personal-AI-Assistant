@@ -15,7 +15,7 @@ import sys
 def test_security():
     print("TEST: Security module...")
     try:
-        from app.core.llm_privacy import ContentSanitizer
+        from app.domains.ai.llm_privacy import ContentSanitizer
         from app.domains.podcast.integration.security import PodcastSecurityValidator
 
         sanitizer = ContentSanitizer('standard')

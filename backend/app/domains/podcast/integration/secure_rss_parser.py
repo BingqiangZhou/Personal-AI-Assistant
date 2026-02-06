@@ -16,7 +16,7 @@ import aiohttp
 from defusedxml.ElementTree import fromstring
 
 from app.core.config import settings
-from app.core.llm_privacy import ContentSanitizer
+from app.domains.ai.llm_privacy import ContentSanitizer
 from app.domains.podcast.integration.platform_detector import PlatformDetector
 from app.domains.podcast.integration.security import (
     PodcastContentValidator,

@@ -15,7 +15,7 @@ def test_imports():
 
     # Test 2: Privacy filter core
     try:
-        from app.core.llm_privacy import ContentSanitizer
+        from app.domains.ai.llm_privacy import ContentSanitizer
         print('[PASS] ContentSanitizer import')
     except ImportError as e:
         print(f'[FAIL] ContentSanitizer: {e}')
@@ -48,7 +48,7 @@ def test_imports():
 
     # Test 4: Functionality test
     try:
-        from app.core.llm_privacy import ContentSanitizer
+        from app.domains.ai.llm_privacy import ContentSanitizer
         sanitizer = ContentSanitizer('standard')
         test_input = '联系张三 zhangsan@company.com 13800138000'
         result = sanitizer.sanitize(test_input, 1, 'test')

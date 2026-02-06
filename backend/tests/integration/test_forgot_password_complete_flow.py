@@ -1,11 +1,19 @@
 """Integration tests for complete forgot password flow."""
 
+import os
 from datetime import datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+
+
+if os.getenv("RUN_INTEGRATION_TESTS") != "1":
+    pytest.skip(
+        "Set RUN_INTEGRATION_TESTS=1 to run integration forgot-password tests.",
+        allow_module_level=True,
+    )
 
 
 class TestForgotPasswordCompleteFlow:

@@ -4,13 +4,13 @@ Stage 4 & 5: End-to-End Simulation & API Validation
 Complete workflow validation without external dependencies
 """
 import asyncio
-import io
 import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
 
 # Fix encoding for Windows
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 async def test_complete_workflow():
     """🚀 Simulate complete podcast workflow"""
@@ -18,7 +18,7 @@ async def test_complete_workflow():
 
     # 1. Security Components
     try:
-        from app.core.llm_privacy import ContentSanitizer
+        from app.domains.ai.llm_privacy import ContentSanitizer
         from app.domains.podcast.integration.security import (
             PodcastSecurityValidator,
         )
@@ -78,7 +78,7 @@ async def test_complete_workflow():
         with patch('app.core.redis.PodcastRedis') as mock_redis_class, \
              patch('app.domains.podcast.repositories.PodcastRepository') as mock_repo_class, \
              patch('app.domains.podcast.integration.secure_rss_parser.SecureRSSParser') as mock_parser_class, \
-             patch('app.core.llm_privacy.ContentSanitizer') as mock_sanitizer_class:
+             patch('app.domains.ai.llm_privacy.ContentSanitizer') as mock_sanitizer_class:
 
             # Configure mocks
             mock_redis = AsyncMock()
