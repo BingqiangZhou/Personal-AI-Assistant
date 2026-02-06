@@ -4,7 +4,7 @@ ETag Response Wrapper
 Custom response class that automatically adds ETag headers to JSON responses.
 """
 import json
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
@@ -38,7 +38,7 @@ class ETagResponse(JSONResponse):
         *,
         max_age: int = 300,
         weak: bool = False,
-        cache_control: Optional[str] = None,
+        cache_control: str | None = None,
         **kwargs
     ):
         """Initialize ETagResponse.
@@ -79,7 +79,12 @@ class ETagResponse(JSONResponse):
 
     def render(self, content: Any) -> bytes:
         """Render content using CustomJSONEncoder for proper datetime serialization."""
-        return json.dumps(content, cls=CustomJSONEncoder, ensure_ascii=False).encode('utf-8')
+        return json.dumps(
+            content,
+            cls=CustomJSONEncoder,
+            sort_keys=True,
+            ensure_ascii=False,
+        ).encode('utf-8')
 
 
 async def check_etag_precondition(
@@ -87,8 +92,8 @@ async def check_etag_precondition(
     content: Any,
     weak: bool = False,
     max_age: int = 300,
-    cache_control: Optional[str] = None
-) -> Optional[Response]:
+    cache_control: str | None = None
+) -> Response | None:
     """Check If-None-Match header and return 304 if match.
 
     This function should be called in endpoints before generating

@@ -1,18 +1,23 @@
-"""Shared components used across domains."""
+"""Shared components used across domains.
 
-from .base_repository import BaseRepository
-from .base_service import BaseService
-from .mappers import (
-    CONVERSATION_FIELD_MAPPING,
-    DOCUMENT_FIELD_MAPPING,
-    MEDIA_FIELD_MAPPING,
-    MESSAGE_FIELD_MAPPING,
-    create_paginated_response,
-    map_model_to_response,
-    map_models_to_responses,
+This package currently exposes only actively used shared modules:
+- schemas
+- file validation utilities
+"""
+
+from .file_validation import (
+    ALLOWED_AUDIO_TYPES,
+    ALLOWED_DOCUMENT_TYPES,
+    ALLOWED_IMAGE_TYPES,
+    ALLOWED_VIDEO_TYPES,
+    FileValidationError,
+    get_allowed_types_for_media,
+    sanitize_filename,
+    validate_file_extension,
+    validate_file_size,
+    validate_file_upload,
+    validate_mime_type,
 )
-from .pagination import PaginatedResponse, PaginationHelper, PaginationParams
-from .response_builder import COMMON_FIELD_MAPPINGS, ResponseBuilder
 from .schemas import (
     APIResponse,
     BaseSchema,
@@ -25,6 +30,8 @@ from .schemas import (
     MessageBase,
     MessageCreate,
     MessageResponse,
+    PaginatedResponse,
+    PaginationParams,
     PasswordResetResponse,
     ResetPasswordRequest,
     SubscriptionBase,
@@ -41,29 +48,9 @@ from .schemas import (
     UserResponse,
     UserUpdate,
 )
-from .schemas import (
-    PaginatedResponse as LegacyPaginatedResponse,
-)
-from .schemas import (
-    PaginationParams as LegacyPaginationParams,
-)
 
 
 __all__ = [
-    # Base classes
-    "BaseService",
-    "BaseRepository",
-
-    # Pagination
-    "PaginationParams",
-    "PaginatedResponse",
-    "PaginationHelper",
-
-    # Response building
-    "ResponseBuilder",
-    "COMMON_FIELD_MAPPINGS",
-
-    # Schemas
     "BaseSchema",
     "TimestampedSchema",
     "UserBase",
@@ -90,17 +77,17 @@ __all__ = [
     "ForgotPasswordRequest",
     "ResetPasswordRequest",
     "PasswordResetResponse",
-
-    # Legacy pagination (for backward compatibility)
-    "LegacyPaginationParams",
-    "LegacyPaginatedResponse",
-
-    # Mappers
-    "map_model_to_response",
-    "map_models_to_responses",
-    "create_paginated_response",
-    "DOCUMENT_FIELD_MAPPING",
-    "MEDIA_FIELD_MAPPING",
-    "CONVERSATION_FIELD_MAPPING",
-    "MESSAGE_FIELD_MAPPING",
+    "PaginationParams",
+    "PaginatedResponse",
+    "FileValidationError",
+    "validate_file_size",
+    "validate_file_extension",
+    "validate_mime_type",
+    "sanitize_filename",
+    "validate_file_upload",
+    "get_allowed_types_for_media",
+    "ALLOWED_IMAGE_TYPES",
+    "ALLOWED_AUDIO_TYPES",
+    "ALLOWED_VIDEO_TYPES",
+    "ALLOWED_DOCUMENT_TYPES",
 ]

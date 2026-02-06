@@ -28,7 +28,6 @@ from app.domains.podcast.services import (
     PodcastSearchService,
     PodcastSubscriptionService,
     PodcastSummaryService,
-    PodcastSyncService,
 )
 
 # Subscription domain
