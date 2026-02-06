@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from app.domains.podcast.services import PodcastService
 from app.domains.podcast.integration.platform_detector import PodcastPlatform
+from app.domains.podcast.services import PodcastService
 
 
 class TestPodcastServicePlatform:

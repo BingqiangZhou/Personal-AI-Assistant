@@ -5,8 +5,9 @@ Tests system performance under concurrent user load.
 Run with: locust -f tests/performance/locustfile.py --host=http://localhost:8000
 """
 
-from locust import HttpUser, task, between
 import random
+
+from locust import HttpUser, between, task
 
 
 class PodcastUser(HttpUser):

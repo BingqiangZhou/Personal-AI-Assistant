@@ -10,23 +10,19 @@
 5. 性能测试
 """
 
-import pytest
 import asyncio
-from typing import Dict, List, Any
-from datetime import datetime, timedelta
-from unittest.mock import patch, AsyncMock
-from sqlalchemy.ext.asyncio import AsyncSession
-from httpx import AsyncClient
 import time
-import json
 
-from app.main import app
+import pytest
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.database import get_db_session, test_engine
+from app.core.security import create_access_token
 from app.core.test_database import TestSessionLocal, get_test_db
-from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
-from app.domains.subscription.models import Subscription
 from app.domains.user.models import User
-from app.core.security import create_access_token, verify_password
+from app.main import app
+
 
 # 测试配置
 TEST_RSS_URL = "https://feed.xyzfm.space/mcklbwxjdvfu"
@@ -85,7 +81,7 @@ async def test_user(db_session: AsyncSession) -> User:
 
 
 @pytest.fixture
-async def auth_headers(test_user: User) -> Dict[str, str]:
+async def auth_headers(test_user: User) -> dict[str, str]:
     """生成认证头"""
     token = create_access_token(data={"sub": str(test_user.id)})
     return {"Authorization": f"Bearer {token}"}
@@ -94,7 +90,7 @@ async def auth_headers(test_user: User) -> Dict[str, str]:
 class TestPodcastSubscriptionWorkflow:
     """播客订阅工作流测试"""
 
-    async def test_01_add_rss_subscription_success(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_01_add_rss_subscription_success(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试成功添加RSS订阅"""
         subscription_data = {
             "feed_url": TEST_RSS_URL,
@@ -119,7 +115,7 @@ class TestPodcastSubscriptionWorkflow:
         TestPodcastSubscriptionWorkflow.subscription_id = data["id"]
         print(f"✓ 成功创建订阅 ID: {data['id']}, 获取到 {data['episode_count']} 个单集")
 
-    async def test_02_list_subscriptions(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_02_list_subscriptions(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试获取订阅列表"""
         response = await client.get(
             "/api/v1/podcasts/subscriptions",
@@ -137,7 +133,7 @@ class TestPodcastSubscriptionWorkflow:
         assert subscription["id"] == TestPodcastSubscriptionWorkflow.subscription_id
         assert subscription["title"] == "测试播客订阅"
 
-    async def test_03_get_subscription_details(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_03_get_subscription_details(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试获取订阅详情"""
         response = await client.get(
             f"/api/v1/podcasts/subscriptions/{TestPodcastSubscriptionWorkflow.subscription_id}",
@@ -151,7 +147,7 @@ class TestPodcastSubscriptionWorkflow:
         assert data["description"] is not None
         assert data["episode_count"] > 0
 
-    async def test_04_get_episodes_list(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_04_get_episodes_list(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试获取单集列表"""
         response = await client.get(
             f"/api/v1/podcasts/episodes?subscription_id={TestPodcastSubscriptionWorkflow.subscription_id}",
@@ -167,7 +163,7 @@ class TestPodcastSubscriptionWorkflow:
         TestPodcastSubscriptionWorkflow.episode_id = data["episodes"][0]["id"]
         print(f"✓ 获取到 {len(data['episodes'])} 个单集")
 
-    async def test_05_get_episode_detail(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_05_get_episode_detail(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试获取单集详情"""
         response = await client.get(
             f"/api/v1/podcasts/episodes/{TestPodcastSubscriptionWorkflow.episode_id}",
@@ -182,7 +178,7 @@ class TestPodcastSubscriptionWorkflow:
         assert data["audio_url"] is not None
         assert data["subscription_id"] == TestPodcastSubscriptionWorkflow.subscription_id
 
-    async def test_06_update_playback_progress(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_06_update_playback_progress(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试更新播放进度"""
         playback_data = {
             "current_position": 120,  # 2分钟
@@ -205,7 +201,7 @@ class TestPodcastSubscriptionWorkflow:
 
         print(f"✓ 更新播放进度到 {data['current_position']} 秒")
 
-    async def test_07_get_playback_state(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_07_get_playback_state(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试获取播放状态"""
         response = await client.get(
             f"/api/v1/podcasts/episodes/{TestPodcastSubscriptionWorkflow.episode_id}/progress",
@@ -217,7 +213,7 @@ class TestPodcastSubscriptionWorkflow:
         assert data["current_position"] == 120
         assert data["is_playing"] is True
 
-    async def test_08_request_ai_summary(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_08_request_ai_summary(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试请求AI摘要"""
         summary_request = {
             "force_regenerate": False,
@@ -237,11 +233,11 @@ class TestPodcastSubscriptionWorkflow:
             data = response.json()
             assert data["episode_id"] == TestPodcastSubscriptionWorkflow.episode_id
             if data.get("ai_summary"):
-                print(f"✓ AI摘要生成成功")
+                print("✓ AI摘要生成成功")
             else:
                 print("ℹ AI摘要处理中...")
 
-    async def test_09_search_episodes(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_09_search_episodes(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试搜索单集"""
         search_params = {
             "query": "播客",
@@ -259,7 +255,7 @@ class TestPodcastSubscriptionWorkflow:
         assert "episodes" in data
         print(f"✓ 搜索到 {len(data['episodes'])} 个匹配单集")
 
-    async def test_10_get_podcast_stats(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_10_get_podcast_stats(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试获取播客统计信息"""
         response = await client.get(
             "/api/v1/podcasts/stats",
@@ -279,7 +275,7 @@ class TestPodcastSubscriptionWorkflow:
 class TestPodcastErrorHandling:
     """播客功能错误处理测试"""
 
-    async def test_invalid_rss_url(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_invalid_rss_url(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试无效RSS URL"""
         subscription_data = {
             "feed_url": TEST_RSS_INVALID_URL,
@@ -297,7 +293,7 @@ class TestPodcastErrorHandling:
         assert "detail" in data
         print(f"✓ 正确处理无效RSS URL: {data['detail']}")
 
-    async def test_duplicate_subscription(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_duplicate_subscription(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试重复订阅"""
         # 先添加一个订阅
         subscription_data = {
@@ -320,7 +316,7 @@ class TestPodcastErrorHandling:
 
         # 应该返回409 Conflict或400 Bad Request
         assert response.status_code in [409, 400]
-        print(f"✓ 正确处理重复订阅")
+        print("✓ 正确处理重复订阅")
 
     async def test_unauthorized_access(self, client: AsyncClient):
         """测试未授权访问"""
@@ -335,7 +331,7 @@ class TestPodcastErrorHandling:
 
         print("✓ 正确处理未授权访问")
 
-    async def test_nonexistent_episode(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_nonexistent_episode(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试不存在的单集ID"""
         fake_id = 99999
 
@@ -354,7 +350,7 @@ class TestPodcastErrorHandling:
 
         print("✓ 正确处理不存在的单集ID")
 
-    async def test_invalid_playback_data(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_invalid_playback_data(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试无效的播放数据"""
         # 需要先获取一个有效的episode_id
         response = await client.get(
@@ -383,7 +379,7 @@ class TestPodcastErrorHandling:
                 assert response.status_code == 422
                 print("✓ 正确处理无效播放数据")
 
-    async def test_malformed_xml_feed(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_malformed_xml_feed(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试格式错误的XML feed"""
         malformed_url = "data:text/xml,<invalid>xml</invalid>"
 
@@ -406,7 +402,7 @@ class TestPodcastErrorHandling:
 class TestPodcastPerformance:
     """播客功能性能测试"""
 
-    async def test_subscription_parsing_performance(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_subscription_parsing_performance(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试RSS解析性能"""
         subscription_data = {
             "feed_url": TEST_RSS_URL,
@@ -428,7 +424,7 @@ class TestPodcastPerformance:
         assert parsing_time < 10.0
         print(f"✓ RSS解析耗时: {parsing_time:.2f} 秒")
 
-    async def test_episodes_list_performance(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_episodes_list_performance(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试单集列表查询性能"""
         # 先获取订阅列表
         response = await client.get(
@@ -455,7 +451,7 @@ class TestPodcastPerformance:
                 assert query_time < 1.0
                 print(f"✓ 单集列表查询耗时: {query_time:.3f} 秒")
 
-    async def test_concurrent_requests(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_concurrent_requests(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试并发请求处理"""
         # 创建多个并发请求
         tasks = []
@@ -485,7 +481,7 @@ class TestPodcastPerformance:
 class TestPodcastDataIntegrity:
     """播客数据完整性测试"""
 
-    async def test_episode_metadata_integrity(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_episode_metadata_integrity(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试单集元数据完整性"""
         # 获取单集详情
         response = await client.get(
@@ -517,7 +513,7 @@ class TestPodcastDataIntegrity:
 
                 print("✓ 单集元数据完整性验证通过")
 
-    async def test_playback_progress_persistence(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_playback_progress_persistence(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试播放进度持久化"""
         # 获取单集ID
         response = await client.get(
@@ -595,9 +591,8 @@ async def run_all_tests():
                 # 准备测试客户端和认证
                 async with AsyncClient(app=app, base_url="http://test") as client:
                     # 创建测试用户和获取认证头
+                    from app.core.security import create_access_token, get_password_hash
                     from app.core.test_database import TestSessionLocal
-                    from app.core.database import Base
-                    from app.core.security import get_password_hash, create_access_token
                     from app.domains.user.models import User
 
                     async with TestSessionLocal() as session:

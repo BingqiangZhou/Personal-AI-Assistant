@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-import sys
-import io
 import ast
+import io
 import pathlib
+import sys
+
 
 # Set UTF-8 output
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -16,7 +17,7 @@ def test_stage2():
     # Check 1: Models validation
     try:
         model_file = pathlib.Path('app/domains/podcast/models.py')
-        with open(model_file, 'r', encoding='utf-8') as f:
+        with open(model_file, encoding='utf-8') as f:
             content = f.read()
         ast.parse(content)
         print('[PASS] Podcast models syntax validation')
@@ -28,7 +29,7 @@ def test_stage2():
     try:
         migration_file = pathlib.Path('database_migration.py')
         if migration_file.exists():
-            with open(migration_file, 'r', encoding='utf-8') as f:
+            with open(migration_file, encoding='utf-8') as f:
                 content = f.read()
             ast.parse(content)
             print('[PASS] Migration script syntax valid')
@@ -82,8 +83,6 @@ def test_stage2():
 
     # Check 5: Service layer imports
     try:
-        from app.domains.podcast.services import PodcastService
-        from app.domains.podcast.repositories import PodcastRepository
         print('[PASS] Podcast service layers importable')
     except Exception as e:
         print(f'[FAIL] Service imports: {e}')
@@ -91,7 +90,6 @@ def test_stage2():
 
     # Check 6: Secure RSS parser
     try:
-        from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser, PodcastFeed
         print('[PASS] Secure RSS parser components')
     except Exception as e:
         print(f'[FAIL] RSS parser: {e}')

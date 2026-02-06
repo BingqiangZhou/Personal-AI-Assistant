@@ -1,7 +1,8 @@
-import asyncio
-import httpx
-import sys
 import os
+import sys
+
+import httpx
+
 
 # Add backend directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

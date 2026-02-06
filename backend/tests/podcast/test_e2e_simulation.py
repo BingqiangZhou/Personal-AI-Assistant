@@ -3,11 +3,11 @@
 Stage 4 & 5: End-to-End Simulation & API Validation
 Complete workflow validation without external dependencies
 """
-import sys
-import io
 import asyncio
+import io
+import sys
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
+
 
 # Fix encoding for Windows
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -18,8 +18,10 @@ async def test_complete_workflow():
 
     # 1. Security Components
     try:
-        from app.domains.podcast.integration.security import PodcastSecurityValidator, PodcastContentValidator
         from app.core.llm_privacy import ContentSanitizer
+        from app.domains.podcast.integration.security import (
+            PodcastSecurityValidator,
+        )
 
         validator = PodcastSecurityValidator()
         sanitizer = ContentSanitizer('standard')
@@ -42,9 +44,6 @@ async def test_complete_workflow():
 
     # 2. Database Models
     try:
-        from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
-        from app.domains.subscription.models import Subscription
-        from app.domains.assistant.models import Conversation, Message
 
         print("[PASS] 2 - All models import correctly")
     except Exception as e:
@@ -53,8 +52,9 @@ async def test_complete_workflow():
 
     # 3. Repository Layer (Mocked)
     try:
-        from app.domains.podcast.repositories import PodcastRepository
         from sqlalchemy.ext.asyncio import AsyncSession
+
+        from app.domains.podcast.repositories import PodcastRepository
 
         # Create mock DB session
         mock_session = AsyncMock(spec=AsyncSession)
@@ -135,8 +135,9 @@ async def test_complete_workflow():
     # 5. API Routes Validation
     try:
         # Import all route modules to check for syntax
-        from app.domains.podcast.api import routes
         import inspect
+
+        from app.domains.podcast.api import routes
 
         # Verify all expected endpoints exist
         route_funcs = [name for name, obj in inspect.getmembers(routes) if inspect.isfunction(obj)]
@@ -188,8 +189,8 @@ async def test_api_contracts():
     print("\n=== Stage 5: API Contract Validation ===")
 
     try:
+
         from app.domains.podcast.api.routes import router
-        from fastapi import status
 
         # Check router configuration
         assert router.prefix == "/podcasts"
@@ -207,11 +208,10 @@ async def test_api_contracts():
         print("[PASS] 7 - API contracts and security")
 
         # Verify response structures from docstrings
-        import ast
         import pathlib
 
         routes_file = pathlib.Path(__file__).parent / "app" / "domains" / "podcast" / "api" / "routes.py"
-        with open(routes_file, 'r', encoding='utf-8') as f:
+        with open(routes_file, encoding='utf-8') as f:
             content = f.read()
 
         # Check for essential response patterns

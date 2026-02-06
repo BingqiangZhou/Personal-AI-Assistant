@@ -10,6 +10,7 @@
 import asyncio
 import sys
 
+
 # 测试1: 安全模块导入
 def test_security():
     print("TEST: Security module...")
@@ -41,7 +42,6 @@ def test_security():
 def test_redis():
     print("TEST: Redis configuration...")
     try:
-        from app.core.redis import PodcastRedis
         from app.core.config import settings
 
         print(f"   Redis URL: {settings.REDIS_URL}")
@@ -55,7 +55,6 @@ def test_redis():
 def test_models():
     print("TEST: Database models...")
     try:
-        from app.core.database import Base
         from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 
         # 检查模型定义
@@ -72,8 +71,6 @@ def test_models():
 def test_services():
     print("TEST: Services layer...")
     try:
-        from app.domains.podcast.services import PodcastService
-        from app.domains.podcast.repositories import PodcastRepository
 
         print("   [PASS] Services OK")
         return True
@@ -85,8 +82,9 @@ def test_services():
 def test_api():
     print("TEST: API routing...")
     try:
-        from app.domains.podcast.api.routes import router
         from fastapi import APIRouter
+
+        from app.domains.podcast.api.routes import router
 
         assert isinstance(router, APIRouter)
         assert router.prefix == "/podcasts"
@@ -102,9 +100,10 @@ async def test_full_workflow():
     print("\nTEST: Full workflow integration...")
 
     try:
-        from app.core.database import engine
         from sqlalchemy import inspect
         from sqlalchemy.ext.asyncio import AsyncSession
+
+        from app.core.database import engine
 
         # 检查数据库连接
         async with engine.connect() as conn:

@@ -1,9 +1,10 @@
 
 import asyncio
-import os
+
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+
 
 async def list_and_delete_models():
     # Force use localhost since we are running on host, using the credentials from docker-compose

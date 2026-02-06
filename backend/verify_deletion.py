@@ -1,14 +1,17 @@
 import asyncio
-import sys
 import os
+import sys
+
 
 # Add backend directory to sys.path
 sys.path.append(os.getcwd())
 
+from sqlalchemy import select
+
 from app.core.database import async_session
 from app.domains.ai.models import AIModelConfig, ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
-from sqlalchemy import delete, select
+
 
 async def main():
     async with async_session() as session:

@@ -1,14 +1,11 @@
 """Integration tests for complete forgot password flow."""
 
-import pytest
-import json
 from datetime import datetime, timedelta
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
 
-from app.domains.user.models import User, PasswordReset
-from app.core.security import verify_password
+import pytest
+from httpx import AsyncClient
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class TestForgotPasswordCompleteFlow:

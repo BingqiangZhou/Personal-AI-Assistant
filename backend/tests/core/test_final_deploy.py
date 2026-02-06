@@ -6,6 +6,7 @@
 
 import sys
 
+
 def test_models():
     '''测试模型定义'''
     print("1. 模型定义测试...")
@@ -61,8 +62,8 @@ def test_redis_config():
     '''测试Redis配置'''
     print("3. Redis配置测试...")
     try:
-        from app.core.redis import PodcastRedis
         from app.core.config import settings
+        from app.core.redis import PodcastRedis
 
         # 验证配置
         assert settings.REDIS_URL
@@ -82,8 +83,9 @@ def test_api_routes():
     '''测试API路由'''
     print("4. API路由测试...")
     try:
-        from app.domains.podcast.api.routes import router
         from fastapi import APIRouter
+
+        from app.domains.podcast.api.routes import router
 
         assert isinstance(router, APIRouter)
         assert router.prefix == "/podcasts"

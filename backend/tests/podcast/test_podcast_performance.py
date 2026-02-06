@@ -3,26 +3,22 @@
 包括负载测试、压力测试和响应时间分析
 """
 
-import pytest
 import asyncio
-import time
 import statistics
-from typing import List, Dict, Tuple
-from datetime import datetime, timedelta
-from concurrent.futures import ThreadPoolExecutor
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from httpx import AsyncClient
-import psutil
 import threading
+import time
+from datetime import datetime
 
-from app.main import app
-from app.core.database import test_engine
-from app.core.test_database import TestSessionLocal, get_test_db
+import psutil
+import pytest
+from httpx import AsyncClient
+from sqlalchemy import select
+
 from app.core.security import create_access_token
-from app.domains.user.models import User
+from app.core.test_database import TestSessionLocal
 from app.domains.podcast.models import PodcastEpisode
-from app.core.config import settings
+from app.domains.user.models import User
+from app.main import app
 
 
 class PerformanceMonitor:
@@ -58,7 +54,7 @@ class PerformanceMonitor:
         """记录响应时间"""
         self.response_times.append(duration)
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """获取统计信息"""
         return {
             "cpu_avg": statistics.mean(self.cpu_samples) if self.cpu_samples else 0,
@@ -101,7 +97,7 @@ class TestPodcastAPIPerformance:
             token = create_access_token(data={"sub": str(user.id)})
             return {"Authorization": f"Bearer {token}"}
 
-    async def test_subscription_creation_performance(self, client: AsyncClient, auth_headers: Dict[str, str], perf_monitor: PerformanceMonitor):
+    async def test_subscription_creation_performance(self, client: AsyncClient, auth_headers: dict[str, str], perf_monitor: PerformanceMonitor):
         """测试订阅创建性能"""
         TEST_RSS = "https://feed.xyzfm.space/mcklbwxjdvfu"
 
@@ -138,13 +134,13 @@ class TestPodcastAPIPerformance:
         assert p95_time < 10.0, f"P95响应时间过长: {p95_time:.2f}s"
 
         stats = perf_monitor.get_stats()
-        print(f"✓ 订阅创建性能:")
+        print("✓ 订阅创建性能:")
         print(f"  - 平均响应时间: {avg_time:.3f}s")
         print(f"  - P95响应时间: {p95_time:.3f}s")
         print(f"  - CPU平均使用率: {stats['cpu_avg']:.1f}%")
         print(f"  - 内存平均使用率: {stats['memory_avg']:.1f}%")
 
-    async def test_episodes_query_performance(self, client: AsyncClient, auth_headers: Dict[str, str], perf_monitor: PerformanceMonitor):
+    async def test_episodes_query_performance(self, client: AsyncClient, auth_headers: dict[str, str], perf_monitor: PerformanceMonitor):
         """测试单集查询性能"""
         # 先创建一些测试数据
         subscription_ids = []
@@ -203,14 +199,14 @@ class TestPodcastAPIPerformance:
 
         perf_monitor.stop_monitoring()
 
-    async def test_concurrent_subscription_creation(self, client: AsyncClient, auth_headers: Dict[str, str], perf_monitor: PerformanceMonitor):
+    async def test_concurrent_subscription_creation(self, client: AsyncClient, auth_headers: dict[str, str], perf_monitor: PerformanceMonitor):
         """测试并发订阅创建"""
         concurrent_users = 20
         requests_per_user = 5
 
         perf_monitor.start_monitoring()
 
-        async def create_subscriptions(user_id: int) -> Tuple[float, int]:
+        async def create_subscriptions(user_id: int) -> tuple[float, int]:
             """为单个用户创建订阅"""
             success_count = 0
             start_time = time.time()
@@ -256,7 +252,7 @@ class TestPodcastAPIPerformance:
         throughput = total_requests / total_time if total_time > 0 else 0
         success_rate = total_success / total_requests * 100
 
-        print(f"\n✓ 并发测试结果:")
+        print("\n✓ 并发测试结果:")
         print(f"  - 并发用户数: {concurrent_users}")
         print(f"  - 每用户请求数: {requests_per_user}")
         print(f"  - 总请求数: {total_requests}")
@@ -273,7 +269,7 @@ class TestPodcastAPIPerformance:
         assert success_rate >= 90, f"成功率过低: {success_rate:.1f}%"
         assert throughput >= 10, f"吞吐量过低: {throughput:.1f} 请求/秒"
 
-    async def test_playback_update_performance(self, client: AsyncClient, auth_headers: Dict[str, str], perf_monitor: PerformanceMonitor):
+    async def test_playback_update_performance(self, client: AsyncClient, auth_headers: dict[str, str], perf_monitor: PerformanceMonitor):
         """测试播放进度更新性能"""
         # 先获取一个episode ID
         response = await client.get("/api/v1/podcasts/episodes", headers=auth_headers)
@@ -315,7 +311,7 @@ class TestPodcastAPIPerformance:
         p95_time = statistics.quantiles(update_times, n=20)[18]
         throughput = update_count / sum(update_times)
 
-        print(f"\n✓ 播放进度更新性能:")
+        print("\n✓ 播放进度更新性能:")
         print(f"  - 更新次数: {update_count}")
         print(f"  - 平均响应时间: {avg_time:.3f}s")
         print(f"  - P95响应时间: {p95_time:.3f}s")
@@ -325,7 +321,7 @@ class TestPodcastAPIPerformance:
         assert avg_time < 0.1, f"平均响应时间过长: {avg_time:.3f}s"
         assert throughput >= 100, f"吞吐量过低: {throughput:.1f} 更新/秒"
 
-    async def test_search_performance(self, client: AsyncClient, auth_headers: Dict[str, str], perf_monitor: PerformanceMonitor):
+    async def test_search_performance(self, client: AsyncClient, auth_headers: dict[str, str], perf_monitor: PerformanceMonitor):
         """测试搜索性能"""
         # 先确保有足够的测试数据
         search_terms = ["播客", "Podcast", "技术", "Technology", "AI", "人工智能"]
@@ -354,7 +350,7 @@ class TestPodcastAPIPerformance:
         avg_time = statistics.mean(search_times)
         p95_time = statistics.quantiles(search_times, n=20)[18] if len(search_times) >= 20 else max(search_times)
 
-        print(f"\n✓ 搜索性能:")
+        print("\n✓ 搜索性能:")
         print(f"  - 搜索次数: {len(search_times)}")
         print(f"  - 平均响应时间: {avg_time:.3f}s")
         print(f"  - P95响应时间: {p95_time:.3f}s")
@@ -362,7 +358,7 @@ class TestPodcastAPIPerformance:
         # 性能断言
         assert avg_time < 1.0, f"平均搜索响应时间过长: {avg_time:.2f}s"
 
-    async def test_memory_leak_detection(self, client: AsyncClient, auth_headers: Dict[str, str]):
+    async def test_memory_leak_detection(self, client: AsyncClient, auth_headers: dict[str, str]):
         """测试内存泄漏"""
         # 记录初始内存使用
         process = psutil.Process()
@@ -394,7 +390,7 @@ class TestPodcastAPIPerformance:
         final_memory = process.memory_info().rss / 1024 / 1024  # MB
         memory_increase = final_memory - initial_memory
 
-        print(f"\n✓ 内存泄漏检测:")
+        print("\n✓ 内存泄漏检测:")
         print(f"  - 初始内存: {initial_memory:.1f} MB")
         print(f"  - 最终内存: {final_memory:.1f} MB")
         print(f"  - 内存增长: {memory_increase:.1f} MB")
@@ -471,7 +467,7 @@ class TestPodcastDatabasePerformance:
         success_count = sum(1 for r in results if r is True)
         throughput = concurrent_operations / total_time
 
-        print(f"\n✓ 并发数据库操作:")
+        print("\n✓ 并发数据库操作:")
         print(f"  - 并发操作数: {concurrent_operations}")
         print(f"  - 成功操作数: {success_count}")
         print(f"  - 总耗时: {total_time:.3f}s")

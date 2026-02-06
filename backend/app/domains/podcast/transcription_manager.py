@@ -351,6 +351,16 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
         """获取可用的转录模型列表"""
         return await self.model_manager.list_available_models()
 
+    async def delete_episode_transcription(self, episode_id: int) -> int | None:
+        """Delete latest transcription task for an episode and return task id."""
+        task = await self.get_episode_transcription(episode_id)
+        if not task:
+            return None
+        task_id = task.id
+        await self.db.delete(task)
+        await self.db.commit()
+        return task_id
+
     async def reset_stale_tasks(self):
         """
         重置所有处于中间状态的任务为失败

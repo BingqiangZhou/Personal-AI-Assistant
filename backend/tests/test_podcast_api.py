@@ -2,11 +2,12 @@
 Comprehensive API Validation Tests for Podcast Feature
 Tests security, models, and core functionality
 """
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 import asyncio
-import sys
 import io
+import sys
+
+import pytest
+
 
 # Fix encoding for Windows
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -39,7 +40,7 @@ class TestPodcastAPI:
 
         is_valid, error = validator.validate_rss_xml(oob_xml)
         assert is_valid is False, "OOB XXE should be blocked"
-        print(f"[PASS] OOB XXE blocked")
+        print("[PASS] OOB XXE blocked")
 
     def test_privacy_sanitization(self):
         """Security Test: PII must be filtered"""
@@ -96,7 +97,7 @@ class TestPodcastAPI:
         model_file = pathlib.Path(__file__).parent.parent / "app" / "domains" / "podcast" / "models.py"
         assert model_file.exists(), "Podcast models file missing"
 
-        with open(model_file, 'r', encoding='utf-8') as f:
+        with open(model_file, encoding='utf-8') as f:
             content = f.read()
 
         # Parse without executing (avoid import issues)
@@ -145,7 +146,7 @@ class TestPodcastAPI:
     @pytest.mark.asyncio
     async def test_redis_functions(self):
         """Integration Test: Redis operations (mocked)"""
-        from unittest.mock import AsyncMock, patch
+        from unittest.mock import AsyncMock
 
         # Mock Redis since we don't have real Redis
         mock_redis = AsyncMock()

@@ -1,15 +1,18 @@
 """Alembic environment configuration."""
 
 import asyncio
+import os
+import sys
 from datetime import timedelta
 from logging.config import fileConfig
+
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 from sqlalchemy.ext.declarative import declarative_base
+
 from alembic import context
-import os
-import sys
+
 
 # Add the app directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
@@ -20,6 +23,7 @@ Base = declarative_base()
 # === STEP 2: Mock modules to prevent circular imports ===
 import types
 
+
 # Mock Header class for security functions
 class Header:
     def __init__(self, default=None, **kwargs):
@@ -28,8 +32,10 @@ class Header:
         return self.default
 
 # Minimal settings for database URL
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings
+
 
 class MinimalSettings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/personal_ai_assistant"
@@ -39,7 +45,7 @@ class MinimalSettings(BaseSettings):
         case_sensitive = True
         extra = "ignore"
 
-@lru_cache()
+@lru_cache
 def get_minimal_settings():
     return MinimalSettings()
 
@@ -191,12 +197,6 @@ mock_database_module.engine = None
 sys.modules['app.core.database'] = mock_database_module
 
 # === STEP 3: Import all models ===
-from app.domains.user.models import User
-from app.domains.subscription.models import Subscription, SubscriptionItem
-from app.domains.assistant.models import Conversation, Message
-from app.domains.multimedia.models import MediaFile, ProcessingJob
-from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState, TranscriptionTask
-from app.domains.ai.models import AIModelConfig
 
 # === STEP 4: Configure Alembic ===
 config = context.config

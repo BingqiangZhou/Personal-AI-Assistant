@@ -2,6 +2,7 @@ import asyncio
 import os
 import sys
 
+
 # Set Mock Env Vars for Pydantic
 os.environ["DATABASE_URL"] = "postgresql+asyncpg://admin:MySecurePass2024!@localhost:5432/personal_ai"
 os.environ["REDIS_URL"] = "redis://localhost:6379"
@@ -10,10 +11,12 @@ os.environ["REDIS_URL"] = "redis://localhost:6379"
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.domains.user.models import User
+
+
 # from app.core.config import settings # Avoid importing if possible, or import after env set
 
 

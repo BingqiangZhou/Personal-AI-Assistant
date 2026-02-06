@@ -97,9 +97,7 @@ async def create_subscription(
     service = SubscriptionService(db, current_user.id)
 
     # Check for duplicate before creation
-    from sqlalchemy import func, select
 
-    from app.domains.subscription.models import Subscription
 
     # Duplicate detection is now handled at service layer with many-to-many support
     # No duplicate found - create subscription

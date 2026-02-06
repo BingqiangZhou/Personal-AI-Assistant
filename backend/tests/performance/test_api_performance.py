@@ -4,19 +4,18 @@ Performance Tests for API Endpoints
 Tests response times, cache effectiveness, and query efficiency.
 """
 
-import pytest
-import time
 import asyncio
-from typing import List, Dict, Any
-from httpx import AsyncClient
+import time
+from typing import Any
 
-from tests.conftactory import async_client, async_session
+import pytest
+from httpx import AsyncClient
 
 
 class PerformanceMetrics:
     """Track performance metrics during tests"""
     def __init__(self):
-        self.results: List[Dict[str, Any]] = []
+        self.results: list[dict[str, Any]] = []
 
     def add_result(self, name: str, duration_ms: float, passed: bool, details: str = ""):
         self.results.append({

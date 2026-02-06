@@ -873,3 +873,21 @@ backend/app/
 ---
 
 **注意**: 本重构需求遵循渐进式重构原则，分阶段实施，每阶段都有明确的验收标准和回滚方案。重构过程中保持向后兼容，确保不影响前端和其他依赖方。
+---
+
+## Implementation Deviation Note (2026-02-06)
+
+This section records implementation decisions that intentionally diverge from earlier draft assumptions:
+
+1. DI framework strategy
+- Draft expected full `dependency-injector` container integration.
+- Actual implementation removed the unused container framework and kept lightweight provider functions (`FastAPI Depends`) because container wiring was not used in runtime paths.
+
+2. Shared layer strategy
+- Draft expected a broad shared utility layer (`pagination`, `response_builder`, CRUD base abstractions).
+- Actual implementation keeps only currently reused shared modules and compatibility shims, removing unused abstractions to reduce maintenance overhead.
+
+3. Podcast route organization
+- Draft expected service/repository boundary improvements; implementation concretely split podcast routes into submodules while preserving public API paths and schemas.
+
+These deviations are intentional and aligned with the “pragmatic, currently-used architecture first” policy.

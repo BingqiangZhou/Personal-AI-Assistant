@@ -1,6 +1,7 @@
 """Test if alembic env.py can be imported without circular dependencies"""
-import sys
 import os
+import sys
+
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(__file__))

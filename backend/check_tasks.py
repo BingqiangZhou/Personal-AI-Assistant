@@ -2,16 +2,18 @@ import asyncio
 import os
 import sys
 
+
 # Add the backend directory to sys.path
 sys.path.append(os.getcwd())
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 # Use a workaround to import without knowing the exact structure if needed,
 # but we are in the backend folder, so app should be available.
-from app.domains.podcast.models import TranscriptionTask, TranscriptionStatus
+from app.domains.podcast.models import TranscriptionTask
+
 
 # Inside the container, DATABASE_URL is already defined in the environment.
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -31,7 +33,7 @@ async def check_tasks():
             result = await session.execute(stmt)
             tasks = result.scalars().all()
             
-            print(f"--- Recent Transcription Tasks ---")
+            print("--- Recent Transcription Tasks ---")
             print(f"Total tasks found (last 10): {len(tasks)}")
             for task in tasks:
                 print(f"ID: {task.id} | EpID: {task.episode_id} | Status: {task.status} | Progress: {task.progress_percentage}% | Updated: {task.updated_at}")
@@ -39,7 +41,7 @@ async def check_tasks():
                     print(f"  Error: {task.error_message}")
                 if task.chunk_info and isinstance(task.chunk_info, dict) and 'debug_message' in task.chunk_info:
                     print(f"  Debug: {task.chunk_info['debug_message']}")
-            print(f"----------------------------------")
+            print("----------------------------------")
     except Exception as e:
         print(f"Error checking tasks: {e}")
     finally:

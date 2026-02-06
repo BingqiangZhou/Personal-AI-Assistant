@@ -1,6 +1,7 @@
 """Test if alembic env.py can be imported without circular import errors"""
-import sys
 import os
+import sys
+
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(__file__))
@@ -13,7 +14,7 @@ try:
     env_path = os.path.join(os.path.dirname(__file__), 'alembic', 'env.py')
 
     # Read the file to check if it has the mock setup
-    with open(env_path, 'r') as f:
+    with open(env_path) as f:
         content = f.read()
 
     # Check for key components of the fix

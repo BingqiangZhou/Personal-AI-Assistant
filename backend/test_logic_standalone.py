@@ -1,7 +1,8 @@
 
+import enum
 import unittest
 from datetime import datetime, timedelta
-import enum
+
 
 # Mock Enums
 class UpdateFrequency(str, enum.Enum):

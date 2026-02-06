@@ -12,12 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.redis import PodcastRedis
+from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.schemas import PodcastSubscriptionCreate
 from app.domains.subscription.models import Subscription
 from app.domains.subscription.repositories import SubscriptionRepository
-from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 
 
 logger = logging.getLogger(__name__)
@@ -363,7 +363,6 @@ class PodcastSubscriptionService:
             ValueError: If subscription not found or refresh fails
         """
         # Import here to avoid circular dependency
-        from app.domains.podcast.services.summary_service import PodcastSummaryService
 
         sub = await self.repo.get_subscription_by_id(self.user_id, subscription_id)
         if not sub:
@@ -645,6 +644,7 @@ class PodcastSubscriptionService:
     ) -> Optional[Subscription]:
         """Validate subscription exists and belongs to user."""
         from sqlalchemy import and_, select
+
         from app.domains.subscription.models import UserSubscription
 
         stmt = (

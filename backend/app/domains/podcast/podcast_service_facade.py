@@ -7,6 +7,7 @@ while delegating to the new specialized services.
 本模块通过保持原始 PodcastService 接口同时委托给新的专业化服务来提供向后兼容性。
 """
 
+# ruff: noqa: UP007
 import logging
 from typing import Any, Optional
 
@@ -16,6 +17,7 @@ from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.services import (
     PodcastEpisodeService,
     PodcastPlaybackService,
+    PodcastScheduleService,
     PodcastSearchService,
     PodcastSubscriptionService,
     PodcastSummaryService,
@@ -62,6 +64,7 @@ class PodcastService:
         self.summary_service = PodcastSummaryService(db, user_id)
         self.search_service = PodcastSearchService(db, user_id)
         self.sync_service = PodcastSyncService(db, user_id)
+        self.schedule_service = PodcastScheduleService(db, user_id)
 
         # For backward compatibility, maintain reference to repo
         from app.domains.podcast.repositories import PodcastRepository
@@ -145,6 +148,50 @@ class PodcastService:
         return sub
 
     # === 播放与进度管理 (Playback Management) ===
+
+    # === Schedule Management ===
+
+    async def get_subscription_schedule(self, subscription_id: int) -> Optional[dict[str, Any]]:
+        """Get schedule settings for one subscription."""
+        return await self.schedule_service.get_subscription_schedule(subscription_id)
+
+    async def update_subscription_schedule(
+        self,
+        subscription_id: int,
+        update_frequency: str | None,
+        update_time: str | None,
+        update_day_of_week: int | None,
+        fetch_interval: int | None,
+    ) -> Optional[dict[str, Any]]:
+        """Update schedule settings for one subscription."""
+        return await self.schedule_service.update_subscription_schedule(
+            subscription_id=subscription_id,
+            update_frequency=update_frequency,
+            update_time=update_time,
+            update_day_of_week=update_day_of_week,
+            fetch_interval=fetch_interval,
+        )
+
+    async def get_all_subscription_schedules(self) -> list[dict[str, Any]]:
+        """Get schedule settings for all user podcast subscriptions."""
+        return await self.schedule_service.get_all_subscription_schedules()
+
+    async def batch_update_subscription_schedules(
+        self,
+        subscription_ids: list[int],
+        update_frequency: str | None,
+        update_time: str | None,
+        update_day_of_week: int | None,
+        fetch_interval: int | None,
+    ) -> list[dict[str, Any]]:
+        """Batch update schedule settings."""
+        return await self.schedule_service.batch_update_subscription_schedules(
+            subscription_ids=subscription_ids,
+            update_frequency=update_frequency,
+            update_time=update_time,
+            update_day_of_week=update_day_of_week,
+            fetch_interval=fetch_interval,
+        )
 
     async def update_playback_progress(
         self,

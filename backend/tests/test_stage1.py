@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys
-import os
+
 
 def test_imports():
     print('=== Stage 1: Import Validation ===')
@@ -31,7 +31,7 @@ def test_imports():
         if plugin_path.exists():
             spec = importlib.util.spec_from_file_location("podcast_models", plugin_path)
             # Just verify the file is valid Python without executing imports
-            with open(plugin_path, 'r', encoding='utf-8') as f:
+            with open(plugin_path, encoding='utf-8') as f:
                 content = f.read()
             import ast
             ast.parse(content)  # Check syntax
@@ -62,7 +62,7 @@ def test_imports():
         import pathlib
         plugin_path = pathlib.Path(__file__).parent / "app" / "integration" / "podcast" / "security.py"
         if plugin_path.exists():
-            with open(plugin_path, 'r', encoding='utf-8') as f:
+            with open(plugin_path, encoding='utf-8') as f:
                 content = f.read()
             import ast
             ast.parse(content)

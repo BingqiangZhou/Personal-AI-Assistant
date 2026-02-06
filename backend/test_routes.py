@@ -1,8 +1,11 @@
 """测试路由注册顺序"""
 import sys
+
+
 sys.path.insert(0, ".")
 
 from app.domains.podcast.api.routes import router
+
 
 print("=" * 80)
 print("Podcast Router Routes:")

@@ -17,6 +17,7 @@ from app.domains.podcast.integration.security import (
     PodcastSecurityValidator,
 )
 
+
 __all__ = [
     "PlatformDetector",
     "PodcastPlatform",

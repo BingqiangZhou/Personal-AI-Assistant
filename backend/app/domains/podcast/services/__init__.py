@@ -8,10 +8,12 @@ For backward compatibility, PodcastService facade is available from:
 
 Or use specialized services directly for better separation of concerns.
 """
+# ruff: noqa: I001
 
 # Import specialized services FIRST
 from .episode_service import PodcastEpisodeService
 from .playback_service import PodcastPlaybackService
+from .schedule_service import PodcastScheduleService
 from .search_service import PodcastSearchService
 from .subscription_service import PodcastSubscriptionService
 from .summary_service import PodcastSummaryService
@@ -29,4 +31,5 @@ __all__ = [
     "PodcastSummaryService",
     "PodcastSearchService",
     "PodcastSyncService",
+    "PodcastScheduleService",
 ]

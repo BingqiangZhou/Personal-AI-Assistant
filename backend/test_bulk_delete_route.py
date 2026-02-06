@@ -1,8 +1,11 @@
 """验证批量删除路由是否正确注册"""
 import sys
+
+
 sys.path.insert(0, ".")
 
 from app.domains.podcast.api.routes import router
+
 
 print("=" * 80)
 print("检查批量删除路由:")
@@ -15,7 +18,7 @@ for route in router.routes:
         methods = list(route.methods)
 
         if 'bulk-delete' in path or ('bulk' in path and 'DELETE' in methods) or ('bulk-delete' in path and 'POST' in methods):
-            print(f"✅ 找到批量删除路由:")
+            print("✅ 找到批量删除路由:")
             print(f"   方法: {methods[0]}")
             print(f"   路径: {path}")
             found = True
