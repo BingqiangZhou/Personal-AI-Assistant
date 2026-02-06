@@ -890,4 +890,14 @@ This section records implementation decisions that intentionally diverge from ea
 3. Podcast route organization
 - Draft expected service/repository boundary improvements; implementation concretely split podcast routes into submodules while preserving public API paths and schemas.
 
+4. Facade simplification
+- `PodcastService` is kept as a compatibility facade but reduced to delegation-only responsibilities.
+- User stats aggregation moved to a dedicated `PodcastStatsService`.
+- Unused private compatibility wrappers were removed; wrappers still referenced by runtime paths remain with deprecation markers.
+
+5. Core/shared compatibility shims
+- `app.core.feed_parser` and `app.core.feed_schemas` remain as compatibility shims pointing to `domains/subscription/parsers`.
+- Shim exports were completed to preserve legacy imports (`parse_feed_url`, `parse_feed_bytes`) used by admin/subscription flows.
+- Shared layer remains reduced to actively-used schema and file validation modules.
+
 These deviations are intentional and aligned with the “pragmatic, currently-used architecture first” policy.

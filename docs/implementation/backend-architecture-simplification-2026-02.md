@@ -25,6 +25,26 @@
   - `dependency-injector` removed from `backend/pyproject.toml`.
 - Shared layer kept only actively reused modules (`schemas`, `file_validation`, plus compatibility shims).
 
+## Phase 2 (Facade Thinning)
+- Added dedicated stats service:
+  - `backend/app/domains/podcast/services/stats_service.py`
+- `PodcastService.get_user_stats()` now delegates to `PodcastStatsService`.
+- `PodcastService` private compatibility methods were classified:
+  - kept with deprecation warning (still used by tasks/tests): `_generate_summary_task`, `_generate_summary`, `_call_llm_for_summary`, `_rule_based_summary`, `_calculate_listening_streak`
+  - removed as unused wrappers in current codebase: subscription/internal summary helper wrappers and episode-count helper wrappers.
+
+## Phase 3 (Core/Shared Simplification)
+- Core DI remains lightweight provider functions:
+  - `backend/app/core/container.py`
+- Legacy feed parser/schema imports stay compatible via core shims:
+  - `backend/app/core/feed_parser.py`
+  - `backend/app/core/feed_schemas.py`
+- Shim export completeness fixed:
+  - `app.core.feed_parser` now re-exports `parse_feed_url` and `parse_feed_bytes` in addition to parser types.
+- Shared layer remains minimal and runtime-used:
+  - `backend/app/shared/schemas.py`
+  - `backend/app/shared/file_validation.py`
+
 ## Compatibility Guarantees
 - No API path changes under `/api/v1/podcasts/*`.
 - No request/response schema contract changes intended.
@@ -35,3 +55,5 @@
   - `docs/reports/openapi-baseline-2026-02-06.json`
 - Diff helper:
   - `backend/scripts/check_openapi_diff.py`
+- Acceptance report:
+  - `docs/reports/backend-architecture-refactor-acceptance-2026-02-06.md`
