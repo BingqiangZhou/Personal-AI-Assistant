@@ -1,4 +1,24 @@
-"""Admin panel routes."""
+"""Admin panel routes.
+
+NOTE: This file contains legacy implementations that are being migrated to independent modules.
+The following routes have been migrated and are NO LONGER served from this file:
+- / -> dashboard.py (Dashboard route)
+- /setup -> setup_auth.py (Admin setup)
+- /login -> setup_auth.py (Login page)
+- POST /login -> setup_auth.py (Login handler)
+- POST /logout -> setup_auth.py (Logout handler)
+- /login/2fa -> setup_auth.py (2FA login verification)
+- /2fa/setup -> setup_auth.py (2FA setup page)
+- POST /2fa/verify -> setup_auth.py (2FA verification)
+- POST /2fa/disable -> setup_auth.py (Disable 2FA)
+
+The remaining routes below are still served from this file and need to be migrated:
+- /apikeys* -> apikeys.py (API Key management)
+- /settings* -> settings.py (System settings)
+- /subscriptions* -> subscriptions.py (Subscription management)
+- /users* -> users_audit.py (User management)
+- /monitoring* -> monitoring.py (System monitoring)
+"""
 import logging
 import secrets
 from datetime import datetime, timezone

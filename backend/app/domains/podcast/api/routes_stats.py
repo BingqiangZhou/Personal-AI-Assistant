@@ -2,8 +2,7 @@
 
 from fastapi import APIRouter, Depends, Request, Response
 
-from app.core.etag import generate_etag, matches_any_etag
-from app.core.etag_response import ETagResponse
+from app.core.etag import ETagResponse, generate_etag, matches_any_etag
 from app.domains.podcast.api.dependencies import get_podcast_service
 from app.domains.podcast.schemas import PodcastStatsResponse
 from app.domains.podcast.services import PodcastService

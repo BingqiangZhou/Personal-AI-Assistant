@@ -7,7 +7,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
-from app.core.etag_response import ETagResponse, check_etag_precondition
+from app.core.etag import ETagResponse, check_etag_precondition
 from app.domains.podcast.api.dependencies import (
     get_podcast_service,
     get_summary_service,

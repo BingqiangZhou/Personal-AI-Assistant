@@ -7,7 +7,7 @@ All endpoints here are mounted under:
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 
-from app.core.etag_response import ETagResponse, check_etag_precondition
+from app.core.etag import ETagResponse, check_etag_precondition
 from app.domains.podcast.api.dependencies import get_podcast_service
 from app.domains.podcast.schemas import (
     PodcastSearchFilter,
