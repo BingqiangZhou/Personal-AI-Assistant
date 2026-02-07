@@ -1,7 +1,7 @@
 """User domain models."""
 
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Integer, String, Text
 from sqlalchemy.orm import relationship
@@ -30,7 +30,7 @@ class User(Base):
     status = Column(String(20), default=UserStatus.ACTIVE)
     is_superuser = Column(Boolean, default=False)
     is_verified = Column(Boolean, default=False)
-    last_login_at = Column(DateTime, nullable=True)
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
     settings = Column(JSON, nullable=True, default={})
     preferences = Column(JSON, nullable=True, default={})
     api_key = Column(String(255), unique=True, nullable=True)
@@ -39,18 +39,13 @@ class User(Base):
     totp_secret = Column(String(32), nullable=True)  # Base32 encoded secret for TOTP
     is_2fa_enabled = Column(Boolean, default=False)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user_subscriptions = relationship("UserSubscription", back_populates="user", cascade="all, delete-orphan")
     subscriptions = relationship("Subscription", secondary="user_subscriptions", viewonly=True)
-    conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
-    assistant_tasks = relationship("AssistantTask", back_populates="user", cascade="all, delete-orphan")
-    media_files = relationship("MediaFile", back_populates="user", cascade="all, delete-orphan")
-    processing_jobs = relationship("ProcessingJob", back_populates="user", cascade="all, delete-orphan")
     subscription_categories = relationship("SubscriptionCategory", back_populates="user", cascade="all, delete-orphan")
-    prompt_templates = relationship("PromptTemplate", back_populates="user", cascade="all, delete-orphan")
 
     # Indexes
     __table_args__ = (
@@ -81,10 +76,10 @@ class UserSession(Base):
     device_info = Column(JSON, nullable=True)
     ip_address = Column(String(45), nullable=True)  # IPv6 compatible
     user_agent = Column(Text, nullable=True)
-    expires_at = Column(DateTime, nullable=False)
-    last_activity_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    last_activity_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Indexes
     __table_args__ = (
@@ -101,10 +96,10 @@ class PasswordReset(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), nullable=False, index=True)
     token = Column(String(255), unique=True, index=True, nullable=False)
-    expires_at = Column(DateTime, nullable=False)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
     is_used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Indexes
     __table_args__ = (

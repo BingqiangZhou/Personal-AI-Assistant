@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
-import '../../../../shared/widgets/custom_button.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/password_requirement_item.dart';
 
@@ -146,10 +145,14 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
-                  CustomButton(
-                    key: const Key('go_to_login_button'),
-                    text: l10n.auth_back_to_login,
-                    onPressed: () => context.go('/login'),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: FilledButton(
+                      key: const Key('go_to_login_button'),
+                      onPressed: () => context.go('/login'),
+                      child: Text(l10n.auth_back_to_login),
+                    ),
                   ),
                 ],
               ),
@@ -316,11 +319,23 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   const SizedBox(height: 32),
 
                   // Reset button
-                  CustomButton(
-                    key: const Key('reset_password_button'),
-                    text: l10n.auth_reset_password,
-                    onPressed: _submitResetPassword,
-                    isLoading: isLoading,
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: FilledButton(
+                      key: const Key('reset_password_button'),
+                      onPressed: isLoading ? null : _submitResetPassword,
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(l10n.auth_reset_password),
+                    ),
                   ),
                 ],
               ),

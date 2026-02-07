@@ -84,6 +84,18 @@ async def init_db(run_metadata_sync: bool = False) -> None:
     We handle this by creating them manually first with existence checks.
     """
     # Import all models to register relationships and metadata.
+    # This MUST happen before any database operations to ensure SQLAlchemy
+    # can properly resolve all relationships between models.
+    from app.admin.models import AdminAuditLog, BackgroundTaskRun, SystemSettings
+    from app.domains.ai.models import AIModelConfig
+    from app.domains.podcast.models import (
+        PodcastConversation, PodcastEpisode, PodcastPlaybackState, TranscriptionTask,
+    )
+    from app.domains.subscription.models import (
+        Subscription, SubscriptionCategory, SubscriptionCategoryMapping,
+        SubscriptionItem, UserSubscription,
+    )
+    from app.domains.user.models import PasswordReset, User, UserSession
 
     # Define ENUM types that need to be created if they don't exist
     enum_definitions = [

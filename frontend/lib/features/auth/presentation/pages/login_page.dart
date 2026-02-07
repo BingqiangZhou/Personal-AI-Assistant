@@ -9,7 +9,6 @@ import '../../../../core/providers/core_providers.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
-import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/server_config_dialog.dart';
 import '../providers/auth_provider.dart';
 
@@ -270,11 +269,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   const SizedBox(height: 32),
 
                   // Login button
-                  CustomButton(
-                    key: const Key('login_button'),
-                    text: l10n.auth_login,
-                    onPressed: _login,
-                    isLoading: isLoading,
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: FilledButton(
+                      key: const Key('login_button'),
+                      onPressed: isLoading ? null : _login,
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(l10n.auth_login),
+                    ),
                   ),
 
                   const SizedBox(height: 32),

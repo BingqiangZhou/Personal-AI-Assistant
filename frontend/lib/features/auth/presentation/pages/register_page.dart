@@ -8,7 +8,6 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
-import '../../../../shared/widgets/custom_button.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/password_requirement_item.dart';
 
@@ -390,11 +389,23 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   const SizedBox(height: 24),
 
                   // Register button
-                  CustomButton(
-                    key: const Key('register_button'),
-                    text: l10n.auth_create_account,
-                    onPressed: _register,
-                    isLoading: isLoading,
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: FilledButton(
+                      key: const Key('register_button'),
+                      onPressed: isLoading ? null : _register,
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(l10n.auth_create_account),
+                    ),
                   ),
 
                   const SizedBox(height: 16),

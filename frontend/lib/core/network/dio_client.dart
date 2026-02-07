@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Import ETag interceptor
@@ -15,8 +14,6 @@ import '../constants/app_constants.dart' as constants;
 import 'exceptions/network_exceptions.dart';
 import '../auth/auth_event.dart';
 import '../utils/app_logger.dart' as logger;
-
-final sl = GetIt.instance;
 
 class DioClient {
   late final Dio _dio;

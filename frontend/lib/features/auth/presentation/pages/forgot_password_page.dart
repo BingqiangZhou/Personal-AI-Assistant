@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
-import '../../../../shared/widgets/custom_button.dart';
 import '../providers/auth_provider.dart';
 
 class ForgotPasswordPage extends ConsumerStatefulWidget {
@@ -139,11 +138,23 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     const SizedBox(height: 32),
 
                     // Submit button
-                    CustomButton(
-                      key: const Key('forgot_password_submit_button'),
-                      text: l10n.auth_send_reset_link,
-                      onPressed: _submitForgotPassword,
-                      isLoading: isLoading,
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: FilledButton(
+                        key: const Key('forgot_password_submit_button'),
+                        onPressed: isLoading ? null : _submitForgotPassword,
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(l10n.auth_send_reset_link),
+                      ),
                     ),
                   ] else ...[
                     // Success message
@@ -194,11 +205,14 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                     const SizedBox(height: 48),
 
                     // Back to login button
-                    CustomButton(
-                      key: const Key('back_to_login_button'),
-                      text: l10n.auth_back_to_login,
-                      onPressed: () => context.go('/login'),
-                      isOutlined: true,
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton(
+                        key: const Key('back_to_login_button'),
+                        onPressed: () => context.go('/login'),
+                        child: Text(l10n.auth_back_to_login),
+                      ),
                     ),
 
                     const SizedBox(height: 16),

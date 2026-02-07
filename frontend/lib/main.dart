@@ -7,7 +7,6 @@ import 'dart:io' show Platform;
 
 import 'core/app/app.dart';
 import 'core/app/config/app_config.dart';
-import 'core/services/service_locator.dart';
 import 'core/storage/local_storage_service.dart';
 import 'features/podcast/presentation/providers/audio_handler.dart';
 
@@ -113,9 +112,6 @@ void main() async {
 
   // Set system UI mode to edgeToEdge to prevent system background
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
-  // Initialize services
-  await ServiceLocator.init();
 
   // Initialize SharedPreferences for LocalStorageService
   final prefs = await SharedPreferences.getInstance();
