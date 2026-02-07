@@ -11,7 +11,6 @@ AuthResponse _$AuthResponseFromJson(Map<String, dynamic> json) => AuthResponse(
   refreshToken: json['refreshToken'] as String,
   tokenType: json['tokenType'] as String,
   expiresIn: (json['expiresIn'] as num).toInt(),
-  user: UserModel.fromJson(json['user'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$AuthResponseToJson(AuthResponse instance) =>
@@ -20,11 +19,11 @@ Map<String, dynamic> _$AuthResponseToJson(AuthResponse instance) =>
       'refreshToken': instance.refreshToken,
       'tokenType': instance.tokenType,
       'expiresIn': instance.expiresIn,
-      'user': instance.user,
     };
 
 LoginRequest _$LoginRequestFromJson(Map<String, dynamic> json) => LoginRequest(
-  email: json['email'] as String,
+  email: json['email'] as String?,
+  username: json['username'] as String?,
   password: json['password'] as String,
   rememberMe: json['rememberMe'] as bool?,
 );
@@ -32,6 +31,7 @@ LoginRequest _$LoginRequestFromJson(Map<String, dynamic> json) => LoginRequest(
 Map<String, dynamic> _$LoginRequestToJson(LoginRequest instance) =>
     <String, dynamic>{
       'email': instance.email,
+      'username': instance.username,
       'password': instance.password,
       'rememberMe': instance.rememberMe,
     };
@@ -39,11 +39,9 @@ Map<String, dynamic> _$LoginRequestToJson(LoginRequest instance) =>
 RegisterRequest _$RegisterRequestFromJson(Map<String, dynamic> json) =>
     RegisterRequest(
       email: json['email'] as String,
-      username: json['username'] as String,
+      username: json['username'] as String?,
       password: json['password'] as String,
-      confirmPassword: json['confirmPassword'] as String,
-      firstName: json['firstName'] as String?,
-      lastName: json['lastName'] as String?,
+      rememberMe: json['rememberMe'] as bool?,
     );
 
 Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
@@ -51,14 +49,50 @@ Map<String, dynamic> _$RegisterRequestToJson(RegisterRequest instance) =>
       'email': instance.email,
       'username': instance.username,
       'password': instance.password,
-      'confirmPassword': instance.confirmPassword,
-      'firstName': instance.firstName,
-      'lastName': instance.lastName,
+      'rememberMe': instance.rememberMe,
     };
 
 RefreshTokenRequest _$RefreshTokenRequestFromJson(Map<String, dynamic> json) =>
-    RefreshTokenRequest(refreshToken: json['refreshToken'] as String);
+    RefreshTokenRequest(refreshToken: json['refresh_token'] as String);
 
 Map<String, dynamic> _$RefreshTokenRequestToJson(
   RefreshTokenRequest instance,
-) => <String, dynamic>{'refreshToken': instance.refreshToken};
+) => <String, dynamic>{'refresh_token': instance.refreshToken};
+
+ForgotPasswordRequest _$ForgotPasswordRequestFromJson(
+  Map<String, dynamic> json,
+) => ForgotPasswordRequest(email: json['email'] as String);
+
+Map<String, dynamic> _$ForgotPasswordRequestToJson(
+  ForgotPasswordRequest instance,
+) => <String, dynamic>{'email': instance.email};
+
+ResetPasswordRequest _$ResetPasswordRequestFromJson(
+  Map<String, dynamic> json,
+) => ResetPasswordRequest(
+  token: json['token'] as String,
+  newPassword: json['new_password'] as String,
+);
+
+Map<String, dynamic> _$ResetPasswordRequestToJson(
+  ResetPasswordRequest instance,
+) => <String, dynamic>{
+  'token': instance.token,
+  'new_password': instance.newPassword,
+};
+
+PasswordResetResponse _$PasswordResetResponseFromJson(
+  Map<String, dynamic> json,
+) => PasswordResetResponse(
+  message: json['message'] as String,
+  token: json['token'] as String?,
+  expiresAt: json['expiresAt'] as String?,
+);
+
+Map<String, dynamic> _$PasswordResetResponseToJson(
+  PasswordResetResponse instance,
+) => <String, dynamic>{
+  'message': instance.message,
+  'token': instance.token,
+  'expiresAt': instance.expiresAt,
+};

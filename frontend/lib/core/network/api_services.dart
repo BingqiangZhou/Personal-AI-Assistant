@@ -4,11 +4,26 @@ import 'package:dio/dio.dart';
 
 import '../../features/auth/models/user_model.dart';
 import '../../features/auth/models/auth_response.dart';
-import '../../features/assistant/models/chat_message_model.dart';
-import '../../features/assistant/models/chat_session_model.dart';
 import '../../features/subscription/models/subscription_model.dart';
+import 'models/api_response.dart';
 
 part 'api_services.g.dart';
+
+@JsonSerializable()
+class SimpleResponse {
+  final String? message;
+  final Map<String, dynamic>? data;
+
+  const SimpleResponse({
+    this.message,
+    this.data,
+  });
+
+  factory SimpleResponse.fromJson(Map<String, dynamic> json) =>
+      _$SimpleResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$SimpleResponseToJson(this);
+}
 
 @RestApi()
 abstract class ApiServices {
@@ -27,142 +42,47 @@ abstract class ApiServices {
   @POST('/auth/logout')
   Future<void> logout();
 
+  @POST('/auth/logout-all')
+  Future<void> logoutAll();
+
   @GET('/auth/me')
   Future<UserModel> getCurrentUser();
 
-  // Chat/AI Assistant endpoints
-  @GET('/assistant/sessions')
-  Future<List<ChatSessionModel>> getChatSessions();
+  @POST('/auth/forgot-password')
+  Future<SimpleResponse> forgotPassword(@Body() Map<String, dynamic> request);
 
-  @POST('/assistant/sessions')
-  Future<ChatSessionModel> createChatSession(@Body() Map<String, dynamic> request);
-
-  @GET('/assistant/sessions/{sessionId}')
-  Future<ChatSessionModel> getChatSession(@Path() String sessionId);
-
-  @PUT('/assistant/sessions/{sessionId}')
-  Future<ChatSessionModel> updateChatSession(
-    @Path() String sessionId,
-    @Body() Map<String, dynamic> request,
-  );
-
-  @DELETE('/assistant/sessions/{sessionId}')
-  Future<void> deleteChatSession(@Path() String sessionId);
-
-  @GET('/assistant/sessions/{sessionId}/messages')
-  Future<List<ChatMessageModel>> getChatMessages(
-    @Path() String sessionId, {
-    @Query('limit') int? limit,
-    @Query('offset') int? offset,
-  });
-
-  @POST('/assistant/sessions/{sessionId}/messages')
-  Future<ChatMessageModel> sendMessage(
-    @Path() String sessionId,
-    @Body() Map<String, dynamic> request,
-  );
-
-  @POST('/assistant/chat/stream')
-  Future<void> streamChat(@Body() Map<String, dynamic> request);
+  @POST('/auth/reset-password')
+  Future<SimpleResponse> resetPassword(@Body() Map<String, dynamic> request);
 
   // Subscription endpoints
-  @GET('/subscriptions')
+  @GET('/subscriptions/')
   Future<PaginatedResponse<SubscriptionModel>> getSubscriptions({
     @Query('page') int? page,
-    @Query('limit') int? limit,
-    @Query('type') String? type,
+    @Query('size') int? size,
+    @Query('source_type') String? sourceType,
     @Query('status') String? status,
   });
 
-  @POST('/subscriptions')
+  @POST('/subscriptions/')
   Future<SubscriptionModel> createSubscription(@Body() Map<String, dynamic> request);
 
   @GET('/subscriptions/{subscriptionId}')
-  Future<SubscriptionModel> getSubscription(@Path() String subscriptionId);
+  Future<SubscriptionModel> getSubscription(@Path('subscriptionId') int subscriptionId);
 
   @PUT('/subscriptions/{subscriptionId}')
   Future<SubscriptionModel> updateSubscription(
-    @Path() String subscriptionId,
+    @Path('subscriptionId') int subscriptionId,
     @Body() Map<String, dynamic> request,
   );
 
   @DELETE('/subscriptions/{subscriptionId}')
-  Future<void> deleteSubscription(@Path() String subscriptionId);
+  Future<void> deleteSubscription(@Path('subscriptionId') int subscriptionId);
 
-  @POST('/subscriptions/{subscriptionId}/refresh')
-  Future<SubscriptionModel> refreshSubscription(@Path() String subscriptionId);
+  @POST('/subscriptions/{subscriptionId}/fetch')
+  Future<SubscriptionModel> fetchSubscription(@Path('subscriptionId') int subscriptionId);
 
-  @GET('/subscriptions/types')
-  Future<void> getSubscriptionTypes();
-
-  // Multimedia endpoints
-  @POST('/multimedia/upload')
-  Future<void> uploadMediaFile(@Part(name: 'file') Map<String, dynamic> file);
-
-  @GET('/multimedia/files/{fileId}')
-  Future<void> getFile(@Path() String fileId);
-
-  @DELETE('/multimedia/files/{fileId}')
-  Future<void> deleteFile(@Path() String fileId);
-
-  @POST('/multimedia/process')
-  Future<void> processFile(@Body() Map<String, dynamic> request);
-}
-
-// Generic response models
-@JsonSerializable(genericArgumentFactories: true)
-class PaginatedResponse<T> {
-  final List<T> items;
-  final int totalCount;
-  final int currentPage;
-  final int totalPages;
-  @JsonKey(defaultValue: false)
-  final bool hasNextPage;
-
-  @JsonKey(defaultValue: false)
-  final bool hasPreviousPage;
-
-  const PaginatedResponse({
-    required this.items,
-    required this.totalCount,
-    required this.currentPage,
-    required this.totalPages,
-    required this.hasNextPage,
-    required this.hasPreviousPage,
-  });
-
-  factory PaginatedResponse.fromJson(
-    Map<String, dynamic> json,
-    T Function(Object? json) fromJsonT,
-  ) =>
-      _$PaginatedResponseFromJson(json, fromJsonT);
-
-  Map<String, dynamic> toJson(Object Function(T value) toJsonT) =>
-      _$PaginatedResponseToJson(this, toJsonT);
-}
-
-@JsonSerializable(genericArgumentFactories: true)
-class SearchResponse<T> {
-  final List<T> results;
-  final int totalCount;
-  final Map<String, dynamic> facets;
-  final Map<String, dynamic> metadata;
-
-  const SearchResponse({
-    required this.results,
-    required this.totalCount,
-    required this.facets,
-    required this.metadata,
-  });
-
-  factory SearchResponse.fromJson(
-    Map<String, dynamic> json,
-    T Function(Object? json) fromJsonT,
-  ) =>
-      _$SearchResponseFromJson(json, fromJsonT);
-
-  Map<String, dynamic> toJson(Object Function(T value) toJsonT) =>
-      _$SearchResponseToJson(this, toJsonT);
+  @POST('/subscriptions/fetch-all')
+  Future<void> fetchAllSubscriptions();
 }
 
 // WebSocket service for real-time updates
@@ -171,25 +91,4 @@ abstract class WebSocketService {
   void disconnect();
   Stream<dynamic> get messageStream;
   void sendMessage(Map<String, dynamic> message);
-}
-
-// API error response model
-@JsonSerializable()
-class ApiErrorResponse {
-  final String error;
-  final String message;
-  final int? statusCode;
-  final Map<String, dynamic>? details;
-
-  const ApiErrorResponse({
-    required this.error,
-    required this.message,
-    this.statusCode,
-    this.details,
-  });
-
-  factory ApiErrorResponse.fromJson(Map<String, dynamic> json) =>
-      _$ApiErrorResponseFromJson(json);
-
-  Map<String, dynamic> toJson() => _$ApiErrorResponseToJson(this);
 }

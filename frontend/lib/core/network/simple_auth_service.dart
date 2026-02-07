@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../../../features/auth/domain/models/auth_response.dart';
-import '../../../features/auth/domain/models/user.dart';
+import '../../../features/auth/models/auth_response.dart';
+import '../../../features/auth/models/user_model.dart';
 import '../app/config/app_config.dart';
 
 /// 简化版认证服务 - 绕过复杂的 Retrofit 代码生成
@@ -74,7 +74,7 @@ class SimpleAuthService {
   }
 
   /// 获取当前用户信息
-  Future<User> getCurrentUser() async {
+  Future<UserModel> getCurrentUser() async {
     final token = await _storage.read(key: 'access_token');
     if (token == null) throw Exception('No access token available');
 
@@ -84,18 +84,22 @@ class SimpleAuthService {
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
 
-      // Convert response to User object
+      // Convert response to UserModel object
       final data = response.data;
-      return User(
-        id: data['id'].toString(),
-        email: data['email'],
-        username: data['username'],
-        fullName: data['full_name'],
-        avatarUrl: data['avatar_url'],
-        isVerified: data['is_verified'] ?? false,
-        isActive: data['is_active'] ?? true,
-        isSuperuser: data['is_superuser'] ?? false,
-        createdAt: DateTime.parse(data['created_at']),
+      return UserModel(
+        id: data['id'] as int,
+        email: data['email'] as String,
+        username: data['username'] as String?,
+        fullName: data['account_name'] as String?,
+        avatar: data['avatar_url'] as String?,
+        isSuperuser: data['is_superuser'] as bool? ?? false,
+        isEmailVerified: data['is_verified'] as bool? ?? false,
+        status: data['status'] as String?,
+        createdAt: DateTime.parse(data['created_at'] as String),
+        updatedAt: data['updated_at'] != null ? DateTime.parse(data['updated_at'] as String) : null,
+        lastLoginAt: data['last_login_at'] != null ? DateTime.parse(data['last_login_at'] as String) : null,
+        preferences: data['preferences'] as Map<String, dynamic>?,
+        roles: data['roles'] != null ? List<String>.from(data['roles'] as List) : null,
       );
     } on DioException catch (e) {
       throw Exception('Get user failed: ${e.response?.data ?? e.message}');

@@ -3,39 +3,84 @@ import 'package:json_annotation/json_annotation.dart';
 part 'subscription_model.g.dart';
 
 @JsonSerializable()
-class SubscriptionModel {
-  final String id;
+class CategoryModel {
+  final int id;
   final String name;
   final String? description;
+  final String? color;
+  final DateTime? createdAt;
+
+  const CategoryModel({
+    required this.id,
+    required this.name,
+    this.description,
+    this.color,
+    this.createdAt,
+  });
+
+  factory CategoryModel.fromJson(Map<String, dynamic> json) =>
+      _$CategoryModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CategoryModelToJson(this);
+}
+
+@JsonSerializable()
+class SubscriptionModel {
+  final int id;
+
+  @JsonKey(name: 'title')
+  final String name;
+
+  final String? description;
+
+  @JsonKey(name: 'source_url')
   final String url;
-  final SubscriptionType type;
+
+  @JsonKey(name: 'source_type')
+  final String sourceType;
+
   final SubscriptionStatus status;
-  final SubscriptionConfig config;
+  final Map<String, dynamic>? config;
+
+  @JsonKey(name: 'item_count')
   final int itemCount;
+
+  @JsonKey(name: 'last_fetched_at')
   final DateTime? lastFetchedAt;
+
+  @JsonKey(name: 'latest_item_published_at')
+  final DateTime? latestItemPublishedAt;
+
+  @JsonKey(name: 'next_update_at')
+  final DateTime? nextUpdateAt;
+
+  @JsonKey(name: 'error_message')
+  final String? errorMessage;
+
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
+
+  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
-  final DateTime? nextFetchAt;
-  final Map<String, dynamic>? metadata;
-  final List<String>? tags;
-  final String? category;
+
+  final List<CategoryModel>? categories;
 
   const SubscriptionModel({
     required this.id,
     required this.name,
     this.description,
     required this.url,
-    required this.type,
+    required this.sourceType,
     required this.status,
-    required this.config,
+    this.config,
     this.itemCount = 0,
     this.lastFetchedAt,
+    this.latestItemPublishedAt,
+    this.nextUpdateAt,
+    this.errorMessage,
     required this.createdAt,
     required this.updatedAt,
-    this.nextFetchAt,
-    this.metadata,
-    this.tags,
-    this.category,
+    this.categories,
   });
 
   factory SubscriptionModel.fromJson(Map<String, dynamic> json) =>
@@ -44,38 +89,38 @@ class SubscriptionModel {
   Map<String, dynamic> toJson() => _$SubscriptionModelToJson(this);
 
   SubscriptionModel copyWith({
-    String? id,
+    int? id,
     String? name,
     String? description,
     String? url,
-    SubscriptionType? type,
+    String? sourceType,
     SubscriptionStatus? status,
-    SubscriptionConfig? config,
+    Map<String, dynamic>? config,
     int? itemCount,
     DateTime? lastFetchedAt,
+    DateTime? latestItemPublishedAt,
+    DateTime? nextUpdateAt,
+    String? errorMessage,
     DateTime? createdAt,
     DateTime? updatedAt,
-    DateTime? nextFetchAt,
-    Map<String, dynamic>? metadata,
-    List<String>? tags,
-    String? category,
+    List<CategoryModel>? categories,
   }) {
     return SubscriptionModel(
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
       url: url ?? this.url,
-      type: type ?? this.type,
+      sourceType: sourceType ?? this.sourceType,
       status: status ?? this.status,
       config: config ?? this.config,
       itemCount: itemCount ?? this.itemCount,
       lastFetchedAt: lastFetchedAt ?? this.lastFetchedAt,
+      latestItemPublishedAt: latestItemPublishedAt ?? this.latestItemPublishedAt,
+      nextUpdateAt: nextUpdateAt ?? this.nextUpdateAt,
+      errorMessage: errorMessage ?? this.errorMessage,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      nextFetchAt: nextFetchAt ?? this.nextFetchAt,
-      metadata: metadata ?? this.metadata,
-      tags: tags ?? this.tags,
-      category: category ?? this.category,
+      categories: categories ?? this.categories,
     );
   }
 
@@ -118,6 +163,8 @@ enum SubscriptionStatus {
   error,
   @JsonValue('paused')
   paused,
+  @JsonValue('pending')
+  pending,
 }
 
 @JsonSerializable()
@@ -152,22 +199,22 @@ class SubscriptionConfig {
 
 @JsonSerializable()
 class CreateSubscriptionRequest {
-  final String name;
+  final String title;
   final String? description;
+  @JsonKey(name: 'source_url')
   final String url;
-  final SubscriptionType type;
-  final SubscriptionConfig? config;
-  final List<String>? tags;
-  final String? category;
+  @JsonKey(name: 'source_type')
+  final String sourceType;
+  final Map<String, dynamic>? config;
+  final List<int>? categoryIds;
 
   const CreateSubscriptionRequest({
-    required this.name,
+    required this.title,
     this.description,
     required this.url,
-    required this.type,
+    required this.sourceType,
     this.config,
-    this.tags,
-    this.category,
+    this.categoryIds,
   });
 
   factory CreateSubscriptionRequest.fromJson(Map<String, dynamic> json) =>
@@ -178,22 +225,18 @@ class CreateSubscriptionRequest {
 
 @JsonSerializable()
 class UpdateSubscriptionRequest {
-  final String? name;
+  final String? title;
   final String? description;
-  final String? url;
-  final SubscriptionStatus? status;
-  final SubscriptionConfig? config;
-  final List<String>? tags;
-  final String? category;
+  final Map<String, dynamic>? config;
+  final int? fetchInterval;
+  final bool? isActive;
 
   const UpdateSubscriptionRequest({
-    this.name,
+    this.title,
     this.description,
-    this.url,
-    this.status,
     this.config,
-    this.tags,
-    this.category,
+    this.fetchInterval,
+    this.isActive,
   });
 
   factory UpdateSubscriptionRequest.fromJson(Map<String, dynamic> json) =>
@@ -205,33 +248,56 @@ class UpdateSubscriptionRequest {
 @JsonSerializable()
 class SubscriptionItemModel {
   final String id;
-  final String subscriptionId;
+
+  @JsonKey(name: 'subscription_id')
+  final int subscriptionId;
+
+  @JsonKey(name: 'external_id')
+  final String? externalId;
+
   final String title;
-  final String? description;
   final String? content;
-  final String? link;
+  final String? summary;
   final String? author;
+
+  @JsonKey(name: 'source_url')
+  final String? sourceUrl;
+
+  @JsonKey(name: 'image_url')
+  final String? imageUrl;
+
+  final List<String>? tags;
+
+  @JsonKey(name: 'metadata_json')
+  final Map<String, dynamic>? metadataJson;
+
+  @JsonKey(name: 'published_at')
   final DateTime? publishedAt;
+
+  @JsonKey(name: 'read_at')
+  final DateTime? readAt;
+
+  final bool? bookmarked;
+
+  @JsonKey(name: 'created_at')
   final DateTime createdAt;
-  final bool isRead;
-  final bool isBookmarked;
-  final List<String>? attachmentIds;
-  final Map<String, dynamic>? metadata;
 
   const SubscriptionItemModel({
     required this.id,
     required this.subscriptionId,
+    this.externalId,
     required this.title,
-    this.description,
     this.content,
-    this.link,
+    this.summary,
     this.author,
+    this.sourceUrl,
+    this.imageUrl,
+    this.tags,
+    this.metadataJson,
     this.publishedAt,
+    this.readAt,
+    this.bookmarked,
     required this.createdAt,
-    this.isRead = false,
-    this.isBookmarked = false,
-    this.attachmentIds,
-    this.metadata,
   });
 
   factory SubscriptionItemModel.fromJson(Map<String, dynamic> json) =>
@@ -239,11 +305,18 @@ class SubscriptionItemModel {
 
   Map<String, dynamic> toJson() => _$SubscriptionItemModelToJson(this);
 
+  bool get isRead => readAt != null;
+
   String get shortDescription {
-    if (description != null && description!.isNotEmpty) {
-      return description!.length > 150
-          ? '${description!.substring(0, 150)}...'
-          : description!;
+    if (summary != null && summary!.isNotEmpty) {
+      return summary!.length > 150
+          ? '${summary!.substring(0, 150)}...'
+          : summary!;
+    }
+    if (content != null && content!.isNotEmpty) {
+      return content!.length > 150
+          ? '${content!.substring(0, 150)}...'
+          : content!;
     }
     return '';
   }

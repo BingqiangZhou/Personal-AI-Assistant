@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/network/simple_auth_service.dart';
-import '../../../auth/domain/models/user.dart';
+import '../../../auth/models/user_model.dart';
 
 part 'user_provider.g.dart';
 
@@ -14,7 +14,7 @@ class UserNotifier extends _$UserNotifier {
   late SimpleAuthService _authService;
 
   @override
-  AsyncValue<User?> build() {
+  AsyncValue<UserModel?> build() {
     _authService = ref.read(simpleAuthServiceProvider);
     _loadUser();
     return const AsyncValue.loading();

@@ -6,59 +6,71 @@ part of 'subscription_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-SubscriptionModel _$SubscriptionModelFromJson(Map<String, dynamic> json) =>
-    SubscriptionModel(
-      id: json['id'] as String,
+CategoryModel _$CategoryModelFromJson(Map<String, dynamic> json) =>
+    CategoryModel(
+      id: (json['id'] as num).toInt(),
       name: json['name'] as String,
       description: json['description'] as String?,
-      url: json['url'] as String,
-      type: $enumDecode(_$SubscriptionTypeEnumMap, json['type']),
-      status: $enumDecode(_$SubscriptionStatusEnumMap, json['status']),
-      config: SubscriptionConfig.fromJson(
-        json['config'] as Map<String, dynamic>,
-      ),
-      itemCount: (json['itemCount'] as num?)?.toInt() ?? 0,
-      lastFetchedAt: json['lastFetchedAt'] == null
+      color: json['color'] as String?,
+      createdAt: json['createdAt'] == null
           ? null
-          : DateTime.parse(json['lastFetchedAt'] as String),
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      updatedAt: DateTime.parse(json['updatedAt'] as String),
-      nextFetchAt: json['nextFetchAt'] == null
-          ? null
-          : DateTime.parse(json['nextFetchAt'] as String),
-      metadata: json['metadata'] as Map<String, dynamic>?,
-      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
-      category: json['category'] as String?,
+          : DateTime.parse(json['createdAt'] as String),
     );
 
-Map<String, dynamic> _$SubscriptionModelToJson(SubscriptionModel instance) =>
+Map<String, dynamic> _$CategoryModelToJson(CategoryModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
       'description': instance.description,
-      'url': instance.url,
-      'type': _$SubscriptionTypeEnumMap[instance.type]!,
-      'status': _$SubscriptionStatusEnumMap[instance.status]!,
-      'config': instance.config,
-      'itemCount': instance.itemCount,
-      'lastFetchedAt': instance.lastFetchedAt?.toIso8601String(),
-      'createdAt': instance.createdAt.toIso8601String(),
-      'updatedAt': instance.updatedAt.toIso8601String(),
-      'nextFetchAt': instance.nextFetchAt?.toIso8601String(),
-      'metadata': instance.metadata,
-      'tags': instance.tags,
-      'category': instance.category,
+      'color': instance.color,
+      'createdAt': instance.createdAt?.toIso8601String(),
     };
 
-const _$SubscriptionTypeEnumMap = {
-  SubscriptionType.rss: 'rss',
-  SubscriptionType.atom: 'atom',
-  SubscriptionType.jsonFeed: 'json_feed',
-  SubscriptionType.webhook: 'webhook',
-  SubscriptionType.api: 'api',
-  SubscriptionType.reddit: 'reddit',
-  SubscriptionType.twitter: 'twitter',
-  SubscriptionType.youtube: 'youtube',
+SubscriptionModel _$SubscriptionModelFromJson(Map<String, dynamic> json) =>
+    SubscriptionModel(
+      id: (json['id'] as num).toInt(),
+      name: json['title'] as String,
+      description: json['description'] as String?,
+      url: json['source_url'] as String,
+      sourceType: json['source_type'] as String,
+      status: $enumDecode(_$SubscriptionStatusEnumMap, json['status']),
+      config: json['config'] as Map<String, dynamic>?,
+      itemCount: (json['item_count'] as num?)?.toInt() ?? 0,
+      lastFetchedAt: json['last_fetched_at'] == null
+          ? null
+          : DateTime.parse(json['last_fetched_at'] as String),
+      latestItemPublishedAt: json['latest_item_published_at'] == null
+          ? null
+          : DateTime.parse(json['latest_item_published_at'] as String),
+      nextUpdateAt: json['next_update_at'] == null
+          ? null
+          : DateTime.parse(json['next_update_at'] as String),
+      errorMessage: json['error_message'] as String?,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+      categories: (json['categories'] as List<dynamic>?)
+          ?.map((e) => CategoryModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$SubscriptionModelToJson(
+  SubscriptionModel instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'title': instance.name,
+  'description': instance.description,
+  'source_url': instance.url,
+  'source_type': instance.sourceType,
+  'status': _$SubscriptionStatusEnumMap[instance.status]!,
+  'config': instance.config,
+  'item_count': instance.itemCount,
+  'last_fetched_at': instance.lastFetchedAt?.toIso8601String(),
+  'latest_item_published_at': instance.latestItemPublishedAt?.toIso8601String(),
+  'next_update_at': instance.nextUpdateAt?.toIso8601String(),
+  'error_message': instance.errorMessage,
+  'created_at': instance.createdAt.toIso8601String(),
+  'updated_at': instance.updatedAt.toIso8601String(),
+  'categories': instance.categories,
 };
 
 const _$SubscriptionStatusEnumMap = {
@@ -66,6 +78,7 @@ const _$SubscriptionStatusEnumMap = {
   SubscriptionStatus.inactive: 'inactive',
   SubscriptionStatus.error: 'error',
   SubscriptionStatus.paused: 'paused',
+  SubscriptionStatus.pending: 'pending',
 };
 
 SubscriptionConfig _$SubscriptionConfigFromJson(Map<String, dynamic> json) =>
@@ -101,91 +114,87 @@ Map<String, dynamic> _$SubscriptionConfigToJson(SubscriptionConfig instance) =>
 CreateSubscriptionRequest _$CreateSubscriptionRequestFromJson(
   Map<String, dynamic> json,
 ) => CreateSubscriptionRequest(
-  name: json['name'] as String,
+  title: json['title'] as String,
   description: json['description'] as String?,
-  url: json['url'] as String,
-  type: $enumDecode(_$SubscriptionTypeEnumMap, json['type']),
-  config: json['config'] == null
-      ? null
-      : SubscriptionConfig.fromJson(json['config'] as Map<String, dynamic>),
-  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
-  category: json['category'] as String?,
+  url: json['source_url'] as String,
+  sourceType: json['source_type'] as String,
+  config: json['config'] as Map<String, dynamic>?,
+  categoryIds: (json['categoryIds'] as List<dynamic>?)
+      ?.map((e) => (e as num).toInt())
+      .toList(),
 );
 
 Map<String, dynamic> _$CreateSubscriptionRequestToJson(
   CreateSubscriptionRequest instance,
 ) => <String, dynamic>{
-  'name': instance.name,
+  'title': instance.title,
   'description': instance.description,
-  'url': instance.url,
-  'type': _$SubscriptionTypeEnumMap[instance.type]!,
+  'source_url': instance.url,
+  'source_type': instance.sourceType,
   'config': instance.config,
-  'tags': instance.tags,
-  'category': instance.category,
+  'categoryIds': instance.categoryIds,
 };
 
 UpdateSubscriptionRequest _$UpdateSubscriptionRequestFromJson(
   Map<String, dynamic> json,
 ) => UpdateSubscriptionRequest(
-  name: json['name'] as String?,
+  title: json['title'] as String?,
   description: json['description'] as String?,
-  url: json['url'] as String?,
-  status: $enumDecodeNullable(_$SubscriptionStatusEnumMap, json['status']),
-  config: json['config'] == null
-      ? null
-      : SubscriptionConfig.fromJson(json['config'] as Map<String, dynamic>),
-  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
-  category: json['category'] as String?,
+  config: json['config'] as Map<String, dynamic>?,
+  fetchInterval: (json['fetchInterval'] as num?)?.toInt(),
+  isActive: json['isActive'] as bool?,
 );
 
 Map<String, dynamic> _$UpdateSubscriptionRequestToJson(
   UpdateSubscriptionRequest instance,
 ) => <String, dynamic>{
-  'name': instance.name,
+  'title': instance.title,
   'description': instance.description,
-  'url': instance.url,
-  'status': _$SubscriptionStatusEnumMap[instance.status],
   'config': instance.config,
-  'tags': instance.tags,
-  'category': instance.category,
+  'fetchInterval': instance.fetchInterval,
+  'isActive': instance.isActive,
 };
 
 SubscriptionItemModel _$SubscriptionItemModelFromJson(
   Map<String, dynamic> json,
 ) => SubscriptionItemModel(
   id: json['id'] as String,
-  subscriptionId: json['subscriptionId'] as String,
+  subscriptionId: (json['subscription_id'] as num).toInt(),
+  externalId: json['external_id'] as String?,
   title: json['title'] as String,
-  description: json['description'] as String?,
   content: json['content'] as String?,
-  link: json['link'] as String?,
+  summary: json['summary'] as String?,
   author: json['author'] as String?,
-  publishedAt: json['publishedAt'] == null
+  sourceUrl: json['source_url'] as String?,
+  imageUrl: json['image_url'] as String?,
+  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+  metadataJson: json['metadata_json'] as Map<String, dynamic>?,
+  publishedAt: json['published_at'] == null
       ? null
-      : DateTime.parse(json['publishedAt'] as String),
-  createdAt: DateTime.parse(json['createdAt'] as String),
-  isRead: json['isRead'] as bool? ?? false,
-  isBookmarked: json['isBookmarked'] as bool? ?? false,
-  attachmentIds: (json['attachmentIds'] as List<dynamic>?)
-      ?.map((e) => e as String)
-      .toList(),
-  metadata: json['metadata'] as Map<String, dynamic>?,
+      : DateTime.parse(json['published_at'] as String),
+  readAt: json['read_at'] == null
+      ? null
+      : DateTime.parse(json['read_at'] as String),
+  bookmarked: json['bookmarked'] as bool?,
+  createdAt: DateTime.parse(json['created_at'] as String),
 );
 
 Map<String, dynamic> _$SubscriptionItemModelToJson(
   SubscriptionItemModel instance,
 ) => <String, dynamic>{
   'id': instance.id,
-  'subscriptionId': instance.subscriptionId,
+  'subscription_id': instance.subscriptionId,
+  'external_id': instance.externalId,
   'title': instance.title,
-  'description': instance.description,
   'content': instance.content,
-  'link': instance.link,
+  'summary': instance.summary,
   'author': instance.author,
-  'publishedAt': instance.publishedAt?.toIso8601String(),
-  'createdAt': instance.createdAt.toIso8601String(),
-  'isRead': instance.isRead,
-  'isBookmarked': instance.isBookmarked,
-  'attachmentIds': instance.attachmentIds,
-  'metadata': instance.metadata,
+  'source_url': instance.sourceUrl,
+  'image_url': instance.imageUrl,
+  'tags': instance.tags,
+  'metadata_json': instance.metadataJson,
+  'published_at': instance.publishedAt?.toIso8601String(),
+  'read_at': instance.readAt?.toIso8601String(),
+  'bookmarked': instance.bookmarked,
+  'created_at': instance.createdAt.toIso8601String(),
 };

@@ -10,7 +10,7 @@ import '../../features/auth/presentation/pages/auth_verify_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
-import '../../features/assistant/presentation/pages/assistant_chat_page.dart';
+// import '../../features/assistant/presentation/pages/assistant_chat_page.dart'; // Assistant backend removed
 import '../../features/podcast/presentation/pages/podcast_list_page.dart';
 import '../../features/podcast/presentation/pages/podcast_player_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
@@ -75,13 +75,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/home',
         name: 'home',
         builder: (context, state) => const HomePage(),
-        routes: [
-          GoRoute(
-            path: 'assistant',
-            name: 'assistant',
-            builder: (context, state) => const AssistantChatPage(),
-          ),
-        ],
+        // routes: [
+        //   GoRoute(
+        //     path: 'assistant',
+        //     name: 'assistant',
+        //     builder: (context, state) => const AssistantChatPage(),
+        //   ),
+        // ],
       ),
 
       // Podcast routes (no bottom nav)

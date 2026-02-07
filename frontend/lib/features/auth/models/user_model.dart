@@ -4,28 +4,45 @@ part 'user_model.g.dart';
 
 @JsonSerializable()
 class UserModel {
-  final int id;  // Match backend: int
-  final String email;
-  final String? username;  // Can be null from backend
-  final String? avatar;  // avatar_url from backend
-  @JsonKey(defaultValue: false)
-  final bool isActive;  // is_active from backend
+  final int id;
 
-  @JsonKey(defaultValue: false)
-  final bool isEmailVerified;  // is_verified from backend
+  final String email;
+
+  final String? username;
+
+  @JsonKey(name: 'account_name')
+  final String? fullName;
+
+  @JsonKey(name: 'avatar_url')
+  final String? avatar;
+
+  @JsonKey(name: 'is_superuser')
+  final bool isSuperuser;
+
+  @JsonKey(name: 'is_verified')
+  final bool isEmailVerified;
+
+  final String? status;
+
   final DateTime createdAt;
-  final DateTime? updatedAt;  // Optional since backend doesn't return this
-  final DateTime? lastLoginAt;  // Optional
-  final Map<String, dynamic>? preferences;  // Optional
-  final List<String>? roles;  // Optional
+
+  final DateTime? updatedAt;
+
+  final DateTime? lastLoginAt;
+
+  final Map<String, dynamic>? preferences;
+
+  final List<String>? roles;
 
   const UserModel({
     required this.id,
     required this.email,
     this.username,
+    this.fullName,
     this.avatar,
-    required this.isActive,
+    required this.isSuperuser,
     required this.isEmailVerified,
+    this.status,
     required this.createdAt,
     this.updatedAt,
     this.lastLoginAt,
@@ -38,13 +55,17 @@ class UserModel {
 
   Map<String, dynamic> toJson() => _$UserModelToJson(this);
 
+  bool get isActive => status == 'ACTIVE' || status == 'active';
+
   UserModel copyWith({
     int? id,
     String? email,
     String? username,
+    String? fullName,
     String? avatar,
-    bool? isActive,
+    bool? isSuperuser,
     bool? isEmailVerified,
+    String? status,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? lastLoginAt,
@@ -55,9 +76,11 @@ class UserModel {
       id: id ?? this.id,
       email: email ?? this.email,
       username: username ?? this.username,
+      fullName: fullName ?? this.fullName,
       avatar: avatar ?? this.avatar,
-      isActive: isActive ?? this.isActive,
+      isSuperuser: isSuperuser ?? this.isSuperuser,
       isEmailVerified: isEmailVerified ?? this.isEmailVerified,
+      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
@@ -67,12 +90,17 @@ class UserModel {
   }
 
   String get displayName {
-    return username ?? email;
+    return fullName ?? username ?? email;
   }
 
   String get initials {
-    if (username != null && username!.isNotEmpty) {
-      return username!.substring(0, 2).toUpperCase();
+    final name = fullName ?? username;
+    if (name != null && name.isNotEmpty) {
+      final parts = name.trim().split(' ');
+      if (parts.length >= 2) {
+        return '${parts[0][0].toUpperCase()}${parts[1][0].toUpperCase()}';
+      }
+      return name.substring(0, name.length > 1 ? 2 : 1).toUpperCase();
     }
     return email.substring(0, 2).toUpperCase();
   }

@@ -6,65 +6,14 @@ part of 'api_services.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-PaginatedResponse<T> _$PaginatedResponseFromJson<T>(
-  Map<String, dynamic> json,
-  T Function(Object? json) fromJsonT,
-) => PaginatedResponse<T>(
-  items: (json['items'] as List<dynamic>).map(fromJsonT).toList(),
-  totalCount: (json['totalCount'] as num).toInt(),
-  currentPage: (json['currentPage'] as num).toInt(),
-  totalPages: (json['totalPages'] as num).toInt(),
-  hasNextPage: json['hasNextPage'] as bool? ?? false,
-  hasPreviousPage: json['hasPreviousPage'] as bool? ?? false,
-);
-
-Map<String, dynamic> _$PaginatedResponseToJson<T>(
-  PaginatedResponse<T> instance,
-  Object? Function(T value) toJsonT,
-) => <String, dynamic>{
-  'items': instance.items.map(toJsonT).toList(),
-  'totalCount': instance.totalCount,
-  'currentPage': instance.currentPage,
-  'totalPages': instance.totalPages,
-  'hasNextPage': instance.hasNextPage,
-  'hasPreviousPage': instance.hasPreviousPage,
-};
-
-SearchResponse<T> _$SearchResponseFromJson<T>(
-  Map<String, dynamic> json,
-  T Function(Object? json) fromJsonT,
-) => SearchResponse<T>(
-  results: (json['results'] as List<dynamic>).map(fromJsonT).toList(),
-  totalCount: (json['totalCount'] as num).toInt(),
-  facets: json['facets'] as Map<String, dynamic>,
-  metadata: json['metadata'] as Map<String, dynamic>,
-);
-
-Map<String, dynamic> _$SearchResponseToJson<T>(
-  SearchResponse<T> instance,
-  Object? Function(T value) toJsonT,
-) => <String, dynamic>{
-  'results': instance.results.map(toJsonT).toList(),
-  'totalCount': instance.totalCount,
-  'facets': instance.facets,
-  'metadata': instance.metadata,
-};
-
-ApiErrorResponse _$ApiErrorResponseFromJson(Map<String, dynamic> json) =>
-    ApiErrorResponse(
-      error: json['error'] as String,
-      message: json['message'] as String,
-      statusCode: (json['statusCode'] as num?)?.toInt(),
-      details: json['details'] as Map<String, dynamic>?,
+SimpleResponse _$SimpleResponseFromJson(Map<String, dynamic> json) =>
+    SimpleResponse(
+      message: json['message'] as String?,
+      data: json['data'] as Map<String, dynamic>?,
     );
 
-Map<String, dynamic> _$ApiErrorResponseToJson(ApiErrorResponse instance) =>
-    <String, dynamic>{
-      'error': instance.error,
-      'message': instance.message,
-      'statusCode': instance.statusCode,
-      'details': instance.details,
-    };
+Map<String, dynamic> _$SimpleResponseToJson(SimpleResponse instance) =>
+    <String, dynamic>{'message': instance.message, 'data': instance.data};
 
 // dart format off
 
@@ -187,6 +136,25 @@ class _ApiServices implements ApiServices {
   }
 
   @override
+  Future<void> logoutAll() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<void>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/auth/logout-all',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    await _dio.fetch<void>(_options);
+  }
+
+  @override
   Future<UserModel> getCurrentUser() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
@@ -214,59 +182,26 @@ class _ApiServices implements ApiServices {
   }
 
   @override
-  Future<List<ChatSessionModel>> getChatSessions() async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<ChatSessionModel>>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/assistant/sessions',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<ChatSessionModel> _value;
-    try {
-      _value = _result.data!
-          .map(
-            (dynamic i) => ChatSessionModel.fromJson(i as Map<String, dynamic>),
-          )
-          .toList();
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, response: _result);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<ChatSessionModel> createChatSession(
-    Map<String, dynamic> request,
-  ) async {
+  Future<SimpleResponse> forgotPassword(Map<String, dynamic> request) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(request);
-    final _options = _setStreamType<ChatSessionModel>(
+    final _options = _setStreamType<SimpleResponse>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/assistant/sessions',
+            '/auth/forgot-password',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late ChatSessionModel _value;
+    late SimpleResponse _value;
     try {
-      _value = ChatSessionModel.fromJson(_result.data!);
+      _value = SimpleResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
@@ -275,184 +210,45 @@ class _ApiServices implements ApiServices {
   }
 
   @override
-  Future<ChatSessionModel> getChatSession(String sessionId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<ChatSessionModel>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/assistant/sessions/${sessionId}',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late ChatSessionModel _value;
-    try {
-      _value = ChatSessionModel.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, response: _result);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<ChatSessionModel> updateChatSession(
-    String sessionId,
-    Map<String, dynamic> request,
-  ) async {
+  Future<SimpleResponse> resetPassword(Map<String, dynamic> request) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(request);
-    final _options = _setStreamType<ChatSessionModel>(
-      Options(method: 'PUT', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/assistant/sessions/${sessionId}',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late ChatSessionModel _value;
-    try {
-      _value = ChatSessionModel.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, response: _result);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<void> deleteChatSession(String sessionId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<void>(
-      Options(method: 'DELETE', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/assistant/sessions/${sessionId}',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    await _dio.fetch<void>(_options);
-  }
-
-  @override
-  Future<List<ChatMessageModel>> getChatMessages(
-    String sessionId, {
-    int? limit,
-    int? offset,
-  }) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{
-      r'limit': limit,
-      r'offset': offset,
-    };
-    queryParameters.removeWhere((k, v) => v == null);
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<ChatMessageModel>>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/assistant/sessions/${sessionId}/messages',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<ChatMessageModel> _value;
-    try {
-      _value = _result.data!
-          .map(
-            (dynamic i) => ChatMessageModel.fromJson(i as Map<String, dynamic>),
-          )
-          .toList();
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, response: _result);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<ChatMessageModel> sendMessage(
-    String sessionId,
-    Map<String, dynamic> request,
-  ) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(request);
-    final _options = _setStreamType<ChatMessageModel>(
+    final _options = _setStreamType<SimpleResponse>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/assistant/sessions/${sessionId}/messages',
+            '/auth/reset-password',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late ChatMessageModel _value;
+    late SimpleResponse _value;
     try {
-      _value = ChatMessageModel.fromJson(_result.data!);
+      _value = SimpleResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     return _value;
-  }
-
-  @override
-  Future<void> streamChat(Map<String, dynamic> request) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(request);
-    final _options = _setStreamType<void>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/assistant/chat/stream',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    await _dio.fetch<void>(_options);
   }
 
   @override
   Future<PaginatedResponse<SubscriptionModel>> getSubscriptions({
     int? page,
-    int? limit,
-    String? type,
+    int? size,
+    String? sourceType,
     String? status,
   }) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
       r'page': page,
-      r'limit': limit,
-      r'type': type,
+      r'size': size,
+      r'source_type': sourceType,
       r'status': status,
     };
     queryParameters.removeWhere((k, v) => v == null);
@@ -462,7 +258,7 @@ class _ApiServices implements ApiServices {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/subscriptions',
+            '/subscriptions/',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -495,7 +291,7 @@ class _ApiServices implements ApiServices {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/subscriptions',
+            '/subscriptions/',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -513,7 +309,7 @@ class _ApiServices implements ApiServices {
   }
 
   @override
-  Future<SubscriptionModel> getSubscription(String subscriptionId) async {
+  Future<SubscriptionModel> getSubscription(int subscriptionId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -541,7 +337,7 @@ class _ApiServices implements ApiServices {
 
   @override
   Future<SubscriptionModel> updateSubscription(
-    String subscriptionId,
+    int subscriptionId,
     Map<String, dynamic> request,
   ) async {
     final _extra = <String, dynamic>{};
@@ -571,7 +367,7 @@ class _ApiServices implements ApiServices {
   }
 
   @override
-  Future<void> deleteSubscription(String subscriptionId) async {
+  Future<void> deleteSubscription(int subscriptionId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -590,7 +386,7 @@ class _ApiServices implements ApiServices {
   }
 
   @override
-  Future<SubscriptionModel> refreshSubscription(String subscriptionId) async {
+  Future<SubscriptionModel> fetchSubscription(int subscriptionId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -599,7 +395,7 @@ class _ApiServices implements ApiServices {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/subscriptions/${subscriptionId}/refresh',
+            '/subscriptions/${subscriptionId}/fetch',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -617,93 +413,16 @@ class _ApiServices implements ApiServices {
   }
 
   @override
-  Future<void> getSubscriptionTypes() async {
+  Future<void> fetchAllSubscriptions() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<void>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/subscriptions/types',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    await _dio.fetch<void>(_options);
-  }
-
-  @override
-  Future<void> uploadMediaFile(Map<String, dynamic> file) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = FormData.fromMap(file);
     final _options = _setStreamType<void>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/multimedia/upload',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    await _dio.fetch<void>(_options);
-  }
-
-  @override
-  Future<void> getFile(String fileId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<void>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/multimedia/files/${fileId}',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    await _dio.fetch<void>(_options);
-  }
-
-  @override
-  Future<void> deleteFile(String fileId) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<void>(
-      Options(method: 'DELETE', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/multimedia/files/${fileId}',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    await _dio.fetch<void>(_options);
-  }
-
-  @override
-  Future<void> processFile(Map<String, dynamic> request) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(request);
-    final _options = _setStreamType<void>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/multimedia/process',
+            '/subscriptions/fetch-all',
             queryParameters: queryParameters,
             data: _data,
           )

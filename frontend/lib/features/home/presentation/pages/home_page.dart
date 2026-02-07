@@ -6,7 +6,7 @@ import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
 import '../../../podcast/presentation/widgets/side_floating_player_widget.dart';
-import '../../../assistant/presentation/pages/assistant_chat_page.dart';
+// import '../../../assistant/presentation/pages/assistant_chat_page.dart'; // Assistant backend removed
 import '../../../profile/presentation/pages/profile_page.dart';
 
 /// Material Design 3自适应主页
@@ -39,11 +39,11 @@ class _HomePageState extends ConsumerState<HomePage> {
         selectedIcon: Icon(Icons.podcasts),
         label: l10n.nav_podcast,
       ),
-      NavigationDestination(
-        icon: Icon(Icons.chat_outlined),
-        selectedIcon: Icon(Icons.chat),
-        label: l10n.nav_chat,
-      ),
+      // NavigationDestination(
+      //   icon: Icon(Icons.chat_outlined),
+      //   selectedIcon: Icon(Icons.chat),
+      //   label: l10n.nav_chat,
+      // ),
       NavigationDestination(
         icon: Icon(Icons.person_outline),
         selectedIcon: Icon(Icons.person),
@@ -121,8 +121,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       case 1:
         return const PodcastListPage();
       case 2:
-        return const AssistantChatPage();
-      case 3:
         return const ProfilePage();
       default:
         return const Center(

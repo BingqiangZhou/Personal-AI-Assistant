@@ -1,5 +1,4 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'user_model.dart';
 
 part 'auth_response.g.dart';
 
@@ -9,14 +8,12 @@ class AuthResponse {
   final String refreshToken;
   final String tokenType;
   final int expiresIn;
-  final UserModel user;
 
   const AuthResponse({
     required this.accessToken,
     required this.refreshToken,
     required this.tokenType,
     required this.expiresIn,
-    required this.user,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) =>
@@ -27,12 +24,14 @@ class AuthResponse {
 
 @JsonSerializable()
 class LoginRequest {
-  final String email;
+  final String? email;
+  final String? username;
   final String password;
   final bool? rememberMe;
 
   const LoginRequest({
-    required this.email,
+    this.email,
+    this.username,
     required this.password,
     this.rememberMe,
   });
@@ -46,19 +45,15 @@ class LoginRequest {
 @JsonSerializable()
 class RegisterRequest {
   final String email;
-  final String username;
+  final String? username;
   final String password;
-  final String confirmPassword;
-  final String? firstName;
-  final String? lastName;
+  final bool? rememberMe;
 
   const RegisterRequest({
     required this.email,
-    required this.username,
+    this.username,
     required this.password,
-    required this.confirmPassword,
-    this.firstName,
-    this.lastName,
+    this.rememberMe,
   });
 
   factory RegisterRequest.fromJson(Map<String, dynamic> json) =>
@@ -69,6 +64,7 @@ class RegisterRequest {
 
 @JsonSerializable()
 class RefreshTokenRequest {
+  @JsonKey(name: 'refresh_token')
   final String refreshToken;
 
   const RefreshTokenRequest({
@@ -79,4 +75,53 @@ class RefreshTokenRequest {
       _$RefreshTokenRequestFromJson(json);
 
   Map<String, dynamic> toJson() => _$RefreshTokenRequestToJson(this);
+}
+
+@JsonSerializable()
+class ForgotPasswordRequest {
+  final String email;
+
+  const ForgotPasswordRequest({
+    required this.email,
+  });
+
+  factory ForgotPasswordRequest.fromJson(Map<String, dynamic> json) =>
+      _$ForgotPasswordRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ForgotPasswordRequestToJson(this);
+}
+
+@JsonSerializable()
+class ResetPasswordRequest {
+  final String token;
+  @JsonKey(name: 'new_password')
+  final String newPassword;
+
+  const ResetPasswordRequest({
+    required this.token,
+    required this.newPassword,
+  });
+
+  factory ResetPasswordRequest.fromJson(Map<String, dynamic> json) =>
+      _$ResetPasswordRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ResetPasswordRequestToJson(this);
+}
+
+@JsonSerializable()
+class PasswordResetResponse {
+  final String message;
+  final String? token;
+  final String? expiresAt;
+
+  const PasswordResetResponse({
+    required this.message,
+    this.token,
+    this.expiresAt,
+  });
+
+  factory PasswordResetResponse.fromJson(Map<String, dynamic> json) =>
+      _$PasswordResetResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PasswordResetResponseToJson(this);
 }
