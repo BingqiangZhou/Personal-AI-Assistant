@@ -34,7 +34,4 @@ def test_legacy_podcast_subscription_routes_removed() -> None:
     assert "/api/v1/podcasts/subscriptions/schedule/all" not in paths
 
 
-def test_admin_task_monitoring_route_exists() -> None:
-    paths = _route_paths()
-
-    assert "/super/api/monitoring/tasks" in paths
+# Monitoring routes have been removed

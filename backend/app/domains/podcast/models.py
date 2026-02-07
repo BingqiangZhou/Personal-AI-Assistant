@@ -235,11 +235,11 @@ class TranscriptionTask(Base):
     chunk_size_mb = Column(Integer, default=10)  # 分片大小（MB）
     model_used = Column(String(100))  # 使用的转录模型
 
-    # 时间戳
-    created_at = Column(DateTime, default=datetime.utcnow)
-    started_at = Column(DateTime)  # 任务开始时间
-    completed_at = Column(DateTime)  # 任务完成时间
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    # 时间戳 (使用 timezone-aware datetime)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    started_at = Column(DateTime(timezone=True))  # 任务开始时间
+    completed_at = Column(DateTime(timezone=True))  # 任务完成时间
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     episode = relationship("PodcastEpisode", backref="transcription_task")

@@ -122,6 +122,11 @@ async def create_subscriptions_batch(
     )
 
 
+# Include podcast sub-router BEFORE /{subscription_id} routes
+# to prevent "podcasts" from being matched as a subscription_id
+router.include_router(podcast_router)
+
+
 @router.get("/{subscription_id}", response_model=SubscriptionResponse)
 async def get_subscription(
     subscription_id: int,
@@ -347,6 +352,3 @@ async def remove_subscription_from_category(
     if not success:
         raise HTTPException(status_code=404, detail="Mapping not found")
     return {"message": "Subscription removed from category"}
-
-
-router.include_router(podcast_router)

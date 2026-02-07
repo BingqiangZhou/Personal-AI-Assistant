@@ -70,16 +70,28 @@ async def apikeys_page(
 
         # Decrypt and mask API keys for display
         for config in apikeys:
-            if config.api_key_encrypted and config.api_key:
+            # Check if API key exists (truthy check for both string and None)
+            if not config.api_key or not config.api_key.strip():
+                logger.warning(f"API key for config {config.id} ({config.name}) is empty or None")
+                config.api_key = '****'
+            elif config.api_key_encrypted:
                 try:
                     decrypted_key = decrypt_data(config.api_key)
                     # Mask the API key: show first 4 and last 4 characters
                     if len(decrypted_key) > 8:
                         config.api_key = decrypted_key[:4] + '****' + decrypted_key[-4:]
                     else:
+                        logger.warning(f"Decrypted API key for config {config.id} ({config.name}) is too short: {len(decrypted_key)} chars")
                         config.api_key = '****'
                 except Exception as e:
-                    logger.warning(f"Failed to decrypt API key for config {config.id}: {e}")
+                    logger.warning(f"Failed to decrypt API key for config {config.id} ({config.name}): {type(e).__name__}: {e}. Encrypted key length: {len(config.api_key)}, starts with: {config.api_key[:20] if len(config.api_key) >= 20 else config.api_key}")
+                    # Show clear message that the key needs to be re-entered
+                    config.api_key = '[密钥无法解密-请重新编辑]'
+            else:
+                # Not encrypted - mask the original value
+                if len(config.api_key) > 8:
+                    config.api_key = config.api_key[:4] + '****' + config.api_key[-4:]
+                else:
                     config.api_key = '****'
 
         return templates.TemplateResponse(
@@ -182,6 +194,14 @@ async def create_apikey(
     try:
         # Encrypt the API key using Fernet symmetric encryption
         encrypted_key = encrypt_data(api_key)
+
+        # Validate encrypted key length (Fernet produces at least 44 characters)
+        if len(encrypted_key) < 44:
+            logger.error(f"Encryption produced invalid length: {len(encrypted_key)} for key {name}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="API key encryption failed - invalid encrypted data length"
+            )
 
         # Create AI Model Config - use name as model_id
         new_config = AIModelConfig(
@@ -336,6 +356,13 @@ async def edit_apikey(
         if api_key is not None and api_key.strip():
             # Encrypt new API key
             encrypted_key = encrypt_data(api_key)
+            # Validate encrypted key length (Fernet produces at least 44 characters)
+            if len(encrypted_key) < 44:
+                logger.error(f"Encryption produced invalid length: {len(encrypted_key)} for config {key_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="API key encryption failed - invalid encrypted data length"
+                )
             model_config.api_key = encrypted_key
             model_config.api_key_encrypted = True
 
@@ -593,9 +620,12 @@ async def import_apikeys_json(
                         if "is_active" in key_data:
                             existing_key.is_active = key_data["is_active"]
                         # Update API key if provided and encrypted
-                        if "api_key_encrypted" in key_data and key_data["api_key_encrypted"]:
-                            existing_key.api_key = key_data["api_key_encrypted"]
-                            existing_key.api_key_encrypted = key_data.get("api_key_encrypted_flag", True)
+                        if "api_key_encrypted" in key_data:
+                            encrypted_key = key_data["api_key_encrypted"]
+                            # Only update if we have actual data
+                            if encrypted_key and encrypted_key.strip():
+                                existing_key.api_key = encrypted_key
+                                existing_key.api_key_encrypted = key_data.get("api_key_encrypted_flag", True)
 
                         updated_count += 1
                     else:
@@ -603,14 +633,18 @@ async def import_apikeys_json(
                         continue
                 else:
                     # Create new API key
+                    # Determine if API key is encrypted: only set to True if we have actual encrypted data
+                    encrypted_key = key_data.get("api_key_encrypted", "")
+                    is_encrypted = bool(encrypted_key and encrypted_key.strip()) and key_data.get("api_key_encrypted_flag", True)
+
                     new_key = AIModelConfig(
                         name=key_data["name"],
                         display_name=key_data["display_name"],
                         provider=key_data.get("provider", "custom"),
                         model_type=key_data["model_type"],
                         api_url=key_data["api_url"],
-                        api_key=key_data.get("api_key_encrypted", ""),
-                        api_key_encrypted=key_data.get("api_key_encrypted_flag", True),
+                        api_key=encrypted_key,
+                        api_key_encrypted=is_encrypted,
                         model_id=key_data["name"],
                         priority=key_data.get("priority", 1),
                         description=key_data.get("description"),

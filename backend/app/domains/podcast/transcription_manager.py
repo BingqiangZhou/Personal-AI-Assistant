@@ -4,7 +4,7 @@
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from sqlalchemy import select
@@ -375,6 +375,7 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
 
         # 任务状态阈值：只重置超过这个时间的任务（5分钟）
         # 避免重置刚刚创建但还没执行的任务
+        # Note: Use datetime.now(timezone.utc) to match the database column type (naive datetime)
         stale_threshold = datetime.now(timezone.utc) - timedelta(minutes=5)
 
         # 只有实际开始执行的任务状态才应该被重置

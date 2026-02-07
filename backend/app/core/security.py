@@ -442,12 +442,44 @@ def decrypt_data(ciphertext: str) -> str:
     if not ciphertext:
         return ""
 
+    # Validate ciphertext format (Fernet tokens start with 'gAAAA' and are base64-like)
+    if not ciphertext.startswith('gAAAA'):
+        raise ValueError(
+            f"Invalid encrypted data format: expected Fernet format (starts with 'gAAAA'), "
+            f"got: {ciphertext[:20] if len(ciphertext) >= 20 else ciphertext}... "
+            f"(length: {len(ciphertext)})"
+        )
+
+    # Import InvalidToken for better error handling
+    from cryptography.fernet import InvalidToken
+
     fernet = _get_fernet()
     try:
         decrypted_bytes = fernet.decrypt(ciphertext.encode('utf-8'))
         return decrypted_bytes.decode('utf-8')
+    except InvalidToken as e:
+        # Fernet-specific error: typically means wrong key or corrupted data
+        raise ValueError(
+            f"Decryption failed (InvalidToken): The encrypted data was likely encrypted "
+            f"with a different SECRET_KEY. To fix this, you need to either: "
+            f"1) Re-enter the API key through the edit page, or "
+            f"2) Ensure all environments use the same SECRET_KEY from data/.secret_key. "
+            f"Data info: length={len(ciphertext)}, prefix={ciphertext[:10]}..."
+        )
+    except ValueError as e:
+        # Base64 decoding error or other value errors
+        raise ValueError(
+            f"Decryption failed (ValueError): {str(e) or 'invalid data format'}. "
+            f"Data: length={len(ciphertext)}, prefix={ciphertext[:10] if len(ciphertext) >= 10 else ciphertext}..."
+        )
     except Exception as e:
-        raise ValueError(f"Failed to decrypt data: {e}")
+        # Other unexpected errors
+        error_type = type(e).__name__
+        error_msg = str(e) if str(e) else "no error message"
+        raise ValueError(
+            f"Decryption failed ({error_type}): {error_msg}. "
+            f"Data: length={len(ciphertext)}, prefix={ciphertext[:10] if len(ciphertext) >= 10 else ciphertext}..."
+        )
 
 
 # === RSA Key Management for Secure API Key Transmission ===

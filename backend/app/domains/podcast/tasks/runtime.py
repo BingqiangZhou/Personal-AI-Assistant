@@ -13,6 +13,25 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from app.core.config import settings
 from app.domains.podcast.tasks._runlog import _insert_run_async
 
+# Import ALL models to ensure SQLAlchemy properly initializes all relationships
+# This is critical for Celery workers which create isolated DB engines
+from app.admin.models import BackgroundTaskRun  # noqa: F401
+from app.domains.ai.models import AIModelConfig  # noqa: F401
+from app.domains.podcast.models import (  # noqa: F401
+    PodcastConversation,
+    PodcastEpisode,
+    PodcastPlaybackState,
+    TranscriptionTask,
+)
+from app.domains.subscription.models import (  # noqa: F401
+    Subscription,
+    SubscriptionCategory,
+    SubscriptionCategoryMapping,
+    SubscriptionItem,
+    UserSubscription,
+)
+from app.domains.user.models import PasswordReset, User, UserSession  # noqa: F401
+
 
 def _new_session_factory(
     application_name: str,
