@@ -20,7 +20,7 @@ import logging
 import re
 from collections import defaultdict
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 logger = logging.getLogger(__name__)
@@ -277,7 +277,7 @@ Instructions:
         """Add entry to audit log"""
         entry = PrivacyAuditEntry(
             user_id=kwargs['user_id'],
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             content_hash=kwargs['content_hash'],
             sanitize_mode=kwargs['sanitize_mode'],
             pii_types_detected=kwargs['pii_types_detected'],

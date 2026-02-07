@@ -70,7 +70,7 @@ class TestPodcastService:
             episode.title = f"单集{i+1}"
             episode.description = f"单集{i+1}描述"
             episode.audio_url = f"https://example.com/ep{i+1}.mp3"
-            episode.published_at = datetime.utcnow()
+            episode.published_at = datetime.now(timezone.utc)
             episode.duration = 1800
             episode.transcript_url = None
 
@@ -81,7 +81,7 @@ class TestPodcastService:
         mock_subscription.id = 1
         mock_subscription.user_id = 1
         mock_subscription.title = custom_name
-        mock_subscription.created_at = datetime.utcnow()
+        mock_subscription.created_at = datetime.now(timezone.utc)
 
         mock_repo.create_or_update_subscription.return_value = mock_subscription
 
@@ -137,8 +137,8 @@ class TestPodcastService:
         """测试获取订阅列表"""
         # 模拟订阅数据
         mock_subscriptions = [
-            Mock(id=1, title="播客1", created_at=datetime.utcnow()),
-            Mock(id=2, title="播客2", created_at=datetime.utcnow())
+            Mock(id=1, title="播客1", created_at=datetime.now(timezone.utc)),
+            Mock(id=2, title="播客2", created_at=datetime.now(timezone.utc))
         ]
         mock_repo.get_user_subscriptions_paginated.return_value = (mock_subscriptions, 2)
 
@@ -172,7 +172,7 @@ class TestPodcastService:
         mock_playback.is_playing = is_playing
         mock_playback.playback_rate = 1.0
         mock_playback.play_count = 2
-        mock_playback.last_updated_at = datetime.utcnow()
+        mock_playback.last_updated_at = datetime.now(timezone.utc)
         mock_repo.update_playback_progress.return_value = mock_playback
 
         # 执行测试
@@ -196,7 +196,7 @@ class TestPodcastService:
         mock_episode.description = "单集描述"
         mock_episode.audio_url = "https://example.com/ep.mp3"
         mock_episode.audio_duration = 1800
-        mock_episode.published_at = datetime.utcnow()
+        mock_episode.published_at = datetime.now(timezone.utc)
         mock_episode.ai_summary = None
         mock_episode.status = "pending_summary"
         mock_episode.play_count = 0
@@ -284,7 +284,7 @@ class TestPodcastService:
 
         # 模拟播放日期
         mock_repo.get_recent_play_dates.return_value = {
-            datetime.utcnow().date() - timedelta(days=i)
+            datetime.now(timezone.utc).date() - timedelta(days=i)
             for i in range(5)
         }
 
@@ -390,7 +390,7 @@ class TestPodcastService:
     async def test_calculate_listening_streak(self, podcast_service, mock_repo):
         """测试计算连续收听天数"""
         # 模拟最近播放日期（连续5天）
-        today = datetime.utcnow().date()
+        today = datetime.now(timezone.utc).date()
         recent_dates = {today - timedelta(days=i) for i in range(5)}
         mock_repo.get_recent_play_dates.return_value = recent_dates
 

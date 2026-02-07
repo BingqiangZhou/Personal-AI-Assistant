@@ -8,7 +8,7 @@
 4. 权限测试 - 未认证、删除其他用户订阅
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -89,7 +89,7 @@ class TestPodcastBulkDelete:
         sub.source_url = "https://example.com/podcast.rss"
         sub.source_type = "podcast-rss"
         sub.description = "测试描述"
-        sub.created_at = datetime.utcnow()
+        sub.created_at = datetime.now(timezone.utc)
         return sub
 
     @pytest.fixture

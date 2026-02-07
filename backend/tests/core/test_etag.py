@@ -10,7 +10,7 @@ from app.core.etag import (
     parse_if_none_match,
     validate_etag,
 )
-from app.core.etag_response import ETagResponse, check_etag_precondition
+from app.core.etag import ETagResponse, check_etag_precondition
 from app.core.json_encoder import CustomJSONEncoder
 
 

@@ -8,9 +8,13 @@ This module contains all routes related to RSS subscription management:
 """
 
 import asyncio
+import html
 import logging
+import re
 import time
-from datetime import datetime
+import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response
@@ -28,7 +32,9 @@ from app.domains.subscription.models import (
     UpdateFrequency,
     UserSubscription,
 )
+from app.domains.subscription.services import SubscriptionService
 from app.domains.user.models import User
+from app.shared.schemas import SubscriptionCreate
 
 
 logger = logging.getLogger(__name__)
@@ -791,7 +797,7 @@ async def refresh_subscription(
 
         # TODO: Trigger background task to refresh subscription
         # For now, just update the last_fetched_at timestamp
-        subscription.last_fetched_at = datetime.utcnow()
+        subscription.last_fetched_at = datetime.now(timezone.utc)
         await db.commit()
         await db.refresh(subscription)
 
@@ -847,7 +853,7 @@ async def batch_refresh_subscriptions(
         subscriptions = result.scalars().all()
 
         for subscription in subscriptions:
-            subscription.last_fetched_at = datetime.utcnow()
+            subscription.last_fetched_at = datetime.now(timezone.utc)
 
         await db.commit()
 
@@ -972,4 +978,283 @@ async def batch_delete_subscriptions(
         raise HTTPException(
             status_code=500,
             detail="Failed to batch delete subscriptions",
+        )
+
+
+# ==================== OPML Export/Import ====================
+
+
+@router.get("/api/subscriptions/export/opml")
+async def export_subscriptions_opml(
+    request: Request,
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """
+    Export all RSS subscriptions to OPML format.
+
+    导出所有RSS订阅为OPML格式。
+    """
+    try:
+        # Create subscription service (export all subscriptions for admin)
+        service = SubscriptionService(db, user_id=user.id)
+
+        # Generate OPML content - export ALL subscriptions regardless of user_id
+        opml_content = await service.generate_opml_content(user_id=None)
+
+        # Log audit action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="export_opml",
+            resource_type="subscription",
+            details={"format": "opml", "filename": "stella.opml"},
+            request=request,
+        )
+
+        logger.info(f"Exported OPML for user {user.username}")
+
+        # Return as downloadable file
+        return Response(
+            content=opml_content,
+            media_type="application/xml; charset=utf-8",
+            headers={
+                "Content-Disposition": 'attachment; filename="stella.opml"'
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"OPML export error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to export OPML: {str(e)}",
+        )
+
+
+@router.post("/api/subscriptions/import/opml")
+async def import_subscriptions_opml(
+    request: Request,
+    opml_content: str = Body(..., embed=True, description="OPML file content"),
+    user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db_session),
+):
+    """
+    Import RSS subscriptions from OPML format using ElementTree.
+
+    从OPML格式导入RSS订阅，使用ElementTree解析。
+    """
+    # Constants
+    MAX_TITLE_LENGTH = 255
+    MAX_DESCRIPTION_LENGTH = 2000
+
+    def parse_outline_element(outline: ET.Element) -> SubscriptionCreate | None:
+        """Parse a single outline element into SubscriptionCreate."""
+        xml_url = outline.get('xmlUrl', '').strip()
+        if not xml_url:
+            return None
+
+        # Get title - try title first, then text attribute
+        title = outline.get('title') or outline.get('text') or ''
+        description = outline.get('description') or ''
+
+        # Decode HTML entities
+        if title:
+            title = html.unescape(title)
+        if description:
+            description = html.unescape(description)
+
+        # Generate title from URL if empty
+        if not title:
+            try:
+                parsed = urlparse(xml_url)
+                title = parsed.netloc or xml_url
+            except Exception:
+                title = xml_url
+
+        # Validate URL
+        if not xml_url.startswith(('http://', 'https://', 'feed://')):
+            logger.warning(f"Skipping invalid URL: {xml_url}")
+            return None
+
+        # Truncate to DB limits
+        title = title.strip()[:MAX_TITLE_LENGTH]
+        description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ''
+
+        return SubscriptionCreate(
+            source_url=xml_url,
+            title=title,
+            source_type="podcast-rss",
+            description=description,
+        )
+
+    def parse_opml_with_etree(content: str) -> list[SubscriptionCreate]:
+        """Parse OPML using ElementTree (primary method)."""
+        subscriptions = []
+
+        try:
+            root = ET.fromstring(content)
+
+            # Handle potential namespaces - try common OPML namespaces
+            namespaces = {
+                'opml': 'http://opml.org/spec2',
+                '': '',  # Default namespace
+            }
+
+            # Try to find body element with and without namespace
+            body = root.find('.//opml:body', namespaces) or root.find('.//body')
+
+            if body is None:
+                logger.warning("No body element found in OPML")
+                return []
+
+            # Process all outline elements recursively
+            for outline in body.iter():
+                tag_name = outline.tag
+                # Remove namespace if present
+                if '}' in tag_name:
+                    tag_name = tag_name.split('}')[1]
+
+                if tag_name == 'outline':
+                    sub_data = parse_outline_element(outline)
+                    if sub_data:
+                        subscriptions.append(sub_data)
+
+        except ET.ParseError as e:
+            logger.warning(f"ElementTree parsing failed: {e}")
+            raise
+
+        return subscriptions
+
+    def parse_opml_with_regex(content: str) -> list[SubscriptionCreate]:
+        """Fallback regex-based OPML parser for malformed XML."""
+        subscriptions = []
+
+        def extract_attr(tag: str, attr_name: str) -> str:
+            """Extract attribute value from XML tag using regex."""
+            # Handle both single and double quotes
+            pattern = rf'{attr_name}\s*=\s*(["\'])([^\1]*?)\1(?=\s|/?>)'
+            match = re.search(pattern, tag, re.IGNORECASE)
+            return match.group(2) if match else ''
+
+        # Match outline elements with xmlUrl
+        outline_pattern = re.compile(
+            r'<outline\s+[^>]*?xmlUrl\s*=\s*["\'][^"\']+["\'][^>]*?/?>',
+            re.IGNORECASE
+        )
+
+        for match in outline_pattern.finditer(content):
+            tag = match.group(0)
+            xml_url = extract_attr(tag, "xmlUrl").strip()
+
+            if not xml_url:
+                continue
+
+            # Validate URL
+            if not xml_url.startswith(('http://', 'https://', 'feed://')):
+                continue
+
+            # Extract attributes
+            title = extract_attr(tag, "title") or extract_attr(tag, "text")
+            description = extract_attr(tag, "description")
+
+            # Decode HTML entities
+            if title:
+                title = html.unescape(title)
+            if description:
+                description = html.unescape(description)
+
+            # Generate title from URL if empty
+            if not title:
+                try:
+                    parsed = urlparse(xml_url)
+                    title = parsed.netloc or xml_url
+                except Exception:
+                    title = xml_url
+
+            # Truncate to DB limits
+            title = title.strip()[:MAX_TITLE_LENGTH]
+            description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ''
+
+            subscriptions.append(
+                SubscriptionCreate(
+                    source_url=xml_url,
+                    title=title,
+                    source_type="podcast-rss",
+                    description=description,
+                )
+            )
+
+        return subscriptions
+
+    try:
+        subscriptions_data = []
+
+        # Try ElementTree first (recommended)
+        try:
+            subscriptions_data = parse_opml_with_etree(opml_content)
+            logger.info(f"Parsed {len(subscriptions_data)} subscriptions using ElementTree")
+        except ET.ParseError:
+            # Fallback to regex for malformed XML
+            logger.info("ElementTree failed, using regex fallback")
+            subscriptions_data = parse_opml_with_regex(opml_content)
+            logger.info(f"Parsed {len(subscriptions_data)} subscriptions using regex fallback")
+
+        if not subscriptions_data:
+            return JSONResponse(
+                status_code=400,
+                content={"success": False, "message": "No valid RSS subscriptions found in OPML file"},
+            )
+
+        # Import subscriptions using batch create
+        service = SubscriptionService(db, user_id=user.id)
+        results = await service.create_subscriptions_batch(subscriptions_data)
+
+        # Count results
+        success_count = sum(1 for r in results if r["status"] == "success")
+        updated_count = sum(1 for r in results if r["status"] == "updated")
+        skipped_count = sum(1 for r in results if r["status"] == "skipped")
+        error_count = sum(1 for r in results if r["status"] == "error")
+
+        # Log the import action
+        await log_admin_action(
+            db=db,
+            user_id=user.id,
+            username=user.username,
+            action="import_opml",
+            resource_type="subscription",
+            details={
+                "total": len(subscriptions_data),
+                "success": success_count,
+                "updated": updated_count,
+                "skipped": skipped_count,
+                "errors": error_count,
+            },
+            request=request,
+        )
+
+        logger.info(
+            f"Imported OPML for user {user.username}: "
+            f"{success_count} added, {updated_count} updated, {skipped_count} skipped, {error_count} failed"
+        )
+
+        return JSONResponse(
+            content={
+                "success": True,
+                "message": f"Import completed: {success_count} added, {updated_count} updated, {skipped_count} skipped, {error_count} failed",
+                "results": {
+                    "total": len(subscriptions_data),
+                    "success": success_count,
+                    "updated": updated_count,
+                    "skipped": skipped_count,
+                    "errors": error_count,
+                },
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"OPML import error: {e}")
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Import failed: {str(e)}"},
         )

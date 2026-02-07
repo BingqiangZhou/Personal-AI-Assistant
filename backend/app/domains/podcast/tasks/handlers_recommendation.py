@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 
@@ -25,5 +25,5 @@ async def generate_podcast_recommendations_handler(session) -> dict:
     return {
         "status": "success",
         "recommendations_generated": recommendations_generated,
-        "processed_at": datetime.utcnow().isoformat(),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
     }

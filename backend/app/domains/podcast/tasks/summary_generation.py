@@ -1,6 +1,6 @@
 """Celery tasks for summary generation flows."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.celery_app import celery_app
 from app.domains.podcast.tasks.handlers_summary import (
@@ -12,7 +12,7 @@ from app.domains.podcast.tasks.runtime import log_task_run, run_async, worker_se
 
 @celery_app.task(bind=True, max_retries=3)
 def generate_pending_summaries(self):
-    started_at = datetime.utcnow()
+    started_at = datetime.now(timezone.utc)
     task_name = "app.domains.podcast.tasks.summary_generation.generate_pending_summaries"
     queue_name = "ai_generation"
     try:
@@ -22,7 +22,7 @@ def generate_pending_summaries(self):
             queue_name=queue_name,
             status="success",
             started_at=started_at,
-            finished_at=datetime.utcnow(),
+            finished_at=datetime.now(timezone.utc),
         )
         return result
     except Exception as exc:
@@ -31,7 +31,7 @@ def generate_pending_summaries(self):
             queue_name=queue_name,
             status="failed",
             started_at=started_at,
-            finished_at=datetime.utcnow(),
+            finished_at=datetime.now(timezone.utc),
             error_message=str(exc),
         )
         if self.request.retries < self.max_retries:
@@ -46,7 +46,7 @@ async def _generate_pending_summaries():
 
 @celery_app.task(bind=True, max_retries=3)
 def generate_summary_for_episode(self, episode_id: int, user_id: int):
-    started_at = datetime.utcnow()
+    started_at = datetime.now(timezone.utc)
     task_name = "app.domains.podcast.tasks.summary_generation.generate_summary_for_episode"
     queue_name = "ai_generation"
     try:
@@ -56,7 +56,7 @@ def generate_summary_for_episode(self, episode_id: int, user_id: int):
             queue_name=queue_name,
             status="success",
             started_at=started_at,
-            finished_at=datetime.utcnow(),
+            finished_at=datetime.now(timezone.utc),
             metadata={"episode_id": episode_id, "user_id": user_id},
         )
         return result
@@ -66,7 +66,7 @@ def generate_summary_for_episode(self, episode_id: int, user_id: int):
             queue_name=queue_name,
             status="failed",
             started_at=started_at,
-            finished_at=datetime.utcnow(),
+            finished_at=datetime.now(timezone.utc),
             error_message=str(exc),
             metadata={"episode_id": episode_id, "user_id": user_id},
         )

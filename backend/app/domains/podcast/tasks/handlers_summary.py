@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import and_, or_, select
 
@@ -73,7 +73,7 @@ async def generate_pending_summaries_handler(session) -> dict:
         "status": "success",
         "processed": processed_count,
         "failed": failed_count,
-        "processed_at": datetime.utcnow().isoformat(),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -96,5 +96,5 @@ async def generate_summary_for_episode_handler(
         "status": "success",
         "episode_id": episode_id,
         "summary": summary,
-        "processed_at": datetime.utcnow().isoformat(),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
     }

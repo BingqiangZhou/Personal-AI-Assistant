@@ -135,7 +135,7 @@ class TranscriptionScheduler:
                 "episode_id": episode_id,
                 "frequency": frequency,
                 "custom_interval": custom_interval,
-                "scheduled_at": datetime.utcnow(),
+                "scheduled_at": datetime.now(timezone.utc),
                 "status": "scheduled"
             }
 
@@ -234,7 +234,7 @@ class TranscriptionScheduler:
         Returns:
             调度结果统计
         """
-        cutoff_time = datetime.utcnow() - timedelta(hours=hours_since_published)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours_since_published)
 
         # 获取新分集
         stmt = select(PodcastEpisode).where(

@@ -1,6 +1,6 @@
 """Subscription domain repositories."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -295,7 +295,7 @@ class SubscriptionRepository:
 
         sub.status = status
         sub.error_message = error_message
-        sub.last_fetched_at = datetime.utcnow()
+        sub.last_fetched_at = datetime.now(timezone.utc)
 
         # Update latest item published time if provided
         if latest_published_at:
@@ -482,7 +482,7 @@ class SubscriptionRepository:
             return None
 
         if not item.read_at:
-            item.read_at = datetime.utcnow()
+            item.read_at = datetime.now(timezone.utc)
             await self.db.commit()
             await self.db.refresh(item)
 

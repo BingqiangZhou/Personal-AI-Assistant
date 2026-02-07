@@ -10,7 +10,7 @@ import logging
 import os
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 import aiofiles
 import aiohttp
@@ -857,7 +857,7 @@ class PodcastTranscriptionService:
         update_data = {
             'status': status,
             'progress_percentage': progress,
-            'updated_at': datetime.utcnow()
+            'updated_at': datetime.now(timezone.utc)
         }
 
         if error_message:
@@ -865,11 +865,11 @@ class PodcastTranscriptionService:
 
         # 设置开始时间
         if status == 'downloading' and not await self._get_task_field(task_id, 'started_at'):
-            update_data['started_at'] = datetime.utcnow()
+            update_data['started_at'] = datetime.now(timezone.utc)
 
         # 设置完成时间
         if status in [TranscriptionStatus.COMPLETED, TranscriptionStatus.FAILED, TranscriptionStatus.CANCELLED]:
-            update_data['completed_at'] = datetime.utcnow()
+            update_data['completed_at'] = datetime.now(timezone.utc)
 
         stmt = (
             update(TranscriptionTask)
@@ -918,7 +918,7 @@ class PodcastTranscriptionService:
         update_data = {
             'current_step': step,
             'progress_percentage': progress,
-            'updated_at': datetime.utcnow()
+            'updated_at': datetime.now(timezone.utc)
         }
 
         if error_message:
@@ -929,7 +929,7 @@ class PodcastTranscriptionService:
         result = await session.execute(stmt_check)
         started_at = result.scalar()
         if not started_at:
-            update_data['started_at'] = datetime.utcnow()
+            update_data['started_at'] = datetime.now(timezone.utc)
             update_data['status'] = TranscriptionStatus.IN_PROGRESS
 
         # Try to update chunk_info with the debug message
@@ -978,11 +978,11 @@ class PodcastTranscriptionService:
         """设置任务的最终状态（COMPLETED 或 FAILED）"""
         update_data = {
             'status': status,
-            'updated_at': datetime.utcnow()
+            'updated_at': datetime.now(timezone.utc)
         }
 
         if status in [TranscriptionStatus.COMPLETED, TranscriptionStatus.FAILED, TranscriptionStatus.CANCELLED]:
-            update_data['completed_at'] = datetime.utcnow()
+            update_data['completed_at'] = datetime.now(timezone.utc)
 
         if error_message:
             update_data['error_message'] = error_message
@@ -1611,7 +1611,7 @@ class PodcastTranscriptionService:
                         for chunk in sorted_chunks
                     ]
                 },
-                'completed_at': datetime.utcnow()
+                'completed_at': datetime.now(timezone.utc)
             }
 
             stmt = (

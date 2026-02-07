@@ -1,6 +1,6 @@
 """Celery tasks for subscription sync flows."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.celery_app import celery_app
 from app.domains.podcast.tasks.handlers_subscription_sync import (
@@ -11,7 +11,7 @@ from app.domains.podcast.tasks.runtime import log_task_run, run_async, worker_se
 
 @celery_app.task(bind=True, max_retries=3)
 def refresh_all_podcast_feeds(self):
-    started_at = datetime.utcnow()
+    started_at = datetime.now(timezone.utc)
     task_name = "app.domains.podcast.tasks.subscription_sync.refresh_all_podcast_feeds"
     queue_name = "subscription_sync"
     try:
@@ -21,7 +21,7 @@ def refresh_all_podcast_feeds(self):
             queue_name=queue_name,
             status="success",
             started_at=started_at,
-            finished_at=datetime.utcnow(),
+            finished_at=datetime.now(timezone.utc),
         )
         return result
     except Exception as exc:
@@ -30,7 +30,7 @@ def refresh_all_podcast_feeds(self):
             queue_name=queue_name,
             status="failed",
             started_at=started_at,
-            finished_at=datetime.utcnow(),
+            finished_at=datetime.now(timezone.utc),
             error_message=str(exc),
         )
         if self.request.retries < self.max_retries:

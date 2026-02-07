@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import select
 
@@ -86,7 +86,7 @@ async def process_audio_transcription_handler(
             "status": "success",
             "task_id": task_id,
             "config_db_id": config_db_id,
-            "processed_at": datetime.utcnow().isoformat(),
+            "processed_at": datetime.now(timezone.utc).isoformat(),
         }
     except Exception as exc:
         await state_manager.fail_task_state(task_id, episode_id, str(exc))
@@ -147,5 +147,5 @@ async def process_podcast_episode_with_transcription_handler(
         "transcription_task_id": transcription_task_id,
         "transcription_completed": episode.transcript_content is not None,
         "summary_generated": episode.ai_summary is not None,
-        "processed_at": datetime.utcnow().isoformat(),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
     }

@@ -103,7 +103,7 @@ class PodcastRepository:
             # 更新订阅元数据
             subscription.title = custom_name or title
             subscription.description = description
-            subscription.updated_at = datetime.utcnow()
+            subscription.updated_at = datetime.now(timezone.utc)
             # 更新元数据
             if metadata:
                 existing_config = subscription.config or {}
@@ -237,7 +237,7 @@ class PodcastRepository:
             episode.published_at = sanitize_published_date(published_at)
             episode.audio_duration = audio_duration
             episode.transcript_url = transcript_url
-            episode.updated_at = datetime.utcnow()
+            episode.updated_at = datetime.now(timezone.utc)
             # Also update subscription_id if different (handles duplicate subscriptions)
             if episode.subscription_id != subscription_id:
                 episode.subscription_id = subscription_id
@@ -358,7 +358,7 @@ class PodcastRepository:
 
         metadata = episode.metadata_json or {}
         metadata["transcript_used"] = transcript_used
-        metadata["summarized_at"] = datetime.utcnow().isoformat()
+        metadata["summarized_at"] = datetime.now(timezone.utc).isoformat()
         episode.metadata = metadata
 
         await self.db.commit()
@@ -376,7 +376,7 @@ class PodcastRepository:
             episode.status = "summary_failed"
             metadata = episode.metadata_json or {}
             metadata["summary_error"] = error
-            metadata["failed_at"] = datetime.utcnow().isoformat()
+            metadata["failed_at"] = datetime.now(timezone.utc).isoformat()
             episode.metadata_json = metadata
             await self.db.commit()
 
@@ -504,7 +504,7 @@ class PodcastRepository:
             state.playback_rate = playback_rate
             if is_playing:
                 state.play_count += 1
-            state.timestamp = datetime.utcnow()
+            state.timestamp = datetime.now(timezone.utc)
         else:
             state = PodcastPlaybackState(
                 user_id=user_id,
@@ -708,7 +708,7 @@ class PodcastRepository:
 
         if subscription:
             # 移除时区信息以匹配数据库的TIMESTAMP WITHOUT TIME ZONE
-            time_to_set = sanitize_published_date(fetch_time or datetime.utcnow())
+            time_to_set = sanitize_published_date(fetch_time or datetime.now(timezone.utc))
             subscription.last_fetched_at = time_to_set
             await self.db.commit()
 
@@ -723,7 +723,7 @@ class PodcastRepository:
             current_config = subscription.config or {}
             current_config.update(metadata)
             subscription.config = current_config
-            subscription.updated_at = datetime.utcnow()
+            subscription.updated_at = datetime.now(timezone.utc)
             await self.db.commit()
 
     async def get_recently_played(
@@ -745,7 +745,7 @@ class PodcastRepository:
                 and_(
                     UserSubscription.user_id == user_id,
                     UserSubscription.is_archived == False,
-                    PodcastPlaybackState.last_updated_at >= datetime.utcnow() - timedelta(days=7)
+                    PodcastPlaybackState.last_updated_at >= datetime.now(timezone.utc) - timedelta(days=7)
                 )
             )
             .order_by(PodcastPlaybackState.last_updated_at.desc())
@@ -804,7 +804,7 @@ class PodcastRepository:
         stmt = select(PodcastPlaybackState.last_updated_at).where(
             and_(
                 PodcastPlaybackState.user_id == user_id,
-                PodcastPlaybackState.last_updated_at >= datetime.utcnow() - timedelta(days=days)
+                PodcastPlaybackState.last_updated_at >= datetime.now(timezone.utc) - timedelta(days=days)
             )
         ).distinct()
 

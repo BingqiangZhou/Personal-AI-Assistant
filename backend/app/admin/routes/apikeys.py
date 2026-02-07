@@ -8,7 +8,7 @@ This module contains all routes related to AI Model Config management:
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse, Response
@@ -441,7 +441,7 @@ async def export_apikeys_json(
         # Build export data
         export_data = {
             "version": "1.0",
-            "exported_at": datetime.utcnow().isoformat(),
+            "exported_at": datetime.now(timezone.utc).isoformat(),
             "exported_by": user.username,
             "total_count": len(apikeys),
             "apikeys": []
@@ -481,7 +481,7 @@ async def export_apikeys_json(
             content=json.dumps(export_data, indent=2, ensure_ascii=False),
             media_type="application/json",
             headers={
-                "Content-Disposition": f"attachment; filename=apikeys_export_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+                "Content-Disposition": f"attachment; filename=apikeys_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
             }
         )
     except Exception as e:

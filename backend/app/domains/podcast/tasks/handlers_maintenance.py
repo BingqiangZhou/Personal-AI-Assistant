@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import delete, func, select
 
@@ -54,19 +54,19 @@ async def log_periodic_task_statistics_handler(session) -> dict:
         stats["in_progress"],
         stats["failed"],
     )
-    return {"status": "success", "stats": stats, "logged_at": datetime.utcnow().isoformat()}
+    return {"status": "success", "stats": stats, "logged_at": datetime.now(timezone.utc).isoformat()}
 
 
 async def cleanup_old_playback_states_handler(session) -> dict:
     """Delete playback states older than 90 days."""
-    cutoff_date = datetime.utcnow() - timedelta(days=90)
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=90)
     stmt = delete(PodcastPlaybackState).where(PodcastPlaybackState.last_updated_at < cutoff_date)
     result = await session.execute(stmt)
     await session.commit()
     return {
         "status": "success",
         "deleted_count": result.rowcount or 0,
-        "processed_at": datetime.utcnow().isoformat(),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -74,7 +74,7 @@ async def cleanup_old_transcription_temp_files_handler(session, days: int = 7) -
     """Clean stale transcription temporary files."""
     service = DatabaseBackedTranscriptionService(session)
     result = await service.cleanup_old_temp_files(days=days)
-    return {"status": "success", **result, "processed_at": datetime.utcnow().isoformat()}
+    return {"status": "success", **result, "processed_at": datetime.now(timezone.utc).isoformat()}
 
 
 async def auto_cleanup_cache_files_handler(session) -> dict:
@@ -86,8 +86,8 @@ async def auto_cleanup_cache_files_handler(session) -> dict:
         return {
             "status": "skipped",
             "reason": "Auto cleanup is disabled",
-            "checked_at": datetime.utcnow().isoformat(),
+            "checked_at": datetime.now(timezone.utc).isoformat(),
         }
 
     result = await service.execute_cleanup(keep_days=1)
-    return {"status": "success", **result, "executed_at": datetime.utcnow().isoformat()}
+    return {"status": "success", **result, "executed_at": datetime.now(timezone.utc).isoformat()}

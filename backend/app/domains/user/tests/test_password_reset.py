@@ -161,7 +161,7 @@ class TestPasswordResetFlow:
         async with auth_service.db as session:
             token_record = await auth_service._get_valid_password_reset_token(token)
             if token_record:
-                token_record.expires_at = datetime.utcnow() - timedelta(hours=1)
+                token_record.expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
                 await session.commit()
 
         # Try to use expired token
@@ -257,7 +257,7 @@ async def test_reset_password_endpoint(async_client, test_user):
     import uuid
 
     reset_token = str(uuid.uuid4())
-    expires_at = datetime.utcnow() + timedelta(hours=1)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
 
     async with async_client.app.state.db_pool.get() as db:
         password_reset = PasswordReset(
@@ -309,7 +309,7 @@ async def test_reset_password_weak_password_endpoint(async_client, test_user):
     import uuid
 
     reset_token = str(uuid.uuid4())
-    expires_at = datetime.utcnow() + timedelta(hours=1)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
 
     async with async_client.app.state.db_pool.get() as db:
         password_reset = PasswordReset(
@@ -383,7 +383,7 @@ async def test_email_service_development():
     result = await service.send_password_reset_email(
         email="test@example.com",
         token="test-token",
-        expires_at=datetime.utcnow() + timedelta(hours=1)
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1)
     )
 
     assert result == True
@@ -409,7 +409,7 @@ async def test_password_resets_table_creation(async_session):
     reset = PasswordReset(
         email="test@example.com",
         token="test-token",
-        expires_at=datetime.utcnow() + timedelta(hours=1)
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1)
     )
 
     assert reset.email == "test@example.com"

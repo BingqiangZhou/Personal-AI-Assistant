@@ -1,6 +1,6 @@
 """Admin authentication dependencies and utilities."""
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import Cookie, Depends, HTTPException, Request, status
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
@@ -109,7 +109,7 @@ class AdminAuthRequired:
 
 def create_admin_session(user_id: int) -> str:
     """Create a secure session token for admin user."""
-    data = {"user_id": user_id, "created_at": datetime.utcnow().isoformat()}
+    data = {"user_id": user_id, "created_at": datetime.now(timezone.utc).isoformat()}
     return serializer.dumps(data)
 
 

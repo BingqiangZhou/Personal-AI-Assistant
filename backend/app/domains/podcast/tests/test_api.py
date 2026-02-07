@@ -2,7 +2,7 @@
 播客API测试用例
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -49,7 +49,7 @@ class TestPodcastSubscriptionAPI:
         mock_subscription.last_fetched_at = None
         mock_subscription.error_message = None
         mock_subscription.fetch_interval = 3600
-        mock_subscription.created_at = datetime.utcnow()
+        mock_subscription.created_at = datetime.now(timezone.utc)
         mock_subscription.updated_at = None
 
         mock_podcast_service.add_subscription.return_value = (
@@ -251,7 +251,7 @@ class TestPodcastEpisodeAPI:
             "is_playing": True,
             "playback_rate": 1.5,
             "play_count": 2,
-            "last_updated_at": datetime.utcnow(),
+            "last_updated_at": datetime.now(timezone.utc),
             "progress_percentage": 50.0,
             "remaining_time": 900
         }
@@ -282,7 +282,7 @@ class TestPodcastEpisodeAPI:
             "version": "v1",
             "confidence_score": 0.85,
             "transcript_used": True,
-            "generated_at": datetime.utcnow()
+            "generated_at": datetime.now(timezone.utc)
         }
 
         mock_podcast_service.generate_summary_for_episode.return_value = mock_summary

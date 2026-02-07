@@ -2,7 +2,7 @@
 Integration tests for podcast service platform support
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -164,7 +164,7 @@ class TestPodcastServicePlatform:
         mock_subscription.id = 1
         mock_subscription.title = "Test Podcast"
         mock_subscription.config = {"platform": PodcastPlatform.XIMALAYA}
-        mock_subscription.created_at = datetime.utcnow()
+        mock_subscription.created_at = datetime.now(timezone.utc)
         mock_subscription.status = "active"
 
         mock_repo.get_user_subscriptions_paginated.return_value = ([mock_subscription], 1)

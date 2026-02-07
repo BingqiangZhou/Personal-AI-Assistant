@@ -5,7 +5,7 @@ Podcast Subscription Service - Manages podcast subscriptions.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -379,7 +379,7 @@ class PodcastSubscriptionService:
                 audio_duration=episode.duration,
                 transcript_url=episode.transcript_url,
                 item_link=episode.link,
-                metadata={"feed_title": feed.title, "refreshed_at": datetime.utcnow().isoformat()}
+                metadata={"feed_title": feed.title, "refreshed_at": datetime.now(timezone.utc).isoformat()}
             )
 
             if is_new:
@@ -480,7 +480,7 @@ class PodcastSubscriptionService:
                     item_link=episode.link,
                     metadata={
                         "feed_title": feed.title,
-                        "reparsed_at": datetime.utcnow().isoformat(),
+                        "reparsed_at": datetime.now(timezone.utc).isoformat(),
                         "item_link": episode.link
                     }
                 )
@@ -506,7 +506,7 @@ class PodcastSubscriptionService:
             "link": feed.link,
             "total_episodes": len(feed.episodes),
             "platform": feed.platform,
-            "reparsed_at": datetime.utcnow().isoformat()
+            "reparsed_at": datetime.now(timezone.utc).isoformat()
         }
 
         await self.repo.update_subscription_metadata(subscription_id, metadata)

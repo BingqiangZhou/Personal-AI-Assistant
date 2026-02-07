@@ -64,7 +64,7 @@ async def monitoring_page(
         active_subscription_count = active_subscription_result.scalar() or 0
 
         # Recent audit logs (last 24 hours)
-        yesterday = datetime.utcnow() - timedelta(days=1)
+        yesterday = datetime.now(timezone.utc) - timedelta(days=1)
         recent_logs_query = select(func.count()).select_from(AdminAuditLog).where(AdminAuditLog.created_at >= yesterday)
         recent_logs_result = await db.execute(recent_logs_query)
         recent_logs_count = recent_logs_result.scalar() or 0

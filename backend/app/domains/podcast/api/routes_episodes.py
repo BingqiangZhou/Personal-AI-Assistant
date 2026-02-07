@@ -2,7 +2,7 @@
 # ruff: noqa
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -171,7 +171,7 @@ async def generate_summary(
             version="1.0",
             confidence_score=None,
             transcript_used=True,
-            generated_at=datetime.utcnow(),
+            generated_at=datetime.now(timezone.utc),
             word_count=len(summary_result["summary_content"].split()),
             model_used=summary_result["model_name"],
             processing_time=summary_result["processing_time"],
@@ -207,7 +207,7 @@ async def update_playback_progress(
             is_playing=result["is_playing"],
             playback_rate=result.get("playback_rate", 1.0),
             play_count=result.get("play_count", 0),
-            last_updated_at=result.get("last_updated_at", datetime.utcnow()),
+            last_updated_at=result.get("last_updated_at", datetime.now(timezone.utc)),
             progress_percentage=result.get("progress_percentage", 0),
             remaining_time=result.get("remaining_time", 0),
         )

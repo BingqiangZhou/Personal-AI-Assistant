@@ -47,7 +47,7 @@ class TokenOptimizer:
     ) -> dict[str, Any]:
         """Fast claim builder optimized for 500+ req/s throughput."""
 
-        # Use time.time() directly to avoid timezone issues with datetime.utcnow().timestamp()
+        # Use time.time() directly to avoid timezone issues with datetime.now(timezone.utc).timestamp()
         now_timestamp = int(time.time())
         expire_seconds = (expire_minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES) * 60
         exp_timestamp = now_timestamp + expire_seconds
@@ -214,7 +214,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def generate_password_reset_token(email: str) -> str:
     """Generate password reset token."""
     delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     expires = now + delta
     exp = expires.timestamp()
     encoded_jwt = jwt.encode(

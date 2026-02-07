@@ -331,7 +331,7 @@ async def test_cleanup_expired_sessions(db_session: AsyncSession):
         user_id=user.id,
         session_token="expired_token",
         refresh_token="expired_refresh",
-        expires_at=datetime.utcnow() - timedelta(days=1),
+        expires_at=datetime.now(timezone.utc) - timedelta(days=1),
         is_active=True
     )
     db_session.add(expired_session)

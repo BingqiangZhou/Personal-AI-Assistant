@@ -1,7 +1,7 @@
 """Subscription domain services."""
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlparse
 from xml.etree.ElementTree import Element, SubElement, tostring
@@ -213,7 +213,7 @@ class SubscriptionService:
             existing.description = sub_data.description
             existing.status = SubscriptionStatus.ACTIVE
             existing.error_message = None
-            existing.updated_at = datetime.utcnow()
+            existing.updated_at = datetime.now(timezone.utc)
             await self.db.commit()
             await self.db.refresh(existing)
             return "updated", existing, f"Updated existing subscription: {existing.title}"
@@ -242,7 +242,7 @@ class SubscriptionService:
             existing.description = sub_data.description
             existing.status = SubscriptionStatus.ACTIVE
             existing.error_message = None
-            existing.updated_at = datetime.utcnow()
+            existing.updated_at = datetime.now(timezone.utc)
             status = "updated"
             message = f"Updated and subscribed to existing source: {existing.title}"
 
@@ -688,7 +688,7 @@ class SubscriptionService:
         # Create head section
         head = SubElement(opml, "head")
         SubElement(head, "title").text = "Stella RSS Subscriptions"
-        SubElement(head, "dateCreated").text = datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S GMT")
+        SubElement(head, "dateCreated").text = datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT")
         SubElement(head, "ownerName").text = "Stella Admin"
 
         # Query all subscriptions

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import and_, select
 
@@ -102,7 +102,7 @@ async def refresh_all_podcast_feeds_handler(session) -> dict:
                     item_link=episode.link,
                     metadata={
                         "feed_title": feed.title,
-                        "refreshed_at": datetime.utcnow().isoformat(),
+                        "refreshed_at": datetime.now(timezone.utc).isoformat(),
                     },
                 )
                 if is_new:
@@ -127,5 +127,5 @@ async def refresh_all_podcast_feeds_handler(session) -> dict:
         "status": "success",
         "refreshed_subscriptions": refreshed_count,
         "new_episodes": new_episodes_count,
-        "processed_at": datetime.utcnow().isoformat(),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
     }

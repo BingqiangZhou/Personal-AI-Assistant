@@ -375,7 +375,7 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
 
         # 任务状态阈值：只重置超过这个时间的任务（5分钟）
         # 避免重置刚刚创建但还没执行的任务
-        stale_threshold = datetime.utcnow() - timedelta(minutes=5)
+        stale_threshold = datetime.now(timezone.utc) - timedelta(minutes=5)
 
         # 只有实际开始执行的任务状态才应该被重置
         # PENDING 状态如果 started_at 为空，说明任务还没开始，不应该被重置
@@ -396,8 +396,8 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
                 .values(
                     status='failed',  # Use string value
                     error_message="Task interrupted by server restart",
-                    updated_at=datetime.utcnow(),
-                    completed_at=datetime.utcnow()
+                    updated_at=datetime.now(timezone.utc),
+                    completed_at=datetime.now(timezone.utc)
                 )
             )
 
@@ -409,7 +409,7 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
 
             # 对于 PENDING 状态的任务，如果创建时间很久了但从未开始执行，也标记为失败
             # 这些任务可能是由于某些原因从未被调度执行
-            pending_stale_threshold = datetime.utcnow() - timedelta(hours=1)  # 1小时
+            pending_stale_threshold = datetime.now(timezone.utc) - timedelta(hours=1)  # 1小时
             stmt2 = (
                 update(TranscriptionTask)
                 .where(
@@ -422,8 +422,8 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
                 .values(
                     status='failed',  # Use string value
                     error_message="Task was never scheduled for execution",
-                    updated_at=datetime.utcnow(),
-                    completed_at=datetime.utcnow()
+                    updated_at=datetime.now(timezone.utc),
+                    completed_at=datetime.now(timezone.utc)
                 )
             )
 
@@ -462,7 +462,7 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
 
             # 获取需要清理的episode_id列表
             # 条件：失败/已取消的任务，且超过指定天数
-            stale_threshold = datetime.utcnow() - timedelta(days=days)
+            stale_threshold = datetime.now(timezone.utc) - timedelta(days=days)
             stmt = select(TranscriptionTask.episode_id).where(
                 and_(
                     TranscriptionTask.status.in_(['failed', 'cancelled']),  # Use string values

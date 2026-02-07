@@ -6,7 +6,7 @@
 import asyncio
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import aiohttp
@@ -584,7 +584,7 @@ class DatabaseBackedAISummaryService:
                 .values(
                     ai_summary=summary_content,
                     summary_version="1.0",
-                    updated_at=datetime.utcnow()
+                    updated_at=datetime.now(timezone.utc)
                 )
             )
             logger.debug(f"Executing update on podcast_episodes table for episode {episode_id}")
@@ -602,7 +602,7 @@ class DatabaseBackedAISummaryService:
                     summary_word_count=word_count,
                     summary_processing_time=processing_time,
                     summary_error_message=None,
-                    updated_at=datetime.utcnow()
+                    updated_at=datetime.now(timezone.utc)
                 )
             )
             logger.debug(f"Executing update on transcription_tasks table for episode {episode_id}")
