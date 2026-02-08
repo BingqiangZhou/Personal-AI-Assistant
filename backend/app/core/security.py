@@ -482,6 +482,167 @@ def decrypt_data(ciphertext: str) -> str:
         )
 
 
+# === Password-based Encryption for Cross-Server API Key Export/Import ===
+
+
+def encrypt_data_with_password(plaintext: str, password: str) -> dict:
+    """
+    Encrypt data using AES-256-GCM with a password-derived key.
+
+    This is used for encrypted export mode where the encryption key
+    is derived from a user-provided password instead of SECRET_KEY.
+
+    Args:
+        plaintext: The plaintext string to encrypt
+        password: The password to derive encryption key from
+
+    Returns:
+        Dictionary containing:
+        - encrypted_data: Base64-encoded ciphertext
+        - salt: Base64-encoded salt used for key derivation
+        - nonce: Base64-encoded nonce used for AES-GCM
+        - algorithm: Always "AES-256-GCM" for identification
+
+    Example:
+        >>> encrypted = encrypt_data_with_password("my-secret-key", "export-password-123")
+        >>> # Use encrypted dict in export JSON
+    """
+    import os
+    import base64
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.backends import default_backend
+
+    if not plaintext or not password:
+        raise ValueError("Both plaintext and password are required")
+
+    # Generate a random salt (16 bytes recommended for PBKDF2)
+    salt = os.urandom(16)
+
+    # Derive a 32-byte key from the password using PBKDF2
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,  # 256 bits for AES-256
+        salt=salt,
+        iterations=100000,  # OWASP recommended minimum
+        backend=default_backend()
+    )
+    key = kdf.derive(password.encode('utf-8'))
+
+    # Generate a random nonce (12 bytes for GCM)
+    nonce = os.urandom(12)
+
+    # Encrypt using AES-256-GCM
+    aesgcm = AESGCM(key)
+    ciphertext = aesgcm.encrypt(nonce, plaintext.encode('utf-8'), None)
+
+    # Return all components needed for decryption
+    return {
+        "encrypted_data": base64.urlsafe_b64encode(ciphertext).decode('utf-8'),
+        "salt": base64.urlsafe_b64encode(salt).decode('utf-8'),
+        "nonce": base64.urlsafe_b64encode(nonce).decode('utf-8'),
+        "algorithm": "AES-256-GCM"
+    }
+
+
+def decrypt_data_with_password(encrypted_dict: dict, password: str) -> str:
+    """
+    Decrypt data that was encrypted with encrypt_data_with_password().
+
+    Args:
+        encrypted_dict: Dictionary containing encrypted_data, salt, nonce, algorithm
+        password: The password used for encryption
+
+    Returns:
+        Decrypted plaintext string
+
+    Raises:
+        ValueError: If decryption fails or password is incorrect
+
+    Example:
+        >>> decrypted = decrypt_data_with_password(encrypted_dict, "export-password-123")
+        >>> print(decrypted)  # "my-secret-key"
+    """
+    import base64
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.backends import default_backend
+
+    # Validate input
+    required_fields = ["encrypted_data", "salt", "nonce", "algorithm"]
+    missing_fields = [f for f in required_fields if f not in encrypted_dict]
+    if missing_fields:
+        raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+
+    if encrypted_dict["algorithm"] != "AES-256-GCM":
+        raise ValueError(f"Unsupported algorithm: {encrypted_dict['algorithm']}")
+
+    try:
+        # Decode base64 components
+        ciphertext = base64.urlsafe_b64decode(encrypted_dict["encrypted_data"])
+        salt = base64.urlsafe_b64decode(encrypted_dict["salt"])
+        nonce = base64.urlsafe_b64decode(encrypted_dict["nonce"])
+
+        # Derive the same key from password
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=100000,
+            backend=default_backend()
+        )
+        key = kdf.derive(password.encode('utf-8'))
+
+        # Decrypt using AES-256-GCM
+        aesgcm = AESGCM(key)
+        plaintext = aesgcm.decrypt(nonce, ciphertext, None)
+
+        return plaintext.decode('utf-8')
+
+    except Exception as e:
+        raise ValueError(
+            f"Decryption failed: {str(e)}. Common cause: incorrect password. "
+            f"Please verify the export password and try again."
+        )
+
+
+def validate_export_password(password: str) -> tuple[bool, str]:
+    """
+    Validate export password strength.
+
+    Args:
+        password: The password to validate
+
+    Returns:
+        Tuple of (is_valid, error_message)
+
+    Validation rules:
+    - Minimum 12 characters
+    - Must contain at least 3 of: uppercase, lowercase, digits, special characters
+
+    Example:
+        >>> is_valid, error = validate_export_password("MySecureP@ssword123")
+        >>> print(is_valid)  # True
+    """
+    if len(password) < 12:
+        return False, "Password must be at least 12 characters long"
+
+    # Check for character variety
+    has_upper = any(c.isupper() for c in password)
+    has_lower = any(c.islower() for c in password)
+    has_digit = any(c.isdigit() for c in password)
+    has_special = any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)
+
+    variety_score = sum([has_upper, has_lower, has_digit, has_special])
+
+    if variety_score < 3:
+        return False, "Password must contain at least 3 of: uppercase, lowercase, digits, special characters"
+
+    return True, ""
+
+
 # === RSA Key Management for Secure API Key Transmission ===
 
 # Global RSA key cache (initialized once)

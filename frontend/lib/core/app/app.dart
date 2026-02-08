@@ -171,10 +171,15 @@ class _PersonalAIAssistantAppState
       authCheckCompleted = true;
     } on TimeoutException catch (_) {
       debugPrint('⚠️ [AppInit] Auth check timed out - continuing anyway');
+      // CRITICAL: Reset loading state to prevent infinite loading
+      // The timeout happens externally, so auth provider's state doesn't get updated
+      ref.read(authProvider.notifier).resetLoadingState();
       // The router will redirect to login since isAuthenticated defaults to false
       // Background auth check may complete later but won't affect UI
     } catch (e) {
       debugPrint('⚠️ [AppInit] Auth check failed: $e, continuing initialization');
+      // CRITICAL: Reset loading state on error
+      ref.read(authProvider.notifier).resetLoadingState();
       // Don't block app initialization on auth errors
       // The router will handle redirecting to login if needed
     }

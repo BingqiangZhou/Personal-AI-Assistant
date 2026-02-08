@@ -9,8 +9,19 @@ This module contains all routes related to AI Model Config management:
 
 import logging
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request, status
+
+if TYPE_CHECKING:
+    from pydantic import BaseModel
+else:
+    try:
+        from pydantic import BaseModel
+    except ImportError:
+        # Fallback for older pydantic versions
+        from pydantic import BaseModel as BaseModelLegacy
+        BaseModel = BaseModelLegacy
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,7 +30,13 @@ from app.admin.audit import log_admin_action
 from app.admin.dependencies import admin_required
 from app.admin.routes._shared import get_templates
 from app.core.database import get_db_session
-from app.core.security import decrypt_data, encrypt_data
+from app.core.security import (
+    decrypt_data,
+    decrypt_data_with_password,
+    encrypt_data,
+    encrypt_data_with_password,
+    validate_export_password,
+)
 from app.domains.ai.models import AIModelConfig, ModelType
 from app.domains.user.models import User
 
@@ -446,18 +463,61 @@ async def delete_apikey(
         )
 
 
-@router.get("/api/apikeys/export/json")
+class ExportRequest(BaseModel):
+    """Request model for API key export."""
+    mode: str = "encrypted"  # "plaintext" or "encrypted"
+    export_password: str | None = None  # Required for encrypted mode
+
+    class Config:
+        # For Pydantic v2 compatibility
+        arbitrary_types_allowed = True
+
+
+@router.post("/api/apikeys/export/json")
 async def export_apikeys_json(
     request: Request,
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
+    export_req: ExportRequest = Body(default=ExportRequest()),
 ):
     """Export all API keys to JSON format.
 
-    API keys remain encrypted in the export for security.
+    Args:
+        export_req: Export request containing mode and password
+            - mode: "plaintext" (decrypted) or "encrypted" (password-protected)
+            - export_password: Required when mode="encrypted"
+
+    API keys handling:
+    - plaintext: API keys are decrypted in JSON (for trusted environments)
+    - encrypted: API keys are encrypted with export password (for production)
     """
     try:
         import json
+
+        mode = export_req.mode
+        export_password = export_req.export_password
+
+        # Validate mode
+        if mode not in ["plaintext", "encrypted"]:
+            return JSONResponse(
+                content={"success": False, "message": f"Invalid mode: {mode}"},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        # For encrypted mode, validate password
+        if mode == "encrypted":
+            if not export_password:
+                return JSONResponse(
+                    content={"success": False, "message": "export_password is required for encrypted mode"},
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+            # Validate password strength
+            is_valid, error_msg = validate_export_password(export_password)
+            if not is_valid:
+                return JSONResponse(
+                    content={"success": False, "message": f"Weak password: {error_msg}"},
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
 
         # Get all API keys
         result = await db.execute(
@@ -467,7 +527,8 @@ async def export_apikeys_json(
 
         # Build export data
         export_data = {
-            "version": "1.0",
+            "version": "2.0",  # New version to indicate format change
+            "export_mode": mode,
             "exported_at": datetime.now(timezone.utc).isoformat(),
             "exported_by": user.username,
             "total_count": len(apikeys),
@@ -475,40 +536,82 @@ async def export_apikeys_json(
         }
 
         for key in apikeys:
-            # API key is already encrypted in the database
             key_data = {
                 "name": key.name,
                 "display_name": key.display_name,
                 "provider": key.provider,
                 "model_type": key.model_type,
                 "api_url": key.api_url,
-                "api_key_encrypted": key.api_key,  # Already encrypted
-                "api_key_encrypted_flag": key.api_key_encrypted,
                 "priority": key.priority,
                 "description": key.description,
                 "is_active": key.is_active,
                 "created_at": key.created_at.isoformat() if key.created_at else None,
             }
+
+            # Handle API key based on mode
+            if mode == "plaintext":
+                # Decrypt API key for plaintext export
+                try:
+                    if key.api_key_encrypted:
+                        decrypted_key = decrypt_data(key.api_key)
+                        key_data["api_key"] = decrypted_key
+                        key_data["api_key_encrypted"] = False
+                    else:
+                        # Already plaintext (shouldn't happen in normal operation)
+                        key_data["api_key"] = key.api_key
+                        key_data["api_key_encrypted"] = False
+                except Exception as e:
+                    logger.warning(f"Failed to decrypt API key for {key.name}: {e}")
+                    key_data["api_key"] = ""
+                    key_data["api_key_error"] = "Decryption failed"
+
+            else:  # mode == "encrypted"
+                # Encrypt API key with export password
+                try:
+                    if key.api_key_encrypted:
+                        # First decrypt with SECRET_KEY, then re-encrypt with password
+                        decrypted_key = decrypt_data(key.api_key)
+                        encrypted_dict = encrypt_data_with_password(decrypted_key, export_password)
+                        key_data["api_key_encrypted_export"] = encrypted_dict
+                        key_data["api_key_encrypted_flag"] = True
+                    else:
+                        # Directly encrypt plaintext with password
+                        encrypted_dict = encrypt_data_with_password(key.api_key, export_password)
+                        key_data["api_key_encrypted_export"] = encrypted_dict
+                        key_data["api_key_encrypted_flag"] = True
+                except Exception as e:
+                    logger.warning(f"Failed to encrypt API key for {key.name}: {e}")
+                    key_data["api_key_encrypted_export"] = None
+                    key_data["api_key_error"] = "Encryption failed"
+
             export_data["apikeys"].append(key_data)
 
-        # Log audit action
+        # Log audit action with mode details
         await log_admin_action(
             db=db,
             user_id=user.id,
             username=user.username,
             action="export_json",
             resource_type="apikey",
-            details={"count": len(apikeys)},
+            details={
+                "count": len(apikeys),
+                "mode": mode,
+                "plaintext_warning": mode == "plaintext"  # Flag for security audit
+            },
             request=request,
         )
 
-        logger.info(f"Exported {len(apikeys)} API keys to JSON by user {user.username}")
+        logger.info(f"Exported {len(apikeys)} API keys to JSON (mode={mode}) by user {user.username}")
+
+        # Add security warning for plaintext mode in filename
+        mode_suffix = "_PLAINTEXT" if mode == "plaintext" else ""
+        filename = f"apikeys_export{mode_suffix}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
 
         return Response(
             content=json.dumps(export_data, indent=2, ensure_ascii=False),
             media_type="application/json",
             headers={
-                "Content-Disposition": f"attachment; filename=apikeys_export_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+                "Content-Disposition": f"attachment; filename={filename}"
             }
         )
     except Exception as e:
@@ -524,16 +627,14 @@ async def import_apikeys_json(
     request: Request,
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
-    file: bytes = Body(...),
-    mode: str = Body(default="skip"),  # skip, update, replace
-    test_before_import: bool = Body(default=False),
 ):
     """Import API keys from JSON format.
 
-    Args:
-        file: JSON file content as bytes
+    Request body (JSON):
+        file: JSON file content as string
         mode: Import mode - 'skip' (skip if exists), 'update' (update if exists), 'replace' (replace all)
-        test_before_import: Whether to test API keys before importing (requires decryption)
+        import_password: Password to decrypt encrypted exports (required for export_mode="encrypted")
+        test_before_import: Whether to test API keys before importing
 
     Returns:
         JSON response with import statistics
@@ -541,9 +642,43 @@ async def import_apikeys_json(
     try:
         import json
 
+        # Parse request body - get raw body first for debugging
+        raw_body = await request.body()
+        logger.info(f"Import API received raw body (first 200 chars): {raw_body[:200] if raw_body else 'empty'}")
+
+        if not raw_body:
+            return JSONResponse(
+                content={"success": False, "message": "Empty request body"},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
         # Parse JSON
         try:
-            import_data = json.loads(file)
+            body = json.loads(raw_body.decode('utf-8'))
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse request JSON: {e}")
+            return JSONResponse(
+                content={"success": False, "message": f"Invalid JSON in request body: {str(e)}"},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        file_content = body.get("file")
+        mode = body.get("mode", "skip")
+        import_password = body.get("import_password")
+        test_before_import = body.get("test_before_import", False)
+
+        logger.info(f"Import request: mode={mode}, has_file={bool(file_content)}, has_password={bool(import_password)}")
+
+        if not file_content:
+            logger.error(f"Request body keys: {list(body.keys())}")
+            return JSONResponse(
+                content={"success": False, "message": "Missing 'file' field in request body"},
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Parse JSON file content
+        try:
+            import_data = json.loads(file_content)
         except json.JSONDecodeError as e:
             return JSONResponse(
                 content={"success": False, "message": f"Invalid JSON format: {str(e)}"},
@@ -563,6 +698,21 @@ async def import_apikeys_json(
                 content={"success": False, "message": "Invalid format: 'apikeys' must be a list"},
                 status_code=status.HTTP_400_BAD_REQUEST
             )
+
+        # Detect export format version
+        export_version = import_data.get("version", "1.0")
+        export_mode = import_data.get("export_mode", "encrypted")
+
+        # Validate import password for encrypted exports
+        if export_mode == "encrypted" or export_version == "1.0":
+            if not import_password:
+                return JSONResponse(
+                    content={
+                        "success": False,
+                        "message": "import_password is required for encrypted exports"
+                    },
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
 
         # Import statistics
         success_count = 0
@@ -596,6 +746,54 @@ async def import_apikeys_json(
 
                 name = key_data["name"]
 
+                # Decrypt API key based on export format
+                api_key_plaintext = None
+
+                if export_version == "2.0" and export_mode == "plaintext":
+                    # Plaintext export (v2.0)
+                    api_key_plaintext = key_data.get("api_key")
+                    if not api_key_plaintext:
+                        error_msg = f"Row {idx + 1}: Missing api_key in plaintext export"
+                        errors.append(error_msg)
+                        error_count += 1
+                        continue
+
+                elif export_version == "2.0" and export_mode == "encrypted":
+                    # Encrypted export (v2.0)
+                    encrypted_dict = key_data.get("api_key_encrypted_export")
+                    if not encrypted_dict:
+                        error_msg = f"Row {idx + 1}: Missing api_key_encrypted_export"
+                        errors.append(error_msg)
+                        error_count += 1
+                        continue
+
+                    try:
+                        api_key_plaintext = decrypt_data_with_password(encrypted_dict, import_password)
+                    except ValueError as e:
+                        error_msg = f"Row {idx + 1}: Failed to decrypt API key: {str(e)}"
+                        errors.append(error_msg)
+                        error_count += 1
+                        continue
+
+                else:  # export_version == "1.0" (legacy format)
+                    # Legacy format - api_key_encrypted contains Fernet-encrypted data
+                    encrypted_key = key_data.get("api_key_encrypted", "")
+                    if not encrypted_key:
+                        error_msg = f"Row {idx + 1}: Missing api_key_encrypted in legacy format"
+                        errors.append(error_msg)
+                        error_count += 1
+                        continue
+
+                    # For legacy format, we need to handle the SECRET_KEY issue
+                    # Try to decrypt first - if it fails, the user must re-enter
+                    try:
+                        api_key_plaintext = decrypt_data(encrypted_key)
+                    except ValueError:
+                        error_msg = f"Row {idx + 1}: Cannot decrypt API key (different SECRET_KEY). Please re-export using v2.0 format."
+                        errors.append(error_msg)
+                        error_count += 1
+                        continue
+
                 # Check if key already exists
                 existing_key = existing_keys.get(name)
 
@@ -619,13 +817,18 @@ async def import_apikeys_json(
                             existing_key.description = key_data["description"]
                         if "is_active" in key_data:
                             existing_key.is_active = key_data["is_active"]
-                        # Update API key if provided and encrypted
-                        if "api_key_encrypted" in key_data:
-                            encrypted_key = key_data["api_key_encrypted"]
-                            # Only update if we have actual data
-                            if encrypted_key and encrypted_key.strip():
-                                existing_key.api_key = encrypted_key
-                                existing_key.api_key_encrypted = key_data.get("api_key_encrypted_flag", True)
+
+                        # Update API key if we successfully decrypted it
+                        if api_key_plaintext:
+                            encrypted_key = encrypt_data(api_key_plaintext)
+                            if len(encrypted_key) < 44:
+                                logger.error(f"Encryption produced invalid length for config {name}")
+                                error_msg = f"Row {idx + 1}: Failed to encrypt API key"
+                                errors.append(error_msg)
+                                error_count += 1
+                                continue
+                            existing_key.api_key = encrypted_key
+                            existing_key.api_key_encrypted = True
 
                         updated_count += 1
                     else:
@@ -633,9 +836,16 @@ async def import_apikeys_json(
                         continue
                 else:
                     # Create new API key
-                    # Determine if API key is encrypted: only set to True if we have actual encrypted data
-                    encrypted_key = key_data.get("api_key_encrypted", "")
-                    is_encrypted = bool(encrypted_key and encrypted_key.strip()) and key_data.get("api_key_encrypted_flag", True)
+                    if api_key_plaintext:
+                        encrypted_key = encrypt_data(api_key_plaintext)
+                        if len(encrypted_key) < 44:
+                            logger.error(f"Encryption produced invalid length for config {name}")
+                            error_msg = f"Row {idx + 1}: Failed to encrypt API key"
+                            errors.append(error_msg)
+                            error_count += 1
+                            continue
+                    else:
+                        encrypted_key = ""
 
                     new_key = AIModelConfig(
                         name=key_data["name"],
@@ -644,7 +854,7 @@ async def import_apikeys_json(
                         model_type=key_data["model_type"],
                         api_url=key_data["api_url"],
                         api_key=encrypted_key,
-                        api_key_encrypted=is_encrypted,
+                        api_key_encrypted=bool(encrypted_key),
                         model_id=key_data["name"],
                         priority=key_data.get("priority", 1),
                         description=key_data.get("description"),
@@ -670,6 +880,8 @@ async def import_apikeys_json(
             resource_type="apikey",
             details={
                 "mode": mode,
+                "export_version": export_version,
+                "export_mode": export_mode,
                 "success_count": success_count,
                 "updated_count": updated_count,
                 "skipped_count": skipped_count,

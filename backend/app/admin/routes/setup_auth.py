@@ -311,9 +311,14 @@ async def login(
             )
             return response
 
-        # Check if user has 2FA enabled
-        if user.totp_secret:
-            # Store user ID in cookie for 2FA verification
+        # Check if user has 2FA enabled AND global 2FA is enabled
+        # 检查用户是否启用2FA 且 全局2FA已启用
+        from app.admin.security_settings import get_admin_2fa_enabled
+        admin_2fa_enabled, _ = await get_admin_2fa_enabled(db)
+
+        if user.is_2fa_enabled and admin_2fa_enabled:
+            # User has 2FA enabled, require verification
+            # 用户已启用2FA，要求验证
             response = templates.TemplateResponse(
                 "2fa_verify.html",
                 {
@@ -334,7 +339,25 @@ async def login(
             )
             return response
         else:
-            # No 2FA, create session directly
+            # Check if global 2FA is enabled but user hasn't set up 2FA
+            # 检查全局2FA是否开启但用户未设置2FA
+            if admin_2fa_enabled and not user.is_2fa_enabled:
+                # Create session first (user is authenticated)
+                session_token = create_admin_session(user.id)
+                # Then redirect to 2FA setup (will be enforced by AdminAuthRequired)
+                response = RedirectResponse(url="/super/2fa/setup", status_code=status.HTTP_303_SEE_OTHER)
+                response.set_cookie(
+                    key="admin_session",
+                    value=session_token,
+                    httponly=True,
+                    secure=True,
+                    samesite="lax",
+                    max_age=30 * 60,  # 30 minutes
+                )
+                logger.info(f"User {username} logged in but required to set up 2FA")
+                return response
+
+            # No 2FA required, create session directly
             session_token = create_admin_session(user.id)
 
             response = RedirectResponse(url="/super", status_code=status.HTTP_303_SEE_OTHER)
@@ -347,7 +370,13 @@ async def login(
                 max_age=30 * 60,  # 30 minutes
             )
 
-            logger.info(f"User {username} logged in without 2FA")
+            # Log login with 2FA status
+            if user.is_2fa_enabled and not admin_2fa_enabled:
+                logger.info(f"User {username} logged in with 2FA enabled but global 2FA is disabled")
+            elif not admin_2fa_enabled:
+                logger.info(f"User {username} logged in without 2FA (global disabled)")
+            else:
+                logger.info(f"User {username} logged in without 2FA configured")
             return response
 
     except Exception as e:
@@ -580,7 +609,7 @@ async def verify_2fa_setup(
             return response
 
         # Enable 2FA
-        user.totp_enabled = True
+        user.is_2fa_enabled = True
         await db.commit()
 
         logger.info(f"User {user.username} enabled 2FA")
@@ -621,7 +650,7 @@ async def disable_2fa(
             )
 
         # Disable 2FA
-        user.totp_enabled = False
+        user.is_2fa_enabled = False
         user.totp_secret = None
         await db.commit()
 

@@ -526,6 +526,13 @@ class AuthNotifier extends Notifier<AuthState> {
     state = state.copyWith(clearFieldErrors: true);
   }
 
+  /// Reset loading state (called when auth check times out or is cancelled)
+  void resetLoadingState() {
+    if (state.isLoading) {
+      state = state.copyWith(isLoading: false, currentOperation: null);
+    }
+  }
+
   Future<void> checkAuthStatus() async {
     await _checkAuthStatus();
   }

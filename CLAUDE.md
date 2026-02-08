@@ -16,6 +16,7 @@ flutter test test/widget/  # Widget tests MANDATORY for pages
 
 # Docker (backend MUST be tested this way)
 cd docker && docker-compose up -d
+# After modifying backend code: cd docker && docker-compose build backend && docker-compose up -d
 
 ## Project-Specific Rules
 
@@ -43,10 +44,13 @@ cd docker && docker-compose up -d
 | ❌ Wrong | ✅ Correct |
 |---------|-----------|
 | `pip install` | `uv add` or `uv sync` |
-| black/isort/flake8 | `ruff check` / `ruff format` |
+| `uv run` commands locally (ruff/pytest) | Run inside Docker container |
 | `uvicorn` directly for testing | Docker for testing |
 | Material 2 components | Material 3 only |
 | Skip widget tests | Required for pages |
+
+**IMPORTANT:**
+- All backend testing (ruff, pytest, etc.) MUST be done via Docker, not locally with `uv run`.
 
 ## Completion Criteria
 
