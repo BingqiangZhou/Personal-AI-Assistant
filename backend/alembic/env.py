@@ -17,10 +17,7 @@ from alembic import context
 # Add the app directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-# === STEP 1: Create isolated Base for migrations ===
-Base = declarative_base()
-
-# === STEP 2: Mock modules to prevent circular imports ===
+# === STEP 1: Mock modules to prevent circular imports ===
 import types
 
 
@@ -189,14 +186,28 @@ mock_security_module.enable_ec256_optimized = MockSecurity.enable_ec256_optimize
 mock_security_module.OAuth2PasswordBearer = lambda tokenUrl: None
 sys.modules['app.core.security'] = mock_security_module
 
-# Mock database module to prevent circular imports
-mock_database_module = types.ModuleType('app.core.database')
-mock_database_module.Base = Base
-mock_database_module.get_db_session = lambda: None
-mock_database_module.engine = None
-sys.modules['app.core.database'] = mock_database_module
+# === STEP 2: Import database module to get Base ===
+# Import after mocking config and security to avoid circular imports
+from app.core.database import Base
 
 # === STEP 3: Import all models ===
+# Import all domain models so they're registered with Base.metadata
+from app.domains.user.models import User, UserSession, PasswordReset
+from app.domains.subscription.models import (
+    Subscription,
+    UserSubscription,
+    SubscriptionItem,
+    SubscriptionCategory,
+    SubscriptionCategoryMapping,
+)
+from app.domains.podcast.models import (
+    PodcastEpisode,
+    PodcastPlaybackState,
+    TranscriptionTask,
+    PodcastConversation,
+)
+from app.domains.ai.models import AIModelConfig
+from app.admin.models import AdminAuditLog, SystemSettings, BackgroundTaskRun
 
 # === STEP 4: Configure Alembic ===
 config = context.config
