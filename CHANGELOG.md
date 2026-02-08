@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.2.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.1.10...v0.2.0) - 2026-02-08 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.2.0))
+
+### 🎨 Styling
+
+- Apply consistent import ordering and formatting ([78a4fd6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/78a4fd65b946316027179f8b8a13a192255cf91f))
+
+### 🚀 Features
+
+- *(performance)* Implement comprehensive performance optimization ([900d0df](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/900d0dfa5c09117cfd6bec7bf099d2f72380b2f1))
+- Add performance optimizations, security enhancements and type safety ([01d1209](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/01d12097adf1a0873bc04e451c2ef550542e999e))
+- Remove knowledge domain and related functionality ([f81bc74](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f81bc74d5434cf23214dd2152036630b99a31f35))
+- Add server config runtime update and speed ruler control specifications ([66c8203](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/66c820370f10d3db0bffc1ac60a8720a489e7606))
+- Implement ETag caching for podcast API responses ([1808f23](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1808f23090cd0d422d67e7c115fa76f9b7bcc3d0))
+- Enhance podcast subscription handling with direct access and metadata updates ([f16736c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f16736cc6c4e18f218f0594214cccb3fb8065da9))
+- Refactor subscription handling and cleanup duplicates ([0fc802e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0fc802e81c3f971d52c8167a1193c5f173c9e3cc))
+- Refactor podcast services and introduce dedicated stats service ([6cfc060](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6cfc0608f7504e7a0486d1c0acf4c0f544b0df4d))
+- *(subscription)* Add podcast subscription API routes and service dependencies ([33c324c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/33c324cd36174c7071b6c0cceda318cfdf5c1f90))
+- *(auth)* Enhance 2FA handling and session management ([5b2f5d2](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5b2f5d232ecd1f6dff65a0d9982562879b034227))
+- Update datetime columns to be timezone-aware and enhance podcast subscription image URL extraction ([6d3bd2f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6d3bd2fc733cae7e30083b2ec854ba515bf2365b))
+
+### 🚜 Refactor
+
+- *(podcast)* Split monolithic service into specialized services and add dependency injection ([a8ff5cf](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a8ff5cfd643351fdaa2144939e3fe35dedef1e97))
+- Move podcast integration to domain and clean up unused files ([e8de58a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e8de58aea01619f9e30304f2b18bc348cce6b8f2))
+- Slim backend batch1 dead code and shims ([da21280](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/da212801f94832d33490876bb5dc66cb5bea60ed))
+- Slim backend batch2 rewrite podcast task system ([3e9e40d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3e9e40dc98ff6f24b68d797897e4ec3b3c8c1a33))
+- Slim backend batch3 modularize admin routes ([0c1b6d6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0c1b6d6625a7b4d3412092ee611a3acb90c6dafc))
+
+
+
 ## [0.1.10](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.1.9...v0.1.10) - 2026-01-24 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.1.10))
 
 ### ⚙️ Miscellaneous Tasks
