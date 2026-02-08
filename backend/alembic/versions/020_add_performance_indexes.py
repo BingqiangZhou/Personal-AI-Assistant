@@ -34,11 +34,12 @@ def upgrade() -> None:
         ON podcast_episodes (subscription_id, published_at DESC);
     """))
 
-    # Composite index for episode status filtering: (status, ai_summary)
+    # Partial index for episode status filtering
     # This improves queries that filter episodes needing summaries
+    # Note: Cannot index TEXT column directly due to size limits
     op.execute(text("""
         CREATE INDEX IF NOT EXISTS idx_podcast_status_summary
-        ON podcast_episodes (status, ai_summary)
+        ON podcast_episodes (status)
         WHERE ai_summary IS NOT NULL;
     """))
 
