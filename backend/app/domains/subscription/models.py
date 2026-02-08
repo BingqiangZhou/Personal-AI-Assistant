@@ -59,17 +59,17 @@ class Subscription(Base):
     source_url = Column(String(500), nullable=False)
     config = Column(JSON, nullable=True, default={})
     status = Column(String(20), default=SubscriptionStatus.ACTIVE)
-    last_fetched_at = Column(DateTime, nullable=True)
+    last_fetched_at = Column(DateTime(timezone=True), nullable=True)
     latest_item_published_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=True,
         comment="Published timestamp of the latest item from this feed"
     )
     error_message = Column(Text, nullable=True)
     fetch_interval = Column(Integer, default=3600)
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     user_subscriptions = relationship("UserSubscription", back_populates="subscription", cascade="all, delete-orphan")
     items = relationship("SubscriptionItem", back_populates="subscription", cascade="all, delete-orphan")
@@ -121,8 +121,8 @@ class UserSubscription(Base):
     is_archived = Column(Boolean, default=False, comment="User has archived this subscription")
     is_pinned = Column(Boolean, default=False, comment="User has pinned this subscription")
 
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="user_subscriptions")
     subscription = relationship("Subscription", back_populates="user_subscriptions")
@@ -252,11 +252,11 @@ class SubscriptionItem(Base):
     image_url = Column(String(500), nullable=True)
     tags = Column(JSON, nullable=True, default=[])
     metadata_json = Column("metadata", JSON, nullable=True, default={})
-    published_at = Column(DateTime, nullable=True)
-    read_at = Column(DateTime, nullable=True)
+    published_at = Column(DateTime(timezone=True), nullable=True)
+    read_at = Column(DateTime(timezone=True), nullable=True)
     bookmarked = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     subscription = relationship("Subscription", back_populates="items")
 
@@ -282,8 +282,8 @@ class SubscriptionCategory(Base):
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
     color = Column(String(7), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="subscription_categories")
     subscriptions = relationship(
@@ -304,4 +304,4 @@ class SubscriptionCategoryMapping(Base):
 
     subscription_id = Column(Integer, ForeignKey("subscriptions.id"), primary_key=True)
     category_id = Column(Integer, ForeignKey("subscription_categories.id"), primary_key=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

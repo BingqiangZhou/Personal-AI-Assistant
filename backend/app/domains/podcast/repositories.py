@@ -8,7 +8,7 @@ from typing import Any
 
 from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import attributes, joinedload
 
 from app.core.datetime_utils import sanitize_published_date
 from app.core.redis import PodcastRedis
@@ -104,12 +104,14 @@ class PodcastRepository:
             subscription.title = custom_name or title
             subscription.description = description
             subscription.updated_at = datetime.now(timezone.utc)
-            # 更新元数据
+            # 更新元数据 - 使用新字典对象确保 SQLAlchemy 检测到变更
             if metadata:
-                existing_config = subscription.config or {}
+                existing_config = dict(subscription.config or {})
                 # 合并新旧元数据，保留原有的其他配置
                 existing_config.update(metadata)
                 subscription.config = existing_config
+                # 显式标记字段已修改，确保 JSON 列变更被持久化
+                attributes.flag_modified(subscription, 'config')
         else:
             # 创建新订阅（无user_id）
             subscription = Subscription(
@@ -719,10 +721,12 @@ class PodcastRepository:
         subscription = result.scalar_one_or_none()
 
         if subscription:
-            # 合并现有配置和新元数据
-            current_config = subscription.config or {}
+            # 合并现有配置和新元数据 - 使用新字典对象确保 SQLAlchemy 检测到变更
+            current_config = dict(subscription.config or {})
             current_config.update(metadata)
             subscription.config = current_config
+            # 显式标记字段已修改，确保 JSON 列变更被持久化
+            attributes.flag_modified(subscription, 'config')
             subscription.updated_at = datetime.now(timezone.utc)
             await self.db.commit()
 

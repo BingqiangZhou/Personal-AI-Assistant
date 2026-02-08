@@ -173,9 +173,8 @@ class SecureRSSParser:
         explicit_text = self._safe_text(channel.findtext('itunes:explicit', '', namespaces=itunes_ns))
         explicit = explicit_text.lower() == 'true' if explicit_text else None
 
-        # Podcast image
-        image_element = channel.find('itunes:image', namespaces=itunes_ns)
-        image_url = image_element.get('href') if image_element is not None else None
+        # Podcast image - extract from multiple sources
+        image_url = self._extract_channel_image_url(channel, itunes_ns)
 
         # Podcast type
         podcast_type = self._safe_text(channel.findtext('itunes:type', '', namespaces=itunes_ns))
@@ -205,6 +204,82 @@ class SecureRSSParser:
             podcast_type=podcast_type or None,
             platform=platform
         )
+
+    def _extract_channel_image_url(self, channel, itunes_ns: dict) -> str | None:
+        """
+        Extract podcast/channel image URL from multiple possible tag formats.
+
+        Tries in order:
+        1. itunes:image (href attribute)
+        2. Standard RSS <image><url>
+        3. <media:thumbnail> (media namespace)
+        4. <atom:link rel="self" type="image">
+        5. <googleplay:image> (googleplay namespace)
+
+        Args:
+            channel: XML channel element
+            itunes_ns: iTunes namespace dict
+
+        Returns:
+            Image URL string or None
+        """
+        # Method 1: iTunes namespace image (most common for podcasts)
+        image_element = channel.find('itunes:image', namespaces=itunes_ns)
+        if image_element is not None:
+            href = image_element.get('href')
+            if href:
+                logger.debug(f"Found image via itunes:image: {href}")
+                return href
+
+        # Method 2: Standard RSS <image><url> tag
+        image_element = channel.find('image')
+        if image_element is not None:
+            url_element = image_element.find('url')
+            if url_element is not None and url_element.text:
+                url = url_element.text.strip()
+                if url and self._is_valid_image_url(url):
+                    logger.debug(f"Found image via RSS <image><url>: {url}")
+                    return url
+
+        # Method 3: Media namespace thumbnail
+        media_ns = {'media': 'http://search.yahoo.com/mrss/'}
+        thumbnail = channel.find('media:thumbnail', namespaces=media_ns)
+        if thumbnail is not None:
+            url = thumbnail.get('url')
+            if url and self._is_valid_image_url(url):
+                logger.debug(f"Found image via media:thumbnail: {url}")
+                return url
+
+        # Method 4: Atom link with image type
+        atom_ns = {'atom': 'http://www.w3.org/2005/Atom'}
+        for link in channel.findall('atom:link', namespaces=atom_ns):
+            rel = link.get('rel', '')
+            link_type = link.get('type', '')
+            href = link.get('href', '')
+            if (rel == 'self' or 'image' in link_type.lower()) and href:
+                if self._is_valid_image_url(href):
+                    logger.debug(f"Found image via atom:link: {href}")
+                    return href
+
+        # Method 5: Google Play namespace
+        gplay_ns = {'gplay': 'http://www.google.com/schemas/play-podcasts/1.0'}
+        gplay_image = channel.find('gplay:image', namespaces=gplay_ns)
+        if gplay_image is not None:
+            href = gplay_image.get('href')
+            if href and self._is_valid_image_url(href):
+                logger.debug(f"Found image via googleplay:image: {href}")
+                return href
+
+        # Method 6: Simple image tag with src attribute (non-standard but some feeds use it)
+        simple_image = channel.find('image')
+        if simple_image is not None:
+            src = simple_image.get('src')
+            if src and self._is_valid_image_url(src):
+                logger.debug(f"Found image via <image src>: {src}")
+                return src
+
+        logger.debug("No channel image found in any supported format")
+        return None
 
     def _parse_episode(self, item) -> PodcastEpisode | None:
         """Parse a single episode item"""

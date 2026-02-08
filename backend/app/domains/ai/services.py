@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import ValidationError
+from app.core.utils import filter_thinking_content, sanitize_html
 from app.domains.ai.model_testing import (
     test_text_generation_model,
     test_transcription_model,
@@ -663,12 +664,18 @@ class TextGenerationService:
 
                 response = await client.chat.completions.create(**api_params)
 
+                # Filter out <thinking> tags and sanitize HTML before returning
+                # 过滤掉 <thinking> 标签并清理 HTML 后再返回
+                raw_content = response.choices[0].message.content.strip()
+                cleaned_content = filter_thinking_content(raw_content)
+                safe_content = sanitize_html(cleaned_content)
+
                 # Success - log and return
                 logger.info(
                     f"Successfully generated summary using model "
                     f"[{model_config.display_name or model_config.name}]"
                 )
-                return response.choices[0].message.content.strip()
+                return safe_content
 
             except AuthenticationError as e:
                 last_error = e

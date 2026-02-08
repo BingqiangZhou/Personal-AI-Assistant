@@ -5,7 +5,7 @@
 """
 
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     JSON,
@@ -43,7 +43,7 @@ class PodcastEpisode(Base):
     # 播客基本信息
     title = Column(String(500), nullable=False)
     description = Column(Text, nullable=True)
-    published_at = Column(DateTime, nullable=False)
+    published_at = Column(DateTime(timezone=True), nullable=False)
 
     # 音频信息
     audio_url = Column(String(500), nullable=False)
@@ -67,7 +67,7 @@ class PodcastEpisode(Base):
 
     # 播放统计（全局）
     play_count = Column(Integer, default=0)
-    last_played_at = Column(DateTime)
+    last_played_at = Column(DateTime(timezone=True))
 
     # 节目信息
     season = Column(Integer)  # 季节
@@ -77,8 +77,8 @@ class PodcastEpisode(Base):
     # 状态和元数据
     status = Column(String(50), default="pending_summary")  # pending, summarized, failed
     metadata_json = Column("metadata", JSON, nullable=True, default={})  # Renamed to avoid SQLAlchemy reserved attribute
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     subscription = relationship("Subscription", back_populates="podcast_episodes")
@@ -131,7 +131,7 @@ class PodcastPlaybackState(Base):
     current_position = Column(Integer, default=0)  # 当前播放位置(秒)
     is_playing = Column(Boolean, default=False)
     playback_rate = Column(Float, default=1.0)  # 播放速度
-    last_updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # 统计
     play_count = Column(Integer, default=0)
@@ -300,7 +300,7 @@ class PodcastConversation(Base):
     processing_time = Column(Float)  # 处理时间（秒）
 
     # 时间戳
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
 
     # Relationships
     episode = relationship("PodcastEpisode", backref="conversations")
