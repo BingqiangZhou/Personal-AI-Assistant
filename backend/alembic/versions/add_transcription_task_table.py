@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
@@ -19,13 +20,29 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create transcription status enum
-    transcription_status_enum = sa.Enum(
-        'pending', 'downloading', 'converting', 'splitting',
-        'transcribing', 'merging', 'completed', 'failed', 'cancelled',
-        name='transcriptionstatus'
-    )
-    transcription_status_enum.create(op.get_bind())
+    # Create transcription status enum (check if exists first)
+    conn = op.get_bind()
+    enum_exists = conn.execute(text("""
+        SELECT EXISTS (
+            SELECT 1 FROM pg_type
+            WHERE typname = 'transcriptionstatus'
+        );
+    """)).scalar()
+
+    if not enum_exists:
+        transcription_status_enum = sa.Enum(
+            'pending', 'downloading', 'converting', 'splitting',
+            'transcribing', 'merging', 'completed', 'failed', 'cancelled',
+            name='transcriptionstatus'
+        )
+        transcription_status_enum.create(op.get_bind(), checkfirst=False)
+    else:
+        # Enum already exists, just reference it
+        transcription_status_enum = postgresql.ENUM(
+            'pending', 'downloading', 'converting', 'splitting',
+            'transcribing', 'merging', 'completed', 'failed', 'cancelled',
+            name='transcriptionstatus'
+        )
 
     # Create transcription_tasks table
     op.create_table(
