@@ -20,7 +20,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create transcription status enum (check if exists first)
+    # Create transcription status enum if it doesn't exist
     conn = op.get_bind()
     enum_exists = conn.execute(text("""
         SELECT EXISTS (
@@ -30,47 +30,59 @@ def upgrade() -> None:
     """)).scalar()
 
     if not enum_exists:
-        transcription_status_enum = sa.Enum(
-            'pending', 'downloading', 'converting', 'splitting',
-            'transcribing', 'merging', 'completed', 'failed', 'cancelled',
-            name='transcriptionstatus'
-        )
-        transcription_status_enum.create(op.get_bind(), checkfirst=False)
-    else:
-        # Enum already exists, just reference it
-        transcription_status_enum = postgresql.ENUM(
-            'pending', 'downloading', 'converting', 'splitting',
-            'transcribing', 'merging', 'completed', 'failed', 'cancelled',
-            name='transcriptionstatus'
-        )
+        conn.execute(text("""
+            CREATE TYPE transcriptionstatus AS ENUM (
+                'pending', 'downloading', 'converting', 'splitting',
+                'transcribing', 'merging', 'completed', 'failed', 'cancelled'
+            );
+        """))
 
-    # Create transcription_tasks table
-    op.create_table(
+    # Create transcription_tasks table using raw SQL for enum type
+    op.execute(text("""
+        CREATE TABLE IF NOT EXISTS transcription_tasks (
+            id SERIAL PRIMARY KEY,
+            episode_id INTEGER NOT NULL REFERENCES podcast_episodes(id),
+            status transcriptionstatus NOT NULL,
+            progress_percentage FLOAT DEFAULT 0.0,
+            original_audio_url VARCHAR(500) NOT NULL,
+            original_file_path VARCHAR(1000),
+            original_file_size INTEGER,
+            transcript_content TEXT,
+            transcript_word_count INTEGER,
+            transcript_duration INTEGER,
+            chunk_info JSON DEFAULT '{}',
+            error_message TEXT,
+            error_code VARCHAR(50),
+            download_time FLOAT,
+            conversion_time FLOAT,
+            transcription_time FLOAT,
+            chunk_size_mb INTEGER DEFAULT 10,
+            model_used VARCHAR(100),
+            created_at TIMESTAMP,
+            started_at TIMESTAMP,
+            completed_at TIMESTAMP,
+            updated_at TIMESTAMP
+        );
+    """))
+
+    # Create indexes
+    op.create_index(
+        op.f('ix_transcription_episode'),
         'transcription_tasks',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('episode_id', sa.Integer(), nullable=False),
-        sa.Column('status', transcription_status_enum, nullable=False),
-        sa.Column('progress_percentage', sa.Float(), nullable=True, default=0.0),
-        sa.Column('original_audio_url', sa.String(length=500), nullable=False),
-        sa.Column('original_file_path', sa.String(length=1000), nullable=True),
-        sa.Column('original_file_size', sa.Integer(), nullable=True),
-        sa.Column('transcript_content', sa.Text(), nullable=True),
-        sa.Column('transcript_word_count', sa.Integer(), nullable=True),
-        sa.Column('transcript_duration', sa.Integer(), nullable=True),
-        sa.Column('chunk_info', sa.JSON(), nullable=True, default=dict),
-        sa.Column('error_message', sa.Text(), nullable=True),
-        sa.Column('error_code', sa.String(length=50), nullable=True),
-        sa.Column('download_time', sa.Float(), nullable=True),
-        sa.Column('conversion_time', sa.Float(), nullable=True),
-        sa.Column('transcription_time', sa.Float(), nullable=True),
-        sa.Column('chunk_size_mb', sa.Integer(), nullable=True, default=10),
-        sa.Column('model_used', sa.String(length=100), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('started_at', sa.DateTime(), nullable=True),
-        sa.Column('completed_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(['episode_id'], ['podcast_episodes.id'], ),
-        sa.PrimaryKeyConstraint('id')
+        ['episode_id'],
+        unique=True
+    )
+    op.create_index(
+        op.f('ix_transcription_status'),
+        'transcription_tasks',
+        ['status'],
+        unique=False
+    )
+    op.create_index(
+        op.f('ix_transcription_created'),
+        'transcription_tasks',
+        ['created_at'],
+        unique=False
     )
 
     # Create indexes
@@ -96,12 +108,23 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # Drop indexes
-    op.drop_index(op.f('ix_transcription_created'), table_name='transcription_tasks')
-    op.drop_index(op.f('ix_transcription_status'), table_name='transcription_tasks')
-    op.drop_index(op.f('ix_transcription_episode'), table_name='transcription_tasks')
+    op.drop_index(op.f('ix_transcription_created'), table_name='transcription_tasks', checkfirst=True)
+    op.drop_index(op.f('ix_transcription_status'), table_name='transcription_tasks', checkfirst=True)
+    op.drop_index(op.f('ix_transcription_episode'), table_name='transcription_tasks', checkfirst=True)
 
     # Drop table
-    op.drop_table('transcription_tasks')
+    op.execute(text("DROP TABLE IF EXISTS transcription_tasks CASCADE;"))
 
-    # Drop enum
-    sa.Enum(name='transcriptionstatus').drop(op.get_bind())
+    # Drop enum (only if no other tables are using it)
+    conn = op.get_bind()
+    enum_in_use = conn.execute(text("""
+        SELECT EXISTS (
+            SELECT 1 FROM pg_attribute
+            INNER JOIN pg_type ON pg_type.oid = pg_attribute.atttypid
+            WHERE pg_type.typname = 'transcriptionstatus'
+            AND pg_attribute.atttypid != 0
+        );
+    """)).scalar()
+
+    if not enum_in_use:
+        conn.execute(text("DROP TYPE IF EXISTS transcriptionstatus;"))
