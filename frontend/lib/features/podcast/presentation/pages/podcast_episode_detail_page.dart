@@ -10,6 +10,7 @@ import '../providers/podcast_providers.dart';
 import '../providers/transcription_providers.dart';
 import '../providers/summary_providers.dart';
 import '../../data/models/podcast_episode_model.dart';
+import '../../data/models/audio_player_state_model.dart';
 import '../widgets/transcript_display_widget.dart';
 import '../widgets/shownotes_display_widget.dart';
 import '../widgets/transcription_status_widget.dart';
@@ -575,60 +576,9 @@ class _PodcastEpisodeDetailPageState
                           InkWell(
                             onTap: () async {
                               try {
-                                final episodeDetailAsync = await ref.read(
-                                  episodeDetailProvider(
-                                    widget.episodeId,
-                                  ).future,
+                                await _playOrResumeFromDetail(
+                                  _episodeToModel(episode),
                                 );
-                                if (episodeDetailAsync != null) {
-                                  final episodeModel = PodcastEpisodeModel(
-                                    id: episodeDetailAsync.id,
-                                    subscriptionId:
-                                        episodeDetailAsync.subscriptionId,
-                                    subscriptionImageUrl:
-                                        episodeDetailAsync.subscriptionImageUrl,
-                                    title: episodeDetailAsync.title,
-                                    description: episodeDetailAsync.description,
-                                    audioUrl: episodeDetailAsync.audioUrl,
-                                    audioDuration:
-                                        episodeDetailAsync.audioDuration,
-                                    audioFileSize:
-                                        episodeDetailAsync.audioFileSize,
-                                    publishedAt: episodeDetailAsync.publishedAt,
-                                    imageUrl: episodeDetailAsync.imageUrl,
-                                    itemLink: episodeDetailAsync.itemLink,
-                                    transcriptUrl:
-                                        episodeDetailAsync.transcriptUrl,
-                                    transcriptContent:
-                                        episodeDetailAsync.transcriptContent,
-                                    aiSummary: episodeDetailAsync.aiSummary,
-                                    summaryVersion:
-                                        episodeDetailAsync.summaryVersion,
-                                    aiConfidenceScore:
-                                        episodeDetailAsync.aiConfidenceScore,
-                                    playCount: episodeDetailAsync.playCount,
-                                    lastPlayedAt:
-                                        episodeDetailAsync.lastPlayedAt,
-                                    season: episodeDetailAsync.season,
-                                    episodeNumber:
-                                        episodeDetailAsync.episodeNumber,
-                                    explicit: episodeDetailAsync.explicit,
-                                    status: episodeDetailAsync.status,
-                                    metadata: episodeDetailAsync.metadata,
-                                    playbackPosition:
-                                        episodeDetailAsync.playbackPosition,
-                                    isPlaying: episodeDetailAsync.isPlaying,
-                                    playbackRate:
-                                        episodeDetailAsync.playbackRate,
-                                    isPlayed:
-                                        episodeDetailAsync.isPlayed ?? false,
-                                    createdAt: episodeDetailAsync.createdAt,
-                                    updatedAt: episodeDetailAsync.updatedAt,
-                                  );
-                                  await ref
-                                      .read(audioPlayerProvider.notifier)
-                                      .playEpisode(episodeModel);
-                                }
                               } catch (error) {
                                 logger.AppLogger.debug(
                                   '鉂?Failed to play episode: $error',
@@ -636,6 +586,9 @@ class _PodcastEpisodeDetailPageState
                               }
                             },
                             child: Container(
+                              key: const Key(
+                                'podcast_episode_detail_play_button',
+                              ),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
                                 vertical: 4,
@@ -963,45 +916,56 @@ class _PodcastEpisodeDetailPageState
     }
   }
 
-  Future<PodcastEpisodeModel?> _loadEpisodeModelForActions() async {
-    final episodeDetailAsync = await ref.read(
-      episodeDetailProvider(widget.episodeId).future,
+  PodcastEpisodeModel _episodeToModel(dynamic episode) {
+    return PodcastEpisodeModel(
+      id: episode.id,
+      subscriptionId: episode.subscriptionId,
+      subscriptionImageUrl: episode.subscriptionImageUrl,
+      title: episode.title,
+      description: episode.description,
+      audioUrl: episode.audioUrl,
+      audioDuration: episode.audioDuration,
+      audioFileSize: episode.audioFileSize,
+      publishedAt: episode.publishedAt,
+      imageUrl: episode.imageUrl,
+      itemLink: episode.itemLink,
+      transcriptUrl: episode.transcriptUrl,
+      transcriptContent: episode.transcriptContent,
+      aiSummary: episode.aiSummary,
+      summaryVersion: episode.summaryVersion,
+      aiConfidenceScore: episode.aiConfidenceScore,
+      playCount: episode.playCount,
+      lastPlayedAt: episode.lastPlayedAt,
+      season: episode.season,
+      episodeNumber: episode.episodeNumber,
+      explicit: episode.explicit,
+      status: episode.status,
+      metadata: episode.metadata,
+      playbackPosition: episode.playbackPosition,
+      isPlaying: episode.isPlaying,
+      playbackRate: episode.playbackRate,
+      isPlayed: episode.isPlayed ?? false,
+      createdAt: episode.createdAt,
+      updatedAt: episode.updatedAt,
     );
-    if (episodeDetailAsync == null) {
-      return null;
+  }
+
+  Future<void> _playOrResumeFromDetail(PodcastEpisodeModel episodeModel) async {
+    final notifier = ref.read(audioPlayerProvider.notifier);
+    final playerState = ref.read(audioPlayerProvider);
+    final isSameEpisode = playerState.currentEpisode?.id == episodeModel.id;
+    final isCompleted =
+        playerState.processingState == ProcessingState.completed;
+
+    if (isSameEpisode && !isCompleted) {
+      if (playerState.isPlaying) {
+        return;
+      }
+      await notifier.resume();
+      return;
     }
 
-    return PodcastEpisodeModel(
-      id: episodeDetailAsync.id,
-      subscriptionId: episodeDetailAsync.subscriptionId,
-      subscriptionImageUrl: episodeDetailAsync.subscriptionImageUrl,
-      title: episodeDetailAsync.title,
-      description: episodeDetailAsync.description,
-      audioUrl: episodeDetailAsync.audioUrl,
-      audioDuration: episodeDetailAsync.audioDuration,
-      audioFileSize: episodeDetailAsync.audioFileSize,
-      publishedAt: episodeDetailAsync.publishedAt,
-      imageUrl: episodeDetailAsync.imageUrl,
-      itemLink: episodeDetailAsync.itemLink,
-      transcriptUrl: episodeDetailAsync.transcriptUrl,
-      transcriptContent: episodeDetailAsync.transcriptContent,
-      aiSummary: episodeDetailAsync.aiSummary,
-      summaryVersion: episodeDetailAsync.summaryVersion,
-      aiConfidenceScore: episodeDetailAsync.aiConfidenceScore,
-      playCount: episodeDetailAsync.playCount,
-      lastPlayedAt: episodeDetailAsync.lastPlayedAt,
-      season: episodeDetailAsync.season,
-      episodeNumber: episodeDetailAsync.episodeNumber,
-      explicit: episodeDetailAsync.explicit,
-      status: episodeDetailAsync.status,
-      metadata: episodeDetailAsync.metadata,
-      playbackPosition: episodeDetailAsync.playbackPosition,
-      isPlaying: episodeDetailAsync.isPlaying,
-      playbackRate: episodeDetailAsync.playbackRate,
-      isPlayed: episodeDetailAsync.isPlayed ?? false,
-      createdAt: episodeDetailAsync.createdAt,
-      updatedAt: episodeDetailAsync.updatedAt,
-    );
+    await notifier.playEpisode(episodeModel);
   }
 
   // 鎾斁鎸夐挳缁勪欢
@@ -1012,17 +976,13 @@ class _PodcastEpisodeDetailPageState
         InkWell(
           onTap: () async {
             try {
-              final episodeModel = await _loadEpisodeModelForActions();
-              if (episodeModel != null) {
-                await ref
-                    .read(audioPlayerProvider.notifier)
-                    .playEpisode(episodeModel);
-              }
+              await _playOrResumeFromDetail(_episodeToModel(episode));
             } catch (error) {
               logger.AppLogger.debug('鉂?Failed to play episode: $error');
             }
           },
           child: Container(
+            key: const Key('podcast_episode_detail_play_button'),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: Theme.of(

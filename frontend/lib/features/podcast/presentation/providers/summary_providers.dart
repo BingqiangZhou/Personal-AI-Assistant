@@ -1,21 +1,29 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/podcast_playback_model.dart';
+import '../../core/utils/summary_sanitizer.dart';
 import 'podcast_providers.dart';
 
 // Summary state providers for each episode
-final summaryStateProviders = <int, NotifierProvider<SummaryNotifier, SummaryState>>{};
+final summaryStateProviders =
+    <int, NotifierProvider<SummaryNotifier, SummaryState>>{};
 
 /// Get or create a summary state provider for a specific episode
-NotifierProvider<SummaryNotifier, SummaryState> getSummaryProvider(int episodeId) {
+NotifierProvider<SummaryNotifier, SummaryState> getSummaryProvider(
+  int episodeId,
+) {
   return summaryStateProviders.putIfAbsent(
     episodeId,
-    () => NotifierProvider<SummaryNotifier, SummaryState>(() => SummaryNotifier(episodeId)),
+    () => NotifierProvider<SummaryNotifier, SummaryState>(
+      () => SummaryNotifier(episodeId),
+    ),
   );
 }
 
 // Provider for available summary models
-final availableModelsProvider = FutureProvider<List<SummaryModelInfo>>((ref) async {
+final availableModelsProvider = FutureProvider<List<SummaryModelInfo>>((
+  ref,
+) async {
   final repository = ref.watch(podcastRepositoryProvider);
   try {
     return await repository.getSummaryModels();
@@ -96,9 +104,10 @@ class SummaryNotifier extends Notifier<SummaryState> {
         summaryModel: model,
         customPrompt: customPrompt,
       );
+      final cleanedSummary = SummarySanitizer.clean(response.summary);
 
       state = SummaryState(
-        summary: response.summary,
+        summary: cleanedSummary,
         modelUsed: response.modelUsed,
         processingTime: response.processingTime,
         wordCount: response.wordCount,
@@ -106,18 +115,12 @@ class SummaryNotifier extends Notifier<SummaryState> {
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, errorMessage: e.toString());
     }
   }
 
   /// Regenerate summary
-  Future<void> regenerateSummary({
-    String? model,
-    String? customPrompt,
-  }) async {
+  Future<void> regenerateSummary({String? model, String? customPrompt}) async {
     return generateSummary(
       model: model,
       customPrompt: customPrompt,
@@ -127,8 +130,9 @@ class SummaryNotifier extends Notifier<SummaryState> {
 
   /// Update summary from existing data (used when loading episode detail)
   void updateSummary(String summary) {
+    final cleanedSummary = SummarySanitizer.clean(summary);
     state = SummaryState(
-      summary: summary,
+      summary: cleanedSummary,
       modelUsed: state.modelUsed,
       processingTime: state.processingTime,
       wordCount: state.wordCount,

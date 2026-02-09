@@ -10,8 +10,8 @@ from sqlalchemy import select
 
 from app.core.redis import PodcastRedis
 from app.domains.podcast.models import PodcastEpisode, TranscriptionTask
-from app.domains.podcast.services import PodcastService
 from app.domains.podcast.services.sync_service import PodcastSyncService
+from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
 from app.domains.podcast.transcription_state import get_transcription_state_manager
 
@@ -137,8 +137,8 @@ async def process_podcast_episode_with_transcription_handler(
 
     await session.refresh(episode)
     if not episode.ai_summary:
-        service = PodcastService(session, user_id)
-        await service._generate_summary(episode)
+        summary_service = DatabaseBackedAISummaryService(session)
+        await summary_service.generate_summary(episode.id)
         await session.refresh(episode)
 
     return {

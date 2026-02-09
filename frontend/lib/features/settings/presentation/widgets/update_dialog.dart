@@ -48,8 +48,11 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isMobile = MediaQuery.of(context).size.width < 600;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth < 600 ? screenWidth - 8 : 500.0;
 
     return AlertDialog(
+      insetPadding: isMobile ? const EdgeInsets.symmetric(horizontal: 4, vertical: 16) : null,
       title: Row(
         children: [
           Icon(
@@ -76,7 +79,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
         ],
       ),
       content: SizedBox(
-        width: 500,
+        width: dialogWidth,
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -499,11 +502,15 @@ class _ManualUpdateCheckDialogState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(manualUpdateCheckProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dialogWidth = screenWidth < 600 ? screenWidth - 8 : 400.0;
+    final isMobile = screenWidth < 600;
 
     return AlertDialog(
+      insetPadding: isMobile ? const EdgeInsets.symmetric(horizontal: 4, vertical: 16) : null,
       title: Text(l10n.update_check_updates),
       content: SizedBox(
-        width: 400,
+        width: dialogWidth,
         child: _buildContent(context, state),
       ),
       actions: _buildActions(context, state),

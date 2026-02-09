@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import PodcastRedis
+from app.core.utils import filter_thinking_content
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastRepository
 
@@ -134,6 +135,7 @@ class PodcastEpisodeService:
             asyncio.create_task(summary_service._generate_summary_task(episode))
 
         playback = await self.repo.get_playback_state(self.user_id, episode_id)
+        cleaned_summary = filter_thinking_content(episode.ai_summary)
 
         # Extract subscription metadata
         subscription_image_url = None
@@ -159,7 +161,7 @@ class PodcastEpisodeService:
             "subscription_image_url": subscription_image_url,
             "transcript_url": episode.transcript_url,
             "transcript_content": episode.transcript_content,
-            "ai_summary": episode.ai_summary,
+            "ai_summary": cleaned_summary,
             "summary_version": episode.summary_version,
             "ai_confidence_score": episode.ai_confidence_score,
             "play_count": episode.play_count,
@@ -238,6 +240,7 @@ class PodcastEpisodeService:
         results = []
         for ep in episodes:
             playback = playback_states.get(ep.id)
+            cleaned_summary = filter_thinking_content(ep.ai_summary)
 
             # Extract image URL from subscription config
             subscription_image_url = None
@@ -269,7 +272,7 @@ class PodcastEpisodeService:
                 "item_link": ep.item_link,
                 "transcript_url": ep.transcript_url,
                 "transcript_content": ep.transcript_content,
-                "ai_summary": ep.ai_summary,
+                "ai_summary": cleaned_summary,
                 "summary_version": ep.summary_version,
                 "ai_confidence_score": ep.ai_confidence_score,
                 "play_count": ep.play_count,

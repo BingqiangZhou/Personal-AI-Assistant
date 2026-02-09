@@ -19,6 +19,7 @@ import '../../data/models/audio_player_state_model.dart';
 import '../../data/models/podcast_state_models.dart';
 import '../../data/repositories/podcast_repository.dart';
 import '../../data/services/podcast_api_service.dart';
+import 'playback_progress_policy.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
 // === API Service & Repository Providers ===
@@ -48,7 +49,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   bool? _lastPlayingState; // Track last playing state to reduce log spam
   ProcessingState? _lastProcessingState;
   bool _isHandlingQueueCompletion = false;
-  Timer? _syncThrottleTimer; // Throttle timer for server sync
+  Timer? _syncThrottleTimer;
+  DateTime? _lastPlaybackSyncAt;
+  static const Duration _syncInterval = Duration(seconds: 2);
 
   PodcastAudioHandler get _audioHandler => main_app.audioHandler;
 
@@ -118,6 +121,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       if (_isDisposed || !ref.mounted) return;
 
       state = state.copyWith(position: position.inMilliseconds);
+      if (state.isPlaying) {
+        unawaited(_updatePlaybackStateOnServer());
+      }
     });
 
     _durationSubscription = _audioHandler.mediaItem.listen((mediaItem) {
@@ -171,11 +177,14 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }
 
   Future<void> _handleTrackCompleted() async {
-    if (_isDisposed || !ref.mounted || _isHandlingQueueCompletion) {
+    if (_isDisposed || !ref.mounted) {
       return;
     }
 
-    if (state.playSource != PlaySource.queue) {
+    state = state.copyWith(isPlaying: false, position: 0);
+    await _updatePlaybackStateOnServer(immediate: true);
+
+    if (state.playSource != PlaySource.queue || _isHandlingQueueCompletion) {
       return;
     }
 
@@ -238,6 +247,22 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       return;
     }
 
+    final isSameEpisode = state.currentEpisode?.id == episode.id;
+    final isCompleted = state.processingState == ProcessingState.completed;
+    if (isSameEpisode && !isCompleted) {
+      if (state.isPlaying) {
+        logger.AppLogger.debug(
+          '⏯️ Same episode already playing, skip reloading source',
+        );
+        return;
+      }
+      logger.AppLogger.debug(
+        '⏯️ Same episode paused, fast resume without reloading source',
+      );
+      await resume();
+      return;
+    }
+
     _isPlayingEpisode = true;
 
     try {
@@ -293,6 +318,10 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       logger.AppLogger.debug('📝 Step 2: Setting new episode info');
       // CRITICAL: Backend audioDuration is in SECONDS, convert to MILLISECONDS
       final durationMs = (episode.audioDuration ?? 0) * 1000;
+      final resumePositionMs = normalizeResumePositionMs(
+        episode.playbackPosition,
+        episode.audioDuration,
+      );
       logger.AppLogger.debug(
         '  📊 Using backend duration: ${episode.audioDuration}s = ${durationMs}ms',
       );
@@ -332,14 +361,12 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       if (!ref.mounted || _isDisposed) return;
 
       // ===== STEP 4: Restore playback position =====
-      if (episode.playbackPosition != null && episode.playbackPosition! > 0) {
+      if (resumePositionMs > 0) {
         logger.AppLogger.debug(
-          '⏩ Step 4: Seeking to saved position: ${episode.playbackPosition}ms',
+          '⏩ Step 4: Seeking to saved position: ${resumePositionMs}ms',
         );
         try {
-          await _audioHandler.seek(
-            Duration(milliseconds: episode.playbackPosition!),
-          );
+          await _audioHandler.seek(Duration(milliseconds: resumePositionMs));
           logger.AppLogger.debug('  ✅ Seek completed');
         } catch (e) {
           logger.AppLogger.debug('  ⚠️ Seek error: $e');
@@ -371,7 +398,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           state = state.copyWith(
             isPlaying: true,
             isLoading: false,
-            position: episode.playbackPosition ?? 0,
+            position: resumePositionMs,
             playbackRate: savedPlaybackRate,
           );
         }
@@ -489,7 +516,13 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       );
 
       if (ref.mounted && !_isDisposed) {
-        await _updatePlaybackStateOnServer();
+        unawaited(
+          _updatePlaybackStateOnServer().catchError((error) {
+            logger.AppLogger.debug(
+              '⚠️ Server update failed after resume: $error',
+            );
+          }),
+        );
       }
     } catch (error) {
       logger.AppLogger.debug('❌ resume() error: $error');
@@ -506,7 +539,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       await _audioHandler.seek(Duration(milliseconds: position));
       if (ref.mounted && !_isDisposed) {
         state = state.copyWith(position: position);
-        await _updatePlaybackStateOnServer();
+        await _updatePlaybackStateOnServer(immediate: true);
       }
     } catch (error) {
       if (ref.mounted && !_isDisposed) {
@@ -535,6 +568,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     if (_isDisposed) return;
 
     try {
+      if (ref.mounted && !_isDisposed) {
+        await _updatePlaybackStateOnServer(immediate: true);
+      }
       await _audioHandler.stop();
       if (ref.mounted && !_isDisposed) {
         state = state.copyWith(
@@ -564,31 +600,58 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     final episode = state.currentEpisode;
     if (episode == null) return;
 
-    // Cancel previous timer
-    _syncThrottleTimer?.cancel();
-
-    // If immediate (pause, stop), send right away
+    // If immediate (pause/seek/stop/completed), send right away
     if (immediate) {
-      _sendPlaybackUpdate(episode);
+      _syncThrottleTimer?.cancel();
+      _syncThrottleTimer = null;
+      await _sendPlaybackUpdate(episode);
+      _lastPlaybackSyncAt = DateTime.now();
       return;
     }
 
-    // Otherwise, throttle to 2-3 seconds to batch rapid updates
-    _syncThrottleTimer = Timer(const Duration(seconds: 2), () {
-      if (!_isDisposed) {
-        _sendPlaybackUpdate(episode);
-      }
+    await _scheduleThrottledSync(episode);
+  }
+
+  Future<void> _scheduleThrottledSync(PodcastEpisodeModel episode) async {
+    final now = DateTime.now();
+    final lastSync = _lastPlaybackSyncAt;
+
+    if (lastSync == null || now.difference(lastSync) >= _syncInterval) {
+      await _sendPlaybackUpdate(episode);
+      _lastPlaybackSyncAt = DateTime.now();
+      return;
+    }
+
+    if (_syncThrottleTimer?.isActive ?? false) {
+      return;
+    }
+
+    final remaining = _syncInterval - now.difference(lastSync);
+    _syncThrottleTimer = Timer(remaining, () {
+      if (_isDisposed) return;
+      final currentEpisode = state.currentEpisode;
+      if (currentEpisode == null) return;
+
+      _sendPlaybackUpdate(currentEpisode).then((_) {
+        _lastPlaybackSyncAt = DateTime.now();
+      });
     });
   }
 
   Future<void> _sendPlaybackUpdate(PodcastEpisodeModel episode) async {
     if (_isDisposed) return;
 
+    final payload = buildPersistPayload(
+      state.position,
+      state.duration,
+      state.isPlaying,
+    );
+
     try {
       await _repository.updatePlaybackProgress(
         episodeId: episode.id,
-        position: (state.position / 1000).round(), // Convert to seconds
-        isPlaying: state.isPlaying,
+        position: payload.positionSec,
+        isPlaying: payload.isPlaying,
         playbackRate: state.playbackRate,
       );
     } catch (error) {

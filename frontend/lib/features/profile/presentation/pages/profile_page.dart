@@ -960,19 +960,47 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Future<void> _showAboutDialog(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     final packageInfo = await PackageInfo.fromPlatform();
-
     if (!context.mounted) return;
 
-    showAboutDialog(
+    showDialog(
       context: context,
-      applicationName: l10n.appTitle,
-      applicationVersion: packageInfo.version,
-      applicationIcon: const Icon(Icons.psychology, size: 48),
-      children: [
-        Text(l10n.profile_about_subtitle),
-        const SizedBox(height: 8),
-        Text('Build: ${packageInfo.buildNumber}'),
-      ],
+      builder: (dialogContext) => LayoutBuilder(
+        builder: (context, constraints) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 8 : 560.0;
+
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            child: AlertDialog(
+              insetPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
+              title: Row(
+                children: [
+                  const Icon(Icons.psychology, size: 48),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(l10n.appTitle)),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Version: ${packageInfo.version}'),
+                  const SizedBox(height: 4),
+                  Text('Build: ${packageInfo.buildNumber}'),
+                  const SizedBox(height: 8),
+                  Text(l10n.profile_about_subtitle),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: Text(l10n.ok),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 

@@ -7,6 +7,7 @@ import pytest
 from app.domains.podcast.tasks import summary_generation
 from app.domains.podcast.tasks.handlers_summary import (
     generate_pending_summaries_handler,
+    generate_summary_for_episode_handler,
 )
 
 
@@ -40,12 +41,12 @@ async def test_generate_pending_summaries_success(monkeypatch):
         async def mark_summary_failed(self, episode_id, error):
             self.marked.append((episode_id, error))
 
-    class _FakeService:
-        def __init__(self, _session, _user_id):
+    class _FakeSummaryService:
+        def __init__(self, _session):
             pass
 
-        async def _generate_summary(self, _episode):
-            return None
+        async def generate_summary(self, _episode_id):
+            return {"summary_content": "ok"}
 
     session = _FakeSession(
         [
@@ -58,8 +59,8 @@ async def test_generate_pending_summaries_success(monkeypatch):
         _FakeRepo,
     )
     monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.PodcastService",
-        _FakeService,
+        "app.domains.podcast.tasks.handlers_summary.DatabaseBackedAISummaryService",
+        _FakeSummaryService,
     )
 
     result = await generate_pending_summaries_handler(session)
@@ -95,3 +96,30 @@ def test_generate_pending_summaries_retries_on_failure(monkeypatch):
 
     assert logs
     assert logs[-1]["status"] == "failed"
+
+
+@pytest.mark.asyncio
+async def test_generate_summary_for_episode_handler_uses_db_backed_service(monkeypatch):
+    fake_episode = SimpleNamespace(id=99)
+    session = _FakeSession([fake_episode])
+
+    class _FakeSummaryService:
+        def __init__(self, _session):
+            pass
+
+        async def generate_summary(self, episode_id):
+            return {"summary_content": f"summary-{episode_id}"}
+
+    monkeypatch.setattr(
+        "app.domains.podcast.tasks.handlers_summary.DatabaseBackedAISummaryService",
+        _FakeSummaryService,
+    )
+
+    result = await generate_summary_for_episode_handler(
+        session=session,
+        episode_id=99,
+        user_id=7,
+    )
+    assert result["status"] == "success"
+    assert result["episode_id"] == 99
+    assert result["summary"] == "summary-99"

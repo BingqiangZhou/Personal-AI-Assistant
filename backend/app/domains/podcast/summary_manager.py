@@ -13,6 +13,7 @@ import aiohttp
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import HTTPException, ValidationError
+from app.core.utils import filter_thinking_content
 from app.domains.ai.models import ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
 from app.domains.podcast.models import PodcastEpisode
@@ -563,13 +564,9 @@ class DatabaseBackedAISummaryService:
             model_name = summary_result["model_name"]
             processing_time = summary_result["processing_time"]
             
-            # 字段长度检查和处理
-            max_summary_length = 100000  # 设置合理的最大长度限制
-            original_length = len(summary_content)
-            
-            if original_length > max_summary_length:
-                logger.warning(f"Summary content too long ({original_length} chars), truncating to {max_summary_length} chars")
-                summary_content = summary_content[:max_summary_length] + "..."
+            # Final safeguard to remove model reasoning content before persistence.
+            summary_content = filter_thinking_content(summary_content)
+            summary_result["summary_content"] = summary_content
             
             # 计算字数
             word_count = len(summary_content.split())

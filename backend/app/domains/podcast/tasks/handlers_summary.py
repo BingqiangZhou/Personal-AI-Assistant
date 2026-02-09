@@ -9,8 +9,7 @@ from sqlalchemy import and_, or_, select
 
 from app.domains.podcast.models import PodcastEpisode, TranscriptionTask
 from app.domains.podcast.repositories import PodcastRepository
-from app.domains.podcast.services import PodcastService
-from app.domains.subscription.models import UserSubscription
+from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
 
 logger = logging.getLogger(__name__)
@@ -19,6 +18,7 @@ logger = logging.getLogger(__name__)
 async def generate_pending_summaries_handler(session) -> dict:
     """Generate summaries for pending episodes."""
     repo = PodcastRepository(session)
+    summary_service = DatabaseBackedAISummaryService(session)
     pending_episodes = await repo.get_unsummarized_episodes()
 
     max_episodes_per_run = 10
@@ -49,20 +49,7 @@ async def generate_pending_summaries_handler(session) -> dict:
             if running_task:
                 continue
 
-            user_sub_stmt = (
-                select(UserSubscription)
-                .where(
-                    UserSubscription.subscription_id == episode.subscription_id,
-                    UserSubscription.is_archived == False,  # noqa: E712
-                )
-                .limit(1)
-            )
-            user_sub_result = await session.execute(user_sub_stmt)
-            user_sub = user_sub_result.scalar_one_or_none()
-            user_id = user_sub.user_id if user_sub else 1
-
-            service = PodcastService(session, user_id)
-            await service._generate_summary(episode)
+            await summary_service.generate_summary(episode.id)
             processed_count += 1
         except Exception as exc:
             failed_count += 1
@@ -89,8 +76,9 @@ async def generate_summary_for_episode_handler(
     if episode is None:
         return {"status": "error", "message": "Episode not found", "episode_id": episode_id}
 
-    service = PodcastService(session, user_id)
-    summary = await service._generate_summary_task(episode)
+    summary_service = DatabaseBackedAISummaryService(session)
+    summary_result = await summary_service.generate_summary(episode_id)
+    summary = summary_result["summary_content"]
 
     return {
         "status": "success",

@@ -165,14 +165,23 @@ async def generate_summary(
             request.custom_prompt,
         )
 
+        # Read back the final persisted value to keep POST response aligned with
+        # episode detail API payload.
+        episode_detail = await service.get_episode_with_summary(episode_id)
+        final_summary = ""
+        final_version = "1.0"
+        if episode_detail:
+            final_summary = episode_detail.get("ai_summary") or ""
+            final_version = episode_detail.get("summary_version") or "1.0"
+
         return PodcastSummaryResponse(
             episode_id=episode_id,
-            summary=summary_result["summary_content"],
-            version="1.0",
+            summary=final_summary,
+            version=final_version,
             confidence_score=None,
             transcript_used=True,
             generated_at=datetime.now(timezone.utc),
-            word_count=len(summary_result["summary_content"].split()),
+            word_count=len(final_summary.split()),
             model_used=summary_result["model_name"],
             processing_time=summary_result["processing_time"],
         )

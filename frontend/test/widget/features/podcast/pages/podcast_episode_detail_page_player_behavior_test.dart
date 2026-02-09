@@ -91,6 +91,82 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets('same episode paused tap should call resume only', (
+      tester,
+    ) async {
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _episode(),
+          duration: 180000,
+          isPlaying: false,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      final playButton = find.byKey(
+        const Key('podcast_episode_detail_play_button'),
+      );
+      expect(playButton, findsOneWidget);
+
+      await tester.tap(playButton);
+      await tester.pump();
+
+      expect(notifier.resumeCalls, 1);
+      expect(notifier.playEpisodeCalls, 0);
+    });
+
+    testWidgets('same episode playing tap should no-op', (tester) async {
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _episode(),
+          duration: 180000,
+          isPlaying: true,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      final playButton = find.byKey(
+        const Key('podcast_episode_detail_play_button'),
+      );
+      expect(playButton, findsOneWidget);
+
+      await tester.tap(playButton);
+      await tester.pump();
+
+      expect(notifier.resumeCalls, 0);
+      expect(notifier.playEpisodeCalls, 0);
+    });
+
+    testWidgets('different episode tap should call playEpisode', (
+      tester,
+    ) async {
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _otherEpisode(),
+          duration: 180000,
+          isPlaying: false,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      final playButton = find.byKey(
+        const Key('podcast_episode_detail_play_button'),
+      );
+      expect(playButton, findsOneWidget);
+
+      await tester.tap(playButton);
+      await tester.pump();
+
+      expect(notifier.playEpisodeCalls, 1);
+      expect(notifier.resumeCalls, 0);
+    });
   });
 }
 
@@ -127,6 +203,20 @@ PodcastEpisodeModel _episode() {
   );
 }
 
+PodcastEpisodeModel _otherEpisode() {
+  final now = DateTime.now();
+  return PodcastEpisodeModel(
+    id: 2,
+    subscriptionId: 1,
+    title: 'Another Episode',
+    description: 'Another episode for mismatch scenario.',
+    audioUrl: 'https://example.com/audio-2.mp3',
+    publishedAt: now,
+    createdAt: now,
+    audioDuration: 200,
+  );
+}
+
 PodcastEpisodeDetailResponse _episodeDetail() {
   final now = DateTime.now();
   return PodcastEpisodeDetailResponse(
@@ -151,6 +241,8 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
   TestAudioPlayerNotifier(this._initialState);
 
   final AudioPlayerState _initialState;
+  int playEpisodeCalls = 0;
+  int resumeCalls = 0;
 
   @override
   AudioPlayerState build() {
@@ -169,7 +261,23 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
 
   @override
   Future<void> resume() async {
+    resumeCalls++;
     state = state.copyWith(isPlaying: true);
+  }
+
+  @override
+  Future<void> playEpisode(
+    PodcastEpisodeModel episode, {
+    PlaySource source = PlaySource.direct,
+    int? queueEpisodeId,
+  }) async {
+    playEpisodeCalls++;
+    state = state.copyWith(
+      currentEpisode: episode,
+      isPlaying: true,
+      isLoading: false,
+      error: null,
+    );
   }
 
   @override

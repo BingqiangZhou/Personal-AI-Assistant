@@ -724,7 +724,7 @@ class TextGenerationService:
 节目名称: {episode_title}
 
 ## 内容摘要
-{summary[:300]}...
+{summary}
 
 ## 说明
 此为系统自动生成的概要，完整总结正在处理中。

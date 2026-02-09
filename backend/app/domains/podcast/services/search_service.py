@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import PodcastRedis
+from app.core.utils import filter_thinking_content
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastRepository
 
@@ -140,6 +141,7 @@ class PodcastSearchService:
         results = []
         for ep in episodes:
             playback = playback_states.get(ep.id)
+            cleaned_summary = filter_thinking_content(ep.ai_summary)
 
             # Extract image URL from subscription config
             subscription_image_url = None
@@ -167,7 +169,7 @@ class PodcastSearchService:
                 "audio_duration": ep.audio_duration,
                 "published_at": ep.published_at,
                 "image_url": image_url,
-                "ai_summary": ep.ai_summary,
+                "ai_summary": cleaned_summary,
                 "is_played": is_played,
             })
 
