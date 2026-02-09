@@ -3,7 +3,18 @@
 import enum
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Integer, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    CheckConstraint,
+    Column,
+    DateTime,
+    Float,
+    Index,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -33,6 +44,7 @@ class User(Base):
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     settings = Column(JSON, nullable=True, default={})
     preferences = Column(JSON, nullable=True, default={})
+    default_playback_rate = Column(Float, nullable=False, default=1.0)
     api_key = Column(String(255), unique=True, nullable=True)
 
     # 2FA fields
@@ -49,6 +61,10 @@ class User(Base):
 
     # Indexes
     __table_args__ = (
+        CheckConstraint(
+            "default_playback_rate >= 0.5 AND default_playback_rate <= 3.0",
+            name="ck_users_default_playback_rate_range",
+        ),
         Index('idx_email_status', 'email', 'status'),
         Index('idx_username_status', 'username', 'status'),
     )

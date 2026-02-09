@@ -286,6 +286,103 @@ void main() {
       );
     });
 
+    testWidgets('speed selector shows 3x option and subscription checkbox', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          duration: 180000,
+          isExpanded: true,
+          playbackRate: 1.0,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('podcast_bottom_player_speed')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('3x'), findsOneWidget);
+      expect(
+        find.text('Only apply to current show (current subscription)'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('speed selector forwards applyToSubscription=true', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          duration: 180000,
+          isExpanded: true,
+          playbackRate: 1.0,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('podcast_bottom_player_speed')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.text('Only apply to current show (current subscription)'),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('3x'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Apply'));
+      await tester.pumpAndSettle();
+
+      expect(notifier.lastPlaybackRate, 3.0);
+      expect(notifier.lastApplyToSubscription, isTrue);
+    });
+
+    testWidgets('speed selector default is applyToSubscription=false', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          duration: 180000,
+          isExpanded: true,
+          playbackRate: 1.0,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('podcast_bottom_player_speed')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('2.5x'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Apply'));
+      await tester.pumpAndSettle();
+
+      expect(notifier.lastPlaybackRate, 2.5);
+      expect(notifier.lastApplyToSubscription, isFalse);
+    });
+
     testWidgets('tap mini playlist icon opens queue sheet without expanding', (
       tester,
     ) async {
@@ -366,6 +463,8 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
 
   final AudioPlayerState _initialState;
   int pauseCalls = 0;
+  double? lastPlaybackRate;
+  bool? lastApplyToSubscription;
 
   @override
   AudioPlayerState build() {
@@ -389,7 +488,12 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
   }
 
   @override
-  Future<void> setPlaybackRate(double rate) async {
+  Future<void> setPlaybackRate(
+    double rate, {
+    bool applyToSubscription = false,
+  }) async {
+    lastPlaybackRate = rate;
+    lastApplyToSubscription = applyToSubscription;
     state = state.copyWith(playbackRate: rate);
   }
 

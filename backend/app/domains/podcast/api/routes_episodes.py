@@ -13,6 +13,8 @@ from app.domains.podcast.api.dependencies import (
     get_summary_service,
 )
 from app.domains.podcast.schemas import (
+    PlaybackRateApplyRequest,
+    PlaybackRateEffectiveResponse,
     PodcastEpisodeDetailResponse,
     PodcastEpisodeFilter,
     PodcastEpisodeListResponse,
@@ -32,6 +34,17 @@ from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
 router = APIRouter(prefix="")
 logger = logging.getLogger(__name__)
+
+
+def _bilingual_error(
+    message_en: str,
+    message_zh: str,
+    status_code: int,
+) -> HTTPException:
+    return HTTPException(
+        status_code=status_code,
+        detail={"message_en": message_en, "message_zh": message_zh},
+    )
 
 
 @router.get(
@@ -214,16 +227,30 @@ async def update_playback_progress(
             episode_id=episode_id,
             current_position=result["progress"],
             is_playing=result["is_playing"],
-            playback_rate=result.get("playback_rate", 1.0),
-            play_count=result.get("play_count", 0),
-            last_updated_at=result.get("last_updated_at", datetime.now(timezone.utc)),
-            progress_percentage=result.get("progress_percentage", 0),
-            remaining_time=result.get("remaining_time", 0),
+            playback_rate=result["playback_rate"],
+            play_count=result["play_count"],
+            last_updated_at=result["last_updated_at"],
+            progress_percentage=result["progress_percentage"],
+            remaining_time=result["remaining_time"],
         )
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
+        if str(exc) == "Episode not found":
+            raise _bilingual_error(
+                "Episode not found",
+                "未找到该单集",
+                status.HTTP_404_NOT_FOUND,
+            ) from exc
+        raise _bilingual_error(
+            "Failed to update playback progress",
+            "更新播放进度失败",
+            status.HTTP_400_BAD_REQUEST,
+        ) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc))
+        raise _bilingual_error(
+            "Failed to update playback progress",
+            "更新播放进度失败",
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ) from exc
 
 
 @router.get(
@@ -243,6 +270,73 @@ async def get_playback_state(
         return PodcastPlaybackStateResponse(**playback)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+
+
+@router.get(
+    "/playback/rate/effective",
+    response_model=PlaybackRateEffectiveResponse,
+    summary="Get effective playback rate preference",
+)
+async def get_effective_playback_rate(
+    subscription_id: Optional[int] = Query(
+        None,
+        ge=1,
+        description="Subscription ID (optional)",
+    ),
+    service: PodcastService = Depends(get_podcast_service),
+):
+    result = await service.get_effective_playback_rate(subscription_id=subscription_id)
+    return PlaybackRateEffectiveResponse(**result)
+
+
+@router.put(
+    "/playback/rate/apply",
+    response_model=PlaybackRateEffectiveResponse,
+    summary="Apply playback rate preference",
+)
+async def apply_playback_rate_preference(
+    request: PlaybackRateApplyRequest,
+    service: PodcastService = Depends(get_podcast_service),
+):
+    try:
+        result = await service.apply_playback_rate_preference(
+            playback_rate=request.playback_rate,
+            apply_to_subscription=request.apply_to_subscription,
+            subscription_id=request.subscription_id,
+        )
+        return PlaybackRateEffectiveResponse(**result)
+    except ValueError as exc:
+        code = str(exc)
+        if code == "SUBSCRIPTION_ID_REQUIRED":
+            raise _bilingual_error(
+                "subscription_id is required when apply_to_subscription is true",
+                "当仅应用于当前订阅时，subscription_id 为必填",
+                status.HTTP_400_BAD_REQUEST,
+            ) from exc
+        if code == "SUBSCRIPTION_NOT_FOUND":
+            raise _bilingual_error(
+                "Subscription not found",
+                "未找到该订阅",
+                status.HTTP_404_NOT_FOUND,
+            ) from exc
+        if code == "USER_NOT_FOUND":
+            raise _bilingual_error(
+                "User not found",
+                "未找到用户",
+                status.HTTP_404_NOT_FOUND,
+            ) from exc
+        raise _bilingual_error(
+            "Failed to apply playback preference",
+            "应用播放偏好失败",
+            status.HTTP_400_BAD_REQUEST,
+        ) from exc
+    except Exception as exc:
+        logger.error("Failed to apply playback rate preference: %s", exc)
+        raise _bilingual_error(
+            "Failed to apply playback preference",
+            "应用播放偏好失败",
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+        ) from exc
 
 
 @router.get(

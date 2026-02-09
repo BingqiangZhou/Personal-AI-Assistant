@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/audio_player_state_model.dart';
+import '../constants/playback_speed_options.dart';
 import '../providers/podcast_providers.dart';
+import 'playback_speed_selector_sheet.dart';
 import 'podcast_queue_sheet.dart';
 
 class PodcastBottomPlayerWidget extends ConsumerWidget {
@@ -239,22 +241,25 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                 LayoutBuilder(
                   builder: (context, constraints) {
                     final controls = <Widget>[
-                      PopupMenuButton<double>(
+                      InkWell(
                         key: const Key('podcast_bottom_player_speed'),
-                        tooltip:
-                            l10n?.podcast_player_playback_speed ??
-                            'Playback speed',
-                        onSelected: (value) => ref
-                            .read(audioPlayerProvider.notifier)
-                            .setPlaybackRate(value),
-                        itemBuilder: (context) => const [
-                          PopupMenuItem(value: 0.5, child: Text('0.5x')),
-                          PopupMenuItem(value: 0.75, child: Text('0.75x')),
-                          PopupMenuItem(value: 1.0, child: Text('1.0x')),
-                          PopupMenuItem(value: 1.25, child: Text('1.25x')),
-                          PopupMenuItem(value: 1.5, child: Text('1.5x')),
-                          PopupMenuItem(value: 2.0, child: Text('2.0x')),
-                        ],
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () async {
+                          final selection =
+                              await showPlaybackSpeedSelectorSheet(
+                                context: context,
+                                initialSpeed: state.playbackRate,
+                              );
+                          if (selection == null) return;
+                          if (!context.mounted) return;
+                          await ref
+                              .read(audioPlayerProvider.notifier)
+                              .setPlaybackRate(
+                                selection.speed,
+                                applyToSubscription:
+                                    selection.applyToSubscription,
+                              );
+                        },
                         child: SizedBox(
                           height: 48,
                           child: Center(
@@ -270,7 +275,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                                 ),
                               ),
                               child: Text(
-                                '${state.playbackRate}x',
+                                formatPlaybackSpeed(state.playbackRate),
                                 style: theme.textTheme.labelMedium,
                               ),
                             ),
@@ -398,7 +403,7 @@ class _CoverImage extends StatelessWidget {
             ? Image.network(
                 imageUrl!,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _fallback(theme),
+                errorBuilder: (_, error, stackTrace) => _fallback(theme),
               )
             : _fallback(theme),
       ),

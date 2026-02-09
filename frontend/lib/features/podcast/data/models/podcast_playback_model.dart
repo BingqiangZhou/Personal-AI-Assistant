@@ -40,15 +40,15 @@ class PodcastPlaybackStateResponse extends Equatable {
 
   @override
   List<Object?> get props => [
-        episodeId,
-        currentPosition,
-        isPlaying,
-        playbackRate,
-        playCount,
-        lastUpdatedAt,
-        progressPercentage,
-        remainingTime,
-      ];
+    episodeId,
+    currentPosition,
+    isPlaying,
+    playbackRate,
+    playCount,
+    lastUpdatedAt,
+    progressPercentage,
+    remainingTime,
+  ];
 }
 
 @JsonSerializable()
@@ -69,6 +69,65 @@ class PodcastPlaybackUpdateRequest extends Equatable {
 
   @override
   List<Object?> get props => [position, isPlaying, playbackRate];
+}
+
+@JsonSerializable()
+class PlaybackRateEffectiveResponse extends Equatable {
+  @JsonKey(name: 'global_playback_rate')
+  final double globalPlaybackRate;
+  @JsonKey(name: 'subscription_playback_rate')
+  final double? subscriptionPlaybackRate;
+  @JsonKey(name: 'effective_playback_rate')
+  final double effectivePlaybackRate;
+  final String source;
+
+  const PlaybackRateEffectiveResponse({
+    required this.globalPlaybackRate,
+    required this.subscriptionPlaybackRate,
+    required this.effectivePlaybackRate,
+    required this.source,
+  });
+
+  factory PlaybackRateEffectiveResponse.fromJson(Map<String, dynamic> json) =>
+      _$PlaybackRateEffectiveResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PlaybackRateEffectiveResponseToJson(this);
+
+  @override
+  List<Object?> get props => [
+    globalPlaybackRate,
+    subscriptionPlaybackRate,
+    effectivePlaybackRate,
+    source,
+  ];
+}
+
+@JsonSerializable()
+class PlaybackRateApplyRequest extends Equatable {
+  @JsonKey(name: 'playback_rate')
+  final double playbackRate;
+  @JsonKey(name: 'subscription_id')
+  final int? subscriptionId;
+  @JsonKey(name: 'apply_to_subscription')
+  final bool applyToSubscription;
+
+  const PlaybackRateApplyRequest({
+    required this.playbackRate,
+    required this.applyToSubscription,
+    this.subscriptionId,
+  });
+
+  factory PlaybackRateApplyRequest.fromJson(Map<String, dynamic> json) =>
+      _$PlaybackRateApplyRequestFromJson(json);
+
+  Map<String, dynamic> toJson() => _$PlaybackRateApplyRequestToJson(this);
+
+  @override
+  List<Object?> get props => [
+    playbackRate,
+    subscriptionId,
+    applyToSubscription,
+  ];
 }
 
 @JsonSerializable()
@@ -109,16 +168,16 @@ class PodcastSummaryResponse extends Equatable {
 
   @override
   List<Object?> get props => [
-        episodeId,
-        summary,
-        version,
-        confidenceScore,
-        transcriptUsed,
-        generatedAt,
-        wordCount,
-        modelUsed,
-        processingTime,
-      ];
+    episodeId,
+    summary,
+    version,
+    confidenceScore,
+    transcriptUsed,
+    generatedAt,
+    wordCount,
+    modelUsed,
+    processingTime,
+  ];
 }
 
 @JsonSerializable()
@@ -143,11 +202,11 @@ class PodcastSummaryRequest extends Equatable {
 
   @override
   List<Object?> get props => [
-        forceRegenerate,
-        useTranscript,
-        summaryModel,
-        customPrompt
-      ];
+    forceRegenerate,
+    useTranscript,
+    summaryModel,
+    customPrompt,
+  ];
 }
 
 @JsonSerializable()
@@ -187,15 +246,15 @@ class PodcastStatsResponse extends Equatable {
 
   @override
   List<Object?> get props => [
-        totalSubscriptions,
-        totalEpisodes,
-        totalPlaytime,
-        summariesGenerated,
-        pendingSummaries,
-        recentlyPlayed,
-        topCategories,
-        listeningStreak,
-      ];
+    totalSubscriptions,
+    totalEpisodes,
+    totalPlaytime,
+    summariesGenerated,
+    pendingSummaries,
+    recentlyPlayed,
+    topCategories,
+    listeningStreak,
+  ];
 }
 
 @JsonSerializable()
@@ -236,17 +295,17 @@ class PodcastSearchFilter extends Equatable {
 
   @override
   List<Object?> get props => [
-        query,
-        categoryId,
-        status,
-        hasSummary,
-        dateFrom,
-        dateTo,
-        subscriptionId,
-        isPlayed,
-        durationMin,
-        durationMax,
-      ];
+    query,
+    categoryId,
+    status,
+    hasSummary,
+    dateFrom,
+    dateTo,
+    subscriptionId,
+    isPlayed,
+    durationMin,
+    durationMax,
+  ];
 }
 
 /// AI总结模型信息
@@ -277,7 +336,14 @@ class SummaryModelInfo extends Equatable {
   Map<String, dynamic> toJson() => _$SummaryModelInfoToJson(this);
 
   @override
-  List<Object?> get props => [id, name, displayName, provider, modelId, isDefault];
+  List<Object?> get props => [
+    id,
+    name,
+    displayName,
+    provider,
+    modelId,
+    isDefault,
+  ];
 }
 
 /// 可用总结模型列表响应
@@ -286,10 +352,7 @@ class SummaryModelsResponse extends Equatable {
   final List<SummaryModelInfo> models;
   final int total;
 
-  const SummaryModelsResponse({
-    required this.models,
-    required this.total,
-  });
+  const SummaryModelsResponse({required this.models, required this.total});
 
   factory SummaryModelsResponse.fromJson(Map<String, dynamic> json) =>
       _$SummaryModelsResponseFromJson(json);

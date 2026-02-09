@@ -3,7 +3,7 @@
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -229,6 +229,30 @@ class PodcastPlaybackStateResponse(PodcastBaseSchema):
 
 
 # === Category相关 ===
+
+
+class PlaybackRateApplyRequest(PodcastBaseSchema):
+    """Apply global/subscription playback rate preference."""
+
+    playback_rate: float = Field(..., ge=0.5, le=3.0, description="播放倍速")
+    subscription_id: int | None = Field(
+        default=None,
+        ge=1,
+        description="订阅ID，仅按订阅设置时使用",
+    )
+    apply_to_subscription: bool = Field(
+        default=False,
+        description="是否仅应用到当前订阅",
+    )
+
+
+class PlaybackRateEffectiveResponse(PodcastBaseSchema):
+    """Effective playback-rate response."""
+
+    global_playback_rate: float
+    subscription_playback_rate: float | None = None
+    effective_playback_rate: float
+    source: Literal["subscription", "global", "default"]
 
 
 class PodcastQueueItemAddRequest(PodcastBaseSchema):

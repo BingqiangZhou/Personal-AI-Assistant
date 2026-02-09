@@ -186,6 +186,33 @@ class PodcastRepository {
     }
   }
 
+  Future<PlaybackRateEffectiveResponse> getEffectivePlaybackRate({
+    int? subscriptionId,
+  }) async {
+    try {
+      return await _apiService.getEffectivePlaybackRate(subscriptionId);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PlaybackRateEffectiveResponse> applyPlaybackRatePreference({
+    required double playbackRate,
+    required bool applyToSubscription,
+    int? subscriptionId,
+  }) async {
+    try {
+      final request = PlaybackRateApplyRequest(
+        playbackRate: playbackRate,
+        applyToSubscription: applyToSubscription,
+        subscriptionId: subscriptionId,
+      );
+      return await _apiService.applyPlaybackRatePreference(request);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   // === Queue Management ===
 
   Future<PodcastQueueModel> getQueue() async {

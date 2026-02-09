@@ -48,6 +48,41 @@ Map<String, dynamic> _$PodcastPlaybackUpdateRequestToJson(
   'playback_rate': instance.playbackRate,
 };
 
+PlaybackRateEffectiveResponse _$PlaybackRateEffectiveResponseFromJson(
+  Map<String, dynamic> json,
+) => PlaybackRateEffectiveResponse(
+  globalPlaybackRate: (json['global_playback_rate'] as num).toDouble(),
+  subscriptionPlaybackRate: (json['subscription_playback_rate'] as num?)
+      ?.toDouble(),
+  effectivePlaybackRate: (json['effective_playback_rate'] as num).toDouble(),
+  source: json['source'] as String,
+);
+
+Map<String, dynamic> _$PlaybackRateEffectiveResponseToJson(
+  PlaybackRateEffectiveResponse instance,
+) => <String, dynamic>{
+  'global_playback_rate': instance.globalPlaybackRate,
+  'subscription_playback_rate': instance.subscriptionPlaybackRate,
+  'effective_playback_rate': instance.effectivePlaybackRate,
+  'source': instance.source,
+};
+
+PlaybackRateApplyRequest _$PlaybackRateApplyRequestFromJson(
+  Map<String, dynamic> json,
+) => PlaybackRateApplyRequest(
+  playbackRate: (json['playback_rate'] as num).toDouble(),
+  applyToSubscription: json['apply_to_subscription'] as bool,
+  subscriptionId: (json['subscription_id'] as num?)?.toInt(),
+);
+
+Map<String, dynamic> _$PlaybackRateApplyRequestToJson(
+  PlaybackRateApplyRequest instance,
+) => <String, dynamic>{
+  'playback_rate': instance.playbackRate,
+  'subscription_id': instance.subscriptionId,
+  'apply_to_subscription': instance.applyToSubscription,
+};
+
 PodcastSummaryResponse _$PodcastSummaryResponseFromJson(
   Map<String, dynamic> json,
 ) => PodcastSummaryResponse(

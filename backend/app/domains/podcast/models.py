@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     Column,
     DateTime,
     Enum,
@@ -151,7 +152,7 @@ class PodcastPlaybackState(Base):
     # 播放状态
     current_position = Column(Integer, default=0)  # 当前播放位置(秒)
     is_playing = Column(Boolean, default=False)
-    playback_rate = Column(Float, default=1.0)  # 播放速度
+    playback_rate = Column(Float, default=1.0, nullable=False)  # 播放速度
     last_updated_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
@@ -166,6 +167,10 @@ class PodcastPlaybackState(Base):
     # 注意：由于User模型未导入，仅通过repositories访问
 
     __table_args__ = (
+        CheckConstraint(
+            "playback_rate >= 0.5 AND playback_rate <= 3.0",
+            name="ck_podcast_playback_states_playback_rate_range",
+        ),
         # 确保每个用户-episode组合唯一
         Index("idx_user_episode_unique", "user_id", "episode_id", unique=True),
     )

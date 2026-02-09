@@ -19,6 +19,7 @@ from app.domains.podcast.models import (
     PodcastQueueItem,
 )
 from app.domains.subscription.models import Subscription, UserSubscription
+from app.domains.user.models import User
 
 
 logger = logging.getLogger(__name__)
@@ -543,6 +544,114 @@ class PodcastRepository:
         # Create a dictionary mapping episode_id to state
         return {state.episode_id: state for state in states}
 
+    async def get_user_default_playback_rate(self, user_id: int) -> float:
+        """Get user's global default playback rate."""
+        stmt = select(User.default_playback_rate).where(User.id == user_id)
+        result = await self.db.execute(stmt)
+        value = result.scalar_one_or_none()
+        return float(value) if value is not None else 1.0
+
+    async def get_subscription_playback_rate_preference(
+        self,
+        user_id: int,
+        subscription_id: int,
+    ) -> float | None:
+        """Get user-specific playback rate preference for a subscription."""
+        stmt = select(UserSubscription.playback_rate_preference).where(
+            and_(
+                UserSubscription.user_id == user_id,
+                UserSubscription.subscription_id == subscription_id,
+                UserSubscription.is_archived == False,  # noqa: E712
+            )
+        )
+        result = await self.db.execute(stmt)
+        value = result.scalar_one_or_none()
+        return float(value) if value is not None else None
+
+    async def get_effective_playback_rate(
+        self,
+        user_id: int,
+        subscription_id: int | None = None,
+    ) -> dict[str, Any]:
+        """Get effective playback rate with priority: subscription > global > default."""
+        global_rate = await self.get_user_default_playback_rate(user_id)
+        subscription_rate: float | None = None
+        source = "global"
+        effective_rate = global_rate
+
+        if subscription_id is not None:
+            subscription_rate = await self.get_subscription_playback_rate_preference(
+                user_id=user_id,
+                subscription_id=subscription_id,
+            )
+            if subscription_rate is not None:
+                source = "subscription"
+                effective_rate = subscription_rate
+            elif global_rate == 1.0:
+                source = "default"
+        elif global_rate == 1.0:
+            source = "default"
+
+        return {
+            "global_playback_rate": global_rate,
+            "subscription_playback_rate": subscription_rate,
+            "effective_playback_rate": effective_rate,
+            "source": source,
+        }
+
+    async def apply_playback_rate_preference(
+        self,
+        user_id: int,
+        playback_rate: float,
+        apply_to_subscription: bool,
+        subscription_id: int | None = None,
+    ) -> dict[str, Any]:
+        """Apply global or subscription playback-rate preference."""
+        if apply_to_subscription:
+            if subscription_id is None:
+                raise ValueError("SUBSCRIPTION_ID_REQUIRED")
+
+            stmt = select(UserSubscription).where(
+                and_(
+                    UserSubscription.user_id == user_id,
+                    UserSubscription.subscription_id == subscription_id,
+                    UserSubscription.is_archived == False,  # noqa: E712
+                )
+            )
+            result = await self.db.execute(stmt)
+            user_sub = result.scalar_one_or_none()
+            if user_sub is None:
+                raise ValueError("SUBSCRIPTION_NOT_FOUND")
+
+            user_sub.playback_rate_preference = playback_rate
+            await self.db.commit()
+            return await self.get_effective_playback_rate(user_id, subscription_id)
+
+        user_stmt = select(User).where(User.id == user_id)
+        user_result = await self.db.execute(user_stmt)
+        user = user_result.scalar_one_or_none()
+        if user is None:
+            raise ValueError("USER_NOT_FOUND")
+
+        user.default_playback_rate = playback_rate
+
+        if subscription_id is not None:
+            sub_stmt = select(UserSubscription).where(
+                and_(
+                    UserSubscription.user_id == user_id,
+                    UserSubscription.subscription_id == subscription_id,
+                    UserSubscription.is_archived == False,  # noqa: E712
+                )
+            )
+            sub_result = await self.db.execute(sub_stmt)
+            user_sub = sub_result.scalar_one_or_none()
+            if user_sub is None:
+                raise ValueError("SUBSCRIPTION_NOT_FOUND")
+            user_sub.playback_rate_preference = None
+
+        await self.db.commit()
+        return await self.get_effective_playback_rate(user_id, subscription_id)
+
     async def get_episodes_counts_batch(
         self, subscription_ids: list[int]
     ) -> dict[int, int]:
@@ -626,7 +735,7 @@ class PodcastRepository:
             state.playback_rate = playback_rate
             if is_playing:
                 state.play_count += 1
-            state.timestamp = datetime.now(timezone.utc)
+            state.last_updated_at = datetime.now(timezone.utc)
         else:
             state = PodcastPlaybackState(
                 user_id=user_id,
@@ -635,6 +744,7 @@ class PodcastRepository:
                 is_playing=is_playing,
                 playback_rate=playback_rate,
                 play_count=1 if is_playing else 0,
+                last_updated_at=datetime.now(timezone.utc),
             )
             self.db.add(state)
 

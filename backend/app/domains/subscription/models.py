@@ -6,8 +6,10 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     Column,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     Integer,
@@ -121,6 +123,11 @@ class UserSubscription(Base):
     # User-specific state
     is_archived = Column(Boolean, default=False, comment="User has archived this subscription")
     is_pinned = Column(Boolean, default=False, comment="User has pinned this subscription")
+    playback_rate_preference = Column(
+        Float,
+        nullable=True,
+        comment="Subscription-level playback speed preference",
+    )
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -129,6 +136,11 @@ class UserSubscription(Base):
     subscription = relationship("Subscription", back_populates="user_subscriptions")
 
     __table_args__ = (
+        CheckConstraint(
+            "playback_rate_preference IS NULL OR "
+            "(playback_rate_preference >= 0.5 AND playback_rate_preference <= 3.0)",
+            name="ck_user_subscriptions_playback_rate_preference_range",
+        ),
         Index('idx_user_subscription', 'user_id', 'subscription_id', unique=True),
         Index('idx_user_archived', 'user_id', 'is_archived'),
     )

@@ -103,6 +103,16 @@ abstract class PodcastApiService {
     @Path('episodeId') int episodeId,
   );
 
+  @GET('/podcasts/playback/rate/effective')
+  Future<PlaybackRateEffectiveResponse> getEffectivePlaybackRate(
+    @Query('subscription_id') int? subscriptionId,
+  );
+
+  @PUT('/podcasts/playback/rate/apply')
+  Future<PlaybackRateEffectiveResponse> applyPlaybackRatePreference(
+    @Body() PlaybackRateApplyRequest request,
+  );
+
   // === Queue Management ===
 
   @GET('/podcasts/queue')

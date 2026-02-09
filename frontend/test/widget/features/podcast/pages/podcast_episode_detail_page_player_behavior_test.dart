@@ -286,7 +286,10 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
   }
 
   @override
-  Future<void> setPlaybackRate(double rate) async {
+  Future<void> setPlaybackRate(
+    double rate, {
+    bool applyToSubscription = false,
+  }) async {
     state = state.copyWith(playbackRate: rate);
   }
 

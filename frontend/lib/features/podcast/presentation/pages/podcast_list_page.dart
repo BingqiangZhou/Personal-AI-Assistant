@@ -149,7 +149,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.playlist_add),
+                    icon: const Icon(Icons.note_add),
                     tooltip: l10n.podcast_bulk_import,
                   ),
                   // 批量选择按钮

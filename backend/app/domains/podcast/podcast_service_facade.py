@@ -180,6 +180,24 @@ class PodcastService:
     async def get_playback_state(self, episode_id: int) -> dict | None:
         return await self.playback_service.get_playback_state(episode_id)
 
+    async def get_effective_playback_rate(
+        self,
+        subscription_id: int | None = None,
+    ) -> dict[str, Any]:
+        return await self.playback_service.get_effective_playback_rate(subscription_id)
+
+    async def apply_playback_rate_preference(
+        self,
+        playback_rate: float,
+        apply_to_subscription: bool,
+        subscription_id: int | None = None,
+    ) -> dict[str, Any]:
+        return await self.playback_service.apply_playback_rate_preference(
+            playback_rate=playback_rate,
+            apply_to_subscription=apply_to_subscription,
+            subscription_id=subscription_id,
+        )
+
     # Queue management
     async def get_queue(self) -> dict[str, Any]:
         return await self.queue_service.get_queue()

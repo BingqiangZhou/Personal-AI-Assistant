@@ -92,7 +92,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       // Only log when state actually changes
       if (kDebugMode && _lastPlayingState != playbackState.playing) {
         logger.AppLogger.debug(
-          '🎵 Playback state changed: ${_lastPlayingState == null
+          '馃幍 Playback state changed: ${_lastPlayingState == null
               ? "initial"
               : _lastPlayingState!
               ? "playing"
@@ -146,7 +146,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         if (shouldUpdate && newDuration != currentDuration) {
           if (kDebugMode) {
             logger.AppLogger.debug(
-              '🎵 [DURATION UPDATE] ${currentDuration}ms -> ${newDuration}ms (from audio stream)',
+              '馃幍 [DURATION UPDATE] ${currentDuration}ms -> ${newDuration}ms (from audio stream)',
             );
           }
           state = state.copyWith(duration: newDuration);
@@ -155,7 +155,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     });
 
     if (kDebugMode) {
-      logger.AppLogger.debug('🎵 Audio listeners set up successfully');
+      logger.AppLogger.debug('馃幍 Audio listeners set up successfully');
     }
   }
 
@@ -211,7 +211,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         queueEpisodeId: next.episodeId,
       );
     } catch (error) {
-      logger.AppLogger.debug('鉂?Failed to advance queue on completion: $error');
+      logger.AppLogger.debug('閴?Failed to advance queue on completion: $error');
     } finally {
       _isHandlingQueueCompletion = false;
     }
@@ -242,7 +242,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }) async {
     if (_isPlayingEpisode) {
       logger.AppLogger.debug(
-        '⚠️ playEpisode already in progress, ignoring duplicate call',
+        '鈿狅笍 playEpisode already in progress, ignoring duplicate call',
       );
       return;
     }
@@ -252,12 +252,12 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     if (isSameEpisode && !isCompleted) {
       if (state.isPlaying) {
         logger.AppLogger.debug(
-          '⏯️ Same episode already playing, skip reloading source',
+          '鈴笍 Same episode already playing, skip reloading source',
         );
         return;
       }
       logger.AppLogger.debug(
-        '⏯️ Same episode paused, fast resume without reloading source',
+        '鈴笍 Same episode paused, fast resume without reloading source',
       );
       await resume();
       return;
@@ -276,34 +276,45 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           effectiveQueueEpisodeId = episode.id;
         }
       }
-      logger.AppLogger.debug('🎵 ===== playEpisode called =====');
-      logger.AppLogger.debug('🎵 Episode ID: ${episode.id}');
-      logger.AppLogger.debug('🎵 Episode Title: ${episode.title}');
-      logger.AppLogger.debug('🎵 Audio URL: ${episode.audioUrl}');
-      logger.AppLogger.debug('🎵 Subscription ID: ${episode.subscriptionId}');
+      logger.AppLogger.debug('馃幍 ===== playEpisode called =====');
+      logger.AppLogger.debug('馃幍 Episode ID: ${episode.id}');
+      logger.AppLogger.debug('馃幍 Episode Title: ${episode.title}');
+      logger.AppLogger.debug('馃幍 Audio URL: ${episode.audioUrl}');
+      logger.AppLogger.debug('馃幍 Subscription ID: ${episode.subscriptionId}');
 
       if (!ref.mounted || _isDisposed) {
         _isPlayingEpisode = false;
         return;
       }
 
-      final savedPlaybackRate = state.playbackRate;
       final queueSnapshot = state.queue;
       final queueSyncing = state.queueSyncing;
+      var targetPlaybackRate = state.playbackRate;
+
+      try {
+        final effectiveRate = await _repository.getEffectivePlaybackRate(
+          subscriptionId: episode.subscriptionId,
+        );
+        targetPlaybackRate = effectiveRate.effectivePlaybackRate;
+      } catch (error) {
+        logger.AppLogger.debug(
+          'Failed to resolve effective playback rate, using current state value: $error',
+        );
+      }
 
       // ===== STEP 1: Pause current playback instead of stop =====
       // Using pause() instead of stop() to avoid clearing the audio source
       // This maintains the media session state better
-      logger.AppLogger.debug('⏸️ Step 1: Pausing current playback');
+      logger.AppLogger.debug('鈴革笍 Step 1: Pausing current playback');
       try {
         await _audioHandler.pause();
-        logger.AppLogger.debug('  ✅ Paused');
+        logger.AppLogger.debug('  鉁?Paused');
       } catch (e) {
-        logger.AppLogger.debug('  ⚠️ Pause error (ignorable): $e');
+        logger.AppLogger.debug('  鈿狅笍 Pause error (ignorable): $e');
       }
 
       state = const AudioPlayerState().copyWith(
-        playbackRate: savedPlaybackRate,
+        playbackRate: targetPlaybackRate,
         queue: queueSnapshot,
         queueSyncing: queueSyncing,
         playSource: effectiveSource,
@@ -315,7 +326,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       if (!ref.mounted || _isDisposed) return;
 
       // ===== STEP 2: Set new episode info with duration from backend =====
-      logger.AppLogger.debug('📝 Step 2: Setting new episode info');
+      logger.AppLogger.debug('馃摑 Step 2: Setting new episode info');
       // CRITICAL: Backend audioDuration is in SECONDS, convert to MILLISECONDS
       final durationMs = (episode.audioDuration ?? 0) * 1000;
       final resumePositionMs = normalizeResumePositionMs(
@@ -323,7 +334,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         episode.audioDuration,
       );
       logger.AppLogger.debug(
-        '  📊 Using backend duration: ${episode.audioDuration}s = ${durationMs}ms',
+        '  馃搳 Using backend duration: ${episode.audioDuration}s = ${durationMs}ms',
       );
       state = state.copyWith(
         currentEpisode: episode,
@@ -336,11 +347,11 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       // ===== STEP 3: Set new episode with metadata =====
       // CRITICAL: Use setEpisode() to properly set MediaItem, validate artUri, and load audio
       // artUri validation is built into setEpisode() - only http/https URLs are accepted
-      logger.AppLogger.debug('🔄 Step 3: Setting new episode with metadata');
+      logger.AppLogger.debug('馃攧 Step 3: Setting new episode with metadata');
       logger.AppLogger.debug(
-        '  📊 Backend duration already set: ${state.duration}ms',
+        '  馃搳 Backend duration already set: ${state.duration}ms',
       );
-      logger.AppLogger.debug('  🖼️ Image URL: ${episode.imageUrl ?? "NULL"}');
+      logger.AppLogger.debug('  馃柤锔?Image URL: ${episode.imageUrl ?? "NULL"}');
 
       try {
         await _audioHandler.setEpisode(
@@ -352,9 +363,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           autoPlay:
               false, // We'll manually start playback after restoring position/speed
         );
-        logger.AppLogger.debug('  ✅ Episode loaded successfully');
+        logger.AppLogger.debug('  鉁?Episode loaded successfully');
       } catch (loadError) {
-        logger.AppLogger.debug('  ❌ Failed to load episode: $loadError');
+        logger.AppLogger.debug('  鉂?Failed to load episode: $loadError');
         throw Exception('Failed to load audio: $loadError');
       }
 
@@ -363,67 +374,64 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       // ===== STEP 4: Restore playback position =====
       if (resumePositionMs > 0) {
         logger.AppLogger.debug(
-          '⏩ Step 4: Seeking to saved position: ${resumePositionMs}ms',
+          '鈴?Step 4: Seeking to saved position: ${resumePositionMs}ms',
         );
         try {
           await _audioHandler.seek(Duration(milliseconds: resumePositionMs));
-          logger.AppLogger.debug('  ✅ Seek completed');
+          logger.AppLogger.debug('  鉁?Seek completed');
         } catch (e) {
-          logger.AppLogger.debug('  ⚠️ Seek error: $e');
+          logger.AppLogger.debug('  鈿狅笍 Seek error: $e');
         }
       }
 
       if (!ref.mounted || _isDisposed) return;
 
       // ===== STEP 5: Restore playback rate =====
-      if (savedPlaybackRate != 1.0) {
-        logger.AppLogger.debug(
-          '⚙️ Step 5: Restoring playback rate: ${savedPlaybackRate}x',
-        );
-        try {
-          await _audioHandler.setSpeed(savedPlaybackRate);
-          logger.AppLogger.debug('  ✅ Playback rate restored');
-        } catch (e) {
-          logger.AppLogger.debug('  ⚠️ Failed to restore playback rate: $e');
-        }
+      logger.AppLogger.debug(
+        'Step 5: Applying effective playback rate ${targetPlaybackRate}x',
+      );
+      try {
+        await _audioHandler.setSpeed(targetPlaybackRate);
+      } catch (e) {
+        logger.AppLogger.debug('Failed to apply playback rate: $e');
       }
 
       // ===== STEP 6: Start playback =====
-      logger.AppLogger.debug('▶️ Step 6: Starting playback');
+      logger.AppLogger.debug('鈻讹笍 Step 6: Starting playback');
       try {
         await _audioHandler.play();
-        logger.AppLogger.debug('  ✅ Playback started');
+        logger.AppLogger.debug('  鉁?Playback started');
 
         if (ref.mounted && !_isDisposed) {
           state = state.copyWith(
             isPlaying: true,
             isLoading: false,
             position: resumePositionMs,
-            playbackRate: savedPlaybackRate,
+            playbackRate: targetPlaybackRate,
           );
         }
       } catch (playError) {
-        logger.AppLogger.debug('  ❌ Failed to start playback: $playError');
+        logger.AppLogger.debug('  鉂?Failed to start playback: $playError');
         _isPlayingEpisode = false;
         throw Exception('Failed to start playback: $playError');
       }
 
-      logger.AppLogger.debug('🎵 ===== playEpisode completed =====');
+      logger.AppLogger.debug('馃幍 ===== playEpisode completed =====');
 
       // Update playback state on server (non-blocking)
       if (ref.mounted && !_isDisposed) {
         _updatePlaybackStateOnServer().catchError((error) {
-          logger.AppLogger.debug('⚠️ Server update failed: $error');
+          logger.AppLogger.debug('鈿狅笍 Server update failed: $error');
         });
       }
 
       // Release the lock
       _isPlayingEpisode = false;
     } catch (error) {
-      logger.AppLogger.debug('❌ ===== Failed to play episode =====');
-      logger.AppLogger.debug('❌ Episode ID: ${episode.id}');
-      logger.AppLogger.debug('❌ Audio URL: ${episode.audioUrl}');
-      logger.AppLogger.debug('❌ Error: $error');
+      logger.AppLogger.debug('鉂?===== Failed to play episode =====');
+      logger.AppLogger.debug('鉂?Episode ID: ${episode.id}');
+      logger.AppLogger.debug('鉂?Audio URL: ${episode.audioUrl}');
+      logger.AppLogger.debug('鉂?Error: $error');
 
       // Release the lock on error
       _isPlayingEpisode = false;
@@ -475,7 +483,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
     try {
       logger.AppLogger.debug(
-        '🔴 pause() called, current isPlaying: ${state.isPlaying}',
+        '馃敶 pause() called, current isPlaying: ${state.isPlaying}',
       );
 
       // IMPORTANT: Don't manually update state here - let the playbackState listener handle it
@@ -484,14 +492,14 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       await _audioHandler.pause();
       logger.AppLogger.debug(
-        '🔴 AudioHandler.pause() completed, waiting for playbackState listener to update UI',
+        '馃敶 AudioHandler.pause() completed, waiting for playbackState listener to update UI',
       );
 
       if (ref.mounted && !_isDisposed) {
         await _updatePlaybackStateOnServer(immediate: true);
       }
     } catch (error) {
-      logger.AppLogger.debug('❌ pause() error: $error');
+      logger.AppLogger.debug('鉂?pause() error: $error');
       if (ref.mounted && !_isDisposed) {
         state = state.copyWith(error: error.toString());
       }
@@ -503,7 +511,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
     try {
       logger.AppLogger.debug(
-        '🟢 resume() called, current isPlaying: ${state.isPlaying}',
+        '馃煝 resume() called, current isPlaying: ${state.isPlaying}',
       );
 
       // IMPORTANT: Don't manually update state here - let the playbackState listener handle it
@@ -512,20 +520,20 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       await _audioHandler.play();
       logger.AppLogger.debug(
-        '🟢 AudioHandler.play() completed, waiting for playbackState listener to update UI',
+        '馃煝 AudioHandler.play() completed, waiting for playbackState listener to update UI',
       );
 
       if (ref.mounted && !_isDisposed) {
         unawaited(
           _updatePlaybackStateOnServer().catchError((error) {
             logger.AppLogger.debug(
-              '⚠️ Server update failed after resume: $error',
+              '鈿狅笍 Server update failed after resume: $error',
             );
           }),
         );
       }
     } catch (error) {
-      logger.AppLogger.debug('❌ resume() error: $error');
+      logger.AppLogger.debug('鉂?resume() error: $error');
       if (ref.mounted && !_isDisposed) {
         state = state.copyWith(isPlaying: false, error: error.toString());
       }
@@ -548,14 +556,30 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     }
   }
 
-  Future<void> setPlaybackRate(double rate) async {
+  Future<void> setPlaybackRate(
+    double rate, {
+    bool applyToSubscription = false,
+  }) async {
     if (_isDisposed) return;
 
     try {
+      final currentEpisode = state.currentEpisode;
+      if (applyToSubscription && currentEpisode == null) {
+        throw StateError(
+          'A current episode is required when applying to subscription',
+        );
+      }
+
       await _audioHandler.setSpeed(rate);
+      final applied = await _repository.applyPlaybackRatePreference(
+        playbackRate: rate,
+        applyToSubscription: applyToSubscription,
+        subscriptionId: currentEpisode?.subscriptionId,
+      );
+
       if (ref.mounted && !_isDisposed) {
-        state = state.copyWith(playbackRate: rate);
-        await _updatePlaybackStateOnServer();
+        state = state.copyWith(playbackRate: applied.effectivePlaybackRate);
+        await _updatePlaybackStateOnServer(immediate: true);
       }
     } catch (error) {
       if (ref.mounted && !_isDisposed) {
@@ -657,20 +681,20 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     } catch (error) {
       // Log more detailed error for debugging
       logger.AppLogger.debug(
-        '⚠️ Failed to update playback state on server: $error',
+        '鈿狅笍 Failed to update playback state on server: $error',
       );
-      logger.AppLogger.debug('📍 Episode ID: ${episode.id}');
+      logger.AppLogger.debug('馃搷 Episode ID: ${episode.id}');
       logger.AppLogger.debug(
-        '📍 Position: ${state.position}ms (${(state.position / 1000).round()}s)',
+        '馃搷 Position: ${state.position}ms (${(state.position / 1000).round()}s)',
       );
-      logger.AppLogger.debug('📍 Is Playing: ${state.isPlaying}');
-      logger.AppLogger.debug('📍 Playback Rate: ${state.playbackRate}');
+      logger.AppLogger.debug('馃搷 Is Playing: ${state.isPlaying}');
+      logger.AppLogger.debug('馃搷 Playback Rate: ${state.playbackRate}');
 
       // Check if it's an authentication error
       if (error.toString().contains('401') ||
           error.toString().contains('authentication')) {
         logger.AppLogger.debug(
-          '🔑 Authentication error - user may need to log in again',
+          '馃攽 Authentication error - user may need to log in again',
         );
       }
 
@@ -827,7 +851,7 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
     // Check if data is fresh and skip refresh if not forced
     if (!forceRefresh && page == 1 && state.isDataFresh()) {
       logger.AppLogger.debug(
-        '📦 Using cached subscription data (fresh within 5 min)',
+        '馃摝 Using cached subscription data (fresh within 5 min)',
       );
       return;
     }
@@ -852,7 +876,7 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
         lastRefreshTime: DateTime.now(), // Record refresh time
       );
       logger.AppLogger.debug(
-        '✅ Subscription data loaded at ${DateTime.now()} (total=${response.total}, count=${response.subscriptions.length})',
+        '鉁?Subscription data loaded at ${DateTime.now()} (total=${response.total}, count=${response.subscriptions.length})',
       );
     } catch (error) {
       state = state.copyWith(isLoading: false, error: error.toString());
@@ -969,10 +993,10 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
     try {
       // Debug log
       logger.AppLogger.debug(
-        '🗑️ Bulk delete request: subscriptionIds=$subscriptionIds',
+        '馃棏锔?Bulk delete request: subscriptionIds=$subscriptionIds',
       );
       logger.AppLogger.debug(
-        '🗑️ Subscription IDs type: ${subscriptionIds.runtimeType}',
+        '馃棏锔?Subscription IDs type: ${subscriptionIds.runtimeType}',
       );
 
       final response = await _repository.bulkDeleteSubscriptions(
@@ -980,7 +1004,7 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
       );
 
       logger.AppLogger.debug(
-        '✅ Bulk delete success: ${response.successCount} deleted, ${response.failedCount} failed',
+        '鉁?Bulk delete success: ${response.successCount} deleted, ${response.failedCount} failed',
       );
 
       // Refresh the list
@@ -988,7 +1012,7 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
 
       return response;
     } catch (error) {
-      logger.AppLogger.debug('❌ Bulk delete failed: $error');
+      logger.AppLogger.debug('鉂?Bulk delete failed: $error');
       rethrow;
     }
   }
@@ -1044,18 +1068,20 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
         isLoading: false,
       );
     } catch (error) {
-      logger.AppLogger.debug('❌ 加载最新内容失败: $error');
+      logger.AppLogger.debug('鉂?鍔犺浇鏈€鏂板唴瀹瑰け璐? $error');
 
       // Check if this is an authentication error
       if (error is AuthenticationException) {
-        logger.AppLogger.debug('🔓 认证失败，触发认证状态检查');
+        logger.AppLogger.debug(
+          'Authentication failed while loading feed, checking auth status.',
+        );
         // Trigger auth status check to update state and redirect to login
         ref.read(authProvider.notifier).checkAuthStatus();
       }
 
       state = state.copyWith(
         isLoading: false,
-        error: '加载最新内容失败: ${error.toString()}',
+        error: '鍔犺浇鏈€鏂板唴瀹瑰け璐? ${error.toString()}',
       );
     }
   }
@@ -1080,18 +1106,20 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
         isLoadingMore: false,
       );
     } catch (error) {
-      logger.AppLogger.debug('❌ 加载更多内容失败: $error');
+      logger.AppLogger.debug('鉂?鍔犺浇鏇村鍐呭澶辫触: $error');
 
       // Check if this is an authentication error
       if (error is AuthenticationException) {
-        logger.AppLogger.debug('🔓 认证失败，触发认证状态检查');
+        logger.AppLogger.debug(
+          'Authentication failed while loading more feed, checking auth status.',
+        );
         // Trigger auth status check to update state and redirect to login
         ref.read(authProvider.notifier).checkAuthStatus();
       }
 
       state = state.copyWith(
         isLoadingMore: false,
-        error: '加载更多内容失败: ${error.toString()}',
+        error: '鍔犺浇鏇村鍐呭澶辫触: ${error.toString()}',
       );
     }
   }
@@ -1247,19 +1275,19 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
     // Check if data is fresh and skip refresh if not forced (only for first page)
     if (!forceRefresh && page == 1 && state.isDataFresh()) {
       logger.AppLogger.debug(
-        '📦 Using cached episode data for sub $subscriptionId (fresh within 5 min)',
+        '馃摝 Using cached episode data for sub $subscriptionId (fresh within 5 min)',
       );
       return;
     }
 
     logger.AppLogger.debug(
-      '📋 Loading episodes for subscription $subscriptionId, page $page',
+      '馃搵 Loading episodes for subscription $subscriptionId, page $page',
     );
 
     // When loading first page, clear existing episodes immediately to avoid showing old data
     if (page == 1) {
       logger.AppLogger.debug(
-        '📋 Clearing old episodes and showing loading state',
+        '馃搵 Clearing old episodes and showing loading state',
       );
       state = state.copyWith(
         isLoading: true,
@@ -1281,7 +1309,7 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
       );
 
       logger.AppLogger.debug(
-        '📋 Loaded ${response.episodes.length} episodes for subscription $subscriptionId',
+        '馃搵 Loaded ${response.episodes.length} episodes for subscription $subscriptionId',
       );
 
       state = state.copyWith(
@@ -1295,9 +1323,9 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
         isLoading: false,
         lastRefreshTime: DateTime.now(), // Record refresh time
       );
-      logger.AppLogger.debug('✅ Episode data loaded at ${DateTime.now()}');
+      logger.AppLogger.debug('鉁?Episode data loaded at ${DateTime.now()}');
     } catch (error) {
-      logger.AppLogger.debug('❌ Failed to load episodes: $error');
+      logger.AppLogger.debug('鉂?Failed to load episodes: $error');
       state = state.copyWith(isLoading: false, error: error.toString());
     }
   }

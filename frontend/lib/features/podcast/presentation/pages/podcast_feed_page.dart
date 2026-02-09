@@ -6,8 +6,6 @@ import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
-import '../widgets/add_podcast_dialog.dart';
-import '../widgets/bulk_import_dialog.dart';
 import '../../core/utils/episode_description_helper.dart';
 
 /// Material Design 3自适应Feed页面
@@ -53,32 +51,6 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                   },
                   icon: const Icon(Icons.refresh),
                   tooltip: l10n.podcast_refresh_feed,
-                ),
-                IconButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => const AddPodcastDialog(),
-                    );
-                  },
-                  icon: const Icon(Icons.add),
-                  tooltip: l10n.podcast_add_podcast,
-                ),
-                IconButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => BulkImportDialog(
-                        onImport: (urls) async {
-                          await ref
-                              .read(podcastSubscriptionProvider.notifier)
-                              .addSubscriptionsBatch(feedUrls: urls);
-                        },
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.playlist_add),
-                  tooltip: l10n.podcast_bulk_import,
                 ),
               ],
             ),

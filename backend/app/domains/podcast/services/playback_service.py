@@ -75,12 +75,46 @@ class PodcastPlaybackService:
             playback_rate
         )
 
+        progress_percentage = 0
+        remaining_time = 0
+        if episode.audio_duration and episode.audio_duration > 0:
+            progress_percentage = (playback.current_position / episode.audio_duration) * 100
+            remaining_time = max(0, episode.audio_duration - playback.current_position)
+
         return {
             "episode_id": episode_id,
             "progress": playback.current_position,
             "is_playing": playback.is_playing,
-            "play_count": playback.play_count
+            "playback_rate": playback.playback_rate,
+            "play_count": playback.play_count,
+            "last_updated_at": playback.last_updated_at,
+            "progress_percentage": round(progress_percentage, 2),
+            "remaining_time": remaining_time,
         }
+
+    async def get_effective_playback_rate(
+        self,
+        subscription_id: int | None = None,
+    ) -> dict[str, Any]:
+        """Resolve effective playback-rate preference."""
+        return await self.repo.get_effective_playback_rate(
+            user_id=self.user_id,
+            subscription_id=subscription_id,
+        )
+
+    async def apply_playback_rate_preference(
+        self,
+        playback_rate: float,
+        apply_to_subscription: bool,
+        subscription_id: int | None = None,
+    ) -> dict[str, Any]:
+        """Persist playback-rate preference and return effective values."""
+        return await self.repo.apply_playback_rate_preference(
+            user_id=self.user_id,
+            playback_rate=playback_rate,
+            apply_to_subscription=apply_to_subscription,
+            subscription_id=subscription_id,
+        )
 
     async def get_playback_state(self, episode_id: int) -> dict | None:
         """
