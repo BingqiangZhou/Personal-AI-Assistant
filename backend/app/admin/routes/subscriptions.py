@@ -36,6 +36,8 @@ from app.domains.subscription.parsers.feed_parser import FeedParser, FeedParserC
 from app.domains.subscription.services import SubscriptionService
 from app.domains.user.models import User
 from app.shared.schemas import SubscriptionCreate
+from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
+from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 
 
 logger = logging.getLogger(__name__)
@@ -1098,9 +1100,13 @@ async def import_subscriptions_opml(
 ):
     """
     Import RSS subscriptions from OPML format using ElementTree.
+    Parses episodes from RSS feeds to populate the Feed page.
 
     从OPML格式导入RSS订阅，使用ElementTree解析。
+    同时解析RSS源的单集以填充Feed页面。
     """
+    from sqlalchemy import and_, select
+
     # Constants
     MAX_TITLE_LENGTH = 255
     MAX_DESCRIPTION_LENGTH = 2000
@@ -1108,14 +1114,14 @@ async def import_subscriptions_opml(
     async def fetch_feed_image_url(feed_url: str) -> str | None:
         """Fetch the image URL from the RSS feed."""
         try:
-            parser = FeedParser(FeedParserConfig(
+            async with FeedParser(FeedParserConfig(
                 max_content_length=1024 * 1024,  # 1MB - we only need metadata
                 timeout=5,
                 strip_html=False,
-            ))
-            result = await parser.parse(feed_url)
-            if result.feed_info and result.feed_info.icon_url:
-                return result.feed_info.icon_url
+            )) as parser:
+                result = await parser.parse_feed(feed_url)
+                if result.feed_info and result.feed_info.icon_url:
+                    return result.feed_info.icon_url
         except Exception as e:
             logger.warning(f"Failed to fetch image from {feed_url}: {e}")
         return None
@@ -1286,15 +1292,129 @@ async def import_subscriptions_opml(
                 content={"success": False, "message": "No valid RSS subscriptions found in OPML file"},
             )
 
-        # Import subscriptions using batch create
-        service = SubscriptionService(db, user_id=user.id)
-        results = await service.create_subscriptions_batch(subscriptions_data)
+        # Import subscriptions using PodcastSubscriptionService for episode parsing
+        parser = SecureRSSParser(user.id)
+        podcast_service = PodcastSubscriptionService(db, user_id=user.id)
 
-        # Count results
-        success_count = sum(1 for r in results if r["status"] == "success")
-        updated_count = sum(1 for r in results if r["status"] == "updated")
-        skipped_count = sum(1 for r in results if r["status"] == "skipped")
-        error_count = sum(1 for r in results if r["status"] == "error")
+        results = []
+        success_count = 0
+        updated_count = 0
+        skipped_count = 0
+        error_count = 0
+        total_episodes_created = 0
+
+        for sub_data in subscriptions_data:
+            try:
+                # Check if subscription already exists (globally)
+                existing = await podcast_service.repo.get_subscription_by_url(user.id, sub_data.source_url)
+
+                if existing:
+                    # Check if user is already subscribed (non-archived)
+                    user_sub_result = await db.execute(
+                        select(UserSubscription).where(
+                            and_(
+                                UserSubscription.user_id == user.id,
+                                UserSubscription.subscription_id == existing.id,
+                                UserSubscription.is_archived == False
+                            )
+                        )
+                    )
+                    user_sub = user_sub_result.scalar_one_or_none()
+
+                    if user_sub:
+                        skipped_count += 1
+                        results.append({
+                            "source_url": sub_data.source_url,
+                            "title": sub_data.title,
+                            "status": "skipped",
+                            "id": existing.id,
+                            "message": f"Subscription already exists: {existing.title}"
+                        })
+                        continue
+
+                # Parse RSS feed to get episodes
+                success, feed, error = await parser.fetch_and_parse_feed(sub_data.source_url)
+
+                if not success:
+                    error_count += 1
+                    results.append({
+                        "source_url": sub_data.source_url,
+                        "title": sub_data.title,
+                        "status": "error",
+                        "message": f"Failed to parse feed: {error}"
+                    })
+                    logger.warning(f"OPML import: failed to parse {sub_data.source_url}: {error}")
+                    continue
+
+                # Build metadata from parsed feed
+                metadata = {
+                    "author": feed.author,
+                    "language": feed.language,
+                    "categories": feed.categories,
+                    "explicit": feed.explicit,
+                    "image_url": feed.image_url or sub_data.image_url,
+                    "podcast_type": feed.podcast_type,
+                    "link": feed.link,
+                    "total_episodes": len(feed.episodes),
+                    "platform": feed.platform
+                }
+
+                # Create or update subscription (includes UserSubscription mapping)
+                subscription = await podcast_service.repo.create_or_update_subscription(
+                    user_id=user.id,
+                    feed_url=sub_data.source_url,
+                    title=sub_data.title,
+                    description=sub_data.description,
+                    custom_name=None,
+                    metadata=metadata
+                )
+
+                # Create episodes from parsed feed
+                new_episodes = []
+                for episode in feed.episodes:
+                    saved_episode, is_new = await podcast_service.repo.create_or_update_episode(
+                        subscription_id=subscription.id,
+                        title=episode.title,
+                        description=episode.description,
+                        audio_url=episode.audio_url,
+                        published_at=episode.published_at,
+                        audio_duration=episode.duration,
+                        transcript_url=episode.transcript_url,
+                        item_link=episode.link,
+                        metadata={"feed_title": feed.title, "imported_via_opml": True}
+                    )
+
+                    if is_new:
+                        new_episodes.append(saved_episode)
+
+                # Track statistics
+                if existing:
+                    updated_count += 1
+                    status = "updated"
+                else:
+                    success_count += 1
+                    status = "success"
+
+                total_episodes_created += len(new_episodes)
+
+                results.append({
+                    "source_url": sub_data.source_url,
+                    "title": sub_data.title,
+                    "status": status,
+                    "id": subscription.id,
+                    "message": f"Imported with {len(new_episodes)} episodes",
+                    "new_episodes": len(new_episodes)
+                })
+
+            except Exception as e:
+                error_count += 1
+                logger.error(f"OPML import error for {sub_data.source_url}: {e}")
+                results.append({
+                    "source_url": sub_data.source_url,
+                    "title": sub_data.title,
+                    "status": "error",
+                    "message": str(e)
+                })
 
         # Log the import action
         await log_admin_action(
@@ -1309,26 +1429,31 @@ async def import_subscriptions_opml(
                 "updated": updated_count,
                 "skipped": skipped_count,
                 "errors": error_count,
+                "total_episodes_created": total_episodes_created,
             },
             request=request,
         )
 
         logger.info(
             f"Imported OPML for user {user.username}: "
-            f"{success_count} added, {updated_count} updated, {skipped_count} skipped, {error_count} failed"
+            f"{success_count} added, {updated_count} updated, {skipped_count} skipped, {error_count} failed. "
+            f"Total episodes created: {total_episodes_created}"
         )
 
+        # Return results with episode count
         return JSONResponse(
             content={
                 "success": True,
-                "message": f"Import completed: {success_count} added, {updated_count} updated, {skipped_count} skipped, {error_count} failed",
+                "message": f"Import completed: {success_count} added, {updated_count} updated, {skipped_count} skipped, {error_count} failed. Total episodes: {total_episodes_created}",
                 "results": {
                     "total": len(subscriptions_data),
                     "success": success_count,
                     "updated": updated_count,
                     "skipped": skipped_count,
                     "errors": error_count,
+                    "total_episodes_created": total_episodes_created,
                 },
+                "details": results
             }
         )
 

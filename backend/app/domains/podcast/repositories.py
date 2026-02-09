@@ -106,6 +106,9 @@ class PodcastRepository:
             subscription.updated_at = datetime.now(timezone.utc)
             # 更新元数据 - 使用新字典对象确保 SQLAlchemy 检测到变更
             if metadata:
+                # NEW: Also store image_url in the direct column
+                if 'image_url' in metadata:
+                    subscription.image_url = metadata.get('image_url')
                 existing_config = dict(subscription.config or {})
                 # 合并新旧元数据，保留原有的其他配置
                 existing_config.update(metadata)
@@ -121,6 +124,7 @@ class PodcastRepository:
                 description=description,
                 status="active",
                 fetch_interval=3600,  # 默认1小时（秒）
+                image_url=(metadata or {}).get('image_url'),  # NEW: Also store in direct column
                 config=metadata or {}
             )
             self.db.add(subscription)

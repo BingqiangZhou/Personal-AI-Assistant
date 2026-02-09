@@ -301,6 +301,36 @@ class FeedParser:
         if icon_url and hasattr(icon_url, 'href'):
             icon_url = icon_url.href
 
+        # NEW: Check iTunes namespace (podcast RSS feeds)
+        # feedparser stores iTunes images in various places
+        if not icon_url:
+            itunes_image = feed_data.get('itunes_image')
+            if itunes_image:
+                if isinstance(itunes_image, dict):
+                    icon_url = itunes_image.get('href')
+                elif isinstance(itunes_image, str):
+                    icon_url = itunes_image
+
+        # NEW: Check standard RSS image with href
+        if not icon_url:
+            image = feed_data.get('image')
+            if image and isinstance(image, dict):
+                icon_url = image.get('href') or image.get('url')
+
+        # NEW: Check podcast_image (another feedparser field)
+        if not icon_url:
+            podcast_image = feed_data.get('podcast_image')
+            if podcast_image:
+                if isinstance(podcast_image, dict):
+                    icon_url = podcast_image.get('href')
+                elif isinstance(podcast_image, str):
+                    icon_url = podcast_image
+
+        # Debug logging for troubleshooting
+        if not icon_url:
+            image_keys = [k for k in feed_data if 'image' in k.lower() or 'icon' in k.lower()]
+            logger.debug(f"No image_url found. Image-related keys: {image_keys}")
+
         # Extract language
         language = self._get_field(feed_data, ['language'], None)
 
