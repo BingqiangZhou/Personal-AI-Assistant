@@ -1303,48 +1303,116 @@ async def import_subscriptions_opml(
         error_count = 0
         total_episodes_created = 0
 
-        for sub_data in subscriptions_data:
-            try:
-                # Check if subscription already exists (globally)
-                existing = await podcast_service.repo.get_subscription_by_url(user.id, sub_data.source_url)
+        # Phase 1: Concurrent feed fetching with semaphore (rate limiting)
+        MAX_CONCURRENT_FEEDS = 10  # Configurable: adjust based on server capacity
+        semaphore = asyncio.Semaphore(MAX_CONCURRENT_FEEDS)
 
-                if existing:
-                    # Check if user is already subscribed (non-archived)
-                    user_sub_result = await db.execute(
-                        select(UserSubscription).where(
-                            and_(
-                                UserSubscription.user_id == user.id,
-                                UserSubscription.subscription_id == existing.id,
-                                UserSubscription.is_archived == False
+        async def fetch_feed_with_check(sub_data):
+            """Fetch RSS feed concurrently with duplicate check."""
+            async with semaphore:
+                try:
+                    # Check if subscription already exists (globally) - FAST DB READ
+                    existing = await podcast_service.repo.get_subscription_by_url(user.id, sub_data.source_url)
+
+                    if existing:
+                        # Check if user is already subscribed (non-archived) - FAST DB READ
+                        user_sub_result = await db.execute(
+                            select(UserSubscription).where(
+                                and_(
+                                    UserSubscription.user_id == user.id,
+                                    UserSubscription.subscription_id == existing.id,
+                                    UserSubscription.is_archived == False
+                                )
                             )
                         )
-                    )
-                    user_sub = user_sub_result.scalar_one_or_none()
+                        user_sub = user_sub_result.scalar_one_or_none()
 
-                    if user_sub:
-                        skipped_count += 1
-                        results.append({
-                            "source_url": sub_data.source_url,
-                            "title": sub_data.title,
-                            "status": "skipped",
-                            "id": existing.id,
-                            "message": f"Subscription already exists: {existing.title}"
-                        })
-                        continue
+                        if user_sub:
+                            return {
+                                "sub_data": sub_data,
+                                "existing": existing,
+                                "feed": None,
+                                "error": None,
+                                "status": "skipped",
+                                "message": f"Subscription already exists: {existing.title}"
+                            }
 
-                # Parse RSS feed to get episodes
-                success, feed, error = await parser.fetch_and_parse_feed(sub_data.source_url)
+                    # SLOW NETWORK I/O: Fetch and parse RSS feed
+                    success, feed, error = await parser.fetch_and_parse_feed(sub_data.source_url)
 
-                if not success:
-                    error_count += 1
-                    results.append({
-                        "source_url": sub_data.source_url,
-                        "title": sub_data.title,
+                    if not success:
+                        return {
+                            "sub_data": sub_data,
+                            "existing": None,
+                            "feed": None,
+                            "error": error,
+                            "status": "error",
+                            "message": f"Failed to parse feed: {error}"
+                        }
+
+                    return {
+                        "sub_data": sub_data,
+                        "existing": existing,
+                        "feed": feed,
+                        "error": None,
+                        "status": "fetched"
+                    }
+
+                except Exception as e:
+                    logger.error(f"OPML import fetch error for {sub_data.source_url}: {e}")
+                    return {
+                        "sub_data": sub_data,
+                        "existing": None,
+                        "feed": None,
+                        "error": str(e),
                         "status": "error",
-                        "message": f"Failed to parse feed: {error}"
-                    })
-                    logger.warning(f"OPML import: failed to parse {sub_data.source_url}: {error}")
-                    continue
+                        "message": str(e)
+                    }
+
+        # Run all feed fetches concurrently
+        logger.info(f"Starting concurrent feed fetch for {len(subscriptions_data)} subscriptions with {MAX_CONCURRENT_FEEDS} concurrent workers")
+        fetch_results = await asyncio.gather(
+            *[fetch_feed_with_check(sub) for sub in subscriptions_data],
+            return_exceptions=True  # Continue even if some fail
+        )
+
+        # Phase 2: Sequential database writes (safe transaction handling)
+        for result in fetch_results:
+            # Handle unexpected exceptions from gather
+            if isinstance(result, Exception):
+                error_count += 1
+                logger.error(f"OPML import unexpected error: {result}")
+                continue
+
+            # Process skipped items (already subscribed)
+            if result["status"] == "skipped":
+                skipped_count += 1
+                results.append({
+                    "source_url": result["sub_data"].source_url,
+                    "title": result["sub_data"].title,
+                    "status": "skipped",
+                    "id": result["existing"].id,
+                    "message": result["message"]
+                })
+                continue
+
+            # Process errors
+            if result["status"] == "error":
+                error_count += 1
+                results.append({
+                    "source_url": result["sub_data"].source_url,
+                    "title": result["sub_data"].title,
+                    "status": "error",
+                    "message": result["message"]
+                })
+                logger.warning(f"OPML import: {result['message']}")
+                continue
+
+            # Process successful fetches - Phase 2: DB writes
+            try:
+                sub_data = result["sub_data"]
+                feed = result["feed"]
+                existing = result["existing"]
 
                 # Build metadata from parsed feed
                 metadata = {
@@ -1408,10 +1476,10 @@ async def import_subscriptions_opml(
 
             except Exception as e:
                 error_count += 1
-                logger.error(f"OPML import error for {sub_data.source_url}: {e}")
+                logger.error(f"OPML import DB write error: {e}")
                 results.append({
-                    "source_url": sub_data.source_url,
-                    "title": sub_data.title,
+                    "source_url": result["sub_data"].source_url,
+                    "title": result["sub_data"].title,
                     "status": "error",
                     "message": str(e)
                 })
