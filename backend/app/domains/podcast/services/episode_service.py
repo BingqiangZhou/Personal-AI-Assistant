@@ -279,11 +279,10 @@ class PodcastEpisodeService:
                 "explicit": ep.explicit,
                 "status": ep.status,
                 "metadata": ep.metadata_json,
-                "current_position": playback.current_position if playback else None,
+                "playback_position": playback.current_position if playback else None,
                 "is_playing": playback.is_playing if playback else False,
                 "playback_rate": playback.playback_rate if playback else 1.0,
                 "is_played": is_played,
-                "liked": playback.liked if playback else None,
                 "created_at": ep.created_at,
                 "updated_at": ep.updated_at,
             })

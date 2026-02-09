@@ -40,8 +40,19 @@ async def add_subscription(
         subscription, new_episodes = await service.add_subscription(
             feed_url=subscription_data.feed_url
         )
+
+        # Extract metadata from config
+        config = subscription.config or {}
+        image_url = config.get("image_url")
+        # Fallback to subscription.image_url column if config doesn't have it
+        if not image_url:
+            image_url = subscription.image_url
+        author = config.get("author")
+        categories = config.get("categories") or []
+
         response_data = {
             "id": subscription.id,
+            "user_id": service.user_id,
             "title": subscription.title,
             "description": subscription.description,
             "source_url": subscription.source_url,
@@ -51,6 +62,9 @@ async def add_subscription(
             "fetch_interval": subscription.fetch_interval,
             "episode_count": len(new_episodes),
             "unplayed_count": len(new_episodes),
+            "image_url": image_url,
+            "author": author,
+            "categories": categories,
             "created_at": subscription.created_at,
             "updated_at": subscription.updated_at,
         }

@@ -229,6 +229,9 @@ class PodcastSubscriptionService:
             # Extract metadata from config
             config = sub.config or {}
             image_url = config.get("image_url")
+            # Fallback to subscription.image_url column if config doesn't have it
+            if not image_url:
+                image_url = sub.image_url
             author = config.get("author")
             platform = config.get("platform")
 
@@ -307,6 +310,9 @@ class PodcastSubscriptionService:
         # Extract metadata from config
         config = sub.config or {}
         image_url = config.get("image_url")
+        # Fallback to subscription.image_url column if config doesn't have it
+        if not image_url:
+            image_url = sub.image_url
         author = config.get("author")
         categories = config.get("categories") or []
         podcast_type = config.get("podcast_type")
