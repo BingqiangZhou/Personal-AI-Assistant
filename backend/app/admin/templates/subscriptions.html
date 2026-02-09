@@ -216,16 +216,21 @@
                                     {% endif %}
                                 </td>
                                 <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                    <button onclick="openEditModal({{ sub.id }}, '{{ sub.title }}', '{{ sub.source_url }}')"
-                                            class="text-indigo-600 hover:text-indigo-900 mr-4">
+                                    <button type="button"
+                                            class="js-open-edit text-indigo-600 hover:text-indigo-900 mr-4"
+                                            data-sub-id="{{ sub.id }}"
+                                            data-sub-title="{{ sub.title | e }}"
+                                            data-sub-url="{{ sub.source_url | e }}">
                                         编辑
                                     </button>
-                                    <button onclick="refreshSubscription({{ sub.id }})"
-                                            class="text-blue-600 hover:text-blue-900 mr-4">
+                                    <button type="button"
+                                            class="js-refresh-subscription text-blue-600 hover:text-blue-900 mr-4"
+                                            data-sub-id="{{ sub.id }}">
                                         刷新
                                     </button>
-                                    <button onclick="deleteSubscription({{ sub.id }})"
-                                            class="text-red-600 hover:text-red-900">
+                                    <button type="button"
+                                            class="js-delete-subscription text-red-600 hover:text-red-900"
+                                            data-sub-id="{{ sub.id }}">
                                         删除
                                     </button>
                                 </td>
@@ -587,6 +592,36 @@ async function deleteSubscription(id) {
         alert('删除失败');
     }
 }
+
+// Use event delegation instead of inline onclick so template placeholders
+// don't trigger JavaScript diagnostics in editors.
+document.addEventListener('click', (event) => {
+    const editBtn = event.target.closest('.js-open-edit');
+    if (editBtn) {
+        const id = Number.parseInt(editBtn.dataset.subId || '', 10);
+        if (!Number.isNaN(id)) {
+            openEditModal(id, editBtn.dataset.subTitle || '', editBtn.dataset.subUrl || '');
+        }
+        return;
+    }
+
+    const refreshBtn = event.target.closest('.js-refresh-subscription');
+    if (refreshBtn) {
+        const id = Number.parseInt(refreshBtn.dataset.subId || '', 10);
+        if (!Number.isNaN(id)) {
+            refreshSubscription(id);
+        }
+        return;
+    }
+
+    const deleteBtn = event.target.closest('.js-delete-subscription');
+    if (deleteBtn) {
+        const id = Number.parseInt(deleteBtn.dataset.subId || '', 10);
+        if (!Number.isNaN(id)) {
+            deleteSubscription(id);
+        }
+    }
+});
 
 // Batch operations
 function getSelectedIds() {
