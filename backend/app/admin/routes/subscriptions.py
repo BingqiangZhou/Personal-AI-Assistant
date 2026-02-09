@@ -37,7 +37,6 @@ from app.domains.subscription.services import SubscriptionService
 from app.domains.user.models import User
 from app.shared.schemas import SubscriptionCreate
 from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
-from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 
 
 logger = logging.getLogger(__name__)
@@ -1099,50 +1098,40 @@ async def import_subscriptions_opml(
     db: AsyncSession = Depends(get_db_session),
 ):
     """
-    Import RSS subscriptions from OPML format using ElementTree.
-    Parses episodes from RSS feeds to populate the Feed page.
+    Import RSS subscriptions from OPML.
 
-    从OPML格式导入RSS订阅，使用ElementTree解析。
-    同时解析RSS源的单集以填充Feed页面。
+    This endpoint performs a fast import for subscription records and queues
+    episode parsing to background workers, so the HTTP request can return early.
     """
     from sqlalchemy import and_, select
+
+    from app.domains.podcast.tasks.opml_import import process_opml_subscription_episodes
 
     # Constants
     MAX_TITLE_LENGTH = 255
     MAX_DESCRIPTION_LENGTH = 2000
 
-    async def fetch_feed_image_url(feed_url: str) -> str | None:
-        """Fetch the image URL from the RSS feed."""
-        try:
-            async with FeedParser(FeedParserConfig(
-                max_content_length=1024 * 1024,  # 1MB - we only need metadata
-                timeout=5,
-                strip_html=False,
-            )) as parser:
-                result = await parser.parse_feed(feed_url)
-                if result.feed_info and result.feed_info.icon_url:
-                    return result.feed_info.icon_url
-        except Exception as e:
-            logger.warning(f"Failed to fetch image from {feed_url}: {e}")
-        return None
+    def normalize_feed_url(feed_url: str) -> str:
+        """Normalize feed:// URLs to https:// for parser compatibility."""
+        url = feed_url.strip()
+        if url.startswith("feed://"):
+            return f"https://{url[len('feed://'):]}"
+        return url
 
     async def parse_outline_element(outline: ET.Element) -> SubscriptionCreate | None:
         """Parse a single outline element into SubscriptionCreate."""
-        xml_url = outline.get('xmlUrl', '').strip()
+        xml_url = normalize_feed_url(outline.get("xmlUrl", ""))
         if not xml_url:
             return None
 
-        # Get title - try title first, then text attribute
-        title = outline.get('title') or outline.get('text') or ''
-        description = outline.get('description') or ''
+        title = outline.get("title") or outline.get("text") or ""
+        description = outline.get("description") or ""
 
-        # Decode HTML entities
         if title:
             title = html.unescape(title)
         if description:
             description = html.unescape(description)
 
-        # Generate title from URL if empty
         if not title:
             try:
                 parsed = urlparse(xml_url)
@@ -1150,54 +1139,43 @@ async def import_subscriptions_opml(
             except Exception:
                 title = xml_url
 
-        # Validate URL
-        if not xml_url.startswith(('http://', 'https://', 'feed://')):
+        if not xml_url.startswith(("http://", "https://")):
             logger.warning(f"Skipping invalid URL: {xml_url}")
             return None
 
-        # Truncate to DB limits
         title = title.strip()[:MAX_TITLE_LENGTH]
-        description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ''
-
-        # Fetch image URL from feed
-        image_url = await fetch_feed_image_url(xml_url)
+        description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ""
 
         return SubscriptionCreate(
             source_url=xml_url,
             title=title,
             source_type="podcast-rss",
             description=description,
-            image_url=image_url,
+            image_url=None,
         )
 
     async def parse_opml_with_etree(content: str) -> list[SubscriptionCreate]:
         """Parse OPML using ElementTree (primary method)."""
-        subscriptions = []
+        subscriptions: list[SubscriptionCreate] = []
 
         try:
             root = ET.fromstring(content)
-
-            # Handle potential namespaces - try common OPML namespaces
             namespaces = {
-                'opml': 'http://opml.org/spec2',
-                '': '',  # Default namespace
+                "opml": "http://opml.org/spec2",
+                "": "",
             }
 
-            # Try to find body element with and without namespace
-            body = root.find('.//opml:body', namespaces) or root.find('.//body')
-
+            body = root.find(".//opml:body", namespaces) or root.find(".//body")
             if body is None:
                 logger.warning("No body element found in OPML")
                 return []
 
-            # Process all outline elements recursively
             for outline in body.iter():
                 tag_name = outline.tag
-                # Remove namespace if present
-                if '}' in tag_name:
-                    tag_name = tag_name.split('}')[1]
+                if "}" in tag_name:
+                    tag_name = tag_name.split("}")[1]
 
-                if tag_name == 'outline':
+                if tag_name == "outline":
                     sub_data = await parse_outline_element(outline)
                     if sub_data:
                         subscriptions.append(sub_data)
@@ -1210,43 +1188,35 @@ async def import_subscriptions_opml(
 
     async def parse_opml_with_regex(content: str) -> list[SubscriptionCreate]:
         """Fallback regex-based OPML parser for malformed XML."""
-        subscriptions = []
+        subscriptions: list[SubscriptionCreate] = []
 
         def extract_attr(tag: str, attr_name: str) -> str:
-            """Extract attribute value from XML tag using regex."""
-            # Handle both single and double quotes
             pattern = rf'{attr_name}\s*=\s*(["\'])([^\1]*?)\1(?=\s|/?>)'
             match = re.search(pattern, tag, re.IGNORECASE)
-            return match.group(2) if match else ''
+            return match.group(2) if match else ""
 
-        # Match outline elements with xmlUrl
         outline_pattern = re.compile(
-            r'<outline\s+[^>]*?xmlUrl\s*=\s*["\'][^"\']+["\'][^>]*?/?>',
-            re.IGNORECASE
+            r"<outline\s+[^>]*?xmlUrl\s*=\s*[\"'][^\"']+[\"'][^>]*?/?>",
+            re.IGNORECASE,
         )
 
         for match in outline_pattern.finditer(content):
             tag = match.group(0)
-            xml_url = extract_attr(tag, "xmlUrl").strip()
-
+            xml_url = normalize_feed_url(extract_attr(tag, "xmlUrl"))
             if not xml_url:
                 continue
 
-            # Validate URL
-            if not xml_url.startswith(('http://', 'https://', 'feed://')):
+            if not xml_url.startswith(("http://", "https://")):
                 continue
 
-            # Extract attributes
             title = extract_attr(tag, "title") or extract_attr(tag, "text")
             description = extract_attr(tag, "description")
 
-            # Decode HTML entities
             if title:
                 title = html.unescape(title)
             if description:
                 description = html.unescape(description)
 
-            # Generate title from URL if empty
             if not title:
                 try:
                     parsed = urlparse(xml_url)
@@ -1254,12 +1224,8 @@ async def import_subscriptions_opml(
                 except Exception:
                     title = xml_url
 
-            # Truncate to DB limits
             title = title.strip()[:MAX_TITLE_LENGTH]
-            description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ''
-
-            # Fetch image URL from feed
-            image_url = await fetch_feed_image_url(xml_url)
+            description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ""
 
             subscriptions.append(
                 SubscriptionCreate(
@@ -1267,24 +1233,31 @@ async def import_subscriptions_opml(
                     title=title,
                     source_type="podcast-rss",
                     description=description,
-                    image_url=image_url,
+                    image_url=None,
                 )
             )
 
         return subscriptions
 
     try:
-        subscriptions_data = []
+        subscriptions_data: list[SubscriptionCreate] = []
 
-        # Try ElementTree first (recommended)
         try:
             subscriptions_data = await parse_opml_with_etree(opml_content)
             logger.info(f"Parsed {len(subscriptions_data)} subscriptions using ElementTree")
         except ET.ParseError:
-            # Fallback to regex for malformed XML
             logger.info("ElementTree failed, using regex fallback")
             subscriptions_data = await parse_opml_with_regex(opml_content)
             logger.info(f"Parsed {len(subscriptions_data)} subscriptions using regex fallback")
+
+        unique_subscriptions: list[SubscriptionCreate] = []
+        seen_urls: set[str] = set()
+        for sub in subscriptions_data:
+            if sub.source_url in seen_urls:
+                continue
+            seen_urls.add(sub.source_url)
+            unique_subscriptions.append(sub)
+        subscriptions_data = unique_subscriptions
 
         if not subscriptions_data:
             return JSONResponse(
@@ -1292,199 +1265,90 @@ async def import_subscriptions_opml(
                 content={"success": False, "message": "No valid RSS subscriptions found in OPML file"},
             )
 
-        # Import subscriptions using PodcastSubscriptionService for episode parsing
-        parser = SecureRSSParser(user.id)
         podcast_service = PodcastSubscriptionService(db, user_id=user.id)
+        import_started_at = datetime.now(timezone.utc).isoformat()
 
         results = []
         success_count = 0
         updated_count = 0
         skipped_count = 0
         error_count = 0
+        queued_episode_tasks = 0
         total_episodes_created = 0
 
-        # Phase 1: Concurrent feed fetching with semaphore (rate limiting)
-        max_concurrent_feeds = 10  # Configurable: adjust based on server capacity
-        semaphore = asyncio.Semaphore(max_concurrent_feeds)
-
-        async def fetch_feed_with_check(sub_data):
-            """Fetch RSS feed concurrently with duplicate check."""
-            async with semaphore:
-                try:
-                    # Check if subscription already exists (globally) - FAST DB READ
-                    existing = await podcast_service.repo.get_subscription_by_url(user.id, sub_data.source_url)
-
-                    if existing:
-                        # Check if user is already subscribed (non-archived) - FAST DB READ
-                        user_sub_result = await db.execute(
-                            select(UserSubscription).where(
-                                and_(
-                                    UserSubscription.user_id == user.id,
-                                    UserSubscription.subscription_id == existing.id,
-                                    UserSubscription.is_archived == False
-                                )
-                            )
-                        )
-                        user_sub = user_sub_result.scalar_one_or_none()
-
-                        if user_sub:
-                            return {
-                                "sub_data": sub_data,
-                                "existing": existing,
-                                "feed": None,
-                                "error": None,
-                                "status": "skipped",
-                                "message": f"Subscription already exists: {existing.title}"
-                            }
-
-                    # SLOW NETWORK I/O: Fetch and parse RSS feed
-                    success, feed, error = await parser.fetch_and_parse_feed(sub_data.source_url)
-
-                    if not success:
-                        return {
-                            "sub_data": sub_data,
-                            "existing": None,
-                            "feed": None,
-                            "error": error,
-                            "status": "error",
-                            "message": f"Failed to parse feed: {error}"
-                        }
-
-                    return {
-                        "sub_data": sub_data,
-                        "existing": existing,
-                        "feed": feed,
-                        "error": None,
-                        "status": "fetched"
-                    }
-
-                except Exception as e:
-                    logger.error(f"OPML import fetch error for {sub_data.source_url}: {e}")
-                    return {
-                        "sub_data": sub_data,
-                        "existing": None,
-                        "feed": None,
-                        "error": str(e),
-                        "status": "error",
-                        "message": str(e)
-                    }
-
-        # Run all feed fetches concurrently
-        logger.info(f"Starting concurrent feed fetch for {len(subscriptions_data)} subscriptions with {MAX_CONCURRENT_FEEDS} concurrent workers")
-        fetch_results = await asyncio.gather(
-            *[fetch_feed_with_check(sub) for sub in subscriptions_data],
-            return_exceptions=True  # Continue even if some fail
-        )
-
-        # Phase 2: Sequential database writes (safe transaction handling)
-        for result in fetch_results:
-            # Handle unexpected exceptions from gather
-            if isinstance(result, Exception):
-                error_count += 1
-                logger.error(f"OPML import unexpected error: {result}")
-                continue
-
-            # Process skipped items (already subscribed)
-            if result["status"] == "skipped":
-                skipped_count += 1
-                results.append({
-                    "source_url": result["sub_data"].source_url,
-                    "title": result["sub_data"].title,
-                    "status": "skipped",
-                    "id": result["existing"].id,
-                    "message": result["message"]
-                })
-                continue
-
-            # Process errors
-            if result["status"] == "error":
-                error_count += 1
-                results.append({
-                    "source_url": result["sub_data"].source_url,
-                    "title": result["sub_data"].title,
-                    "status": "error",
-                    "message": result["message"]
-                })
-                logger.warning(f"OPML import: {result['message']}")
-                continue
-
-            # Process successful fetches - Phase 2: DB writes
+        for sub_data in subscriptions_data:
             try:
-                sub_data = result["sub_data"]
-                feed = result["feed"]
-                existing = result["existing"]
+                existing = await podcast_service.repo.get_subscription_by_url(user.id, sub_data.source_url)
+                if existing:
+                    skipped_count += 1
+                    results.append(
+                        {
+                            "source_url": sub_data.source_url,
+                            "title": sub_data.title,
+                            "status": "skipped",
+                            "id": existing.id,
+                            "message": f"Subscription already exists: {existing.title}",
+                        }
+                    )
+                    continue
 
-                # Build metadata from parsed feed
-                metadata = {
-                    "author": feed.author,
-                    "language": feed.language,
-                    "categories": feed.categories,
-                    "explicit": feed.explicit,
-                    "image_url": feed.image_url or sub_data.image_url,
-                    "podcast_type": feed.podcast_type,
-                    "link": feed.link,
-                    "total_episodes": len(feed.episodes),
-                    "platform": feed.platform
-                }
+                global_existing_stmt = select(Subscription.id).where(
+                    and_(
+                        Subscription.source_url == sub_data.source_url,
+                        Subscription.source_type == "podcast-rss",
+                    )
+                )
+                global_existing_result = await db.execute(global_existing_stmt)
+                existed_globally = global_existing_result.scalar_one_or_none() is not None
 
-                # Create or update subscription (includes UserSubscription mapping)
                 subscription = await podcast_service.repo.create_or_update_subscription(
                     user_id=user.id,
                     feed_url=sub_data.source_url,
                     title=sub_data.title,
                     description=sub_data.description,
                     custom_name=None,
-                    metadata=metadata
+                    metadata={
+                        "imported_via_opml": True,
+                        "opml_imported_at": import_started_at,
+                    },
                 )
 
-                # Create episodes from parsed feed
-                new_episodes = []
-                for episode in feed.episodes:
-                    saved_episode, is_new = await podcast_service.repo.create_or_update_episode(
-                        subscription_id=subscription.id,
-                        title=episode.title,
-                        description=episode.description,
-                        audio_url=episode.audio_url,
-                        published_at=episode.published_at,
-                        audio_duration=episode.duration,
-                        transcript_url=episode.transcript_url,
-                        item_link=episode.link,
-                        metadata={"feed_title": feed.title, "imported_via_opml": True}
-                    )
+                task = process_opml_subscription_episodes.delay(
+                    subscription_id=subscription.id,
+                    user_id=user.id,
+                    source_url=sub_data.source_url,
+                )
+                queued_episode_tasks += 1
 
-                    if is_new:
-                        new_episodes.append(saved_episode)
-
-                # Track statistics
-                if existing:
+                if existed_globally:
                     updated_count += 1
                     status = "updated"
                 else:
                     success_count += 1
                     status = "success"
 
-                total_episodes_created += len(new_episodes)
-
-                results.append({
-                    "source_url": sub_data.source_url,
-                    "title": sub_data.title,
-                    "status": status,
-                    "id": subscription.id,
-                    "message": f"Imported with {len(new_episodes)} episodes",
-                    "new_episodes": len(new_episodes)
-                })
-
+                results.append(
+                    {
+                        "source_url": sub_data.source_url,
+                        "title": sub_data.title,
+                        "status": status,
+                        "id": subscription.id,
+                        "message": "Subscription imported. Episode parsing queued in background.",
+                        "background_task_id": task.id,
+                    }
+                )
             except Exception as e:
                 error_count += 1
-                logger.error(f"OPML import DB write error: {e}")
-                results.append({
-                    "source_url": result["sub_data"].source_url,
-                    "title": result["sub_data"].title,
-                    "status": "error",
-                    "message": str(e)
-                })
+                logger.error(f"OPML import DB/task error for {sub_data.source_url}: {e}")
+                results.append(
+                    {
+                        "source_url": sub_data.source_url,
+                        "title": sub_data.title,
+                        "status": "error",
+                        "message": str(e),
+                    }
+                )
 
-        # Log the import action
         await log_admin_action(
             db=db,
             user_id=user.id,
@@ -1498,6 +1362,7 @@ async def import_subscriptions_opml(
                 "skipped": skipped_count,
                 "errors": error_count,
                 "total_episodes_created": total_episodes_created,
+                "queued_episode_tasks": queued_episode_tasks,
             },
             request=request,
         )
@@ -1505,14 +1370,17 @@ async def import_subscriptions_opml(
         logger.info(
             f"Imported OPML for user {user.username}: "
             f"{success_count} added, {updated_count} updated, {skipped_count} skipped, {error_count} failed. "
-            f"Total episodes created: {total_episodes_created}"
+            f"Background episode tasks queued: {queued_episode_tasks}"
         )
 
-        # Return results with episode count
         return JSONResponse(
             content={
                 "success": True,
-                "message": f"Import completed: {success_count} added, {updated_count} updated, {skipped_count} skipped, {error_count} failed. Total episodes: {total_episodes_created}",
+                "message": (
+                    f"Import completed: {success_count} added, {updated_count} updated, "
+                    f"{skipped_count} skipped, {error_count} failed. "
+                    f"Episode parsing is running in background for {queued_episode_tasks} subscriptions."
+                ),
                 "results": {
                     "total": len(subscriptions_data),
                     "success": success_count,
@@ -1520,8 +1388,9 @@ async def import_subscriptions_opml(
                     "skipped": skipped_count,
                     "errors": error_count,
                     "total_episodes_created": total_episodes_created,
+                    "queued_episode_tasks": queued_episode_tasks,
                 },
-                "details": results
+                "details": results,
             }
         )
 

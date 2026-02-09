@@ -1146,7 +1146,17 @@ async function submitImport() {
             body: JSON.stringify({ opml_content: importOpmlContent }),
         });
 
-        const result = await response.json();
+        const responseText = await response.text();
+        let result = null;
+        try {
+            result = responseText ? JSON.parse(responseText) : {};
+        } catch (parseError) {
+            throw new Error(`服务器返回了非 JSON 响应 (HTTP ${response.status})`);
+        }
+
+        if (!response.ok) {
+            throw new Error(result.message || `HTTP ${response.status}`);
+        }
 
         resultDiv.classList.remove('hidden');
 
