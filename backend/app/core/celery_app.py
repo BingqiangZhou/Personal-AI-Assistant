@@ -27,6 +27,9 @@ celery_app.conf.update(
         "app.domains.podcast.tasks.subscription_sync.refresh_all_podcast_feeds": {
             "queue": "subscription_sync"
         },
+        "app.domains.podcast.tasks.opml_import.process_opml_subscription_episodes": {
+            "queue": "subscription_sync"
+        },
         "app.domains.podcast.tasks.summary_generation.generate_pending_summaries": {
             "queue": "ai_generation"
         },
@@ -73,4 +76,3 @@ celery_app.conf.update(
 
 # Ensure task modules are imported so Celery registers them.
 import app.domains.podcast.tasks  # noqa: F401,E402
-

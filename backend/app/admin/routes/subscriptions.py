@@ -1304,8 +1304,8 @@ async def import_subscriptions_opml(
         total_episodes_created = 0
 
         # Phase 1: Concurrent feed fetching with semaphore (rate limiting)
-        MAX_CONCURRENT_FEEDS = 10  # Configurable: adjust based on server capacity
-        semaphore = asyncio.Semaphore(MAX_CONCURRENT_FEEDS)
+        max_concurrent_feeds = 10  # Configurable: adjust based on server capacity
+        semaphore = asyncio.Semaphore(max_concurrent_feeds)
 
         async def fetch_feed_with_check(sub_data):
             """Fetch RSS feed concurrently with duplicate check."""

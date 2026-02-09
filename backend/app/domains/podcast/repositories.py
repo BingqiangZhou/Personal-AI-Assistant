@@ -248,7 +248,8 @@ class PodcastRepository:
             if episode.subscription_id != subscription_id:
                 episode.subscription_id = subscription_id
             if metadata:
-                episode.metadata_json = {**episode.metadata_json, **metadata}
+                current_metadata = episode.metadata_json or {}
+                episode.metadata_json = {**current_metadata, **metadata}
             is_new = False
         else:
             # 不存在，创建新记录
@@ -262,7 +263,7 @@ class PodcastRepository:
                 transcript_url=transcript_url,
                 item_link=item_link,
                 status="pending_summary",  # 等待AI总结
-                metadata=metadata or {}
+                metadata_json=metadata or {}
             )
             self.db.add(episode)
             is_new = True
@@ -275,6 +276,98 @@ class PodcastRepository:
             await self._cache_episode_metadata(episode)
 
         return episode, is_new
+
+    async def create_or_update_episodes_batch(
+        self,
+        subscription_id: int,
+        episodes_data: list[dict[str, Any]],
+    ) -> tuple[list[PodcastEpisode], list[PodcastEpisode]]:
+        """
+        Batch upsert episodes with a single commit.
+
+        Status rule:
+        - New episodes are initialized as ``pending_summary``.
+        - Existing episode status is never overwritten.
+        """
+        if not episodes_data:
+            return [], []
+
+        item_links = list(
+            {
+                data["item_link"]
+                for data in episodes_data
+                if data.get("item_link")
+            }
+        )
+        existing_by_item_link: dict[str, PodcastEpisode] = {}
+
+        if item_links:
+            existing_stmt = select(PodcastEpisode).where(
+                PodcastEpisode.item_link.in_(item_links)
+            )
+            existing_result = await self.db.execute(existing_stmt)
+            existing_episodes = list(existing_result.scalars().all())
+            existing_by_item_link = {
+                episode.item_link: episode
+                for episode in existing_episodes
+                if episode.item_link
+            }
+
+        processed_episodes: list[PodcastEpisode] = []
+        new_episodes: list[PodcastEpisode] = []
+        now = datetime.now(timezone.utc)
+
+        for data in episodes_data:
+            title = data.get("title") or "Untitled"
+            description = data.get("description") or ""
+            audio_url = data.get("audio_url") or ""
+            transcript_url = data.get("transcript_url")
+            audio_duration = data.get("audio_duration")
+            item_link = data.get("item_link")
+            metadata = data.get("metadata") or {}
+            published_at_raw = data.get("published_at") or now
+            published_at = sanitize_published_date(published_at_raw)
+
+            episode = existing_by_item_link.get(item_link) if item_link else None
+            if episode:
+                episode.title = title
+                episode.description = description
+                episode.audio_url = audio_url
+                episode.published_at = published_at
+                episode.audio_duration = audio_duration
+                episode.transcript_url = transcript_url
+                episode.updated_at = now
+                if episode.subscription_id != subscription_id:
+                    episode.subscription_id = subscription_id
+                if metadata:
+                    current_metadata = episode.metadata_json or {}
+                    episode.metadata_json = {**current_metadata, **metadata}
+                processed_episodes.append(episode)
+                continue
+
+            new_episode = PodcastEpisode(
+                subscription_id=subscription_id,
+                title=title,
+                description=description,
+                audio_url=audio_url,
+                published_at=published_at,
+                audio_duration=audio_duration,
+                transcript_url=transcript_url,
+                item_link=item_link,
+                status="pending_summary",
+                metadata_json=metadata,
+            )
+            self.db.add(new_episode)
+            processed_episodes.append(new_episode)
+            new_episodes.append(new_episode)
+
+        await self.db.commit()
+
+        for episode in new_episodes:
+            await self.db.refresh(episode)
+            await self._cache_episode_metadata(episode)
+
+        return processed_episodes, new_episodes
 
     async def get_unsummarized_episodes(self, subscription_id: int | None = None) -> list[PodcastEpisode]:
         """获取待AI总结的单集"""
