@@ -13,6 +13,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
     this.body,
     this.floatingActionButton,
     this.appBar,
+    this.bottomAccessory,
   });
 
   final List<NavigationDestination> destinations;
@@ -21,6 +22,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
   final Widget? body;
   final Widget? floatingActionButton;
   final PreferredSizeWidget? appBar;
+  final Widget? bottomAccessory;
 
   @override
   Widget build(BuildContext context) {
@@ -44,16 +46,23 @@ class CustomAdaptiveNavigation extends StatelessWidget {
 
   /// 移动端布局
   Widget _buildMobileLayout(BuildContext context) {
+    final navigationBar = NavigationBar(
+      selectedIndex: selectedIndex,
+      onDestinationSelected: onDestinationSelected,
+      destinations: destinations,
+      height: 65,
+    );
+
     return Scaffold(
       appBar: appBar,
       body: body,
       floatingActionButton: floatingActionButton,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: onDestinationSelected,
-        destinations: destinations,
-        height: 65,
-      ),
+      bottomNavigationBar: bottomAccessory == null
+          ? navigationBar
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [bottomAccessory!, navigationBar],
+            ),
     );
   }
 
@@ -94,7 +103,9 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.secondary.withValues(alpha: 0.3),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -146,7 +157,14 @@ class CustomAdaptiveNavigation extends StatelessWidget {
             ),
           ),
           const VerticalDivider(thickness: 1, width: 1),
-          Expanded(child: body!),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(child: body!),
+                if (bottomAccessory != null) bottomAccessory!,
+              ],
+            ),
+          ),
         ],
       ),
       floatingActionButton: floatingActionButton,
@@ -193,7 +211,9 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                             boxShadow: [
                               BoxShadow(
-                                color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.secondary.withValues(alpha: 0.3),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
@@ -210,15 +230,19 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Text(
-                          'AI Assistant',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        Expanded(
+                          child: Text(
+                            'AI Assistant',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
                         ),
                       ],
                     ),
@@ -257,7 +281,14 @@ class CustomAdaptiveNavigation extends StatelessWidget {
             ),
           ),
           const VerticalDivider(thickness: 1, width: 1),
-          Expanded(child: body!),
+          Expanded(
+            child: Column(
+              children: [
+                Expanded(child: body!),
+                if (bottomAccessory != null) bottomAccessory!,
+              ],
+            ),
+          ),
         ],
       ),
       floatingActionButton: floatingActionButton,

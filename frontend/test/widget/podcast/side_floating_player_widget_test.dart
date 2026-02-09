@@ -9,31 +9,24 @@ Widget createTestWidget({required Widget child}) {
   return ProviderScope(
     child: MaterialApp.router(
       routerConfig: GoRouter(
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, state) => child,
-          ),
-        ],
+        routes: [GoRoute(path: '/', builder: (context, state) => child)],
       ),
     ),
   );
 }
 
 void main() {
-  group('SideFloatingPlayerWidget', () {
+  group('SideFloatingPlayerWidget (Legacy)', () {
     // === Basic Widget Rendering Tests ===
 
     testWidgets('renders without errors', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestWidget(
-        child: const Scaffold(
-          body: Stack(
-            children: [
-              SideFloatingPlayerWidget(),
-            ],
+      await tester.pumpWidget(
+        createTestWidget(
+          child: const Scaffold(
+            body: Stack(children: [SideFloatingPlayerWidget()]),
           ),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
 
@@ -41,17 +34,16 @@ void main() {
       expect(find.byType(SideFloatingPlayerWidget), findsOneWidget);
     });
 
-    testWidgets('does not render floating player when no episode is loaded',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(createTestWidget(
-        child: const Scaffold(
-          body: Stack(
-            children: [
-              SideFloatingPlayerWidget(),
-            ],
+    testWidgets('does not render floating player when no episode is loaded', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          child: const Scaffold(
+            body: Stack(children: [SideFloatingPlayerWidget()]),
           ),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
 
@@ -61,17 +53,16 @@ void main() {
 
     // === Animation Tests ===
 
-    testWidgets('animation controller initializes correctly',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(createTestWidget(
-        child: const Scaffold(
-          body: Stack(
-            children: [
-              SideFloatingPlayerWidget(),
-            ],
+    testWidgets('animation controller initializes correctly', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestWidget(
+          child: const Scaffold(
+            body: Stack(children: [SideFloatingPlayerWidget()]),
           ),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
 
@@ -85,15 +76,13 @@ void main() {
       tester.view.physicalSize = const Size(400, 800);
       tester.view.devicePixelRatio = 1.0;
 
-      await tester.pumpWidget(createTestWidget(
-        child: const Scaffold(
-          body: Stack(
-            children: [
-              SideFloatingPlayerWidget(),
-            ],
+      await tester.pumpWidget(
+        createTestWidget(
+          child: const Scaffold(
+            body: Stack(children: [SideFloatingPlayerWidget()]),
           ),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
 
@@ -107,15 +96,13 @@ void main() {
       tester.view.physicalSize = const Size(1200, 800);
       tester.view.devicePixelRatio = 1.0;
 
-      await tester.pumpWidget(createTestWidget(
-        child: const Scaffold(
-          body: Stack(
-            children: [
-              SideFloatingPlayerWidget(),
-            ],
+      await tester.pumpWidget(
+        createTestWidget(
+          child: const Scaffold(
+            body: Stack(children: [SideFloatingPlayerWidget()]),
           ),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
 
@@ -129,15 +116,13 @@ void main() {
       tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1.0;
 
-      await tester.pumpWidget(createTestWidget(
-        child: const Scaffold(
-          body: Stack(
-            children: [
-              SideFloatingPlayerWidget(),
-            ],
+      await tester.pumpWidget(
+        createTestWidget(
+          child: const Scaffold(
+            body: Stack(children: [SideFloatingPlayerWidget()]),
           ),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
 
@@ -150,15 +135,13 @@ void main() {
     // === Material 3 Compliance Tests ===
 
     testWidgets('uses Material 3 components', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestWidget(
-        child: const Scaffold(
-          body: Stack(
-            children: [
-              SideFloatingPlayerWidget(),
-            ],
+      await tester.pumpWidget(
+        createTestWidget(
+          child: const Scaffold(
+            body: Stack(children: [SideFloatingPlayerWidget()]),
           ),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
 
@@ -169,18 +152,20 @@ void main() {
     // === Stack Integration Tests ===
 
     testWidgets('works correctly within a Stack', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestWidget(
-        child: const Scaffold(
-          body: Stack(
-            children: [
-              // Main content
-              Center(child: Text('Main Content')),
-              // Floating player
-              SideFloatingPlayerWidget(),
-            ],
+      await tester.pumpWidget(
+        createTestWidget(
+          child: const Scaffold(
+            body: Stack(
+              children: [
+                // Main content
+                Center(child: Text('Main Content')),
+                // Floating player
+                SideFloatingPlayerWidget(),
+              ],
+            ),
           ),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
 
@@ -192,24 +177,22 @@ void main() {
     // === Widget Lifecycle Tests ===
 
     testWidgets('handles widget disposal', (WidgetTester tester) async {
-      await tester.pumpWidget(createTestWidget(
-        child: const Scaffold(
-          body: Stack(
-            children: [
-              SideFloatingPlayerWidget(),
-            ],
+      await tester.pumpWidget(
+        createTestWidget(
+          child: const Scaffold(
+            body: Stack(children: [SideFloatingPlayerWidget()]),
           ),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
 
       // Replace with different widget
-      await tester.pumpWidget(createTestWidget(
-        child: const Scaffold(
-          body: Center(child: Text('Different Content')),
+      await tester.pumpWidget(
+        createTestWidget(
+          child: const Scaffold(body: Center(child: Text('Different Content'))),
         ),
-      ));
+      );
 
       await tester.pumpAndSettle();
 

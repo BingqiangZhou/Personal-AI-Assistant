@@ -5,13 +5,9 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
-import '../../../podcast/presentation/widgets/side_floating_player_widget.dart';
-// import '../../../assistant/presentation/pages/assistant_chat_page.dart'; // Assistant backend removed
+import '../../../podcast/presentation/widgets/podcast_bottom_player_widget.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 
-/// Material Design 3自适应主页
-///
-/// 使用AdaptiveScaffoldWrapper实现跨设备响应式导航
 class HomePage extends ConsumerStatefulWidget {
   final Widget? child;
   final int? initialTab;
@@ -25,81 +21,63 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   late int _currentIndex;
 
-  /// 导航目的地配置
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialTab ?? 0;
+  }
+
   List<NavigationDestination> _buildDestinations(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return [
       NavigationDestination(
-        icon: Icon(Icons.home_outlined),
-        selectedIcon: Icon(Icons.home),
+        icon: const Icon(Icons.home_outlined),
+        selectedIcon: const Icon(Icons.home),
         label: l10n.nav_feed,
       ),
       NavigationDestination(
-        icon: Icon(Icons.podcasts_outlined),
-        selectedIcon: Icon(Icons.podcasts),
+        icon: const Icon(Icons.podcasts_outlined),
+        selectedIcon: const Icon(Icons.podcasts),
         label: l10n.nav_podcast,
       ),
-      // NavigationDestination(
-      //   icon: Icon(Icons.chat_outlined),
-      //   selectedIcon: Icon(Icons.chat),
-      //   label: l10n.nav_chat,
-      // ),
       NavigationDestination(
-        icon: Icon(Icons.person_outline),
-        selectedIcon: Icon(Icons.person),
+        icon: const Icon(Icons.person_outline),
+        selectedIcon: const Icon(Icons.person),
         label: l10n.nav_profile,
       ),
     ];
   }
 
   @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialTab ?? 0; // Default to Feed/信息流 (index 0)
-  }
-
-  @override
   Widget build(BuildContext context) {
-    // 如果有子组件，直接显示（用于内嵌页面）
     if (widget.child != null) {
-      return Scaffold(
-        appBar: null, // 移除顶部标题栏
-        body: Stack(
-          children: [
-            widget.child!,
-            // Floating player overlay
-            const SideFloatingPlayerWidget(),
-          ],
-        ),
-        floatingActionButton: _buildFloatingActionButton(),
-      );
+      return Scaffold(body: widget.child!);
     }
 
-    // 主导航布局 - 使用自定义的Material Design 3自适应导航
-    // 使用 Stack 将悬浮播放器放在最上层
-    return Stack(
-      children: [
-        CustomAdaptiveNavigation(
-          key: const ValueKey('home_custom_adaptive_navigation'),
-          destinations: _buildDestinations(context),
-          selectedIndex: _currentIndex,
-          onDestinationSelected: _handleNavigation,
-          appBar: null, // 移除顶部标题栏
-          floatingActionButton: _buildFloatingActionButton(),
-          body: _buildTabContent(context, _currentIndex),
-        ),
-        // Floating player overlay - always on top
-        const SideFloatingPlayerWidget(),
-      ],
+    return CustomAdaptiveNavigation(
+      key: const ValueKey('home_custom_adaptive_navigation'),
+      destinations: _buildDestinations(context),
+      selectedIndex: _currentIndex,
+      onDestinationSelected: _handleNavigation,
+      appBar: null,
+      floatingActionButton: _buildFloatingActionButton(),
+      bottomAccessory: _buildBottomAccessory(),
+      body: _buildTabContent(_currentIndex),
     );
   }
 
-  /// 构建浮动操作按钮
   Widget? _buildFloatingActionButton() {
     return null;
   }
 
-  /// 处理导航选择
+  Widget? _buildBottomAccessory() {
+    final isPodcastTab = _currentIndex == 0 || _currentIndex == 1;
+    if (!isPodcastTab) {
+      return null;
+    }
+    return const PodcastBottomPlayerWidget(applySafeArea: false);
+  }
+
   void _handleNavigation(int index) {
     if (_currentIndex != index) {
       setState(() {
@@ -108,14 +86,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  /// 构建当前标签页内容
-  Widget _buildTabContent(BuildContext context, int index) {
-    return _buildCurrentTabContent();
-  }
-
-  /// 构建当前标签页内容（保持原有逻辑）
-  Widget _buildCurrentTabContent() {
-    switch (_currentIndex) {
+  Widget _buildTabContent(int index) {
+    switch (index) {
       case 0:
         return const PodcastFeedPage();
       case 1:
@@ -127,11 +99,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.grey,
-              ),
+              Icon(Icons.error_outline, size: 64, color: Colors.grey),
               SizedBox(height: 16),
               Text(
                 'Page Not Found',
@@ -144,10 +112,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               SizedBox(height: 8),
               Text(
                 'Please select a valid tab from the navigation',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
             ],

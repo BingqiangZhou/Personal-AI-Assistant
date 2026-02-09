@@ -16,7 +16,7 @@ import '../widgets/transcription_status_widget.dart';
 import '../widgets/ai_summary_control_widget.dart';
 import '../widgets/conversation_chat_widget.dart';
 import '../widgets/podcast_image_widget.dart';
-import '../widgets/side_floating_player_widget.dart';
+import '../widgets/podcast_bottom_player_widget.dart';
 import '../widgets/scrollable_content_wrapper.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
@@ -32,7 +32,8 @@ class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
 
 class _PodcastEpisodeDetailPageState
     extends ConsumerState<PodcastEpisodeDetailPage> {
-  int _selectedTabIndex = 0; // 0 = Shownotes, 1 = Transcript, 2 = AI Summary, 3 = Conversation
+  int _selectedTabIndex =
+      0; // 0 = Shownotes, 1 = Transcript, 2 = AI Summary, 3 = Conversation
   Timer? _summaryPollingTimer; // AI摘要轮询定时器
   bool _isPolling = false; // Guard flag to prevent multiple polls
 
@@ -40,18 +41,35 @@ class _PodcastEpisodeDetailPageState
   final ScrollController _scrollController = ScrollController();
   final PageController _pageController = PageController(); // 用于移动端页面切换
   double _scrollOffset = 0.0;
-  static const double _headerScrollThreshold = 50.0; // Header starts fading after 50px scroll
+  static const double _headerScrollThreshold =
+      50.0; // Header starts fading after 50px scroll
+  static const double _autoCollapseScrollDeltaThreshold = 6.0;
 
   // Scroll to top button
-  final Map<int, double> _tabScrollPositions = {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}; // Track scroll position for each tab
-  final Map<int, double> _tabScrollPercentages = {0: 0.0, 1: 0.0, 2: 0.0, 3: 0.0}; // Track scroll percentage for each tab
-  final Map<int, ScrollController> _tabScrollControllers = {}; // ScrollController for each tab
+  final Map<int, double> _tabScrollPositions = {
+    0: 0.0,
+    1: 0.0,
+    2: 0.0,
+    3: 0.0,
+  }; // Track scroll position for each tab
+  final Map<int, double> _tabScrollPercentages = {
+    0: 0.0,
+    1: 0.0,
+    2: 0.0,
+    3: 0.0,
+  }; // Track scroll percentage for each tab
+  final Map<int, ScrollController> _tabScrollControllers =
+      {}; // ScrollController for each tab
 
   // GlobalKeys for accessing child widget states to call scrollToTop
-  final GlobalKey<ShownotesDisplayWidgetState> _shownotesKey = GlobalKey<ShownotesDisplayWidgetState>();
-  final GlobalKey<TranscriptDisplayWidgetState> _transcriptKey = GlobalKey<TranscriptDisplayWidgetState>();
-  final GlobalKey<ScrollableContentWrapperState> _aiSummaryKey = GlobalKey<ScrollableContentWrapperState>();
-  final GlobalKey<ConversationChatWidgetState> _conversationKey = GlobalKey<ConversationChatWidgetState>();
+  final GlobalKey<ShownotesDisplayWidgetState> _shownotesKey =
+      GlobalKey<ShownotesDisplayWidgetState>();
+  final GlobalKey<TranscriptDisplayWidgetState> _transcriptKey =
+      GlobalKey<TranscriptDisplayWidgetState>();
+  final GlobalKey<ScrollableContentWrapperState> _aiSummaryKey =
+      GlobalKey<ScrollableContentWrapperState>();
+  final GlobalKey<ConversationChatWidgetState> _conversationKey =
+      GlobalKey<ConversationChatWidgetState>();
 
   @override
   void initState() {
@@ -113,11 +131,15 @@ class _PodcastEpisodeDetailPageState
         episodeDetailProvider(widget.episodeId).future,
       );
 
-      logger.AppLogger.debug('🎵 Loaded episode detail: ID=${episodeDetailAsync?.id}, Title=${episodeDetailAsync?.title}');
+      logger.AppLogger.debug(
+        '🎵 Loaded episode detail: ID=${episodeDetailAsync?.id}, Title=${episodeDetailAsync?.title}',
+      );
 
       // Debug: Log itemLink from API response
       if (episodeDetailAsync != null) {
-        logger.AppLogger.debug('🔗 [API Response] itemLink: ${episodeDetailAsync.itemLink ?? "NULL"}');
+        logger.AppLogger.debug(
+          '🔗 [API Response] itemLink: ${episodeDetailAsync.itemLink ?? "NULL"}',
+        );
       }
 
       if (episodeDetailAsync != null) {
@@ -133,7 +155,7 @@ class _PodcastEpisodeDetailPageState
           audioFileSize: episodeDetailAsync.audioFileSize,
           publishedAt: episodeDetailAsync.publishedAt,
           imageUrl: episodeDetailAsync.imageUrl,
-          itemLink: episodeDetailAsync.itemLink,  // ← 添加这一行
+          itemLink: episodeDetailAsync.itemLink, // ← 添加这一行
           transcriptUrl: episodeDetailAsync.transcriptUrl,
           transcriptContent: episodeDetailAsync.transcriptContent,
           aiSummary: episodeDetailAsync.aiSummary,
@@ -154,7 +176,9 @@ class _PodcastEpisodeDetailPageState
           updatedAt: episodeDetailAsync.updatedAt,
         );
 
-        logger.AppLogger.debug('🎵 Auto-playing episode: ${episodeModel.title}');
+        logger.AppLogger.debug(
+          '🎵 Auto-playing episode: ${episodeModel.title}',
+        );
         await ref.read(audioPlayerProvider.notifier).playEpisode(episodeModel);
       }
     } catch (error) {
@@ -166,10 +190,34 @@ class _PodcastEpisodeDetailPageState
     try {
       final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
       // Automatically check/start transcription if missing
-      await ref.read(transcriptionProvider.notifier).checkOrStartTranscription();
+      await ref
+          .read(transcriptionProvider.notifier)
+          .checkOrStartTranscription();
     } catch (error) {
       logger.AppLogger.debug('❌ Failed to load transcription status: $error');
     }
+  }
+
+  void _handleAutoCollapseOnRead(ScrollNotification scrollNotification) {
+    if (scrollNotification is! ScrollUpdateNotification) {
+      return;
+    }
+
+    if (scrollNotification.metrics.axis != Axis.vertical) {
+      return;
+    }
+
+    final scrollDelta = scrollNotification.scrollDelta ?? 0.0;
+    if (scrollDelta <= _autoCollapseScrollDeltaThreshold) {
+      return;
+    }
+
+    final playerState = ref.read(audioPlayerProvider);
+    if (!playerState.isExpanded) {
+      return;
+    }
+
+    ref.read(audioPlayerProvider.notifier).setExpanded(false);
   }
 
   @override
@@ -193,10 +241,17 @@ class _PodcastEpisodeDetailPageState
                   const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  Text(AppLocalizations.of(context)!.podcast_transcription_processing),
+                  Text(
+                    AppLocalizations.of(
+                      context,
+                    )!.podcast_transcription_processing,
+                  ),
                 ],
               ),
               backgroundColor: Theme.of(context).colorScheme.primary,
@@ -204,47 +259,49 @@ class _PodcastEpisodeDetailPageState
             ),
           );
         }
-      } else if (nextData != null && prevData == null && nextData.isProcessing) {
-         // Auto-start case
-         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+      } else if (nextData != null &&
+          prevData == null &&
+          nextData.isProcessing) {
+        // Auto-start case
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
                   ),
-                  const SizedBox(width: 12),
-                  Text(AppLocalizations.of(context)!.podcast_transcription_auto_starting),
-                ],
-              ),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              duration: const Duration(seconds: 3),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  AppLocalizations.of(
+                    context,
+                  )!.podcast_transcription_auto_starting,
+                ),
+              ],
             ),
-          );
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
     });
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: Stack(
-        children: [
-          // Main content
-          episodeDetailAsync.when(
-            data: (episodeDetail) {
-              if (episodeDetail == null) {
-                return _buildErrorState(context, 'Episode not found');
-              }
-              return _buildNewLayout(context, episodeDetail);
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => _buildErrorState(context, error),
-          ),
-
-          // Side floating player
-          const SideFloatingPlayerWidget(),
-        ],
+      bottomNavigationBar: const PodcastBottomPlayerWidget(),
+      body: episodeDetailAsync.when(
+        data: (episodeDetail) {
+          if (episodeDetail == null) {
+            return _buildErrorState(context, 'Episode not found');
+          }
+          return _buildNewLayout(context, episodeDetail);
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => _buildErrorState(context, error),
       ),
     );
   }
@@ -290,19 +347,25 @@ class _PodcastEpisodeDetailPageState
                         // 内容区
                         NotificationListener<ScrollNotification>(
                           onNotification: (scrollNotification) {
+                            _handleAutoCollapseOnRead(scrollNotification);
                             // 监听所有页面的滚动更新以实现 header 收起效果和显示浮动按钮
-                            if (scrollNotification is ScrollUpdateNotification) {
+                            if (scrollNotification
+                                is ScrollUpdateNotification) {
                               final metrics = scrollNotification.metrics;
                               // 监听所有标签页的垂直滚动
                               if (metrics.axis == Axis.vertical) {
                                 final scrollPosition = metrics.pixels;
                                 final maxScroll = metrics.maxScrollExtent;
-                                final scrollPercent = maxScroll > 0 ? (scrollPosition / maxScroll) : 0.0;
+                                final scrollPercent = maxScroll > 0
+                                    ? (scrollPosition / maxScroll)
+                                    : 0.0;
 
                                 setState(() {
                                   _scrollOffset = scrollPosition;
-                                  _tabScrollPositions[_selectedTabIndex] = scrollPosition;
-                                  _tabScrollPercentages[_selectedTabIndex] = scrollPercent;
+                                  _tabScrollPositions[_selectedTabIndex] =
+                                      scrollPosition;
+                                  _tabScrollPercentages[_selectedTabIndex] =
+                                      scrollPercent;
                                 });
                               }
                             }
@@ -341,17 +404,16 @@ class _PodcastEpisodeDetailPageState
               ),
               // 浮动的返回按钮（收缩状态时显示在右上方）
               if (!_isHeaderExpanded)
-                Positioned(
-                  top: 16,
-                  right: 16,
-                  child: _buildBackButton(),
-                ),
+                Positioned(top: 16, right: 16, child: _buildBackButton()),
               // 浮动的播放按钮（收缩状态时显示）
               if (!_isHeaderExpanded)
                 Positioned(
                   top: 16,
                   right: 80,
-                  child: _buildPlayButton(episode, AppLocalizations.of(context)!),
+                  child: _buildPlayButton(
+                    episode,
+                    AppLocalizations.of(context)!,
+                  ),
                 ),
             ],
           );
@@ -396,6 +458,7 @@ class _PodcastEpisodeDetailPageState
                     // 内容区
                     NotificationListener<ScrollNotification>(
                       onNotification: (scrollNotification) {
+                        _handleAutoCollapseOnRead(scrollNotification);
                         // 监听滚动更新以实现 header 收起效果和显示浮动按钮
                         if (scrollNotification is ScrollUpdateNotification) {
                           final metrics = scrollNotification.metrics;
@@ -403,12 +466,16 @@ class _PodcastEpisodeDetailPageState
                           if (metrics.axis == Axis.vertical) {
                             final scrollPosition = metrics.pixels;
                             final maxScroll = metrics.maxScrollExtent;
-                            final scrollPercent = maxScroll > 0 ? (scrollPosition / maxScroll) : 0.0;
+                            final scrollPercent = maxScroll > 0
+                                ? (scrollPosition / maxScroll)
+                                : 0.0;
 
                             setState(() {
                               _scrollOffset = scrollPosition;
-                              _tabScrollPositions[_selectedTabIndex] = scrollPosition;
-                              _tabScrollPercentages[_selectedTabIndex] = scrollPercent;
+                              _tabScrollPositions[_selectedTabIndex] =
+                                  scrollPosition;
+                              _tabScrollPercentages[_selectedTabIndex] =
+                                  scrollPercent;
                             });
                           }
                         }
@@ -468,259 +535,307 @@ class _PodcastEpisodeDetailPageState
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-            // 左侧：Logo（独占两行）
-            PodcastImageWidget(
-              imageUrl: episode.imageUrl,
-              fallbackImageUrl: episode.subscriptionImageUrl,
-              width: 60,
-              height: 60,
-              iconSize: 32,
-            ),
-            const SizedBox(width: 16),
-            // 右侧：标题和发布时间
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 第一行：标题 + 播放按钮
-                  Row(
-                    children: [
-                      // 标题和播放按钮放在一起
-                      Expanded(
+          // 左侧：Logo（独占两行）
+          PodcastImageWidget(
+            imageUrl: episode.imageUrl,
+            fallbackImageUrl: episode.subscriptionImageUrl,
+            width: 60,
+            height: 60,
+            iconSize: 32,
+          ),
+          const SizedBox(width: 16),
+          // 右侧：标题和发布时间
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 第一行：标题 + 播放按钮
+                Row(
+                  children: [
+                    // 标题和播放按钮放在一起
+                    Expanded(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              episode.title ?? 'Unknown Episode',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // 播放按钮
+                          InkWell(
+                            onTap: () async {
+                              try {
+                                final episodeDetailAsync = await ref.read(
+                                  episodeDetailProvider(
+                                    widget.episodeId,
+                                  ).future,
+                                );
+                                if (episodeDetailAsync != null) {
+                                  final episodeModel = PodcastEpisodeModel(
+                                    id: episodeDetailAsync.id,
+                                    subscriptionId:
+                                        episodeDetailAsync.subscriptionId,
+                                    subscriptionImageUrl:
+                                        episodeDetailAsync.subscriptionImageUrl,
+                                    title: episodeDetailAsync.title,
+                                    description: episodeDetailAsync.description,
+                                    audioUrl: episodeDetailAsync.audioUrl,
+                                    audioDuration:
+                                        episodeDetailAsync.audioDuration,
+                                    audioFileSize:
+                                        episodeDetailAsync.audioFileSize,
+                                    publishedAt: episodeDetailAsync.publishedAt,
+                                    imageUrl: episodeDetailAsync.imageUrl,
+                                    itemLink: episodeDetailAsync.itemLink,
+                                    transcriptUrl:
+                                        episodeDetailAsync.transcriptUrl,
+                                    transcriptContent:
+                                        episodeDetailAsync.transcriptContent,
+                                    aiSummary: episodeDetailAsync.aiSummary,
+                                    summaryVersion:
+                                        episodeDetailAsync.summaryVersion,
+                                    aiConfidenceScore:
+                                        episodeDetailAsync.aiConfidenceScore,
+                                    playCount: episodeDetailAsync.playCount,
+                                    lastPlayedAt:
+                                        episodeDetailAsync.lastPlayedAt,
+                                    season: episodeDetailAsync.season,
+                                    episodeNumber:
+                                        episodeDetailAsync.episodeNumber,
+                                    explicit: episodeDetailAsync.explicit,
+                                    status: episodeDetailAsync.status,
+                                    metadata: episodeDetailAsync.metadata,
+                                    playbackPosition:
+                                        episodeDetailAsync.playbackPosition,
+                                    isPlaying: episodeDetailAsync.isPlaying,
+                                    playbackRate:
+                                        episodeDetailAsync.playbackRate,
+                                    isPlayed:
+                                        episodeDetailAsync.isPlayed ?? false,
+                                    createdAt: episodeDetailAsync.createdAt,
+                                    updatedAt: episodeDetailAsync.updatedAt,
+                                  );
+                                  await ref
+                                      .read(audioPlayerProvider.notifier)
+                                      .playEpisode(episodeModel);
+                                }
+                              } catch (error) {
+                                logger.AppLogger.debug(
+                                  '❌ Failed to play episode: $error',
+                                );
+                              }
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.play_arrow,
+                                    size: 18,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    // 根据屏幕宽度显示不同文本：移动端显示"播放"，桌面端显示"播放此集"
+                                    MediaQuery.of(context).size.width < 600
+                                        ? l10n.podcast_play_episode
+                                        : l10n.podcast_play_episode_full,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // 返回按钮 - 仅在非移动设备上显示
+                    // 注意：这里检测的是真正的平台类型，而不是屏幕宽度
+                    // 这样可以确保在桌面应用缩小窗口时仍然显示返回按钮
+                    if (!_isMobilePlatform())
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            Icons.arrow_back,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 20,
+                          ),
+                          onPressed: () => context.pop(),
+                          tooltip: AppLocalizations.of(context)!.back_button,
+                          constraints: const BoxConstraints(
+                            minWidth: 36,
+                            minHeight: 36,
+                          ),
+                          padding: EdgeInsets.zero,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // 第二行：发布时间、时长和源链接
+                Wrap(
+                  spacing: 16,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    // Published date
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 14,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _formatDate(episode.publishedAt),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Duration
+                    if (episode.audioDuration != null)
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final audioPlayerState = ref.watch(
+                            audioPlayerProvider,
+                          );
+                          // Use audio player duration if available (more accurate), otherwise fall back to episode duration
+                          // CRITICAL: episode.audioDuration is in SECONDS, convert to MILLISECONDS
+                          final displayDuration =
+                              (audioPlayerState.currentEpisode?.id ==
+                                      episode.id &&
+                                  audioPlayerState.duration > 0)
+                              ? audioPlayerState.duration
+                              : (episode.audioDuration! *
+                                    1000); // Convert seconds to milliseconds
+                          final duration = Duration(
+                            milliseconds: displayDuration,
+                          );
+                          final hours = duration.inHours;
+                          final minutes = duration.inMinutes.remainder(60);
+                          final seconds = duration.inSeconds.remainder(60);
+
+                          // Format as H:MM:SS or MM:SS depending on whether hours exist
+                          final formattedDuration = hours > 0
+                              ? '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}'
+                              : '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.schedule_outlined,
+                                size: 14,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                formattedDuration,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    // Source link
+                    if (episode.itemLink != null &&
+                        episode.itemLink!.isNotEmpty)
+                      InkWell(
+                        onTap: () async {
+                          final Uri linkUri = Uri.parse(episode.itemLink!);
+                          if (await canLaunchUrl(linkUri)) {
+                            await launchUrl(
+                              linkUri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        },
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Flexible(
-                              child: Text(
-                                episode.title ?? 'Unknown Episode',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                            Icon(
+                              Icons.link,
+                              size: 14,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                            const SizedBox(width: 8),
-                            // 播放按钮
-                            InkWell(
-                              onTap: () async {
-                                try {
-                                  final episodeDetailAsync = await ref.read(
-                                    episodeDetailProvider(widget.episodeId).future,
-                                  );
-                                  if (episodeDetailAsync != null) {
-                                    final episodeModel = PodcastEpisodeModel(
-                                      id: episodeDetailAsync.id,
-                                      subscriptionId: episodeDetailAsync.subscriptionId,
-                                      subscriptionImageUrl: episodeDetailAsync.subscriptionImageUrl,
-                                      title: episodeDetailAsync.title,
-                                      description: episodeDetailAsync.description,
-                                      audioUrl: episodeDetailAsync.audioUrl,
-                                      audioDuration: episodeDetailAsync.audioDuration,
-                                      audioFileSize: episodeDetailAsync.audioFileSize,
-                                      publishedAt: episodeDetailAsync.publishedAt,
-                                      imageUrl: episodeDetailAsync.imageUrl,
-                                      itemLink: episodeDetailAsync.itemLink,
-                                      transcriptUrl: episodeDetailAsync.transcriptUrl,
-                                      transcriptContent: episodeDetailAsync.transcriptContent,
-                                      aiSummary: episodeDetailAsync.aiSummary,
-                                      summaryVersion: episodeDetailAsync.summaryVersion,
-                                      aiConfidenceScore: episodeDetailAsync.aiConfidenceScore,
-                                      playCount: episodeDetailAsync.playCount,
-                                      lastPlayedAt: episodeDetailAsync.lastPlayedAt,
-                                      season: episodeDetailAsync.season,
-                                      episodeNumber: episodeDetailAsync.episodeNumber,
-                                      explicit: episodeDetailAsync.explicit,
-                                      status: episodeDetailAsync.status,
-                                      metadata: episodeDetailAsync.metadata,
-                                      playbackPosition: episodeDetailAsync.playbackPosition,
-                                      isPlaying: episodeDetailAsync.isPlaying,
-                                      playbackRate: episodeDetailAsync.playbackRate,
-                                      isPlayed: episodeDetailAsync.isPlayed ?? false,
-                                      createdAt: episodeDetailAsync.createdAt,
-                                      updatedAt: episodeDetailAsync.updatedAt,
-                                    );
-                                    await ref.read(audioPlayerProvider.notifier).playEpisode(episodeModel);
-                                  }
-                                } catch (error) {
-                                  logger.AppLogger.debug('❌ Failed to play episode: $error');
-                                }
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.play_arrow,
-                                      size: 18,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      // 根据屏幕宽度显示不同文本：移动端显示"播放"，桌面端显示"播放此集"
-                                      MediaQuery.of(context).size.width < 600
-                                          ? l10n.podcast_play_episode
-                                          : l10n.podcast_play_episode_full,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: Theme.of(context).colorScheme.primary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            const SizedBox(width: 6),
+                            Text(
+                              l10n.podcast_source,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      // 返回按钮 - 仅在非移动设备上显示
-                      // 注意：这里检测的是真正的平台类型，而不是屏幕宽度
-                      // 这样可以确保在桌面应用缩小窗口时仍然显示返回按钮
-                      if (!_isMobilePlatform())
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.arrow_back,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 20,
-                            ),
-                            onPressed: () => context.pop(),
-                            tooltip: AppLocalizations.of(context)!.back_button,
-                            constraints: const BoxConstraints(
-                              minWidth: 36,
-                              minHeight: 36,
-                            ),
-                            padding: EdgeInsets.zero,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // 第二行：发布时间、时长和源链接
-                  Wrap(
-                    spacing: 16,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      // Published date
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.calendar_today_outlined,
-                            size: 14,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            _formatDate(episode.publishedAt),
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // Duration
-                      if (episode.audioDuration != null)
-                        Consumer(
-                          builder: (context, ref, _) {
-                            final audioPlayerState = ref.watch(audioPlayerProvider);
-                            // Use audio player duration if available (more accurate), otherwise fall back to episode duration
-                            // CRITICAL: episode.audioDuration is in SECONDS, convert to MILLISECONDS
-                            final displayDuration = (audioPlayerState.currentEpisode?.id == episode.id &&
-                                audioPlayerState.duration > 0)
-                                ? audioPlayerState.duration
-                                : (episode.audioDuration! * 1000); // Convert seconds to milliseconds
-                            final duration = Duration(milliseconds: displayDuration);
-                            final hours = duration.inHours;
-                            final minutes = duration.inMinutes.remainder(60);
-                            final seconds = duration.inSeconds.remainder(60);
-
-                            // Format as H:MM:SS or MM:SS depending on whether hours exist
-                            final formattedDuration = hours > 0
-                                ? '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}'
-                                : '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-
-                            return Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.schedule_outlined,
-                                  size: 14,
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  formattedDuration,
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      // Source link
-                      if (episode.itemLink != null && episode.itemLink!.isNotEmpty)
-                        InkWell(
-                          onTap: () async {
-                            final Uri linkUri = Uri.parse(episode.itemLink!);
-                            if (await canLaunchUrl(linkUri)) {
-                              await launchUrl(
-                                linkUri,
-                                mode: LaunchMode.externalApplication,
-                              );
-                            }
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.link,
-                                size: 14,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                l10n.podcast_source,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -786,8 +901,10 @@ class _PodcastEpisodeDetailPageState
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       _buildDateChip(episode),
-                      if (episode.audioDuration != null) _buildDurationChip(episode),
-                      if (episode.itemLink != null && episode.itemLink!.isNotEmpty)
+                      if (episode.audioDuration != null)
+                        _buildDurationChip(episode),
+                      if (episode.itemLink != null &&
+                          episode.itemLink!.isNotEmpty)
                         _buildSourceLinkChip(episode, l10n),
                     ],
                   ),
@@ -886,7 +1003,9 @@ class _PodcastEpisodeDetailPageState
               createdAt: episodeDetailAsync.createdAt,
               updatedAt: episodeDetailAsync.updatedAt,
             );
-            await ref.read(audioPlayerProvider.notifier).playEpisode(episodeModel);
+            await ref
+                .read(audioPlayerProvider.notifier)
+                .playEpisode(episodeModel);
           }
         } catch (error) {
           logger.AppLogger.debug('❌ Failed to play episode: $error');
@@ -979,8 +1098,9 @@ class _PodcastEpisodeDetailPageState
     return Consumer(
       builder: (context, ref, _) {
         final audioPlayerState = ref.watch(audioPlayerProvider);
-        final displayDuration = (audioPlayerState.currentEpisode?.id == episode.id &&
-            audioPlayerState.duration > 0)
+        final displayDuration =
+            (audioPlayerState.currentEpisode?.id == episode.id &&
+                audioPlayerState.duration > 0)
             ? audioPlayerState.duration
             : (episode.audioDuration! * 1000);
         final duration = Duration(milliseconds: displayDuration);
@@ -1020,10 +1140,7 @@ class _PodcastEpisodeDetailPageState
       onTap: () async {
         final Uri linkUri = Uri.parse(episode.itemLink!);
         if (await canLaunchUrl(linkUri)) {
-          await launchUrl(
-            linkUri,
-            mode: LaunchMode.externalApplication,
-          );
+          await launchUrl(linkUri, mode: LaunchMode.externalApplication);
         }
       },
       child: Row(
@@ -1064,45 +1181,61 @@ class _PodcastEpisodeDetailPageState
         child: Row(
           children: [
             // Shownotes Tab
-            _buildTabButton(AppLocalizations.of(context)!.podcast_tab_shownotes, _selectedTabIndex == 0, () {
-              if (_selectedTabIndex != 0) {
-                _pageController.animateToPage(
-                  0,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
-              }
-            }),
+            _buildTabButton(
+              AppLocalizations.of(context)!.podcast_tab_shownotes,
+              _selectedTabIndex == 0,
+              () {
+                if (_selectedTabIndex != 0) {
+                  _pageController.animateToPage(
+                    0,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              },
+            ),
             // Transcript Tab
-            _buildTabButton(AppLocalizations.of(context)!.podcast_tab_transcript, _selectedTabIndex == 1, () {
-              if (_selectedTabIndex != 1) {
-                _pageController.animateToPage(
-                  1,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
-              }
-            }),
+            _buildTabButton(
+              AppLocalizations.of(context)!.podcast_tab_transcript,
+              _selectedTabIndex == 1,
+              () {
+                if (_selectedTabIndex != 1) {
+                  _pageController.animateToPage(
+                    1,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              },
+            ),
             // AI Summary Tab
-            _buildTabButton(AppLocalizations.of(context)!.podcast_filter_with_summary, _selectedTabIndex == 2, () {
-              if (_selectedTabIndex != 2) {
-                _pageController.animateToPage(
-                  2,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
-              }
-            }),
+            _buildTabButton(
+              AppLocalizations.of(context)!.podcast_filter_with_summary,
+              _selectedTabIndex == 2,
+              () {
+                if (_selectedTabIndex != 2) {
+                  _pageController.animateToPage(
+                    2,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              },
+            ),
             // Conversation Tab
-            _buildTabButton(AppLocalizations.of(context)!.podcast_tab_chat, _selectedTabIndex == 3, () {
-              if (_selectedTabIndex != 3) {
-                _pageController.animateToPage(
-                  3,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
-              }
-            }),
+            _buildTabButton(
+              AppLocalizations.of(context)!.podcast_tab_chat,
+              _selectedTabIndex == 3,
+              () {
+                if (_selectedTabIndex != 3) {
+                  _pageController.animateToPage(
+                    3,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              },
+            ),
           ],
         ),
       ),
@@ -1126,51 +1259,71 @@ class _PodcastEpisodeDetailPageState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Shownotes Tab
-          _buildSidebarTabButton(AppLocalizations.of(context)!.podcast_tab_shownotes, _selectedTabIndex == 0, () {
-            if (_selectedTabIndex != 0) {
-              setState(() {
-                _selectedTabIndex = 0;
-                _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
-              });
-            }
-          }),
+          _buildSidebarTabButton(
+            AppLocalizations.of(context)!.podcast_tab_shownotes,
+            _selectedTabIndex == 0,
+            () {
+              if (_selectedTabIndex != 0) {
+                setState(() {
+                  _selectedTabIndex = 0;
+                  _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
+                });
+              }
+            },
+          ),
           const SizedBox(height: 8),
           // Transcript Tab
-          _buildSidebarTabButton(AppLocalizations.of(context)!.podcast_tab_transcript, _selectedTabIndex == 1, () {
-            if (_selectedTabIndex != 1) {
-              setState(() {
-                _selectedTabIndex = 1;
-                _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
-              });
-            }
-          }),
+          _buildSidebarTabButton(
+            AppLocalizations.of(context)!.podcast_tab_transcript,
+            _selectedTabIndex == 1,
+            () {
+              if (_selectedTabIndex != 1) {
+                setState(() {
+                  _selectedTabIndex = 1;
+                  _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
+                });
+              }
+            },
+          ),
           const SizedBox(height: 8),
           // AI Summary Tab
-          _buildSidebarTabButton(AppLocalizations.of(context)!.podcast_filter_with_summary, _selectedTabIndex == 2, () {
-            if (_selectedTabIndex != 2) {
-              setState(() {
-                _selectedTabIndex = 2;
-                _startSummaryPolling(); // 切换到AI Summary tab时启动轮询
-              });
-            }
-          }),
+          _buildSidebarTabButton(
+            AppLocalizations.of(context)!.podcast_filter_with_summary,
+            _selectedTabIndex == 2,
+            () {
+              if (_selectedTabIndex != 2) {
+                setState(() {
+                  _selectedTabIndex = 2;
+                  _startSummaryPolling(); // 切换到AI Summary tab时启动轮询
+                });
+              }
+            },
+          ),
           const SizedBox(height: 8),
           // Conversation Tab
-          _buildSidebarTabButton(AppLocalizations.of(context)!.podcast_tab_chat, _selectedTabIndex == 3, () {
-            if (_selectedTabIndex != 3) {
-              setState(() {
-                _selectedTabIndex = 3;
-                _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
-              });
-            }
-          }),
+          _buildSidebarTabButton(
+            AppLocalizations.of(context)!.podcast_tab_chat,
+            _selectedTabIndex == 3,
+            () {
+              if (_selectedTabIndex != 3) {
+                setState(() {
+                  _selectedTabIndex = 3;
+                  _stopSummaryPolling(); // 切换离开AI Summary tab时停止轮询
+                });
+              }
+            },
+          ),
         ],
       ),
     );
   }
 
   // 左侧边栏按钮组件（宽屏）
-  Widget _buildSidebarTabButton(String text, bool isSelected, VoidCallback onTap) {
+  Widget _buildSidebarTabButton(
+    String text,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1331,7 +1484,10 @@ class _PodcastEpisodeDetailPageState
     final transcriptionState = ref.watch(transcriptionProvider);
 
     // 初始化总结状态：如果后端返回了aiSummary，同步到状态中
-    if (episode.aiSummary != null && episode.aiSummary!.isNotEmpty && !summaryState.hasSummary && !summaryState.isLoading) {
+    if (episode.aiSummary != null &&
+        episode.aiSummary!.isNotEmpty &&
+        !summaryState.hasSummary &&
+        !summaryState.isLoading) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         summaryNotifier.updateSummary(episode.aiSummary!);
       });
@@ -1346,7 +1502,8 @@ class _PodcastEpisodeDetailPageState
           // AI总结控制区域
           AISummaryControlWidget(
             episodeId: widget.episodeId,
-            hasTranscript: transcriptionState.value?.transcriptContent != null &&
+            hasTranscript:
+                transcriptionState.value?.transcriptContent != null &&
                 transcriptionState.value!.transcriptContent!.isNotEmpty,
           ),
 
@@ -1382,7 +1539,10 @@ class _PodcastEpisodeDetailPageState
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    summaryState.errorMessage ?? AppLocalizations.of(context)!.podcast_summary_generate_failed,
+                    summaryState.errorMessage ??
+                        AppLocalizations.of(
+                          context,
+                        )!.podcast_summary_generate_failed,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -1394,7 +1554,9 @@ class _PodcastEpisodeDetailPageState
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -1409,7 +1571,9 @@ class _PodcastEpisodeDetailPageState
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        AppLocalizations.of(context)!.podcast_filter_with_summary,
+                        AppLocalizations.of(
+                          context,
+                        )!.podcast_filter_with_summary,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1456,12 +1620,15 @@ class _PodcastEpisodeDetailPageState
                 ],
               ),
             ),
-          ] else if (episode.aiSummary != null && episode.aiSummary!.isNotEmpty) ...[
+          ] else if (episode.aiSummary != null &&
+              episode.aiSummary!.isNotEmpty) ...[
             // 兼容旧版本：如果episode有aiSummary但state还没有，显示episode的aiSummary
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -1476,7 +1643,9 @@ class _PodcastEpisodeDetailPageState
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        AppLocalizations.of(context)!.podcast_filter_with_summary,
+                        AppLocalizations.of(
+                          context,
+                        )!.podcast_filter_with_summary,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1566,12 +1735,18 @@ class _PodcastEpisodeDetailPageState
 
   // 对话内容
   Widget _buildConversationContent(dynamic episode) {
-    final episodeDetailAsync = ref.watch(episodeDetailProvider(widget.episodeId));
+    final episodeDetailAsync = ref.watch(
+      episodeDetailProvider(widget.episodeId),
+    );
 
     return episodeDetailAsync.when(
       data: (episode) {
         if (episode == null) {
-          return Center(child: Text(AppLocalizations.of(context)!.podcast_episode_not_found));
+          return Center(
+            child: Text(
+              AppLocalizations.of(context)!.podcast_episode_not_found,
+            ),
+          );
         }
         return ConversationChatWidget(
           key: _conversationKey,
@@ -1598,8 +1773,8 @@ class _PodcastEpisodeDetailPageState
             Text(
               error.toString(),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -1660,10 +1835,14 @@ class _PodcastEpisodeDetailPageState
     super.didUpdateWidget(oldWidget);
     // Check if episodeId has changed
     if (oldWidget.episodeId != widget.episodeId) {
-      logger.AppLogger.debug('🔄 ===== didUpdateWidget: Episode ID changed =====');
+      logger.AppLogger.debug(
+        '🔄 ===== didUpdateWidget: Episode ID changed =====',
+      );
       logger.AppLogger.debug('🔄 Old Episode ID: ${oldWidget.episodeId}');
       logger.AppLogger.debug('🔄 New Episode ID: ${widget.episodeId}');
-      logger.AppLogger.debug('🔄 Reloading episode data and auto-playing new episode');
+      logger.AppLogger.debug(
+        '🔄 Reloading episode data and auto-playing new episode',
+      );
 
       // Invalidate old episode detail provider to force refresh
       logger.AppLogger.debug('🔄 Invalidating old episode detail provider');
@@ -1678,7 +1857,9 @@ class _PodcastEpisodeDetailPageState
 
       // Reload data for the new episode
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        logger.AppLogger.debug('🔄 Calling _loadAndPlayEpisode for new episode');
+        logger.AppLogger.debug(
+          '🔄 Calling _loadAndPlayEpisode for new episode',
+        );
         _loadAndPlayEpisode();
         _loadTranscriptionStatus();
       });
@@ -1694,15 +1875,21 @@ class _PodcastEpisodeDetailPageState
 
     // 首先检查是否已经有摘要，如果有则不开始轮询
     try {
-      final episodeDetailAsync = await ref.read(episodeDetailProvider(widget.episodeId).future);
+      final episodeDetailAsync = await ref.read(
+        episodeDetailProvider(widget.episodeId).future,
+      );
       if (episodeDetailAsync != null &&
           episodeDetailAsync.aiSummary != null &&
           episodeDetailAsync.aiSummary!.isNotEmpty) {
-        logger.AppLogger.debug('✅ [AI SUMMARY] Summary already exists, skipping polling');
+        logger.AppLogger.debug(
+          '✅ [AI SUMMARY] Summary already exists, skipping polling',
+        );
         return;
       }
     } catch (e) {
-      logger.AppLogger.debug('⚠️ [AI SUMMARY] Failed to check initial summary state: $e');
+      logger.AppLogger.debug(
+        '⚠️ [AI SUMMARY] Failed to check initial summary state: $e',
+      );
     }
 
     // 开始轮询
@@ -1710,7 +1897,9 @@ class _PodcastEpisodeDetailPageState
     logger.AppLogger.debug('🔄 [AI SUMMARY] Starting polling...');
 
     // 每5秒轮询一次，检查AI摘要是否已生成
-    _summaryPollingTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+    _summaryPollingTimer = Timer.periodic(const Duration(seconds: 5), (
+      timer,
+    ) async {
       if (!mounted || !_isPolling) {
         timer.cancel();
         return;
@@ -1718,12 +1907,17 @@ class _PodcastEpisodeDetailPageState
 
       try {
         // 检查当前episode的AI摘要状态
-        final episodeDetailAsync = await ref.read(episodeDetailProvider(widget.episodeId).future);
+        final episodeDetailAsync = await ref.read(
+          episodeDetailProvider(widget.episodeId).future,
+        );
 
         if (episodeDetailAsync != null) {
           // 如果AI摘要已存在，停止轮询
-          if (episodeDetailAsync.aiSummary != null && episodeDetailAsync.aiSummary!.isNotEmpty) {
-            logger.AppLogger.debug('✅ [AI SUMMARY] Summary generated, stopping polling');
+          if (episodeDetailAsync.aiSummary != null &&
+              episodeDetailAsync.aiSummary!.isNotEmpty) {
+            logger.AppLogger.debug(
+              '✅ [AI SUMMARY] Summary generated, stopping polling',
+            );
             _stopSummaryPolling();
             return;
           }
@@ -1784,10 +1978,7 @@ class _PodcastEpisodeDetailPageState
     final bottomMargin = isMobile ? (screenSize.height * 0.1) : 32.0;
 
     return Padding(
-      padding: EdgeInsets.only(
-        right: rightMargin,
-        bottom: bottomMargin,
-      ),
+      padding: EdgeInsets.only(right: rightMargin, bottom: bottomMargin),
       child: Material(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
@@ -1801,7 +1992,9 @@ class _PodcastEpisodeDetailPageState
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.5),
                 width: 1,
               ),
             ),
