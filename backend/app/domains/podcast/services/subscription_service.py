@@ -390,15 +390,8 @@ class PodcastSubscriptionService:
 
             if is_new:
                 new_episodes.append(saved_episode)
-                # For podcast-rss subscriptions, trigger complete processing task (transcription + summary)
-                # This ensures the flow: transcription �?wait �?summary
-                from app.core.celery_app import celery_app
-                celery_app.send_task(
-                    'app.domains.podcast.tasks.transcription.process_podcast_episode_with_transcription',
-                    args=[saved_episode.id, self.user_id],
-                    queue='transcription'
-                )
-                logger.debug(f"Triggered complete processing task for episode {saved_episode.id}")
+                # Manual refresh: NO auto-processing, user requests via frontend
+                logger.info(f"Episode {saved_episode.id} discovered via manual refresh, awaiting user request")
 
         # Update subscription metadata (including image_url) from feed
         # This ensures the subscription has correct metadata even on first refresh

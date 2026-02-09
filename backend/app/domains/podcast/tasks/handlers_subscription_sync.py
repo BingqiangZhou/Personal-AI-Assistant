@@ -107,7 +107,14 @@ async def refresh_all_podcast_feeds_handler(session) -> dict:
                 )
                 if is_new:
                     new_episodes += 1
-                    await sync_service.trigger_transcription(saved_episode.id)
+                    # Only auto-process if episode is truly new (published after last fetch)
+                    if subscription.last_fetched_at and saved_episode.published_at > subscription.last_fetched_at:
+                        await sync_service.trigger_transcription(saved_episode.id)
+                    else:
+                        logger.info(
+                            f"Episode {saved_episode.id} (published: {saved_episode.published_at}) "
+                            f"is old (last fetch: {subscription.last_fetched_at}), skipping auto-processing"
+                        )
 
             await repo.update_subscription_fetch_time(subscription.id, feed.last_fetched)
 
