@@ -97,41 +97,12 @@ async def init_db(run_metadata_sync: bool = False) -> None:
     )
     from app.domains.user.models import PasswordReset, User, UserSession
 
-    # Define ENUM types that need to be created if they don't exist
-    enum_definitions = [
-        ("transcriptionstatus", "pending", "in_progress", "completed", "failed", "cancelled"),
-        ("transcriptionstep", "not_started", "downloading", "converting", "splitting", "transcribing", "merging"),
-    ]
-
+    # Schema is managed by Alembic migrations - no manual ENUM creation needed
     async with engine.begin() as conn:
-        # First, ensure ENUM types exist (PostgreSQL specific workaround)
-        for enum_def in enum_definitions:
-            enum_name = enum_def[0]
-            enum_values = enum_def[1:]
-
-            try:
-                # Check if ENUM type exists
-                result = await conn.execute(
-                    text(f"SELECT 1 FROM pg_type WHERE typname = '{enum_name}'")
-                )
-                exists = result.first() is not None
-
-                if not exists:
-                    # Create ENUM type with quoted values
-                    values_str = ", ".join(f"'{v}'" for v in enum_values)
-                    await conn.execute(
-                        text(f"CREATE TYPE {enum_name} AS ENUM ({values_str})")
-                    )
-                    logger.info(f"Created ENUM type: {enum_name}")
-                else:
-                    logger.debug(f"ENUM type already exists: {enum_name}")
-            except Exception as e:
-                logger.warning(f"Could not create/check ENUM type {enum_name}: {e}")
-
         if not run_metadata_sync:
             logger.info(
-                "Database connectivity and ENUM checks completed; "
-                "skipping Base.metadata.create_all (schema is migration-managed)."
+                "Database connectivity verified; "
+                "schema is managed by Alembic migrations."
             )
             return
 
