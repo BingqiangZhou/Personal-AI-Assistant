@@ -32,6 +32,7 @@ from app.domains.subscription.models import (
     UpdateFrequency,
     UserSubscription,
 )
+from app.domains.subscription.parsers.feed_parser import FeedParser, FeedParserConfig
 from app.domains.subscription.services import SubscriptionService
 from app.domains.user.models import User
 from app.shared.schemas import SubscriptionCreate
@@ -954,8 +955,60 @@ async def batch_delete_subscriptions(
         )
         subscriptions = result.scalars().all()
 
+        # Import podcast models if needed
+        from app.domains.podcast.models import (
+            PodcastConversation,
+            PodcastEpisode,
+            PodcastPlaybackState,
+            TranscriptionTask,
+        )
+
+        # Delete each subscription with proper handling of podcast-related data
         for subscription in subscriptions:
-            await db.delete(subscription)
+            sub_id = subscription.id
+            is_podcast = subscription.source_type == "podcast-rss"
+
+            if is_podcast:
+                # Get all episode IDs for this subscription
+                ep_result = await db.execute(
+                    select(PodcastEpisode.id).where(
+                        PodcastEpisode.subscription_id == sub_id
+                    )
+                )
+                episode_ids = [row[0] for row in ep_result.fetchall()]
+
+                # Delete in dependency order
+                if episode_ids:
+                    # 1. conversations
+                    await db.execute(
+                        delete(PodcastConversation).where(
+                            PodcastConversation.episode_id.in_(episode_ids)
+                        )
+                    )
+                    # 2. playback states
+                    await db.execute(
+                        delete(PodcastPlaybackState).where(
+                            PodcastPlaybackState.episode_id.in_(episode_ids)
+                        )
+                    )
+                    # 3. transcription tasks
+                    await db.execute(
+                        delete(TranscriptionTask).where(
+                            TranscriptionTask.episode_id.in_(episode_ids)
+                        )
+                    )
+
+                # 4. episodes
+                await db.execute(
+                    delete(PodcastEpisode).where(
+                        PodcastEpisode.subscription_id == sub_id
+                    )
+                )
+
+            # 5. Finally delete the subscription
+            await db.execute(
+                delete(Subscription).where(Subscription.id == sub_id)
+            )
 
         await db.commit()
 
@@ -974,10 +1027,14 @@ async def batch_delete_subscriptions(
 
         return Response(status_code=200)
     except Exception as e:
+        await db.rollback()
         logger.error(f"Batch delete error: {e}")
         raise HTTPException(
             status_code=500,
-            detail="Failed to batch delete subscriptions",
+            detail={
+                "message_en": "Failed to batch delete subscriptions",
+                "message_zh": "批量删除订阅失败"
+            },
         )
 
 
@@ -1048,7 +1105,22 @@ async def import_subscriptions_opml(
     MAX_TITLE_LENGTH = 255
     MAX_DESCRIPTION_LENGTH = 2000
 
-    def parse_outline_element(outline: ET.Element) -> SubscriptionCreate | None:
+    async def fetch_feed_image_url(feed_url: str) -> str | None:
+        """Fetch the image URL from the RSS feed."""
+        try:
+            parser = FeedParser(FeedParserConfig(
+                max_content_length=1024 * 1024,  # 1MB - we only need metadata
+                timeout=5,
+                strip_html=False,
+            ))
+            result = await parser.parse(feed_url)
+            if result.feed_info and result.feed_info.icon_url:
+                return result.feed_info.icon_url
+        except Exception as e:
+            logger.warning(f"Failed to fetch image from {feed_url}: {e}")
+        return None
+
+    async def parse_outline_element(outline: ET.Element) -> SubscriptionCreate | None:
         """Parse a single outline element into SubscriptionCreate."""
         xml_url = outline.get('xmlUrl', '').strip()
         if not xml_url:
@@ -1081,14 +1153,18 @@ async def import_subscriptions_opml(
         title = title.strip()[:MAX_TITLE_LENGTH]
         description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ''
 
+        # Fetch image URL from feed
+        image_url = await fetch_feed_image_url(xml_url)
+
         return SubscriptionCreate(
             source_url=xml_url,
             title=title,
             source_type="podcast-rss",
             description=description,
+            image_url=image_url,
         )
 
-    def parse_opml_with_etree(content: str) -> list[SubscriptionCreate]:
+    async def parse_opml_with_etree(content: str) -> list[SubscriptionCreate]:
         """Parse OPML using ElementTree (primary method)."""
         subscriptions = []
 
@@ -1116,7 +1192,7 @@ async def import_subscriptions_opml(
                     tag_name = tag_name.split('}')[1]
 
                 if tag_name == 'outline':
-                    sub_data = parse_outline_element(outline)
+                    sub_data = await parse_outline_element(outline)
                     if sub_data:
                         subscriptions.append(sub_data)
 
@@ -1126,7 +1202,7 @@ async def import_subscriptions_opml(
 
         return subscriptions
 
-    def parse_opml_with_regex(content: str) -> list[SubscriptionCreate]:
+    async def parse_opml_with_regex(content: str) -> list[SubscriptionCreate]:
         """Fallback regex-based OPML parser for malformed XML."""
         subscriptions = []
 
@@ -1176,12 +1252,16 @@ async def import_subscriptions_opml(
             title = title.strip()[:MAX_TITLE_LENGTH]
             description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ''
 
+            # Fetch image URL from feed
+            image_url = await fetch_feed_image_url(xml_url)
+
             subscriptions.append(
                 SubscriptionCreate(
                     source_url=xml_url,
                     title=title,
                     source_type="podcast-rss",
                     description=description,
+                    image_url=image_url,
                 )
             )
 
@@ -1192,12 +1272,12 @@ async def import_subscriptions_opml(
 
         # Try ElementTree first (recommended)
         try:
-            subscriptions_data = parse_opml_with_etree(opml_content)
+            subscriptions_data = await parse_opml_with_etree(opml_content)
             logger.info(f"Parsed {len(subscriptions_data)} subscriptions using ElementTree")
         except ET.ParseError:
             # Fallback to regex for malformed XML
             logger.info("ElementTree failed, using regex fallback")
-            subscriptions_data = parse_opml_with_regex(opml_content)
+            subscriptions_data = await parse_opml_with_regex(opml_content)
             logger.info(f"Parsed {len(subscriptions_data)} subscriptions using regex fallback")
 
         if not subscriptions_data:

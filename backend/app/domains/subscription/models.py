@@ -57,6 +57,7 @@ class Subscription(Base):
     description = Column(Text, nullable=True)
     source_type = Column(String(50), nullable=False)
     source_url = Column(String(500), nullable=False)
+    image_url = Column(String(500), nullable=True)
     config = Column(JSON, nullable=True, default={})
     status = Column(String(20), default=SubscriptionStatus.ACTIVE)
     last_fetched_at = Column(DateTime(timezone=True), nullable=True)

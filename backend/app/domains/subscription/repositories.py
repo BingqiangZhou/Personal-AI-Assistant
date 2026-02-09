@@ -185,6 +185,7 @@ class SubscriptionRepository:
             description=sub_data.description,
             source_type=sub_data.source_type,
             source_url=sub_data.source_url,
+            image_url=sub_data.image_url,
             config=sub_data.config,
             fetch_interval=sub_data.fetch_interval,
             status=SubscriptionStatus.ACTIVE,
