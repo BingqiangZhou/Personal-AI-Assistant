@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.3.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.2.0...v0.3.0) - 2026-02-09 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.3.0))
+
+### 🐛 Bug Fixes
+
+- Add missing base tables migration and fix foreign key dependencies ([0561999](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/056199946f569402c13a5cee1364224773f6a152))
+- Add check for existing enum in transcription task migration ([fff56f7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/fff56f795e8dee25523f7cb12064b9c888c8ccfd))
+- Use raw SQL for enum creation to avoid duplicate type error ([917b182](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/917b1823fc6d768e37a201542ba63f47c61bdf6d))
+- Update podcast episode processing logic to skip auto-processing for old episodes ([5e01998](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5e019988c3a637c37548176adf1cf092a5c2508a))
+- Improve error handling for OPML import response in the frontend ([2af8faf](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2af8faf4e157bbb70fa77579f27df0703cf302ff))
+
+### 🚀 Features
+
+- Update episode status filtering index to improve performance and address TEXT column limitations ([707ea2d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/707ea2db5122eaf9efe810bd4cb9628c76a805d8))
+- Add image_url field to subscriptions and update related logic for podcast handling ([c539380](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c539380c0f8eadac10bd019497f72053882f644a))
+- Enhance subscription metadata handling with fallback for image_url and additional fields ([617128d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/617128df18867400f60a2f505c6bba59e6d482c7))
+- Enhance OPML import to parse podcast episodes and store image URLs ([0bcd1c1](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0bcd1c114381a262f11f8ec46cf06e2637892f28))
+- Implement concurrent feed fetching with duplicate checks in OPML import ([967ab80](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/967ab800fd61c37826b36d399262e1c2ce7b519b))
+- Implement OPML subscription episode processing with status safety checks ([8aa2363](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8aa236347b8a607963944b81fcc444af4ae3b6b3))
+- Add podcast queue functionality with backend support ([8d3c505](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8d3c505b94e0a4d78604b790b0cc24fc494a992b))
+- Enhance podcast player with playlist functionality and UI improvements ([d951030](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d9510301b806c199dc602870773b22782d0fb883))
+- Enhance podcast summary handling and playback synchronization ([575c4cf](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/575c4cf74f22104b3f9ad4c295ec1ef0f954162e))
+- Add playback rate preferences and constraints ([c23f86c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c23f86c1fc8caed42ae4c7217b280b1eeec2aa16))
+
+### 🚜 Refactor
+
+- Consolidate initial migration and remove obsolete image_url migration ([c2ccf57](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c2ccf5757c455d5b8358fd52509b16f7ce38a065))
+- Replace inline onclick handlers with event delegation for subscription actions ([971a4ba](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/971a4ba4af203a44314fc7ab8a067d16ff713700))
+
+
+
 ## [0.2.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.1.10...v0.2.0) - 2026-02-08 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.2.0))
 
 ### 🎨 Styling
