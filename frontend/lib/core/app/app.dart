@@ -149,7 +149,6 @@ class _PersonalAIAssistantAppState
 
   Future<void> _initializeApp() async {
     // Wrap auth check in timeout to prevent infinite loading
-    bool authCheckCompleted = false;
     try {
       // Load saved locale from storage
       await ref.read(localeProvider.notifier).loadSavedLocale();
@@ -168,7 +167,6 @@ class _PersonalAIAssistantAppState
           throw TimeoutException('Auth check timed out');
         },
       );
-      authCheckCompleted = true;
     } on TimeoutException catch (_) {
       debugPrint('⚠️ [AppInit] Auth check timed out - continuing anyway');
       // CRITICAL: Reset loading state to prevent infinite loading
