@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/audio_player_state_model.dart';
 import '../providers/podcast_providers.dart';
+import 'podcast_queue_sheet.dart';
 
 class PodcastBottomPlayerWidget extends ConsumerWidget {
   const PodcastBottomPlayerWidget({super.key, this.applySafeArea = true});
@@ -322,16 +323,14 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                       IconButton(
                         key: const Key('podcast_bottom_player_playlist'),
                         tooltip: l10n?.podcast_player_list ?? 'List',
-                        onPressed: () {
-                          final languageCode = Localizations.localeOf(
-                            context,
-                          ).languageCode;
-                          final message = languageCode == 'zh'
-                              ? '播放列表即将上线'
-                              : 'Playlist coming soon';
-                          ScaffoldMessenger.of(
-                            context,
-                          ).showSnackBar(SnackBar(content: Text(message)));
+                        onPressed: () async {
+                          await ref
+                              .read(podcastQueueControllerProvider.notifier)
+                              .loadQueue();
+                          if (!context.mounted) {
+                            return;
+                          }
+                          await PodcastQueueSheet.show(context);
                         },
                         icon: const Icon(Icons.playlist_play),
                       ),

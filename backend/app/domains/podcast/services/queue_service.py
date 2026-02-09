@@ -1,0 +1,83 @@
+"""Podcast Queue Service - manages single persistent queue per user."""
+
+from typing import Any
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.domains.podcast.repositories import PodcastRepository
+
+
+class PodcastQueueService:
+    """Service for queue operations and queue response serialization."""
+
+    MAX_QUEUE_ITEMS = 500
+
+    def __init__(self, db: AsyncSession, user_id: int):
+        self.db = db
+        self.user_id = user_id
+        self.repo = PodcastRepository(db)
+
+    async def get_queue(self) -> dict[str, Any]:
+        queue = await self.repo.get_queue_with_items(self.user_id)
+        return self._serialize_queue(queue)
+
+    async def add_to_queue(self, episode_id: int) -> dict[str, Any]:
+        episode = await self.repo.get_episode_by_id(episode_id, self.user_id)
+        if not episode:
+            raise ValueError("EPISODE_NOT_FOUND")
+
+        queue = await self.repo.add_or_move_to_tail(
+            user_id=self.user_id,
+            episode_id=episode_id,
+            max_items=self.MAX_QUEUE_ITEMS,
+        )
+        return self._serialize_queue(queue)
+
+    async def remove_from_queue(self, episode_id: int) -> dict[str, Any]:
+        queue = await self.repo.remove_item(self.user_id, episode_id)
+        return self._serialize_queue(queue)
+
+    async def reorder_queue(self, episode_ids: list[int]) -> dict[str, Any]:
+        queue = await self.repo.reorder_items(self.user_id, episode_ids)
+        return self._serialize_queue(queue)
+
+    async def set_current(self, episode_id: int) -> dict[str, Any]:
+        queue = await self.repo.set_current(self.user_id, episode_id)
+        return self._serialize_queue(queue)
+
+    async def complete_current(self) -> dict[str, Any]:
+        queue = await self.repo.complete_current(self.user_id)
+        return self._serialize_queue(queue)
+
+    @staticmethod
+    def _serialize_queue(queue) -> dict[str, Any]:
+        items = []
+        ordered_items = sorted(queue.items, key=lambda item: (item.position, item.id))
+        for item in ordered_items:
+            episode = item.episode
+            subscription = episode.subscription if episode else None
+            subscription_image = None
+            if subscription and subscription.config:
+                subscription_image = subscription.config.get("image_url")
+
+            items.append(
+                {
+                    "episode_id": item.episode_id,
+                    "position": item.position,
+                    "title": episode.title if episode else "",
+                    "podcast_id": episode.subscription_id if episode else 0,
+                    "audio_url": episode.audio_url if episode else "",
+                    "duration": episode.audio_duration if episode else None,
+                    "published_at": episode.published_at if episode else None,
+                    "image_url": episode.image_url if episode else None,
+                    "subscription_title": subscription.title if subscription else None,
+                    "subscription_image_url": subscription_image,
+                }
+            )
+
+        return {
+            "current_episode_id": queue.current_episode_id,
+            "revision": queue.revision or 0,
+            "updated_at": queue.updated_at,
+            "items": items,
+        }

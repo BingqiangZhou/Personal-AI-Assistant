@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../providers/podcast_providers.dart';
+import 'podcast_queue_sheet.dart';
 import 'speed_ruler/speed_roller_picker.dart';
 
 /// Floating podcast player on the right side of the screen
@@ -56,7 +57,8 @@ class _SideFloatingPlayerWidgetState
     if (_isExpanded && !isMobile) {
       final expandedWidth = 320.0;
       final right = 24.0;
-      final top = (screenHeight - 400) / 2; // Center vertically, assuming ~400px height
+      final top =
+          (screenHeight - 400) / 2; // Center vertically, assuming ~400px height
 
       setState(() {
         // Position from right edge, expand to the left
@@ -78,7 +80,15 @@ class _SideFloatingPlayerWidgetState
   /// Desktop collapsed: Only X axis snaps to RIGHT edge, Y axis stays free
   /// Mobile collapsed: Snaps to closest edge (top, bottom, left, right)
   /// Expanded state: No snapping (uses fixed position)
-  Offset _snapToEdge(Offset position, double playerWidth, double playerHeight, double screenWidth, double screenHeight, bool isDesktop, bool isCollapsed) {
+  Offset _snapToEdge(
+    Offset position,
+    double playerWidth,
+    double playerHeight,
+    double screenWidth,
+    double screenHeight,
+    bool isDesktop,
+    bool isCollapsed,
+  ) {
     // Desktop collapsed: Snap X to right edge only, keep Y free
     if (isDesktop && isCollapsed) {
       final newX = screenWidth - playerWidth - 24; // 24dp from right edge
@@ -167,16 +177,14 @@ class _SideFloatingPlayerWidgetState
 
     // Calculate top position and max height
     final topPosition = _getTopPosition(context, isMobile);
-    final bottomNavHeight = 60.0 + bottomPadding; // Standard bottom nav height + safe area
+    final bottomNavHeight =
+        60.0 + bottomPadding; // Standard bottom nav height + safe area
     final bottomSpacing = 2.0; // Spacing from bottom nav when expanded
 
     return Stack(
       children: [
         // Full-screen overlay when expanded (dimmed background)
-        if (_isExpanded)
-          Container(
-            color: Colors.black.withValues(alpha: 0.3),
-          ),
+        if (_isExpanded) Container(color: Colors.black.withValues(alpha: 0.3)),
 
         // Tap detector - wraps everything and handles outside taps
         Positioned.fill(
@@ -201,7 +209,8 @@ class _SideFloatingPlayerWidgetState
               final tapX = event.position.dx;
               final tapY = event.position.dy;
 
-              final isOutside = tapX < playerPosition.dx ||
+              final isOutside =
+                  tapX < playerPosition.dx ||
                   tapX > playerPosition.dx + playerSize.width ||
                   tapY < playerPosition.dy ||
                   tapY > playerPosition.dy + playerSize.height;
@@ -213,9 +222,7 @@ class _SideFloatingPlayerWidgetState
             },
             child: IgnorePointer(
               // Ignore pointer events so they pass through to children
-              child: Container(
-                color: Colors.transparent,
-              ),
+              child: Container(color: Colors.transparent),
             ),
           ),
         ),
@@ -228,7 +235,11 @@ class _SideFloatingPlayerWidgetState
                 right: 16,
                 bottom: bottomNavHeight + bottomSpacing,
                 width: screenWidth - 32,
-                height: screenHeight - topPosition - bottomNavHeight - bottomSpacing,
+                height:
+                    screenHeight -
+                    topPosition -
+                    bottomNavHeight -
+                    bottomSpacing,
                 child: _buildPlayerContent(
                   context,
                   ref,
@@ -242,76 +253,80 @@ class _SideFloatingPlayerWidgetState
                 ),
               )
             : (_isExpanded && !isMobile)
-                ? Positioned(
-                    key: _playerKey,
-                    right: 24, // Fixed to right edge
-                    top: (screenHeight - 450) / 2, // Vertically centered, assuming ~450px height
-                    child: _buildPlayerContent(
-                      context,
-                      ref,
-                      audioPlayerState,
-                      l10n,
-                      isMobile,
-                      isTablet,
-                      collapsedWidth,
-                      expandedWidth,
-                      screenHeight,
-                    ),
-                  )
-                : Positioned(
-                    key: _playerKey,
-                    left: _playerOffset.dx,
-                    top: _playerOffset.dy,
-                    child: GestureDetector(
-                      // Desktop collapsed: Enable drag (but only on right edge)
-                      // Mobile collapsed: Enable drag (can snap to any edge)
-                      // Expanded: Disable drag (uses fixed position)
-                      onPanStart: (details) {
-                        setState(() {
-                          _dragStartOffset = details.globalPosition;
-                          _dragStartPosition = _playerOffset;
-                        });
-                      },
-                      onPanUpdate: (details) {
-                        setState(() {
-                          final deltaX = details.globalPosition.dx - _dragStartOffset.dx;
-                          final deltaY = details.globalPosition.dy - _dragStartOffset.dy;
-                          _playerOffset = Offset(
-                            _dragStartPosition.dx + deltaX,
-                            _dragStartPosition.dy + deltaY,
-                          );
-                        });
-                      },
-                      onPanEnd: (details) {
-                        setState(() {
-                          // Calculate player size for snapping
-                          final currentWidth = collapsedWidth;
-                          final playerHeight = 64.0;
-                          // Snap to edge
-                          _playerOffset = _snapToEdge(
-                            _playerOffset,
-                            currentWidth,
-                            playerHeight,
-                            screenWidth,
-                            screenHeight,
-                            !isMobile, // isDesktop
-                            true, // isCollapsed
-                          );
-                        });
-                      },
-                      child: _buildPlayerContent(
-                        context,
-                        ref,
-                        audioPlayerState,
-                        l10n,
-                        isMobile,
-                        isTablet,
-                        collapsedWidth,
-                        expandedWidth,
+            ? Positioned(
+                key: _playerKey,
+                right: 24, // Fixed to right edge
+                top:
+                    (screenHeight - 450) /
+                    2, // Vertically centered, assuming ~450px height
+                child: _buildPlayerContent(
+                  context,
+                  ref,
+                  audioPlayerState,
+                  l10n,
+                  isMobile,
+                  isTablet,
+                  collapsedWidth,
+                  expandedWidth,
+                  screenHeight,
+                ),
+              )
+            : Positioned(
+                key: _playerKey,
+                left: _playerOffset.dx,
+                top: _playerOffset.dy,
+                child: GestureDetector(
+                  // Desktop collapsed: Enable drag (but only on right edge)
+                  // Mobile collapsed: Enable drag (can snap to any edge)
+                  // Expanded: Disable drag (uses fixed position)
+                  onPanStart: (details) {
+                    setState(() {
+                      _dragStartOffset = details.globalPosition;
+                      _dragStartPosition = _playerOffset;
+                    });
+                  },
+                  onPanUpdate: (details) {
+                    setState(() {
+                      final deltaX =
+                          details.globalPosition.dx - _dragStartOffset.dx;
+                      final deltaY =
+                          details.globalPosition.dy - _dragStartOffset.dy;
+                      _playerOffset = Offset(
+                        _dragStartPosition.dx + deltaX,
+                        _dragStartPosition.dy + deltaY,
+                      );
+                    });
+                  },
+                  onPanEnd: (details) {
+                    setState(() {
+                      // Calculate player size for snapping
+                      final currentWidth = collapsedWidth;
+                      final playerHeight = 64.0;
+                      // Snap to edge
+                      _playerOffset = _snapToEdge(
+                        _playerOffset,
+                        currentWidth,
+                        playerHeight,
+                        screenWidth,
                         screenHeight,
-                      ),
-                    ),
+                        !isMobile, // isDesktop
+                        true, // isCollapsed
+                      );
+                    });
+                  },
+                  child: _buildPlayerContent(
+                    context,
+                    ref,
+                    audioPlayerState,
+                    l10n,
+                    isMobile,
+                    isTablet,
+                    collapsedWidth,
+                    expandedWidth,
+                    screenHeight,
                   ),
+                ),
+              ),
       ],
     );
   }
@@ -331,7 +346,8 @@ class _SideFloatingPlayerWidgetState
       animation: _widthAnimation,
       builder: (context, child) {
         final currentWidth =
-            collapsedWidth + (expandedWidth - collapsedWidth) * _widthAnimation.value;
+            collapsedWidth +
+            (expandedWidth - collapsedWidth) * _widthAnimation.value;
 
         // Calculate max height - only for non-mobile-expanded cases
         final maxHeight = !(isMobile && _isExpanded)
@@ -340,9 +356,7 @@ class _SideFloatingPlayerWidgetState
 
         return Container(
           width: currentWidth,
-          constraints: BoxConstraints(
-            maxHeight: maxHeight,
-          ),
+          constraints: BoxConstraints(maxHeight: maxHeight),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
@@ -366,12 +380,26 @@ class _SideFloatingPlayerWidgetState
                     playbackRate: audioPlayerState.playbackRate,
                     onCollapse: _toggleExpand,
                     onClose: () => _closePlayer(ref),
-                    onPlayPause: () => _handlePlayPause(ref, audioPlayerState.isPlaying),
-                    onSeek: (position) => ref.read(audioPlayerProvider.notifier).seekTo(position),
+                    onPlayPause: () =>
+                        _handlePlayPause(ref, audioPlayerState.isPlaying),
+                    onSeek: (position) =>
+                        ref.read(audioPlayerProvider.notifier).seekTo(position),
                     onRewind: () => _handleRewind(ref, audioPlayerState),
                     onForward: () => _handleForward(ref, audioPlayerState),
-                    onSpeedChange: (speed) => ref.read(audioPlayerProvider.notifier).setPlaybackRate(speed),
-                    onNavigateToEpisode: () => _navigateToEpisode(audioPlayerState.currentEpisode!),
+                    onSpeedChange: (speed) => ref
+                        .read(audioPlayerProvider.notifier)
+                        .setPlaybackRate(speed),
+                    onOpenQueue: () async {
+                      await ref
+                          .read(podcastQueueControllerProvider.notifier)
+                          .loadQueue();
+                      if (!context.mounted) {
+                        return;
+                      }
+                      await PodcastQueueSheet.show(context);
+                    },
+                    onNavigateToEpisode: () =>
+                        _navigateToEpisode(audioPlayerState.currentEpisode!),
                     l10n: l10n,
                   )
                 : _CollapsedPlayerContent(
@@ -379,8 +407,10 @@ class _SideFloatingPlayerWidgetState
                     isPlaying: audioPlayerState.isPlaying,
                     isLoading: audioPlayerState.isLoading,
                     onExpand: _toggleExpand,
-                    onPlayPause: () => _handlePlayPause(ref, audioPlayerState.isPlaying),
-                    onNavigateToEpisode: () => _navigateToEpisode(audioPlayerState.currentEpisode!),
+                    onPlayPause: () =>
+                        _handlePlayPause(ref, audioPlayerState.isPlaying),
+                    onNavigateToEpisode: () =>
+                        _navigateToEpisode(audioPlayerState.currentEpisode!),
                   ),
           ),
         );
@@ -405,14 +435,18 @@ class _SideFloatingPlayerWidgetState
   }
 
   void _handleRewind(WidgetRef ref, dynamic audioPlayerState) {
-    final newPosition = (audioPlayerState.position - 10000)
-        .clamp(0, audioPlayerState.duration);
+    final newPosition = (audioPlayerState.position - 10000).clamp(
+      0,
+      audioPlayerState.duration,
+    );
     ref.read(audioPlayerProvider.notifier).seekTo(newPosition);
   }
 
   void _handleForward(WidgetRef ref, dynamic audioPlayerState) {
-    final newPosition = (audioPlayerState.position + 30000)
-        .clamp(0, audioPlayerState.duration);
+    final newPosition = (audioPlayerState.position + 30000).clamp(
+      0,
+      audioPlayerState.duration,
+    );
     ref.read(audioPlayerProvider.notifier).seekTo(newPosition);
   }
 
@@ -488,9 +522,7 @@ class _CollapsedPlayerContent extends StatelessWidget {
                 child: Container(
                   width: 48,
                   height: 48,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                  ),
+                  decoration: BoxDecoration(shape: BoxShape.circle),
                   clipBehavior: Clip.antiAlias,
                   child: Stack(
                     fit: StackFit.expand,
@@ -498,9 +530,7 @@ class _CollapsedPlayerContent extends StatelessWidget {
                       // Podcast image as background
                       _buildPodcastImageForButton(context),
                       // Semi-transparent overlay
-                      Container(
-                        color: Colors.black.withValues(alpha: 0.3),
-                      ),
+                      Container(color: Colors.black.withValues(alpha: 0.3)),
                       // Play/Pause icon
                       Center(
                         child: isLoading
@@ -509,7 +539,9 @@ class _CollapsedPlayerContent extends StatelessWidget {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : Icon(
@@ -586,6 +618,7 @@ class _ExpandedPlayerContent extends StatefulWidget {
   final VoidCallback onRewind;
   final VoidCallback onForward;
   final void Function(double) onSpeedChange;
+  final VoidCallback onOpenQueue;
   final VoidCallback onNavigateToEpisode;
   final AppLocalizations? l10n;
 
@@ -603,6 +636,7 @@ class _ExpandedPlayerContent extends StatefulWidget {
     required this.onRewind,
     required this.onForward,
     required this.onSpeedChange,
+    required this.onOpenQueue,
     required this.onNavigateToEpisode,
     required this.l10n,
   });
@@ -670,7 +704,8 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
         }
 
         // Calculate available width for content after padding
-        final contentWidth = constraints.maxWidth - 24; // 24 = padding horizontal (12*2)
+        final contentWidth =
+            constraints.maxWidth - 24; // 24 = padding horizontal (12*2)
 
         // Minimum width for showing title: buttons (80) + spacing (16) + some space for text (60)
         final minWidthForTitle = 160.0;
@@ -679,7 +714,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             border: Border(
               bottom: BorderSide(
                 color: Theme.of(context).colorScheme.outlineVariant,
@@ -755,7 +792,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
 
         // Calculate available width for image
         final availableWidth = constraints.maxWidth - 32; // subtract padding
-        final imageSize = availableWidth < 100 ? 32.0 : 48.0; // smaller image for tight spaces
+        final imageSize = availableWidth < 100
+            ? 32.0
+            : 48.0; // smaller image for tight spaces
 
         return InkWell(
           onTap: widget.onNavigateToEpisode,
@@ -800,7 +839,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                           Icon(
                             Icons.calendar_today_outlined,
                             size: 12,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 4),
                           Expanded(
@@ -808,7 +849,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                               _formatDate(widget.episode.publishedAt),
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
@@ -820,13 +863,18 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                       if (widget.episode.audioDuration != null)
                         Consumer(
                           builder: (context, ref, _) {
-                            final audioPlayerState = ref.watch(audioPlayerProvider);
+                            final audioPlayerState = ref.watch(
+                              audioPlayerProvider,
+                            );
                             // Use audio player duration if available (more accurate), otherwise fall back to episode duration
                             // CRITICAL: episode.audioDuration is in SECONDS, convert to MILLISECONDS
-                            final displayDuration = (audioPlayerState.currentEpisode?.id == widget.episode.id &&
-                                audioPlayerState.duration > 0)
+                            final displayDuration =
+                                (audioPlayerState.currentEpisode?.id ==
+                                        widget.episode.id &&
+                                    audioPlayerState.duration > 0)
                                 ? audioPlayerState.duration
-                                : (widget.episode.audioDuration! * 1000); // Convert seconds to milliseconds
+                                : (widget.episode.audioDuration! *
+                                      1000); // Convert seconds to milliseconds
 
                             return Padding(
                               padding: const EdgeInsets.only(top: 2),
@@ -835,7 +883,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                                   Icon(
                                     Icons.schedule_outlined,
                                     size: 12,
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                   const SizedBox(width: 4),
                                   Expanded(
@@ -843,7 +893,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                                       _formatDuration(displayDuration),
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
@@ -866,7 +918,8 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
   }
 
   Widget _buildEpisodeImage(BuildContext context) {
-    final imageUrl = widget.episode.subscriptionImageUrl ?? widget.episode.imageUrl;
+    final imageUrl =
+        widget.episode.subscriptionImageUrl ?? widget.episode.imageUrl;
 
     if (imageUrl != null && imageUrl.isNotEmpty) {
       return Image.network(
@@ -904,7 +957,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
   }
 
   Widget _buildProgressBar(BuildContext context) {
-    final progress = widget.duration > 0 ? widget.position / widget.duration : 0.0;
+    final progress = widget.duration > 0
+        ? widget.position / widget.duration
+        : 0.0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -927,8 +982,12 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
               SliderTheme(
                 data: SliderTheme.of(context).copyWith(
                   trackHeight: 3,
-                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                  overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 6,
+                  ),
+                  overlayShape: const RoundSliderOverlayShape(
+                    overlayRadius: 12,
+                  ),
                 ),
                 child: Slider(
                   value: progress.clamp(0.0, 1.0),
@@ -1021,7 +1080,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),
@@ -1038,7 +1099,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                         height: 24,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : Icon(
@@ -1125,9 +1188,7 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                   context,
                   icon: Icons.list,
                   tooltip: l10n.podcast_player_list,
-                  onTap: () {
-                    // TODO: Implement playlist
-                  },
+                  onTap: widget.onOpenQueue,
                 ),
                 // Sleep timer (placeholder)
                 _buildIconButton(
@@ -1182,7 +1243,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
         ),
         borderRadius: BorderRadius.circular(16),
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       ),
       // 使用与其他图标按钮一致的 padding
       child: Padding(
@@ -1215,7 +1278,10 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
-                        '${value.toStringAsFixed(2)}x'.replaceAll(RegExp(r'\.?0+$'), ''),
+                        '${value.toStringAsFixed(2)}x'.replaceAll(
+                          RegExp(r'\.?0+$'),
+                          '',
+                        ),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1236,7 +1302,12 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
             items: speedOptions.map<DropdownMenuItem<double>>((double value) {
               return DropdownMenuItem<double>(
                 value: value,
-                child: Text('${value.toStringAsFixed(2)}x'.replaceAll(RegExp(r'\.?0+$'), '')),
+                child: Text(
+                  '${value.toStringAsFixed(2)}x'.replaceAll(
+                    RegExp(r'\.?0+$'),
+                    '',
+                  ),
+                ),
               );
             }).toList(),
           ),
@@ -1254,7 +1325,9 @@ class _ExpandedPlayerContentState extends State<_ExpandedPlayerContent> {
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
         ),
         borderRadius: BorderRadius.circular(16),
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
       ),
       child: Material(
         color: Colors.transparent,

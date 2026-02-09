@@ -8,12 +8,14 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
   final PodcastEpisodeModel episode;
   final VoidCallback? onTap;
   final VoidCallback? onPlay;
+  final VoidCallback? onAddToQueue;
 
   const SimplifiedEpisodeCard({
     super.key,
     required this.episode,
     this.onTap,
     this.onPlay,
+    this.onAddToQueue,
   });
 
   @override
@@ -61,6 +63,12 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
                         vertical: 6,
                       ),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    tooltip: 'Add to queue',
+                    onPressed: onAddToQueue,
+                    icon: const Icon(Icons.playlist_add),
                   ),
                 ],
               ),
@@ -118,13 +126,13 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
               if (displayDescription.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
-                    displayDescription,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 4,
+                  displayDescription,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 4,
+                ),
               ],
             ],
           ),

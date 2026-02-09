@@ -35,3 +35,14 @@ def test_legacy_podcast_subscription_routes_removed() -> None:
 
 
 # Monitoring routes have been removed
+
+
+def test_queue_routes_exist() -> None:
+    paths = _route_paths()
+
+    assert "/api/v1/podcasts/queue" in paths
+    assert "/api/v1/podcasts/queue/items" in paths
+    assert "/api/v1/podcasts/queue/items/{episode_id}" in paths
+    assert "/api/v1/podcasts/queue/items/reorder" in paths
+    assert "/api/v1/podcasts/queue/current" in paths
+    assert "/api/v1/podcasts/queue/current/complete" in paths

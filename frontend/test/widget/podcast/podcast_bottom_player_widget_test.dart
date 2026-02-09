@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_bottom_player_widget.dart';
 
@@ -227,7 +228,7 @@ void main() {
       );
     });
 
-    testWidgets('tap playlist icon shows placeholder snackbar', (tester) async {
+    testWidgets('tap playlist icon opens queue sheet', (tester) async {
       final notifier = TestAudioPlayerNotifier(
         AudioPlayerState(
           currentEpisode: _testEpisode(),
@@ -242,19 +243,20 @@ void main() {
       await tester.tap(find.byKey(const Key('podcast_bottom_player_playlist')));
       await tester.pump();
 
-      expect(find.byType(SnackBar), findsOneWidget);
-      expect(
-        find.text('Playlist coming soon').evaluate().isNotEmpty ||
-            find.text('播放列表即将上线').evaluate().isNotEmpty,
-        isTrue,
-      );
+      expect(find.text('Playlist'), findsOneWidget);
+      expect(find.text('Queue is empty'), findsOneWidget);
     });
   });
 }
 
 Widget _createWidget(TestAudioPlayerNotifier notifier) {
   return ProviderScope(
-    overrides: [audioPlayerProvider.overrideWith(() => notifier)],
+    overrides: [
+      audioPlayerProvider.overrideWith(() => notifier),
+      podcastQueueControllerProvider.overrideWith(
+        () => TestPodcastQueueController(),
+      ),
+    ],
     child: const MaterialApp(
       home: Scaffold(
         body: SizedBox.shrink(),
@@ -321,5 +323,18 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
   @override
   void setExpanded(bool expanded) {
     state = state.copyWith(isExpanded: expanded);
+  }
+}
+
+class TestPodcastQueueController extends PodcastQueueController {
+  @override
+  Future<PodcastQueueModel> build() async {
+    return PodcastQueueModel.empty();
+  }
+
+  @override
+  Future<PodcastQueueModel> loadQueue() async {
+    state = const AsyncValue.data(PodcastQueueModel());
+    return PodcastQueueModel.empty();
   }
 }

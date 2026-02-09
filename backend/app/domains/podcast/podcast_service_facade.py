@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.services.episode_service import PodcastEpisodeService
 from app.domains.podcast.services.playback_service import PodcastPlaybackService
+from app.domains.podcast.services.queue_service import PodcastQueueService
 from app.domains.podcast.services.schedule_service import PodcastScheduleService
 from app.domains.podcast.services.search_service import PodcastSearchService
 from app.domains.podcast.services.stats_service import PodcastStatsService
@@ -31,6 +32,7 @@ class PodcastService:
         self.subscription_service = PodcastSubscriptionService(db, user_id)
         self.episode_service = PodcastEpisodeService(db, user_id)
         self.playback_service = PodcastPlaybackService(db, user_id)
+        self.queue_service = PodcastQueueService(db, user_id)
         self.summary_service = PodcastSummaryService(db, user_id)
         self.search_service = PodcastSearchService(db, user_id)
         self.sync_service = PodcastSyncService(db, user_id)
@@ -59,8 +61,12 @@ class PodcastService:
     ) -> tuple[Subscription, list[PodcastEpisode]]:
         return await self.subscription_service.add_subscription(feed_url)
 
-    async def add_subscriptions_batch(self, subscriptions_data: list) -> list[dict[str, Any]]:
-        return await self.subscription_service.add_subscriptions_batch(subscriptions_data)
+    async def add_subscriptions_batch(
+        self, subscriptions_data: list
+    ) -> list[dict[str, Any]]:
+        return await self.subscription_service.add_subscriptions_batch(
+            subscriptions_data
+        )
 
     async def list_subscriptions(
         self,
@@ -76,14 +82,22 @@ class PodcastService:
     async def refresh_subscription(self, subscription_id: int) -> list[PodcastEpisode]:
         return await self.subscription_service.refresh_subscription(subscription_id)
 
-    async def reparse_subscription(self, subscription_id: int, force_all: bool = False) -> dict:
-        return await self.subscription_service.reparse_subscription(subscription_id, force_all)
+    async def reparse_subscription(
+        self, subscription_id: int, force_all: bool = False
+    ) -> dict:
+        return await self.subscription_service.reparse_subscription(
+            subscription_id, force_all
+        )
 
     async def remove_subscription(self, subscription_id: int) -> bool:
         return await self.subscription_service.remove_subscription(subscription_id)
 
-    async def remove_subscriptions_bulk(self, subscription_ids: list[int]) -> dict[str, Any]:
-        return await self.subscription_service.remove_subscriptions_bulk(subscription_ids)
+    async def remove_subscriptions_bulk(
+        self, subscription_ids: list[int]
+    ) -> dict[str, Any]:
+        return await self.subscription_service.remove_subscriptions_bulk(
+            subscription_ids
+        )
 
     # Episode management
     async def list_episodes(
@@ -166,6 +180,25 @@ class PodcastService:
     async def get_playback_state(self, episode_id: int) -> dict | None:
         return await self.playback_service.get_playback_state(episode_id)
 
+    # Queue management
+    async def get_queue(self) -> dict[str, Any]:
+        return await self.queue_service.get_queue()
+
+    async def add_queue_item(self, episode_id: int) -> dict[str, Any]:
+        return await self.queue_service.add_to_queue(episode_id)
+
+    async def remove_queue_item(self, episode_id: int) -> dict[str, Any]:
+        return await self.queue_service.remove_from_queue(episode_id)
+
+    async def reorder_queue_items(self, episode_ids: list[int]) -> dict[str, Any]:
+        return await self.queue_service.reorder_queue(episode_ids)
+
+    async def set_queue_current(self, episode_id: int) -> dict[str, Any]:
+        return await self.queue_service.set_current(episode_id)
+
+    async def complete_queue_current(self) -> dict[str, Any]:
+        return await self.queue_service.complete_current()
+
     # Summary management
     async def generate_summary_for_episode(self, episode_id: int) -> str:
         return await self.summary_service.generate_summary_for_episode(episode_id)
@@ -198,7 +231,9 @@ class PodcastService:
         self._warn_deprecated_private("_generate_summary_task")
         await self.summary_service._generate_summary_task(episode)
 
-    async def _generate_summary(self, episode: PodcastEpisode, version: str = "v1") -> str:
+    async def _generate_summary(
+        self, episode: PodcastEpisode, version: str = "v1"
+    ) -> str:
         self._warn_deprecated_private("_generate_summary")
         return await self.summary_service._generate_summary(episode, version)
 
@@ -226,12 +261,21 @@ class PodcastService:
             for sentence in sentences
             if any(
                 keyword in sentence.lower()
-                for keyword in ["key", "main", "conclusion", "important", "learn", "feel"]
+                for keyword in [
+                    "key",
+                    "main",
+                    "conclusion",
+                    "important",
+                    "learn",
+                    "feel",
+                ]
             )
         ][:3]
 
         if important_sentences:
-            bullet_points = "\n".join(f"- {sentence}" for sentence in important_sentences)
+            bullet_points = "\n".join(
+                f"- {sentence}" for sentence in important_sentences
+            )
         else:
             bullet_points = f"- {content[:150]}..."
 

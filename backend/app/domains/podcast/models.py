@@ -19,6 +19,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -35,6 +36,7 @@ class PodcastEpisode(Base):
     - 复用部分SubscriptionItem字段但独立管理播客特有的音频/总结字段
     - 保持与现有schema兼容，同时避免复杂的SQLAlchemy继承配置
     """
+
     __tablename__ = "podcast_episodes"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -63,7 +65,9 @@ class PodcastEpisode(Base):
     image_url = Column(String(500))  # 分集封面图URL
 
     # 分集详情页链接
-    item_link = Column(String(500), unique=True, nullable=False)  # <item><link> 标签内容，指向分集详情页
+    item_link = Column(
+        String(500), unique=True, nullable=False
+    )  # <item><link> 标签内容，指向分集详情页
 
     # 播放统计（全局）
     play_count = Column(Integer, default=0)
@@ -75,22 +79,37 @@ class PodcastEpisode(Base):
     explicit = Column(Boolean, default=False)
 
     # 状态和元数据
-    status = Column(String(50), default="pending_summary")  # pending, summarized, failed
-    metadata_json = Column("metadata", JSON, nullable=True, default={})  # Renamed to avoid SQLAlchemy reserved attribute
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    status = Column(
+        String(50), default="pending_summary"
+    )  # pending, summarized, failed
+    metadata_json = Column(
+        "metadata", JSON, nullable=True, default={}
+    )  # Renamed to avoid SQLAlchemy reserved attribute
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     # Relationships
     subscription = relationship("Subscription", back_populates="podcast_episodes")
-    playback_states = relationship("PodcastPlaybackState", back_populates="episode", cascade="all, delete")
+    playback_states = relationship(
+        "PodcastPlaybackState", back_populates="episode", cascade="all, delete"
+    )
+    queue_items = relationship(
+        "PodcastQueueItem", back_populates="episode", cascade="all, delete"
+    )
 
     # Indexes
     __table_args__ = (
-        Index('idx_podcast_subscription', 'subscription_id'),
-        Index('idx_podcast_status', 'status'),
-        Index('idx_podcast_published', 'published_at'),
-        Index('idx_podcast_episode_image', 'image_url'),
-        Index('idx_podcast_episodes_item_link', 'item_link', unique=True),
+        Index("idx_podcast_subscription", "subscription_id"),
+        Index("idx_podcast_status", "status"),
+        Index("idx_podcast_published", "published_at"),
+        Index("idx_podcast_episode_image", "image_url"),
+        Index("idx_podcast_episodes_item_link", "item_link", unique=True),
     )
 
     def __repr__(self):
@@ -104,16 +123,15 @@ def _add_podcast_relationship():
         "PodcastEpisode",
         back_populates="subscription",
         cascade="all, delete-orphan",
-        uselist=False  # 不直接使用，通过方法访问
+        uselist=False,  # 不直接使用，通过方法访问
     )
+
 
 # 直接用赋值方式添加
 
 
 Subscription.podcast_episodes = relationship(
-    "PodcastEpisode",
-    back_populates="subscription",
-    cascade="all, delete-orphan"
+    "PodcastEpisode", back_populates="subscription", cascade="all, delete-orphan"
 )
 
 
@@ -121,17 +139,24 @@ class PodcastPlaybackState(Base):
     """
     用户播放状态 - 跟踪每个用户的播客播放进度
     """
+
     __tablename__ = "podcast_playback_states"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    episode_id = Column(Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False)
+    episode_id = Column(
+        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False
+    )
 
     # 播放状态
     current_position = Column(Integer, default=0)  # 当前播放位置(秒)
     is_playing = Column(Boolean, default=False)
     playback_rate = Column(Float, default=1.0)  # 播放速度
-    last_updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    last_updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     # 统计
     play_count = Column(Integer, default=0)
@@ -142,16 +167,89 @@ class PodcastPlaybackState(Base):
 
     __table_args__ = (
         # 确保每个用户-episode组合唯一
-        Index('idx_user_episode_unique', 'user_id', 'episode_id', unique=True),
+        Index("idx_user_episode_unique", "user_id", "episode_id", unique=True),
     )
 
     def __repr__(self):
         return f"<PlaybackState(user={self.user_id}, ep={self.episode_id}, pos={self.current_position}s)>"
 
 
+class PodcastQueue(Base):
+    """Per-user persistent podcast playback queue."""
+
+    __tablename__ = "podcast_queues"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True
+    )
+    current_episode_id = Column(
+        Integer, ForeignKey("podcast_episodes.id", ondelete="SET NULL"), nullable=True
+    )
+    revision = Column(Integer, default=0, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    items = relationship(
+        "PodcastQueueItem",
+        back_populates="queue",
+        cascade="all, delete-orphan",
+        order_by="PodcastQueueItem.position",
+    )
+    current_episode = relationship(
+        "PodcastEpisode", foreign_keys=[current_episode_id], lazy="joined"
+    )
+
+    __table_args__ = (Index("idx_podcast_queue_user", "user_id"),)
+
+    def __repr__(self):
+        return f"<PodcastQueue(user={self.user_id}, current={self.current_episode_id}, revision={self.revision})>"
+
+
+class PodcastQueueItem(Base):
+    """Item in a user's podcast queue."""
+
+    __tablename__ = "podcast_queue_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    queue_id = Column(
+        Integer, ForeignKey("podcast_queues.id", ondelete="CASCADE"), nullable=False
+    )
+    episode_id = Column(
+        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False
+    )
+    position = Column(Integer, nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    queue = relationship("PodcastQueue", back_populates="items")
+    episode = relationship("PodcastEpisode", back_populates="queue_items")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "queue_id", "episode_id", name="uq_podcast_queue_item_episode"
+        ),
+        UniqueConstraint("queue_id", "position", name="uq_podcast_queue_item_position"),
+        Index("idx_podcast_queue_items_queue_position", "queue_id", "position"),
+    )
+
+    def __repr__(self):
+        return f"<PodcastQueueItem(queue={self.queue_id}, episode={self.episode_id}, position={self.position})>"
+
+
 # 转录任务状态枚举（简化版）
 class TranscriptionStatus(str, enum.Enum):
     """转录任务状态枚举（简化版）"""
+
     PENDING = "pending"  # 等待开始
     IN_PROGRESS = "in_progress"  # 处理中
     COMPLETED = "completed"  # 已完成
@@ -162,6 +260,7 @@ class TranscriptionStatus(str, enum.Enum):
 # 转录任务步骤枚举
 class TranscriptionStep(str, enum.Enum):
     """转录任务执行步骤枚举"""
+
     NOT_STARTED = "not_started"  # 未开始
     DOWNLOADING = "downloading"  # 下载音频文件
     CONVERTING = "converting"  # 格式转换为MP3
@@ -180,23 +279,44 @@ class TranscriptionTask(Base):
     - status: 整体任务状态 (PENDING, IN_PROGRESS, COMPLETED, FAILED, CANCELLED)
     - current_step: 当前执行到的步骤 (NOT_STARTED, DOWNLOADING, CONVERTING, SPLITTING, TRANSCRIBING, MERGING)
     """
+
     __tablename__ = "transcription_tasks"
 
     id = Column(Integer, primary_key=True, index=True)
-    episode_id = Column(Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False, unique=True)
+    episode_id = Column(
+        Integer,
+        ForeignKey("podcast_episodes.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
 
     # 任务状态（简化版）- Use explicit values to match database enum
     status = Column(
-        Enum('pending', 'in_progress', 'completed', 'failed', 'cancelled', name='transcriptionstatus'),
-        default='pending',
-        nullable=False
+        Enum(
+            "pending",
+            "in_progress",
+            "completed",
+            "failed",
+            "cancelled",
+            name="transcriptionstatus",
+        ),
+        default="pending",
+        nullable=False,
     )
 
     # 当前执行步骤 - Use explicit values to match database enum
     current_step = Column(
-        Enum('not_started', 'downloading', 'converting', 'splitting', 'transcribing', 'merging', name='transcriptionstep'),
-        default='not_started',
-        nullable=False
+        Enum(
+            "not_started",
+            "downloading",
+            "converting",
+            "splitting",
+            "transcribing",
+            "merging",
+            name="transcriptionstep",
+        ),
+        default="not_started",
+        nullable=False,
     )
 
     # 进度百分比 0-100
@@ -220,7 +340,9 @@ class TranscriptionTask(Base):
     summary_error_message = Column(Text)  # 总结错误信息
 
     # 分片信息（JSON格式存储）
-    chunk_info = Column(JSON, default=dict)  # 存储分片信息，如：{"chunks": [{"index": 1, "file": "path", "size": 1024, "transcript": "..."}]}
+    chunk_info = Column(
+        JSON, default=dict
+    )  # 存储分片信息，如：{"chunks": [{"index": 1, "file": "path", "size": 1024, "transcript": "..."}]}
 
     # 错误信息
     error_message = Column(Text)  # 错误详情
@@ -236,19 +358,25 @@ class TranscriptionTask(Base):
     model_used = Column(String(100))  # 使用的转录模型
 
     # 时间戳 (使用 timezone-aware datetime)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
     started_at = Column(DateTime(timezone=True))  # 任务开始时间
     completed_at = Column(DateTime(timezone=True))  # 任务完成时间
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
     # Relationships
     episode = relationship("PodcastEpisode", backref="transcription_task")
 
     # Indexes
     __table_args__ = (
-        Index('idx_transcription_episode', 'episode_id', unique=True),
-        Index('idx_transcription_status', 'status'),
-        Index('idx_transcription_created', 'created_at'),
+        Index("idx_transcription_episode", "episode_id", unique=True),
+        Index("idx_transcription_status", "status"),
+        Index("idx_transcription_created", "created_at"),
     )
 
     @property
@@ -280,10 +408,13 @@ class PodcastConversation(Base):
 
     存储用户与AI基于播客摘要的对话历史，支持上下文保持的交互
     """
+
     __tablename__ = "podcast_conversations"
 
     id = Column(Integer, primary_key=True, index=True)
-    episode_id = Column(Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False)
+    episode_id = Column(
+        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False
+    )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
     # 对话内容
@@ -291,7 +422,9 @@ class PodcastConversation(Base):
     content = Column(Text, nullable=False)
 
     # 上下文管理
-    parent_message_id = Column(Integer, ForeignKey("podcast_conversations.id"), nullable=True)  # 父消息ID，用于构建对话树
+    parent_message_id = Column(
+        Integer, ForeignKey("podcast_conversations.id"), nullable=True
+    )  # 父消息ID，用于构建对话树
     conversation_turn = Column(Integer, default=0)  # 对话轮次
 
     # 元数据
@@ -300,18 +433,22 @@ class PodcastConversation(Base):
     processing_time = Column(Float)  # 处理时间（秒）
 
     # 时间戳
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+    )
 
     # Relationships
     episode = relationship("PodcastEpisode", backref="conversations")
-    parent_message = relationship("PodcastConversation", remote_side=[id], backref="replies")
+    parent_message = relationship(
+        "PodcastConversation", remote_side=[id], backref="replies"
+    )
 
     # Indexes
     __table_args__ = (
-        Index('idx_conversation_episode', 'episode_id'),
-        Index('idx_conversation_user', 'user_id'),
-        Index('idx_conversation_created', 'created_at'),
-        Index('idx_conversation_turn', 'episode_id', 'conversation_turn'),
+        Index("idx_conversation_episode", "episode_id"),
+        Index("idx_conversation_user", "user_id"),
+        Index("idx_conversation_created", "created_at"),
+        Index("idx_conversation_turn", "episode_id", "conversation_turn"),
     )
 
     def __repr__(self):

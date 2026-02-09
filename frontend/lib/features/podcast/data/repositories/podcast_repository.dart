@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../models/podcast_episode_model.dart';
 import '../models/podcast_playback_model.dart';
+import '../models/podcast_queue_model.dart';
 import '../models/podcast_subscription_model.dart';
 import '../models/podcast_transcription_model.dart';
 import '../models/podcast_conversation_model.dart';
@@ -36,10 +37,14 @@ class PodcastRepository {
     List<int>? categoryIds,
   }) async {
     try {
-      final requests = feedUrls.map((url) => PodcastSubscriptionCreateRequest(
-        feedUrl: url,
-        categoryIds: categoryIds,
-      )).toList();
+      final requests = feedUrls
+          .map(
+            (url) => PodcastSubscriptionCreateRequest(
+              feedUrl: url,
+              categoryIds: categoryIds,
+            ),
+          )
+          .toList();
       await _apiService.addSubscriptionsBatch(requests);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
@@ -101,7 +106,10 @@ class PodcastRepository {
     }
   }
 
-  Future<ReparseResponse> reparseSubscription(int subscriptionId, bool forceAll) async {
+  Future<ReparseResponse> reparseSubscription(
+    int subscriptionId,
+    bool forceAll,
+  ) async {
     try {
       return await _apiService.reparseSubscription(subscriptionId, forceAll);
     } on DioException catch (e) {
@@ -178,6 +186,62 @@ class PodcastRepository {
     }
   }
 
+  // === Queue Management ===
+
+  Future<PodcastQueueModel> getQueue() async {
+    try {
+      return await _apiService.getQueue();
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastQueueModel> addQueueItem(int episodeId) async {
+    try {
+      return await _apiService.addQueueItem(
+        PodcastQueueAddItemRequest(episodeId: episodeId),
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastQueueModel> removeQueueItem(int episodeId) async {
+    try {
+      return await _apiService.removeQueueItem(episodeId);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastQueueModel> reorderQueueItems(List<int> episodeIds) async {
+    try {
+      return await _apiService.reorderQueueItems(
+        PodcastQueueReorderRequest(episodeIds: episodeIds),
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastQueueModel> setQueueCurrent(int episodeId) async {
+    try {
+      return await _apiService.setQueueCurrent(
+        PodcastQueueSetCurrentRequest(episodeId: episodeId),
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastQueueModel> completeQueueCurrent() async {
+    try {
+      return await _apiService.completeQueueCurrent(const {});
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   // === Summary Management ===
 
   Future<PodcastSummaryResponse> generateSummary({
@@ -226,12 +290,7 @@ class PodcastRepository {
     int size = 20,
   }) async {
     try {
-      return await _apiService.searchPodcasts(
-        query,
-        searchIn,
-        page,
-        size,
-      );
+      return await _apiService.searchPodcasts(query, searchIn, page, size);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
@@ -297,7 +356,9 @@ class PodcastRepository {
     }
   }
 
-  Future<PodcastTranscriptionResponse?> getTranscriptionStatus(int episodeId) async {
+  Future<PodcastTranscriptionResponse?> getTranscriptionStatus(
+    int episodeId,
+  ) async {
     try {
       return await _apiService.getTranscriptionStatus(episodeId);
     } on DioException catch (e) {
@@ -345,7 +406,9 @@ class PodcastRepository {
 
   // === Schedule Management ===
 
-  Future<ScheduleConfigResponse> getSubscriptionSchedule(int subscriptionId) async {
+  Future<ScheduleConfigResponse> getSubscriptionSchedule(
+    int subscriptionId,
+  ) async {
     try {
       return await _apiService.getSubscriptionSchedule(subscriptionId);
     } on DioException catch (e) {
@@ -358,7 +421,10 @@ class PodcastRepository {
     ScheduleConfigUpdateRequest request,
   ) async {
     try {
-      return await _apiService.updateSubscriptionSchedule(subscriptionId, request);
+      return await _apiService.updateSubscriptionSchedule(
+        subscriptionId,
+        request,
+      );
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }

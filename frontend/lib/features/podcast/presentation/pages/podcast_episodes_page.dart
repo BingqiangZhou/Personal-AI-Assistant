@@ -392,6 +392,37 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                           );
                                         }
                                       },
+                                      onAddToQueue: () async {
+                                        try {
+                                          await ref
+                                              .read(
+                                                podcastQueueControllerProvider
+                                                    .notifier,
+                                              )
+                                              .addToQueue(episode.id);
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Added to queue'),
+                                              ),
+                                            );
+                                          }
+                                        } catch (error) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Failed to add to queue: $error',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
                                     );
                                   },
                                 );
@@ -438,6 +469,37 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                         context.push(
                                           '/podcast/episode/detail/${episode.id}',
                                         );
+                                      }
+                                    },
+                                    onAddToQueue: () async {
+                                      try {
+                                        await ref
+                                            .read(
+                                              podcastQueueControllerProvider
+                                                  .notifier,
+                                            )
+                                            .addToQueue(episode.id);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Added to queue'),
+                                            ),
+                                          );
+                                        }
+                                      } catch (error) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Failed to add to queue: $error',
+                                              ),
+                                            ),
+                                          );
+                                        }
                                       }
                                     },
                                   );

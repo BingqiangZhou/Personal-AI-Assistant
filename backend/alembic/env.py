@@ -9,7 +9,6 @@ from logging.config import fileConfig
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-from sqlalchemy.ext.declarative import declarative_base
 
 from alembic import context
 
@@ -25,8 +24,10 @@ import types
 class Header:
     def __init__(self, default=None, **kwargs):
         self.default = default
+
     def __call__(self, *args, **kwargs):
         return self.default
+
 
 # Minimal settings for database URL
 from functools import lru_cache
@@ -35,18 +36,23 @@ from pydantic_settings import BaseSettings
 
 
 class MinimalSettings(BaseSettings):
-    DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/personal_ai_assistant"
+    DATABASE_URL: str = (
+        "postgresql+asyncpg://user:password@localhost:5432/personal_ai_assistant"
+    )
 
     class Config:
         env_file = ".env"
         case_sensitive = True
         extra = "ignore"
 
+
 @lru_cache
 def get_minimal_settings():
     return MinimalSettings()
 
+
 minimal_settings = get_minimal_settings()
+
 
 # Complete mock config to avoid importing app.core.config
 class MockConfig:
@@ -94,10 +100,12 @@ class MockConfig:
     TRANSCRIPTION_MAX_THREADS = 4
     TRANSCRIPTION_QUEUE_SIZE = 100
 
+
 # Mock config module
-mock_config_module = types.ModuleType('app.core.config')
+mock_config_module = types.ModuleType("app.core.config")
 mock_config_module.settings = MockConfig()
-sys.modules['app.core.config'] = mock_config_module
+sys.modules["app.core.config"] = mock_config_module
+
 
 # Mock security module
 class MockSecurity:
@@ -142,7 +150,9 @@ class MockSecurity:
         return {"sub": "1", "email": "test@example.com"} if token else None
 
     @staticmethod
-    async def get_token_from_request(authorization: str = None, api_key: str = Header(None)):
+    async def get_token_from_request(
+        authorization: str = None, api_key: str = Header(None)
+    ):
         return "mock_token"
 
     @staticmethod
@@ -165,9 +175,12 @@ class MockSecurity:
     def enable_ec256_optimized():
         return {"public_key": "mock_public_key", "private_key": "mock_private_key"}
 
-mock_security_module = types.ModuleType('app.core.security')
+
+mock_security_module = types.ModuleType("app.core.security")
 mock_security_module.settings = MockConfig()
-mock_security_module.get_or_generate_secret_key = MockSecurity.get_or_generate_secret_key
+mock_security_module.get_or_generate_secret_key = (
+    MockSecurity.get_or_generate_secret_key
+)
 mock_security_module.verify_password = MockSecurity.verify_password
 mock_security_module.get_password_hash = MockSecurity.get_password_hash
 mock_security_module.create_access_token = MockSecurity.create_access_token
@@ -178,36 +191,44 @@ mock_security_module.get_current_active_user = MockSecurity.get_current_active_u
 mock_security_module.get_current_superuser = MockSecurity.get_current_superuser
 mock_security_module.verify_token_optional = MockSecurity.verify_token_optional
 mock_security_module.get_token_from_request = MockSecurity.get_token_from_request
-mock_security_module.generate_password_reset_token = MockSecurity.generate_password_reset_token
-mock_security_module.verify_password_reset_token = MockSecurity.verify_password_reset_token
+mock_security_module.generate_password_reset_token = (
+    MockSecurity.generate_password_reset_token
+)
+mock_security_module.verify_password_reset_token = (
+    MockSecurity.verify_password_reset_token
+)
 mock_security_module.generate_api_key = MockSecurity.generate_api_key
 mock_security_module.generate_random_string = MockSecurity.generate_random_string
 mock_security_module.enable_ec256_optimized = MockSecurity.enable_ec256_optimized
 mock_security_module.OAuth2PasswordBearer = lambda tokenUrl: None
-sys.modules['app.core.security'] = mock_security_module
+sys.modules["app.core.security"] = mock_security_module
 
 # === STEP 2: Import database module to get Base ===
 # Import after mocking config and security to avoid circular imports
 from app.core.database import Base
 
+
 # === STEP 3: Import all models ===
 # Import all domain models so they're registered with Base.metadata
-from app.domains.user.models import User, UserSession, PasswordReset
-from app.domains.subscription.models import (
-    Subscription,
-    UserSubscription,
-    SubscriptionItem,
-    SubscriptionCategory,
-    SubscriptionCategoryMapping,
-)
-from app.domains.podcast.models import (
+from app.admin.models import AdminAuditLog, BackgroundTaskRun, SystemSettings  # noqa: F401,E402
+from app.domains.ai.models import AIModelConfig  # noqa: F401,E402
+from app.domains.podcast.models import (  # noqa: F401,E402
+    PodcastConversation,
     PodcastEpisode,
     PodcastPlaybackState,
+    PodcastQueue,
+    PodcastQueueItem,
     TranscriptionTask,
-    PodcastConversation,
 )
-from app.domains.ai.models import AIModelConfig
-from app.admin.models import AdminAuditLog, SystemSettings, BackgroundTaskRun
+from app.domains.subscription.models import (  # noqa: F401,E402
+    Subscription,
+    SubscriptionCategory,
+    SubscriptionCategoryMapping,
+    SubscriptionItem,
+    UserSubscription,
+)
+from app.domains.user.models import PasswordReset, User, UserSession  # noqa: F401,E402
+
 
 # === STEP 4: Configure Alembic ===
 config = context.config
@@ -216,6 +237,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
+
 
 def get_url():
     """Get database URL from settings."""

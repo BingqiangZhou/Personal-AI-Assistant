@@ -10,6 +10,7 @@ Or use specialized services directly for better separation of concerns.
 
 from .episode_service import PodcastEpisodeService
 from .playback_service import PodcastPlaybackService
+from .queue_service import PodcastQueueService
 from .schedule_service import PodcastScheduleService
 from .search_service import PodcastSearchService
 from .stats_service import PodcastStatsService
@@ -25,6 +26,7 @@ __all__ = [
     "PodcastSubscriptionService",
     "PodcastEpisodeService",
     "PodcastPlaybackService",
+    "PodcastQueueService",
     "PodcastSummaryService",
     "PodcastSearchService",
     "PodcastSyncService",

@@ -3,6 +3,7 @@ import 'package:retrofit/retrofit.dart';
 
 import '../models/podcast_episode_model.dart';
 import '../models/podcast_playback_model.dart';
+import '../models/podcast_queue_model.dart';
 import '../models/podcast_subscription_model.dart';
 import '../models/schedule_config_model.dart';
 import '../models/podcast_transcription_model.dart';
@@ -40,9 +41,7 @@ abstract class PodcastApiService {
   );
 
   @DELETE('/subscriptions/podcasts/{subscriptionId}')
-  Future<void> deleteSubscription(
-    @Path('subscriptionId') int subscriptionId,
-  );
+  Future<void> deleteSubscription(@Path('subscriptionId') int subscriptionId);
 
   @POST('/subscriptions/podcasts/bulk-delete')
   Future<PodcastSubscriptionBulkDeleteResponse> bulkDeleteSubscriptions(
@@ -50,9 +49,7 @@ abstract class PodcastApiService {
   );
 
   @POST('/subscriptions/podcasts/{subscriptionId}/refresh')
-  Future<void> refreshSubscription(
-    @Path('subscriptionId') int subscriptionId,
-  );
+  Future<void> refreshSubscription(@Path('subscriptionId') int subscriptionId);
 
   @POST('/subscriptions/podcasts/{subscriptionId}/reparse')
   Future<ReparseResponse> reparseSubscription(
@@ -106,6 +103,34 @@ abstract class PodcastApiService {
     @Path('episodeId') int episodeId,
   );
 
+  // === Queue Management ===
+
+  @GET('/podcasts/queue')
+  Future<PodcastQueueModel> getQueue();
+
+  @POST('/podcasts/queue/items')
+  Future<PodcastQueueModel> addQueueItem(
+    @Body() PodcastQueueAddItemRequest request,
+  );
+
+  @DELETE('/podcasts/queue/items/{episodeId}')
+  Future<PodcastQueueModel> removeQueueItem(@Path('episodeId') int episodeId);
+
+  @PUT('/podcasts/queue/items/reorder')
+  Future<PodcastQueueModel> reorderQueueItems(
+    @Body() PodcastQueueReorderRequest request,
+  );
+
+  @POST('/podcasts/queue/current')
+  Future<PodcastQueueModel> setQueueCurrent(
+    @Body() PodcastQueueSetCurrentRequest request,
+  );
+
+  @POST('/podcasts/queue/current/complete')
+  Future<PodcastQueueModel> completeQueueCurrent(
+    @Body() Map<String, dynamic> request,
+  );
+
   // === Summary Management ===
 
   @POST('/podcasts/episodes/{episodeId}/summary')
@@ -138,9 +163,7 @@ abstract class PodcastApiService {
   // === Recommendations ===
 
   @GET('/podcasts/recommendations')
-  Future<SimpleResponse> getRecommendations(
-    @Query('limit') int limit,
-  );
+  Future<SimpleResponse> getRecommendations(@Query('limit') int limit);
 
   // === Transcription Management ===
 
@@ -156,9 +179,7 @@ abstract class PodcastApiService {
   );
 
   @DELETE('/podcasts/episodes/{episodeId}/transcription')
-  Future<void> deleteTranscription(
-    @Path('episodeId') int episodeId,
-  );
+  Future<void> deleteTranscription(@Path('episodeId') int episodeId);
 
   @GET('/podcasts/episodes/{episodeId}/transcription/status')
   Future<PodcastTranscriptionResponse> getTranscriptionStatus(

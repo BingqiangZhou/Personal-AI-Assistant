@@ -94,6 +94,25 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   }
 
   /// 构建Feed内容
+  Future<void> _addToQueue(PodcastEpisodeModel episode) async {
+    try {
+      await ref
+          .read(podcastQueueControllerProvider.notifier)
+          .addToQueue(episode.id);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Added to queue')));
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add to queue: $error')),
+        );
+      }
+    }
+  }
+
   Widget _buildFeedContent(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final feedState = ref.watch(podcastFeedProvider);
@@ -376,15 +395,32 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                episode.title,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      episode.title,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                          ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Add to queue',
+                                    onPressed: () => _addToQueue(episode),
+                                    icon: const Icon(
+                                      Icons.playlist_add,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ],
                               ),
 
                               Wrap(
@@ -675,6 +711,12 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     ),
                   ),
                   const SizedBox(width: 12),
+                  IconButton(
+                    tooltip: 'Add to queue',
+                    onPressed: () => _addToQueue(episode),
+                    icon: const Icon(Icons.playlist_add),
+                  ),
+                  const SizedBox(width: 8),
                   // 右侧：Play 按钮（播放并跳转到详情页）
                   FilledButton.tonal(
                     onPressed: () {

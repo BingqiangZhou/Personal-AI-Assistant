@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../main.dart' as main_app;
 import 'audio_handler.dart';
@@ -13,6 +13,7 @@ import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_playback_model.dart';
+import '../../data/models/podcast_queue_model.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import '../../data/models/audio_player_state_model.dart';
 import '../../data/models/podcast_state_models.dart';
@@ -32,7 +33,10 @@ final podcastRepositoryProvider = Provider<PodcastRepository>((ref) {
   return PodcastRepository(apiService);
 });
 
-final audioPlayerProvider = NotifierProvider<AudioPlayerNotifier, AudioPlayerState>(AudioPlayerNotifier.new);
+final audioPlayerProvider =
+    NotifierProvider<AudioPlayerNotifier, AudioPlayerState>(
+      AudioPlayerNotifier.new,
+    );
 
 class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   late PodcastRepository _repository;
@@ -42,6 +46,8 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   StreamSubscription? _positionSubscription;
   StreamSubscription? _durationSubscription;
   bool? _lastPlayingState; // Track last playing state to reduce log spam
+  ProcessingState? _lastProcessingState;
+  bool _isHandlingQueueCompletion = false;
   Timer? _syncThrottleTimer; // Throttle timer for server sync
 
   PodcastAudioHandler get _audioHandler => main_app.audioHandler;
@@ -67,12 +73,28 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   void _setupListeners() {
     if (_isDisposed) return;
 
-    _playerStateSubscription = _audioHandler.playbackState.listen((playbackState) {
+    _playerStateSubscription = _audioHandler.playbackState.listen((
+      playbackState,
+    ) {
       if (_isDisposed || !ref.mounted) return;
+
+      final processingState = _mapProcessingState(
+        playbackState.processingState,
+      );
+      final completedJustNow =
+          _lastProcessingState != ProcessingState.completed &&
+          processingState == ProcessingState.completed;
+      _lastProcessingState = processingState;
 
       // Only log when state actually changes
       if (kDebugMode && _lastPlayingState != playbackState.playing) {
-        logger.AppLogger.debug('🎵 Playback state changed: ${_lastPlayingState == null ? "initial" : _lastPlayingState! ? "playing" : "paused"} -> ${playbackState.playing ? "playing" : "paused"}');
+        logger.AppLogger.debug(
+          '🎵 Playback state changed: ${_lastPlayingState == null
+              ? "initial"
+              : _lastPlayingState!
+              ? "playing"
+              : "paused"} -> ${playbackState.playing ? "playing" : "paused"}',
+        );
         _lastPlayingState = playbackState.playing;
       }
 
@@ -81,7 +103,12 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       state = state.copyWith(
         isPlaying: playbackState.playing,
         isLoading: false,
+        processingState: processingState,
       );
+
+      if (completedJustNow) {
+        unawaited(_handleTrackCompleted());
+      }
     });
 
     // CRITICAL: Use _audioHandler.positionStream instead of AudioService.position
@@ -90,9 +117,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     _positionSubscription = _audioHandler.positionStream.listen((position) {
       if (_isDisposed || !ref.mounted) return;
 
-      state = state.copyWith(
-        position: position.inMilliseconds,
-      );
+      state = state.copyWith(position: position.inMilliseconds);
     });
 
     _durationSubscription = _audioHandler.mediaItem.listen((mediaItem) {
@@ -107,13 +132,16 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         // 1. Current duration is 0 (no backend duration available)
         // 2. New duration is significantly different (>5% difference) and non-zero
         final currentDuration = state.duration;
-        final shouldUpdate = currentDuration == 0 ||
-                           (newDuration > 0 &&
-                            (newDuration - currentDuration).abs() > currentDuration * 0.05);
+        final shouldUpdate =
+            currentDuration == 0 ||
+            (newDuration > 0 &&
+                (newDuration - currentDuration).abs() > currentDuration * 0.05);
 
         if (shouldUpdate && newDuration != currentDuration) {
           if (kDebugMode) {
-            logger.AppLogger.debug('🎵 [DURATION UPDATE] ${currentDuration}ms -> ${newDuration}ms (from audio stream)');
+            logger.AppLogger.debug(
+              '🎵 [DURATION UPDATE] ${currentDuration}ms -> ${newDuration}ms (from audio stream)',
+            );
           }
           state = state.copyWith(duration: newDuration);
         }
@@ -125,9 +153,88 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     }
   }
 
-  Future<void> playEpisode(PodcastEpisodeModel episode) async {
+  ProcessingState _mapProcessingState(AudioProcessingState state) {
+    switch (state) {
+      case AudioProcessingState.idle:
+        return ProcessingState.idle;
+      case AudioProcessingState.loading:
+        return ProcessingState.loading;
+      case AudioProcessingState.buffering:
+        return ProcessingState.buffering;
+      case AudioProcessingState.ready:
+        return ProcessingState.ready;
+      case AudioProcessingState.completed:
+        return ProcessingState.completed;
+      default:
+        return ProcessingState.idle;
+    }
+  }
+
+  Future<void> _handleTrackCompleted() async {
+    if (_isDisposed || !ref.mounted || _isHandlingQueueCompletion) {
+      return;
+    }
+
+    if (state.playSource != PlaySource.queue) {
+      return;
+    }
+
+    _isHandlingQueueCompletion = true;
+    try {
+      final queue = await ref
+          .read(podcastQueueControllerProvider.notifier)
+          .onQueueTrackCompleted();
+
+      final next = queue.currentItem;
+      if (next == null) {
+        state = state.copyWith(
+          isPlaying: false,
+          position: 0,
+          playSource: PlaySource.direct,
+          clearCurrentQueueEpisodeId: true,
+        );
+        return;
+      }
+
+      await playEpisode(
+        next.toEpisodeModel(),
+        source: PlaySource.queue,
+        queueEpisodeId: next.episodeId,
+      );
+    } catch (error) {
+      logger.AppLogger.debug('鉂?Failed to advance queue on completion: $error');
+    } finally {
+      _isHandlingQueueCompletion = false;
+    }
+  }
+
+  void syncQueueState(PodcastQueueModel queue) {
+    if (_isDisposed || !ref.mounted) {
+      return;
+    }
+    state = state.copyWith(
+      queue: queue,
+      currentQueueEpisodeId:
+          queue.currentEpisodeId ?? state.currentQueueEpisodeId,
+    );
+  }
+
+  void setQueueSyncing(bool syncing) {
+    if (_isDisposed || !ref.mounted) {
+      return;
+    }
+    state = state.copyWith(queueSyncing: syncing);
+  }
+
+  Future<void> playEpisode(
+    PodcastEpisodeModel episode, {
+    PlaySource source = PlaySource.direct,
+    int? queueEpisodeId,
+  }) async {
     if (_isPlayingEpisode) {
-      logger.AppLogger.debug('⚠️ playEpisode already in progress, ignoring duplicate call');
+      logger.AppLogger.debug(
+        '⚠️ playEpisode already in progress, ignoring duplicate call',
+      );
       return;
     }
 
@@ -146,6 +253,8 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       }
 
       final savedPlaybackRate = state.playbackRate;
+      final queueSnapshot = state.queue;
+      final queueSyncing = state.queueSyncing;
 
       // ===== STEP 1: Pause current playback instead of stop =====
       // Using pause() instead of stop() to avoid clearing the audio source
@@ -160,6 +269,12 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       state = const AudioPlayerState().copyWith(
         playbackRate: savedPlaybackRate,
+        queue: queueSnapshot,
+        queueSyncing: queueSyncing,
+        playSource: source,
+        currentQueueEpisodeId: source == PlaySource.queue
+            ? (queueEpisodeId ?? episode.id)
+            : null,
       );
 
       if (!ref.mounted || _isDisposed) return;
@@ -168,7 +283,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       logger.AppLogger.debug('📝 Step 2: Setting new episode info');
       // CRITICAL: Backend audioDuration is in SECONDS, convert to MILLISECONDS
       final durationMs = (episode.audioDuration ?? 0) * 1000;
-      logger.AppLogger.debug('  📊 Using backend duration: ${episode.audioDuration}s = ${durationMs}ms');
+      logger.AppLogger.debug(
+        '  📊 Using backend duration: ${episode.audioDuration}s = ${durationMs}ms',
+      );
       state = state.copyWith(
         currentEpisode: episode,
         isLoading: true,
@@ -181,7 +298,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       // CRITICAL: Use setEpisode() to properly set MediaItem, validate artUri, and load audio
       // artUri validation is built into setEpisode() - only http/https URLs are accepted
       logger.AppLogger.debug('🔄 Step 3: Setting new episode with metadata');
-      logger.AppLogger.debug('  📊 Backend duration already set: ${state.duration}ms');
+      logger.AppLogger.debug(
+        '  📊 Backend duration already set: ${state.duration}ms',
+      );
       logger.AppLogger.debug('  🖼️ Image URL: ${episode.imageUrl ?? "NULL"}');
 
       try {
@@ -191,7 +310,8 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           title: episode.title,
           artist: episode.subscriptionTitle ?? 'Unknown Podcast',
           artUri: episode.imageUrl, // Will be validated inside setEpisode()
-          autoPlay: false, // We'll manually start playback after restoring position/speed
+          autoPlay:
+              false, // We'll manually start playback after restoring position/speed
         );
         logger.AppLogger.debug('  ✅ Episode loaded successfully');
       } catch (loadError) {
@@ -203,9 +323,13 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       // ===== STEP 4: Restore playback position =====
       if (episode.playbackPosition != null && episode.playbackPosition! > 0) {
-        logger.AppLogger.debug('⏩ Step 4: Seeking to saved position: ${episode.playbackPosition}ms');
+        logger.AppLogger.debug(
+          '⏩ Step 4: Seeking to saved position: ${episode.playbackPosition}ms',
+        );
         try {
-          await _audioHandler.seek(Duration(milliseconds: episode.playbackPosition!));
+          await _audioHandler.seek(
+            Duration(milliseconds: episode.playbackPosition!),
+          );
           logger.AppLogger.debug('  ✅ Seek completed');
         } catch (e) {
           logger.AppLogger.debug('  ⚠️ Seek error: $e');
@@ -216,7 +340,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       // ===== STEP 5: Restore playback rate =====
       if (savedPlaybackRate != 1.0) {
-        logger.AppLogger.debug('⚙️ Step 5: Restoring playback rate: ${savedPlaybackRate}x');
+        logger.AppLogger.debug(
+          '⚙️ Step 5: Restoring playback rate: ${savedPlaybackRate}x',
+        );
         try {
           await _audioHandler.setSpeed(savedPlaybackRate);
           logger.AppLogger.debug('  ✅ Playback rate restored');
@@ -280,14 +406,18 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     if (_isDisposed) return;
 
     try {
-      logger.AppLogger.debug('🔴 pause() called, current isPlaying: ${state.isPlaying}');
+      logger.AppLogger.debug(
+        '🔴 pause() called, current isPlaying: ${state.isPlaying}',
+      );
 
       // IMPORTANT: Don't manually update state here - let the playbackState listener handle it
       // The listener will update the state when playbackState.playing changes
       // This avoids race conditions where manual state gets overwritten
 
       await _audioHandler.pause();
-      logger.AppLogger.debug('🔴 AudioHandler.pause() completed, waiting for playbackState listener to update UI');
+      logger.AppLogger.debug(
+        '🔴 AudioHandler.pause() completed, waiting for playbackState listener to update UI',
+      );
 
       if (ref.mounted && !_isDisposed) {
         await _updatePlaybackStateOnServer(immediate: true);
@@ -304,14 +434,18 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     if (_isDisposed) return;
 
     try {
-      logger.AppLogger.debug('🟢 resume() called, current isPlaying: ${state.isPlaying}');
+      logger.AppLogger.debug(
+        '🟢 resume() called, current isPlaying: ${state.isPlaying}',
+      );
 
       // IMPORTANT: Don't manually update state here - let the playbackState listener handle it
       // The listener will update the state when playbackState.playing changes
       // This avoids race conditions where manual state gets overwritten
 
       await _audioHandler.play();
-      logger.AppLogger.debug('🟢 AudioHandler.play() completed, waiting for playbackState listener to update UI');
+      logger.AppLogger.debug(
+        '🟢 AudioHandler.play() completed, waiting for playbackState listener to update UI',
+      );
 
       if (ref.mounted && !_isDisposed) {
         await _updatePlaybackStateOnServer();
@@ -366,6 +500,8 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           clearCurrentEpisode: true,
           isPlaying: false,
           position: 0,
+          playSource: PlaySource.direct,
+          clearCurrentQueueEpisodeId: true,
         );
       }
     } catch (error) {
@@ -377,9 +513,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
   void setExpanded(bool expanded) {
     if (ref.mounted && !_isDisposed) {
-      state = state.copyWith(
-        isExpanded: expanded
-      );
+      state = state.copyWith(isExpanded: expanded);
     }
   }
 
@@ -418,15 +552,22 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       );
     } catch (error) {
       // Log more detailed error for debugging
-      logger.AppLogger.debug('⚠️ Failed to update playback state on server: $error');
+      logger.AppLogger.debug(
+        '⚠️ Failed to update playback state on server: $error',
+      );
       logger.AppLogger.debug('📍 Episode ID: ${episode.id}');
-      logger.AppLogger.debug('📍 Position: ${state.position}ms (${(state.position / 1000).round()}s)');
+      logger.AppLogger.debug(
+        '📍 Position: ${state.position}ms (${(state.position / 1000).round()}s)',
+      );
       logger.AppLogger.debug('📍 Is Playing: ${state.isPlaying}');
       logger.AppLogger.debug('📍 Playback Rate: ${state.playbackRate}');
 
       // Check if it's an authentication error
-      if (error.toString().contains('401') || error.toString().contains('authentication')) {
-        logger.AppLogger.debug('🔑 Authentication error - user may need to log in again');
+      if (error.toString().contains('401') ||
+          error.toString().contains('authentication')) {
+        logger.AppLogger.debug(
+          '🔑 Authentication error - user may need to log in again',
+        );
       }
 
       // Don't update the UI state for server errors - continue playback
@@ -434,7 +575,124 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }
 }
 
-final podcastSubscriptionProvider = NotifierProvider<PodcastSubscriptionNotifier, PodcastSubscriptionState>(PodcastSubscriptionNotifier.new);
+final podcastQueueControllerProvider =
+    AsyncNotifierProvider<PodcastQueueController, PodcastQueueModel>(
+      PodcastQueueController.new,
+    );
+
+class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
+  late PodcastRepository _repository;
+
+  @override
+  FutureOr<PodcastQueueModel> build() async {
+    _repository = ref.read(podcastRepositoryProvider);
+    try {
+      final queue = await _repository.getQueue();
+      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+      return queue;
+    } catch (_) {
+      return PodcastQueueModel.empty();
+    }
+  }
+
+  Future<PodcastQueueModel> loadQueue() async {
+    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    try {
+      final queue = await _repository.getQueue();
+      state = AsyncValue.data(queue);
+      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+      return queue;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    } finally {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+    }
+  }
+
+  Future<PodcastQueueModel> addToQueue(int episodeId) async {
+    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    try {
+      final queue = await _repository.addQueueItem(episodeId);
+      state = AsyncValue.data(queue);
+      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+      return queue;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    } finally {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+    }
+  }
+
+  Future<PodcastQueueModel> removeFromQueue(int episodeId) async {
+    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    try {
+      final queue = await _repository.removeQueueItem(episodeId);
+      state = AsyncValue.data(queue);
+      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+      return queue;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    } finally {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+    }
+  }
+
+  Future<PodcastQueueModel> reorderQueue(List<int> episodeIds) async {
+    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    try {
+      final queue = await _repository.reorderQueueItems(episodeIds);
+      state = AsyncValue.data(queue);
+      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+      return queue;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    } finally {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+    }
+  }
+
+  Future<PodcastQueueModel> playFromQueue(int episodeId) async {
+    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    try {
+      final queue = await _repository.setQueueCurrent(episodeId);
+      state = AsyncValue.data(queue);
+      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+
+      final current = queue.currentItem;
+      if (current != null) {
+        await ref
+            .read(audioPlayerProvider.notifier)
+            .playEpisode(
+              current.toEpisodeModel(),
+              source: PlaySource.queue,
+              queueEpisodeId: current.episodeId,
+            );
+      }
+      return queue;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    } finally {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+    }
+  }
+
+  Future<PodcastQueueModel> onQueueTrackCompleted() async {
+    final queue = await _repository.completeQueueCurrent();
+    state = AsyncValue.data(queue);
+    ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+    return queue;
+  }
+}
+
+final podcastSubscriptionProvider =
+    NotifierProvider<PodcastSubscriptionNotifier, PodcastSubscriptionState>(
+      PodcastSubscriptionNotifier.new,
+    );
 
 class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
   late PodcastRepository _repository;
@@ -454,7 +712,9 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
   }) async {
     // Check if data is fresh and skip refresh if not forced
     if (!forceRefresh && page == 1 && state.isDataFresh()) {
-      logger.AppLogger.debug('📦 Using cached subscription data (fresh within 5 min)');
+      logger.AppLogger.debug(
+        '📦 Using cached subscription data (fresh within 5 min)',
+      );
       return;
     }
 
@@ -481,18 +741,12 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
         '✅ Subscription data loaded at ${DateTime.now()} (total=${response.total}, count=${response.subscriptions.length})',
       );
     } catch (error) {
-      state = state.copyWith(
-        isLoading: false,
-        error: error.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: error.toString());
       rethrow;
     }
   }
 
-  Future<void> loadMoreSubscriptions({
-    int? categoryId,
-    String? status,
-  }) async {
+  Future<void> loadMoreSubscriptions({int? categoryId, String? status}) async {
     if (state.isLoadingMore || !state.hasMore) return;
 
     state = state.copyWith(isLoadingMore: true);
@@ -508,23 +762,19 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
       state = state.copyWith(
         subscriptions: [...state.subscriptions, ...response.subscriptions],
         hasMore: (state.nextPage ?? 1) < response.pages,
-        nextPage: (state.nextPage ?? 1) < response.pages ? (state.nextPage ?? 1) + 1 : null,
+        nextPage: (state.nextPage ?? 1) < response.pages
+            ? (state.nextPage ?? 1) + 1
+            : null,
         currentPage: state.nextPage ?? 1,
         total: response.total,
         isLoadingMore: false,
       );
     } catch (error) {
-      state = state.copyWith(
-        isLoadingMore: false,
-        error: error.toString(),
-      );
+      state = state.copyWith(isLoadingMore: false, error: error.toString());
     }
   }
 
-  Future<void> refreshSubscriptions({
-    int? categoryId,
-    String? status,
-  }) async {
+  Future<void> refreshSubscriptions({int? categoryId, String? status}) async {
     state = const PodcastSubscriptionState();
     await loadSubscriptions(
       page: 1,
@@ -554,14 +804,18 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
 
       // Remove from subscribing set (refreshSubscriptions resets state, so we need to add it back)
       state = state.copyWith(
-        subscribingFeedUrls: state.subscribingFeedUrls.where((url) => url != feedUrl).toSet(),
+        subscribingFeedUrls: state.subscribingFeedUrls
+            .where((url) => url != feedUrl)
+            .toSet(),
       );
 
       return subscription;
     } catch (error) {
       // Remove from subscribing set
       state = state.copyWith(
-        subscribingFeedUrls: state.subscribingFeedUrls.where((url) => url != feedUrl).toSet(),
+        subscribingFeedUrls: state.subscribingFeedUrls
+            .where((url) => url != feedUrl)
+            .toSet(),
       );
       rethrow;
     }
@@ -600,14 +854,20 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
   }) async {
     try {
       // Debug log
-      logger.AppLogger.debug('🗑️ Bulk delete request: subscriptionIds=$subscriptionIds');
-      logger.AppLogger.debug('🗑️ Subscription IDs type: ${subscriptionIds.runtimeType}');
+      logger.AppLogger.debug(
+        '🗑️ Bulk delete request: subscriptionIds=$subscriptionIds',
+      );
+      logger.AppLogger.debug(
+        '🗑️ Subscription IDs type: ${subscriptionIds.runtimeType}',
+      );
 
       final response = await _repository.bulkDeleteSubscriptions(
         subscriptionIds: subscriptionIds,
       );
 
-      logger.AppLogger.debug('✅ Bulk delete success: ${response.successCount} deleted, ${response.failedCount} failed');
+      logger.AppLogger.debug(
+        '✅ Bulk delete success: ${response.successCount} deleted, ${response.failedCount} failed',
+      );
 
       // Refresh the list
       await refreshSubscriptions();
@@ -642,7 +902,10 @@ class PodcastSubscriptionNotifier extends Notifier<PodcastSubscriptionState> {
   }
 }
 
-final podcastFeedProvider = NotifierProvider<PodcastFeedNotifier, PodcastFeedState>(PodcastFeedNotifier.new);
+final podcastFeedProvider =
+    NotifierProvider<PodcastFeedNotifier, PodcastFeedState>(
+      PodcastFeedNotifier.new,
+    );
 
 class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
   late PodcastRepository _repository;
@@ -657,10 +920,7 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final response = await _repository.getPodcastFeed(
-        page: 1,
-        pageSize: 20,
-      );
+      final response = await _repository.getPodcastFeed(page: 1, pageSize: 20);
 
       state = state.copyWith(
         episodes: response.items,
@@ -737,7 +997,10 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
   }
 }
 
-final podcastSearchProvider = AsyncNotifierProvider<PodcastSearchNotifier, PodcastEpisodeListResponse>(PodcastSearchNotifier.new);
+final podcastSearchProvider =
+    AsyncNotifierProvider<PodcastSearchNotifier, PodcastEpisodeListResponse>(
+      PodcastSearchNotifier.new,
+    );
 
 class PodcastSearchNotifier extends AsyncNotifier<PodcastEpisodeListResponse> {
   late PodcastRepository _repository;
@@ -749,14 +1012,16 @@ class PodcastSearchNotifier extends AsyncNotifier<PodcastEpisodeListResponse> {
     ref.onDispose(() {
       _debounceTimer?.cancel();
     });
-    return Future.value(const PodcastEpisodeListResponse(
-      episodes: [],
-      total: 0,
-      page: 1,
-      size: 20,
-      pages: 0,
-      subscriptionId: 0,
-    ));
+    return Future.value(
+      const PodcastEpisodeListResponse(
+        episodes: [],
+        total: 0,
+        page: 1,
+        size: 20,
+        pages: 0,
+        subscriptionId: 0,
+      ),
+    );
   }
 
   Future<void> searchPodcasts({
@@ -769,14 +1034,16 @@ class PodcastSearchNotifier extends AsyncNotifier<PodcastEpisodeListResponse> {
     _debounceTimer?.cancel();
 
     if (query.trim().isEmpty) {
-      state = AsyncValue.data(const PodcastEpisodeListResponse(
-        episodes: [],
-        total: 0,
-        page: 1,
-        size: 20,
-        pages: 0,
-        subscriptionId: 0,
-      ));
+      state = AsyncValue.data(
+        const PodcastEpisodeListResponse(
+          episodes: [],
+          total: 0,
+          page: 1,
+          size: 20,
+          pages: 0,
+          subscriptionId: 0,
+        ),
+      );
       return;
     }
 
@@ -801,14 +1068,16 @@ class PodcastSearchNotifier extends AsyncNotifier<PodcastEpisodeListResponse> {
 
   void clearSearch() {
     _debounceTimer?.cancel();
-    state = AsyncValue.data(const PodcastEpisodeListResponse(
-      episodes: [],
-      total: 0,
-      page: 1,
-      size: 20,
-      pages: 0,
-      subscriptionId: 0,
-    ));
+    state = AsyncValue.data(
+      const PodcastEpisodeListResponse(
+        episodes: [],
+        total: 0,
+        page: 1,
+        size: 20,
+        pages: 0,
+        subscriptionId: 0,
+      ),
+    );
   }
 }
 
@@ -823,19 +1092,26 @@ final podcastStatsProvider = FutureProvider<PodcastStatsResponse?>((ref) async {
 });
 
 // === Episode Detail Provider ===
-final episodeDetailProvider = FutureProvider.family<PodcastEpisodeDetailResponse?, int>((ref, episodeId) async {
-  final repository = ref.read(podcastRepositoryProvider);
-  try {
-    return await repository.getEpisode(episodeId);
-  } catch (error) {
-    logger.AppLogger.debug('Failed to load episode detail: $error');
-    return null;
-  }
-});
+final episodeDetailProvider =
+    FutureProvider.family<PodcastEpisodeDetailResponse?, int>((
+      ref,
+      episodeId,
+    ) async {
+      final repository = ref.read(podcastRepositoryProvider);
+      try {
+        return await repository.getEpisode(episodeId);
+      } catch (error) {
+        logger.AppLogger.debug('Failed to load episode detail: $error');
+        return null;
+      }
+    });
 
 // For Riverpod 3.0.3, we need to use a different approach for family providers
 // Let's use a simple Notifier and pass the subscriptionId through methods
-final podcastEpisodesProvider = NotifierProvider<PodcastEpisodesNotifier, PodcastEpisodesState>(PodcastEpisodesNotifier.new);
+final podcastEpisodesProvider =
+    NotifierProvider<PodcastEpisodesNotifier, PodcastEpisodesState>(
+      PodcastEpisodesNotifier.new,
+    );
 
 class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
   late PodcastRepository _repository;
@@ -856,15 +1132,21 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
   }) async {
     // Check if data is fresh and skip refresh if not forced (only for first page)
     if (!forceRefresh && page == 1 && state.isDataFresh()) {
-      logger.AppLogger.debug('📦 Using cached episode data for sub $subscriptionId (fresh within 5 min)');
+      logger.AppLogger.debug(
+        '📦 Using cached episode data for sub $subscriptionId (fresh within 5 min)',
+      );
       return;
     }
 
-    logger.AppLogger.debug('📋 Loading episodes for subscription $subscriptionId, page $page');
+    logger.AppLogger.debug(
+      '📋 Loading episodes for subscription $subscriptionId, page $page',
+    );
 
     // When loading first page, clear existing episodes immediately to avoid showing old data
     if (page == 1) {
-      logger.AppLogger.debug('📋 Clearing old episodes and showing loading state');
+      logger.AppLogger.debug(
+        '📋 Clearing old episodes and showing loading state',
+      );
       state = state.copyWith(
         isLoading: true,
         episodes: [], // Clear immediately
@@ -879,13 +1161,19 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
         subscriptionId: subscriptionId,
         page: page,
         size: size,
-        isPlayed: status == 'played' ? true : (status == 'unplayed' ? false : null),
+        isPlayed: status == 'played'
+            ? true
+            : (status == 'unplayed' ? false : null),
       );
 
-      logger.AppLogger.debug('📋 Loaded ${response.episodes.length} episodes for subscription $subscriptionId');
+      logger.AppLogger.debug(
+        '📋 Loaded ${response.episodes.length} episodes for subscription $subscriptionId',
+      );
 
       state = state.copyWith(
-        episodes: page == 1 ? response.episodes : [...state.episodes, ...response.episodes],
+        episodes: page == 1
+            ? response.episodes
+            : [...state.episodes, ...response.episodes],
         hasMore: page < response.pages,
         nextPage: page < response.pages ? page + 1 : null,
         currentPage: page,
@@ -896,10 +1184,7 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
       logger.AppLogger.debug('✅ Episode data loaded at ${DateTime.now()}');
     } catch (error) {
       logger.AppLogger.debug('❌ Failed to load episodes: $error');
-      state = state.copyWith(
-        isLoading: false,
-        error: error.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: error.toString());
     }
   }
 
@@ -922,14 +1207,13 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
       state = state.copyWith(
         episodes: [...state.episodes, ...response.episodes],
         hasMore: state.nextPage != null && state.nextPage! < response.pages,
-        nextPage: state.nextPage != null && state.nextPage! < response.pages ? state.nextPage! + 1 : null,
+        nextPage: state.nextPage != null && state.nextPage! < response.pages
+            ? state.nextPage! + 1
+            : null,
         isLoadingMore: false,
       );
     } catch (error) {
-      state = state.copyWith(
-        isLoadingMore: false,
-        error: error.toString(),
-      );
+      state = state.copyWith(isLoadingMore: false, error: error.toString());
     }
   }
 
@@ -942,7 +1226,7 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
     await loadEpisodesForSubscription(
       subscriptionId: subscriptionId,
       status: status,
-      forceRefresh: true,  // Bypass 5-minute cache check on explicit refresh
+      forceRefresh: true, // Bypass 5-minute cache check on explicit refresh
     );
   }
 }
