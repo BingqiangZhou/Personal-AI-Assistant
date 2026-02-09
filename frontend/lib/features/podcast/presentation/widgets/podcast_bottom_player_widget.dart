@@ -114,6 +114,20 @@ class _MiniBottomPlayer extends ConsumerWidget {
                             state.isPlaying ? Icons.pause : Icons.play_arrow,
                           ),
                   ),
+                  IconButton(
+                    key: const Key('podcast_bottom_player_mini_playlist'),
+                    tooltip: l10n?.podcast_player_list ?? 'List',
+                    onPressed: () async {
+                      await ref
+                          .read(podcastQueueControllerProvider.notifier)
+                          .loadQueue();
+                      if (!context.mounted) {
+                        return;
+                      }
+                      await PodcastQueueSheet.show(context);
+                    },
+                    icon: const Icon(Icons.playlist_play),
+                  ),
                   Icon(
                     Icons.keyboard_arrow_up,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -241,20 +255,25 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                           PopupMenuItem(value: 1.5, child: Text('1.5x')),
                           PopupMenuItem(value: 2.0, child: Text('2.0x')),
                         ],
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: theme.colorScheme.outlineVariant,
+                        child: SizedBox(
+                          height: 48,
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: theme.colorScheme.outlineVariant,
+                                ),
+                              ),
+                              child: Text(
+                                '${state.playbackRate}x',
+                                style: theme.textTheme.labelMedium,
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            '${state.playbackRate}x',
-                            style: theme.textTheme.labelMedium,
                           ),
                         ),
                       ),
@@ -336,7 +355,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                       ),
                     ];
 
-                    if (constraints.maxWidth >= 420) {
+                    if (constraints.maxWidth >= 360) {
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: _withSpacing(controls),
@@ -345,6 +364,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
 
                     return Wrap(
                       alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
                       spacing: 8,
                       runSpacing: 8,
                       children: controls,

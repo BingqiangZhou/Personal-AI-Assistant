@@ -550,7 +550,11 @@ class MockAudioPlayerNotifier extends AudioPlayerNotifier {
 
   // Override methods to avoid actual audio player initialization
   @override
-  Future<void> playEpisode(PodcastEpisodeModel episode) async {
+  Future<void> playEpisode(
+    PodcastEpisodeModel episode, {
+    PlaySource source = PlaySource.direct,
+    int? queueEpisodeId,
+  }) async {
     // Do nothing in test
   }
 

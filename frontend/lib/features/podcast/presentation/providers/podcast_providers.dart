@@ -241,6 +241,16 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     _isPlayingEpisode = true;
 
     try {
+      var effectiveSource = source;
+      var effectiveQueueEpisodeId = queueEpisodeId;
+
+      if (source == PlaySource.direct) {
+        final preparedQueue = await _prepareManualPlayQueue(episode.id);
+        if (preparedQueue != null) {
+          effectiveSource = PlaySource.queue;
+          effectiveQueueEpisodeId = episode.id;
+        }
+      }
       logger.AppLogger.debug('🎵 ===== playEpisode called =====');
       logger.AppLogger.debug('🎵 Episode ID: ${episode.id}');
       logger.AppLogger.debug('🎵 Episode Title: ${episode.title}');
@@ -271,9 +281,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         playbackRate: savedPlaybackRate,
         queue: queueSnapshot,
         queueSyncing: queueSyncing,
-        playSource: source,
-        currentQueueEpisodeId: source == PlaySource.queue
-            ? (queueEpisodeId ?? episode.id)
+        playSource: effectiveSource,
+        currentQueueEpisodeId: effectiveSource == PlaySource.queue
+            ? (effectiveQueueEpisodeId ?? episode.id)
             : null,
       );
 
@@ -399,6 +409,37 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           error: 'Failed to play audio: $error',
         );
       }
+    }
+  }
+
+  Future<PodcastQueueModel?> _prepareManualPlayQueue(int episodeId) async {
+    if (_isDisposed || !ref.mounted) {
+      return null;
+    }
+
+    try {
+      final queueController = ref.read(podcastQueueControllerProvider.notifier);
+      var queue = await queueController.addToQueue(episodeId);
+      final orderedEpisodeIds = <int>[
+        episodeId,
+        ...queue.items
+            .map((item) => item.episodeId)
+            .where((id) => id != episodeId),
+      ];
+      final currentOrder = queue.items.map((item) => item.episodeId).toList();
+
+      if (!listEquals(currentOrder, orderedEpisodeIds)) {
+        queue = await queueController.reorderQueue(orderedEpisodeIds);
+      }
+
+      if (queue.currentEpisodeId != episodeId) {
+        queue = await queueController.setCurrentEpisode(episodeId);
+      }
+
+      return queue;
+    } catch (error) {
+      logger.AppLogger.debug('Failed to prepare manual play queue: $error');
+      return null;
     }
   }
 
@@ -655,12 +696,24 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
     }
   }
 
-  Future<PodcastQueueModel> playFromQueue(int episodeId) async {
+  Future<PodcastQueueModel> setCurrentEpisode(int episodeId) async {
     ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
     try {
       final queue = await _repository.setQueueCurrent(episodeId);
       state = AsyncValue.data(queue);
       ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+      return queue;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    } finally {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+    }
+  }
+
+  Future<PodcastQueueModel> playFromQueue(int episodeId) async {
+    try {
+      final queue = await setCurrentEpisode(episodeId);
 
       final current = queue.currentItem;
       if (current != null) {
@@ -676,8 +729,6 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
       rethrow;
-    } finally {
-      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
     }
   }
 

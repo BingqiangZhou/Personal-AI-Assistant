@@ -339,7 +339,11 @@ class MockAudioPlayerNotifier extends AudioPlayerNotifier {
   }
 
   @override
-  Future<void> playEpisode(PodcastEpisodeModel episode) async {
+  Future<void> playEpisode(
+    PodcastEpisodeModel episode, {
+    PlaySource source = PlaySource.direct,
+    int? queueEpisodeId,
+  }) async {
     state = state.copyWith(
       currentEpisode: episode,
       isPlaying: true,

@@ -110,6 +110,7 @@ class _QueueList extends ConsumerWidget {
 
     return ReorderableListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
+      buildDefaultDragHandles: false,
       itemCount: queue.items.length,
       onReorder: (oldIndex, newIndex) async {
         var targetIndex = newIndex;
@@ -135,41 +136,104 @@ class _QueueList extends ConsumerWidget {
       itemBuilder: (context, index) {
         final item = queue.items[index];
         final isCurrent = item.episodeId == currentEpisodeId;
-        return ListTile(
+        final theme = Theme.of(context);
+        return Container(
           key: ValueKey(item.episodeId),
-          leading: CircleAvatar(
-            child: Icon(
-              isCurrent ? Icons.equalizer : Icons.music_note,
-              size: 18,
-            ),
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: isCurrent
+                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.24)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
           ),
-          title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          subtitle: Text(_formatSubtitle(item)),
-          onTap: () async {
-            try {
-              await notifier.playFromQueue(item.episodeId);
-            } catch (error) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Failed to play item: $error')),
-                );
-              }
-            }
-          },
-          trailing: IconButton(
-            tooltip: 'Remove',
-            onPressed: () async {
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () async {
               try {
-                await notifier.removeFromQueue(item.episodeId);
+                await notifier.playFromQueue(item.episodeId);
               } catch (error) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to remove item: $error')),
+                    SnackBar(content: Text('Failed to play item: $error')),
                   );
                 }
               }
             },
-            icon: const Icon(Icons.delete_outline),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: ReorderableDragStartListener(
+                      key: Key('queue_item_drag_${item.episodeId}'),
+                      index: index,
+                      child: Icon(
+                        Icons.drag_indicator,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _QueueItemCover(
+                    item: item,
+                    isCurrent: isCurrent,
+                    size: 44,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          item.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: isCurrent
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatSubtitle(item),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    key: Key('queue_item_remove_${item.episodeId}'),
+                    tooltip: 'Remove',
+                    constraints: const BoxConstraints.tightFor(
+                      width: 40,
+                      height: 40,
+                    ),
+                    padding: EdgeInsets.zero,
+                    onPressed: () async {
+                      try {
+                        await notifier.removeFromQueue(item.episodeId);
+                      } catch (error) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to remove item: $error')),
+                          );
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.delete_outline),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -189,5 +253,82 @@ class _QueueList extends ConsumerWidget {
       return durationText;
     }
     return '$title · $durationText';
+  }
+}
+
+class _QueueItemCover extends StatelessWidget {
+  const _QueueItemCover({
+    required this.item,
+    required this.isCurrent,
+    required this.size,
+  });
+
+  final PodcastQueueItemModel item;
+  final bool isCurrent;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final imageUrl = item.subscriptionImageUrl ?? item.imageUrl;
+
+    return SizedBox(
+      key: Key('queue_item_cover_${item.episodeId}'),
+      width: size,
+      height: size,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: imageUrl != null && imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => _fallback(theme),
+                    )
+                  : _fallback(theme),
+            ),
+          ),
+          if (isCurrent)
+            Positioned(
+              right: -2,
+              bottom: -2,
+              child: Container(
+                key: Key('queue_item_playing_badge_${item.episodeId}'),
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: theme.colorScheme.surface,
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(
+                  Icons.equalizer,
+                  size: 12,
+                  color: theme.colorScheme.onPrimary,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _fallback(ThemeData theme) {
+    return Container(
+      key: Key('queue_item_cover_fallback_${item.episodeId}'),
+      color: theme.colorScheme.primary.withValues(alpha: 0.14),
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.podcasts,
+        color: theme.colorScheme.primary,
+        size: size * 0.52,
+      ),
+    );
   }
 }

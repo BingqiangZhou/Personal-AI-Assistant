@@ -41,6 +41,24 @@ void main() {
       expect(find.text('Test Episode'), findsOneWidget);
     });
 
+    testWidgets('mini player shows playlist button', (tester) async {
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          duration: 180000,
+          position: 25000,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('podcast_bottom_player_mini_playlist')),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('mini player height matches profile menu button height', (
       tester,
     ) async {
@@ -169,6 +187,46 @@ void main() {
     });
 
     testWidgets(
+      'narrow width keeps speed control vertically centered with neighboring controls',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final notifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _testEpisode(),
+            duration: 180000,
+            isExpanded: true,
+          ),
+        );
+
+        await tester.pumpWidget(_createWidget(notifier));
+        await tester.pumpAndSettle();
+
+        final speedRect = tester.getRect(
+          find.byKey(const Key('podcast_bottom_player_speed')),
+        );
+        final rewindRect = tester.getRect(
+          find.byKey(const Key('podcast_bottom_player_rewind_10')),
+        );
+        final playPauseRect = tester.getRect(
+          find.byKey(const Key('podcast_bottom_player_play_pause')),
+        );
+
+        expect(
+          (speedRect.center.dy - rewindRect.center.dy).abs(),
+          lessThanOrEqualTo(1.0),
+        );
+        expect(
+          (speedRect.center.dy - playPauseRect.center.dy).abs(),
+          lessThanOrEqualTo(1.0),
+        );
+      },
+    );
+
+    testWidgets(
       'expanded controls order is speed -> rewind -> play/pause -> forward -> playlist',
       (tester) async {
         tester.view.physicalSize = const Size(1200, 900);
@@ -226,6 +284,30 @@ void main() {
         find.byKey(const Key('podcast_bottom_player_playlist')),
         findsOneWidget,
       );
+    });
+
+    testWidgets('tap mini playlist icon opens queue sheet without expanding', (
+      tester,
+    ) async {
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          duration: 180000,
+          isExpanded: false,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const Key('podcast_bottom_player_mini_playlist')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Playlist'), findsOneWidget);
+      expect(find.text('Queue is empty'), findsOneWidget);
+      expect(notifier.state.isExpanded, isFalse);
     });
 
     testWidgets('tap playlist icon opens queue sheet', (tester) async {
