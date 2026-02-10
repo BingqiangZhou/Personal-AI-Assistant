@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../../data/models/audio_player_state_model.dart';
 import '../constants/playback_speed_options.dart';
@@ -89,28 +90,48 @@ class AudioPlayerWidget extends ConsumerWidget {
           const SizedBox(width: 12),
           // Episode info
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  state.currentEpisode!.title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  state.formattedPosition,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(
+            child: GestureDetector(
+              onTap: () {
+                final episode = state.currentEpisode;
+                if (episode != null) {
+                  final currentLocation = GoRouterState.of(context).uri.toString();
+                  final episodeDetailPath = '/podcast/episodes/${episode.subscriptionId}/${episode.id}';
+                  if (currentLocation.startsWith(episodeDetailPath)) {
+                    ref.read(audioPlayerProvider.notifier).setExpanded(true);
+                  } else {
+                    PodcastNavigation.goToEpisodeDetail(
                       context,
-                    ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                      episodeId: episode.id,
+                      subscriptionId: episode.subscriptionId,
+                      episodeTitle: episode.title,
+                    );
+                  }
+                }
+              },
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    state.currentEpisode!.title,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    '${state.formattedPosition} / ${state.formattedDuration}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           // Play/pause button

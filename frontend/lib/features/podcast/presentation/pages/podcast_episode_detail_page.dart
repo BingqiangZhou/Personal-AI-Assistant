@@ -78,6 +78,8 @@ class _PodcastEpisodeDetailPageState
     // Don't auto-play episode when page loads - user must click play button
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadTranscriptionStatus();
+      // Auto-expand the bottom player when entering the detail page
+      ref.read(audioPlayerProvider.notifier).setExpanded(true);
     });
     // Setup scroll listener for sticky header effect
     _scrollController.addListener(_onScroll);

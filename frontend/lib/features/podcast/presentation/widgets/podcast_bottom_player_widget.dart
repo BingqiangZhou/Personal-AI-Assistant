@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/audio_player_state_model.dart';
 import '../constants/playback_speed_options.dart';
+import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import 'playback_speed_selector_sheet.dart';
 import 'podcast_queue_sheet.dart';
@@ -55,22 +57,42 @@ class _MiniBottomPlayer extends ConsumerWidget {
         key: const Key('podcast_bottom_player_mini'),
         color: theme.colorScheme.surface,
         elevation: isWideLayout ? 0 : 6,
-        child: InkWell(
-          onTap: () => ref.read(audioPlayerProvider.notifier).setExpanded(true),
-          child: SizedBox(
-            height: _miniHeight,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                children: [
-                  _CoverImage(
+        child: SizedBox(
+          height: _miniHeight,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: () => ref.read(audioPlayerProvider.notifier).setExpanded(true),
+                  child: _CoverImage(
                     imageUrl:
                         state.currentEpisode!.subscriptionImageUrl ??
                         state.currentEpisode!.imageUrl,
                     size: 42,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      final episode = state.currentEpisode!;
+                      // Check if already on this episode's detail page
+                      final currentLocation = GoRouterState.of(context).uri.toString();
+                      final episodeDetailPath = '/podcast/episodes/${episode.subscriptionId}/${episode.id}';
+                      if (currentLocation.startsWith(episodeDetailPath)) {
+                        // Already on detail page, just expand the player
+                        ref.read(audioPlayerProvider.notifier).setExpanded(true);
+                      } else {
+                        PodcastNavigation.goToEpisodeDetail(
+                          context,
+                          episodeId: episode.id,
+                          subscriptionId: episode.subscriptionId,
+                          episodeTitle: episode.title,
+                        );
+                      }
+                    },
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,7 +107,7 @@ class _MiniBottomPlayer extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          state.formattedPosition,
+                          '${state.formattedPosition} / ${state.formattedDuration}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -93,49 +115,52 @@ class _MiniBottomPlayer extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    key: const Key('podcast_bottom_player_mini_play_pause'),
-                    tooltip: state.isPlaying
-                        ? (l10n?.podcast_player_pause ?? 'Pause')
-                        : (l10n?.podcast_player_play ?? 'Play'),
-                    onPressed: () async {
-                      if (state.isLoading) return;
-                      if (state.isPlaying) {
-                        await ref.read(audioPlayerProvider.notifier).pause();
-                      } else {
-                        await ref.read(audioPlayerProvider.notifier).resume();
-                      }
-                    },
-                    icon: state.isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Icon(
-                            state.isPlaying ? Icons.pause : Icons.play_arrow,
-                          ),
-                  ),
-                  IconButton(
-                    key: const Key('podcast_bottom_player_mini_playlist'),
-                    tooltip: l10n?.podcast_player_list ?? 'List',
-                    onPressed: () async {
-                      await ref
-                          .read(podcastQueueControllerProvider.notifier)
-                          .loadQueue();
-                      if (!context.mounted) {
-                        return;
-                      }
-                      await PodcastQueueSheet.show(context);
-                    },
-                    icon: const Icon(Icons.playlist_play),
-                  ),
-                  Icon(
+                ),
+                IconButton(
+                  key: const Key('podcast_bottom_player_mini_play_pause'),
+                  tooltip: state.isPlaying
+                      ? (l10n?.podcast_player_pause ?? 'Pause')
+                      : (l10n?.podcast_player_play ?? 'Play'),
+                  onPressed: () async {
+                    if (state.isLoading) return;
+                    if (state.isPlaying) {
+                      await ref.read(audioPlayerProvider.notifier).pause();
+                    } else {
+                      await ref.read(audioPlayerProvider.notifier).resume();
+                    }
+                  },
+                  icon: state.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          state.isPlaying ? Icons.pause : Icons.play_arrow,
+                        ),
+                ),
+                IconButton(
+                  key: const Key('podcast_bottom_player_mini_playlist'),
+                  tooltip: l10n?.podcast_player_list ?? 'List',
+                  onPressed: () async {
+                    await ref
+                        .read(podcastQueueControllerProvider.notifier)
+                        .loadQueue();
+                    if (!context.mounted) {
+                      return;
+                    }
+                    await PodcastQueueSheet.show(context);
+                  },
+                  icon: const Icon(Icons.playlist_play),
+                ),
+                GestureDetector(
+                  onTap: () => ref.read(audioPlayerProvider.notifier).setExpanded(true),
+                  child: Icon(
                     Icons.keyboard_arrow_up,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
