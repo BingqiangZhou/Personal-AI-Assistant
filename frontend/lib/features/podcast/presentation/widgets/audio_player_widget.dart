@@ -8,6 +8,7 @@ import '../providers/podcast_providers.dart';
 import '../../data/models/audio_player_state_model.dart';
 import '../constants/playback_speed_options.dart';
 import 'playback_speed_selector_sheet.dart';
+import 'sleep_timer_selector_sheet.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
 class AudioPlayerWidget extends ConsumerWidget {
@@ -212,7 +213,7 @@ class AudioPlayerWidget extends ConsumerWidget {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            // Header with close button
+            // Header with sleep timer and close button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -220,11 +221,19 @@ class AudioPlayerWidget extends ConsumerWidget {
                   'Now Playing',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
-                IconButton(
-                  onPressed: () {
-                    ref.read(audioPlayerProvider.notifier).setExpanded(false);
-                  },
-                  icon: const Icon(Icons.keyboard_arrow_down),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Sleep timer button
+                    _buildSleepTimerButton(context, ref, state),
+                    const SizedBox(width: 4),
+                    IconButton(
+                      onPressed: () {
+                        ref.read(audioPlayerProvider.notifier).setExpanded(false);
+                      },
+                      icon: const Icon(Icons.keyboard_arrow_down),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -643,6 +652,59 @@ class AudioPlayerWidget extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSleepTimerButton(
+    BuildContext context,
+    WidgetRef ref,
+    AudioPlayerState state,
+  ) {
+    final theme = Theme.of(context);
+    final isActive = state.isSleepTimerActive;
+
+    return IconButton(
+      onPressed: () async {
+        final selection = await showSleepTimerSelectorSheet(
+          context: context,
+          isTimerActive: isActive,
+        );
+        if (selection == null) return;
+        if (!context.mounted) return;
+
+        final notifier = ref.read(audioPlayerProvider.notifier);
+        if (selection.cancel) {
+          notifier.cancelSleepTimer();
+        } else if (selection.afterEpisode) {
+          notifier.setSleepTimerAfterEpisode();
+        } else if (selection.duration != null) {
+          notifier.setSleepTimer(selection.duration!);
+        }
+      },
+      tooltip: '睡眠定时',
+      icon: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isActive ? Icons.nightlight_round : Icons.nightlight_outlined,
+            color: isActive
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+            size: 24,
+          ),
+          if (isActive && state.sleepTimerRemainingLabel != null)
+            Text(
+              state.sleepTimerRemainingLabel!,
+              style: TextStyle(
+                fontSize: 9,
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+                height: 1.0,
+              ),
+            ),
+        ],
       ),
     );
   }

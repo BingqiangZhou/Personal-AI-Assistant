@@ -50,6 +50,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   ProcessingState? _lastProcessingState;
   bool _isHandlingQueueCompletion = false;
   Timer? _syncThrottleTimer;
+  Timer? _sleepTimerTickTimer;
   DateTime? _lastPlaybackSyncAt;
   static const Duration _syncInterval = Duration(seconds: 2);
 
@@ -68,6 +69,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       _positionSubscription?.cancel();
       _durationSubscription?.cancel();
       _syncThrottleTimer?.cancel();
+      _sleepTimerTickTimer?.cancel();
     });
 
     return const AudioPlayerState();
@@ -184,6 +186,13 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     state = state.copyWith(isPlaying: false, position: 0);
     await _updatePlaybackStateOnServer(immediate: true);
 
+    // If sleep timer is set to "after episode", stop here
+    if (state.sleepTimerAfterEpisode) {
+      logger.AppLogger.debug('😴 Sleep timer: stop after episode triggered');
+      cancelSleepTimer();
+      return;
+    }
+
     if (state.playSource != PlaySource.queue || _isHandlingQueueCompletion) {
       return;
     }
@@ -211,7 +220,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         queueEpisodeId: next.episodeId,
       );
     } catch (error) {
-      logger.AppLogger.debug('閴?Failed to advance queue on completion: $error');
+      logger.AppLogger.debug('❌ Failed to advance queue on completion: $error');
     } finally {
       _isHandlingQueueCompletion = false;
     }
@@ -616,6 +625,110 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     if (ref.mounted && !_isDisposed) {
       state = state.copyWith(isExpanded: expanded);
     }
+  }
+
+  // ===== Sleep Timer =====
+
+  void setSleepTimer(Duration duration) {
+    if (_isDisposed || !ref.mounted) return;
+
+    _sleepTimerTickTimer?.cancel();
+
+    final endTime = DateTime.now().add(duration);
+    state = state.copyWith(
+      sleepTimerEndTime: endTime,
+      sleepTimerAfterEpisode: false,
+      sleepTimerRemainingLabel: _formatRemainingTime(duration),
+    );
+
+    logger.AppLogger.debug(
+      '😴 Sleep timer set: ${duration.inMinutes} minutes',
+    );
+
+    _sleepTimerTickTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _onSleepTimerTick(),
+    );
+  }
+
+  void setSleepTimerAfterEpisode() {
+    if (_isDisposed || !ref.mounted) return;
+
+    _sleepTimerTickTimer?.cancel();
+
+    state = state.copyWith(
+      sleepTimerAfterEpisode: true,
+      sleepTimerRemainingLabel: '本集',
+      clearSleepTimer: false,
+    );
+    // Explicitly clear the endTime by using copyWith then overriding
+    state = AudioPlayerState(
+      currentEpisode: state.currentEpisode,
+      queue: state.queue,
+      currentQueueEpisodeId: state.currentQueueEpisodeId,
+      playSource: state.playSource,
+      queueSyncing: state.queueSyncing,
+      isPlaying: state.isPlaying,
+      isLoading: state.isLoading,
+      isExpanded: state.isExpanded,
+      position: state.position,
+      duration: state.duration,
+      playbackRate: state.playbackRate,
+      processingState: state.processingState,
+      error: state.error,
+      sleepTimerEndTime: null,
+      sleepTimerAfterEpisode: true,
+      sleepTimerRemainingLabel: '本集',
+    );
+
+    logger.AppLogger.debug('😴 Sleep timer set: after current episode');
+  }
+
+  void cancelSleepTimer() {
+    if (_isDisposed || !ref.mounted) return;
+
+    _sleepTimerTickTimer?.cancel();
+    _sleepTimerTickTimer = null;
+
+    state = state.copyWith(clearSleepTimer: true);
+
+    logger.AppLogger.debug('😴 Sleep timer cancelled');
+  }
+
+  void _onSleepTimerTick() {
+    if (_isDisposed || !ref.mounted) return;
+
+    final endTime = state.sleepTimerEndTime;
+    if (endTime == null) {
+      _sleepTimerTickTimer?.cancel();
+      _sleepTimerTickTimer = null;
+      return;
+    }
+
+    final remaining = endTime.difference(DateTime.now());
+    if (remaining.isNegative || remaining.inSeconds <= 0) {
+      // Timer expired, pause playback
+      logger.AppLogger.debug('😴 Sleep timer expired, pausing playback');
+      _sleepTimerTickTimer?.cancel();
+      _sleepTimerTickTimer = null;
+      state = state.copyWith(clearSleepTimer: true);
+      pause();
+      return;
+    }
+
+    state = state.copyWith(
+      sleepTimerRemainingLabel: _formatRemainingTime(remaining),
+    );
+  }
+
+  String _formatRemainingTime(Duration d) {
+    final hours = d.inHours;
+    final minutes = d.inMinutes.remainder(60);
+    final seconds = d.inSeconds.remainder(60);
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   Future<void> _updatePlaybackStateOnServer({bool immediate = false}) async {

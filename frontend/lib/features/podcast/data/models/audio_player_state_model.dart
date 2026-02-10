@@ -21,6 +21,9 @@ class AudioPlayerState extends Equatable {
   final double playbackRate;
   final ProcessingState? processingState;
   final String? error;
+  final DateTime? sleepTimerEndTime;
+  final bool sleepTimerAfterEpisode;
+  final String? sleepTimerRemainingLabel;
 
   const AudioPlayerState({
     this.currentEpisode,
@@ -36,6 +39,9 @@ class AudioPlayerState extends Equatable {
     this.playbackRate = 1.0,
     this.processingState,
     this.error,
+    this.sleepTimerEndTime,
+    this.sleepTimerAfterEpisode = false,
+    this.sleepTimerRemainingLabel,
   });
 
   AudioPlayerState copyWith({
@@ -52,8 +58,12 @@ class AudioPlayerState extends Equatable {
     double? playbackRate,
     ProcessingState? processingState,
     String? error,
+    DateTime? sleepTimerEndTime,
+    bool? sleepTimerAfterEpisode,
+    String? sleepTimerRemainingLabel,
     bool clearCurrentEpisode = false,
     bool clearCurrentQueueEpisodeId = false,
+    bool clearSleepTimer = false,
   }) {
     return AudioPlayerState(
       currentEpisode: clearCurrentEpisode
@@ -73,8 +83,20 @@ class AudioPlayerState extends Equatable {
       playbackRate: playbackRate ?? this.playbackRate,
       processingState: processingState ?? this.processingState,
       error: error ?? this.error,
+      sleepTimerEndTime: clearSleepTimer
+          ? null
+          : (sleepTimerEndTime ?? this.sleepTimerEndTime),
+      sleepTimerAfterEpisode: clearSleepTimer
+          ? false
+          : (sleepTimerAfterEpisode ?? this.sleepTimerAfterEpisode),
+      sleepTimerRemainingLabel: clearSleepTimer
+          ? null
+          : (sleepTimerRemainingLabel ?? this.sleepTimerRemainingLabel),
     );
   }
+
+  bool get isSleepTimerActive =>
+      sleepTimerEndTime != null || sleepTimerAfterEpisode;
 
   double get progress {
     if (duration == 0) return 0.0;
@@ -120,5 +142,8 @@ class AudioPlayerState extends Equatable {
     playbackRate,
     processingState,
     error,
+    sleepTimerEndTime,
+    sleepTimerAfterEpisode,
+    sleepTimerRemainingLabel,
   ];
 }

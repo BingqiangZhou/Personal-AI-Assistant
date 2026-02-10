@@ -9,6 +9,7 @@ import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import 'playback_speed_selector_sheet.dart';
 import 'podcast_queue_sheet.dart';
+import 'sleep_timer_selector_sheet.dart';
 
 class PodcastBottomPlayerWidget extends ConsumerWidget {
   const PodcastBottomPlayerWidget({super.key, this.applySafeArea = true});
@@ -211,6 +212,8 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                           .setExpanded(false),
                       icon: const Icon(Icons.keyboard_arrow_down),
                     ),
+                    _buildSleepTimerButton(context, ref, state),
+                    const SizedBox(width: 8),
                     IconButton(
                       tooltip: 'Close',
                       onPressed: () =>
@@ -397,6 +400,60 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+
+  }
+
+  Widget _buildSleepTimerButton(
+    BuildContext context,
+    WidgetRef ref,
+    AudioPlayerState state,
+  ) {
+    final theme = Theme.of(context);
+    final isActive = state.isSleepTimerActive;
+
+    return IconButton(
+      onPressed: () async {
+        final selection = await showSleepTimerSelectorSheet(
+          context: context,
+          isTimerActive: isActive,
+        );
+        if (selection == null) return;
+        if (!context.mounted) return;
+
+        final notifier = ref.read(audioPlayerProvider.notifier);
+        if (selection.cancel) {
+          notifier.cancelSleepTimer();
+        } else if (selection.afterEpisode) {
+          notifier.setSleepTimerAfterEpisode();
+        } else if (selection.duration != null) {
+          notifier.setSleepTimer(selection.duration!);
+        }
+      },
+      tooltip: '睡眠定时',
+      icon: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isActive ? Icons.nightlight_round : Icons.nightlight_outlined,
+            color: isActive
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+            size: 24,
+          ),
+          if (isActive && state.sleepTimerRemainingLabel != null)
+            Text(
+              state.sleepTimerRemainingLabel!,
+              style: TextStyle(
+                fontSize: 9,
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+                height: 1.0,
+              ),
+            ),
+        ],
       ),
     );
   }
