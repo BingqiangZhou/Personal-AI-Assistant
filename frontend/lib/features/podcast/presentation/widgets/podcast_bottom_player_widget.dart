@@ -160,11 +160,13 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
       key: const Key('podcast_bottom_player_expanded'),
       color: theme.colorScheme.surface,
       elevation: 8,
-      child: SizedBox(
-        height: 248,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.45,
+        ),
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 10),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -213,7 +215,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 6),
                 Slider(
                   value: sliderValue,
                   max: maxSlider,
@@ -237,9 +239,9 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                LayoutBuilder(
-                  builder: (context, constraints) {
+                const SizedBox(height: 4),
+                Builder(
+                  builder: (context) {
                     final controls = <Widget>[
                       InkWell(
                         key: const Key('podcast_bottom_player_speed'),
@@ -360,19 +362,9 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                       ),
                     ];
 
-                    if (constraints.maxWidth >= 360) {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: _withSpacing(controls),
-                      );
-                    }
-
-                    return Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: controls,
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: _withSpacing(controls),
                     );
                   },
                 ),
