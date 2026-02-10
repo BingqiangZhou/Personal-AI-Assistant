@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.4.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.4.0...v0.4.1) - 2026-02-10 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.4.1))
+
+### 🚀 Features
+
+- *(localization)* Enhance localization for authentication, podcast, and transcription features ([e634eb2](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e634eb2f3fad357b7b0485b62ce4b39a72d2fefb))
+
+
+
 ## [0.4.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.3.1...v0.4.0) - 2026-02-10 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.4.0))
 
 ### 🚀 Features
