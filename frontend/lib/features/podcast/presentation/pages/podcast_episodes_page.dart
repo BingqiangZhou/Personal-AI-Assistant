@@ -401,22 +401,24 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                               )
                                               .addToQueue(episode.id);
                                           if (context.mounted) {
+                                            final l10n = AppLocalizations.of(context)!;
                                             ScaffoldMessenger.of(
                                               context,
                                             ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text('Added to queue'),
+                                              SnackBar(
+                                                content: Text(l10n.added_to_queue),
                                               ),
                                             );
                                           }
                                         } catch (error) {
                                           if (context.mounted) {
+                                            final l10n = AppLocalizations.of(context)!;
                                             ScaffoldMessenger.of(
                                               context,
                                             ).showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                  'Failed to add to queue: $error',
+                                                  l10n.failed_to_add_to_queue(error.toString()),
                                                 ),
                                               ),
                                             );
@@ -483,8 +485,8 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                           ScaffoldMessenger.of(
                                             context,
                                           ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text('Added to queue'),
+                                            SnackBar(
+                                              content: Text(AppLocalizations.of(context)!.added_to_queue),
                                             ),
                                           );
                                         }
@@ -495,7 +497,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                           ).showSnackBar(
                                             SnackBar(
                                               content: Text(
-                                                'Failed to add to queue: $error',
+                                                AppLocalizations.of(context)!.failed_to_add_to_queue(error.toString()),
                                               ),
                                             ),
                                           );

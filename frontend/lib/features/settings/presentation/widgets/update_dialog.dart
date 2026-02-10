@@ -408,10 +408,11 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           );
         } else if (success && context.mounted) {
           // Download started, close dialog and show message
+          final l10n = AppLocalizations.of(context)!;
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('Downloading in background...'),
+              content: Text(l10n.downloading_in_background),
               duration: const Duration(seconds: 5),
             ),
           );

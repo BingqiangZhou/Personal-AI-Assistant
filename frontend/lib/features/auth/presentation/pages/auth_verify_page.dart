@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../../../../core/app/config/app_config.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 /// Authentication Verification Page - Direct API Testing
 /// This page bypasses complex build issues and tests backend connectivity directly
@@ -200,9 +201,10 @@ class _AuthVerifyPageState extends State<AuthVerifyPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Auth Verification'),
+        title: Text(l10n.auth_verification_title),
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: SingleChildScrollView(

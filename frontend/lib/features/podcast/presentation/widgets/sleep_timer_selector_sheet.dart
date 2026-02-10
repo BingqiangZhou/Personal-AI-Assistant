@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 /// Represents the user's sleep timer selection.
 class SleepTimerSelection {
@@ -39,13 +40,14 @@ const _kSleepTimerPresets = [
   Duration(minutes: 90),
 ];
 
-String _formatPresetDuration(Duration d) {
+String _formatPresetDuration(Duration d, BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
   if (d.inMinutes >= 60) {
     final hours = d.inHours;
     final mins = d.inMinutes.remainder(60);
-    return mins > 0 ? '$hours小时${mins}分钟' : '$hours小时';
+    return mins > 0 ? l10n.player_hours_minutes(hours, mins) : l10n.player_hours(hours);
   }
-  return '${d.inMinutes}分钟';
+  return l10n.player_minutes(d.inMinutes);
 }
 
 /// Shows a bottom sheet for selecting a sleep timer option.
@@ -87,7 +89,7 @@ Future<SleepTimerSelection?> showSleepTimerSelectorSheet({
                   runSpacing: 8,
                   children: _kSleepTimerPresets.map((preset) {
                     return ActionChip(
-                      label: Text(_formatPresetDuration(preset)),
+                      label: Text(_formatPresetDuration(preset, context)),
                       onPressed: () {
                         Navigator.of(context).pop(
                           SleepTimerSelection(duration: preset),
@@ -105,7 +107,7 @@ Future<SleepTimerSelection?> showSleepTimerSelectorSheet({
                     Icons.stop_circle_outlined,
                     color: theme.colorScheme.primary,
                   ),
-                  title: const Text('播放完本集后停止'),
+                  title: Text(AppLocalizations.of(context)!.player_stop_after_episode),
                   onTap: () {
                     Navigator.of(context).pop(
                       const SleepTimerSelection.afterEpisode(),

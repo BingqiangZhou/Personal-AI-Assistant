@@ -70,7 +70,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Title
             Text(
-              'Start Transcription',
+              AppLocalizations.of(context)!.transcription_start_title,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -82,7 +82,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Description
             Text(
-              'Generate full text transcription for this episode\nSupports multi-language and high accuracy',
+              AppLocalizations.of(context)!.transcription_start_desc,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -99,7 +99,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               child: ElevatedButton.icon(
                 onPressed: () => _startTranscriptionWithFeedback(ref, context),
                 icon: const Icon(Icons.play_arrow),
-                label: const Text('Start Transcription'),
+                label: Text(AppLocalizations.of(context)!.transcription_start_button),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -129,7 +129,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      'Or enable auto-transcription in settings',
+                      AppLocalizations.of(context)!.transcription_auto_hint,
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.primary,
@@ -156,7 +156,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(width: 12),
-            const Text('Starting transcription...'),
+            Text(AppLocalizations.of(context)!.transcription_starting),
           ],
         ),
         duration: const Duration(seconds: 2),
@@ -172,7 +172,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('✓ Transcription started successfully'),
+            content: Text(AppLocalizations.of(context)!.transcription_started_success),
             duration: const Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.green,
@@ -183,7 +183,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✗ Failed to start: $e'),
+            content: Text(AppLocalizations.of(context)!.transcription_start_failed(e.toString())),
             duration: const Duration(seconds: 3),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.red,
@@ -238,7 +238,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
                     // Title - 响应式字体大小
                     Text(
-                      'Pending',
+                      AppLocalizations.of(context)!.transcription_pending_title,
                       style: TextStyle(
                         fontSize: titleFontSize,
                         fontWeight: FontWeight.bold,
@@ -250,7 +250,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
                     // Description - 响应式字体大小
                     Text(
-                      'Transcription task has been queued\nProcessing will start shortly',
+                      AppLocalizations.of(context)!.transcription_pending_desc,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: descriptionFontSize,
@@ -335,7 +335,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                                 ),
                               ),
                               Text(
-                                'Complete',
+                                AppLocalizations.of(context)!.transcription_progress_complete,
                                 style: TextStyle(
                                   fontSize: labelFontSize,
                                   color: Colors.blue.withValues(alpha: 0.8),
@@ -448,7 +448,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                             ),
                             SizedBox(width: isSmallScreen ? 3 : 4),
                             Text(
-                              'Duration: ${_formatDuration(transcription.durationSeconds!)}',
+                              AppLocalizations.of(context)!.transcription_duration_label(_formatDuration(transcription.durationSeconds!)),
                               style: TextStyle(
                                 fontSize: isSmallScreen ? 11 : 12,
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -465,7 +465,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                             ),
                             SizedBox(width: isSmallScreen ? 3 : 4),
                             Text(
-                              '~${(transcription.wordCount! / 1000).toStringAsFixed(1)}K words',
+                              AppLocalizations.of(context)!.transcription_words_label((transcription.wordCount! / 1000).toStringAsFixed(1)),
                               style: TextStyle(
                                 fontSize: isSmallScreen ? 11 : 12,
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -486,12 +486,13 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   }
 
   Widget _buildStepIndicators(BuildContext context, PodcastTranscriptionResponse transcription) {
+    final l10n = AppLocalizations.of(context)!;
     final steps = [
-      {'icon': Icons.download, 'label': 'Download', 'status': _getStepStatus(transcription, 0)},
-      {'icon': Icons.transform, 'label': 'Convert', 'status': _getStepStatus(transcription, 1)},
-      {'icon': Icons.content_cut, 'label': 'Split', 'status': _getStepStatus(transcription, 2)},
-      {'icon': Icons.transcribe, 'label': 'Transcribe', 'status': _getStepStatus(transcription, 3)},
-      {'icon': Icons.merge_type, 'label': 'Merge', 'status': _getStepStatus(transcription, 4)},
+      {'icon': Icons.download, 'label': l10n.transcription_step_download, 'status': _getStepStatus(transcription, 0)},
+      {'icon': Icons.transform, 'label': l10n.transcription_step_convert, 'status': _getStepStatus(transcription, 1)},
+      {'icon': Icons.content_cut, 'label': l10n.transcription_step_split, 'status': _getStepStatus(transcription, 2)},
+      {'icon': Icons.transcribe, 'label': l10n.transcription_step_transcribe, 'status': _getStepStatus(transcription, 3)},
+      {'icon': Icons.merge_type, 'label': l10n.transcription_step_merge, 'status': _getStepStatus(transcription, 4)},
     ];
 
     return Row(
@@ -701,7 +702,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Title
             Text(
-              'Transcription Complete',
+              AppLocalizations.of(context)!.transcription_complete_title,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -713,7 +714,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Description
             Text(
-              'Transcript generated successfully\nYou can now read and search the content',
+              AppLocalizations.of(context)!.transcription_complete_desc,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -742,19 +743,19 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                       _buildStatItem(
                         context,
                         '${(wordCount / 1000).toStringAsFixed(1)}K',
-                        'Words',
+                        AppLocalizations.of(context)!.transcription_stat_words,
                         Icons.text_fields,
                       ),
                       _buildStatItem(
                         context,
                         _formatDuration(duration),
-                        'Duration',
+                        AppLocalizations.of(context)!.transcription_stat_duration,
                         Icons.schedule,
                       ),
                       _buildStatItem(
                         context,
                         _formatAccuracy(null),
-                        'Accuracy',
+                        AppLocalizations.of(context)!.transcription_stat_accuracy,
                         Icons.speed,
                       ),
                     ],
@@ -766,7 +767,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
             if (completedAt != null) ...[
               const SizedBox(height: 8),
               Text(
-                'Completed at: ${_formatDateTime(completedAt)}',
+                AppLocalizations.of(context)!.transcription_completed_at(_formatDateTime(completedAt)),
                 style: TextStyle(
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -801,7 +802,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _viewTranscription(ref),
                     icon: const Icon(Icons.visibility),
-                    label: const Text('View Transcript'),
+                    label: Text(AppLocalizations.of(context)!.transcription_view_button),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -819,9 +820,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   }
 
   Widget _buildFailedState(BuildContext context, PodcastTranscriptionResponse transcription, WidgetRef ref) {
-    final errorMessage = transcription.errorMessage ?? '未知错误';
-    final friendlyMessage = _getFriendlyErrorMessage(errorMessage);
-    final suggestion = _getErrorSuggestion(errorMessage);
+    final errorMessage = transcription.errorMessage ?? AppLocalizations.of(context)!.transcription_unknown_error;
+    final friendlyMessage = _getFriendlyErrorMessage(context, errorMessage);
+    final suggestion = _getErrorSuggestion(context, errorMessage);
 
     return Card(
       elevation: 0,
@@ -856,7 +857,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
             // Title
             Text(
-              'Transcription Failed',
+              AppLocalizations.of(context)!.transcription_failed_title,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -917,7 +918,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: Text(
-                  'Technical Details',
+                  AppLocalizations.of(context)!.transcription_technical_details,
                   style: TextStyle(
                     fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -966,7 +967,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _retryTranscription(ref),
                     icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
+                    label: Text(AppLocalizations.of(context)!.transcription_retry_button),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -985,51 +986,51 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     );
   }
 
-  String _getFriendlyErrorMessage(String error) {
+  String _getFriendlyErrorMessage(BuildContext context, String error) {
     final lowerError = error.toLowerCase();
 
     if (lowerError.contains('already in progress') || lowerError.contains('already exists') || lowerError.contains('locked')) {
-      return 'Transcription already in progress';
+      return AppLocalizations.of(context)!.transcription_error_already_progress;
     }
     if (lowerError.contains('network') || lowerError.contains('connection') || lowerError.contains('timeout')) {
-      return 'Network connection failed';
+      return AppLocalizations.of(context)!.transcription_error_network;
     }
     if (lowerError.contains('audio') || lowerError.contains('download')) {
-      return 'Failed to download audio';
+      return AppLocalizations.of(context)!.transcription_error_audio_download;
     }
     if (lowerError.contains('api') || lowerError.contains('transcription')) {
-      return 'Transcription service error';
+      return AppLocalizations.of(context)!.transcription_error_service;
     }
     if (lowerError.contains('format') || lowerError.contains('convert')) {
-      return 'Audio format conversion failed';
+      return AppLocalizations.of(context)!.transcription_error_format;
     }
     if (lowerError.contains('server restart')) {
-      return 'Service was restarted';
+      return AppLocalizations.of(context)!.transcription_error_server_restart;
     }
 
-    return 'Transcription failed';
+    return AppLocalizations.of(context)!.transcription_error_generic;
   }
 
-  String _getErrorSuggestion(String error) {
+  String _getErrorSuggestion(BuildContext context, String error) {
     final lowerError = error.toLowerCase();
 
     if (lowerError.contains('network') || lowerError.contains('connection') || lowerError.contains('timeout')) {
-      return 'Check your internet connection and try again';
+      return AppLocalizations.of(context)!.transcription_suggest_network;
     }
     if (lowerError.contains('audio') || lowerError.contains('download')) {
-      return 'The audio file may be unavailable. Try again later';
+      return AppLocalizations.of(context)!.transcription_suggest_audio;
     }
     if (lowerError.contains('api') || lowerError.contains('transcription')) {
-      return 'The transcription service may be busy. Retry in a moment';
+      return AppLocalizations.of(context)!.transcription_suggest_service;
     }
     if (lowerError.contains('format') || lowerError.contains('convert')) {
-      return 'The audio format may not be supported. Try a different episode';
+      return AppLocalizations.of(context)!.transcription_suggest_format;
     }
     if (lowerError.contains('server restart')) {
-      return 'Click Retry to start a new transcription task';
+      return AppLocalizations.of(context)!.transcription_suggest_restart;
     }
 
-    return 'Try clicking Retry to start over';
+    return AppLocalizations.of(context)!.transcription_suggest_generic;
   }
 
   Widget _buildStatItem(BuildContext context, String value, String label, IconData icon) {

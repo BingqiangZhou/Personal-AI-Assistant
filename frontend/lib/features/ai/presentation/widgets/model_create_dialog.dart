@@ -221,7 +221,7 @@ class _ModelCreateDialogState extends ConsumerState<ModelCreateDialog> {
                 ),
                 ButtonSegment<AIModelType>(
                   value: AIModelType.textGeneration,
-                  label: Text('Text Gen'),
+                  label: Text(l10n.text_gen_label),
                   icon: const Icon(Icons.auto_awesome),
                 ),
               ],

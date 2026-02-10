@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants/playback_speed_options.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class PlaybackSpeedSelection {
   final double speed;
@@ -85,7 +86,7 @@ Future<PlaybackSpeedSelection?> showPlaybackSpeedSelectorSheet({
                             ),
                           );
                         },
-                        child: const Text('Apply'),
+                        child: Text(AppLocalizations.of(context)!.apply_button),
                       ),
                     ),
                   ],

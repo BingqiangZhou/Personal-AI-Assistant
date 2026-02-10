@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class FeedErrorWidget extends StatelessWidget {
   final String error;
@@ -13,6 +14,7 @@ class FeedErrorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Container(
         padding: const EdgeInsets.all(32),
@@ -46,7 +48,7 @@ class FeedErrorWidget extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Failed to Load Feed',
+              l10n.feed_load_failed_title,
               style: theme.textTheme.headlineSmall?.copyWith(
                 color: theme.colorScheme.onErrorContainer,
                 fontWeight: FontWeight.bold,
@@ -91,7 +93,7 @@ class FeedErrorWidget extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: Text(l10n.retry_button_short),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   foregroundColor: theme.colorScheme.onError,

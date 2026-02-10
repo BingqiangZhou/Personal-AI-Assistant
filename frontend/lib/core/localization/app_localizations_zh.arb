@@ -3065,39 +3065,9 @@
     "description": "无转录内容时的提示"
   },
 
-  "podcast_advanced_options": "高级选项",
-  "@podcast_advanced_options": {
-    "description": "高级选项按钮"
-  },
-
-  "podcast_regenerate": "重新生成",
-  "@podcast_regenerate": {
-    "description": "重新生成摘要按钮"
-  },
-
-  "podcast_ai_model": "AI模型",
-  "@podcast_ai_model": {
-    "description": "模型选择器标签"
-  },
-
   "podcast_default_model": "默认",
   "@podcast_default_model": {
     "description": "默认模型标记"
-  },
-
-  "podcast_custom_prompt": "自定义提示词（可选）",
-  "@podcast_custom_prompt": {
-    "description": "提示词输入框标签"
-  },
-
-  "podcast_custom_prompt_hint": "例如：重点关注技术要点...",
-  "@podcast_custom_prompt_hint": {
-    "description": "提示词占位符"
-  },
-
-  "podcast_generating_summary": "正在生成AI摘要...",
-  "@podcast_generating_summary": {
-    "description": "生成摘要加载状态文本"
   },
 
   "podcast_summary_chars": "字符",
@@ -3163,5 +3133,688 @@
         "type": "int"
       }
     }
+  },
+
+  "transcription_start_title": "开始转录",
+  "@transcription_start_title": {
+    "description": "开始转录状态标题"
+  },
+
+  "transcription_start_desc": "为本集生成完整文字转录\n支持多语言和高精度",
+  "@transcription_start_desc": {
+    "description": "开始转录状态描述"
+  },
+
+  "transcription_start_button": "开始转录",
+  "@transcription_start_button": {
+    "description": "开始转录按钮文本"
+  },
+
+  "transcription_auto_hint": "或在设置中启用自动转录",
+  "@transcription_auto_hint": {
+    "description": "自动转录设置提示"
+  },
+
+  "transcription_starting": "正在启动转录...",
+  "@transcription_starting": {
+    "description": "启动转录时的提示"
+  },
+
+  "transcription_started_success": "✓ 转录已成功启动",
+  "@transcription_started_success": {
+    "description": "启动成功提示"
+  },
+
+  "transcription_start_failed": "✗ 启动失败：{error}",
+  "@transcription_start_failed": {
+    "description": "启动转录失败提示",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "transcription_pending_title": "等待中",
+  "@transcription_pending_title": {
+    "description": "等待中转录状态标题"
+  },
+
+  "transcription_pending_desc": "转录任务已加入队列\n即将开始处理",
+  "@transcription_pending_desc": {
+    "description": "等待中转录状态描述"
+  },
+
+  "transcription_progress_complete": "完成",
+  "@transcription_progress_complete": {
+    "description": "进度环中百分比下方的标签"
+  },
+
+  "transcription_duration_label": "时长：{duration}",
+  "@transcription_duration_label": {
+    "description": "处理状态中的时长标签",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+
+  "transcription_words_label": "约{count}K字",
+  "@transcription_words_label": {
+    "description": "处理状态中的字数标签",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+
+  "transcription_step_download": "下载",
+  "@transcription_step_download": {
+    "description": "下载步骤标签"
+  },
+
+  "transcription_step_convert": "转换",
+  "@transcription_step_convert": {
+    "description": "转换步骤标签"
+  },
+
+  "transcription_step_split": "分割",
+  "@transcription_step_split": {
+    "description": "分割步骤标签"
+  },
+
+  "transcription_step_transcribe": "转录",
+  "@transcription_step_transcribe": {
+    "description": "转录步骤标签"
+  },
+
+  "transcription_step_merge": "合并",
+  "@transcription_step_merge": {
+    "description": "合并步骤标签"
+  },
+
+  "transcription_complete_title": "转录完成",
+  "@transcription_complete_title": {
+    "description": "转录完成状态标题"
+  },
+
+  "transcription_complete_desc": "转录文本已成功生成\n您现在可以阅读和搜索内容",
+  "@transcription_complete_desc": {
+    "description": "转录完成状态描述"
+  },
+
+  "transcription_stat_words": "字数",
+  "@transcription_stat_words": {
+    "description": "字数统计标签"
+  },
+
+  "transcription_stat_duration": "时长",
+  "@transcription_stat_duration": {
+    "description": "时长统计标签"
+  },
+
+  "transcription_stat_accuracy": "准确率",
+  "@transcription_stat_accuracy": {
+    "description": "准确率统计标签"
+  },
+
+  "transcription_completed_at": "完成时间：{time}",
+  "@transcription_completed_at": {
+    "description": "完成时间标签",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
+  "transcription_view_button": "查看转录",
+  "@transcription_view_button": {
+    "description": "查看转录按钮"
+  },
+
+  "transcription_failed_title": "转录失败",
+  "@transcription_failed_title": {
+    "description": "转录失败状态标题"
+  },
+
+  "transcription_unknown_error": "未知错误",
+  "@transcription_unknown_error": {
+    "description": "默认错误信息"
+  },
+
+  "transcription_technical_details": "技术详情",
+  "@transcription_technical_details": {
+    "description": "错误详情展开区域"
+  },
+
+  "transcription_retry_button": "重试",
+  "@transcription_retry_button": {
+    "description": "重试转录按钮"
+  },
+
+  "transcription_error_already_progress": "转录正在进行中",
+  "@transcription_error_already_progress": {
+    "description": "转录已在运行时的错误文本"
+  },
+
+  "transcription_error_network": "网络连接失败",
+  "@transcription_error_network": {
+    "description": "网络错误消息"
+  },
+
+  "transcription_error_audio_download": "音频下载失败",
+  "@transcription_error_audio_download": {
+    "description": "音频下载错误"
+  },
+
+  "transcription_error_service": "转录服务错误",
+  "@transcription_error_service": {
+    "description": "服务错误"
+  },
+
+  "transcription_error_format": "音频格式转换失败",
+  "@transcription_error_format": {
+    "description": "格式转换错误"
+  },
+
+  "transcription_error_server_restart": "服务已重启",
+  "@transcription_error_server_restart": {
+    "description": "服务器重启错误"
+  },
+
+  "transcription_error_generic": "转录失败",
+  "@transcription_error_generic": {
+    "description": "通用转录失败"
+  },
+
+  "transcription_suggest_network": "请检查您的网络连接后重试",
+  "@transcription_suggest_network": {
+    "description": "网络错误建议"
+  },
+
+  "transcription_suggest_audio": "音频文件可能暂时不可用，请稍后重试",
+  "@transcription_suggest_audio": {
+    "description": "音频错误建议"
+  },
+
+  "transcription_suggest_service": "转录服务可能正忙，请稍后重试",
+  "@transcription_suggest_service": {
+    "description": "服务错误建议"
+  },
+
+  "transcription_suggest_format": "该音频格式可能不支持，请尝试其他集数",
+  "@transcription_suggest_format": {
+    "description": "格式错误建议"
+  },
+
+  "transcription_suggest_restart": "点击重试以启动新的转录任务",
+  "@transcription_suggest_restart": {
+    "description": "服务器重启建议"
+  },
+
+  "transcription_suggest_generic": "请尝试点击重试重新开始",
+  "@transcription_suggest_generic": {
+    "description": "通用错误建议"
+  },
+
+  "player_playback_speed_title": "播放倍速",
+  "@player_playback_speed_title": {
+    "description": "播放倍速区域标题"
+  },
+
+  "player_apply_subscription_only": "仅应用于当前订阅",
+  "@player_apply_subscription_only": {
+    "description": "仅当前订阅的复选框标签"
+  },
+
+  "player_apply_subscription_subtitle": "选中：仅当前订阅；未选中：全局默认",
+  "@player_apply_subscription_subtitle": {
+    "description": "订阅复选框副标题"
+  },
+
+  "player_sleep_timer_title": "睡眠定时",
+  "@player_sleep_timer_title": {
+    "description": "睡眠定时区域标题"
+  },
+
+  "player_sleep_timer_desc": "设置定时后，播放将在指定时间自动暂停",
+  "@player_sleep_timer_desc": {
+    "description": "睡眠定时描述"
+  },
+
+  "player_stop_after_episode": "播放完本集后停止",
+  "@player_stop_after_episode": {
+    "description": "当前集播放完后停止选项"
+  },
+
+  "player_cancel_timer": "取消定时",
+  "@player_cancel_timer": {
+    "description": "取消睡眠定时按钮"
+  },
+
+  "player_minutes": "{count}分钟",
+  "@player_minutes": {
+    "description": "分钟时长",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "player_hours_minutes": "{hours}小时{minutes}分钟",
+  "@player_hours_minutes": {
+    "description": "小时和分钟时长",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+
+  "player_hours": "{count}小时",
+  "@player_hours": {
+    "description": "仅小时时长",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "global_rss_failed_load": "加载失败",
+  "@global_rss_failed_load": {
+    "description": "加载失败错误标题"
+  },
+
+  "global_rss_retry": "重试",
+  "@global_rss_retry": {
+    "description": "重试按钮文本"
+  },
+
+  "global_rss_affected_count": "受影响的订阅 ({count})",
+  "@global_rss_affected_count": {
+    "description": "显示受影响订阅数量的区域标题",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "global_rss_no_subscriptions": "暂无RSS订阅",
+  "@global_rss_no_subscriptions": {
+    "description": "空状态文本"
+  },
+
+  "global_rss_schedule_title": "所有RSS订阅的更新计划",
+  "@global_rss_schedule_title": {
+    "description": "全局RSS计划卡片标题"
+  },
+
+  "global_rss_apply_desc": "这将应用于所有 {count} 个订阅",
+  "@global_rss_apply_desc": {
+    "description": "全局应用范围描述",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "global_rss_update_frequency": "更新频率",
+  "@global_rss_update_frequency": {
+    "description": "频率选择器标签"
+  },
+
+  "global_rss_hourly": "每小时",
+  "@global_rss_hourly": {
+    "description": "每小时频率选项"
+  },
+
+  "global_rss_daily": "每天",
+  "@global_rss_daily": {
+    "description": "每天频率选项"
+  },
+
+  "global_rss_weekly": "每周",
+  "@global_rss_weekly": {
+    "description": "每周频率选项"
+  },
+
+  "global_rss_update_time": "更新时间",
+  "@global_rss_update_time": {
+    "description": "时间选择器标签"
+  },
+
+  "global_rss_select_time": "选择时间",
+  "@global_rss_select_time": {
+    "description": "时间选择器提示文本"
+  },
+
+  "global_rss_select_time_button": "选择时间",
+  "@global_rss_select_time_button": {
+    "description": "时间选择器按钮文本"
+  },
+
+  "global_rss_day_of_week": "星期",
+  "@global_rss_day_of_week": {
+    "description": "星期选择器标签"
+  },
+
+  "global_rss_mon": "一",
+  "@global_rss_mon": {
+    "description": "星期一缩写"
+  },
+
+  "global_rss_tue": "二",
+  "@global_rss_tue": {
+    "description": "星期二缩写"
+  },
+
+  "global_rss_wed": "三",
+  "@global_rss_wed": {
+    "description": "星期三缩写"
+  },
+
+  "global_rss_thu": "四",
+  "@global_rss_thu": {
+    "description": "星期四缩写"
+  },
+
+  "global_rss_fri": "五",
+  "@global_rss_fri": {
+    "description": "星期五缩写"
+  },
+
+  "global_rss_sat": "六",
+  "@global_rss_sat": {
+    "description": "星期六缩写"
+  },
+
+  "global_rss_sun": "日",
+  "@global_rss_sun": {
+    "description": "星期日缩写"
+  },
+
+  "global_rss_applying": "正在应用...",
+  "@global_rss_applying": {
+    "description": "应用中的按钮文本"
+  },
+
+  "global_rss_apply_all": "应用到所有订阅",
+  "@global_rss_apply_all": {
+    "description": "应用到所有按钮文本"
+  },
+
+  "global_rss_current_label": "当前：{value}",
+  "@global_rss_current_label": {
+    "description": "当前计划标签",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+
+  "global_rss_next_label": "下次：{value}",
+  "@global_rss_next_label": {
+    "description": "下次更新标签",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+
+  "global_rss_failed_update": "更新订阅失败",
+  "@global_rss_failed_update": {
+    "description": "更新失败错误消息"
+  },
+
+  "playback_speed_title": "播放速度",
+  "@playback_speed_title": {
+    "description": "播放速度选择器标题"
+  },
+
+  "podcast_notification_channel": "播客播放",
+  "@podcast_notification_channel": {
+    "description": "播客播放的Android通知渠道名称"
+  },
+
+  "page_not_found": "页面未找到",
+  "@page_not_found": {
+    "description": "页面未找到错误标题"
+  },
+
+  "page_not_found_subtitle": "请从导航中选择有效的标签页",
+  "@page_not_found_subtitle": {
+    "description": "页面未找到错误消息"
+  },
+
+  "error_prefix": "错误：{error}",
+  "@error_prefix": {
+    "description": "通用错误消息前缀",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "downloading_in_background": "正在后台下载...",
+  "@downloading_in_background": {
+    "description": "在后台下载更新时显示的消息"
+  },
+
+  "version_label": "版本：{version}",
+  "@version_label": {
+    "description": "版本标签（带占位符）",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+
+  "build_label": "构建：{build}",
+  "@build_label": {
+    "description": "构建标签（带占位符）",
+    "placeholders": {
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+
+  "added_to_queue": "已添加到播放队列",
+  "@added_to_queue": {
+    "description": "将项目添加到队列时显示的消息"
+  },
+
+  "failed_to_add_to_queue": "添加到队列失败：{error}",
+  "@failed_to_add_to_queue": {
+    "description": "添加到队列失败时的错误消息",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "play_button_short": "播放",
+  "@play_button_short": {
+    "description": "卡片上使用的简短播放按钮标签"
+  },
+
+  "retry_button_short": "重试",
+  "@retry_button_short": {
+    "description": "简短的重试按钮标签"
+  },
+
+  "error_opening_link": "打开链接时出错：{error}",
+  "@error_opening_link": {
+    "description": "打开链接失败时的错误消息",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "queue_is_empty": "播放队列为空",
+  "@queue_is_empty": {
+    "description": "队列为空时显示的消息"
+  },
+
+  "failed_to_load_queue": "加载队列失败：{error}",
+  "@failed_to_load_queue": {
+    "description": "加载队列失败时的错误消息",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "failed_to_reorder_queue": "重新排序队列失败：{error}",
+  "@failed_to_reorder_queue": {
+    "description": "重新排序队列失败时的错误消息",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "failed_to_play_item": "播放项目失败：{error}",
+  "@failed_to_play_item": {
+    "description": "播放项目失败时的错误消息",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "failed_to_remove_item": "移除项目失败：{error}",
+  "@failed_to_remove_item": {
+    "description": "移除项目失败时的错误消息",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "apply_button": "应用",
+  "@apply_button": {
+    "description": "通用应用按钮标签"
+  },
+
+  "auth_test_page_title": "身份验证测试",
+  "@auth_test_page_title": {
+    "description": "身份验证测试页面标题"
+  },
+
+  "email_label": "邮箱：{email}",
+  "@email_label": {
+    "description": "邮箱标签（带值）",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+
+  "username_label": "用户名：{username}",
+  "@username_label": {
+    "description": "用户名标签（带值）",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+
+  "display_name_label": "显示名称：{displayName}",
+  "@display_name_label": {
+    "description": "显示名称标签（带值）",
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "verified_label": "已验证：{isVerified}",
+  "@verified_label": {
+    "description": "已验证标签（带值）",
+    "placeholders": {
+      "isVerified": {
+        "type": "String"
+      }
+    }
+  },
+
+  "user_not_logged_in": "用户：未登录",
+  "@user_not_logged_in": {
+    "description": "用户未登录时显示的消息"
+  },
+
+  "current_operation_label": "当前操作：{operation}",
+  "@current_operation_label": {
+    "description": "当前操作标签（带值）",
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+
+  "login_button_short": "登录",
+  "@login_button_short": {
+    "description": "简短登录按钮标签"
+  },
+
+  "register_button_short": "注册",
+  "@register_button_short": {
+    "description": "简短注册按钮标签"
+  },
+
+  "base_url_label": "基础 URL：{url}",
+  "@base_url_label": {
+    "description": "基础 URL 标签（带值）",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+
+  "endpoints_label": "API 端点：",
+  "@endpoints_label": {
+    "description": "端点标签"
+  },
+
+  "auth_verification_title": "身份验证",
+  "@auth_verification_title": {
+    "description": "身份验证页面标题"
+  },
+
+  "text_gen_label": "文本生成",
+  "@text_gen_label": {
+    "description": "文本生成模型类型标签（简短）"
+  },
+
+  "feed_load_failed_title": "加载信息流失败",
+  "@feed_load_failed_title": {
+    "description": "加载信息流失败时的错误标题"
   }
 }

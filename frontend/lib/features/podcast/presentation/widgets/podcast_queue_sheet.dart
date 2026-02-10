@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/podcast_queue_model.dart';
 import '../providers/podcast_providers.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class PodcastQueueSheet extends ConsumerWidget {
   const PodcastQueueSheet({super.key});
@@ -18,6 +19,7 @@ class PodcastQueueSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final queueAsync = ref.watch(podcastQueueControllerProvider);
     final notifier = ref.read(podcastQueueControllerProvider.notifier);
 
@@ -27,14 +29,14 @@ class PodcastQueueSheet extends ConsumerWidget {
         data: (queue) {
           if (queue.items.isEmpty) {
             return _QueueScaffold(
-              title: 'Playlist',
+              title: l10n.podcast_rss_list,
               onRefresh: () => notifier.loadQueue(),
-              child: const Center(child: Text('Queue is empty')),
+              child: Center(child: Text(l10n.queue_is_empty)),
             );
           }
 
           return _QueueScaffold(
-            title: 'Playlist',
+            title: l10n.podcast_rss_list,
             onRefresh: () => notifier.loadQueue(),
             child: _QueueList(queue: queue),
           );
@@ -42,9 +44,9 @@ class PodcastQueueSheet extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) {
           return _QueueScaffold(
-            title: 'Playlist',
+            title: l10n.podcast_rss_list,
             onRefresh: () => notifier.loadQueue(),
-            child: Center(child: Text('Failed to load queue: $error')),
+            child: Center(child: Text(l10n.failed_to_load_queue(error.toString()))),
           );
         },
       ),
@@ -127,8 +129,9 @@ class _QueueList extends ConsumerWidget {
           await notifier.reorderQueue(orderedIds);
         } catch (error) {
           if (context.mounted) {
+            final l10n = AppLocalizations.of(context)!;
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Failed to reorder queue: $error')),
+              SnackBar(content: Text(l10n.failed_to_reorder_queue(error.toString()))),
             );
           }
         }
@@ -153,8 +156,9 @@ class _QueueList extends ConsumerWidget {
                 await notifier.playFromQueue(item.episodeId);
               } catch (error) {
                 if (context.mounted) {
+                  final l10n = AppLocalizations.of(context)!;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to play item: $error')),
+                    SnackBar(content: Text(l10n.failed_to_play_item(error.toString()))),
                   );
                 }
               }
@@ -212,7 +216,7 @@ class _QueueList extends ConsumerWidget {
                   const SizedBox(width: 8),
                   IconButton(
                     key: Key('queue_item_remove_${item.episodeId}'),
-                    tooltip: 'Remove',
+                    tooltip: AppLocalizations.of(context)!.delete,
                     constraints: const BoxConstraints.tightFor(
                       width: 40,
                       height: 40,
@@ -223,8 +227,9 @@ class _QueueList extends ConsumerWidget {
                         await notifier.removeFromQueue(item.episodeId);
                       } catch (error) {
                         if (context.mounted) {
+                          final l10n = AppLocalizations.of(context)!;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to remove item: $error')),
+                            SnackBar(content: Text(l10n.failed_to_remove_item(error.toString()))),
                           );
                         }
                       }

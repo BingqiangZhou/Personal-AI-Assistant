@@ -1879,4 +1879,386 @@ class AppLocalizationsZh extends AppLocalizations {
   String podcast_transcript_match(int index) {
     return '第 $index 个匹配';
   }
+
+  @override
+  String get transcription_start_title => '开始转录';
+
+  @override
+  String get transcription_start_desc => '为本集生成完整文字转录\n支持多语言和高精度';
+
+  @override
+  String get transcription_start_button => '开始转录';
+
+  @override
+  String get transcription_auto_hint => '或在设置中启用自动转录';
+
+  @override
+  String get transcription_starting => '正在启动转录...';
+
+  @override
+  String get transcription_started_success => '✓ 转录已成功启动';
+
+  @override
+  String transcription_start_failed(String error) {
+    return '✗ 启动失败：$error';
+  }
+
+  @override
+  String get transcription_pending_title => '等待中';
+
+  @override
+  String get transcription_pending_desc => '转录任务已加入队列\n即将开始处理';
+
+  @override
+  String get transcription_progress_complete => '完成';
+
+  @override
+  String transcription_duration_label(String duration) {
+    return '时长：$duration';
+  }
+
+  @override
+  String transcription_words_label(String count) {
+    return '约${count}K字';
+  }
+
+  @override
+  String get transcription_step_download => '下载';
+
+  @override
+  String get transcription_step_convert => '转换';
+
+  @override
+  String get transcription_step_split => '分割';
+
+  @override
+  String get transcription_step_transcribe => '转录';
+
+  @override
+  String get transcription_step_merge => '合并';
+
+  @override
+  String get transcription_complete_title => '转录完成';
+
+  @override
+  String get transcription_complete_desc => '转录文本已成功生成\n您现在可以阅读和搜索内容';
+
+  @override
+  String get transcription_stat_words => '字数';
+
+  @override
+  String get transcription_stat_duration => '时长';
+
+  @override
+  String get transcription_stat_accuracy => '准确率';
+
+  @override
+  String transcription_completed_at(String time) {
+    return '完成时间：$time';
+  }
+
+  @override
+  String get transcription_view_button => '查看转录';
+
+  @override
+  String get transcription_failed_title => '转录失败';
+
+  @override
+  String get transcription_unknown_error => '未知错误';
+
+  @override
+  String get transcription_technical_details => '技术详情';
+
+  @override
+  String get transcription_retry_button => '重试';
+
+  @override
+  String get transcription_error_already_progress => '转录正在进行中';
+
+  @override
+  String get transcription_error_network => '网络连接失败';
+
+  @override
+  String get transcription_error_audio_download => '音频下载失败';
+
+  @override
+  String get transcription_error_service => '转录服务错误';
+
+  @override
+  String get transcription_error_format => '音频格式转换失败';
+
+  @override
+  String get transcription_error_server_restart => '服务已重启';
+
+  @override
+  String get transcription_error_generic => '转录失败';
+
+  @override
+  String get transcription_suggest_network => '请检查您的网络连接后重试';
+
+  @override
+  String get transcription_suggest_audio => '音频文件可能暂时不可用，请稍后重试';
+
+  @override
+  String get transcription_suggest_service => '转录服务可能正忙，请稍后重试';
+
+  @override
+  String get transcription_suggest_format => '该音频格式可能不支持，请尝试其他集数';
+
+  @override
+  String get transcription_suggest_restart => '点击重试以启动新的转录任务';
+
+  @override
+  String get transcription_suggest_generic => '请尝试点击重试重新开始';
+
+  @override
+  String get player_playback_speed_title => '播放倍速';
+
+  @override
+  String get player_apply_subscription_only => '仅应用于当前订阅';
+
+  @override
+  String get player_apply_subscription_subtitle => '选中：仅当前订阅；未选中：全局默认';
+
+  @override
+  String get player_sleep_timer_title => '睡眠定时';
+
+  @override
+  String get player_sleep_timer_desc => '设置定时后，播放将在指定时间自动暂停';
+
+  @override
+  String get player_stop_after_episode => '播放完本集后停止';
+
+  @override
+  String get player_cancel_timer => '取消定时';
+
+  @override
+  String player_minutes(int count) {
+    return '$count分钟';
+  }
+
+  @override
+  String player_hours_minutes(int hours, int minutes) {
+    return '$hours小时$minutes分钟';
+  }
+
+  @override
+  String player_hours(int count) {
+    return '$count小时';
+  }
+
+  @override
+  String get global_rss_failed_load => '加载失败';
+
+  @override
+  String get global_rss_retry => '重试';
+
+  @override
+  String global_rss_affected_count(int count) {
+    return '受影响的订阅 ($count)';
+  }
+
+  @override
+  String get global_rss_no_subscriptions => '暂无RSS订阅';
+
+  @override
+  String get global_rss_schedule_title => '所有RSS订阅的更新计划';
+
+  @override
+  String global_rss_apply_desc(int count) {
+    return '这将应用于所有 $count 个订阅';
+  }
+
+  @override
+  String get global_rss_update_frequency => '更新频率';
+
+  @override
+  String get global_rss_hourly => '每小时';
+
+  @override
+  String get global_rss_daily => '每天';
+
+  @override
+  String get global_rss_weekly => '每周';
+
+  @override
+  String get global_rss_update_time => '更新时间';
+
+  @override
+  String get global_rss_select_time => '选择时间';
+
+  @override
+  String get global_rss_select_time_button => '选择时间';
+
+  @override
+  String get global_rss_day_of_week => '星期';
+
+  @override
+  String get global_rss_mon => '一';
+
+  @override
+  String get global_rss_tue => '二';
+
+  @override
+  String get global_rss_wed => '三';
+
+  @override
+  String get global_rss_thu => '四';
+
+  @override
+  String get global_rss_fri => '五';
+
+  @override
+  String get global_rss_sat => '六';
+
+  @override
+  String get global_rss_sun => '日';
+
+  @override
+  String get global_rss_applying => '正在应用...';
+
+  @override
+  String get global_rss_apply_all => '应用到所有订阅';
+
+  @override
+  String global_rss_current_label(String value) {
+    return '当前：$value';
+  }
+
+  @override
+  String global_rss_next_label(String value) {
+    return '下次：$value';
+  }
+
+  @override
+  String get global_rss_failed_update => '更新订阅失败';
+
+  @override
+  String get playback_speed_title => '播放速度';
+
+  @override
+  String get podcast_notification_channel => '播客播放';
+
+  @override
+  String get page_not_found => '页面未找到';
+
+  @override
+  String get page_not_found_subtitle => '请从导航中选择有效的标签页';
+
+  @override
+  String error_prefix(String error) {
+    return '错误：$error';
+  }
+
+  @override
+  String get downloading_in_background => '正在后台下载...';
+
+  @override
+  String version_label(String version) {
+    return '版本：$version';
+  }
+
+  @override
+  String build_label(String build) {
+    return '构建：$build';
+  }
+
+  @override
+  String get added_to_queue => '已添加到播放队列';
+
+  @override
+  String failed_to_add_to_queue(String error) {
+    return '添加到队列失败：$error';
+  }
+
+  @override
+  String get play_button_short => '播放';
+
+  @override
+  String get retry_button_short => '重试';
+
+  @override
+  String error_opening_link(String error) {
+    return '打开链接时出错：$error';
+  }
+
+  @override
+  String get queue_is_empty => '播放队列为空';
+
+  @override
+  String failed_to_load_queue(String error) {
+    return '加载队列失败：$error';
+  }
+
+  @override
+  String failed_to_reorder_queue(String error) {
+    return '重新排序队列失败：$error';
+  }
+
+  @override
+  String failed_to_play_item(String error) {
+    return '播放项目失败：$error';
+  }
+
+  @override
+  String failed_to_remove_item(String error) {
+    return '移除项目失败：$error';
+  }
+
+  @override
+  String get apply_button => '应用';
+
+  @override
+  String get auth_test_page_title => '身份验证测试';
+
+  @override
+  String email_label(String email) {
+    return '邮箱：$email';
+  }
+
+  @override
+  String username_label(String username) {
+    return '用户名：$username';
+  }
+
+  @override
+  String display_name_label(String displayName) {
+    return '显示名称：$displayName';
+  }
+
+  @override
+  String verified_label(String isVerified) {
+    return '已验证：$isVerified';
+  }
+
+  @override
+  String get user_not_logged_in => '用户：未登录';
+
+  @override
+  String current_operation_label(String operation) {
+    return '当前操作：$operation';
+  }
+
+  @override
+  String get login_button_short => '登录';
+
+  @override
+  String get register_button_short => '注册';
+
+  @override
+  String base_url_label(String url) {
+    return '基础 URL：$url';
+  }
+
+  @override
+  String get endpoints_label => 'API 端点：';
+
+  @override
+  String get auth_verification_title => '身份验证';
+
+  @override
+  String get text_gen_label => '文本生成';
+
+  @override
+  String get feed_load_failed_title => '加载信息流失败';
 }

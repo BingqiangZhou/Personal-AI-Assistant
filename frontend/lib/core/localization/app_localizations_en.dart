@@ -1930,4 +1930,403 @@ class AppLocalizationsEn extends AppLocalizations {
   String podcast_transcript_match(int index) {
     return 'Match $index';
   }
+
+  @override
+  String get transcription_start_title => 'Start Transcription';
+
+  @override
+  String get transcription_start_desc =>
+      'Generate full text transcription for this episode\nSupports multi-language and high accuracy';
+
+  @override
+  String get transcription_start_button => 'Start Transcription';
+
+  @override
+  String get transcription_auto_hint =>
+      'Or enable auto-transcription in settings';
+
+  @override
+  String get transcription_starting => 'Starting transcription...';
+
+  @override
+  String get transcription_started_success =>
+      '✓ Transcription started successfully';
+
+  @override
+  String transcription_start_failed(String error) {
+    return '✗ Failed to start: $error';
+  }
+
+  @override
+  String get transcription_pending_title => 'Pending';
+
+  @override
+  String get transcription_pending_desc =>
+      'Transcription task has been queued\nProcessing will start shortly';
+
+  @override
+  String get transcription_progress_complete => 'Complete';
+
+  @override
+  String transcription_duration_label(String duration) {
+    return 'Duration: $duration';
+  }
+
+  @override
+  String transcription_words_label(String count) {
+    return '~${count}K words';
+  }
+
+  @override
+  String get transcription_step_download => 'Download';
+
+  @override
+  String get transcription_step_convert => 'Convert';
+
+  @override
+  String get transcription_step_split => 'Split';
+
+  @override
+  String get transcription_step_transcribe => 'Transcribe';
+
+  @override
+  String get transcription_step_merge => 'Merge';
+
+  @override
+  String get transcription_complete_title => 'Transcription Complete';
+
+  @override
+  String get transcription_complete_desc =>
+      'Transcript generated successfully\nYou can now read and search the content';
+
+  @override
+  String get transcription_stat_words => 'Words';
+
+  @override
+  String get transcription_stat_duration => 'Duration';
+
+  @override
+  String get transcription_stat_accuracy => 'Accuracy';
+
+  @override
+  String transcription_completed_at(String time) {
+    return 'Completed at: $time';
+  }
+
+  @override
+  String get transcription_view_button => 'View Transcript';
+
+  @override
+  String get transcription_failed_title => 'Transcription Failed';
+
+  @override
+  String get transcription_unknown_error => 'Unknown error';
+
+  @override
+  String get transcription_technical_details => 'Technical Details';
+
+  @override
+  String get transcription_retry_button => 'Retry';
+
+  @override
+  String get transcription_error_already_progress =>
+      'Transcription already in progress';
+
+  @override
+  String get transcription_error_network => 'Network connection failed';
+
+  @override
+  String get transcription_error_audio_download => 'Failed to download audio';
+
+  @override
+  String get transcription_error_service => 'Transcription service error';
+
+  @override
+  String get transcription_error_format => 'Audio format conversion failed';
+
+  @override
+  String get transcription_error_server_restart => 'Service was restarted';
+
+  @override
+  String get transcription_error_generic => 'Transcription failed';
+
+  @override
+  String get transcription_suggest_network =>
+      'Check your internet connection and try again';
+
+  @override
+  String get transcription_suggest_audio =>
+      'The audio file may be unavailable. Try again later';
+
+  @override
+  String get transcription_suggest_service =>
+      'The transcription service may be busy. Retry in a moment';
+
+  @override
+  String get transcription_suggest_format =>
+      'The audio format may not be supported. Try a different episode';
+
+  @override
+  String get transcription_suggest_restart =>
+      'Click Retry to start a new transcription task';
+
+  @override
+  String get transcription_suggest_generic =>
+      'Try clicking Retry to start over';
+
+  @override
+  String get player_playback_speed_title => 'Playback Speed';
+
+  @override
+  String get player_apply_subscription_only =>
+      'Apply to current subscription only';
+
+  @override
+  String get player_apply_subscription_subtitle =>
+      'Checked: current subscription only; Unchecked: global default';
+
+  @override
+  String get player_sleep_timer_title => 'Sleep Timer';
+
+  @override
+  String get player_sleep_timer_desc =>
+      'Playback will automatically pause after the set time';
+
+  @override
+  String get player_stop_after_episode => 'Stop after this episode';
+
+  @override
+  String get player_cancel_timer => 'Cancel timer';
+
+  @override
+  String player_minutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String player_hours_minutes(int hours, int minutes) {
+    return '${hours}h ${minutes}min';
+  }
+
+  @override
+  String player_hours(int count) {
+    return '${count}h';
+  }
+
+  @override
+  String get global_rss_failed_load => 'Failed to load';
+
+  @override
+  String get global_rss_retry => 'Retry';
+
+  @override
+  String global_rss_affected_count(int count) {
+    return 'Affected Subscriptions ($count)';
+  }
+
+  @override
+  String get global_rss_no_subscriptions => 'No RSS subscriptions';
+
+  @override
+  String get global_rss_schedule_title =>
+      'Update Schedule for All RSS Subscriptions';
+
+  @override
+  String global_rss_apply_desc(int count) {
+    return 'This will apply to all $count subscriptions';
+  }
+
+  @override
+  String get global_rss_update_frequency => 'Update Frequency';
+
+  @override
+  String get global_rss_hourly => 'Hourly';
+
+  @override
+  String get global_rss_daily => 'Daily';
+
+  @override
+  String get global_rss_weekly => 'Weekly';
+
+  @override
+  String get global_rss_update_time => 'Update Time';
+
+  @override
+  String get global_rss_select_time => 'Select time';
+
+  @override
+  String get global_rss_select_time_button => 'Select Time';
+
+  @override
+  String get global_rss_day_of_week => 'Day of Week';
+
+  @override
+  String get global_rss_mon => 'Mon';
+
+  @override
+  String get global_rss_tue => 'Tue';
+
+  @override
+  String get global_rss_wed => 'Wed';
+
+  @override
+  String get global_rss_thu => 'Thu';
+
+  @override
+  String get global_rss_fri => 'Fri';
+
+  @override
+  String get global_rss_sat => 'Sat';
+
+  @override
+  String get global_rss_sun => 'Sun';
+
+  @override
+  String get global_rss_applying => 'Applying...';
+
+  @override
+  String get global_rss_apply_all => 'Apply to All Subscriptions';
+
+  @override
+  String global_rss_current_label(String value) {
+    return 'Current: $value';
+  }
+
+  @override
+  String global_rss_next_label(String value) {
+    return 'Next: $value';
+  }
+
+  @override
+  String get global_rss_failed_update => 'Failed to update subscriptions';
+
+  @override
+  String get playback_speed_title => 'Playback Speed';
+
+  @override
+  String get podcast_notification_channel => 'Podcast Playback';
+
+  @override
+  String get page_not_found => 'Page Not Found';
+
+  @override
+  String get page_not_found_subtitle =>
+      'Please select a valid tab from the navigation';
+
+  @override
+  String error_prefix(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get downloading_in_background => 'Downloading in background...';
+
+  @override
+  String version_label(String version) {
+    return 'Version: $version';
+  }
+
+  @override
+  String build_label(String build) {
+    return 'Build: $build';
+  }
+
+  @override
+  String get added_to_queue => 'Added to queue';
+
+  @override
+  String failed_to_add_to_queue(String error) {
+    return 'Failed to add to queue: $error';
+  }
+
+  @override
+  String get play_button_short => 'Play';
+
+  @override
+  String get retry_button_short => 'Retry';
+
+  @override
+  String error_opening_link(String error) {
+    return 'Error opening link: $error';
+  }
+
+  @override
+  String get queue_is_empty => 'Queue is empty';
+
+  @override
+  String failed_to_load_queue(String error) {
+    return 'Failed to load queue: $error';
+  }
+
+  @override
+  String failed_to_reorder_queue(String error) {
+    return 'Failed to reorder queue: $error';
+  }
+
+  @override
+  String failed_to_play_item(String error) {
+    return 'Failed to play item: $error';
+  }
+
+  @override
+  String failed_to_remove_item(String error) {
+    return 'Failed to remove item: $error';
+  }
+
+  @override
+  String get apply_button => 'Apply';
+
+  @override
+  String get auth_test_page_title => 'Authentication Test';
+
+  @override
+  String email_label(String email) {
+    return 'Email: $email';
+  }
+
+  @override
+  String username_label(String username) {
+    return 'Username: $username';
+  }
+
+  @override
+  String display_name_label(String displayName) {
+    return 'Display Name: $displayName';
+  }
+
+  @override
+  String verified_label(String isVerified) {
+    return 'Verified: $isVerified';
+  }
+
+  @override
+  String get user_not_logged_in => 'User: Not logged in';
+
+  @override
+  String current_operation_label(String operation) {
+    return 'Current Operation: $operation';
+  }
+
+  @override
+  String get login_button_short => 'Login';
+
+  @override
+  String get register_button_short => 'Register';
+
+  @override
+  String base_url_label(String url) {
+    return 'Base URL: $url';
+  }
+
+  @override
+  String get endpoints_label => 'Endpoints:';
+
+  @override
+  String get auth_verification_title => 'Auth Verification';
+
+  @override
+  String get text_gen_label => 'Text Gen';
+
+  @override
+  String get feed_load_failed_title => 'Failed to Load Feed';
 }

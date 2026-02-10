@@ -4,6 +4,7 @@ import '../../data/models/podcast_episode_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../../../../core/utils/time_formatter.dart';
 import '../../core/utils/episode_description_helper.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class FeedStyleEpisodeCard extends ConsumerWidget {
   final PodcastEpisodeModel episode;
@@ -171,7 +172,7 @@ class FeedStyleEpisodeCard extends ConsumerWidget {
                 alignment: Alignment.centerRight,
                 child: FilledButton.tonal(
                   onPressed: onPlay,
-                  child: const Text('Play'),
+                  child: Text(AppLocalizations.of(context)!.play_button_short),
                 ),
               ),
             ],

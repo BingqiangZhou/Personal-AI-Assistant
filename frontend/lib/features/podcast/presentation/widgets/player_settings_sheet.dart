@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/playback_speed_options.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 // Reuse models from original files or define new ones if needed used in the sheet
 // For simplicity in this refactor, I'll keep the return type simple or use a callback class
@@ -57,13 +58,14 @@ const _kSleepTimerPresets = [
   Duration(minutes: 90),
 ];
 
-String _formatPresetDuration(Duration d) {
+String _formatPresetDuration(Duration d, BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
   if (d.inMinutes >= 60) {
     final hours = d.inHours;
     final mins = d.inMinutes.remainder(60);
-    return mins > 0 ? '$hours小时${mins}分钟' : '$hours小时';
+    return mins > 0 ? l10n.player_hours_minutes(hours, mins) : l10n.player_hours(hours);
   }
-  return '${d.inMinutes}分钟';
+  return l10n.player_minutes(d.inMinutes);
 }
 
 Future<void> showPlayerSettingsSheet({
@@ -139,7 +141,7 @@ class _PlayerSettingsSheetContentState
                   Icon(Icons.speed, color: theme.colorScheme.primary),
                   const SizedBox(width: 8),
                   Text(
-                    '播放倍速',
+                    AppLocalizations.of(context)!.player_playback_speed_title,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -194,8 +196,8 @@ class _PlayerSettingsSheetContentState
                     applyToSubscription: _applyToSubscription,
                   ));
                 },
-                title: const Text('仅应用于当前订阅'),
-                subtitle: const Text('选中：仅当前订阅；未选中：全局默认'),
+                title: Text(AppLocalizations.of(context)!.player_apply_subscription_only),
+                subtitle: Text(AppLocalizations.of(context)!.player_apply_subscription_subtitle),
               ),
 
               const Padding(
@@ -212,7 +214,7 @@ class _PlayerSettingsSheetContentState
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '睡眠定时',
+                    AppLocalizations.of(context)!.player_sleep_timer_title,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -243,7 +245,7 @@ class _PlayerSettingsSheetContentState
               ),
               const SizedBox(height: 4),
               Text(
-                '设置定时后，播放将在指定时间自动暂停',
+                AppLocalizations.of(context)!.player_sleep_timer_desc,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -254,7 +256,7 @@ class _PlayerSettingsSheetContentState
                 runSpacing: 8,
                 children: _kSleepTimerPresets.map((preset) {
                   return ActionChip(
-                    label: Text(_formatPresetDuration(preset)),
+                    label: Text(_formatPresetDuration(preset, context)),
                     onPressed: () {
                       widget.onTimerChanged(
                         SleepTimerSelection(duration: preset),
@@ -268,7 +270,7 @@ class _PlayerSettingsSheetContentState
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.stop_circle_outlined),
-                title: const Text('播放完本集后停止'),
+                title: Text(AppLocalizations.of(context)!.player_stop_after_episode),
                 onTap: () {
                   widget.onTimerChanged(
                     const SleepTimerSelection.afterEpisode(),
@@ -284,7 +286,7 @@ class _PlayerSettingsSheetContentState
                     color: theme.colorScheme.error,
                   ),
                   title: Text(
-                    '取消定时',
+                    AppLocalizations.of(context)!.player_cancel_timer,
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
                   onTap: () {

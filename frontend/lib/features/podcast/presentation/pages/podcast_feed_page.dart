@@ -72,14 +72,16 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           .read(podcastQueueControllerProvider.notifier)
           .addToQueue(episode.id);
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Added to queue')));
+        ).showSnackBar(SnackBar(content: Text(l10n.added_to_queue)));
       }
     } catch (error) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add to queue: $error')),
+          SnackBar(content: Text(l10n.failed_to_add_to_queue(error.toString()))),
         );
       }
     }

@@ -3691,6 +3691,666 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Match {index}'**
   String podcast_transcript_match(int index);
+
+  /// Title for start transcription state
+  ///
+  /// In en, this message translates to:
+  /// **'Start Transcription'**
+  String get transcription_start_title;
+
+  /// Description for start transcription state
+  ///
+  /// In en, this message translates to:
+  /// **'Generate full text transcription for this episode\nSupports multi-language and high accuracy'**
+  String get transcription_start_desc;
+
+  /// Button text to start transcription
+  ///
+  /// In en, this message translates to:
+  /// **'Start Transcription'**
+  String get transcription_start_button;
+
+  /// Hint about auto-transcription setting
+  ///
+  /// In en, this message translates to:
+  /// **'Or enable auto-transcription in settings'**
+  String get transcription_auto_hint;
+
+  /// Snackbar text when starting transcription
+  ///
+  /// In en, this message translates to:
+  /// **'Starting transcription...'**
+  String get transcription_starting;
+
+  /// Success snackbar text
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Transcription started successfully'**
+  String get transcription_started_success;
+
+  /// Failed to start transcription snackbar
+  ///
+  /// In en, this message translates to:
+  /// **'✗ Failed to start: {error}'**
+  String transcription_start_failed(String error);
+
+  /// Title for pending transcription state
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get transcription_pending_title;
+
+  /// Description for pending transcription state
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription task has been queued\nProcessing will start shortly'**
+  String get transcription_pending_desc;
+
+  /// Label below percentage in progress ring
+  ///
+  /// In en, this message translates to:
+  /// **'Complete'**
+  String get transcription_progress_complete;
+
+  /// Duration label in processing state
+  ///
+  /// In en, this message translates to:
+  /// **'Duration: {duration}'**
+  String transcription_duration_label(String duration);
+
+  /// Word count label in processing state
+  ///
+  /// In en, this message translates to:
+  /// **'~{count}K words'**
+  String transcription_words_label(String count);
+
+  /// Step label for download
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get transcription_step_download;
+
+  /// Step label for convert
+  ///
+  /// In en, this message translates to:
+  /// **'Convert'**
+  String get transcription_step_convert;
+
+  /// Step label for split
+  ///
+  /// In en, this message translates to:
+  /// **'Split'**
+  String get transcription_step_split;
+
+  /// Step label for transcribe
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribe'**
+  String get transcription_step_transcribe;
+
+  /// Step label for merge
+  ///
+  /// In en, this message translates to:
+  /// **'Merge'**
+  String get transcription_step_merge;
+
+  /// Title for completed transcription state
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription Complete'**
+  String get transcription_complete_title;
+
+  /// Description for completed transcription state
+  ///
+  /// In en, this message translates to:
+  /// **'Transcript generated successfully\nYou can now read and search the content'**
+  String get transcription_complete_desc;
+
+  /// Stat label for word count
+  ///
+  /// In en, this message translates to:
+  /// **'Words'**
+  String get transcription_stat_words;
+
+  /// Stat label for duration
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get transcription_stat_duration;
+
+  /// Stat label for accuracy
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy'**
+  String get transcription_stat_accuracy;
+
+  /// Completed time label
+  ///
+  /// In en, this message translates to:
+  /// **'Completed at: {time}'**
+  String transcription_completed_at(String time);
+
+  /// Button to view transcript
+  ///
+  /// In en, this message translates to:
+  /// **'View Transcript'**
+  String get transcription_view_button;
+
+  /// Title for failed transcription state
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription Failed'**
+  String get transcription_failed_title;
+
+  /// Default error message
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown error'**
+  String get transcription_unknown_error;
+
+  /// Expandable section for error details
+  ///
+  /// In en, this message translates to:
+  /// **'Technical Details'**
+  String get transcription_technical_details;
+
+  /// Button to retry transcription
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get transcription_retry_button;
+
+  /// Error text when transcription is already running
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription already in progress'**
+  String get transcription_error_already_progress;
+
+  /// Network error message
+  ///
+  /// In en, this message translates to:
+  /// **'Network connection failed'**
+  String get transcription_error_network;
+
+  /// Audio download error
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download audio'**
+  String get transcription_error_audio_download;
+
+  /// Service error
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription service error'**
+  String get transcription_error_service;
+
+  /// Format conversion error
+  ///
+  /// In en, this message translates to:
+  /// **'Audio format conversion failed'**
+  String get transcription_error_format;
+
+  /// Server restart error
+  ///
+  /// In en, this message translates to:
+  /// **'Service was restarted'**
+  String get transcription_error_server_restart;
+
+  /// Generic transcription failure
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription failed'**
+  String get transcription_error_generic;
+
+  /// Network error suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'Check your internet connection and try again'**
+  String get transcription_suggest_network;
+
+  /// Audio error suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'The audio file may be unavailable. Try again later'**
+  String get transcription_suggest_audio;
+
+  /// Service error suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'The transcription service may be busy. Retry in a moment'**
+  String get transcription_suggest_service;
+
+  /// Format error suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'The audio format may not be supported. Try a different episode'**
+  String get transcription_suggest_format;
+
+  /// Server restart suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'Click Retry to start a new transcription task'**
+  String get transcription_suggest_restart;
+
+  /// Generic error suggestion
+  ///
+  /// In en, this message translates to:
+  /// **'Try clicking Retry to start over'**
+  String get transcription_suggest_generic;
+
+  /// Title for playback speed section
+  ///
+  /// In en, this message translates to:
+  /// **'Playback Speed'**
+  String get player_playback_speed_title;
+
+  /// Checkbox label for subscription-specific speed
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to current subscription only'**
+  String get player_apply_subscription_only;
+
+  /// Subtitle for subscription checkbox
+  ///
+  /// In en, this message translates to:
+  /// **'Checked: current subscription only; Unchecked: global default'**
+  String get player_apply_subscription_subtitle;
+
+  /// Title for sleep timer section
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep Timer'**
+  String get player_sleep_timer_title;
+
+  /// Description for sleep timer
+  ///
+  /// In en, this message translates to:
+  /// **'Playback will automatically pause after the set time'**
+  String get player_sleep_timer_desc;
+
+  /// Option to stop playback after current episode
+  ///
+  /// In en, this message translates to:
+  /// **'Stop after this episode'**
+  String get player_stop_after_episode;
+
+  /// Button to cancel sleep timer
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel timer'**
+  String get player_cancel_timer;
+
+  /// Duration in minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{count} min'**
+  String player_minutes(int count);
+
+  /// Duration in hours and minutes
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}min'**
+  String player_hours_minutes(int hours, int minutes);
+
+  /// Duration in hours only
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h'**
+  String player_hours(int count);
+
+  /// Error title when loading fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load'**
+  String get global_rss_failed_load;
+
+  /// Retry button text
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get global_rss_retry;
+
+  /// Section title showing affected subscriptions count
+  ///
+  /// In en, this message translates to:
+  /// **'Affected Subscriptions ({count})'**
+  String global_rss_affected_count(int count);
+
+  /// Empty state text
+  ///
+  /// In en, this message translates to:
+  /// **'No RSS subscriptions'**
+  String get global_rss_no_subscriptions;
+
+  /// Card title for global RSS schedule
+  ///
+  /// In en, this message translates to:
+  /// **'Update Schedule for All RSS Subscriptions'**
+  String get global_rss_schedule_title;
+
+  /// Description of global apply scope
+  ///
+  /// In en, this message translates to:
+  /// **'This will apply to all {count} subscriptions'**
+  String global_rss_apply_desc(int count);
+
+  /// Label for frequency selector
+  ///
+  /// In en, this message translates to:
+  /// **'Update Frequency'**
+  String get global_rss_update_frequency;
+
+  /// Hourly frequency option
+  ///
+  /// In en, this message translates to:
+  /// **'Hourly'**
+  String get global_rss_hourly;
+
+  /// Daily frequency option
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get global_rss_daily;
+
+  /// Weekly frequency option
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get global_rss_weekly;
+
+  /// Label for time picker
+  ///
+  /// In en, this message translates to:
+  /// **'Update Time'**
+  String get global_rss_update_time;
+
+  /// Hint text for time picker
+  ///
+  /// In en, this message translates to:
+  /// **'Select time'**
+  String get global_rss_select_time;
+
+  /// Button text for time picker
+  ///
+  /// In en, this message translates to:
+  /// **'Select Time'**
+  String get global_rss_select_time_button;
+
+  /// Label for day of week selector
+  ///
+  /// In en, this message translates to:
+  /// **'Day of Week'**
+  String get global_rss_day_of_week;
+
+  /// Monday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get global_rss_mon;
+
+  /// Tuesday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get global_rss_tue;
+
+  /// Wednesday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get global_rss_wed;
+
+  /// Thursday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get global_rss_thu;
+
+  /// Friday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get global_rss_fri;
+
+  /// Saturday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get global_rss_sat;
+
+  /// Sunday abbreviation
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get global_rss_sun;
+
+  /// Button text when applying
+  ///
+  /// In en, this message translates to:
+  /// **'Applying...'**
+  String get global_rss_applying;
+
+  /// Button text to apply to all
+  ///
+  /// In en, this message translates to:
+  /// **'Apply to All Subscriptions'**
+  String get global_rss_apply_all;
+
+  /// Current schedule label
+  ///
+  /// In en, this message translates to:
+  /// **'Current: {value}'**
+  String global_rss_current_label(String value);
+
+  /// Next update label
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {value}'**
+  String global_rss_next_label(String value);
+
+  /// Error message when update fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update subscriptions'**
+  String get global_rss_failed_update;
+
+  /// Title for playback speed selector sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Playback Speed'**
+  String get playback_speed_title;
+
+  /// Android notification channel name for podcast playback
+  ///
+  /// In en, this message translates to:
+  /// **'Podcast Playback'**
+  String get podcast_notification_channel;
+
+  /// Page not found error title
+  ///
+  /// In en, this message translates to:
+  /// **'Page Not Found'**
+  String get page_not_found;
+
+  /// Page not found error message
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a valid tab from the navigation'**
+  String get page_not_found_subtitle;
+
+  /// Generic error message prefix
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String error_prefix(String error);
+
+  /// Message shown when downloading update in background
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading in background...'**
+  String get downloading_in_background;
+
+  /// Version label with placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Version: {version}'**
+  String version_label(String version);
+
+  /// Build label with placeholder
+  ///
+  /// In en, this message translates to:
+  /// **'Build: {build}'**
+  String build_label(String build);
+
+  /// Message shown when item is added to queue
+  ///
+  /// In en, this message translates to:
+  /// **'Added to queue'**
+  String get added_to_queue;
+
+  /// Error message when failing to add to queue
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add to queue: {error}'**
+  String failed_to_add_to_queue(String error);
+
+  /// Short play button label for cards
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get play_button_short;
+
+  /// Short retry button label
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry_button_short;
+
+  /// Error message when failing to open link
+  ///
+  /// In en, this message translates to:
+  /// **'Error opening link: {error}'**
+  String error_opening_link(String error);
+
+  /// Message shown when queue is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Queue is empty'**
+  String get queue_is_empty;
+
+  /// Error message when failing to load queue
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load queue: {error}'**
+  String failed_to_load_queue(String error);
+
+  /// Error message when failing to reorder queue
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reorder queue: {error}'**
+  String failed_to_reorder_queue(String error);
+
+  /// Error message when failing to play item
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to play item: {error}'**
+  String failed_to_play_item(String error);
+
+  /// Error message when failing to remove item
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove item: {error}'**
+  String failed_to_remove_item(String error);
+
+  /// Generic apply button label
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply_button;
+
+  /// Authentication test page title
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication Test'**
+  String get auth_test_page_title;
+
+  /// Email label with value
+  ///
+  /// In en, this message translates to:
+  /// **'Email: {email}'**
+  String email_label(String email);
+
+  /// Username label with value
+  ///
+  /// In en, this message translates to:
+  /// **'Username: {username}'**
+  String username_label(String username);
+
+  /// Display name label with value
+  ///
+  /// In en, this message translates to:
+  /// **'Display Name: {displayName}'**
+  String display_name_label(String displayName);
+
+  /// Verified label with value
+  ///
+  /// In en, this message translates to:
+  /// **'Verified: {isVerified}'**
+  String verified_label(String isVerified);
+
+  /// Message shown when user is not logged in
+  ///
+  /// In en, this message translates to:
+  /// **'User: Not logged in'**
+  String get user_not_logged_in;
+
+  /// Current operation label with value
+  ///
+  /// In en, this message translates to:
+  /// **'Current Operation: {operation}'**
+  String current_operation_label(String operation);
+
+  /// Short login button label
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get login_button_short;
+
+  /// Short register button label
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get register_button_short;
+
+  /// Base URL label with value
+  ///
+  /// In en, this message translates to:
+  /// **'Base URL: {url}'**
+  String base_url_label(String url);
+
+  /// Endpoints label
+  ///
+  /// In en, this message translates to:
+  /// **'Endpoints:'**
+  String get endpoints_label;
+
+  /// Authentication verification page title
+  ///
+  /// In en, this message translates to:
+  /// **'Auth Verification'**
+  String get auth_verification_title;
+
+  /// Text generation model type label (short)
+  ///
+  /// In en, this message translates to:
+  /// **'Text Gen'**
+  String get text_gen_label;
+
+  /// Error title when feed loading fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to Load Feed'**
+  String get feed_load_failed_title;
 }
 
 class _AppLocalizationsDelegate

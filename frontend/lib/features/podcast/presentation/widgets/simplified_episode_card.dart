@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../core/utils/episode_description_helper.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 /// Simplified episode card without podcast image and name (for episodes list page)
 class SimplifiedEpisodeCard extends ConsumerWidget {
@@ -55,7 +56,7 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
                   FilledButton.tonalIcon(
                     onPressed: onPlay,
                     icon: const Icon(Icons.play_arrow, size: 16),
-                    label: const Text('Play'),
+                    label: Text(AppLocalizations.of(context)!.play_button_short),
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(70, 32),
                       padding: const EdgeInsets.symmetric(

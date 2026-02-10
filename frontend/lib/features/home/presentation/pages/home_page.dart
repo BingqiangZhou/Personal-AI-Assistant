@@ -90,11 +90,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildTabContent(int index) {
     final content = _buildPageContent(index);
 
-    // Watch global audio player state
-    final audioState = ref.watch(audioPlayerProvider);
+    // Watch global audio player state for expansion only
+    final isExpanded = ref.watch(audioPlayerProvider.select((s) => s.isExpanded));
 
     // If expanded, wrap content with a barrier to detect outside taps
-    if (audioState.isExpanded) {
+    if (isExpanded) {
       return Stack(
         children: [
           content,
@@ -126,14 +126,14 @@ class _HomePageState extends ConsumerState<HomePage> {
       case 2:
         return const ProfilePage();
       default:
-        return const Center(
+        return Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.error_outline, size: 64, color: Colors.grey),
               SizedBox(height: 16),
               Text(
-                'Page Not Found',
+                AppLocalizations.of(context)!.page_not_found,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
@@ -142,7 +142,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               SizedBox(height: 8),
               Text(
-                'Please select a valid tab from the navigation',
+                AppLocalizations.of(context)!.page_not_found_subtitle,
                 style: TextStyle(fontSize: 14, color: Colors.grey),
                 textAlign: TextAlign.center,
               ),

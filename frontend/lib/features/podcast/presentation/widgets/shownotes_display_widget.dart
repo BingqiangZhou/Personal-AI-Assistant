@@ -118,9 +118,10 @@ class ShownotesDisplayWidgetState extends ConsumerState<ShownotesDisplayWidget> 
                     return false;
                   } catch (e) {
                     if (context.mounted) {
+                      final l10n = AppLocalizations.of(context)!;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Error opening link: ${e.toString()}'),
+                          content: Text(l10n.error_opening_link(e.toString())),
                           backgroundColor: Theme.of(context).colorScheme.error,
                         ),
                       );

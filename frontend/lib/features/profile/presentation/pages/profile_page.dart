@@ -993,9 +993,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Version: ${packageInfo.version}'),
+                  Text(l10n.version_label(packageInfo.version)),
                   const SizedBox(height: 4),
-                  Text('Build: ${packageInfo.buildNumber}'),
+                  Text(l10n.build_label(packageInfo.buildNumber)),
                   const SizedBox(height: 8),
                   Text(l10n.profile_about_subtitle),
                 ],

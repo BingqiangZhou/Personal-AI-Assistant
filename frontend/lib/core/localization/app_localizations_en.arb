@@ -3118,5 +3118,688 @@
         "type": "int"
       }
     }
+  },
+
+  "transcription_start_title": "Start Transcription",
+  "@transcription_start_title": {
+    "description": "Title for start transcription state"
+  },
+
+  "transcription_start_desc": "Generate full text transcription for this episode\nSupports multi-language and high accuracy",
+  "@transcription_start_desc": {
+    "description": "Description for start transcription state"
+  },
+
+  "transcription_start_button": "Start Transcription",
+  "@transcription_start_button": {
+    "description": "Button text to start transcription"
+  },
+
+  "transcription_auto_hint": "Or enable auto-transcription in settings",
+  "@transcription_auto_hint": {
+    "description": "Hint about auto-transcription setting"
+  },
+
+  "transcription_starting": "Starting transcription...",
+  "@transcription_starting": {
+    "description": "Snackbar text when starting transcription"
+  },
+
+  "transcription_started_success": "✓ Transcription started successfully",
+  "@transcription_started_success": {
+    "description": "Success snackbar text"
+  },
+
+  "transcription_start_failed": "✗ Failed to start: {error}",
+  "@transcription_start_failed": {
+    "description": "Failed to start transcription snackbar",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "transcription_pending_title": "Pending",
+  "@transcription_pending_title": {
+    "description": "Title for pending transcription state"
+  },
+
+  "transcription_pending_desc": "Transcription task has been queued\nProcessing will start shortly",
+  "@transcription_pending_desc": {
+    "description": "Description for pending transcription state"
+  },
+
+  "transcription_progress_complete": "Complete",
+  "@transcription_progress_complete": {
+    "description": "Label below percentage in progress ring"
+  },
+
+  "transcription_duration_label": "Duration: {duration}",
+  "@transcription_duration_label": {
+    "description": "Duration label in processing state",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+
+  "transcription_words_label": "~{count}K words",
+  "@transcription_words_label": {
+    "description": "Word count label in processing state",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+
+  "transcription_step_download": "Download",
+  "@transcription_step_download": {
+    "description": "Step label for download"
+  },
+
+  "transcription_step_convert": "Convert",
+  "@transcription_step_convert": {
+    "description": "Step label for convert"
+  },
+
+  "transcription_step_split": "Split",
+  "@transcription_step_split": {
+    "description": "Step label for split"
+  },
+
+  "transcription_step_transcribe": "Transcribe",
+  "@transcription_step_transcribe": {
+    "description": "Step label for transcribe"
+  },
+
+  "transcription_step_merge": "Merge",
+  "@transcription_step_merge": {
+    "description": "Step label for merge"
+  },
+
+  "transcription_complete_title": "Transcription Complete",
+  "@transcription_complete_title": {
+    "description": "Title for completed transcription state"
+  },
+
+  "transcription_complete_desc": "Transcript generated successfully\nYou can now read and search the content",
+  "@transcription_complete_desc": {
+    "description": "Description for completed transcription state"
+  },
+
+  "transcription_stat_words": "Words",
+  "@transcription_stat_words": {
+    "description": "Stat label for word count"
+  },
+
+  "transcription_stat_duration": "Duration",
+  "@transcription_stat_duration": {
+    "description": "Stat label for duration"
+  },
+
+  "transcription_stat_accuracy": "Accuracy",
+  "@transcription_stat_accuracy": {
+    "description": "Stat label for accuracy"
+  },
+
+  "transcription_completed_at": "Completed at: {time}",
+  "@transcription_completed_at": {
+    "description": "Completed time label",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+
+  "transcription_view_button": "View Transcript",
+  "@transcription_view_button": {
+    "description": "Button to view transcript"
+  },
+
+  "transcription_failed_title": "Transcription Failed",
+  "@transcription_failed_title": {
+    "description": "Title for failed transcription state"
+  },
+
+  "transcription_unknown_error": "Unknown error",
+  "@transcription_unknown_error": {
+    "description": "Default error message"
+  },
+
+  "transcription_technical_details": "Technical Details",
+  "@transcription_technical_details": {
+    "description": "Expandable section for error details"
+  },
+
+  "transcription_retry_button": "Retry",
+  "@transcription_retry_button": {
+    "description": "Button to retry transcription"
+  },
+
+  "transcription_error_already_progress": "Transcription already in progress",
+  "@transcription_error_already_progress": {
+    "description": "Error text when transcription is already running"
+  },
+
+  "transcription_error_network": "Network connection failed",
+  "@transcription_error_network": {
+    "description": "Network error message"
+  },
+
+  "transcription_error_audio_download": "Failed to download audio",
+  "@transcription_error_audio_download": {
+    "description": "Audio download error"
+  },
+
+  "transcription_error_service": "Transcription service error",
+  "@transcription_error_service": {
+    "description": "Service error"
+  },
+
+  "transcription_error_format": "Audio format conversion failed",
+  "@transcription_error_format": {
+    "description": "Format conversion error"
+  },
+
+  "transcription_error_server_restart": "Service was restarted",
+  "@transcription_error_server_restart": {
+    "description": "Server restart error"
+  },
+
+  "transcription_error_generic": "Transcription failed",
+  "@transcription_error_generic": {
+    "description": "Generic transcription failure"
+  },
+
+  "transcription_suggest_network": "Check your internet connection and try again",
+  "@transcription_suggest_network": {
+    "description": "Network error suggestion"
+  },
+
+  "transcription_suggest_audio": "The audio file may be unavailable. Try again later",
+  "@transcription_suggest_audio": {
+    "description": "Audio error suggestion"
+  },
+
+  "transcription_suggest_service": "The transcription service may be busy. Retry in a moment",
+  "@transcription_suggest_service": {
+    "description": "Service error suggestion"
+  },
+
+  "transcription_suggest_format": "The audio format may not be supported. Try a different episode",
+  "@transcription_suggest_format": {
+    "description": "Format error suggestion"
+  },
+
+  "transcription_suggest_restart": "Click Retry to start a new transcription task",
+  "@transcription_suggest_restart": {
+    "description": "Server restart suggestion"
+  },
+
+  "transcription_suggest_generic": "Try clicking Retry to start over",
+  "@transcription_suggest_generic": {
+    "description": "Generic error suggestion"
+  },
+
+  "player_playback_speed_title": "Playback Speed",
+  "@player_playback_speed_title": {
+    "description": "Title for playback speed section"
+  },
+
+  "player_apply_subscription_only": "Apply to current subscription only",
+  "@player_apply_subscription_only": {
+    "description": "Checkbox label for subscription-specific speed"
+  },
+
+  "player_apply_subscription_subtitle": "Checked: current subscription only; Unchecked: global default",
+  "@player_apply_subscription_subtitle": {
+    "description": "Subtitle for subscription checkbox"
+  },
+
+  "player_sleep_timer_title": "Sleep Timer",
+  "@player_sleep_timer_title": {
+    "description": "Title for sleep timer section"
+  },
+
+  "player_sleep_timer_desc": "Playback will automatically pause after the set time",
+  "@player_sleep_timer_desc": {
+    "description": "Description for sleep timer"
+  },
+
+  "player_stop_after_episode": "Stop after this episode",
+  "@player_stop_after_episode": {
+    "description": "Option to stop playback after current episode"
+  },
+
+  "player_cancel_timer": "Cancel timer",
+  "@player_cancel_timer": {
+    "description": "Button to cancel sleep timer"
+  },
+
+  "player_minutes": "{count} min",
+  "@player_minutes": {
+    "description": "Duration in minutes",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "player_hours_minutes": "{hours}h {minutes}min",
+  "@player_hours_minutes": {
+    "description": "Duration in hours and minutes",
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+
+  "player_hours": "{count}h",
+  "@player_hours": {
+    "description": "Duration in hours only",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "global_rss_failed_load": "Failed to load",
+  "@global_rss_failed_load": {
+    "description": "Error title when loading fails"
+  },
+
+  "global_rss_retry": "Retry",
+  "@global_rss_retry": {
+    "description": "Retry button text"
+  },
+
+  "global_rss_affected_count": "Affected Subscriptions ({count})",
+  "@global_rss_affected_count": {
+    "description": "Section title showing affected subscriptions count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "global_rss_no_subscriptions": "No RSS subscriptions",
+  "@global_rss_no_subscriptions": {
+    "description": "Empty state text"
+  },
+
+  "global_rss_schedule_title": "Update Schedule for All RSS Subscriptions",
+  "@global_rss_schedule_title": {
+    "description": "Card title for global RSS schedule"
+  },
+
+  "global_rss_apply_desc": "This will apply to all {count} subscriptions",
+  "@global_rss_apply_desc": {
+    "description": "Description of global apply scope",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "global_rss_update_frequency": "Update Frequency",
+  "@global_rss_update_frequency": {
+    "description": "Label for frequency selector"
+  },
+
+  "global_rss_hourly": "Hourly",
+  "@global_rss_hourly": {
+    "description": "Hourly frequency option"
+  },
+
+  "global_rss_daily": "Daily",
+  "@global_rss_daily": {
+    "description": "Daily frequency option"
+  },
+
+  "global_rss_weekly": "Weekly",
+  "@global_rss_weekly": {
+    "description": "Weekly frequency option"
+  },
+
+  "global_rss_update_time": "Update Time",
+  "@global_rss_update_time": {
+    "description": "Label for time picker"
+  },
+
+  "global_rss_select_time": "Select time",
+  "@global_rss_select_time": {
+    "description": "Hint text for time picker"
+  },
+
+  "global_rss_select_time_button": "Select Time",
+  "@global_rss_select_time_button": {
+    "description": "Button text for time picker"
+  },
+
+  "global_rss_day_of_week": "Day of Week",
+  "@global_rss_day_of_week": {
+    "description": "Label for day of week selector"
+  },
+
+  "global_rss_mon": "Mon",
+  "@global_rss_mon": {
+    "description": "Monday abbreviation"
+  },
+
+  "global_rss_tue": "Tue",
+  "@global_rss_tue": {
+    "description": "Tuesday abbreviation"
+  },
+
+  "global_rss_wed": "Wed",
+  "@global_rss_wed": {
+    "description": "Wednesday abbreviation"
+  },
+
+  "global_rss_thu": "Thu",
+  "@global_rss_thu": {
+    "description": "Thursday abbreviation"
+  },
+
+  "global_rss_fri": "Fri",
+  "@global_rss_fri": {
+    "description": "Friday abbreviation"
+  },
+
+  "global_rss_sat": "Sat",
+  "@global_rss_sat": {
+    "description": "Saturday abbreviation"
+  },
+
+  "global_rss_sun": "Sun",
+  "@global_rss_sun": {
+    "description": "Sunday abbreviation"
+  },
+
+  "global_rss_applying": "Applying...",
+  "@global_rss_applying": {
+    "description": "Button text when applying"
+  },
+
+  "global_rss_apply_all": "Apply to All Subscriptions",
+  "@global_rss_apply_all": {
+    "description": "Button text to apply to all"
+  },
+
+  "global_rss_current_label": "Current: {value}",
+  "@global_rss_current_label": {
+    "description": "Current schedule label",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+
+  "global_rss_next_label": "Next: {value}",
+  "@global_rss_next_label": {
+    "description": "Next update label",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+
+  "global_rss_failed_update": "Failed to update subscriptions",
+  "@global_rss_failed_update": {
+    "description": "Error message when update fails"
+  },
+
+  "playback_speed_title": "Playback Speed",
+  "@playback_speed_title": {
+    "description": "Title for playback speed selector sheet"
+  },
+
+  "podcast_notification_channel": "Podcast Playback",
+  "@podcast_notification_channel": {
+    "description": "Android notification channel name for podcast playback"
+  },
+
+  "page_not_found": "Page Not Found",
+  "@page_not_found": {
+    "description": "Page not found error title"
+  },
+
+  "page_not_found_subtitle": "Please select a valid tab from the navigation",
+  "@page_not_found_subtitle": {
+    "description": "Page not found error message"
+  },
+
+  "error_prefix": "Error: {error}",
+  "@error_prefix": {
+    "description": "Generic error message prefix",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "downloading_in_background": "Downloading in background...",
+  "@downloading_in_background": {
+    "description": "Message shown when downloading update in background"
+  },
+
+  "version_label": "Version: {version}",
+  "@version_label": {
+    "description": "Version label with placeholder",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+
+  "build_label": "Build: {build}",
+  "@build_label": {
+    "description": "Build label with placeholder",
+    "placeholders": {
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+
+  "added_to_queue": "Added to queue",
+  "@added_to_queue": {
+    "description": "Message shown when item is added to queue"
+  },
+
+  "failed_to_add_to_queue": "Failed to add to queue: {error}",
+  "@failed_to_add_to_queue": {
+    "description": "Error message when failing to add to queue",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "play_button_short": "Play",
+  "@play_button_short": {
+    "description": "Short play button label for cards"
+  },
+
+  "retry_button_short": "Retry",
+  "@retry_button_short": {
+    "description": "Short retry button label"
+  },
+
+  "error_opening_link": "Error opening link: {error}",
+  "@error_opening_link": {
+    "description": "Error message when failing to open link",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "queue_is_empty": "Queue is empty",
+  "@queue_is_empty": {
+    "description": "Message shown when queue is empty"
+  },
+
+  "failed_to_load_queue": "Failed to load queue: {error}",
+  "@failed_to_load_queue": {
+    "description": "Error message when failing to load queue",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "failed_to_reorder_queue": "Failed to reorder queue: {error}",
+  "@failed_to_reorder_queue": {
+    "description": "Error message when failing to reorder queue",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "failed_to_play_item": "Failed to play item: {error}",
+  "@failed_to_play_item": {
+    "description": "Error message when failing to play item",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "failed_to_remove_item": "Failed to remove item: {error}",
+  "@failed_to_remove_item": {
+    "description": "Error message when failing to remove item",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "apply_button": "Apply",
+  "@apply_button": {
+    "description": "Generic apply button label"
+  },
+
+  "auth_test_page_title": "Authentication Test",
+  "@auth_test_page_title": {
+    "description": "Authentication test page title"
+  },
+
+  "email_label": "Email: {email}",
+  "@email_label": {
+    "description": "Email label with value",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+
+  "username_label": "Username: {username}",
+  "@username_label": {
+    "description": "Username label with value",
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+
+  "display_name_label": "Display Name: {displayName}",
+  "@display_name_label": {
+    "description": "Display name label with value",
+    "placeholders": {
+      "displayName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "verified_label": "Verified: {isVerified}",
+  "@verified_label": {
+    "description": "Verified label with value",
+    "placeholders": {
+      "isVerified": {
+        "type": "String"
+      }
+    }
+  },
+
+  "user_not_logged_in": "User: Not logged in",
+  "@user_not_logged_in": {
+    "description": "Message shown when user is not logged in"
+  },
+
+  "current_operation_label": "Current Operation: {operation}",
+  "@current_operation_label": {
+    "description": "Current operation label with value",
+    "placeholders": {
+      "operation": {
+        "type": "String"
+      }
+    }
+  },
+
+  "login_button_short": "Login",
+  "@login_button_short": {
+    "description": "Short login button label"
+  },
+
+  "register_button_short": "Register",
+  "@register_button_short": {
+    "description": "Short register button label"
+  },
+
+  "base_url_label": "Base URL: {url}",
+  "@base_url_label": {
+    "description": "Base URL label with value",
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+
+  "endpoints_label": "Endpoints:",
+  "@endpoints_label": {
+    "description": "Endpoints label"
+  },
+
+  "auth_verification_title": "Auth Verification",
+  "@auth_verification_title": {
+    "description": "Authentication verification page title"
+  },
+
+  "text_gen_label": "Text Gen",
+  "@text_gen_label": {
+    "description": "Text generation model type label (short)"
+  },
+
+  "feed_load_failed_title": "Failed to Load Feed",
+  "@feed_load_failed_title": {
+    "description": "Error title when feed loading fails"
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/auth_provider.dart';
+import '../../../../core/localization/app_localizations.dart';
 
 class AuthTestPage extends ConsumerStatefulWidget {
   const AuthTestPage({super.key});
@@ -34,10 +35,11 @@ class _AuthTestPageState extends ConsumerState<AuthTestPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Authentication Test'),
+        title: Text(l10n.auth_test_page_title),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
