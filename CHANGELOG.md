@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.4.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.3.1...v0.4.0) - 2026-02-10 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.4.0))
+
+### 🚀 Features
+
+- Enhance podcast stats retrieval and improve profile page with dynamic episode and summary counts ([ccaac75](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ccaac75b27321b318ac9dddd0e0c246c35196f20))
+- Add sleep timer functionality with UI integration for audio player ([299ec54](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/299ec540c38975e72ba5a4592e39fed7bdc1abee))
+- Refactor audio player and bottom player to integrate player settings, replacing sleep timer button with settings button ([021bb65](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/021bb65dec45a4f69d6b39d4e6949f6e01034423))
+- Enhance bottom player widget with animated size transition and update home page to manage audio player state ([03b275c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/03b275c63001fa6227a89839a5331ddb2bc931c4))
+- Add conversation sessions management ([7de2f29](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7de2f29ad0f32aec9db4ecfd873920b22edc0329))
+
+
+
 ## [0.3.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.3.0...v0.3.1) - 2026-02-10 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.3.1))
 
 ### 🚀 Features
