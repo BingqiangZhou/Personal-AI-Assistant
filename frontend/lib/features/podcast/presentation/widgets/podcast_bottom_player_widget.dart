@@ -7,9 +7,8 @@ import '../../data/models/audio_player_state_model.dart';
 import '../constants/playback_speed_options.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
-import 'playback_speed_selector_sheet.dart';
+import 'player_settings_sheet.dart';
 import 'podcast_queue_sheet.dart';
-import 'sleep_timer_selector_sheet.dart';
 
 class PodcastBottomPlayerWidget extends ConsumerWidget {
   const PodcastBottomPlayerWidget({super.key, this.applySafeArea = true});
@@ -182,6 +181,12 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
     final maxSlider = state.duration > 0 ? state.duration.toDouble() : 1.0;
     final sliderValue = state.position.toDouble().clamp(0.0, maxSlider);
 
+    // Construct "Now Playing" text with speed if not 1.0x
+    String nowPlayingText = l10n?.podcast_player_now_playing ?? 'Now Playing';
+    if ((state.playbackRate - 1.0).abs() > 0.01) {
+      nowPlayingText += ' (${formatPlaybackSpeed(state.playbackRate)})';
+    }
+
     return Material(
       key: const Key('podcast_bottom_player_expanded'),
       color: theme.colorScheme.surface,
@@ -199,7 +204,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                 Row(
                   children: [
                     Text(
-                      l10n?.podcast_player_now_playing ?? 'Now Playing',
+                      nowPlayingText,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
@@ -212,7 +217,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                           .setExpanded(false),
                       icon: const Icon(Icons.keyboard_arrow_down),
                     ),
-                    _buildSleepTimerButton(context, ref, state),
+                     // Removed separate Sleep timer button
                     const SizedBox(width: 8),
                     IconButton(
                       tooltip: 'Close',
@@ -232,13 +237,50 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(
-                        state.currentEpisode!.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            state.currentEpisode!.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today_outlined,
+                                size: 12,
+                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                state.currentEpisode!.publishedAt.toString().split(' ')[0],
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                  fontSize: 11,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(
+                                Icons.access_time,
+                                size: 12,
+                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                state.currentEpisode!.formattedDuration,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -271,50 +313,45 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                 Builder(
                   builder: (context) {
                     final controls = <Widget>[
-                      InkWell(
-                        key: const Key('podcast_bottom_player_speed'),
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () async {
-                          final selection =
-                              await showPlaybackSpeedSelectorSheet(
-                                context: context,
-                                initialSpeed: state.playbackRate,
-                              );
-                          if (selection == null) return;
-                          if (!context.mounted) return;
-                          await ref
-                              .read(audioPlayerProvider.notifier)
-                              .setPlaybackRate(
-                                selection.speed,
-                                applyToSubscription:
-                                    selection.applyToSubscription,
-                              );
+                      IconButton(
+                        key: const Key('podcast_bottom_player_settings'),
+                        tooltip: 'Settings',
+                        iconSize: 28,
+                        onPressed: () async {
+                          await showPlayerSettingsSheet(
+                            context: context,
+                            currentSpeed: state.playbackRate,
+                            isTimerActive: state.isSleepTimerActive,
+                            timerRemainingLabel: state.sleepTimerRemainingLabel,
+                            onSpeedChanged: (selection) async {
+                              if (!context.mounted) return;
+                              await ref
+                                  .read(audioPlayerProvider.notifier)
+                                  .setPlaybackRate(
+                                    selection.speed,
+                                    applyToSubscription:
+                                        selection.applyToSubscription,
+                                  );
+                            },
+                             onTimerChanged: (selection) {
+                              if (!context.mounted) return;
+                              final notifier = ref.read(audioPlayerProvider.notifier);
+                              if (selection.cancel) {
+                                notifier.cancelSleepTimer();
+                              } else if (selection.afterEpisode) {
+                                notifier.setSleepTimerAfterEpisode();
+                              } else if (selection.duration != null) {
+                                notifier.setSleepTimer(selection.duration!);
+                              }
+                            },
+                          );
                         },
-                        child: SizedBox(
-                          height: 48,
-                          child: Center(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: theme.colorScheme.outlineVariant,
-                                ),
-                              ),
-                              child: Text(
-                                formatPlaybackSpeed(state.playbackRate),
-                                style: theme.textTheme.labelMedium,
-                              ),
-                            ),
-                          ),
-                        ),
+                        icon: const Icon(Icons.tune),
                       ),
                       IconButton(
                         key: const Key('podcast_bottom_player_rewind_10'),
                         tooltip: l10n?.podcast_player_rewind_10 ?? 'Rewind 10s',
+                        iconSize: 32,
                         onPressed: () {
                           final next = (state.position - 10000).clamp(
                             0,
@@ -331,6 +368,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                         ),
                         child: IconButton(
                           key: const Key('podcast_bottom_player_play_pause'),
+                          iconSize: 48,
                           tooltip: state.isPlaying
                               ? (l10n?.podcast_player_pause ?? 'Pause')
                               : (l10n?.podcast_player_play ?? 'Play'),
@@ -348,10 +386,10 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                           },
                           icon: state.isLoading
                               ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
+                                  width: 24,
+                                  height: 24,
                                   child: CircularProgressIndicator(
-                                    strokeWidth: 2,
+                                    strokeWidth: 3,
                                   ),
                                 )
                               : Icon(
@@ -365,6 +403,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                         key: const Key('podcast_bottom_player_forward_30'),
                         tooltip:
                             l10n?.podcast_player_forward_30 ?? 'Forward 30s',
+                        iconSize: 32,
                         onPressed: () {
                           final next = (state.position + 30000).clamp(
                             0,
@@ -377,6 +416,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                       IconButton(
                         key: const Key('podcast_bottom_player_playlist'),
                         tooltip: l10n?.podcast_player_list ?? 'List',
+                        iconSize: 32,
                         onPressed: () async {
                           await ref
                               .read(podcastQueueControllerProvider.notifier)
@@ -402,61 +442,12 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
         ),
       ),
     );
-
   }
 
-  Widget _buildSleepTimerButton(
-    BuildContext context,
-    WidgetRef ref,
-    AudioPlayerState state,
-  ) {
-    final theme = Theme.of(context);
-    final isActive = state.isSleepTimerActive;
-
-    return IconButton(
-      onPressed: () async {
-        final selection = await showSleepTimerSelectorSheet(
-          context: context,
-          isTimerActive: isActive,
-        );
-        if (selection == null) return;
-        if (!context.mounted) return;
-
-        final notifier = ref.read(audioPlayerProvider.notifier);
-        if (selection.cancel) {
-          notifier.cancelSleepTimer();
-        } else if (selection.afterEpisode) {
-          notifier.setSleepTimerAfterEpisode();
-        } else if (selection.duration != null) {
-          notifier.setSleepTimer(selection.duration!);
-        }
-      },
-      tooltip: '睡眠定时',
-      icon: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            isActive ? Icons.nightlight_round : Icons.nightlight_outlined,
-            color: isActive
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
-            size: 24,
-          ),
-          if (isActive && state.sleepTimerRemainingLabel != null)
-            Text(
-              state.sleepTimerRemainingLabel!,
-              style: TextStyle(
-                fontSize: 9,
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w700,
-                height: 1.0,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+  // Helper methods like _CoverImage, _withSpacing ... are needed or implied?
+  // They are in the original file. Since I am calling write_to_file with "overwrite", I MUST include them.
+  // I will check the original file content from step 29.
+  // Yes, _CoverImage and _withSpacing are at the bottom. I need to include them.
 }
 
 class _CoverImage extends StatelessWidget {
