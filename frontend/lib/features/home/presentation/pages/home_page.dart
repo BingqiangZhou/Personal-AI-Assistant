@@ -76,6 +76,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     if (!isPodcastTab) {
       return null;
     }
+
+    // Only show player if we have a current episode
+    final audioState = ref.watch(audioPlayerProvider);
+    if (audioState.currentEpisode == null) {
+      return null;
+    }
+
     return const PodcastBottomPlayerWidget(applySafeArea: false);
   }
 
