@@ -5,6 +5,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
+import '../../../podcast/presentation/providers/podcast_providers.dart';
 import '../../../podcast/presentation/widgets/podcast_bottom_player_widget.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
 
@@ -87,6 +88,36 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildTabContent(int index) {
+    final content = _buildPageContent(index);
+
+    // Watch global audio player state
+    final audioState = ref.watch(audioPlayerProvider);
+
+    // If expanded, wrap content with a barrier to detect outside taps
+    if (audioState.isExpanded) {
+      return Stack(
+        children: [
+          content,
+          // Transparent barrier that covers the content behind the player
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () {
+                ref.read(audioPlayerProvider.notifier).setExpanded(false);
+              },
+              behavior: HitTestBehavior.opaque, // Opaque to catch all touches
+              child: Container(
+                color: Colors.black.withValues(alpha: 0.01), // Almost transparent but touchable
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return content;
+  }
+
+  Widget _buildPageContent(int index) {
     switch (index) {
       case 0:
         return const PodcastFeedPage();

@@ -34,7 +34,12 @@ class PodcastBottomPlayerWidget extends ConsumerWidget {
       content = SafeArea(top: false, child: content);
     }
 
-    return content;
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+      alignment: Alignment.bottomCenter,
+      child: content,
+    );
   }
 }
 

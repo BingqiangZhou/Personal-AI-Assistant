@@ -55,14 +55,31 @@ class CustomAdaptiveNavigation extends StatelessWidget {
 
     return Scaffold(
       appBar: appBar,
-      body: body,
-      floatingActionButton: floatingActionButton,
-      bottomNavigationBar: bottomAccessory == null
-          ? navigationBar
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [bottomAccessory!, navigationBar],
+      body: Stack(
+        children: [
+          // Body content with padding for bottom accessory (Mini Player height approx)
+          Padding(
+            padding: EdgeInsets.only(bottom: bottomAccessory != null ? 60.0 : 0),
+            child: body ?? const SizedBox.shrink(),
+          ),
+          // Floating Action Button
+          if (floatingActionButton != null)
+            Positioned(
+              right: 16,
+              bottom: (bottomAccessory != null ? 76.0 : 16.0),
+              child: floatingActionButton!,
             ),
+          // Bottom Accessory (Player) Overlay
+          if (bottomAccessory != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: bottomAccessory!,
+            ),
+        ],
+      ),
+      bottomNavigationBar: navigationBar,
     );
   }
 
@@ -158,16 +175,32 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           ),
           const VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            child: Column(
+            child: Stack(
               children: [
-                Expanded(child: body!),
-                if (bottomAccessory != null) bottomAccessory!,
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: bottomAccessory != null ? 60.0 : 0,
+                  ),
+                  child: body ?? const SizedBox.shrink(),
+                ),
+                if (floatingActionButton != null)
+                  Positioned(
+                    right: 24,
+                    bottom: (bottomAccessory != null ? 84.0 : 24.0),
+                    child: floatingActionButton!,
+                  ),
+                if (bottomAccessory != null)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: bottomAccessory!,
+                  ),
               ],
             ),
           ),
         ],
       ),
-      floatingActionButton: floatingActionButton,
     );
   }
 
@@ -282,16 +315,32 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           ),
           const VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            child: Column(
+            child: Stack(
               children: [
-                Expanded(child: body!),
-                if (bottomAccessory != null) bottomAccessory!,
+                Padding(
+                  padding: EdgeInsets.only(
+                    bottom: bottomAccessory != null ? 60.0 : 0,
+                  ),
+                  child: body ?? const SizedBox.shrink(),
+                ),
+                if (floatingActionButton != null)
+                  Positioned(
+                    right: 24,
+                    bottom: (bottomAccessory != null ? 84.0 : 24.0),
+                    child: floatingActionButton!,
+                  ),
+                if (bottomAccessory != null)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: bottomAccessory!,
+                  ),
               ],
             ),
           ),
         ],
       ),
-      floatingActionButton: floatingActionButton,
     );
   }
 
