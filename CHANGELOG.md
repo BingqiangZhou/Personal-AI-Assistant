@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.3.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.3.0...v0.3.1) - 2026-02-10 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.3.1))
+
+### 🚀 Features
+
+- Improve layout and responsiveness of the expanded bottom player ([a82f1b0](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a82f1b036afa29fde6cdc2410e12ae2cee6db8fd))
+- Enhance audio player interactions and improve UI responsiveness ([774a803](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/774a80370558de628bfe0a6b559f383d01e414d3))
+
+
+
 ## [0.3.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.2.0...v0.3.0) - 2026-02-09 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.3.0))
 
 ### 🐛 Bug Fixes
