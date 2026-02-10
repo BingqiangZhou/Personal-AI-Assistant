@@ -6,7 +6,7 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy import and_, case, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes, joinedload
 
@@ -1143,6 +1143,7 @@ class PodcastRepository:
             .join(PodcastPlaybackState)
             .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .options(joinedload(PodcastEpisode.subscription))
             .where(
                 and_(
                     UserSubscription.user_id == user_id,
@@ -1156,15 +1157,16 @@ class PodcastRepository:
         )
 
         result = await self.db.execute(stmt)
-        rows = result.all()
+        rows = result.unique().all()
 
         recently_played = []
         for episode, position, last_played in rows:
+            sub_title = episode.subscription.title if episode.subscription else None
             recently_played.append(
                 {
                     "episode_id": episode.id,
                     "title": episode.title,
-                    "subscription_title": episode.subscription.title,
+                    "subscription_title": sub_title,
                     "position": position,
                     "last_played": last_played,
                     "duration": episode.audio_duration,

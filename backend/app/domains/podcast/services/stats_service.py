@@ -28,16 +28,29 @@ class PodcastStatsService:
 
     async def get_user_stats(self) -> dict[str, Any]:
         """Get cached/aggregated user stats with playback context."""
-        cached = await self.redis.get_user_stats(self.user_id)
-        if cached:
-            logger.info("Cache HIT for user stats: user_id=%s", self.user_id)
-            return cached
+        try:
+            cached = await self.redis.get_user_stats(self.user_id)
+            if cached:
+                logger.info("Cache HIT for user stats: user_id=%s", self.user_id)
+                return cached
+        except Exception:
+            logger.warning("Redis cache read failed for user stats, skipping cache")
 
         logger.info("Cache MISS for user stats: user_id=%s", self.user_id)
 
         stats = await self.repo.get_user_stats_aggregated(self.user_id)
-        recently_played = await self.playback_service.get_recently_played(limit=5)
-        listening_streak = await self.playback_service.calculate_listening_streak()
+
+        try:
+            recently_played = await self.playback_service.get_recently_played(limit=5)
+        except Exception:
+            logger.warning("Failed to get recently played, defaulting to empty list")
+            recently_played = []
+
+        try:
+            listening_streak = await self.playback_service.calculate_listening_streak()
+        except Exception:
+            logger.warning("Failed to calculate listening streak, defaulting to 0")
+            listening_streak = 0
 
         result = {
             **stats,
@@ -46,5 +59,9 @@ class PodcastStatsService:
             "listening_streak": listening_streak,
         }
 
-        await self.redis.set_user_stats(self.user_id, result)
+        try:
+            await self.redis.set_user_stats(self.user_id, result)
+        except Exception:
+            logger.warning("Redis cache write failed for user stats, skipping cache")
+
         return result

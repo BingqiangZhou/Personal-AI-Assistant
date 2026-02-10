@@ -9,6 +9,7 @@ import 'package:personal_ai_assistant/features/settings/presentation/widgets/upd
 
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../podcast/presentation/providers/podcast_providers.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
 /// Material Design 3自适应Profile页面
@@ -152,11 +153,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   Row(
                     children: [
                       Flexible(
-                        child: Text(
-                          user?.displayName ?? l10n.profile_guest_user,
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                        child: Tooltip(
+                          message: user?.email ?? '',
+                          child: Text(
+                            user?.displayName ?? l10n.profile_guest_user,
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -169,13 +173,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    user?.email ?? l10n.profile_please_login,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
                   ),
                   const SizedBox(height: 8),
                   // Premium Chip
@@ -220,6 +217,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
+    final statsAsync = ref.watch(podcastStatsProvider);
+
+    final episodeCount = statsAsync.when(
+      data: (stats) => stats?.totalEpisodes.toString() ?? '0',
+      loading: () => '...',
+      error: (_, __) => '0',
+    );
+    final summaryCount = statsAsync.when(
+      data: (stats) => stats?.summariesGenerated.toString() ?? '0',
+      loading: () => '...',
+      error: (_, __) => '0',
+    );
 
     // On narrow screens, stack cards vertically to prevent squishing
     if (isMobile) {
@@ -229,15 +238,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             context,
             Icons.podcasts,
             l10n.nav_podcast,
-            '42',
+            episodeCount,
             Theme.of(context).colorScheme.primary,
           ),
           const SizedBox(height: 12),
           _buildActivityCard(
             context,
-            Icons.chat,
-            l10n.nav_assistant,
-            '1,024',
+            Icons.auto_awesome,
+            'AI 总结',
+            summaryCount,
             Theme.of(context).colorScheme.tertiary,
           ),
         ],
@@ -252,7 +261,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             context,
             Icons.podcasts,
             l10n.nav_podcast,
-            '42',
+            episodeCount,
             Theme.of(context).colorScheme.primary,
           ),
         ),
@@ -260,9 +269,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         Expanded(
           child: _buildActivityCard(
             context,
-            Icons.chat,
-            l10n.nav_assistant,
-            '1,024',
+            Icons.auto_awesome,
+            'AI 总结',
+            summaryCount,
             Theme.of(context).colorScheme.tertiary,
           ),
         ),
