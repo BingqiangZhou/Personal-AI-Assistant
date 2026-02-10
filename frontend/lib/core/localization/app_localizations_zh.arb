@@ -2844,12 +2844,12 @@
 
   "podcast_bulk_import_input_text": "文本",
   "@podcast_bulk_import_input_text": {
-    "description": "批量导入文本输入标签标签"
+    "description": "批量导入文本输入标签"
   },
 
   "podcast_bulk_import_input_file": "文件",
   "@podcast_bulk_import_input_file": {
-    "description": "批量导入文件上传标签标签"
+    "description": "批量导入文件上传标签"
   },
 
   "podcast_bulk_import_no_urls_text": "未找到URL",
@@ -3050,11 +3050,6 @@
     "description": "无摘要可用消息"
   },
 
-  "podcast_transcription_required": "需要转录才能生成AI摘要",
-  "@podcast_transcription_required": {
-    "description": "无转录内容时的提示"
-  },
-
   "podcast_advanced_options": "高级选项",
   "@podcast_advanced_options": {
     "description": "展开/收起高级选项按钮"
@@ -3070,11 +3065,6 @@
     "description": "模型选择器标签"
   },
 
-  "podcast_default": "默认",
-  "@podcast_default": {
-    "description": "默认模型标记"
-  },
-
   "podcast_custom_prompt": "自定义提示词（可选）",
   "@podcast_custom_prompt": {
     "description": "提示词输入框标签"
@@ -3088,11 +3078,6 @@
   "podcast_generating_summary": "正在生成AI摘要...",
   "@podcast_generating_summary": {
     "description": "加载状态文本"
-  },
-
-  "podcast_word_count": "字符",
-  "@podcast_word_count": {
-    "description": "字数统计单位"
   },
 
   "podcast_summary_generate": "生成摘要",
@@ -3856,5 +3841,205 @@
   "feed_load_failed_title": "加载信息流失败",
   "@feed_load_failed_title": {
     "description": "加载信息流失败时的错误标题"
+  },
+
+  "auth_password_requirement_uppercase": "至少包含一个大写字母",
+  "@auth_password_requirement_uppercase": {
+    "description": "密码要求：至少一个大写字母"
+  },
+
+  "auth_password_requirement_lowercase": "至少包含一个小写字母",
+  "@auth_password_requirement_lowercase": {
+    "description": "密码要求：至少一个小写字母"
+  },
+
+  "auth_password_requirement_number": "至少包含一个数字",
+  "@auth_password_requirement_number": {
+    "description": "密码要求：至少一个数字"
+  },
+
+  "auth_password_req_uppercase_short": "至少一个大写字母（A-Z）",
+  "@auth_password_req_uppercase_short": {
+    "description": "密码要求简短版：大写字母"
+  },
+
+  "auth_password_req_lowercase_short": "至少一个小写字母（a-z）",
+  "@auth_password_req_lowercase_short": {
+    "description": "密码要求简短版：小写字母"
+  },
+
+  "auth_password_req_number_short": "至少一个数字（0-9）",
+  "@auth_password_req_number_short": {
+    "description": "密码要求简短版：数字"
+  },
+
+  "auth_password_requirement_min_length": "至少8个字符",
+  "@auth_password_requirement_min_length": {
+    "description": "密码要求：最少8个字符"
+  },
+
+  "auth_password_requirements_title": "密码必须满足：",
+  "@auth_password_requirements_title": {
+    "description": "密码要求部分标题"
+  },
+
+  "auth_terms_and_conditions": "条款和条件",
+  "@auth_terms_and_conditions": {
+    "description": "条款和条件链接文本"
+  },
+
+  "auth_privacy_policy": "隐私政策",
+  "@auth_privacy_policy": {
+    "description": "隐私政策链接文本"
+  },
+
+  "auth_set_new_password": "设置新密码",
+  "@auth_set_new_password": {
+    "description": "设置新密码页面标题"
+  },
+
+  "auth_new_password": "新密码",
+  "@auth_new_password": {
+    "description": "新密码字段标签"
+  },
+
+  "podcast_add_to_queue": "添加到播放队列",
+  "@podcast_add_to_queue": {
+    "description": "添加到播放队列按钮"
+  },
+
+  "podcast_unknown_podcast": "未知播客",
+  "@podcast_unknown_podcast": {
+    "description": "播客标题为空时的后备名称"
+  },
+
+  "episode_unknown_title": "未知集数",
+  "@episode_unknown_title": {
+    "description": "集数名称为空时的后备标题"
+  },
+
+  "episode_details": "集数详情",
+  "@episode_details": {
+    "description": "集数详情部分标题"
+  },
+
+  "transcription_status_pending": "等待开始",
+  "@transcription_status_pending": {
+    "description": "转录状态：等待开始"
+  },
+
+  "transcription_status_downloading": "下载音频中...",
+  "@transcription_status_downloading": {
+    "description": "转录状态：下载音频文件中"
+  },
+
+  "transcription_status_converting": "转换格式中...",
+  "@transcription_status_converting": {
+    "description": "转录状态：转换音频格式中"
+  },
+
+  "transcription_status_transcribing": "转录中...",
+  "@transcription_status_transcribing": {
+    "description": "转录状态：处理音频中"
+  },
+
+  "transcription_status_processing": "处理文本中...",
+  "@transcription_status_processing": {
+    "description": "转录状态：处理转录文本中"
+  },
+
+  "transcription_status_completed": "转录完成",
+  "@transcription_status_completed": {
+    "description": "转录状态：成功完成"
+  },
+
+  "transcription_status_failed": "转录失败",
+  "@transcription_status_failed": {
+    "description": "转录状态：失败"
+  },
+
+  "player_no_media": "无媒体",
+  "@player_no_media": {
+    "description": "未加载媒体时的播放器状态"
+  },
+
+  "player_audio_playback": "音频播放",
+  "@player_audio_playback": {
+    "description": "通知中的音频播放频道名称"
+  },
+
+  "ai_model_type_transcription": "转录模型",
+  "@ai_model_type_transcription": {
+    "description": "AI模型类型：转录"
+  },
+
+  "ai_model_type_text_generation": "文本生成模型",
+  "@ai_model_type_text_generation": {
+    "description": "AI模型类型：文本生成"
+  },
+
+  "ai_provider_azure_openai": "Azure OpenAI",
+  "@ai_provider_azure_openai": {
+    "description": "AI提供商名称：Azure OpenAI"
+  },
+
+  "profile_ai_summary": "AI 总结",
+  "@profile_ai_summary": {
+    "description": "个人资料中的AI总结部分"
+  },
+
+  "profile_support_section": "支持",
+  "@profile_support_section": {
+    "description": "个人资料中的支持部分"
+  },
+
+  "podcast_rss_list": "RSS 列表",
+  "@podcast_rss_list": {
+    "description": "批量导入对话框中的RSS列表标签"
+  },
+
+  "error_unknown_dio": "未知的 Dio 错误",
+  "@error_unknown_dio": {
+    "description": "通用未知 Dio 错误消息"
+  },
+
+  "auth_and": " 和 ",
+  "@auth_and": {
+    "description": "连接词'和'，用于连接条款"
+  },
+
+  "auth_enter_email_hint": "输入邮箱",
+  "@auth_enter_email_hint": {
+    "description": "邮箱输入提示"
+  },
+
+  "auth_enter_email_error": "请输入邮箱",
+  "@auth_enter_email_error": {
+    "description": "邮箱为空时的验证错误"
+  },
+
+  "auth_invalid_email": "请输入有效的邮箱地址",
+  "@auth_invalid_email": {
+    "description": "邮箱格式无效时的验证错误"
+  },
+
+  "api_key_leave_empty_hint": "留空以保持不变",
+  "@api_key_leave_empty_hint": {
+    "description": "编辑时API密钥输入提示"
+  },
+
+  "ai_enter_config_name_error": "请输入配置名称",
+  "@ai_enter_config_name_error": {
+    "description": "配置名称为空时的验证错误"
+  },
+
+  "ai_enter_base_url_error": "请输入基础URL",
+  "@ai_enter_base_url_error": {
+    "description": "基础URL为空时的验证错误"
+  },
+
+  "ai_enter_model_name_error": "请输入模型名称",
+  "@ai_enter_model_name_error": {
+    "description": "模型名称为空时的验证错误"
   }
 }

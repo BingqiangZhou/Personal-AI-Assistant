@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../../data/models/audio_player_state_model.dart';
@@ -205,9 +206,10 @@ class AudioPlayerWidget extends ConsumerWidget {
     AudioPlayerState state,
   ) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     // Construct "Now Playing" text with speed if not 1.0x
-    String nowPlayingText = 'Now Playing';
+    String nowPlayingText = l10n.podcast_player_now_playing;
     if ((state.playbackRate - 1.0).abs() > 0.01) {
       nowPlayingText += ' (${formatPlaybackSpeed(state.playbackRate)})';
     }
@@ -670,7 +672,7 @@ class AudioPlayerWidget extends ConsumerWidget {
                       color: theme.primaryColor.withValues(alpha: 0.8),
                     ),
                     label: Text(
-                      'Episode Details',
+                      l10n.episode_details,
                       style: TextStyle(
                         color: theme.primaryColor.withValues(alpha: 0.8),
                       ),

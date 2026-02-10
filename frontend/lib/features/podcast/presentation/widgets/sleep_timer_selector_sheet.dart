@@ -60,6 +60,7 @@ Future<SleepTimerSelection?> showSleepTimerSelectorSheet({
     showDragHandle: true,
     builder: (context) {
       final theme = Theme.of(context);
+      final l10n = AppLocalizations.of(context)!;
 
       return SafeArea(
         child: SingleChildScrollView(
@@ -70,14 +71,14 @@ Future<SleepTimerSelection?> showSleepTimerSelectorSheet({
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '睡眠定时',
+                  l10n.player_sleep_timer_title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '设置定时后，播放将在指定时间自动暂停',
+                  l10n.player_sleep_timer_desc,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -124,7 +125,7 @@ Future<SleepTimerSelection?> showSleepTimerSelectorSheet({
                       color: theme.colorScheme.error,
                     ),
                     title: Text(
-                      '取消定时',
+                      l10n.player_cancel_timer,
                       style: TextStyle(color: theme.colorScheme.error),
                     ),
                     onTap: () {

@@ -264,15 +264,15 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                               isValid: _passwordController.text.length >= 8,
                             ),
                             PasswordRequirementItem(
-                              text: 'One uppercase letter (A-Z)',
+                              text: l10n.auth_password_req_uppercase_short,
                               isValid: _passwordController.text.contains(RegExp(r'[A-Z]')),
                             ),
                             PasswordRequirementItem(
-                              text: 'One lowercase letter (a-z)',
+                              text: l10n.auth_password_req_lowercase_short,
                               isValid: _passwordController.text.contains(RegExp(r'[a-z]')),
                             ),
                             PasswordRequirementItem(
-                              text: 'One number (0-9)',
+                              text: l10n.auth_password_req_number_short,
                               isValid: _passwordController.text.contains(RegExp(r'[0-9]')),
                             ),
                           ],
@@ -356,7 +356,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                     // TODO: Show terms and conditions
                                   },
                                   child: Text(
-                                    'Terms and Conditions',
+                                    l10n.auth_terms_and_conditions,
                                     style: TextStyle(
                                       color: Theme.of(context).colorScheme.primary,
                                       decoration: TextDecoration.underline,
@@ -364,14 +364,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   ),
                                 ),
                               ),
-                              const TextSpan(text: ' and '),
+                              TextSpan(text: l10n.auth_and),
                               WidgetSpan(
                                 child: GestureDetector(
                                   onTap: () {
                                     // TODO: Show privacy policy
                                   },
                                   child: Text(
-                                    'Privacy Policy',
+                                    l10n.auth_privacy_policy,
                                     style: TextStyle(
                                       color: Theme.of(context).colorScheme.primary,
                                       decoration: TextDecoration.underline,

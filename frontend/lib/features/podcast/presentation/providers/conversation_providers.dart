@@ -354,7 +354,7 @@ class ConversationNotifier extends Notifier<ConversationState> {
   String get conversationTitle {
     final firstUserMessage = state.messages.isNotEmpty && state.messages.first.isUser
         ? state.messages.first.content
-        : '对话';
+        : 'Conversation';
     // Truncate if too long
     if (firstUserMessage.length > 30) {
       return '${firstUserMessage.substring(0, 30)}...';

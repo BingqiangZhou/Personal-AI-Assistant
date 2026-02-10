@@ -125,28 +125,28 @@ class _ModelEditDialogState extends ConsumerState<ModelEditDialog> {
                 _buildTextFormField(
                   controller: _displayNameController,
                   label: 'Config Name *',
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter a config name' : null,
+                  validator: (value) => value?.isEmpty ?? true ? l10n.ai_enter_config_name_error : null,
                 ),
                 const SizedBox(height: 12),
 
                 _buildTextFormField(
                   controller: _apiUrlController,
                   label: 'Base URL *',
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter Base URL' : null,
+                  validator: (value) => value?.isEmpty ?? true ? l10n.ai_enter_base_url_error : null,
                 ),
                 const SizedBox(height: 12),
 
                 _buildTextFormField(
                   controller: _modelIdController,
                   label: 'Model Name *',
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter Model Name' : null,
+                  validator: (value) => value?.isEmpty ?? true ? l10n.ai_enter_model_name_error : null,
                 ),
                 const SizedBox(height: 12),
-                
+
                  _buildTextFormField(
                   controller: _apiKeyController,
                   label: 'API Key',
-                  hint: 'Leave empty to keep unchanged',
+                  hint: l10n.api_key_leave_empty_hint,
                   isPassword: !_isApiKeyVisible,
                   suffixIcon: IconButton(
                     icon: Icon(_isApiKeyVisible ? Icons.visibility : Icons.visibility_off),

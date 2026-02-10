@@ -2351,4 +2351,125 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feed_load_failed_title => 'Failed to Load Feed';
+
+  @override
+  String get auth_password_requirement_uppercase =>
+      'Contain at least one uppercase letter';
+
+  @override
+  String get auth_password_requirement_lowercase =>
+      'Contain at least one lowercase letter';
+
+  @override
+  String get auth_password_requirement_number => 'Contain at least one number';
+
+  @override
+  String get auth_password_req_uppercase_short =>
+      'At least one uppercase letter (A-Z)';
+
+  @override
+  String get auth_password_req_lowercase_short =>
+      'At least one lowercase letter (a-z)';
+
+  @override
+  String get auth_password_req_number_short => 'At least one number (0-9)';
+
+  @override
+  String get auth_password_requirement_min_length => 'Be at least 8 characters';
+
+  @override
+  String get auth_password_requirements_title => 'Password must:';
+
+  @override
+  String get auth_terms_and_conditions => 'Terms and Conditions';
+
+  @override
+  String get auth_privacy_policy => 'Privacy Policy';
+
+  @override
+  String get auth_set_new_password => 'Set New Password';
+
+  @override
+  String get auth_new_password => 'New Password';
+
+  @override
+  String get podcast_add_to_queue => 'Add to queue';
+
+  @override
+  String get podcast_unknown_podcast => 'Unknown Podcast';
+
+  @override
+  String get episode_unknown_title => 'Unknown Episode';
+
+  @override
+  String get episode_details => 'Episode Details';
+
+  @override
+  String get transcription_status_pending => 'Pending';
+
+  @override
+  String get transcription_status_downloading => 'Downloading audio...';
+
+  @override
+  String get transcription_status_converting => 'Converting format...';
+
+  @override
+  String get transcription_status_transcribing => 'Transcribing...';
+
+  @override
+  String get transcription_status_processing => 'Processing text...';
+
+  @override
+  String get transcription_status_completed => 'Completed';
+
+  @override
+  String get transcription_status_failed => 'Failed';
+
+  @override
+  String get player_no_media => 'No media';
+
+  @override
+  String get player_audio_playback => 'Audio Playback';
+
+  @override
+  String get ai_model_type_transcription => 'Transcription Model';
+
+  @override
+  String get ai_model_type_text_generation => 'Text Generation Model';
+
+  @override
+  String get ai_provider_azure_openai => 'Azure OpenAI';
+
+  @override
+  String get profile_ai_summary => 'AI Summary';
+
+  @override
+  String get profile_support_section => 'Support';
+
+  @override
+  String get error_unknown_dio => 'Unknown Dio error';
+
+  @override
+  String get auth_and => ' and ';
+
+  @override
+  String get auth_enter_email_hint => 'Enter email';
+
+  @override
+  String get auth_enter_email_error => 'Please enter email';
+
+  @override
+  String get auth_invalid_email => 'Please enter a valid email';
+
+  @override
+  String get api_key_leave_empty_hint => 'Leave empty to keep unchanged';
+
+  @override
+  String get ai_enter_config_name_error => 'Please enter a config name';
+
+  @override
+  String get ai_enter_base_url_error => 'Please enter Base URL';
+
+  @override
+  String get ai_enter_model_name_error => 'Please enter Model Name';
 }

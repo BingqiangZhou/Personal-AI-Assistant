@@ -245,7 +245,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildActivityCard(
             context,
             Icons.auto_awesome,
-            'AI 总结',
+            l10n.profile_ai_summary,
             summaryCount,
             Theme.of(context).colorScheme.tertiary,
           ),
@@ -270,7 +270,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           child: _buildActivityCard(
             context,
             Icons.auto_awesome,
-            'AI 总结',
+            l10n.profile_ai_summary,
             summaryCount,
             Theme.of(context).colorScheme.tertiary,
           ),
@@ -418,7 +418,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ),
           ]),
           const SizedBox(height: 24),
-          _buildSettingsSection(context, 'Support', [
+          _buildSettingsSection(context, l10n.profile_support_section, [
             _buildSettingsItem(
               context,
               icon: Icons.help,

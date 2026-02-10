@@ -995,7 +995,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                     _buildFilterTabs(),
                     const SizedBox(height: 12),
                     Text(
-                      'RSS List',
+                      l10n.podcast_rss_list,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),

@@ -3841,5 +3841,205 @@
   "feed_load_failed_title": "Failed to Load Feed",
   "@feed_load_failed_title": {
     "description": "Error title when feed loading fails"
+  },
+
+  "auth_password_requirement_uppercase": "Contain at least one uppercase letter",
+  "@auth_password_requirement_uppercase": {
+    "description": "Password requirement: at least one uppercase letter"
+  },
+
+  "auth_password_requirement_lowercase": "Contain at least one lowercase letter",
+  "@auth_password_requirement_lowercase": {
+    "description": "Password requirement: at least one lowercase letter"
+  },
+
+  "auth_password_requirement_number": "Contain at least one number",
+  "@auth_password_requirement_number": {
+    "description": "Password requirement: at least one number"
+  },
+
+  "auth_password_req_uppercase_short": "At least one uppercase letter (A-Z)",
+  "@auth_password_req_uppercase_short": {
+    "description": "Password requirement short: uppercase letter"
+  },
+
+  "auth_password_req_lowercase_short": "At least one lowercase letter (a-z)",
+  "@auth_password_req_lowercase_short": {
+    "description": "Password requirement short: lowercase letter"
+  },
+
+  "auth_password_req_number_short": "At least one number (0-9)",
+  "@auth_password_req_number_short": {
+    "description": "Password requirement short: number"
+  },
+
+  "auth_password_requirement_min_length": "Be at least 8 characters",
+  "@auth_password_requirement_min_length": {
+    "description": "Password requirement: minimum 8 characters"
+  },
+
+  "auth_password_requirements_title": "Password must:",
+  "@auth_password_requirements_title": {
+    "description": "Password requirements section title"
+  },
+
+  "auth_terms_and_conditions": "Terms and Conditions",
+  "@auth_terms_and_conditions": {
+    "description": "Terms and conditions link text"
+  },
+
+  "auth_privacy_policy": "Privacy Policy",
+  "@auth_privacy_policy": {
+    "description": "Privacy policy link text"
+  },
+
+  "auth_set_new_password": "Set New Password",
+  "@auth_set_new_password": {
+    "description": "Set new password page title"
+  },
+
+  "auth_new_password": "New Password",
+  "@auth_new_password": {
+    "description": "New password field label"
+  },
+
+  "podcast_add_to_queue": "Add to queue",
+  "@podcast_add_to_queue": {
+    "description": "Add episode to queue button"
+  },
+
+  "podcast_unknown_podcast": "Unknown Podcast",
+  "@podcast_unknown_podcast": {
+    "description": "Fallback podcast name when title is empty"
+  },
+
+  "episode_unknown_title": "Unknown Episode",
+  "@episode_unknown_title": {
+    "description": "Fallback episode title when name is empty"
+  },
+
+  "episode_details": "Episode Details",
+  "@episode_details": {
+    "description": "Episode details section header"
+  },
+
+  "transcription_status_pending": "Pending",
+  "@transcription_status_pending": {
+    "description": "Transcription status: waiting to start"
+  },
+
+  "transcription_status_downloading": "Downloading audio...",
+  "@transcription_status_downloading": {
+    "description": "Transcription status: downloading audio file"
+  },
+
+  "transcription_status_converting": "Converting format...",
+  "@transcription_status_converting": {
+    "description": "Transcription status: converting audio format"
+  },
+
+  "transcription_status_transcribing": "Transcribing...",
+  "@transcription_status_transcribing": {
+    "description": "Transcription status: processing audio"
+  },
+
+  "transcription_status_processing": "Processing text...",
+  "@transcription_status_processing": {
+    "description": "Transcription status: processing transcript text"
+  },
+
+  "transcription_status_completed": "Completed",
+  "@transcription_status_completed": {
+    "description": "Transcription status: successfully completed"
+  },
+
+  "transcription_status_failed": "Failed",
+  "@transcription_status_failed": {
+    "description": "Transcription status: failed"
+  },
+
+  "player_no_media": "No media",
+  "@player_no_media": {
+    "description": "Player state when no media is loaded"
+  },
+
+  "player_audio_playback": "Audio Playback",
+  "@player_audio_playback": {
+    "description": "Audio playback channel name for notifications"
+  },
+
+  "ai_model_type_transcription": "Transcription Model",
+  "@ai_model_type_transcription": {
+    "description": "AI model type: transcription"
+  },
+
+  "ai_model_type_text_generation": "Text Generation Model",
+  "@ai_model_type_text_generation": {
+    "description": "AI model type: text generation"
+  },
+
+  "ai_provider_azure_openai": "Azure OpenAI",
+  "@ai_provider_azure_openai": {
+    "description": "AI provider name: Azure OpenAI"
+  },
+
+  "profile_ai_summary": "AI Summary",
+  "@profile_ai_summary": {
+    "description": "AI Summary section in profile"
+  },
+
+  "profile_support_section": "Support",
+  "@profile_support_section": {
+    "description": "Support section in profile"
+  },
+
+  "podcast_rss_list": "RSS List",
+  "@podcast_rss_list": {
+    "description": "RSS list tab label in bulk import dialog"
+  },
+
+  "error_unknown_dio": "Unknown Dio error",
+  "@error_unknown_dio": {
+    "description": "Generic unknown Dio error message"
+  },
+
+  "auth_and": " and ",
+  "@auth_and": {
+    "description": "Conjunction 'and' for linking terms"
+  },
+
+  "auth_enter_email_hint": "Enter email",
+  "@auth_enter_email_hint": {
+    "description": "Email input hint"
+  },
+
+  "auth_enter_email_error": "Please enter email",
+  "@auth_enter_email_error": {
+    "description": "Validation error for empty email"
+  },
+
+  "auth_invalid_email": "Please enter a valid email",
+  "@auth_invalid_email": {
+    "description": "Validation error for invalid email format"
+  },
+
+  "api_key_leave_empty_hint": "Leave empty to keep unchanged",
+  "@api_key_leave_empty_hint": {
+    "description": "API key input hint when editing"
+  },
+
+  "ai_enter_config_name_error": "Please enter a config name",
+  "@ai_enter_config_name_error": {
+    "description": "Validation error for empty config name"
+  },
+
+  "ai_enter_base_url_error": "Please enter Base URL",
+  "@ai_enter_base_url_error": {
+    "description": "Validation error for empty base URL"
+  },
+
+  "ai_enter_model_name_error": "Please enter Model Name",
+  "@ai_enter_model_name_error": {
+    "description": "Validation error for empty model name"
   }
 }

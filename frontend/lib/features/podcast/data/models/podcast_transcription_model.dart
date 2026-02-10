@@ -165,26 +165,6 @@ class PodcastTranscriptionResponse extends Equatable {
     return 0.0;
   }
 
-  /// 获取状态描述
-  String get statusDescription {
-    switch (transcriptionStatus) {
-      case TranscriptionStatus.pending:
-        return '等待开始';
-      case TranscriptionStatus.downloading:
-        return '下载音频中...';
-      case TranscriptionStatus.converting:
-        return '转换格式中...';
-      case TranscriptionStatus.transcribing:
-        return '转录中...';
-      case TranscriptionStatus.processing:
-        return '处理文本中...';
-      case TranscriptionStatus.completed:
-        return '转录完成';
-      case TranscriptionStatus.failed:
-        return '转录失败';
-    }
-  }
-
   @override
   List<Object?> get props => [
         id,

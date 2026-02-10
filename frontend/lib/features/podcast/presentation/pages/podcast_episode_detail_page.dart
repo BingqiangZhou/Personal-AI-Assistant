@@ -299,7 +299,8 @@ class _PodcastEpisodeDetailPageState
       body: episodeDetailAsync.when(
         data: (episodeDetail) {
           if (episodeDetail == null) {
-            return _buildErrorState(context, 'Episode not found');
+            final l10n = AppLocalizations.of(context)!;
+            return _buildErrorState(context, l10n.podcast_episode_not_found);
           }
           return _buildNewLayout(context, episodeDetail);
         },
@@ -563,7 +564,7 @@ class _PodcastEpisodeDetailPageState
                         children: [
                           Flexible(
                             child: Text(
-                              episode.title ?? 'Unknown Episode',
+                              episode.title ?? l10n.episode_unknown_title,
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -834,7 +835,7 @@ class _PodcastEpisodeDetailPageState
                     children: [
                       Expanded(
                         child: Text(
-                          episode.title ?? 'Unknown Episode',
+                          episode.title ?? l10n.episode_unknown_title,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

@@ -1788,7 +1788,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_bulk_import_select_file => '选择文件';
 
   @override
-  String get podcast_rss_list => 'RSS列表';
+  String get podcast_rss_list => 'RSS 列表';
 
   @override
   String get podcast_import_all => '全部导入';
@@ -2281,4 +2281,121 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get feed_load_failed_title => '加载信息流失败';
+
+  @override
+  String get auth_password_requirement_uppercase => '至少包含一个大写字母';
+
+  @override
+  String get auth_password_requirement_lowercase => '至少包含一个小写字母';
+
+  @override
+  String get auth_password_requirement_number => '至少包含一个数字';
+
+  @override
+  String get auth_password_req_uppercase_short => '至少一个大写字母（A-Z）';
+
+  @override
+  String get auth_password_req_lowercase_short => '至少一个小写字母（a-z）';
+
+  @override
+  String get auth_password_req_number_short => '至少一个数字（0-9）';
+
+  @override
+  String get auth_password_requirement_min_length => '至少8个字符';
+
+  @override
+  String get auth_password_requirements_title => '密码必须满足：';
+
+  @override
+  String get auth_terms_and_conditions => '条款和条件';
+
+  @override
+  String get auth_privacy_policy => '隐私政策';
+
+  @override
+  String get auth_set_new_password => '设置新密码';
+
+  @override
+  String get auth_new_password => '新密码';
+
+  @override
+  String get podcast_add_to_queue => '添加到播放队列';
+
+  @override
+  String get podcast_unknown_podcast => '未知播客';
+
+  @override
+  String get episode_unknown_title => '未知集数';
+
+  @override
+  String get episode_details => '集数详情';
+
+  @override
+  String get transcription_status_pending => '等待开始';
+
+  @override
+  String get transcription_status_downloading => '下载音频中...';
+
+  @override
+  String get transcription_status_converting => '转换格式中...';
+
+  @override
+  String get transcription_status_transcribing => '转录中...';
+
+  @override
+  String get transcription_status_processing => '处理文本中...';
+
+  @override
+  String get transcription_status_completed => '转录完成';
+
+  @override
+  String get transcription_status_failed => '转录失败';
+
+  @override
+  String get player_no_media => '无媒体';
+
+  @override
+  String get player_audio_playback => '音频播放';
+
+  @override
+  String get ai_model_type_transcription => '转录模型';
+
+  @override
+  String get ai_model_type_text_generation => '文本生成模型';
+
+  @override
+  String get ai_provider_azure_openai => 'Azure OpenAI';
+
+  @override
+  String get profile_ai_summary => 'AI 总结';
+
+  @override
+  String get profile_support_section => '支持';
+
+  @override
+  String get error_unknown_dio => '未知的 Dio 错误';
+
+  @override
+  String get auth_and => ' 和 ';
+
+  @override
+  String get auth_enter_email_hint => '输入邮箱';
+
+  @override
+  String get auth_enter_email_error => '请输入邮箱';
+
+  @override
+  String get auth_invalid_email => '请输入有效的邮箱地址';
+
+  @override
+  String get api_key_leave_empty_hint => '留空以保持不变';
+
+  @override
+  String get ai_enter_config_name_error => '请输入配置名称';
+
+  @override
+  String get ai_enter_base_url_error => '请输入基础URL';
+
+  @override
+  String get ai_enter_model_name_error => '请输入模型名称';
 }

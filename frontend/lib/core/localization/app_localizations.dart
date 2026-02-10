@@ -3518,7 +3518,7 @@ abstract class AppLocalizations {
   /// **'Select File'**
   String get podcast_bulk_import_select_file;
 
-  /// RSS list heading
+  /// RSS list tab label in bulk import dialog
   ///
   /// In en, this message translates to:
   /// **'RSS List'**
@@ -4387,6 +4387,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to Load Feed'**
   String get feed_load_failed_title;
+
+  /// Password requirement: at least one uppercase letter
+  ///
+  /// In en, this message translates to:
+  /// **'Contain at least one uppercase letter'**
+  String get auth_password_requirement_uppercase;
+
+  /// Password requirement: at least one lowercase letter
+  ///
+  /// In en, this message translates to:
+  /// **'Contain at least one lowercase letter'**
+  String get auth_password_requirement_lowercase;
+
+  /// Password requirement: at least one number
+  ///
+  /// In en, this message translates to:
+  /// **'Contain at least one number'**
+  String get auth_password_requirement_number;
+
+  /// Password requirement short: uppercase letter
+  ///
+  /// In en, this message translates to:
+  /// **'At least one uppercase letter (A-Z)'**
+  String get auth_password_req_uppercase_short;
+
+  /// Password requirement short: lowercase letter
+  ///
+  /// In en, this message translates to:
+  /// **'At least one lowercase letter (a-z)'**
+  String get auth_password_req_lowercase_short;
+
+  /// Password requirement short: number
+  ///
+  /// In en, this message translates to:
+  /// **'At least one number (0-9)'**
+  String get auth_password_req_number_short;
+
+  /// Password requirement: minimum 8 characters
+  ///
+  /// In en, this message translates to:
+  /// **'Be at least 8 characters'**
+  String get auth_password_requirement_min_length;
+
+  /// Password requirements section title
+  ///
+  /// In en, this message translates to:
+  /// **'Password must:'**
+  String get auth_password_requirements_title;
+
+  /// Terms and conditions link text
+  ///
+  /// In en, this message translates to:
+  /// **'Terms and Conditions'**
+  String get auth_terms_and_conditions;
+
+  /// Privacy policy link text
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get auth_privacy_policy;
+
+  /// Set new password page title
+  ///
+  /// In en, this message translates to:
+  /// **'Set New Password'**
+  String get auth_set_new_password;
+
+  /// New password field label
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get auth_new_password;
+
+  /// Add episode to queue button
+  ///
+  /// In en, this message translates to:
+  /// **'Add to queue'**
+  String get podcast_add_to_queue;
+
+  /// Fallback podcast name when title is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Podcast'**
+  String get podcast_unknown_podcast;
+
+  /// Fallback episode title when name is empty
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Episode'**
+  String get episode_unknown_title;
+
+  /// Episode details section header
+  ///
+  /// In en, this message translates to:
+  /// **'Episode Details'**
+  String get episode_details;
+
+  /// Transcription status: waiting to start
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get transcription_status_pending;
+
+  /// Transcription status: downloading audio file
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading audio...'**
+  String get transcription_status_downloading;
+
+  /// Transcription status: converting audio format
+  ///
+  /// In en, this message translates to:
+  /// **'Converting format...'**
+  String get transcription_status_converting;
+
+  /// Transcription status: processing audio
+  ///
+  /// In en, this message translates to:
+  /// **'Transcribing...'**
+  String get transcription_status_transcribing;
+
+  /// Transcription status: processing transcript text
+  ///
+  /// In en, this message translates to:
+  /// **'Processing text...'**
+  String get transcription_status_processing;
+
+  /// Transcription status: successfully completed
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get transcription_status_completed;
+
+  /// Transcription status: failed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get transcription_status_failed;
+
+  /// Player state when no media is loaded
+  ///
+  /// In en, this message translates to:
+  /// **'No media'**
+  String get player_no_media;
+
+  /// Audio playback channel name for notifications
+  ///
+  /// In en, this message translates to:
+  /// **'Audio Playback'**
+  String get player_audio_playback;
+
+  /// AI model type: transcription
+  ///
+  /// In en, this message translates to:
+  /// **'Transcription Model'**
+  String get ai_model_type_transcription;
+
+  /// AI model type: text generation
+  ///
+  /// In en, this message translates to:
+  /// **'Text Generation Model'**
+  String get ai_model_type_text_generation;
+
+  /// AI provider name: Azure OpenAI
+  ///
+  /// In en, this message translates to:
+  /// **'Azure OpenAI'**
+  String get ai_provider_azure_openai;
+
+  /// AI Summary section in profile
+  ///
+  /// In en, this message translates to:
+  /// **'AI Summary'**
+  String get profile_ai_summary;
+
+  /// Support section in profile
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get profile_support_section;
+
+  /// Generic unknown Dio error message
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Dio error'**
+  String get error_unknown_dio;
+
+  /// Conjunction 'and' for linking terms
+  ///
+  /// In en, this message translates to:
+  /// **' and '**
+  String get auth_and;
+
+  /// Email input hint
+  ///
+  /// In en, this message translates to:
+  /// **'Enter email'**
+  String get auth_enter_email_hint;
+
+  /// Validation error for empty email
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter email'**
+  String get auth_enter_email_error;
+
+  /// Validation error for invalid email format
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email'**
+  String get auth_invalid_email;
+
+  /// API key input hint when editing
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty to keep unchanged'**
+  String get api_key_leave_empty_hint;
+
+  /// Validation error for empty config name
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a config name'**
+  String get ai_enter_config_name_error;
+
+  /// Validation error for empty base URL
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter Base URL'**
+  String get ai_enter_base_url_error;
+
+  /// Validation error for empty model name
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter Model Name'**
+  String get ai_enter_model_name_error;
 }
 
 class _AppLocalizationsDelegate

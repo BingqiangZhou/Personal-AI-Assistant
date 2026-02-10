@@ -214,8 +214,3 @@ bool isTranscriptionFailed(PodcastTranscriptionResponse? transcription) {
 double getTranscriptionProgress(PodcastTranscriptionResponse? transcription) {
   return transcription?.progressPercentage ?? 0.0;
 }
-
-// Helper function to get transcription status description
-String getTranscriptionStatusDescription(PodcastTranscriptionResponse? transcription) {
-  return transcription?.statusDescription ?? '未知状态';
-}

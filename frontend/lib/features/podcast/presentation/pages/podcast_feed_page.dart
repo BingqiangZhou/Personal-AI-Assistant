@@ -387,7 +387,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                     ),
                                   ),
                                   IconButton(
-                                    tooltip: 'Add to queue',
+                                    tooltip: l10n.podcast_add_to_queue,
                                     onPressed: () => _addToQueue(episode),
                                     icon: const Icon(
                                       Icons.playlist_add,

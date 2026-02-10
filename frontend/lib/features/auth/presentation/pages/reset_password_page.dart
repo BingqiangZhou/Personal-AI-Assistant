@@ -203,7 +203,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Set New Password',
+                          l10n.auth_set_new_password,
                           style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Theme.of(context).colorScheme.primary,
@@ -226,7 +226,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   // Password field
                   CustomTextField(
                     controller: _passwordController,
-                    label: 'New Password',
+                    label: l10n.auth_new_password,
                     obscureText: _obscurePassword,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
@@ -289,26 +289,26 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Password must:',
+                            l10n.auth_password_requirements_title,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(height: 8),
                           PasswordRequirementItem(
-                            text: 'Be at least 8 characters',
+                            text: l10n.auth_password_requirement_min_length,
                             isValid: _hasMinLength(_passwordController.text),
                           ),
                           PasswordRequirementItem(
-                            text: 'Contain at least one uppercase letter',
+                            text: l10n.auth_password_requirement_uppercase,
                             isValid: _hasUppercase(_passwordController.text),
                           ),
                           PasswordRequirementItem(
-                            text: 'Contain at least one lowercase letter',
+                            text: l10n.auth_password_requirement_lowercase,
                             isValid: _hasLowercase(_passwordController.text),
                           ),
                           PasswordRequirementItem(
-                            text: 'Contain at least one number',
+                            text: l10n.auth_password_requirement_number,
                             isValid: _hasNumber(_passwordController.text),
                           ),
                         ],

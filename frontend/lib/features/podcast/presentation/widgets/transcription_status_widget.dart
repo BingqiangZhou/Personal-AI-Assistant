@@ -4,6 +4,7 @@ import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 
 import '../providers/transcription_providers.dart';
 import '../../data/models/podcast_transcription_model.dart';
+import '../../data/models/podcast_transcription_model_extensions.dart';
 
 class TranscriptionStatusWidget extends ConsumerWidget {
   final int episodeId;
@@ -270,7 +271,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
   Widget _buildProcessingState(BuildContext context, PodcastTranscriptionResponse transcription) {
     final progress = transcription.progressPercentage;
-    final statusText = transcription.statusDescription;
+    final statusText = transcription.getLocalizedStatusDescription(context);
     final currentStep = _getCurrentStep(transcription);
 
     return LayoutBuilder(
