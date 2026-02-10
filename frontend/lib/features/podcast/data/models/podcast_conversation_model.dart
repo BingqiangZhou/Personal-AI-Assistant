@@ -11,6 +11,65 @@ enum ConversationRole {
   assistant,
 }
 
+/// 对话会话模型
+@JsonSerializable()
+class ConversationSession extends Equatable {
+  final int id;
+  @JsonKey(name: 'episode_id')
+  final int episodeId;
+  final String title;
+  @JsonKey(name: 'message_count')
+  final int messageCount;
+  @JsonKey(name: 'created_at')
+  final String createdAt;
+  @JsonKey(name: 'updated_at')
+  final String? updatedAt;
+
+  const ConversationSession({
+    required this.id,
+    required this.episodeId,
+    required this.title,
+    this.messageCount = 0,
+    required this.createdAt,
+    this.updatedAt,
+  });
+
+  factory ConversationSession.fromJson(Map<String, dynamic> json) =>
+      _$ConversationSessionFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ConversationSessionToJson(this);
+
+  @override
+  List<Object?> get props => [
+        id,
+        episodeId,
+        title,
+        messageCount,
+        createdAt,
+        updatedAt,
+      ];
+}
+
+/// 对话会话列表响应
+@JsonSerializable()
+class ConversationSessionListResponse extends Equatable {
+  final List<ConversationSession> sessions;
+  final int total;
+
+  const ConversationSessionListResponse({
+    required this.sessions,
+    required this.total,
+  });
+
+  factory ConversationSessionListResponse.fromJson(Map<String, dynamic> json) =>
+      _$ConversationSessionListResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ConversationSessionListResponseToJson(this);
+
+  @override
+  List<Object?> get props => [sessions, total];
+}
+
 /// 对话消息模型
 @JsonSerializable()
 class PodcastConversationMessage extends Equatable {
@@ -73,10 +132,13 @@ class PodcastConversationSendRequest extends Equatable {
   final String message;
   @JsonKey(name: 'model_name')
   final String? modelName;
+  @JsonKey(name: 'session_id')
+  final int? sessionId;
 
   const PodcastConversationSendRequest({
     required this.message,
     this.modelName,
+    this.sessionId,
   });
 
   factory PodcastConversationSendRequest.fromJson(Map<String, dynamic> json) =>
@@ -85,7 +147,7 @@ class PodcastConversationSendRequest extends Equatable {
   Map<String, dynamic> toJson() => _$PodcastConversationSendRequestToJson(this);
 
   @override
-  List<Object?> get props => [message, modelName];
+  List<Object?> get props => [message, modelName, sessionId];
 }
 
 /// 发送对话消息响应
@@ -143,11 +205,14 @@ class PodcastConversationSendResponse extends Equatable {
 class PodcastConversationHistoryResponse extends Equatable {
   @JsonKey(name: 'episode_id')
   final int episodeId;
+  @JsonKey(name: 'session_id')
+  final int? sessionId;
   final List<PodcastConversationMessage> messages;
   final int total;
 
   const PodcastConversationHistoryResponse({
     required this.episodeId,
+    this.sessionId,
     required this.messages,
     required this.total,
   });
@@ -158,7 +223,7 @@ class PodcastConversationHistoryResponse extends Equatable {
   Map<String, dynamic> toJson() => _$PodcastConversationHistoryResponseToJson(this);
 
   @override
-  List<Object?> get props => [episodeId, messages, total];
+  List<Object?> get props => [episodeId, sessionId, messages, total];
 }
 
 /// 清除对话历史响应
@@ -166,11 +231,14 @@ class PodcastConversationHistoryResponse extends Equatable {
 class PodcastConversationClearResponse extends Equatable {
   @JsonKey(name: 'episode_id')
   final int episodeId;
+  @JsonKey(name: 'session_id')
+  final int? sessionId;
   @JsonKey(name: 'deleted_count')
   final int deletedCount;
 
   const PodcastConversationClearResponse({
     required this.episodeId,
+    this.sessionId,
     required this.deletedCount,
   });
 
@@ -180,5 +248,5 @@ class PodcastConversationClearResponse extends Equatable {
   Map<String, dynamic> toJson() => _$PodcastConversationClearResponseToJson(this);
 
   @override
-  List<Object?> get props => [episodeId, deletedCount];
+  List<Object?> get props => [episodeId, sessionId, deletedCount];
 }

@@ -2687,6 +2687,26 @@
     "description": "Clear conversation history dialog title"
   },
 
+  "podcast_conversation_history": "Chat History",
+  "@podcast_conversation_history": {
+    "description": "Chat history title"
+  },
+
+  "podcast_conversation_delete_title": "Delete Chat",
+  "@podcast_conversation_delete_title": {
+    "description": "Delete chat dialog title"
+  },
+
+  "podcast_conversation_delete_confirm": "Are you sure you want to delete this chat? This action cannot be undone.",
+  "@podcast_conversation_delete_confirm": {
+    "description": "Delete chat confirmation message"
+  },
+
+  "podcast_conversation_title": "Chat with AI",
+  "@podcast_conversation_title": {
+    "description": "Conversation screen title"
+  },
+
   "podcast_conversation_clear_confirm": "Are you sure you want to clear all conversation history? This cannot be undone.",
   "@podcast_conversation_clear_confirm": {
     "description": "Clear conversation confirmation message"
@@ -2720,6 +2740,26 @@
   "podcast_conversation_reload": "Reload",
   "@podcast_conversation_reload": {
     "description": "Reload button label"
+  },
+
+  "podcast_conversation_new_chat": "New Chat",
+  "@podcast_conversation_new_chat": {
+    "description": "New chat button tooltip"
+  },
+
+  "podcast_conversation_new_chat_confirm": "Starting a new chat will clear the current conversation history. Are you sure?",
+  "@podcast_conversation_new_chat_confirm": {
+    "description": "New chat confirmation message"
+  },
+
+  "podcast_conversation_message_count": "{count} messages",
+  "@podcast_conversation_message_count": {
+    "description": "Conversation message count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
 
   "podcast_error_loading": "Failed to load content",

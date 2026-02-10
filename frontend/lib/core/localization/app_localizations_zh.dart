@@ -1634,6 +1634,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_conversation_clear_history => '清空对话历史';
 
   @override
+  String get podcast_conversation_history => '对话历史';
+
+  @override
+  String get podcast_conversation_delete_title => '删除对话';
+
+  @override
+  String get podcast_conversation_delete_confirm => '确定要删除这个对话吗？此操作无法撤销。';
+
+  @override
   String get podcast_conversation_clear_confirm => '确定要清空所有对话历史吗？此操作无法撤销。';
 
   @override
@@ -1653,6 +1662,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get podcast_conversation_reload => '重新加载';
+
+  @override
+  String get podcast_conversation_new_chat => '新对话';
+
+  @override
+  String get podcast_conversation_new_chat_confirm => '确定要开始新的对话吗？当前的对话将会被清除。';
+
+  @override
+  String podcast_conversation_message_count(int count) {
+    return '$count条消息';
+  }
 
   @override
   String get podcast_error_loading => '加载内容失败';

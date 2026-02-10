@@ -455,7 +455,9 @@ class _PodcastApiService implements PodcastApiService {
     int? subscriptionId,
   ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'subscription_id': subscriptionId};
+    final queryParameters = <String, dynamic>{
+      r'subscription_id': subscriptionId,
+    };
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
@@ -538,7 +540,9 @@ class _PodcastApiService implements PodcastApiService {
   }
 
   @override
-  Future<PodcastQueueModel> addQueueItem(PodcastQueueAddItemRequest request) async {
+  Future<PodcastQueueModel> addQueueItem(
+    PodcastQueueAddItemRequest request,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -593,7 +597,9 @@ class _PodcastApiService implements PodcastApiService {
   }
 
   @override
-  Future<PodcastQueueModel> reorderQueueItems(PodcastQueueReorderRequest request) async {
+  Future<PodcastQueueModel> reorderQueueItems(
+    PodcastQueueReorderRequest request,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -621,7 +627,9 @@ class _PodcastApiService implements PodcastApiService {
   }
 
   @override
-  Future<PodcastQueueModel> setQueueCurrent(PodcastQueueSetCurrentRequest request) async {
+  Future<PodcastQueueModel> setQueueCurrent(
+    PodcastQueueSetCurrentRequest request,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -649,7 +657,9 @@ class _PodcastApiService implements PodcastApiService {
   }
 
   @override
-  Future<PodcastQueueModel> completeQueueCurrent(Map<String, dynamic> request) async {
+  Future<PodcastQueueModel> completeQueueCurrent(
+    Map<String, dynamic> request,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -960,12 +970,107 @@ class _PodcastApiService implements PodcastApiService {
   }
 
   @override
+  Future<ConversationSessionListResponse> getConversationSessions(
+    int episodeId,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<ConversationSessionListResponse>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/podcasts/episodes/${episodeId}/conversation-sessions',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ConversationSessionListResponse _value;
+    try {
+      _value = ConversationSessionListResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<ConversationSession> createConversationSession(
+    int episodeId,
+    Map<String, dynamic> body,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body);
+    final _options = _setStreamType<ConversationSession>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/podcasts/episodes/${episodeId}/conversation-sessions',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ConversationSession _value;
+    try {
+      _value = ConversationSession.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<PodcastConversationClearResponse> deleteConversationSession(
+    int episodeId,
+    int sessionId,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<PodcastConversationClearResponse>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/podcasts/episodes/${episodeId}/conversation-sessions/${sessionId}',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late PodcastConversationClearResponse _value;
+    try {
+      _value = PodcastConversationClearResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<PodcastConversationHistoryResponse> getConversationHistory(
     int episodeId,
     int limit,
+    int? sessionId,
   ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'limit': limit};
+    final queryParameters = <String, dynamic>{
+      r'limit': limit,
+      r'session_id': sessionId,
+    };
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<PodcastConversationHistoryResponse>(
@@ -1023,9 +1128,11 @@ class _PodcastApiService implements PodcastApiService {
   @override
   Future<PodcastConversationClearResponse> clearConversationHistory(
     int episodeId,
+    int? sessionId,
   ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'session_id': sessionId};
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<PodcastConversationClearResponse>(

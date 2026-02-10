@@ -608,6 +608,7 @@ class PodcastConversationSendRequest(PodcastBaseSchema):
 
     message: str = Field(..., min_length=1, max_length=5000, description="用户消息内容")
     model_name: str | None = Field(None, description="使用的AI模型名称")
+    session_id: int | None = Field(None, description="会话ID，不提供则使用或创建默认会话")
 
 
 class PodcastConversationSendResponse(PodcastBaseSchema):
@@ -625,6 +626,7 @@ class PodcastConversationHistoryResponse(PodcastBaseSchema):
     """对话历史响应"""
 
     episode_id: int
+    session_id: int | None = None
     messages: list[PodcastConversationMessage]
     total: int
 
@@ -633,7 +635,35 @@ class PodcastConversationClearResponse(PodcastBaseSchema):
     """清除对话历史响应"""
 
     episode_id: int
+    session_id: int | None = None
     deleted_count: int
+
+
+# === Conversation Session Schemas ===
+
+
+class ConversationSessionResponse(PodcastBaseSchema):
+    """对话会话响应"""
+
+    id: int
+    episode_id: int
+    title: str
+    message_count: int = 0
+    created_at: datetime
+    updated_at: datetime | None = None
+
+
+class ConversationSessionListResponse(PodcastBaseSchema):
+    """对话会话列表响应"""
+
+    sessions: list[ConversationSessionResponse]
+    total: int
+
+
+class ConversationSessionCreateRequest(PodcastBaseSchema):
+    """创建对话会话请求"""
+
+    title: str | None = Field(None, max_length=255, description="会话标题")
 
 
 # === Schedule Configuration Schemas ===

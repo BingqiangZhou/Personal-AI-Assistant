@@ -399,12 +399,48 @@ class PodcastRepository {
 
   // === Conversation Management ===
 
+  Future<ConversationSessionListResponse> getConversationSessions({
+    required int episodeId,
+  }) async {
+    try {
+      return await _apiService.getConversationSessions(episodeId);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<ConversationSession> createConversationSession({
+    required int episodeId,
+    String? title,
+  }) async {
+    try {
+      return await _apiService.createConversationSession(
+        episodeId,
+        {'title': title},
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastConversationClearResponse> deleteConversationSession({
+    required int episodeId,
+    required int sessionId,
+  }) async {
+    try {
+      return await _apiService.deleteConversationSession(episodeId, sessionId);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   Future<PodcastConversationHistoryResponse> getConversationHistory({
     required int episodeId,
     int limit = 50,
+    int? sessionId,
   }) async {
     try {
-      return await _apiService.getConversationHistory(episodeId, limit);
+      return await _apiService.getConversationHistory(episodeId, limit, sessionId);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
@@ -423,9 +459,10 @@ class PodcastRepository {
 
   Future<PodcastConversationClearResponse> clearConversationHistory({
     required int episodeId,
+    int? sessionId,
   }) async {
     try {
-      return await _apiService.clearConversationHistory(episodeId);
+      return await _apiService.clearConversationHistory(episodeId, sessionId);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }

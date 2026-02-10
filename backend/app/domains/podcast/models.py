@@ -407,6 +407,49 @@ class TranscriptionTask(Base):
         return f"<TranscriptionTask(id={self.id}, episode_id={self.episode_id}, status='{self.status}')>"
 
 
+class ConversationSession(Base):
+    """
+    对话会话模型
+
+    每个 episode+user 可以有多个会话，每个会话包含独立的对话历史
+    """
+
+    __tablename__ = "conversation_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    episode_id = Column(
+        Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String(255), default="默认对话")
+
+    created_at = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    # Relationships
+    episode = relationship("PodcastEpisode", backref="conversation_sessions")
+    messages = relationship(
+        "PodcastConversation",
+        back_populates="session",
+        cascade="all, delete-orphan",
+        order_by="PodcastConversation.created_at",
+    )
+
+    __table_args__ = (
+        Index("idx_session_episode_user", "episode_id", "user_id"),
+        Index("idx_session_created", "created_at"),
+    )
+
+    def __repr__(self):
+        return f"<ConversationSession(id={self.id}, episode_id={self.episode_id}, title='{self.title}')>"
+
+
 class PodcastConversation(Base):
     """
     播客单集对话交互模型
@@ -421,6 +464,9 @@ class PodcastConversation(Base):
         Integer, ForeignKey("podcast_episodes.id", ondelete="CASCADE"), nullable=False
     )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    session_id = Column(
+        Integer, ForeignKey("conversation_sessions.id", ondelete="CASCADE"), nullable=True
+    )
 
     # 对话内容
     role = Column(String(20), nullable=False)  # 'user' or 'assistant'
@@ -444,6 +490,7 @@ class PodcastConversation(Base):
 
     # Relationships
     episode = relationship("PodcastEpisode", backref="conversations")
+    session = relationship("ConversationSession", back_populates="messages")
     parent_message = relationship(
         "PodcastConversation", remote_side=[id], backref="replies"
     )
@@ -452,6 +499,7 @@ class PodcastConversation(Base):
     __table_args__ = (
         Index("idx_conversation_episode", "episode_id"),
         Index("idx_conversation_user", "user_id"),
+        Index("idx_conversation_session", "session_id"),
         Index("idx_conversation_created", "created_at"),
         Index("idx_conversation_turn", "episode_id", "conversation_turn"),
     )

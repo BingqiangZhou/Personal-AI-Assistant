@@ -1665,7 +1665,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_transcription_start_button => 'Start Transcription';
 
   @override
-  String get podcast_conversation_title => 'AI Conversation';
+  String get podcast_conversation_title => 'Chat with AI';
 
   @override
   String get podcast_conversation_empty_title => 'Start a conversation';
@@ -1676,6 +1676,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcast_conversation_clear_history => 'Clear Conversation History';
+
+  @override
+  String get podcast_conversation_history => 'Chat History';
+
+  @override
+  String get podcast_conversation_delete_title => 'Delete Chat';
+
+  @override
+  String get podcast_conversation_delete_confirm =>
+      'Are you sure you want to delete this chat? This action cannot be undone.';
 
   @override
   String get podcast_conversation_clear_confirm =>
@@ -1700,6 +1710,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcast_conversation_reload => 'Reload';
+
+  @override
+  String get podcast_conversation_new_chat => 'New Chat';
+
+  @override
+  String get podcast_conversation_new_chat_confirm =>
+      'Starting a new chat will clear the current conversation history. Are you sure?';
+
+  @override
+  String podcast_conversation_message_count(int count) {
+    return '$count messages';
+  }
 
   @override
   String get podcast_error_loading => 'Failed to load content';

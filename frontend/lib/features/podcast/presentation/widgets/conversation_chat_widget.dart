@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_conversation_model.dart';
+import '../../data/models/podcast_playback_model.dart';
 import '../providers/conversation_providers.dart';
+import '../providers/summary_providers.dart';
 
 /// AI对话聊天界面组件
 class ConversationChatWidget extends ConsumerStatefulWidget {
@@ -24,6 +26,7 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
+  SummaryModelInfo? _selectedModel;
 
   /// 滚动到顶部
   void scrollToTop() {
@@ -44,6 +47,25 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
         // Scroll to bottom when keyboard appears
         Future.delayed(const Duration(milliseconds: 300), _scrollToBottom);
       }
+    });
+    // 自动选择默认模型
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final modelsAsync = ref.read(availableModelsProvider);
+      modelsAsync.when(
+        data: (models) {
+          if (models.isNotEmpty) {
+            final defaultModel = models.firstWhere(
+              (m) => m.isDefault,
+              orElse: () => models.first,
+            );
+            if (mounted) {
+              setState(() => _selectedModel = defaultModel);
+            }
+          }
+        },
+        loading: () {},
+        error: (_, __) {},
+      );
     });
   }
 
@@ -70,7 +92,7 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
     if (message.isEmpty) return;
 
     final notifier = ref.read(getConversationProvider(widget.episodeId).notifier);
-    notifier.sendMessage(message);
+    notifier.sendMessage(message, modelName: _selectedModel?.name);
 
     _messageController.clear();
     _focusNode.requestFocus();
@@ -106,6 +128,35 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
     }
   }
 
+  void _startNewChat() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(l10n.podcast_conversation_new_chat),
+          content: Text(l10n.podcast_conversation_new_chat_confirm),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton.tonal(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.podcast_conversation_new_chat),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && mounted) {
+      await ref.read(getConversationProvider(widget.episodeId).notifier).startNewChat();
+      _messageController.clear();
+      _focusNode.requestFocus();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final conversationState = ref.watch(getConversationProvider(widget.episodeId));
@@ -120,24 +171,178 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
       },
     );
 
-    return Column(
-      children: [
-        // Header with title and actions
-        _buildHeader(context, conversationState),
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      endDrawer: _buildSessionsDrawer(context),
+      body: Column(
+        children: [
+          // Header with title and actions
+          _buildHeader(context, conversationState),
 
-        // Messages list
-        Expanded(
-          child: _buildMessagesList(context, conversationState),
-        ),
+          // Messages list
+          Expanded(
+            child: _buildMessagesList(context, conversationState),
+          ),
 
-        // Input field
-        _buildInputArea(context, conversationState),
-      ],
+          // Input field
+          _buildInputArea(context, conversationState),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSessionsDrawer(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final sessionsAsync = ref.watch(getSessionListProvider(widget.episodeId));
+    final currentSessionId = ref.watch(getCurrentSessionIdProvider(widget.episodeId));
+
+    return Drawer(
+      width: MediaQuery.of(context).size.width * 0.75,
+      child: Column(
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.history,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.podcast_conversation_history,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: sessionsAsync.when(
+              data: (sessions) {
+                if (sessions.isEmpty) {
+                  return Center(
+                    child: Text(
+                      l10n.podcast_conversation_empty_title,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  padding: EdgeInsets.zero,
+                  itemCount: sessions.length,
+                  itemBuilder: (context, index) {
+                    final session = sessions[index];
+                    final isSelected = session.id == currentSessionId;
+                    return ListTile(
+                      leading: Icon(
+                        isSelected
+                            ? Icons.chat_bubble
+                            : Icons.chat_bubble_outline,
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                      ),
+                      title: Text(
+                        session.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      subtitle: Text(
+                        session.createdAt.substring(0, 10), // Simple date format
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 20),
+                        onPressed: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text(l10n.podcast_conversation_delete_title),
+                              content: Text(
+                                  l10n.podcast_conversation_delete_confirm),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: Text(l10n.cancel),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, true),
+                                  child: Text(
+                                    l10n.delete,
+                                    style: TextStyle(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .error,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true) {
+                            ref
+                                .read(getSessionListProvider(widget.episodeId)
+                                    .notifier)
+                                .deleteSession(session.id);
+                          }
+                        },
+                      ),
+                      selected: isSelected,
+                      onTap: () {
+                        ref
+                            .read(getCurrentSessionIdProvider(widget.episodeId)
+                                .notifier)
+                            .set(session.id);
+                        Navigator.pop(context); // Close drawer
+                      },
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, __) => Center(child: Text('Error: $e')),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(context); // Close drawer first
+                  _startNewChat();
+                },
+                icon: const Icon(Icons.add),
+                label: Text(l10n.podcast_conversation_new_chat),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildHeader(BuildContext context, ConversationState state) {
     final l10n = AppLocalizations.of(context)!;
+    final availableModelsAsync = ref.watch(availableModelsProvider);
+    final messageCount = state.messages.length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -154,19 +359,60 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
           const Icon(Icons.chat_bubble_outline),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              l10n.podcast_conversation_title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    l10n.podcast_conversation_title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
+                if (messageCount > 0) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      l10n.podcast_conversation_message_count(messageCount),
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          ),
+                    ),
+                  ),
+                ],
+              ],
             ),
+          ),
+          // 模型选择器
+          availableModelsAsync.when(
+            data: (models) {
+              if (models.length <= 1) return const SizedBox.shrink();
+              return _buildModelSelector(context, models);
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
           ),
           if (state.hasMessages)
             IconButton(
-              icon: const Icon(Icons.delete_outline),
-              tooltip: l10n.podcast_conversation_clear_history,
-              onPressed: state.isSending ? null : _clearHistory,
+              icon: const Icon(Icons.add_comment_outlined),
+              tooltip: l10n.podcast_conversation_new_chat,
+              onPressed: state.isSending ? null : _startNewChat,
             ),
+          Builder(
+            builder: (context) => IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: l10n.podcast_conversation_history,
+              onPressed: () {
+                Scaffold.of(context).openEndDrawer();
+              },
+            ),
+          ),
           if (state.hasError)
             IconButton(
               icon: const Icon(Icons.refresh),
@@ -176,6 +422,81 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                   : () => ref.read(getConversationProvider(widget.episodeId).notifier).refresh(),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildModelSelector(BuildContext context, List<SummaryModelInfo> models) {
+    final l10n = AppLocalizations.of(context)!;
+    // 确保_selectedModel在可用列表中
+    if (_selectedModel != null && !models.any((m) => m.id == _selectedModel!.id)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _selectedModel = models.firstWhere(
+              (m) => m.isDefault,
+              orElse: () => models.first,
+            );
+          });
+        }
+      });
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButton<SummaryModelInfo>(
+        value: _selectedModel,
+        underline: const SizedBox.shrink(),
+        isDense: true,
+        icon: const Icon(Icons.expand_more, size: 18),
+        hint: Text(
+          l10n.podcast_ai_model,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+        items: models.map((model) {
+          return DropdownMenuItem<SummaryModelInfo>(
+            value: model,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(model.displayName),
+                if (model.isDefault)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        l10n.podcast_default_model,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }).toList(),
+        onChanged: (value) {
+          setState(() => _selectedModel = value);
+        },
       ),
     );
   }

@@ -3224,10 +3224,10 @@ abstract class AppLocalizations {
   /// **'Start Transcription'**
   String get podcast_transcription_start_button;
 
-  /// AI Conversation title
+  /// Conversation screen title
   ///
   /// In en, this message translates to:
-  /// **'AI Conversation'**
+  /// **'Chat with AI'**
   String get podcast_conversation_title;
 
   /// Empty conversation title
@@ -3247,6 +3247,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear Conversation History'**
   String get podcast_conversation_clear_history;
+
+  /// Chat history title
+  ///
+  /// In en, this message translates to:
+  /// **'Chat History'**
+  String get podcast_conversation_history;
+
+  /// Delete chat dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Chat'**
+  String get podcast_conversation_delete_title;
+
+  /// Delete chat confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this chat? This action cannot be undone.'**
+  String get podcast_conversation_delete_confirm;
 
   /// Clear conversation confirmation message
   ///
@@ -3289,6 +3307,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reload'**
   String get podcast_conversation_reload;
+
+  /// New chat button tooltip
+  ///
+  /// In en, this message translates to:
+  /// **'New Chat'**
+  String get podcast_conversation_new_chat;
+
+  /// New chat confirmation message
+  ///
+  /// In en, this message translates to:
+  /// **'Starting a new chat will clear the current conversation history. Are you sure?'**
+  String get podcast_conversation_new_chat_confirm;
+
+  /// Conversation message count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} messages'**
+  String podcast_conversation_message_count(int count);
 
   /// Generic error loading message
   ///

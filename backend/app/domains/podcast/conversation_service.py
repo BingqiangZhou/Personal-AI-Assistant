@@ -8,13 +8,13 @@ import time
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ValidationError
 from app.domains.ai.models import ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
-from app.domains.podcast.models import PodcastConversation, PodcastEpisode
+from app.domains.podcast.models import ConversationSession, PodcastConversation, PodcastEpisode
 
 
 logger = logging.getLogger(__name__)
@@ -27,21 +27,175 @@ class ConversationService:
         self.db = db
         self.ai_model_repo = AIModelConfigRepository(db)
 
+    # === Session Management ===
+
+    async def get_sessions(
+        self,
+        episode_id: int,
+        user_id: int,
+    ) -> list[dict[str, Any]]:
+        """获取某个 episode 的所有对话会话"""
+        # Sub-query for message counts
+        msg_count_subq = (
+            select(
+                PodcastConversation.session_id,
+                func.count(PodcastConversation.id).label("message_count"),
+            )
+            .group_by(PodcastConversation.session_id)
+            .subquery()
+        )
+
+        stmt = (
+            select(ConversationSession, msg_count_subq.c.message_count)
+            .outerjoin(
+                msg_count_subq,
+                ConversationSession.id == msg_count_subq.c.session_id,
+            )
+            .where(
+                and_(
+                    ConversationSession.episode_id == episode_id,
+                    ConversationSession.user_id == user_id,
+                )
+            )
+            .order_by(ConversationSession.created_at.desc())
+        )
+        result = await self.db.execute(stmt)
+        rows = result.all()
+
+        return [
+            {
+                "id": session.id,
+                "episode_id": session.episode_id,
+                "title": session.title,
+                "message_count": message_count or 0,
+                "created_at": session.created_at,
+                "updated_at": session.updated_at,
+            }
+            for session, message_count in rows
+        ]
+
+    async def create_session(
+        self,
+        episode_id: int,
+        user_id: int,
+        title: str | None = None,
+    ) -> dict[str, Any]:
+        """创建新对话会话"""
+        # Count existing sessions for auto-naming
+        count_stmt = (
+            select(func.count(ConversationSession.id))
+            .where(
+                and_(
+                    ConversationSession.episode_id == episode_id,
+                    ConversationSession.user_id == user_id,
+                )
+            )
+        )
+        count_result = await self.db.execute(count_stmt)
+        existing_count = count_result.scalar() or 0
+
+        session = ConversationSession(
+            episode_id=episode_id,
+            user_id=user_id,
+            title=title or f"对话 {existing_count + 1}",
+        )
+        self.db.add(session)
+        await self.db.commit()
+        await self.db.refresh(session)
+
+        logger.info(f"Created session {session.id} for episode {episode_id}, user {user_id}")
+        return {
+            "id": session.id,
+            "episode_id": session.episode_id,
+            "title": session.title,
+            "message_count": 0,
+            "created_at": session.created_at,
+            "updated_at": session.updated_at,
+        }
+
+    async def delete_session(
+        self,
+        session_id: int,
+        user_id: int,
+    ) -> int:
+        """删除对话会话及其所有消息"""
+        stmt = select(ConversationSession).where(
+            and_(
+                ConversationSession.id == session_id,
+                ConversationSession.user_id == user_id,
+            )
+        )
+        result = await self.db.execute(stmt)
+        session = result.scalar_one_or_none()
+        if not session:
+            raise ValidationError(f"Session {session_id} not found")
+
+        # Count messages before deleting
+        msg_count_stmt = select(func.count(PodcastConversation.id)).where(
+            PodcastConversation.session_id == session_id
+        )
+        msg_count_result = await self.db.execute(msg_count_stmt)
+        deleted_count = msg_count_result.scalar() or 0
+
+        await self.db.delete(session)  # cascade deletes messages
+        await self.db.commit()
+        logger.info(f"Deleted session {session_id} with {deleted_count} messages")
+        return deleted_count
+
+    async def get_or_create_default_session(
+        self,
+        episode_id: int,
+        user_id: int,
+    ) -> int:
+        """获取或创建默认会话，返回 session_id"""
+        # Try to find the most recent session
+        stmt = (
+            select(ConversationSession)
+            .where(
+                and_(
+                    ConversationSession.episode_id == episode_id,
+                    ConversationSession.user_id == user_id,
+                )
+            )
+            .order_by(ConversationSession.created_at.desc())
+            .limit(1)
+        )
+        result = await self.db.execute(stmt)
+        session = result.scalar_one_or_none()
+
+        if session:
+            return session.id
+
+        # Create default session
+        new_session = ConversationSession(
+            episode_id=episode_id,
+            user_id=user_id,
+            title="默认对话",
+        )
+        self.db.add(new_session)
+        await self.db.flush()
+        return new_session.id
+
+    # === Conversation History ===
+
     async def get_conversation_history(
         self,
         episode_id: int,
         user_id: int,
+        session_id: int | None = None,
         limit: int = 50
     ) -> list[dict[str, Any]]:
-        """获取对话历史"""
+        """获取对话历史（按 session 过滤）"""
+        conditions = [
+            PodcastConversation.episode_id == episode_id,
+            PodcastConversation.user_id == user_id,
+        ]
+        if session_id is not None:
+            conditions.append(PodcastConversation.session_id == session_id)
+
         stmt = (
             select(PodcastConversation)
-            .where(
-                and_(
-                    PodcastConversation.episode_id == episode_id,
-                    PodcastConversation.user_id == user_id
-                )
-            )
+            .where(and_(*conditions))
             .order_by(PodcastConversation.conversation_turn, PodcastConversation.created_at)
             .limit(limit)
         )
@@ -64,7 +218,8 @@ class ConversationService:
         episode_id: int,
         user_id: int,
         user_message: str,
-        model_name: str | None = None
+        model_name: str | None = None,
+        session_id: int | None = None,
     ) -> dict[str, Any]:
         """发送消息并获取AI回复"""
         # 获取播客单集信息
@@ -78,8 +233,12 @@ class ConversationService:
         if not episode.ai_summary:
             raise ValidationError("Cannot start conversation: AI summary not available for this episode")
 
-        # 获取对话历史
-        conversation_history = await self.get_conversation_history(episode_id, user_id)
+        # Ensure session exists
+        if session_id is None:
+            session_id = await self.get_or_create_default_session(episode_id, user_id)
+        
+        # 获取对话历史（按 session 过滤）
+        conversation_history = await self.get_conversation_history(episode_id, user_id, session_id=session_id)
 
         # 确定当前对话轮次
         current_turn = len(conversation_history)
@@ -88,6 +247,7 @@ class ConversationService:
         user_conv = PodcastConversation(
             episode_id=episode_id,
             user_id=user_id,
+            session_id=session_id,
             role="user",
             content=user_message,
             conversation_turn=current_turn,
@@ -108,6 +268,7 @@ class ConversationService:
         assistant_conv = PodcastConversation(
             episode_id=episode_id,
             user_id=user_id,
+            session_id=session_id,
             role="assistant",
             content=ai_response_content,
             parent_message_id=user_conv.id,
@@ -120,7 +281,7 @@ class ConversationService:
         await self.db.commit()
         await self.db.refresh(assistant_conv)
 
-        logger.info(f"Conversation saved for episode {episode_id}, user {user_id}, turn {current_turn + 1}")
+        logger.info(f"Conversation saved for episode {episode_id}, user {user_id}, session {session_id}, turn {current_turn + 1}")
 
         return {
             "id": assistant_conv.id,
@@ -259,7 +420,7 @@ class ConversationService:
                         logger.info(f"成功使用对话模型 [{model.display_name or model.name}] (priority={model.priority})")
                         return cleaned_content.strip()
 
-            except aiohttp.ClientTimeout as e:
+            except TimeoutError as e:
                 last_error = e
                 logger.error(f"模型配置 [{model.display_name or model.name}] (priority={model.priority}) 请求超时: {e}")
             except aiohttp.ClientError as e:
@@ -301,18 +462,18 @@ class ConversationService:
     async def clear_conversation_history(
         self,
         episode_id: int,
-        user_id: int
+        user_id: int,
+        session_id: int | None = None,
     ) -> int:
-        """清除对话历史"""
-        stmt = (
-            select(PodcastConversation)
-            .where(
-                and_(
-                    PodcastConversation.episode_id == episode_id,
-                    PodcastConversation.user_id == user_id
-                )
-            )
-        )
+        """清除对话历史（按 session 过滤）"""
+        conditions = [
+            PodcastConversation.episode_id == episode_id,
+            PodcastConversation.user_id == user_id,
+        ]
+        if session_id is not None:
+            conditions.append(PodcastConversation.session_id == session_id)
+
+        stmt = select(PodcastConversation).where(and_(*conditions))
         result = await self.db.execute(stmt)
         conversations = result.scalars().all()
 
@@ -321,6 +482,6 @@ class ConversationService:
             await self.db.delete(conv)
 
         await self.db.commit()
-        logger.info(f"Cleared {count} conversation messages for episode {episode_id}, user {user_id}")
+        logger.info(f"Cleared {count} conversation messages for episode {episode_id}, user {user_id}, session {session_id}")
 
         return count

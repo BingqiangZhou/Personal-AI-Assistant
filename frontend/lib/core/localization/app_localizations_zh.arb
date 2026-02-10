@@ -2722,6 +2722,46 @@
     "description": "重新加载按钮标签"
   },
 
+  "podcast_conversation_new_chat": "新对话",
+  "@podcast_conversation_new_chat": {
+    "description": "新建对话按钮提示"
+  },
+
+  "podcast_conversation_new_chat_confirm": "确定要开始新的对话吗？当前的对话将会被清除。",
+  "@podcast_conversation_new_chat_confirm": {
+    "description": "新建对话确认消息"
+  },
+
+  "podcast_conversation_history": "对话历史",
+  "@podcast_conversation_history": {
+    "description": "对话历史标题"
+  },
+
+  "podcast_conversation_delete_title": "删除对话",
+  "@podcast_conversation_delete_title": {
+    "description": "删除对话确认框标题"
+  },
+
+  "podcast_conversation_delete_confirm": "确定要删除这个对话吗？此操作无法撤销。",
+  "@podcast_conversation_delete_confirm": {
+    "description": "删除对话确认消息"
+  },
+
+  "podcast_conversation_title": "AI对话",
+  "@podcast_conversation_title": {
+    "description": "对话界面标题"
+  },
+
+  "podcast_conversation_message_count": "{count}条消息",
+  "@podcast_conversation_message_count": {
+    "description": "对话消息数量",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
   "podcast_error_loading": "加载内容失败",
   "@podcast_error_loading": {
     "description": "通用加载错误消息"

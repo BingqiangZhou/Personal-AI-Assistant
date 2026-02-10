@@ -6,6 +6,40 @@ part of 'podcast_conversation_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+ConversationSession _$ConversationSessionFromJson(Map<String, dynamic> json) =>
+    ConversationSession(
+      id: (json['id'] as num).toInt(),
+      episodeId: (json['episode_id'] as num).toInt(),
+      title: json['title'] as String,
+      messageCount: (json['message_count'] as num?)?.toInt() ?? 0,
+      createdAt: json['created_at'] as String,
+      updatedAt: json['updated_at'] as String?,
+    );
+
+Map<String, dynamic> _$ConversationSessionToJson(
+  ConversationSession instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'episode_id': instance.episodeId,
+  'title': instance.title,
+  'message_count': instance.messageCount,
+  'created_at': instance.createdAt,
+  'updated_at': instance.updatedAt,
+};
+
+ConversationSessionListResponse _$ConversationSessionListResponseFromJson(
+  Map<String, dynamic> json,
+) => ConversationSessionListResponse(
+  sessions: (json['sessions'] as List<dynamic>)
+      .map((e) => ConversationSession.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  total: (json['total'] as num).toInt(),
+);
+
+Map<String, dynamic> _$ConversationSessionListResponseToJson(
+  ConversationSessionListResponse instance,
+) => <String, dynamic>{'sessions': instance.sessions, 'total': instance.total};
+
 PodcastConversationMessage _$PodcastConversationMessageFromJson(
   Map<String, dynamic> json,
 ) => PodcastConversationMessage(
@@ -33,6 +67,7 @@ PodcastConversationSendRequest _$PodcastConversationSendRequestFromJson(
 ) => PodcastConversationSendRequest(
   message: json['message'] as String,
   modelName: json['model_name'] as String?,
+  sessionId: (json['session_id'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$PodcastConversationSendRequestToJson(
@@ -40,6 +75,7 @@ Map<String, dynamic> _$PodcastConversationSendRequestToJson(
 ) => <String, dynamic>{
   'message': instance.message,
   'model_name': instance.modelName,
+  'session_id': instance.sessionId,
 };
 
 PodcastConversationSendResponse _$PodcastConversationSendResponseFromJson(
@@ -68,6 +104,7 @@ PodcastConversationHistoryResponse _$PodcastConversationHistoryResponseFromJson(
   Map<String, dynamic> json,
 ) => PodcastConversationHistoryResponse(
   episodeId: (json['episode_id'] as num).toInt(),
+  sessionId: (json['session_id'] as num?)?.toInt(),
   messages: (json['messages'] as List<dynamic>)
       .map(
         (e) => PodcastConversationMessage.fromJson(e as Map<String, dynamic>),
@@ -80,6 +117,7 @@ Map<String, dynamic> _$PodcastConversationHistoryResponseToJson(
   PodcastConversationHistoryResponse instance,
 ) => <String, dynamic>{
   'episode_id': instance.episodeId,
+  'session_id': instance.sessionId,
   'messages': instance.messages,
   'total': instance.total,
 };
@@ -88,6 +126,7 @@ PodcastConversationClearResponse _$PodcastConversationClearResponseFromJson(
   Map<String, dynamic> json,
 ) => PodcastConversationClearResponse(
   episodeId: (json['episode_id'] as num).toInt(),
+  sessionId: (json['session_id'] as num?)?.toInt(),
   deletedCount: (json['deleted_count'] as num).toInt(),
 );
 
@@ -95,5 +134,6 @@ Map<String, dynamic> _$PodcastConversationClearResponseToJson(
   PodcastConversationClearResponse instance,
 ) => <String, dynamic>{
   'episode_id': instance.episodeId,
+  'session_id': instance.sessionId,
   'deleted_count': instance.deletedCount,
 };

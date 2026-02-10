@@ -137,6 +137,12 @@ class MockAuthNotifier extends _i1.Mock implements _i2.AuthNotifier {
   );
 
   @override
+  void resetLoadingState() => super.noSuchMethod(
+    Invocation.method(#resetLoadingState, []),
+    returnValueForMissingStub: null,
+  );
+
+  @override
   _i5.Future<void> checkAuthStatus() =>
       (super.noSuchMethod(
             Invocation.method(#checkAuthStatus, []),
