@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,15 +8,18 @@ import '../../data/models/podcast_conversation_model.dart';
 import '../../data/models/podcast_playback_model.dart';
 import '../providers/conversation_providers.dart';
 import '../providers/summary_providers.dart';
+import '../services/content_image_share_service.dart';
 
 /// AI对话聊天界面组件
 class ConversationChatWidget extends ConsumerStatefulWidget {
   final int episodeId;
+  final String episodeTitle;
   final String? aiSummary;
 
   const ConversationChatWidget({
     super.key,
     required this.episodeId,
+    required this.episodeTitle,
     this.aiSummary,
   });
 
@@ -29,6 +34,11 @@ class ConversationChatWidgetState
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
   SummaryModelInfo? _selectedModel;
+  String _lastSelectedChatText = '';
+  String _lastSelectedChatRoleLabel = '';
+  bool _lastSelectedChatIsUser = false;
+  bool _isMessageSelectMode = false;
+  final Set<int> _selectedMessageIds = <int>{};
 
   /// 滚动到顶部
   void scrollToTop() {
@@ -103,6 +113,205 @@ class ConversationChatWidgetState
     _focusNode.requestFocus();
   }
 
+  void _updateSelectedChatText(
+    String sourceText,
+    TextSelection selection, {
+    required bool isUser,
+    required String roleLabel,
+  }) {
+    if (selection.isCollapsed ||
+        selection.start < 0 ||
+        selection.end <= selection.start ||
+        selection.end > sourceText.length) {
+      _lastSelectedChatText = '';
+      return;
+    }
+    _lastSelectedChatText = sourceText
+        .substring(selection.start, selection.end)
+        .trim();
+    _lastSelectedChatIsUser = isUser;
+    _lastSelectedChatRoleLabel = roleLabel;
+  }
+
+  void _setMessageSelectMode(bool enabled) {
+    setState(() {
+      _isMessageSelectMode = enabled;
+      if (!enabled) {
+        _selectedMessageIds.clear();
+      }
+    });
+  }
+
+  void _toggleMessageSelection(PodcastConversationMessage message) {
+    setState(() {
+      if (_selectedMessageIds.contains(message.id)) {
+        _selectedMessageIds.remove(message.id);
+      } else {
+        _selectedMessageIds.add(message.id);
+      }
+    });
+  }
+
+  void _syncSelectedMessageIds(List<PodcastConversationMessage> messages) {
+    if (_selectedMessageIds.isEmpty && !_isMessageSelectMode) {
+      return;
+    }
+    final validIds = messages.map((m) => m.id).toSet();
+    final filteredIds = _selectedMessageIds
+        .where((id) => validIds.contains(id))
+        .toSet();
+    final shouldExitMode = _isMessageSelectMode && filteredIds.isEmpty;
+    final hasChanged = filteredIds.length != _selectedMessageIds.length;
+    if (!hasChanged && !shouldExitMode) {
+      return;
+    }
+    setState(() {
+      _selectedMessageIds
+        ..clear()
+        ..addAll(filteredIds);
+      if (_selectedMessageIds.isEmpty) {
+        _isMessageSelectMode = false;
+      }
+    });
+  }
+
+  int get _selectedMessageCount => _selectedMessageIds.length;
+
+  bool _isMessageSelected(PodcastConversationMessage message) {
+    return _selectedMessageIds.contains(message.id);
+  }
+
+  String _messageRoleLabel(PodcastConversationMessage message) {
+    final l10n = AppLocalizations.of(context)!;
+    return message.isUser
+        ? l10n.podcast_conversation_user
+        : l10n.podcast_conversation_assistant;
+  }
+
+  Widget _buildMessageSelectBadge(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    if (!_isMessageSelectMode) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.secondaryContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          l10n.podcast_selected_count(_selectedMessageCount),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSecondaryContainer,
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<PodcastConversationMessage> _resolveSelectedMessages(
+    ConversationState state,
+  ) {
+    if (_selectedMessageIds.isEmpty) {
+      return const <PodcastConversationMessage>[];
+    }
+    return state.messages
+        .where((message) => _selectedMessageIds.contains(message.id))
+        .toList();
+  }
+
+  List<ShareConversationItem> _buildShareConversationItems(
+    List<PodcastConversationMessage> messages,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    return messages
+        .map(
+          (message) => ShareConversationItem(
+            roleLabel: message.isUser
+                ? l10n.podcast_conversation_user
+                : l10n.podcast_conversation_assistant,
+            content: message.content.trim(),
+            isUser: message.isUser,
+          ),
+        )
+        .where((item) => item.content.isNotEmpty)
+        .toList();
+  }
+
+  Future<void> _shareConversationMessagesAsImage(
+    List<PodcastConversationMessage> messages,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final conversationItems = _buildShareConversationItems(messages);
+    final plainText = formatShareConversationItems(conversationItems);
+    try {
+      await ContentImageShareService.shareAsImage(
+        context,
+        ShareImagePayload(
+          episodeTitle: widget.episodeTitle,
+          contentType: ShareContentType.chat,
+          content: plainText,
+          sourceLabel: l10n.podcast_tab_chat,
+          renderMode: ShareImageRenderMode.conversation,
+          conversationItems: conversationItems,
+        ),
+      );
+    } on ContentImageShareException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
+  Future<void> _shareSelectedChatAsImage() async {
+    final l10n = AppLocalizations.of(context)!;
+    final roleLabel = _lastSelectedChatRoleLabel.isNotEmpty
+        ? _lastSelectedChatRoleLabel
+        : (_lastSelectedChatIsUser
+              ? l10n.podcast_conversation_user
+              : l10n.podcast_conversation_assistant);
+    try {
+      await ContentImageShareService.shareAsImage(
+        context,
+        ShareImagePayload(
+          episodeTitle: widget.episodeTitle,
+          contentType: ShareContentType.chat,
+          content: _lastSelectedChatText,
+          sourceLabel: l10n.podcast_tab_chat,
+          renderMode: ShareImageRenderMode.conversation,
+          conversationItems: <ShareConversationItem>[
+            ShareConversationItem(
+              roleLabel: roleLabel,
+              content: _lastSelectedChatText,
+              isUser: _lastSelectedChatIsUser,
+            ),
+          ],
+        ),
+      );
+    } on ContentImageShareException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
+  Future<void> _shareAllChatAsImage(ConversationState state) async {
+    await _shareConversationMessagesAsImage(state.messages);
+  }
+
+  Future<void> _shareSelectedMessagesAsImage(ConversationState state) async {
+    final selectedMessages = _resolveSelectedMessages(state);
+    await _shareConversationMessagesAsImage(selectedMessages);
+  }
+
   void _startNewChat() async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
@@ -145,6 +354,7 @@ class ConversationChatWidgetState
       previous,
       next,
     ) {
+      _syncSelectedMessageIds(next.messages);
       if (next.messages.length > (previous?.messages.length ?? 0)) {
         Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
       }
@@ -379,6 +589,7 @@ class ConversationChatWidgetState
                       ),
                     ),
                   ),
+                  _buildMessageSelectBadge(context),
                 ],
               ],
             ),
@@ -392,6 +603,36 @@ class ConversationChatWidgetState
             loading: () => const SizedBox.shrink(),
             error: (_, _) => const SizedBox.shrink(),
           ),
+          if (state.hasMessages)
+            IconButton(
+              icon: Icon(
+                _isMessageSelectMode
+                    ? Icons.checklist_rtl
+                    : Icons.playlist_add_check_circle_outlined,
+              ),
+              tooltip: _isMessageSelectMode
+                  ? l10n.podcast_deselect_all
+                  : l10n.podcast_enter_select_mode,
+              onPressed: state.isSending
+                  ? null
+                  : () => _setMessageSelectMode(!_isMessageSelectMode),
+            ),
+          if (_isMessageSelectMode)
+            IconButton(
+              icon: const Icon(Icons.ios_share_outlined),
+              tooltip: l10n.podcast_share_as_image,
+              onPressed: state.isSending || _selectedMessageCount == 0
+                  ? null
+                  : () => unawaited(_shareSelectedMessagesAsImage(state)),
+            ),
+          if (state.hasMessages)
+            IconButton(
+              icon: const Icon(Icons.ios_share_outlined),
+              tooltip: l10n.podcast_share_all_content,
+              onPressed: state.isSending
+                  ? null
+                  : () => unawaited(_shareAllChatAsImage(state)),
+            ),
           if (state.hasMessages)
             IconButton(
               icon: const Icon(Icons.add_comment_outlined),
@@ -636,6 +877,9 @@ class ConversationChatWidgetState
     PodcastConversationMessage message,
   ) {
     final isUser = message.isUser;
+    const userTextColor = Colors.white;
+    final isSelected = _isMessageSelected(message);
+    final roleLabel = _messageRoleLabel(message);
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -650,11 +894,20 @@ class ConversationChatWidgetState
               : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isUser
-                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
-                : Theme.of(
-                    context,
-                  ).colorScheme.outlineVariant.withValues(alpha: 0.3),
+            color: _isMessageSelectMode
+                ? (isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(
+                          context,
+                        ).colorScheme.outlineVariant.withValues(alpha: 0.35))
+                : (isUser
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.3)
+                      : Theme.of(
+                          context,
+                        ).colorScheme.outlineVariant.withValues(alpha: 0.3)),
+            width: _isMessageSelectMode && isSelected ? 1.6 : 1,
           ),
         ),
         child: Column(
@@ -668,35 +921,90 @@ class ConversationChatWidgetState
                   isUser ? Icons.person_outline : Icons.smart_toy_outlined,
                   size: 14,
                   color: isUser
-                      ? Theme.of(context).colorScheme.onPrimaryContainer
+                      ? userTextColor
                       : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  isUser
-                      ? AppLocalizations.of(context)!.podcast_conversation_user
-                      : AppLocalizations.of(
-                          context,
-                        )!.podcast_conversation_assistant,
+                  roleLabel,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: isUser
-                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        ? userTextColor
                         : Theme.of(context).colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+                if (_isMessageSelectMode) ...[
+                  const SizedBox(width: 6),
+                  Icon(
+                    isSelected
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                    size: 16,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 6),
-            // Message content
-            SelectableText(
-              message.content,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: isUser
-                    ? Theme.of(context).colorScheme.onPrimaryContainer
-                    : Theme.of(context).colorScheme.onSurface,
-                height: 1.5,
-              ),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _isMessageSelectMode
+                  ? () => _toggleMessageSelection(message)
+                  : null,
+              child: _isMessageSelectMode
+                  ? Text(
+                      message.content,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: isUser
+                            ? userTextColor
+                            : Theme.of(context).colorScheme.onSurface,
+                        height: 1.5,
+                      ),
+                    )
+                  : SelectableText(
+                      message.content,
+                      onSelectionChanged: (selection, _) {
+                        _updateSelectedChatText(
+                          message.content,
+                          selection,
+                          isUser: isUser,
+                          roleLabel: roleLabel,
+                        );
+                      },
+                      contextMenuBuilder: (context, editableTextState) {
+                        return AdaptiveTextSelectionToolbar.buttonItems(
+                          anchors: editableTextState.contextMenuAnchors,
+                          buttonItems: [
+                            ...editableTextState.contextMenuButtonItems,
+                            ContextMenuButtonItem(
+                              label: AppLocalizations.of(
+                                context,
+                              )!.podcast_share_as_image,
+                              onPressed: () {
+                                final value =
+                                    editableTextState.textEditingValue;
+                                _lastSelectedChatText = value.selection
+                                    .textInside(value.text)
+                                    .trim();
+                                _lastSelectedChatRoleLabel = roleLabel;
+                                _lastSelectedChatIsUser = isUser;
+                                ContextMenuController.removeAny();
+                                unawaited(_shareSelectedChatAsImage());
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: isUser
+                            ? userTextColor
+                            : Theme.of(context).colorScheme.onSurface,
+                        height: 1.5,
+                      ),
+                    ),
             ),
           ],
         ),

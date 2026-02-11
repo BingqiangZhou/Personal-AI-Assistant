@@ -1,31 +1,40 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../providers/transcription_providers.dart';
 import '../../data/models/podcast_transcription_model.dart';
+import '../services/content_image_share_service.dart';
 
 class TranscriptDisplayWidget extends ConsumerStatefulWidget {
   final int episodeId;
+  final String episodeTitle;
   final PodcastTranscriptionResponse? transcription;
   final Function(String)? onSearchChanged;
 
   const TranscriptDisplayWidget({
     super.key,
     required this.episodeId,
+    required this.episodeTitle,
     this.transcription,
     this.onSearchChanged,
   });
 
   @override
-  ConsumerState<TranscriptDisplayWidget> createState() => TranscriptDisplayWidgetState();
+  ConsumerState<TranscriptDisplayWidget> createState() =>
+      TranscriptDisplayWidgetState();
 }
 
-class TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget> {
+class TranscriptDisplayWidgetState
+    extends ConsumerState<TranscriptDisplayWidget> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<String> _searchResults = [];
   bool _isSearching = false;
+  String _lastSelectedTranscriptText = '';
+  final Map<String, String> _selectedTranscriptSegments = <String, String>{};
 
   /// 滚动到顶部
   void scrollToTop() {
@@ -54,6 +63,7 @@ class TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget
 
   void _onSearchChanged() {
     final query = _searchController.text;
+    _clearSelectedTranscriptSegments();
     if (query.isNotEmpty) {
       setState(() {
         _isSearching = true;
@@ -81,11 +91,114 @@ class TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget
 
   void _clearSearch() {
     _searchController.clear();
+    _clearSelectedTranscriptSegments();
     setState(() {
       _isSearching = false;
       _searchResults.clear();
     });
     clearTranscriptionSearchQuery(ref);
+  }
+
+  void _toggleTranscriptSegmentSelection(String key, String segment) {
+    final normalized = segment.trim();
+    if (normalized.isEmpty) {
+      return;
+    }
+    setState(() {
+      if (_selectedTranscriptSegments.containsKey(key)) {
+        _selectedTranscriptSegments.remove(key);
+      } else {
+        _selectedTranscriptSegments[key] = normalized;
+      }
+    });
+  }
+
+  void _clearSelectedTranscriptSegments() {
+    if (_selectedTranscriptSegments.isEmpty) {
+      return;
+    }
+    setState(() {
+      _selectedTranscriptSegments.clear();
+    });
+  }
+
+  int _segmentOrderFromKey(String key) {
+    final parts = key.split('_');
+    if (parts.length < 2) {
+      return 0;
+    }
+    final index = int.tryParse(parts.last) ?? 0;
+    final bucket = parts.first == 'full' ? 0 : 100000;
+    return bucket + index;
+  }
+
+  String _buildSelectedTranscriptContent() {
+    final entries = _selectedTranscriptSegments.entries.toList()
+      ..sort(
+        (a, b) =>
+            _segmentOrderFromKey(a.key).compareTo(_segmentOrderFromKey(b.key)),
+      );
+    return entries.map((entry) => entry.value).join('\n\n').trim();
+  }
+
+  void _updateSelectedTranscriptText(
+    String sourceText,
+    TextSelection selection,
+  ) {
+    if (selection.isCollapsed ||
+        selection.start < 0 ||
+        selection.end <= selection.start ||
+        selection.end > sourceText.length) {
+      _lastSelectedTranscriptText = '';
+      return;
+    }
+    _lastSelectedTranscriptText = sourceText
+        .substring(selection.start, selection.end)
+        .trim();
+  }
+
+  Future<void> _shareSelectedTranscriptAsImage() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ContentImageShareService.shareAsImage(
+        context,
+        ShareImagePayload(
+          episodeTitle: widget.episodeTitle,
+          contentType: ShareContentType.transcript,
+          content: _lastSelectedTranscriptText,
+          sourceLabel: l10n.podcast_tab_transcript,
+        ),
+      );
+    } on ContentImageShareException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+
+  Future<void> _shareSelectedTranscriptSegmentsAsImage() async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ContentImageShareService.shareAsImage(
+        context,
+        ShareImagePayload(
+          episodeTitle: widget.episodeTitle,
+          contentType: ShareContentType.transcript,
+          content: _buildSelectedTranscriptContent(),
+          sourceLabel: l10n.podcast_tab_transcript,
+        ),
+      );
+    } on ContentImageShareException catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
+    }
   }
 
   @override
@@ -100,12 +213,50 @@ class TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget
       children: [
         // Search bar
         _buildSearchBar(context),
+        if (_selectedTranscriptSegments.isNotEmpty)
+          _buildSelectionToolbar(context),
 
         // Content
         Expanded(
-          child: _isSearching ? _buildSearchResults(context) : _buildFullTranscript(context, content),
+          child: _isSearching
+              ? _buildSearchResults(context)
+              : _buildFullTranscript(context, content),
         ),
       ],
+    );
+  }
+
+  Widget _buildSelectionToolbar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final selectedCount = _selectedTranscriptSegments.length;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      color: Theme.of(
+        context,
+      ).colorScheme.primaryContainer.withValues(alpha: 0.35),
+      child: Row(
+        children: [
+          Text(
+            l10n.podcast_selected_count(selectedCount),
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          TextButton.icon(
+            onPressed: () =>
+                unawaited(_shareSelectedTranscriptSegmentsAsImage()),
+            icon: const Icon(Icons.ios_share_outlined, size: 16),
+            label: Text(l10n.podcast_share_as_image),
+          ),
+          TextButton(
+            onPressed: _clearSelectedTranscriptSegments,
+            child: Text(l10n.podcast_deselect_all),
+          ),
+        ],
+      ),
     );
   }
 
@@ -213,24 +364,88 @@ class TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget
     return segments;
   }
 
-  Widget _buildSentenceSegment(BuildContext context, String sentence, int index) {
+  Widget _buildSentenceSegment(
+    BuildContext context,
+    String sentence,
+    int index,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final selectionKey = 'full_$index';
+    final isSelected = _selectedTranscriptSegments.containsKey(selectionKey);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
-      child: SelectableText(
-        sentence,
-        style: TextStyle(
-          fontSize: 15,
-          height: 1.6,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                '#${index + 1}',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () =>
+                    _toggleTranscriptSegmentSelection(selectionKey, sentence),
+                icon: Icon(
+                  isSelected
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                ),
+                tooltip: isSelected
+                    ? l10n.podcast_deselect_all
+                    : l10n.podcast_enter_select_mode,
+                iconSize: 18,
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+          SelectableText(
+            sentence,
+            onSelectionChanged: (selection, _) {
+              _updateSelectedTranscriptText(sentence, selection);
+            },
+            contextMenuBuilder: (context, editableTextState) {
+              return AdaptiveTextSelectionToolbar.buttonItems(
+                anchors: editableTextState.contextMenuAnchors,
+                buttonItems: [
+                  ...editableTextState.contextMenuButtonItems,
+                  ContextMenuButtonItem(
+                    label: l10n.podcast_share_as_image,
+                    onPressed: () {
+                      final value = editableTextState.textEditingValue;
+                      final selected = value.selection
+                          .textInside(value.text)
+                          .trim();
+                      _lastSelectedTranscriptText = selected;
+                      ContextMenuController.removeAny();
+                      unawaited(_shareSelectedTranscriptAsImage());
+                    },
+                  ),
+                ],
+              );
+            },
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.6,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -273,8 +488,14 @@ class TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget
     );
   }
 
-  Widget _buildSearchResultItem(BuildContext context, String result, int index) {
+  Widget _buildSearchResultItem(
+    BuildContext context,
+    String result,
+    int index,
+  ) {
     final l10n = AppLocalizations.of(context)!;
+    final selectionKey = 'search_$index';
+    final isSelected = _selectedTranscriptSegments.containsKey(selectionKey);
     final query = _searchController.text;
     final highlightedText = _highlightSearchText(result, query);
 
@@ -285,25 +506,68 @@ class TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Result number
-          Text(
-            l10n.podcast_transcript_match(index + 1),
-            style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
-            ),
+          Row(
+            children: [
+              Text(
+                l10n.podcast_transcript_match(index + 1),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () =>
+                    _toggleTranscriptSegmentSelection(selectionKey, result),
+                icon: Icon(
+                  isSelected
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                ),
+                tooltip: isSelected
+                    ? l10n.podcast_deselect_all
+                    : l10n.podcast_enter_select_mode,
+                iconSize: 18,
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           // Highlighted text
-          RichText(
-            text: highlightedText,
+          SelectableText.rich(
+            highlightedText,
+            onSelectionChanged: (selection, _) {
+              _updateSelectedTranscriptText(result, selection);
+            },
+            contextMenuBuilder: (context, editableTextState) {
+              return AdaptiveTextSelectionToolbar.buttonItems(
+                anchors: editableTextState.contextMenuAnchors,
+                buttonItems: [
+                  ...editableTextState.contextMenuButtonItems,
+                  ContextMenuButtonItem(
+                    label: l10n.podcast_share_as_image,
+                    onPressed: () {
+                      final value = editableTextState.textEditingValue;
+                      final selected = value.selection
+                          .textInside(value.text)
+                          .trim();
+                      _lastSelectedTranscriptText = selected;
+                      ContextMenuController.removeAny();
+                      unawaited(_shareSelectedTranscriptAsImage());
+                    },
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -333,41 +597,49 @@ class TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget
 
       // Add text before match
       if (index > start) {
-        spans.add(TextSpan(
-          text: text.substring(start, index),
-          style: TextStyle(
-            fontSize: 15,
-            height: 1.6,
-            color: Theme.of(context).colorScheme.onSurface,
+        spans.add(
+          TextSpan(
+            text: text.substring(start, index),
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.6,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
-        ));
+        );
       }
 
       // Add highlighted match
-      spans.add(TextSpan(
-        text: text.substring(index, index + query.length),
-        style: TextStyle(
-          fontSize: 15,
-          height: 1.6,
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-          backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+      spans.add(
+        TextSpan(
+          text: text.substring(index, index + query.length),
+          style: TextStyle(
+            fontSize: 15,
+            height: 1.6,
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.bold,
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.primary.withValues(alpha: 0.2),
+          ),
         ),
-      ));
+      );
 
       start = index + query.length;
     }
 
     // Add remaining text
     if (start < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(start),
-        style: TextStyle(
-          fontSize: 15,
-          height: 1.6,
-          color: Theme.of(context).colorScheme.onSurface,
+      spans.add(
+        TextSpan(
+          text: text.substring(start),
+          style: TextStyle(
+            fontSize: 15,
+            height: 1.6,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
-      ));
+      );
     }
 
     return TextSpan(children: spans);
@@ -397,7 +669,9 @@ class TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget
             l10n.podcast_click_to_transcribe,
             style: TextStyle(
               fontSize: 14,
-              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -410,17 +684,18 @@ class TranscriptDisplayWidgetState extends ConsumerState<TranscriptDisplayWidget
 class FormattedTranscriptWidget extends ConsumerWidget {
   final PodcastTranscriptionResponse? transcription;
 
-  const FormattedTranscriptWidget({
-    super.key,
-    this.transcription,
-  });
+  const FormattedTranscriptWidget({super.key, this.transcription});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final content = getTranscriptionText(transcription);
 
     if (content == null || content.isEmpty) {
-      return const TranscriptDisplayWidget(transcription: null, episodeId: 0);
+      return const TranscriptDisplayWidget(
+        transcription: null,
+        episodeId: 0,
+        episodeTitle: '',
+      );
     }
 
     // Try to parse the transcript for dialogue format
@@ -428,7 +703,11 @@ class FormattedTranscriptWidget extends ConsumerWidget {
 
     if (segments.isEmpty) {
       // Fall back to plain text display
-      return TranscriptDisplayWidget(transcription: transcription, episodeId: 0);
+      return TranscriptDisplayWidget(
+        transcription: transcription,
+        episodeId: 0,
+        episodeTitle: '',
+      );
     }
 
     return Container(
@@ -453,32 +732,42 @@ class FormattedTranscriptWidget extends ConsumerWidget {
 
       // Try to match dialogue patterns
       // Pattern: [Speaker] Text
-      final speakerMatch = RegExp(r'^\[([^\]]+)\]\s*(.*)$').firstMatch(trimmedLine);
+      final speakerMatch = RegExp(
+        r'^\[([^\]]+)\]\s*(.*)$',
+      ).firstMatch(trimmedLine);
       if (speakerMatch != null) {
-        segments.add(TranscriptDialogueSegment(
-          speaker: speakerMatch.group(1),
-          text: speakerMatch.group(2) ?? '',
-        ));
+        segments.add(
+          TranscriptDialogueSegment(
+            speaker: speakerMatch.group(1),
+            text: speakerMatch.group(2) ?? '',
+          ),
+        );
         continue;
       }
 
       // Pattern: Speaker: Text
       final colonMatch = RegExp(r'^([^:]+):\s*(.*)$').firstMatch(trimmedLine);
       if (colonMatch != null) {
-        segments.add(TranscriptDialogueSegment(
-          speaker: colonMatch.group(1),
-          text: colonMatch.group(2) ?? '',
-        ));
+        segments.add(
+          TranscriptDialogueSegment(
+            speaker: colonMatch.group(1),
+            text: colonMatch.group(2) ?? '',
+          ),
+        );
         continue;
       }
 
       // Pattern: [HH:MM:SS] Text
-      final timestampMatch = RegExp(r'^\[(\d{1,2}:\d{2}(?::\d{2})?)\]\s*(.*)$').firstMatch(trimmedLine);
+      final timestampMatch = RegExp(
+        r'^\[(\d{1,2}:\d{2}(?::\d{2})?)\]\s*(.*)$',
+      ).firstMatch(trimmedLine);
       if (timestampMatch != null) {
-        segments.add(TranscriptDialogueSegment(
-          timestamp: timestampMatch.group(1),
-          text: timestampMatch.group(2) ?? '',
-        ));
+        segments.add(
+          TranscriptDialogueSegment(
+            timestamp: timestampMatch.group(1),
+            text: timestampMatch.group(2) ?? '',
+          ),
+        );
         continue;
       }
 
@@ -489,7 +778,10 @@ class FormattedTranscriptWidget extends ConsumerWidget {
     return segments;
   }
 
-  Widget _buildDialogueSegment(BuildContext context, TranscriptDialogueSegment segment) {
+  Widget _buildDialogueSegment(
+    BuildContext context,
+    TranscriptDialogueSegment segment,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       child: Column(
@@ -501,12 +793,19 @@ class FormattedTranscriptWidget extends ConsumerWidget {
               children: [
                 if (segment.speaker != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -526,7 +825,9 @@ class FormattedTranscriptWidget extends ConsumerWidget {
                     segment.timestamp!,
                     style: TextStyle(
                       fontSize: 11,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                     ),
                   ),
               ],

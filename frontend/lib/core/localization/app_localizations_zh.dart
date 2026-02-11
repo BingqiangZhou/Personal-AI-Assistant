@@ -381,6 +381,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_share => '分享';
 
   @override
+  String get podcast_share_as_image => '分享为图片';
+
+  @override
+  String get podcast_save_as_image => '保存为图片';
+
+  @override
+  String get podcast_save_image_success => '图片已保存';
+
+  @override
+  String get podcast_save_image_failed => '保存图片失败';
+
+  @override
+  String get podcast_save_image_permission => '需要照片权限才能保存图片';
+
+  @override
+  String get podcast_share_all_content => '分享全部';
+
+  @override
+  String get podcast_share_selection_required => '请先选择要分享的内容';
+
+  @override
+  String get podcast_share_not_supported => '当前平台暂不支持图片分享';
+
+  @override
+  String get podcast_share_failed => '图片分享失败';
+
+  @override
+  String podcast_share_truncated(int max) {
+    return '内容已截断为前 $max 个字符';
+  }
+
+  @override
   String get podcast_default_podcast => '播客';
 
   @override

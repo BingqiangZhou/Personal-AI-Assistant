@@ -842,6 +842,66 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get podcast_share;
 
+  /// Share selected text as image action
+  ///
+  /// In en, this message translates to:
+  /// **'Share as Image'**
+  String get podcast_share_as_image;
+
+  /// Save generated share image
+  ///
+  /// In en, this message translates to:
+  /// **'Save as Image'**
+  String get podcast_save_as_image;
+
+  /// Image save success message
+  ///
+  /// In en, this message translates to:
+  /// **'Image saved successfully'**
+  String get podcast_save_image_success;
+
+  /// Image save failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save image'**
+  String get podcast_save_image_failed;
+
+  /// Permission message for saving image
+  ///
+  /// In en, this message translates to:
+  /// **'Photo permission is required to save image'**
+  String get podcast_save_image_permission;
+
+  /// Share all content as image action
+  ///
+  /// In en, this message translates to:
+  /// **'Share All'**
+  String get podcast_share_all_content;
+
+  /// Selection required message before sharing as image
+  ///
+  /// In en, this message translates to:
+  /// **'Please select content before sharing'**
+  String get podcast_share_selection_required;
+
+  /// Platform not supported message for image sharing
+  ///
+  /// In en, this message translates to:
+  /// **'Image sharing is not supported on this platform'**
+  String get podcast_share_not_supported;
+
+  /// Share image failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to share image'**
+  String get podcast_share_failed;
+
+  /// Content truncation message for long share text
+  ///
+  /// In en, this message translates to:
+  /// **'Content truncated to first {max} characters'**
+  String podcast_share_truncated(int max);
+
   /// Default podcast name
   ///
   /// In en, this message translates to:

@@ -626,6 +626,61 @@
     "description": "Share button"
   },
 
+  "podcast_share_as_image": "Share as Image",
+  "@podcast_share_as_image": {
+    "description": "Share selected text as image action"
+  },
+
+  "podcast_save_as_image": "Save as Image",
+  "@podcast_save_as_image": {
+    "description": "Save generated share image"
+  },
+
+  "podcast_save_image_success": "Image saved successfully",
+  "@podcast_save_image_success": {
+    "description": "Image save success message"
+  },
+
+  "podcast_save_image_failed": "Failed to save image",
+  "@podcast_save_image_failed": {
+    "description": "Image save failed message"
+  },
+
+  "podcast_save_image_permission": "Photo permission is required to save image",
+  "@podcast_save_image_permission": {
+    "description": "Permission message for saving image"
+  },
+
+  "podcast_share_all_content": "Share All",
+  "@podcast_share_all_content": {
+    "description": "Share all content as image action"
+  },
+
+  "podcast_share_selection_required": "Please select content before sharing",
+  "@podcast_share_selection_required": {
+    "description": "Selection required message before sharing as image"
+  },
+
+  "podcast_share_not_supported": "Image sharing is not supported on this platform",
+  "@podcast_share_not_supported": {
+    "description": "Platform not supported message for image sharing"
+  },
+
+  "podcast_share_failed": "Failed to share image",
+  "@podcast_share_failed": {
+    "description": "Share image failed message"
+  },
+
+  "podcast_share_truncated": "Content truncated to first {max} characters",
+  "@podcast_share_truncated": {
+    "description": "Content truncation message for long share text",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+
   "podcast_default_podcast": "Podcast",
   "@podcast_default_podcast": {
     "description": "Default podcast name"

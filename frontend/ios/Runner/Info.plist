@@ -53,5 +53,9 @@
 		<array>
 			<string>audio</string>
 		</array>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>We need photo library access to save shared images.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>We need photo library access to save shared images.</string>
 	</dict>
 </plist>

@@ -19,6 +19,7 @@ import '../widgets/conversation_chat_widget.dart';
 import '../widgets/podcast_image_widget.dart';
 import '../widgets/podcast_bottom_player_widget.dart';
 import '../widgets/scrollable_content_wrapper.dart';
+import '../services/content_image_share_service.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
 class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
@@ -38,6 +39,7 @@ class _PodcastEpisodeDetailPageState
   Timer? _summaryPollingTimer; // AI鎽樿杞瀹氭椂鍣?
   bool _isPolling = false; // Guard flag to prevent multiple polls
   bool _hasTrackedEpisodeView = false;
+  String _selectedSummaryText = '';
 
   // Sticky header animation
   final ScrollController _scrollController = ScrollController();
@@ -1480,6 +1482,7 @@ class _PodcastEpisodeDetailPageState
           return TranscriptDisplayWidget(
             key: _transcriptKey,
             episodeId: widget.episodeId,
+            episodeTitle: episode.title ?? '',
             transcription: transcription,
           );
         }
@@ -1531,6 +1534,61 @@ class _PodcastEpisodeDetailPageState
   }
 
   // AI Summary 鍐呭
+  void _showShareErrorSnackBar(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _shareSelectedSummaryAsImage(
+    String episodeTitle,
+    String fullSummaryMarkdown,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final markdownSelection = extractMarkdownSelection(
+      markdown: fullSummaryMarkdown,
+      selectedText: _selectedSummaryText,
+    );
+    try {
+      await ContentImageShareService.shareAsImage(
+        context,
+        ShareImagePayload(
+          episodeTitle: episodeTitle,
+          contentType: ShareContentType.summary,
+          content: markdownSelection,
+          sourceLabel: l10n.podcast_filter_with_summary,
+          renderMode: ShareImageRenderMode.markdown,
+        ),
+      );
+    } on ContentImageShareException catch (e) {
+      _showShareErrorSnackBar(e.message);
+    }
+  }
+
+  Future<void> _shareAllSummaryAsImage(
+    String episodeTitle,
+    String summary,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ContentImageShareService.shareAsImage(
+        context,
+        ShareImagePayload(
+          episodeTitle: episodeTitle,
+          contentType: ShareContentType.summary,
+          content: summary,
+          sourceLabel: l10n.podcast_filter_with_summary,
+          renderMode: ShareImageRenderMode.markdown,
+        ),
+      );
+    } on ContentImageShareException catch (e) {
+      _showShareErrorSnackBar(e.message);
+    }
+  }
+
   Widget _buildAiSummaryContent(dynamic episode) {
     final provider = getSummaryProvider(widget.episodeId);
     final summaryState = ref.watch(provider);
@@ -1635,10 +1693,51 @@ class _PodcastEpisodeDetailPageState
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: () => unawaited(
+                          _shareAllSummaryAsImage(
+                            episode.title ?? '',
+                            summaryState.summary!,
+                          ),
+                        ),
+                        icon: const Icon(Icons.ios_share_outlined, size: 16),
+                        label: Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.podcast_share_all_content,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   SelectionArea(
+                    onSelectionChanged: (selectedContent) {
+                      _selectedSummaryText =
+                          selectedContent?.plainText.trim() ?? '';
+                    },
+                    contextMenuBuilder: (context, selectableRegionState) {
+                      return AdaptiveTextSelectionToolbar.buttonItems(
+                        anchors: selectableRegionState.contextMenuAnchors,
+                        buttonItems: [
+                          ...selectableRegionState.contextMenuButtonItems,
+                          ContextMenuButtonItem(
+                            label: AppLocalizations.of(
+                              context,
+                            )!.podcast_share_as_image,
+                            onPressed: () {
+                              ContextMenuController.removeAny();
+                              unawaited(
+                                _shareSelectedSummaryAsImage(
+                                  episode.title ?? '',
+                                  summaryState.summary!,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      );
+                    },
                     child: MarkdownBody(
                       data: summaryState.summary!,
                       styleSheet: MarkdownStyleSheet(
@@ -1707,10 +1806,51 @@ class _PodcastEpisodeDetailPageState
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: () => unawaited(
+                          _shareAllSummaryAsImage(
+                            episode.title ?? '',
+                            episode.aiSummary!,
+                          ),
+                        ),
+                        icon: const Icon(Icons.ios_share_outlined, size: 16),
+                        label: Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.podcast_share_all_content,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   SelectionArea(
+                    onSelectionChanged: (selectedContent) {
+                      _selectedSummaryText =
+                          selectedContent?.plainText.trim() ?? '';
+                    },
+                    contextMenuBuilder: (context, selectableRegionState) {
+                      return AdaptiveTextSelectionToolbar.buttonItems(
+                        anchors: selectableRegionState.contextMenuAnchors,
+                        buttonItems: [
+                          ...selectableRegionState.contextMenuButtonItems,
+                          ContextMenuButtonItem(
+                            label: AppLocalizations.of(
+                              context,
+                            )!.podcast_share_as_image,
+                            onPressed: () {
+                              ContextMenuController.removeAny();
+                              unawaited(
+                                _shareSelectedSummaryAsImage(
+                                  episode.title ?? '',
+                                  episode.aiSummary!,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      );
+                    },
                     child: MarkdownBody(
                       data: episode.aiSummary!,
                       styleSheet: MarkdownStyleSheet(
@@ -1806,6 +1946,7 @@ class _PodcastEpisodeDetailPageState
         return ConversationChatWidget(
           key: _conversationKey,
           episodeId: widget.episodeId,
+          episodeTitle: episode.title,
           aiSummary: episode.aiSummary,
         );
       },

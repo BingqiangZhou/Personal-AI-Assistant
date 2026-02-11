@@ -384,6 +384,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_share => 'Share';
 
   @override
+  String get podcast_share_as_image => 'Share as Image';
+
+  @override
+  String get podcast_save_as_image => 'Save as Image';
+
+  @override
+  String get podcast_save_image_success => 'Image saved successfully';
+
+  @override
+  String get podcast_save_image_failed => 'Failed to save image';
+
+  @override
+  String get podcast_save_image_permission =>
+      'Photo permission is required to save image';
+
+  @override
+  String get podcast_share_all_content => 'Share All';
+
+  @override
+  String get podcast_share_selection_required =>
+      'Please select content before sharing';
+
+  @override
+  String get podcast_share_not_supported =>
+      'Image sharing is not supported on this platform';
+
+  @override
+  String get podcast_share_failed => 'Failed to share image';
+
+  @override
+  String podcast_share_truncated(int max) {
+    return 'Content truncated to first $max characters';
+  }
+
+  @override
   String get podcast_default_podcast => 'Podcast';
 
   @override
