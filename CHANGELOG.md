@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.5.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.5.1...v0.5.2) - 2026-02-11 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.5.2))
+
+### 🚀 Features
+
+- Refactor image export behavior and update related tests; remove unused message count badge in chat widget ([f4109cb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f4109cbbce7a0b7f1d4f5a51c67c45482344a8aa))
+
+
+
 ## [0.5.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.5.0...v0.5.1) - 2026-02-11 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.5.1))
 
 ### 🚀 Features
