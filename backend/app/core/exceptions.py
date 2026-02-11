@@ -8,8 +8,9 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.core.json_encoder import CustomJSONResponse
 
 
 logger = logging.getLogger(__name__)
@@ -161,7 +162,7 @@ class FileProcessingError(BaseCustomException):
         super().__init__(message, 422, "FILE_PROCESSING_ERROR", **kwargs)
 
 
-async def custom_exception_handler(request: Request, exc: BaseCustomException) -> JSONResponse:
+async def custom_exception_handler(request: Request, exc: BaseCustomException) -> CustomJSONResponse:
     """Handle custom exceptions.
 
     处理自定义异常
@@ -185,10 +186,10 @@ async def custom_exception_handler(request: Request, exc: BaseCustomException) -
     if exc.details:
         content["details"] = exc.details
 
-    return JSONResponse(status_code=exc.status_code, content=content)
+    return CustomJSONResponse(status_code=exc.status_code, content=content)
 
 
-async def http_exception_handler(request: Request, exc: HTTPException | StarletteHTTPException) -> JSONResponse:
+async def http_exception_handler(request: Request, exc: HTTPException | StarletteHTTPException) -> CustomJSONResponse:
     """Handle HTTP exceptions.
 
     处理 HTTP 异常
@@ -199,7 +200,7 @@ async def http_exception_handler(request: Request, exc: HTTPException | Starlett
         f"方法: {request.method} | "
         f"详情: {exc.detail}"
     )
-    return JSONResponse(
+    return CustomJSONResponse(
         status_code=exc.status_code,
         content={
             "detail": str(exc.detail),
@@ -209,7 +210,7 @@ async def http_exception_handler(request: Request, exc: HTTPException | Starlett
     )
 
 
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> CustomJSONResponse:
     """Handle validation exceptions.
 
     处理验证异常
@@ -229,7 +230,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         f"错误详情: {errors}"
     )
 
-    return JSONResponse(
+    return CustomJSONResponse(
         status_code=422,
         content={
             "detail": "Validation failed",
@@ -239,7 +240,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+async def general_exception_handler(request: Request, exc: Exception) -> CustomJSONResponse:
     """Handle general exceptions.
 
     处理通用异常
@@ -252,7 +253,7 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
         exc_info=True
     )
 
-    return JSONResponse(
+    return CustomJSONResponse(
         status_code=500,
         content={
             "detail": "Internal server error",

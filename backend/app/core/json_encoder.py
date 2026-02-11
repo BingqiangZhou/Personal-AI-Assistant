@@ -4,9 +4,29 @@
 处理 datetime 序列化，确保时间戳带有时区信息
 """
 
+import json
 from datetime import datetime, timezone
 from json import JSONEncoder
 from typing import Any
+
+from fastapi.responses import JSONResponse
+
+
+class CustomJSONResponse(JSONResponse):
+    """自定义 JSON 响应类，使用自定义编码器处理 datetime"""
+
+    # 显式声明 media_type 包含 charset=utf-8
+    media_type = "application/json; charset=utf-8"
+
+    def render(self, content: Any) -> bytes:
+        return json.dumps(
+            content,
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=None,
+            separators=(",", ":"),
+            cls=CustomJSONEncoder,
+        ).encode("utf-8")
 
 
 class CustomJSONEncoder(JSONEncoder):

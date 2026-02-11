@@ -1,5 +1,3 @@
-import json
-
 # from app.core.security_middleware import SecurityHeadersMiddleware
 import logging
 import os
@@ -13,7 +11,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.exceptions import setup_exception_handlers
-from app.core.json_encoder import CustomJSONEncoder
+from app.core.json_encoder import CustomJSONEncoder, CustomJSONResponse
 from app.core.logging_config import setup_logging_from_env
 from app.core.logging_middleware import setup_logging_middleware
 from app.core.middleware import (
@@ -26,20 +24,6 @@ from app.core.middleware import (
 # 初始化日志系统
 setup_logging_from_env()
 logger = logging.getLogger(__name__)
-
-
-class CustomJSONResponse(JSONResponse):
-    """自定义 JSON 响应类，使用自定义编码器处理 datetime"""
-
-    def render(self, content: Any) -> bytes:
-        return json.dumps(
-            content,
-            ensure_ascii=False,
-            allow_nan=False,
-            indent=None,
-            separators=(",", ":"),
-            cls=CustomJSONEncoder,
-        ).encode("utf-8")
 
 
 @asynccontextmanager
