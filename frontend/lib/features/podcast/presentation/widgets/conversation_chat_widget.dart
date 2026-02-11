@@ -30,6 +30,8 @@ class ConversationChatWidget extends ConsumerStatefulWidget {
 
 class ConversationChatWidgetState
     extends ConsumerState<ConversationChatWidget> {
+  static const double _modelSelectorMaxWidth = 160;
+
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
@@ -39,6 +41,11 @@ class ConversationChatWidgetState
   bool _lastSelectedChatIsUser = false;
   bool _isMessageSelectMode = false;
   final Set<int> _selectedMessageIds = <int>{};
+
+  void _onMessageInputChanged() {
+    if (!mounted) return;
+    setState(() {});
+  }
 
   /// 滚动到顶部
   void scrollToTop() {
@@ -54,6 +61,7 @@ class ConversationChatWidgetState
   @override
   void initState() {
     super.initState();
+    _messageController.addListener(_onMessageInputChanged);
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) {
         // Scroll to bottom when keyboard appears
@@ -83,6 +91,7 @@ class ConversationChatWidgetState
 
   @override
   void dispose() {
+    _messageController.removeListener(_onMessageInputChanged);
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
@@ -543,7 +552,7 @@ class ConversationChatWidgetState
   Widget _buildHeader(BuildContext context, ConversationState state) {
     final l10n = AppLocalizations.of(context)!;
     final availableModelsAsync = ref.watch(availableModelsProvider);
-    final messageCount = state.messages.length;
+    final assistantReplyCount = state.assistantMessages.length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -560,11 +569,11 @@ class ConversationChatWidgetState
         children: [
           Row(
             children: [
-              const Icon(Icons.chat_bubble_outline),
-              const SizedBox(width: 12),
               Expanded(
                 child: Row(
                   children: [
+                    const Icon(Icons.chat_bubble_outline),
+                    const SizedBox(width: 12),
                     Flexible(
                       child: Text(
                         l10n.podcast_conversation_title,
@@ -573,7 +582,7 @@ class ConversationChatWidgetState
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (messageCount > 0) ...[
+                    if (assistantReplyCount > 0) ...[
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -585,7 +594,9 @@ class ConversationChatWidgetState
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          l10n.podcast_conversation_message_count(messageCount),
+                          l10n.podcast_conversation_message_count(
+                            assistantReplyCount,
+                          ),
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -599,25 +610,47 @@ class ConversationChatWidgetState
                   ],
                 ),
               ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (state.hasMessages)
+                    IconButton(
+                      icon: const Icon(Icons.add_comment_outlined),
+                      tooltip: l10n.podcast_conversation_new_chat,
+                      onPressed: state.isSending ? null : _startNewChat,
+                    ),
+                  Builder(
+                    builder: (context) => IconButton(
+                      icon: const Icon(Icons.history),
+                      tooltip: l10n.podcast_conversation_history,
+                      onPressed: () {
+                        Scaffold.of(context).openEndDrawer();
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 8),
           Row(
             children: [
-              Expanded(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: availableModelsAsync.when(
-                    data: (models) {
-                      if (models.length <= 1) return const SizedBox.shrink();
-                      return _buildModelSelector(context, models);
-                    },
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, _) => const SizedBox.shrink(),
-                  ),
-                ),
+              availableModelsAsync.when(
+                data: (models) {
+                  if (models.length <= 1) return const SizedBox.shrink();
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: _modelSelectorMaxWidth,
+                      ),
+                      child: _buildModelSelector(context, models),
+                    ),
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
               ),
-              const SizedBox(width: 8),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
@@ -662,21 +695,6 @@ class ConversationChatWidgetState
                                 ? null
                                 : () => unawaited(_shareAllChatAsImage(state)),
                           ),
-                        if (state.hasMessages)
-                          IconButton(
-                            icon: const Icon(Icons.add_comment_outlined),
-                            tooltip: l10n.podcast_conversation_new_chat,
-                            onPressed: state.isSending ? null : _startNewChat,
-                          ),
-                        Builder(
-                          builder: (context) => IconButton(
-                            icon: const Icon(Icons.history),
-                            tooltip: l10n.podcast_conversation_history,
-                            onPressed: () {
-                              Scaffold.of(context).openEndDrawer();
-                            },
-                          ),
-                        ),
                         if (state.hasError)
                           IconButton(
                             icon: const Icon(Icons.refresh),
@@ -708,6 +726,7 @@ class ConversationChatWidgetState
     List<SummaryModelInfo> models,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     // 确保_selectedModel在可用列表中
     if (_selectedModel != null &&
         !models.any((m) => m.id == _selectedModel!.id)) {
@@ -725,54 +744,81 @@ class ConversationChatWidgetState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButton<SummaryModelInfo>(
         value: _selectedModel,
         underline: const SizedBox.shrink(),
         isDense: true,
+        isExpanded: true,
         icon: const Icon(Icons.expand_more, size: 18),
         hint: Text(
           l10n.podcast_ai_model,
-          style: Theme.of(context).textTheme.bodySmall,
+          style: theme.textTheme.bodySmall,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurface,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurface,
         ),
+        selectedItemBuilder: (context) {
+          return models
+              .map(
+                (model) => Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    model.displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              )
+              .toList();
+        },
         items: models.map((model) {
           return DropdownMenuItem<SummaryModelInfo>(
             value: model,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(model.displayName),
-                if (model.isDefault)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 6),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                        vertical: 1,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        l10n.podcast_default_model,
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Theme.of(context).colorScheme.primary,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 220),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      model.displayName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (model.isDefault)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          l10n.podcast_default_model,
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           );
         }).toList(),
@@ -915,7 +961,7 @@ class ConversationChatWidgetState
     PodcastConversationMessage message,
   ) {
     final isUser = message.isUser;
-    const userTextColor = Colors.white;
+    final userTextColor = Theme.of(context).colorScheme.onSurface;
     final isSelected = _isMessageSelected(message);
     final roleLabel = _messageRoleLabel(message);
 
@@ -1072,6 +1118,10 @@ class ConversationChatWidgetState
                 controller: _messageController,
                 focusNode: _focusNode,
                 enabled: state.isReady && widget.aiSummary != null,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                cursorColor: Theme.of(context).colorScheme.primary,
                 maxLines: null,
                 minLines: 1,
                 textInputAction: TextInputAction.send,

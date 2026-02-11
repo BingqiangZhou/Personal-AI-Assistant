@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_conversation_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_playback_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model.dart';
@@ -31,6 +32,7 @@ void main() {
           ),
         ],
         child: MaterialApp(
+          theme: AppTheme.lightTheme,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: const Scaffold(
@@ -49,6 +51,253 @@ void main() {
     expect(find.byTooltip('Share All'), findsOneWidget);
   });
 
+  testWidgets('Conversation message count follows assistant replies only', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          getConversationProvider(
+            1,
+          ).overrideWith(() => _ConversationWithMixedMessagesNotifier()),
+          getSessionListProvider(
+            1,
+          ).overrideWith(() => _EmptySessionListNotifier()),
+          getCurrentSessionIdProvider(
+            1,
+          ).overrideWith(() => _NullSessionIdNotifier()),
+          availableModelsProvider.overrideWith(
+            (ref) async => <SummaryModelInfo>[],
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: ConversationChatWidget(
+              episodeId: 1,
+              episodeTitle: 'Test Episode',
+              aiSummary: 'Summary exists',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(ConversationChatWidget));
+    final l10n = AppLocalizations.of(context)!;
+
+    expect(
+      find.text(l10n.podcast_conversation_message_count(1)),
+      findsOneWidget,
+    );
+    expect(find.text(l10n.podcast_conversation_message_count(2)), findsNothing);
+  });
+
+  testWidgets('Conversation new-chat and history buttons are on title row', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          getConversationProvider(
+            1,
+          ).overrideWith(() => _ConversationWithMessagesNotifier()),
+          getSessionListProvider(
+            1,
+          ).overrideWith(() => _EmptySessionListNotifier()),
+          getCurrentSessionIdProvider(
+            1,
+          ).overrideWith(() => _NullSessionIdNotifier()),
+          availableModelsProvider.overrideWith(
+            (ref) async => <SummaryModelInfo>[],
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: ConversationChatWidget(
+              episodeId: 1,
+              episodeTitle: 'Test Episode',
+              aiSummary: 'Summary exists',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final context = tester.element(find.byType(ConversationChatWidget));
+    final l10n = AppLocalizations.of(context)!;
+
+    final titleFinder = find.text(l10n.podcast_conversation_title);
+    final newChatFinder = find.byIcon(Icons.add_comment_outlined);
+    final historyFinder = find.byIcon(Icons.history);
+
+    expect(titleFinder, findsOneWidget);
+    expect(newChatFinder, findsOneWidget);
+    expect(historyFinder, findsOneWidget);
+
+    final titleDy = tester.getTopLeft(titleFinder).dy;
+    final newChatDy = tester.getTopLeft(newChatFinder).dy;
+    final historyDy = tester.getTopLeft(historyFinder).dy;
+
+    expect((newChatDy - titleDy).abs(), lessThan(8));
+    expect((historyDy - titleDy).abs(), lessThan(8));
+  });
+
+  testWidgets(
+    'Conversation chat keeps share-all visible with long model names on small width',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(320, 800));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            getConversationProvider(
+              1,
+            ).overrideWith(() => _ConversationWithMessagesNotifier()),
+            getSessionListProvider(
+              1,
+            ).overrideWith(() => _EmptySessionListNotifier()),
+            getCurrentSessionIdProvider(
+              1,
+            ).overrideWith(() => _NullSessionIdNotifier()),
+            availableModelsProvider.overrideWith(
+              (ref) async => _longNameModels,
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(
+              body: ConversationChatWidget(
+                episodeId: 1,
+                episodeTitle: 'Test Episode',
+                aiSummary: 'Summary exists',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DropdownButton<SummaryModelInfo>), findsOneWidget);
+      expect(find.byTooltip('Share All'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('Conversation chat enables send button after typing text', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          getConversationProvider(
+            1,
+          ).overrideWith(() => _ConversationWithMessagesNotifier()),
+          getSessionListProvider(
+            1,
+          ).overrideWith(() => _EmptySessionListNotifier()),
+          getCurrentSessionIdProvider(
+            1,
+          ).overrideWith(() => _NullSessionIdNotifier()),
+          availableModelsProvider.overrideWith(
+            (ref) async => <SummaryModelInfo>[],
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: ConversationChatWidget(
+              episodeId: 1,
+              episodeTitle: 'Test Episode',
+              aiSummary: 'Summary exists',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final sendButtonFinder = find.ancestor(
+      of: find.byIcon(Icons.send),
+      matching: find.byType(IconButton),
+    );
+    expect(sendButtonFinder, findsOneWidget);
+    expect(tester.widget<IconButton>(sendButtonFinder).onPressed, isNull);
+
+    await tester.enterText(find.byType(TextField), 'hello');
+    await tester.pump();
+
+    expect(tester.widget<IconButton>(sendButtonFinder).onPressed, isNotNull);
+    await tester.pump(const Duration(milliseconds: 350));
+  });
+
+  testWidgets('Conversation user message uses onSurface color in light theme', (
+    tester,
+  ) async {
+    const userMessage = 'User asks a question';
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          getConversationProvider(
+            1,
+          ).overrideWith(() => _ConversationWithUserMessageNotifier()),
+          getSessionListProvider(
+            1,
+          ).overrideWith(() => _EmptySessionListNotifier()),
+          getCurrentSessionIdProvider(
+            1,
+          ).overrideWith(() => _NullSessionIdNotifier()),
+          availableModelsProvider.overrideWith(
+            (ref) async => <SummaryModelInfo>[],
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: ConversationChatWidget(
+              episodeId: 1,
+              episodeTitle: 'Test Episode',
+              aiSummary: 'Summary exists',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final textFinder = find.byWidgetPredicate(
+      (widget) => widget is SelectableText && widget.data == userMessage,
+    );
+    expect(textFinder, findsOneWidget);
+
+    final selectableText = tester.widget<SelectableText>(textFinder);
+    final context = tester.element(find.byType(ConversationChatWidget));
+    final expectedColor = Theme.of(context).colorScheme.onSurface;
+
+    expect(selectableText.style?.color, expectedColor);
+    expect(selectableText.style?.color, isNot(Colors.white));
+  });
+
   testWidgets('Transcript widget has no share-all entry', (tester) async {
     final transcription = PodcastTranscriptionResponse(
       id: 1,
@@ -61,6 +310,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
+          theme: AppTheme.lightTheme,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
@@ -81,6 +331,27 @@ void main() {
   });
 }
 
+const List<SummaryModelInfo> _longNameModels = <SummaryModelInfo>[
+  SummaryModelInfo(
+    id: 11,
+    name: 'primary-model',
+    displayName:
+        'A very long model display name that should be truncated in the selector',
+    provider: 'openai',
+    modelId: 'gpt-4.1-long-name-variant',
+    isDefault: true,
+  ),
+  SummaryModelInfo(
+    id: 12,
+    name: 'backup-model',
+    displayName:
+        'Another extremely long model name for overflow behavior verification',
+    provider: 'openai',
+    modelId: 'gpt-4.1-mini-long-name',
+    isDefault: false,
+  ),
+];
+
 class _ConversationWithMessagesNotifier extends ConversationNotifier {
   _ConversationWithMessagesNotifier() : super(1);
 
@@ -92,6 +363,51 @@ class _ConversationWithMessagesNotifier extends ConversationNotifier {
           id: 1,
           role: 'assistant',
           content: 'Hello from assistant',
+          conversationTurn: 1,
+          createdAt: DateTime.now().toIso8601String(),
+        ),
+      ],
+    );
+  }
+}
+
+class _ConversationWithMixedMessagesNotifier extends ConversationNotifier {
+  _ConversationWithMixedMessagesNotifier() : super(1);
+
+  @override
+  ConversationState build() {
+    return ConversationState(
+      messages: [
+        PodcastConversationMessage(
+          id: 10,
+          role: 'user',
+          content: 'User says hello',
+          conversationTurn: 1,
+          createdAt: DateTime.now().toIso8601String(),
+        ),
+        PodcastConversationMessage(
+          id: 11,
+          role: 'assistant',
+          content: 'Assistant replies',
+          conversationTurn: 2,
+          createdAt: DateTime.now().toIso8601String(),
+        ),
+      ],
+    );
+  }
+}
+
+class _ConversationWithUserMessageNotifier extends ConversationNotifier {
+  _ConversationWithUserMessageNotifier() : super(1);
+
+  @override
+  ConversationState build() {
+    return ConversationState(
+      messages: [
+        PodcastConversationMessage(
+          id: 2,
+          role: 'user',
+          content: 'User asks a question',
           conversationTurn: 1,
           createdAt: DateTime.now().toIso8601String(),
         ),
