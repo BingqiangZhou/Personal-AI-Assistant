@@ -36,14 +36,14 @@ class _PodcastEpisodeDetailPageState
     extends ConsumerState<PodcastEpisodeDetailPage> {
   int _selectedTabIndex =
       0; // 0 = Shownotes, 1 = Transcript, 2 = AI Summary, 3 = Conversation
-  Timer? _summaryPollingTimer; // AI鎽樿杞瀹氭椂鍣?
+  Timer? _summaryPollingTimer;
   bool _isPolling = false; // Guard flag to prevent multiple polls
   bool _hasTrackedEpisodeView = false;
   String _selectedSummaryText = '';
 
   // Sticky header animation
   final ScrollController _scrollController = ScrollController();
-  final PageController _pageController = PageController(); // 鐢ㄤ簬绉诲姩绔〉闈㈠垏鎹?
+  final PageController _pageController = PageController();
   double _scrollOffset = 0.0;
   static const double _headerScrollThreshold =
       50.0; // Header starts fading after 50px scroll
@@ -116,13 +116,12 @@ class _PodcastEpisodeDetailPageState
 
   // Calculate header clipping height based on scroll offset
   double get _headerClipHeight {
-    const maxHeaderHeight = 100.0; // 鏈€澶ц鍓珮搴︼紙瓒冲鏄剧ず瀹屾暣 header锛?
+    const maxHeaderHeight = 100.0;
     if (_scrollOffset <= 0) return maxHeaderHeight;
     if (_scrollOffset >= _headerScrollThreshold) return 0.0;
     return maxHeaderHeight * (1 - _scrollOffset / _headerScrollThreshold);
   }
 
-  // Check if header should be in expanded state (妯法鏁翠釜椤堕儴)
   bool get _isHeaderExpanded {
     return _scrollOffset < _headerScrollThreshold;
   }
@@ -132,8 +131,8 @@ class _PodcastEpisodeDetailPageState
   }
 
   Future<void> _loadAndPlayEpisode() async {
-    logger.AppLogger.debug('馃幍 ===== _loadAndPlayEpisode called =====');
-    logger.AppLogger.debug('馃幍 widget.episodeId: ${widget.episodeId}');
+    logger.AppLogger.debug('[Playback] ===== _loadAndPlayEpisode called =====');
+    logger.AppLogger.debug('[Playback] widget.episodeId: ${widget.episodeId}');
 
     try {
       // Wait for episode detail to be loaded
@@ -142,13 +141,13 @@ class _PodcastEpisodeDetailPageState
       );
 
       logger.AppLogger.debug(
-        '馃幍 Loaded episode detail: ID=${episodeDetailAsync?.id}, Title=${episodeDetailAsync?.title}',
+        '[Playback] Loaded episode detail: ID=${episodeDetailAsync?.id}, Title=${episodeDetailAsync?.title}',
       );
 
       // Debug: Log itemLink from API response
       if (episodeDetailAsync != null) {
         logger.AppLogger.debug(
-          '馃敆 [API Response] itemLink: ${episodeDetailAsync.itemLink ?? "NULL"}',
+          '[API Response] itemLink: ${episodeDetailAsync.itemLink ?? "NULL"}',
         );
       }
 
@@ -165,7 +164,7 @@ class _PodcastEpisodeDetailPageState
           audioFileSize: episodeDetailAsync.audioFileSize,
           publishedAt: episodeDetailAsync.publishedAt,
           imageUrl: episodeDetailAsync.imageUrl,
-          itemLink: episodeDetailAsync.itemLink, // 鈫?娣诲姞杩欎竴琛?
+          itemLink: episodeDetailAsync.itemLink,
           transcriptUrl: episodeDetailAsync.transcriptUrl,
           transcriptContent: episodeDetailAsync.transcriptContent,
           aiSummary: episodeDetailAsync.aiSummary,
@@ -187,12 +186,12 @@ class _PodcastEpisodeDetailPageState
         );
 
         logger.AppLogger.debug(
-          '馃幍 Auto-playing episode: ${episodeModel.title}',
+          '[Playback] Auto-playing episode: ${episodeModel.title}',
         );
         await ref.read(audioPlayerProvider.notifier).playEpisode(episodeModel);
       }
     } catch (error) {
-      logger.AppLogger.debug('鉂?Failed to auto-play episode: $error');
+      logger.AppLogger.debug('[Error] Failed to auto-play episode: $error');
     }
   }
 
@@ -204,7 +203,7 @@ class _PodcastEpisodeDetailPageState
           .read(transcriptionProvider.notifier)
           .checkOrStartTranscription();
     } catch (error) {
-      logger.AppLogger.debug('鉂?Failed to load transcription status: $error');
+      logger.AppLogger.debug('[Error] Failed to load transcription status: $error');
     }
   }
 
@@ -344,32 +343,27 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 鏂扮殑椤甸潰甯冨眬锛堝甫鍚搁《鏁堟灉锛?
   Widget _buildNewLayout(BuildContext context, dynamic episode) {
     return LayoutBuilder(
       builder: (context, layoutConstraints) {
+        // Use split-pane layout on desktop/tablet widths.
         final isWideScreen = layoutConstraints.maxWidth > 800;
 
         if (isWideScreen) {
-          // 瀹藉睆锛氬甫鍙粴鍔ㄦ敹缂?Header 鐨勫竷灞€
           return Stack(
             children: [
-              // 涓诲唴瀹硅锛氬乏渚ц竟鏍?+ 鍙充晶鍐呭鍖?
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 宸︿晶杈规爮锛堝寘鍚爣绛炬寜閽紝椤堕儴棰勭暀 Header 绌洪棿锛?
                   SizedBox(
                     width: 200,
                     child: Column(
                       children: [
-                        // 棰勭暀绌洪棿锛氭牴鎹?Header 鐘舵€佸姩鎬佽皟鏁?
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           curve: Curves.easeInOut,
                           height: _isHeaderExpanded ? 90 : 100,
                         ),
-                        // 宸︿晶鏍囩鏍忥紙鍙粴鍔級
                         Expanded(
                           child: SingleChildScrollView(
                             child: _buildLeftSidebar(),
@@ -378,19 +372,15 @@ class _PodcastEpisodeDetailPageState
                       ],
                     ),
                   ),
-                  // 鍙充晶鍐呭鍖?
                   Expanded(
                     child: Stack(
                       children: [
-                        // 鍐呭鍖?
                         NotificationListener<ScrollNotification>(
                           onNotification: (scrollNotification) {
                             _handleAutoCollapseOnRead(scrollNotification);
-                            // 鐩戝惉鎵€鏈夐〉闈㈢殑婊氬姩鏇存柊浠ュ疄鐜?header 鏀惰捣鏁堟灉鍜屾樉绀烘诞鍔ㄦ寜閽?
                             if (scrollNotification
                                 is ScrollUpdateNotification) {
                               final metrics = scrollNotification.metrics;
-                              // 鐩戝惉鎵€鏈夋爣绛鹃〉鐨勫瀭鐩存粴鍔?
                               if (metrics.axis == Axis.vertical) {
                                 final scrollPosition = metrics.pixels;
                                 final maxScroll = metrics.maxScrollExtent;
@@ -418,7 +408,6 @@ class _PodcastEpisodeDetailPageState
                             child: _buildTabContent(episode),
                           ),
                         ),
-                        // 娴姩鍚戜笂鎸夐挳
                         if (_shouldShowScrollToTopButton())
                           Positioned(
                             right: 16,
@@ -430,7 +419,6 @@ class _PodcastEpisodeDetailPageState
                   ),
                 ],
               ),
-              // 鍙Щ鍔ㄧ殑 Header (浣跨敤 AnimatedPositioned 瀹炵幇骞虫粦绉诲姩)
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOut,
@@ -440,8 +428,6 @@ class _PodcastEpisodeDetailPageState
                 width: _isHeaderExpanded ? null : 200,
                 child: _buildAnimatedHeader(episode),
               ),
-              // 娴姩鐨勮繑鍥炴寜閽紙鏀剁缉鐘舵€佹椂鏄剧ず鍦ㄥ彸涓婃柟锛?
-              // 娴姩鐨勬挱鏀炬寜閽紙鏀剁缉鐘舵€佹椂鏄剧ず锛?
               if (!_isHeaderExpanded)
                 Positioned(
                   left: 16,
@@ -454,24 +440,19 @@ class _PodcastEpisodeDetailPageState
             ],
           );
         } else {
-          // 绐勫睆锛氬瀭鐩村竷灞€
-          // 鑾峰彇椤堕儴瀹夊叏鍖哄煙楂樺害锛堢姸鎬佹爮楂樺害锛?
           final topPadding = MediaQuery.of(context).padding.top;
-          // 纭繚鑷冲皯鏈?8 鍍忕礌鐨勫熀纭€闂磋窛
           final totalTopPadding = topPadding > 0 ? topPadding + 8.0 : 8.0;
 
           return Column(
             children: [
-              // 娣诲姞缁熶竴鐨勫畨鍏ㄥ尯鍩熼棿璺濓紝鍖呰９ header 鍜屾寜閽爮
               Padding(
                 padding: EdgeInsets.only(top: totalTopPadding),
                 child: Column(
                   children: [
-                    // A. 椤堕儴鍏冩暟鎹尯 (Header) - 甯︽贰鍑哄拰鏀惰捣鍔ㄧ敾
                     ClipRect(
                       child: Align(
                         alignment: Alignment.topCenter,
-                        heightFactor: _headerClipHeight / 100.0, // 褰掍竴鍖栭珮搴﹀洜瀛?
+                        heightFactor: _headerClipHeight / 100.0,
                         child: AnimatedOpacity(
                           opacity: _headerOpacity,
                           duration: const Duration(milliseconds: 100),
@@ -481,24 +462,19 @@ class _PodcastEpisodeDetailPageState
                       ),
                     ),
 
-                    // B. 鍥哄畾鐨勬爣绛炬爮 - 鍚搁《鏁堟灉锛堢揣鎺ュ湪 header 涓嬫柟锛?
                     _buildTopButtonBar(),
                   ],
                 ),
               ),
 
-              // C. 涓棿涓讳綋鍐呭鍖?(Body) - 浣跨敤 PageView 鏀寔婊戝姩鍒囨崲
               Expanded(
                 child: Stack(
                   children: [
-                    // 鍐呭鍖?
                     NotificationListener<ScrollNotification>(
                       onNotification: (scrollNotification) {
                         _handleAutoCollapseOnRead(scrollNotification);
-                        // 鐩戝惉婊氬姩鏇存柊浠ュ疄鐜?header 鏀惰捣鏁堟灉鍜屾樉绀烘诞鍔ㄦ寜閽?
                         if (scrollNotification is ScrollUpdateNotification) {
                           final metrics = scrollNotification.metrics;
-                          // 鑾峰彇褰撳墠椤甸潰鐨勬粴鍔ㄤ綅缃?
                           if (metrics.axis == Axis.vertical) {
                             final scrollPosition = metrics.pixels;
                             final maxScroll = metrics.maxScrollExtent;
@@ -522,13 +498,11 @@ class _PodcastEpisodeDetailPageState
                         onPageChanged: (index) {
                           setState(() {
                             _selectedTabIndex = index;
-                            // 鍒囨崲鏍囩鏃剁殑杞鎺у埗
                             if (index == 2) {
                               _startSummaryPolling();
                             } else {
                               _stopSummaryPolling();
                             }
-                            // 閲嶇疆婊氬姩鍋忕Щ
                             _updateHeaderStateForTab(index);
                           });
                         },
@@ -544,7 +518,6 @@ class _PodcastEpisodeDetailPageState
                         ],
                       ),
                     ),
-                    // 娴姩鍚戜笂鎸夐挳
                     if (_shouldShowScrollToTopButton())
                       Positioned(
                         right: 0,
@@ -561,7 +534,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // A. 椤堕儴鍏冩暟鎹尯 (Header) - 鏃犲簳閮ㄥ垎鍓茬嚎
   Widget _buildHeader(dynamic episode) {
     final l10n = AppLocalizations.of(context)!;
 
@@ -571,7 +543,6 @@ class _PodcastEpisodeDetailPageState
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 宸︿晶锛歀ogo锛堢嫭鍗犱袱琛岋級
           PodcastImageWidget(
             imageUrl: episode.imageUrl,
             fallbackImageUrl: episode.subscriptionImageUrl,
@@ -580,16 +551,13 @@ class _PodcastEpisodeDetailPageState
             iconSize: 32,
           ),
           const SizedBox(width: 16),
-          // 鍙充晶锛氭爣棰樺拰鍙戝竷鏃堕棿
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 绗竴琛岋細鏍囬 + 鎾斁鎸夐挳
                 Row(
                   children: [
-                    // 鏍囬鍜屾挱鏀炬寜閽斁鍦ㄤ竴璧?
                     Expanded(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -607,7 +575,6 @@ class _PodcastEpisodeDetailPageState
                             ),
                           ),
                           const SizedBox(width: 8),
-                          // 鎾斁鎸夐挳
                           InkWell(
                             onTap: () async {
                               try {
@@ -616,7 +583,7 @@ class _PodcastEpisodeDetailPageState
                                 );
                               } catch (error) {
                                 logger.AppLogger.debug(
-                                  '鉂?Failed to play episode: $error',
+                                  '[Error] Failed to play episode: $error',
                                 );
                               }
                             },
@@ -652,7 +619,6 @@ class _PodcastEpisodeDetailPageState
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    // 鏍规嵁灞忓箷瀹藉害鏄剧ず涓嶅悓鏂囨湰锛氱Щ鍔ㄧ鏄剧ず"鎾斁"锛屾闈㈢鏄剧ず"鎾斁姝ら泦"
                                     MediaQuery.of(context).size.width < 600
                                         ? l10n.podcast_play_episode
                                         : l10n.podcast_play_episode_full,
@@ -672,9 +638,6 @@ class _PodcastEpisodeDetailPageState
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // 杩斿洖鎸夐挳 - 浠呭湪闈炵Щ鍔ㄨ澶囦笂鏄剧ず
-                    // 娉ㄦ剰锛氳繖閲屾娴嬬殑鏄湡姝ｇ殑骞冲彴绫诲瀷锛岃€屼笉鏄睆骞曞搴?
-                    // 杩欐牱鍙互纭繚鍦ㄦ闈㈠簲鐢ㄧ缉灏忕獥鍙ｆ椂浠嶇劧鏄剧ず杩斿洖鎸夐挳
                     if (!_isMobilePlatform())
                       Container(
                         decoration: BoxDecoration(
@@ -707,7 +670,6 @@ class _PodcastEpisodeDetailPageState
                   ],
                 ),
                 const SizedBox(height: 8),
-                // 绗簩琛岋細鍙戝竷鏃堕棿銆佹椂闀垮拰婧愰摼鎺?
                 Wrap(
                   spacing: 16,
                   crossAxisAlignment: WrapCrossAlignment.center,
@@ -827,12 +789,10 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 鍙姩鐢荤殑 Header锛堟闈㈢锛? 鏍规嵁婊氬姩浣嶇疆鏀瑰彉甯冨眬
   Widget _buildAnimatedHeader(dynamic episode) {
     final l10n = AppLocalizations.of(context)!;
 
     if (_isHeaderExpanded) {
-      // 灞曞紑鐘舵€侊細妯法鏁翠釜椤堕儴锛屽畬鏁翠俊鎭?
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
@@ -847,7 +807,6 @@ class _PodcastEpisodeDetailPageState
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 宸︿晶锛歀ogo
             PodcastImageWidget(
               imageUrl: episode.imageUrl,
               fallbackImageUrl: episode.subscriptionImageUrl,
@@ -856,13 +815,11 @@ class _PodcastEpisodeDetailPageState
               iconSize: 32,
             ),
             const SizedBox(width: 16),
-            // 涓棿锛氭爣棰樺拰淇℃伅
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 鏍囬琛?
                   Row(
                     children: [
                       Expanded(
@@ -878,12 +835,10 @@ class _PodcastEpisodeDetailPageState
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // 鎾斁鎸夐挳
                       _buildPlayButton(episode, l10n),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  // 鍏冩暟鎹
                   Wrap(
                     spacing: 16,
                     crossAxisAlignment: WrapCrossAlignment.center,
@@ -900,13 +855,11 @@ class _PodcastEpisodeDetailPageState
               ),
             ),
             const SizedBox(width: 16),
-            // 杩斿洖鎸夐挳
             _buildBackButton(),
           ],
         ),
       );
     } else {
-      // 鏀剁缉鐘舵€侊細绱у噾甯冨眬锛屾樉绀哄湪宸︿晶杈规爮
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         decoration: BoxDecoration(
@@ -922,7 +875,6 @@ class _PodcastEpisodeDetailPageState
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Logo锛堝皬灏哄锛?
             Center(
               child: PodcastImageWidget(
                 imageUrl: episode.imageUrl,
@@ -933,7 +885,6 @@ class _PodcastEpisodeDetailPageState
               ),
             ),
             const SizedBox(height: 6),
-            // 鏍囬锛堟埅鏂級
             Text(
               episode.title ?? 'Unknown',
               style: TextStyle(
@@ -1003,7 +954,6 @@ class _PodcastEpisodeDetailPageState
     await notifier.playEpisode(episodeModel);
   }
 
-  // 鎾斁鎸夐挳缁勪欢
   Widget _buildPlayButton(dynamic episode, AppLocalizations l10n) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -1013,7 +963,7 @@ class _PodcastEpisodeDetailPageState
             try {
               await _playOrResumeFromDetail(_episodeToModel(episode));
             } catch (error) {
-              logger.AppLogger.debug('鉂?Failed to play episode: $error');
+              logger.AppLogger.debug('[Error] Failed to play episode: $error');
             }
           },
           child: Container(
@@ -1103,7 +1053,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 杩斿洖鎸夐挳缁勪欢
   Widget _buildCollapsedFloatingActions(
     dynamic episode,
     AppLocalizations l10n,
@@ -1147,7 +1096,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 鏃ユ湡鑺墖缁勪欢
   Widget _buildDateChip(dynamic episode) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -1169,7 +1117,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 鏃堕暱鑺墖缁勪欢
   Widget _buildDurationChip(dynamic episode) {
     return Consumer(
       builder: (context, ref, _) {
@@ -1210,7 +1157,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 婧愰摼鎺ヨ姱鐗囩粍浠?
   Widget _buildSourceLinkChip(dynamic episode, AppLocalizations l10n) {
     return InkWell(
       onTap: () async {
@@ -1240,7 +1186,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 椤堕儴鎸夐挳琛岋紙绉诲姩绔級
   Widget _buildTopButtonBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1330,7 +1275,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 宸︿晶鎸夐挳鍒楋紙瀹藉睆锛?
   Widget _buildLeftSidebar() {
     return Container(
       width: 200,
@@ -1354,7 +1298,7 @@ class _PodcastEpisodeDetailPageState
               if (_selectedTabIndex != 0) {
                 setState(() {
                   _selectedTabIndex = 0;
-                  _stopSummaryPolling(); // 鍒囨崲绂诲紑AI Summary tab鏃跺仠姝㈣疆璇?
+                  _stopSummaryPolling();
                   _updateHeaderStateForTab(0);
                 });
               }
@@ -1369,7 +1313,7 @@ class _PodcastEpisodeDetailPageState
               if (_selectedTabIndex != 1) {
                 setState(() {
                   _selectedTabIndex = 1;
-                  _stopSummaryPolling(); // 鍒囨崲绂诲紑AI Summary tab鏃跺仠姝㈣疆璇?
+                  _stopSummaryPolling();
                   _updateHeaderStateForTab(1);
                 });
               }
@@ -1384,7 +1328,7 @@ class _PodcastEpisodeDetailPageState
               if (_selectedTabIndex != 2) {
                 setState(() {
                   _selectedTabIndex = 2;
-                  _startSummaryPolling(); // 鍒囨崲鍒癆I Summary tab鏃跺惎鍔ㄨ疆璇?
+                  _startSummaryPolling();
                   _updateHeaderStateForTab(2);
                 });
               }
@@ -1399,7 +1343,7 @@ class _PodcastEpisodeDetailPageState
               if (_selectedTabIndex != 3) {
                 setState(() {
                   _selectedTabIndex = 3;
-                  _stopSummaryPolling(); // 鍒囨崲绂诲紑AI Summary tab鏃跺仠姝㈣疆璇?
+                  _stopSummaryPolling();
                   _updateHeaderStateForTab(3);
                 });
               }
@@ -1410,7 +1354,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 宸︿晶杈规爮鎸夐挳缁勪欢锛堝灞忥級
   Widget _buildSidebarTabButton(
     String text,
     bool isSelected,
@@ -1447,7 +1390,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 椤堕儴鑳跺泭鐘舵寜閽粍浠?
   Widget _buildTabButton(String text, bool isSelected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
@@ -1473,7 +1415,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // Tab鍐呭鏍规嵁閫夋嫨鏄剧ず
   Widget _buildTabContent(dynamic episode) {
     switch (_selectedTabIndex) {
       case 0:
@@ -1489,7 +1430,6 @@ class _PodcastEpisodeDetailPageState
     }
   }
 
-  // 鏋勫缓鍗曚釜鏍囩椤靛唴瀹癸紙鐢ㄤ簬 PageView锛?
   Widget _buildSingleTabContent(dynamic episode, int index) {
     switch (index) {
       case 0:
@@ -1505,7 +1445,6 @@ class _PodcastEpisodeDetailPageState
     }
   }
 
-  // 杞綍鍐呭
   Widget _buildTranscriptContent(dynamic episode) {
     final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
     final transcriptionState = ref.watch(transcriptionProvider);
@@ -1568,7 +1507,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // AI Summary 鍐呭
   void _showShareErrorSnackBar(String message) {
     if (!mounted) {
       return;
@@ -1631,7 +1569,6 @@ class _PodcastEpisodeDetailPageState
     final transcriptionProvider = getTranscriptionProvider(widget.episodeId);
     final transcriptionState = ref.watch(transcriptionProvider);
 
-    // 鍒濆鍖栨€荤粨鐘舵€侊細濡傛灉鍚庣杩斿洖浜哸iSummary锛屽悓姝ュ埌鐘舵€佷腑
     if (episode.aiSummary != null &&
         episode.aiSummary!.isNotEmpty &&
         !summaryState.hasSummary &&
@@ -1647,7 +1584,6 @@ class _PodcastEpisodeDetailPageState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // AI鎬荤粨鎺у埗鍖哄煙
           AISummaryControlWidget(
             episodeId: widget.episodeId,
             hasTranscript:
@@ -1657,7 +1593,6 @@ class _PodcastEpisodeDetailPageState
 
           const SizedBox(height: 16),
 
-          // 鎬荤粨鍐呭鏄剧ず
           if (summaryState.isLoading) ...[
             Center(
               child: Column(
@@ -1811,7 +1746,6 @@ class _PodcastEpisodeDetailPageState
             ),
           ] else if (episode.aiSummary != null &&
               episode.aiSummary!.isNotEmpty) ...[
-            // 鍏煎鏃х増鏈細濡傛灉episode鏈塧iSummary浣唖tate杩樻病鏈夛紝鏄剧ずepisode鐨刟iSummary
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -1963,7 +1897,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 瀵硅瘽鍐呭
   Widget _buildConversationContent(dynamic episode) {
     final episodeDetailAsync = ref.watch(
       episodeDetailProvider(widget.episodeId),
@@ -2014,9 +1947,7 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 鏍煎紡鍖栨棩鏈?
   String _formatDate(DateTime date) {
-    // 纭繚浣跨敤鏈湴鏃堕棿锛岃€屼笉鏄?UTC 鏃堕棿
     final localDate = date.isUtc ? date.toLocal() : date;
     final year = localDate.year;
     final month = localDate.month.toString().padLeft(2, '0');
@@ -2025,7 +1956,6 @@ class _PodcastEpisodeDetailPageState
     return l10n.date_format(year, month, day);
   }
 
-  // 閿欒鐘舵€?
   Widget _buildErrorState(BuildContext context, dynamic error) {
     final l10n = AppLocalizations.of(context)!;
     return Center(
@@ -2067,16 +1997,16 @@ class _PodcastEpisodeDetailPageState
     // Check if episodeId has changed
     if (oldWidget.episodeId != widget.episodeId) {
       logger.AppLogger.debug(
-        '馃攧 ===== didUpdateWidget: Episode ID changed =====',
+        '[Playback] ===== didUpdateWidget: Episode ID changed =====',
       );
-      logger.AppLogger.debug('馃攧 Old Episode ID: ${oldWidget.episodeId}');
-      logger.AppLogger.debug('馃攧 New Episode ID: ${widget.episodeId}');
+      logger.AppLogger.debug('[Playback] Old Episode ID: ${oldWidget.episodeId}');
+      logger.AppLogger.debug('[Playback] New Episode ID: ${widget.episodeId}');
       logger.AppLogger.debug(
-        '馃攧 Reloading episode data and auto-playing new episode',
+        '[Playback] Reloading episode data and auto-playing new episode',
       );
 
       // Invalidate old episode detail provider to force refresh
-      logger.AppLogger.debug('馃攧 Invalidating old episode detail provider');
+      logger.AppLogger.debug('[Playback] Invalidating old episode detail provider');
       ref.invalidate(episodeDetailProvider(oldWidget.episodeId));
       _hasTrackedEpisodeView = false;
 
@@ -2090,22 +2020,19 @@ class _PodcastEpisodeDetailPageState
       // Reload data for the new episode
       WidgetsBinding.instance.addPostFrameCallback((_) {
         logger.AppLogger.debug(
-          '馃攧 Calling _loadAndPlayEpisode for new episode',
+          '[Playback] Calling _loadAndPlayEpisode for new episode',
         );
         _loadAndPlayEpisode();
         _loadTranscriptionStatus();
       });
-      logger.AppLogger.debug('馃攧 ===== didUpdateWidget complete =====');
+      logger.AppLogger.debug('[Playback] ===== didUpdateWidget complete =====');
     }
   }
 
-  // 鍚姩AI鎽樿杞
   void _startSummaryPolling() async {
-    // 鍋滄鐜版湁鐨勮疆璇?
     _summaryPollingTimer?.cancel();
     _isPolling = false;
 
-    // 棣栧厛妫€鏌ユ槸鍚﹀凡缁忔湁鎽樿锛屽鏋滄湁鍒欎笉寮€濮嬭疆璇?
     try {
       final episodeDetailAsync = await ref.read(
         episodeDetailProvider(widget.episodeId).future,
@@ -2114,21 +2041,19 @@ class _PodcastEpisodeDetailPageState
           episodeDetailAsync.aiSummary != null &&
           episodeDetailAsync.aiSummary!.isNotEmpty) {
         logger.AppLogger.debug(
-          '鉁?[AI SUMMARY] Summary already exists, skipping polling',
+          '[AI Summary] Summary already exists, skipping polling',
         );
         return;
       }
     } catch (e) {
       logger.AppLogger.debug(
-        '鈿狅笍 [AI SUMMARY] Failed to check initial summary state: $e',
+        '[AI Summary] Failed to check initial summary state: $e',
       );
     }
 
-    // 寮€濮嬭疆璇?
     _isPolling = true;
-    logger.AppLogger.debug('馃攧 [AI SUMMARY] Starting polling...');
+    logger.AppLogger.debug('[AI Summary] Starting polling...');
 
-    // 姣?绉掕疆璇竴娆★紝妫€鏌I鎽樿鏄惁宸茬敓鎴?
     _summaryPollingTimer = Timer.periodic(const Duration(seconds: 5), (
       timer,
     ) async {
@@ -2138,50 +2063,38 @@ class _PodcastEpisodeDetailPageState
       }
 
       try {
-        // 妫€鏌ュ綋鍓峞pisode鐨凙I鎽樿鐘舵€?
         final episodeDetailAsync = await ref.read(
           episodeDetailProvider(widget.episodeId).future,
         );
 
         if (episodeDetailAsync != null) {
-          // 濡傛灉AI鎽樿宸插瓨鍦紝鍋滄杞
           if (episodeDetailAsync.aiSummary != null &&
               episodeDetailAsync.aiSummary!.isNotEmpty) {
             logger.AppLogger.debug(
-              '鉁?[AI SUMMARY] Summary generated, stopping polling',
+              '[AI Summary] Summary generated, stopping polling',
             );
             _stopSummaryPolling();
             return;
           }
         }
 
-        // 鍒锋柊episode detail鏁版嵁
         ref.invalidate(episodeDetailProvider(widget.episodeId));
       } catch (e) {
-        logger.AppLogger.debug('鈿狅笍 [AI SUMMARY] Error during polling: $e');
+        logger.AppLogger.debug('[AI Summary] Error during polling: $e');
       }
     });
   }
 
-  // 鍋滄AI鎽樿杞
   void _stopSummaryPolling() {
     _summaryPollingTimer?.cancel();
     _summaryPollingTimer = null;
     _isPolling = false;
-    logger.AppLogger.debug('鈴癸笍 [AI SUMMARY] Stopped polling');
+    logger.AppLogger.debug('[AI Summary] Stopped polling');
   }
 
-  /// 妫€娴嬫槸鍚︽槸鐪熸鐨勭Щ鍔ㄨ澶囧钩鍙?
-  ///
-  /// 娉ㄦ剰锛氳繖閲屾娴嬬殑鏄钩鍙扮被鍨嬶紝鑰屼笉鏄睆骞曞搴?
-  /// - iOS 鍜?Android 骞冲彴杩斿洖 true锛堢Щ鍔ㄨ澶囷級
-  /// - Windows銆乵acOS銆丩inux銆乄eb 骞冲彴杩斿洖 false锛堟闈?Web锛?
-  ///
-  /// 杩欐牱鍙互纭繚鍦ㄦ闈㈠簲鐢ㄧ缉灏忕獥鍙ｆ椂浠嶇劧鏄剧ず杩斿洖鎸夐挳
+  // Use actual platform type instead of width breakpoints.
+  // Mobile platforms return true, desktop/web-like targets return false.
   bool _isMobilePlatform() {
-    // 浣跨敤 Theme.of(context).platform 妫€娴嬪钩鍙扮被鍨?
-    // 杩欐娴嬬殑鏄湡姝ｇ殑骞冲彴锛岃€屼笉鏄睆骞曞搴?
-    // 鍥犳鍦ㄦ闈㈠簲鐢ㄧ缉灏忕獥鍙ｆ椂浠嶇劧浼氳繑鍥?false
     switch (Theme.of(context).platform) {
       case TargetPlatform.iOS:
       case TargetPlatform.android:
@@ -2194,18 +2107,15 @@ class _PodcastEpisodeDetailPageState
     }
   }
 
-  // 鍒ゆ柇鏄惁搴旇鏄剧ず娴姩鍚戜笂鎸夐挳锛堝彧瑕佸悜涓嬫粴鍔ㄥ氨鏄剧ず锛?
   bool _shouldShowScrollToTopButton() {
     final scrollPosition = _tabScrollPositions[_selectedTabIndex] ?? 0.0;
     return scrollPosition > 0;
   }
 
-  // 鏋勫缓娴姩鍚戜笂鎸夐挳
   Widget _buildScrollToTopButton() {
     final screenSize = MediaQuery.of(context).size;
     final isMobile = screenSize.width < 600;
 
-    // 璁＄畻璺濈鍙充笅瑙掔殑浣嶇疆
     final rightMargin = isMobile ? 32.0 : (screenSize.width * 0.1);
     final bottomMargin = isMobile ? (screenSize.height * 0.1) : 32.0;
 
@@ -2241,7 +2151,6 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  // 婊氬姩鍥為《閮?
   void _scrollToTop() {
     // Reset scroll offset to expand header
     setState(() {

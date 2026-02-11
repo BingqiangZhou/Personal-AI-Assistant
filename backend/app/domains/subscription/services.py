@@ -99,7 +99,7 @@ class SubscriptionService:
         """
         Create a new subscription with enhanced duplicate detection.
 
-        创建新订阅，带有增强的重复检测�?
+        Create and attach a subscription with robust duplicate detection.
         With many-to-many relationship:
         1. Check if subscription exists globally by URL
         2. If exists and user already subscribed: raise error
@@ -119,7 +119,7 @@ class SubscriptionService:
         """
         Batch create subscriptions with enhanced duplicate detection.
 
-        批量创建订阅，带有增强的重复检测�?
+        Batch create subscriptions with robust duplicate detection.
         Returns results with status:
         - success: New subscription created
         - updated: Existing subscription updated (non-active status)
@@ -345,9 +345,10 @@ class SubscriptionService:
         """
         Manually trigger subscription fetch (for RSS feeds).
 
-        手动触发订阅获取（RSS 订阅）�?
+        Manually trigger RSS subscription fetch.
         Uses the enhanced FeedParser component for robust parsing.
-        使用增强�?FeedParser 组件进行健壮解析�?        """
+        Uses the enhanced FeedParser component for resilient parsing.
+        """
         sub = await self.repo.get_subscription_by_id(self.user_id, sub_id)
         if not sub:
             raise ValueError("Subscription not found")
@@ -676,7 +677,7 @@ class SubscriptionService:
         """
         Generate OPML 2.0 format XML content for RSS subscriptions using ElementTree.
 
-        生成符合OPML 2.0规范的RSS订阅XML内容�?
+        Generate OPML 2.0 compliant XML content for RSS subscriptions.
         Args:
             user_id: Optional user ID to filter subscriptions. If None, exports all subscriptions.
             status_filter: Subscription status filter (default: ACTIVE)
@@ -751,7 +752,7 @@ class SubscriptionService:
         """
         Add a subscription as an outline element to the given parent.
 
-        将订阅作�?outline 元素添加到给定的父元素�?
+        Add the subscription as an OPML outline element under the given parent.
         Args:
             parent: Parent Element to add the outline to
             subscription: Subscription model instance

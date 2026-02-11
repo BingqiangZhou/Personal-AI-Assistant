@@ -1,4 +1,4 @@
-﻿# Backend Architecture Refactor Acceptance Report (2026-02-06)
+# Backend Architecture Refactor Acceptance Report (2026-02-06)
 
 ## Summary
 - Scope completed in four batches: Podcast-first refactor, facade thinning, core/shared simplification, and doc/spec/ADR sync.

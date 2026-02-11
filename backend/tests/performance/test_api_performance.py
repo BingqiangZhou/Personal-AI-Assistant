@@ -43,7 +43,7 @@ class PerformanceMetrics:
         total = len(self.results)
 
         for result in self.results:
-            status = "�?PASS" if result['passed'] else "�?FAIL"
+            status = "[PASS]" if result['passed'] else "[FAIL]"
             print(f"{status} | {result['test']}: {result['duration_ms']:.2f}ms")
             if result['details']:
                 print(f"     Details: {result['details']}")
