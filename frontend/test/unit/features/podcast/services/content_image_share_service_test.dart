@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_conversation_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/services/content_image_share_service.dart';
@@ -194,5 +195,65 @@ void main() {
         );
       },
     );
+  });
+
+  group('resolveShareCardWidth', () {
+    test(
+      'uses mobile width candidate with margin on a common narrow screen',
+      () {
+        final width = resolveShareCardWidth(
+          platform: TargetPlatform.android,
+          screenWidth: 360,
+        );
+
+        expect(width, 328);
+      },
+    );
+
+    test('keeps mobile result within min and max range for common sizes', () {
+      final width390 = resolveShareCardWidth(
+        platform: TargetPlatform.iOS,
+        screenWidth: 390,
+      );
+      final width430 = resolveShareCardWidth(
+        platform: TargetPlatform.iOS,
+        screenWidth: 430,
+      );
+
+      expect(width390, inInclusiveRange(320, 430));
+      expect(width430, inInclusiveRange(320, 430));
+    });
+
+    test('caps mobile width at 430 on wide screens', () {
+      final width = resolveShareCardWidth(
+        platform: TargetPlatform.android,
+        screenWidth: 800,
+      );
+
+      expect(width, 430);
+    });
+
+    test('uses fallback width for mobile when screen width is invalid', () {
+      final width = resolveShareCardWidth(
+        platform: TargetPlatform.android,
+        screenWidth: 0,
+      );
+
+      expect(width, 390);
+    });
+
+    test('keeps desktop width fixed at 900', () {
+      final windowsWidth = resolveShareCardWidth(
+        platform: TargetPlatform.windows,
+        screenWidth: 1440,
+      );
+      final macWidth = resolveShareCardWidth(
+        platform: TargetPlatform.macOS,
+        screenWidth: 1280,
+      );
+
+      expect(windowsWidth, 900);
+      expect(macWidth, 900);
+    });
   });
 }

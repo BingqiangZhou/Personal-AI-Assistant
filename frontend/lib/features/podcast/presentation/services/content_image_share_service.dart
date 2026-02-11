@@ -12,7 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_conversation_model.dart';
 
-const int kDefaultShareMaxChars = 2500;
+const int kDefaultShareMaxChars = 10000;
 const String kShareImagePrimaryFontFamily = 'SF Pro Text';
 const List<String> kShareImageFontFallback = <String>[
   'PingFang SC',
@@ -30,6 +30,11 @@ const List<String> kShareImageCodeFontFallback = <String>[
   'Monaco',
   'monospace',
 ];
+const double kShareCardDesktopWidth = 900;
+const double kShareCardMobileHorizontalMargin = 32;
+const double kShareCardMobileMinWidth = 320;
+const double kShareCardMobileMaxWidth = 430;
+const double kShareCardMobileFallbackWidth = 390;
 
 enum ShareContentType { summary, transcript, chat }
 
@@ -795,6 +800,29 @@ String formatChatMessagesForShare({
   return blocks.join('\n\n');
 }
 
+@visibleForTesting
+double resolveShareCardWidth({
+  required TargetPlatform platform,
+  required double screenWidth,
+}) {
+  switch (platform) {
+    case TargetPlatform.android:
+    case TargetPlatform.iOS:
+      if (screenWidth <= 0) {
+        return kShareCardMobileFallbackWidth;
+      }
+      final candidate = screenWidth - kShareCardMobileHorizontalMargin;
+      return candidate
+          .clamp(kShareCardMobileMinWidth, kShareCardMobileMaxWidth)
+          .toDouble();
+    case TargetPlatform.windows:
+    case TargetPlatform.macOS:
+    case TargetPlatform.linux:
+    case TargetPlatform.fuchsia:
+      return kShareCardDesktopWidth;
+  }
+}
+
 class ContentImageShareService {
   static final ScreenshotController _screenshotController =
       ScreenshotController();
@@ -862,9 +890,14 @@ class ContentImageShareService {
 
       final shareOrigin = _resolveShareOrigin(context);
       final fileName = _buildFileName(payload.contentType);
+      final cardWidth = resolveShareCardWidth(
+        platform: defaultTargetPlatform,
+        screenWidth: MediaQuery.sizeOf(context).width,
+      );
       final bytes = await _screenshotController.captureFromLongWidget(
         _buildShareCard(
           context,
+          cardWidth: cardWidth,
           title: payload.episodeTitle.trim().isNotEmpty
               ? payload.episodeTitle.trim()
               : sourceLabel,
@@ -1257,17 +1290,21 @@ class ContentImageShareService {
 
   static Widget _buildShareCard(
     BuildContext context, {
+    required double cardWidth,
     required String title,
     required String subtitle,
     required Widget body,
   }) {
     final theme = Theme.of(context);
+    final isCompactMobileWidth = cardWidth <= kShareCardMobileMaxWidth;
+    final outerPadding = isCompactMobileWidth ? 20.0 : 28.0;
+    final contentPadding = isCompactMobileWidth ? 14.0 : 16.0;
 
     return Material(
       color: Colors.white,
       child: Container(
-        width: 900,
-        padding: const EdgeInsets.all(28),
+        width: cardWidth,
+        padding: EdgeInsets.all(outerPadding),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: Colors.black38, width: 1.2),
@@ -1315,7 +1352,7 @@ class ContentImageShareService {
                   const SizedBox(height: 16),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.all(contentPadding),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
