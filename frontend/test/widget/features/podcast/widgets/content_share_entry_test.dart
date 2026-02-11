@@ -97,6 +97,111 @@ void main() {
     expect(find.text(l10n.podcast_conversation_message_count(2)), findsNothing);
   });
 
+  testWidgets(
+    'Conversation selection can toggle by tapping bubble header area',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            getConversationProvider(
+              1,
+            ).overrideWith(() => _ConversationWithMessagesNotifier()),
+            getSessionListProvider(
+              1,
+            ).overrideWith(() => _EmptySessionListNotifier()),
+            getCurrentSessionIdProvider(
+              1,
+            ).overrideWith(() => _NullSessionIdNotifier()),
+            availableModelsProvider.overrideWith(
+              (ref) async => <SummaryModelInfo>[],
+            ),
+          ],
+          child: MaterialApp(
+            theme: AppTheme.lightTheme,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(
+              body: ConversationChatWidget(
+                episodeId: 1,
+                episodeTitle: 'Test Episode',
+                aiSummary: 'Summary exists',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(ConversationChatWidget));
+      final l10n = AppLocalizations.of(context)!;
+
+      await tester.tap(find.byIcon(Icons.check_box_outlined));
+      await tester.pumpAndSettle();
+
+      final assistantIconFinder = find.byIcon(Icons.smart_toy_outlined);
+      expect(assistantIconFinder, findsOneWidget);
+      await tester.tap(assistantIconFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.podcast_selected_count(1)), findsOneWidget);
+
+      await tester.tap(assistantIconFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.podcast_selected_count(1)), findsNothing);
+    },
+  );
+
+  testWidgets('Conversation selection/share icons are replaced as expected', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          getConversationProvider(
+            1,
+          ).overrideWith(() => _ConversationWithMessagesNotifier()),
+          getSessionListProvider(
+            1,
+          ).overrideWith(() => _EmptySessionListNotifier()),
+          getCurrentSessionIdProvider(
+            1,
+          ).overrideWith(() => _NullSessionIdNotifier()),
+          availableModelsProvider.overrideWith(
+            (ref) async => <SummaryModelInfo>[],
+          ),
+        ],
+        child: MaterialApp(
+          theme: AppTheme.lightTheme,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: ConversationChatWidget(
+              episodeId: 1,
+              episodeTitle: 'Test Episode',
+              aiSummary: 'Summary exists',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.check_box_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.deselect), findsNothing);
+    expect(find.byIcon(Icons.share_outlined), findsNothing);
+    expect(find.byIcon(Icons.ios_share_outlined), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.check_box_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.deselect), findsOneWidget);
+    expect(find.byIcon(Icons.share_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.ios_share_outlined), findsOneWidget);
+  });
+
   testWidgets('Conversation new-chat and history buttons are on title row', (
     tester,
   ) async {

@@ -664,8 +664,8 @@ class ConversationChatWidgetState
                           IconButton(
                             icon: Icon(
                               _isMessageSelectMode
-                                  ? Icons.checklist_rtl
-                                  : Icons.playlist_add_check_circle_outlined,
+                                  ? Icons.deselect
+                                  : Icons.check_box_outlined,
                             ),
                             tooltip: _isMessageSelectMode
                                 ? l10n.podcast_deselect_all
@@ -678,7 +678,7 @@ class ConversationChatWidgetState
                           ),
                         if (_isMessageSelectMode)
                           IconButton(
-                            icon: const Icon(Icons.ios_share_outlined),
+                            icon: const Icon(Icons.share_outlined),
                             tooltip: l10n.podcast_share_as_image,
                             onPressed:
                                 state.isSending || _selectedMessageCount == 0
@@ -967,78 +967,78 @@ class ConversationChatWidgetState
 
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isUser
-              ? Theme.of(context).colorScheme.primaryContainer
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: _isMessageSelectMode
-                ? (isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(
-                          context,
-                        ).colorScheme.outlineVariant.withValues(alpha: 0.35))
-                : (isUser
-                      ? Theme.of(
-                          context,
-                        ).colorScheme.primary.withValues(alpha: 0.3)
-                      : Theme.of(
-                          context,
-                        ).colorScheme.outlineVariant.withValues(alpha: 0.3)),
-            width: _isMessageSelectMode && isSelected ? 1.6 : 1,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _isMessageSelectMode
+            ? () => _toggleMessageSelection(message)
+            : null,
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.75,
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Message header with role and time
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isUser ? Icons.person_outline : Icons.smart_toy_outlined,
-                  size: 14,
-                  color: isUser
-                      ? userTextColor
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  roleLabel,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isUser
+                ? Theme.of(context).colorScheme.primaryContainer
+                : Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _isMessageSelectMode
+                  ? (isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(
+                            context,
+                          ).colorScheme.outlineVariant.withValues(alpha: 0.35))
+                  : (isUser
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.3)
+                        : Theme.of(
+                            context,
+                          ).colorScheme.outlineVariant.withValues(alpha: 0.3)),
+              width: _isMessageSelectMode && isSelected ? 1.6 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Message header with role and time
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isUser ? Icons.person_outline : Icons.smart_toy_outlined,
+                    size: 14,
                     color: isUser
                         ? userTextColor
                         : Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
                   ),
-                ),
-                if (_isMessageSelectMode) ...[
-                  const SizedBox(width: 6),
-                  Icon(
-                    isSelected
-                        ? Icons.check_circle
-                        : Icons.radio_button_unchecked,
-                    size: 16,
-                    color: isSelected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  const SizedBox(width: 4),
+                  Text(
+                    roleLabel,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: isUser
+                          ? userTextColor
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
+                  if (_isMessageSelectMode) ...[
+                    const SizedBox(width: 6),
+                    Icon(
+                      isSelected
+                          ? Icons.check_circle
+                          : Icons.radio_button_unchecked,
+                      size: 16,
+                      color: isSelected
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ],
                 ],
-              ],
-            ),
-            const SizedBox(height: 6),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _isMessageSelectMode
-                  ? () => _toggleMessageSelection(message)
-                  : null,
-              child: _isMessageSelectMode
+              ),
+              const SizedBox(height: 6),
+              _isMessageSelectMode
                   ? Text(
                       message.content,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -1089,8 +1089,8 @@ class ConversationChatWidgetState
                         height: 1.5,
                       ),
                     ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
