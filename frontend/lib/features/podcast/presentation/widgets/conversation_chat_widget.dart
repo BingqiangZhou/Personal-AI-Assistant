@@ -555,111 +555,149 @@ class ConversationChatWidgetState
           ),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.chat_bubble_outline),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    l10n.podcast_conversation_title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (messageCount > 0) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      l10n.podcast_conversation_message_count(messageCount),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+          Row(
+            children: [
+              const Icon(Icons.chat_bubble_outline),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        l10n.podcast_conversation_title,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  ),
-                  _buildMessageSelectBadge(context),
-                ],
-              ],
-            ),
-          ),
-          // 模型选择器
-          availableModelsAsync.when(
-            data: (models) {
-              if (models.length <= 1) return const SizedBox.shrink();
-              return _buildModelSelector(context, models);
-            },
-            loading: () => const SizedBox.shrink(),
-            error: (_, _) => const SizedBox.shrink(),
-          ),
-          if (state.hasMessages)
-            IconButton(
-              icon: Icon(
-                _isMessageSelectMode
-                    ? Icons.checklist_rtl
-                    : Icons.playlist_add_check_circle_outlined,
+                    if (messageCount > 0) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          l10n.podcast_conversation_message_count(messageCount),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
+                              ),
+                        ),
+                      ),
+                      _buildMessageSelectBadge(context),
+                    ],
+                  ],
+                ),
               ),
-              tooltip: _isMessageSelectMode
-                  ? l10n.podcast_deselect_all
-                  : l10n.podcast_enter_select_mode,
-              onPressed: state.isSending
-                  ? null
-                  : () => _setMessageSelectMode(!_isMessageSelectMode),
-            ),
-          if (_isMessageSelectMode)
-            IconButton(
-              icon: const Icon(Icons.ios_share_outlined),
-              tooltip: l10n.podcast_share_as_image,
-              onPressed: state.isSending || _selectedMessageCount == 0
-                  ? null
-                  : () => unawaited(_shareSelectedMessagesAsImage(state)),
-            ),
-          if (state.hasMessages)
-            IconButton(
-              icon: const Icon(Icons.ios_share_outlined),
-              tooltip: l10n.podcast_share_all_content,
-              onPressed: state.isSending
-                  ? null
-                  : () => unawaited(_shareAllChatAsImage(state)),
-            ),
-          if (state.hasMessages)
-            IconButton(
-              icon: const Icon(Icons.add_comment_outlined),
-              tooltip: l10n.podcast_conversation_new_chat,
-              onPressed: state.isSending ? null : _startNewChat,
-            ),
-          Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(Icons.history),
-              tooltip: l10n.podcast_conversation_history,
-              onPressed: () {
-                Scaffold.of(context).openEndDrawer();
-              },
-            ),
+            ],
           ),
-          if (state.hasError)
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: l10n.podcast_conversation_reload,
-              onPressed: state.isSending
-                  ? null
-                  : () => ref
-                        .read(
-                          getConversationProvider(widget.episodeId).notifier,
-                        )
-                        .refresh(),
-            ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: availableModelsAsync.when(
+                    data: (models) {
+                      if (models.length <= 1) return const SizedBox.shrink();
+                      return _buildModelSelector(context, models);
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    reverse: true,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (state.hasMessages)
+                          IconButton(
+                            icon: Icon(
+                              _isMessageSelectMode
+                                  ? Icons.checklist_rtl
+                                  : Icons.playlist_add_check_circle_outlined,
+                            ),
+                            tooltip: _isMessageSelectMode
+                                ? l10n.podcast_deselect_all
+                                : l10n.podcast_enter_select_mode,
+                            onPressed: state.isSending
+                                ? null
+                                : () => _setMessageSelectMode(
+                                    !_isMessageSelectMode,
+                                  ),
+                          ),
+                        if (_isMessageSelectMode)
+                          IconButton(
+                            icon: const Icon(Icons.ios_share_outlined),
+                            tooltip: l10n.podcast_share_as_image,
+                            onPressed:
+                                state.isSending || _selectedMessageCount == 0
+                                ? null
+                                : () => unawaited(
+                                    _shareSelectedMessagesAsImage(state),
+                                  ),
+                          ),
+                        if (state.hasMessages)
+                          IconButton(
+                            icon: const Icon(Icons.ios_share_outlined),
+                            tooltip: l10n.podcast_share_all_content,
+                            onPressed: state.isSending
+                                ? null
+                                : () => unawaited(_shareAllChatAsImage(state)),
+                          ),
+                        if (state.hasMessages)
+                          IconButton(
+                            icon: const Icon(Icons.add_comment_outlined),
+                            tooltip: l10n.podcast_conversation_new_chat,
+                            onPressed: state.isSending ? null : _startNewChat,
+                          ),
+                        Builder(
+                          builder: (context) => IconButton(
+                            icon: const Icon(Icons.history),
+                            tooltip: l10n.podcast_conversation_history,
+                            onPressed: () {
+                              Scaffold.of(context).openEndDrawer();
+                            },
+                          ),
+                        ),
+                        if (state.hasError)
+                          IconButton(
+                            icon: const Icon(Icons.refresh),
+                            tooltip: l10n.podcast_conversation_reload,
+                            onPressed: state.isSending
+                                ? null
+                                : () => ref
+                                      .read(
+                                        getConversationProvider(
+                                          widget.episodeId,
+                                        ).notifier,
+                                      )
+                                      .refresh(),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

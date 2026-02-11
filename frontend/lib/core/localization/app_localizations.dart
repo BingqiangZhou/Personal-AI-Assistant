@@ -3170,10 +3170,10 @@ abstract class AppLocalizations {
   /// **'Play'**
   String get podcast_play_episode;
 
-  /// Play this episode button label (full version for desktop)
+  /// Play button label (full version for desktop)
   ///
   /// In en, this message translates to:
-  /// **'Play this episode'**
+  /// **'Play'**
   String get podcast_play_episode_full;
 
   /// Source link label

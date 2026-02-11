@@ -127,6 +127,10 @@ class _PodcastEpisodeDetailPageState
     return _scrollOffset < _headerScrollThreshold;
   }
 
+  void _updateHeaderStateForTab(int tabIndex) {
+    _scrollOffset = tabIndex == 3 ? _headerScrollThreshold : 0.0;
+  }
+
   Future<void> _loadAndPlayEpisode() async {
     logger.AppLogger.debug('馃幍 ===== _loadAndPlayEpisode called =====');
     logger.AppLogger.debug('馃幍 widget.episodeId: ${widget.episodeId}');
@@ -437,14 +441,12 @@ class _PodcastEpisodeDetailPageState
                 child: _buildAnimatedHeader(episode),
               ),
               // 娴姩鐨勮繑鍥炴寜閽紙鏀剁缉鐘舵€佹椂鏄剧ず鍦ㄥ彸涓婃柟锛?
-              if (!_isHeaderExpanded)
-                Positioned(top: 16, right: 16, child: _buildBackButton()),
               // 娴姩鐨勬挱鏀炬寜閽紙鏀剁缉鐘舵€佹椂鏄剧ず锛?
               if (!_isHeaderExpanded)
                 Positioned(
-                  top: 16,
-                  right: 80,
-                  child: _buildPlayButton(
+                  left: 16,
+                  bottom: 16,
+                  child: _buildCollapsedFloatingActions(
                     episode,
                     AppLocalizations.of(context)!,
                   ),
@@ -527,7 +529,7 @@ class _PodcastEpisodeDetailPageState
                               _stopSummaryPolling();
                             }
                             // 閲嶇疆婊氬姩鍋忕Щ
-                            _scrollOffset = 0;
+                            _updateHeaderStateForTab(index);
                           });
                         },
                         children: [
@@ -1102,6 +1104,23 @@ class _PodcastEpisodeDetailPageState
   }
 
   // 杩斿洖鎸夐挳缁勪欢
+  Widget _buildCollapsedFloatingActions(
+    dynamic episode,
+    AppLocalizations l10n,
+  ) {
+    return Container(
+      key: const Key('podcast_episode_detail_collapsed_actions'),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildBackButton(),
+          const SizedBox(width: 8),
+          _buildPlayButton(episode, l10n),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBackButton() {
     return Container(
       width: 32,
@@ -1243,6 +1262,9 @@ class _PodcastEpisodeDetailPageState
               _selectedTabIndex == 0,
               () {
                 if (_selectedTabIndex != 0) {
+                  setState(() {
+                    _updateHeaderStateForTab(0);
+                  });
                   _pageController.animateToPage(
                     0,
                     duration: const Duration(milliseconds: 300),
@@ -1257,6 +1279,9 @@ class _PodcastEpisodeDetailPageState
               _selectedTabIndex == 1,
               () {
                 if (_selectedTabIndex != 1) {
+                  setState(() {
+                    _updateHeaderStateForTab(1);
+                  });
                   _pageController.animateToPage(
                     1,
                     duration: const Duration(milliseconds: 300),
@@ -1271,6 +1296,9 @@ class _PodcastEpisodeDetailPageState
               _selectedTabIndex == 2,
               () {
                 if (_selectedTabIndex != 2) {
+                  setState(() {
+                    _updateHeaderStateForTab(2);
+                  });
                   _pageController.animateToPage(
                     2,
                     duration: const Duration(milliseconds: 300),
@@ -1285,6 +1313,9 @@ class _PodcastEpisodeDetailPageState
               _selectedTabIndex == 3,
               () {
                 if (_selectedTabIndex != 3) {
+                  setState(() {
+                    _updateHeaderStateForTab(3);
+                  });
                   _pageController.animateToPage(
                     3,
                     duration: const Duration(milliseconds: 300),
@@ -1324,6 +1355,7 @@ class _PodcastEpisodeDetailPageState
                 setState(() {
                   _selectedTabIndex = 0;
                   _stopSummaryPolling(); // 鍒囨崲绂诲紑AI Summary tab鏃跺仠姝㈣疆璇?
+                  _updateHeaderStateForTab(0);
                 });
               }
             },
@@ -1338,6 +1370,7 @@ class _PodcastEpisodeDetailPageState
                 setState(() {
                   _selectedTabIndex = 1;
                   _stopSummaryPolling(); // 鍒囨崲绂诲紑AI Summary tab鏃跺仠姝㈣疆璇?
+                  _updateHeaderStateForTab(1);
                 });
               }
             },
@@ -1352,6 +1385,7 @@ class _PodcastEpisodeDetailPageState
                 setState(() {
                   _selectedTabIndex = 2;
                   _startSummaryPolling(); // 鍒囨崲鍒癆I Summary tab鏃跺惎鍔ㄨ疆璇?
+                  _updateHeaderStateForTab(2);
                 });
               }
             },
@@ -1366,6 +1400,7 @@ class _PodcastEpisodeDetailPageState
                 setState(() {
                   _selectedTabIndex = 3;
                   _stopSummaryPolling(); // 鍒囨崲绂诲紑AI Summary tab鏃跺仠姝㈣疆璇?
+                  _updateHeaderStateForTab(3);
                 });
               }
             },

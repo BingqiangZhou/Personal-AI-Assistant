@@ -8,6 +8,7 @@ import 'package:personal_ai_assistant/features/podcast/data/models/podcast_trans
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_episode_detail_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/transcription_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shownotes_display_widget.dart';
 
 void main() {
   group('PodcastEpisodeDetailPage player behavior', () {
@@ -90,6 +91,129 @@ void main() {
         find.byKey(const Key('podcast_bottom_player_mini')),
         findsOneWidget,
       );
+    });
+
+    testWidgets(
+      'shows collapsed actions at left-bottom on wide screen after header collapse',
+      (tester) async {
+        addTearDown(() async {
+          await tester.binding.setSurfaceSize(null);
+        });
+        await tester.binding.setSurfaceSize(const Size(1200, 900));
+
+        final notifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _episode(),
+            duration: 180000,
+            isExpanded: true,
+            isPlaying: true,
+          ),
+        );
+
+        await tester.pumpWidget(_createWidget(notifier));
+        await tester.pumpAndSettle();
+
+        final collapsedActions = find.byKey(
+          const Key('podcast_episode_detail_collapsed_actions'),
+        );
+        expect(collapsedActions, findsNothing);
+
+        final context = tester.element(find.byType(ShownotesDisplayWidget));
+        final metrics = FixedScrollMetrics(
+          minScrollExtent: 0,
+          maxScrollExtent: 1200,
+          pixels: 60,
+          viewportDimension: 800,
+          axisDirection: AxisDirection.down,
+          devicePixelRatio: 1.0,
+        );
+        ScrollUpdateNotification(
+          metrics: metrics,
+          context: context,
+          scrollDelta: 12.0,
+        ).dispatch(context);
+
+        await tester.pumpAndSettle();
+
+        expect(collapsedActions, findsOneWidget);
+
+        final topLeft = tester.getTopLeft(collapsedActions);
+        final bottomLeft = tester.getBottomLeft(collapsedActions);
+        expect(topLeft.dx, lessThan(200));
+        expect(bottomLeft.dy, greaterThan(700));
+
+        expect(
+          find.descendant(
+            of: collapsedActions,
+            matching: find.byKey(
+              const Key('podcast_episode_detail_play_button'),
+            ),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: collapsedActions,
+            matching: find.byIcon(Icons.arrow_back),
+          ),
+          findsOneWidget,
+        );
+
+        final backIconPosition = tester.getTopLeft(
+          find.descendant(
+            of: collapsedActions,
+            matching: find.byIcon(Icons.arrow_back),
+          ),
+        );
+        final playButtonPosition = tester.getTopLeft(
+          find.descendant(
+            of: collapsedActions,
+            matching: find.byKey(
+              const Key('podcast_episode_detail_play_button'),
+            ),
+          ),
+        );
+        expect(backIconPosition.dx, lessThan(playButtonPosition.dx));
+      },
+    );
+
+    testWidgets('does not show collapsed actions on narrow layout', (
+      tester,
+    ) async {
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _episode(),
+          duration: 180000,
+          isExpanded: true,
+          isPlaying: true,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      final collapsedActions = find.byKey(
+        const Key('podcast_episode_detail_collapsed_actions'),
+      );
+      expect(collapsedActions, findsNothing);
+
+      final context = tester.element(find.byType(PageView).first);
+      final metrics = FixedScrollMetrics(
+        minScrollExtent: 0,
+        maxScrollExtent: 1200,
+        pixels: 100,
+        viewportDimension: 600,
+        axisDirection: AxisDirection.down,
+        devicePixelRatio: 1.0,
+      );
+      ScrollUpdateNotification(
+        metrics: metrics,
+        context: context,
+        scrollDelta: 12.0,
+      ).dispatch(context);
+
+      await tester.pumpAndSettle();
+      expect(collapsedActions, findsNothing);
     });
 
     testWidgets('same episode paused tap should call resume only', (

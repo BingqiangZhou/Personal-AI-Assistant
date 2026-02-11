@@ -1641,7 +1641,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_play_episode => 'Play';
 
   @override
-  String get podcast_play_episode_full => 'Play this episode';
+  String get podcast_play_episode_full => 'Play';
 
   @override
   String get podcast_source => 'Source';

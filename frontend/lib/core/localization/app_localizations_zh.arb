@@ -2627,9 +2627,9 @@
     "description": "播放按钮标签（移动端简短版本）"
   },
 
-  "podcast_play_episode_full": "播放此集",
+  "podcast_play_episode_full": "播放",
   "@podcast_play_episode_full": {
-    "description": "播放此集按钮标签（桌面端完整版本）"
+    "description": "播放按钮标签（桌面端完整版本）"
   },
 
   "podcast_source": "来源",

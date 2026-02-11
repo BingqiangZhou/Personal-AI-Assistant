@@ -2627,9 +2627,9 @@
     "description": "Play button label (short version for mobile)"
   },
 
-  "podcast_play_episode_full": "Play this episode",
+  "podcast_play_episode_full": "Play",
   "@podcast_play_episode_full": {
-    "description": "Play this episode button label (full version for desktop)"
+    "description": "Play button label (full version for desktop)"
   },
 
   "podcast_source": "Source",
