@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.5.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.4.1...v0.5.0) - 2026-02-11 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.5.0))
+
+### 🚀 Features
+
+- Track episode views and add playback history feature ([353606b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/353606b990bde5ccb26ec7a03856dc71b364f894))
+- Enhance share card width resolution logic and update max character limit for sharing ([592b779](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/592b77969d6a42502817f72dde3d9641c95f8b32))
+- Refactor exception handling to use CustomJSONResponse for consistent JSON formatting ([37c9962](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/37c996255222548f80cf7936bc9766173b3c5742))
+- Update localization strings for podcast play button and enhance UI for collapsed actions ([15579c0](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/15579c0b75979082b5027ba4d3f56462fb50bfb5))
+
+
+
 ## [0.4.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.4.0...v0.4.1) - 2026-02-10 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.4.1))
 
 ### 🚀 Features
