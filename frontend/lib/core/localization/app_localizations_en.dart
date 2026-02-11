@@ -414,6 +414,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_share_failed => 'Failed to share image';
 
   @override
+  String get podcast_share_preparing_image => 'Preparing image...';
+
+  @override
+  String get podcast_share_in_progress => 'Image generation is in progress';
+
+  @override
   String podcast_share_truncated(int max) {
     return 'Content truncated to first $max characters';
   }

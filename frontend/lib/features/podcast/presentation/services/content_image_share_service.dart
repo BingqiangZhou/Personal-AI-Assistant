@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:file_selector/file_selector.dart' as file_selector;
 import 'package:flutter/foundation.dart';
@@ -35,6 +37,11 @@ const double kShareCardMobileHorizontalMargin = 32;
 const double kShareCardMobileMinWidth = 320;
 const double kShareCardMobileMaxWidth = 430;
 const double kShareCardMobileFallbackWidth = 390;
+const double kShareImageMinPixelRatio = 1.0;
+const double kShareImageMobilePixelBudget = 8000000;
+const double kShareImageDesktopPixelBudget = 12000000;
+const double kShareImageEstimatedBaseHeight = 220;
+const double kShareImageEstimatedLineHeight = 26;
 
 enum ShareContentType { summary, transcript, chat }
 
@@ -823,9 +830,125 @@ double resolveShareCardWidth({
   }
 }
 
+@visibleForTesting
+double estimateShareImageHeight({
+  required ShareImageRenderMode renderMode,
+  required int contentLength,
+  required int conversationItemCount,
+  required double cardWidth,
+}) {
+  final normalizedLength = contentLength < 0 ? 0 : contentLength;
+  final charsPerLine = (cardWidth / 13).clamp(24, 70).toDouble();
+  var estimatedLines = (normalizedLength / charsPerLine).ceil();
+  if (estimatedLines < 8) {
+    estimatedLines = 8;
+  }
+
+  var bodyHeight = estimatedLines * kShareImageEstimatedLineHeight;
+  switch (renderMode) {
+    case ShareImageRenderMode.markdown:
+      bodyHeight *= 1.12;
+    case ShareImageRenderMode.conversation:
+      bodyHeight += conversationItemCount * 36;
+    case ShareImageRenderMode.plainText:
+      break;
+  }
+
+  return (kShareImageEstimatedBaseHeight + bodyHeight)
+      .clamp(kShareImageEstimatedBaseHeight, 20000)
+      .toDouble();
+}
+
+@visibleForTesting
+double applyShareImagePixelBudgetGuard({
+  required double pixelRatio,
+  required double estimatedWidth,
+  required double estimatedHeight,
+  required double pixelBudget,
+}) {
+  if (pixelRatio <= kShareImageMinPixelRatio) {
+    return kShareImageMinPixelRatio;
+  }
+  if (estimatedWidth <= 0 || estimatedHeight <= 0 || pixelBudget <= 0) {
+    return pixelRatio;
+  }
+
+  final estimatedPixels =
+      estimatedWidth * estimatedHeight * pixelRatio * pixelRatio;
+  if (estimatedPixels <= pixelBudget) {
+    return pixelRatio;
+  }
+
+  final guardedRatio = math.sqrt(
+    pixelBudget / (estimatedWidth * estimatedHeight),
+  );
+  return guardedRatio.clamp(kShareImageMinPixelRatio, pixelRatio).toDouble();
+}
+
+@visibleForTesting
+double resolveShareImagePixelRatio({
+  required TargetPlatform platform,
+  required ShareImageRenderMode renderMode,
+  required int contentLength,
+  required int conversationItemCount,
+  required double cardWidth,
+}) {
+  final isMobile =
+      platform == TargetPlatform.android || platform == TargetPlatform.iOS;
+  final normalizedLength = contentLength < 0 ? 0 : contentLength;
+
+  double pixelRatio;
+  if (normalizedLength <= 1200) {
+    pixelRatio = isMobile ? 1.6 : 1.35;
+  } else if (normalizedLength <= 2500) {
+    pixelRatio = isMobile ? 1.45 : 1.25;
+  } else if (normalizedLength <= 4500) {
+    pixelRatio = isMobile ? 1.3 : 1.15;
+  } else if (normalizedLength <= 7000) {
+    pixelRatio = isMobile ? 1.15 : 1.05;
+  } else {
+    pixelRatio = 1.0;
+  }
+
+  switch (renderMode) {
+    case ShareImageRenderMode.markdown:
+      pixelRatio += isMobile ? 0.05 : 0.03;
+    case ShareImageRenderMode.conversation:
+      pixelRatio -= isMobile ? 0.05 : 0.03;
+    case ShareImageRenderMode.plainText:
+      break;
+  }
+  pixelRatio = pixelRatio.clamp(kShareImageMinPixelRatio, 1.6).toDouble();
+
+  final estimatedHeight = estimateShareImageHeight(
+    renderMode: renderMode,
+    contentLength: normalizedLength,
+    conversationItemCount: conversationItemCount,
+    cardWidth: cardWidth,
+  );
+  final pixelBudget = isMobile
+      ? kShareImageMobilePixelBudget
+      : kShareImageDesktopPixelBudget;
+  return applyShareImagePixelBudgetGuard(
+    pixelRatio: pixelRatio,
+    estimatedWidth: cardWidth,
+    estimatedHeight: estimatedHeight,
+    pixelBudget: pixelBudget,
+  );
+}
+
 class ContentImageShareService {
   static final ScreenshotController _screenshotController =
       ScreenshotController();
+  static bool _isShareInProgress = false;
+
+  @visibleForTesting
+  static bool get isShareInProgress => _isShareInProgress;
+
+  @visibleForTesting
+  static void setShareInProgressForTest(bool value) {
+    _isShareInProgress = value;
+  }
 
   static Future<void> shareAsImage(
     BuildContext context,
@@ -854,6 +977,10 @@ class ContentImageShareService {
     if (!_isSupportedPlatform()) {
       throw ContentImageShareException(l10n.podcast_share_not_supported);
     }
+    if (_isShareInProgress) {
+      throw ContentImageShareException(l10n.podcast_share_in_progress);
+    }
+    _isShareInProgress = true;
 
     final typeLabel = _resolveTypeLabel(context, payload.contentType);
     final sourceLabel = payload.sourceLabel?.trim().isNotEmpty == true
@@ -882,9 +1009,19 @@ class ContentImageShareService {
         truncatedConversation = const <ShareConversationItem>[];
     }
 
+    OverlayEntry? preparingOverlayEntry;
     try {
       final exportAction = await _pickExportAction(context);
       if (exportAction == null || !context.mounted) {
+        return;
+      }
+
+      preparingOverlayEntry = _showPreparingOverlay(
+        context,
+        message: l10n.podcast_share_preparing_image,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 16));
+      if (!context.mounted) {
         return;
       }
 
@@ -894,6 +1031,19 @@ class ContentImageShareService {
         platform: defaultTargetPlatform,
         screenWidth: MediaQuery.sizeOf(context).width,
       );
+      final contentLength = _calculateShareContentLength(
+        renderMode: payload.renderMode,
+        text: truncatedText,
+        conversationItems: truncatedConversation,
+      );
+      final pixelRatio = resolveShareImagePixelRatio(
+        platform: defaultTargetPlatform,
+        renderMode: payload.renderMode,
+        contentLength: contentLength,
+        conversationItemCount: truncatedConversation.length,
+        cardWidth: cardWidth,
+      );
+
       final bytes = await _screenshotController.captureFromLongWidget(
         _buildShareCard(
           context,
@@ -910,8 +1060,8 @@ class ContentImageShareService {
           ),
         ),
         context: context,
-        pixelRatio: 2.0,
-        delay: const Duration(milliseconds: 100),
+        pixelRatio: pixelRatio,
+        delay: const Duration(milliseconds: 60),
       );
       if (!context.mounted) {
         return;
@@ -919,18 +1069,26 @@ class ContentImageShareService {
 
       switch (exportAction) {
         case _ImageExportAction.share:
-          await SharePlus.instance.share(
-            ShareParams(
-              title: payload.episodeTitle,
-              subject: payload.episodeTitle,
-              text: sourceLabel,
-              sharePositionOrigin: shareOrigin,
-              files: <XFile>[
-                XFile.fromData(bytes, mimeType: 'image/png', name: fileName),
-              ],
-              fileNameOverrides: <String>[fileName],
-            ),
+          final tempFile = await _writeTemporaryShareImage(
+            bytes: bytes,
+            fileName: fileName,
           );
+          try {
+            await SharePlus.instance.share(
+              ShareParams(
+                title: payload.episodeTitle,
+                subject: payload.episodeTitle,
+                text: sourceLabel,
+                sharePositionOrigin: shareOrigin,
+                files: <XFile>[
+                  XFile(tempFile.path, mimeType: 'image/png', name: fileName),
+                ],
+                fileNameOverrides: <String>[fileName],
+              ),
+            );
+          } finally {
+            unawaited(_deleteTemporaryShareImage(tempFile));
+          }
           break;
         case _ImageExportAction.save:
           await _saveImage(context, bytes: bytes, fileName: fileName);
@@ -942,6 +1100,110 @@ class ContentImageShareService {
       debugPrint('ContentImageShareService.shareAsImage failed: $error');
       debugPrintStack(stackTrace: stackTrace);
       throw ContentImageShareException(l10n.podcast_share_failed);
+    } finally {
+      preparingOverlayEntry?.remove();
+      _isShareInProgress = false;
+    }
+  }
+
+  static int _calculateShareContentLength({
+    required ShareImageRenderMode renderMode,
+    required String text,
+    required List<ShareConversationItem> conversationItems,
+  }) {
+    switch (renderMode) {
+      case ShareImageRenderMode.conversation:
+        var total = 0;
+        for (final item in conversationItems) {
+          total += item.roleLabel.length;
+          total += item.content.length;
+        }
+        return total;
+      case ShareImageRenderMode.plainText:
+      case ShareImageRenderMode.markdown:
+        return text.length;
+    }
+  }
+
+  static OverlayEntry? _showPreparingOverlay(
+    BuildContext context, {
+    required String message,
+  }) {
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) {
+      return null;
+    }
+
+    final entry = OverlayEntry(
+      builder: (_) {
+        return Stack(
+          children: [
+            const ModalBarrier(dismissible: false, color: Color(0x4D000000)),
+            Center(
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        message,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    overlay.insert(entry);
+    return entry;
+  }
+
+  static Future<File> _writeTemporaryShareImage({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    final safeName = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    final tempFile = File(
+      '${Directory.systemTemp.path}/'
+      '${DateTime.now().microsecondsSinceEpoch}_$safeName',
+    );
+    await tempFile.writeAsBytes(bytes, flush: true);
+    return tempFile;
+  }
+
+  static Future<void> _deleteTemporaryShareImage(File file) async {
+    try {
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } catch (error) {
+      debugPrint(
+        'ContentImageShareService temporary image cleanup failed: $error',
+      );
     }
   }
 

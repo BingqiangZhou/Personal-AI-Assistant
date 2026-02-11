@@ -671,6 +671,16 @@
     "description": "Share image failed message"
   },
 
+  "podcast_share_preparing_image": "Preparing image...",
+  "@podcast_share_preparing_image": {
+    "description": "Progress message while generating share image"
+  },
+
+  "podcast_share_in_progress": "Image generation is in progress",
+  "@podcast_share_in_progress": {
+    "description": "Message shown when share image generation is already running"
+  },
+
   "podcast_share_truncated": "Content truncated to first {max} characters",
   "@podcast_share_truncated": {
     "description": "Content truncation message for long share text",

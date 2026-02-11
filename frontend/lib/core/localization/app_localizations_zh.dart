@@ -408,6 +408,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_share_failed => '图片分享失败';
 
   @override
+  String get podcast_share_preparing_image => '正在生成图片...';
+
+  @override
+  String get podcast_share_in_progress => '图片正在生成中，请稍候';
+
+  @override
   String podcast_share_truncated(int max) {
     return '内容已截断为前 $max 个字符';
   }

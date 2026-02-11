@@ -671,6 +671,16 @@
     "description": "图片分享失败提示"
   },
 
+  "podcast_share_preparing_image": "正在生成图片...",
+  "@podcast_share_preparing_image": {
+    "description": "生成分享图片时的进度提示"
+  },
+
+  "podcast_share_in_progress": "图片正在生成中，请稍候",
+  "@podcast_share_in_progress": {
+    "description": "重复触发分享时的提示"
+  },
+
   "podcast_share_truncated": "内容已截断为前 {max} 个字符",
   "@podcast_share_truncated": {
     "description": "超长内容截断提示",

@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_conversation_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/services/content_image_share_service.dart';
 
@@ -255,5 +256,104 @@ void main() {
       expect(windowsWidth, 900);
       expect(macWidth, 900);
     });
+  });
+
+  group('share image pixel ratio strategy', () {
+    test('uses higher pixel ratio on short mobile content', () {
+      final ratio = resolveShareImagePixelRatio(
+        platform: TargetPlatform.android,
+        renderMode: ShareImageRenderMode.plainText,
+        contentLength: 300,
+        conversationItemCount: 0,
+        cardWidth: 390,
+      );
+
+      expect(ratio, inInclusiveRange(1.4, 1.6));
+    });
+
+    test('reduces pixel ratio on long mobile content', () {
+      final ratio = resolveShareImagePixelRatio(
+        platform: TargetPlatform.iOS,
+        renderMode: ShareImageRenderMode.markdown,
+        contentLength: 9000,
+        conversationItemCount: 0,
+        cardWidth: 390,
+      );
+
+      expect(ratio, inInclusiveRange(1.0, 1.1));
+    });
+
+    test('desktop stays more conservative than mobile for same content', () {
+      final mobile = resolveShareImagePixelRatio(
+        platform: TargetPlatform.android,
+        renderMode: ShareImageRenderMode.plainText,
+        contentLength: 1800,
+        conversationItemCount: 0,
+        cardWidth: 390,
+      );
+      final desktop = resolveShareImagePixelRatio(
+        platform: TargetPlatform.windows,
+        renderMode: ShareImageRenderMode.plainText,
+        contentLength: 1800,
+        conversationItemCount: 0,
+        cardWidth: 900,
+      );
+
+      expect(desktop, lessThan(mobile));
+    });
+
+    test('pixel budget guard lowers ratio when estimate exceeds budget', () {
+      final guarded = applyShareImagePixelBudgetGuard(
+        pixelRatio: 1.6,
+        estimatedWidth: 900,
+        estimatedHeight: 12000,
+        pixelBudget: 12000000,
+      );
+
+      expect(guarded, lessThan(1.6));
+      expect(guarded, greaterThanOrEqualTo(1.0));
+    });
+  });
+
+  testWidgets('shareAsImage rejects when another generation is in progress', (
+    tester,
+  ) async {
+    late BuildContext context;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (builderContext) {
+            context = builderContext;
+            return const Scaffold(body: SizedBox.shrink());
+          },
+        ),
+      ),
+    );
+
+    ContentImageShareService.setShareInProgressForTest(true);
+    addTearDown(() {
+      ContentImageShareService.setShareInProgressForTest(false);
+    });
+
+    await expectLater(
+      ContentImageShareService.shareAsImage(
+        context,
+        const ShareImagePayload(
+          episodeTitle: 'Episode',
+          contentType: ShareContentType.summary,
+          content: 'summary content',
+        ),
+      ),
+      throwsA(
+        isA<ContentImageShareException>().having(
+          (e) => e.message,
+          'message',
+          'Image generation is in progress',
+        ),
+      ),
+    );
   });
 }

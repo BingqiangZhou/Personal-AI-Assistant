@@ -896,6 +896,18 @@ abstract class AppLocalizations {
   /// **'Failed to share image'**
   String get podcast_share_failed;
 
+  /// Progress message while generating share image
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing image...'**
+  String get podcast_share_preparing_image;
+
+  /// Message shown when share image generation is already running
+  ///
+  /// In en, this message translates to:
+  /// **'Image generation is in progress'**
+  String get podcast_share_in_progress;
+
   /// Content truncation message for long share text
   ///
   /// In en, this message translates to:
