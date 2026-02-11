@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.5.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.5.0...v0.5.1) - 2026-02-11 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.5.1))
+
+### 🚀 Features
+
+- Add localization for podcast share image preparation and in-progress messages ([9f7cd79](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9f7cd79f944b68315748639d55ede36c65a9f8ea))
+- Enhance ConversationChatWidget with new chat and history buttons, update message count logic, and improve UI responsiveness ([3753ece](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3753ece38d64860788db60a5c914ec093ad19689))
+- Update ConversationChatWidget UI and add tests for message selection and icon behavior ([9ea36b2](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9ea36b2b24182bfb184c8111517cf23d86b80829))
+
+
+
 ## [0.5.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.4.1...v0.5.0) - 2026-02-11 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.5.0))
 
 ### 🚀 Features
