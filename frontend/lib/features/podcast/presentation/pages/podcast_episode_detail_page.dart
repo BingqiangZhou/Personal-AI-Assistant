@@ -37,6 +37,7 @@ class _PodcastEpisodeDetailPageState
       0; // 0 = Shownotes, 1 = Transcript, 2 = AI Summary, 3 = Conversation
   Timer? _summaryPollingTimer; // AI鎽樿杞瀹氭椂鍣?
   bool _isPolling = false; // Guard flag to prevent multiple polls
+  bool _hasTrackedEpisodeView = false;
 
   // Sticky header animation
   final ScrollController _scrollController = ScrollController();
@@ -201,6 +202,32 @@ class _PodcastEpisodeDetailPageState
     }
   }
 
+  void _trackEpisodeViewOnce(PodcastEpisodeDetailResponse episodeDetail) {
+    if (_hasTrackedEpisodeView) {
+      return;
+    }
+    _hasTrackedEpisodeView = true;
+    unawaited(_trackEpisodeView(episodeDetail));
+  }
+
+  Future<void> _trackEpisodeView(
+    PodcastEpisodeDetailResponse episodeDetail,
+  ) async {
+    try {
+      final repository = ref.read(podcastRepositoryProvider);
+      await repository.updatePlaybackProgress(
+        episodeId: widget.episodeId,
+        position: episodeDetail.playbackPosition ?? 0,
+        isPlaying: false,
+        playbackRate: episodeDetail.playbackRate,
+      );
+      ref.invalidate(podcastStatsProvider);
+      ref.invalidate(playbackHistoryProvider);
+    } catch (error) {
+      logger.AppLogger.debug('Failed to track episode view: $error');
+    }
+  }
+
   void _handleAutoCollapseOnRead(ScrollNotification scrollNotification) {
     if (scrollNotification is! ScrollUpdateNotification) {
       return;
@@ -302,6 +329,7 @@ class _PodcastEpisodeDetailPageState
             final l10n = AppLocalizations.of(context)!;
             return _buildErrorState(context, l10n.podcast_episode_not_found);
           }
+          _trackEpisodeViewOnce(episodeDetail);
           return _buildNewLayout(context, episodeDetail);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -1037,7 +1065,11 @@ class _PodcastEpisodeDetailPageState
               if (mounted) {
                 final l10n = AppLocalizations.of(context)!;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.failed_to_add_to_queue(error.toString()))),
+                  SnackBar(
+                    content: Text(
+                      l10n.failed_to_add_to_queue(error.toString()),
+                    ),
+                  ),
                 );
               }
             }
@@ -1870,6 +1902,7 @@ class _PodcastEpisodeDetailPageState
       // Invalidate old episode detail provider to force refresh
       logger.AppLogger.debug('馃攧 Invalidating old episode detail provider');
       ref.invalidate(episodeDetailProvider(oldWidget.episodeId));
+      _hasTrackedEpisodeView = false;
 
       // Reset tab selection
       _selectedTabIndex = 0;

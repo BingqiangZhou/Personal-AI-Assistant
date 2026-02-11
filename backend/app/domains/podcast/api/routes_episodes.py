@@ -59,7 +59,9 @@ async def get_podcast_feed(
     service: PodcastService = Depends(get_podcast_service),
 ):
     """Return all subscribed episodes ordered by publish date desc."""
-    episodes, total = await service.list_episodes(filters=None, page=page, size=page_size)
+    episodes, total = await service.list_episodes(
+        filters=None, page=page, size=page_size
+    )
     episode_responses = [PodcastEpisodeResponse(**ep) for ep in episodes]
 
     has_more = (page * page_size) < total
@@ -122,6 +124,30 @@ async def list_episodes(
 
 
 @router.get(
+    "/episodes/history",
+    response_model=PodcastEpisodeListResponse,
+    summary="List playback history",
+)
+async def list_playback_history(
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(20, ge=1, le=100, description="Page size"),
+    service: PodcastService = Depends(get_podcast_service),
+):
+    episodes, total = await service.get_playback_history(page=page, size=size)
+    episode_responses = [PodcastEpisodeResponse(**ep) for ep in episodes]
+    pages = (total + size - 1) // size
+
+    return PodcastEpisodeListResponse(
+        episodes=episode_responses,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages,
+        subscription_id=0,
+    )
+
+
+@router.get(
     "/episodes/{episode_id}",
     response_model=PodcastEpisodeDetailResponse,
     summary="Get episode detail",
@@ -133,7 +159,9 @@ async def get_episode(
 ):
     episode = await service.get_episode_with_summary(episode_id)
     if not episode:
-        raise HTTPException(status_code=404, detail="Episode not found or no permission")
+        raise HTTPException(
+            status_code=404, detail="Episode not found or no permission"
+        )
 
     response_data = PodcastEpisodeDetailResponse(**episode)
 

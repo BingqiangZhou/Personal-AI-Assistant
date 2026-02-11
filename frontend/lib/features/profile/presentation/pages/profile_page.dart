@@ -59,50 +59,49 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-              // 页面标题和操作区域
-              SizedBox(
-                height: 56,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.profile,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
+            // 页面标题和操作区域
+            SizedBox(
+              height: 56,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.profile,
+                      style: Theme.of(context).textTheme.headlineMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(width: 16),
-                    // 设置按钮
-                    IconButton(
-                      onPressed: () {
-                        context.push('/profile/settings');
-                      },
-                      icon: const Icon(Icons.settings),
-                      tooltip: l10n.settings,
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 16),
+                  // 设置按钮
+                  IconButton(
+                    onPressed: () {
+                      context.push('/profile/settings');
+                    },
+                    icon: const Icon(Icons.settings),
+                    tooltip: l10n.settings,
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
+            ),
+            const SizedBox(height: 8),
 
-              // 用户信息卡片
-              _buildUserProfileCard(context),
+            // 用户信息卡片
+            _buildUserProfileCard(context),
 
-              const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
-              // 统计和活动卡片
-              _buildActivityCards(context),
+            // 统计和活动卡片
+            _buildActivityCards(context),
 
-              const SizedBox(height: 8),
+            const SizedBox(height: 8),
 
-              // 设置选项
-              _buildSettingsContent(context),
+            // 设置选项
+            _buildSettingsContent(context),
 
-              // 底部空间
-              const SizedBox(height: 16),
-            ],
-          ),
+            // 底部空间
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -157,9 +156,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           message: user?.email ?? '',
                           child: Text(
                             user?.displayName ?? l10n.profile_guest_user,
-                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -186,10 +184,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
                     label: Text(l10n.profile_premium),
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                    labelStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer,
+                    labelStyle: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onPrimaryContainer,
+                        ),
                   ),
                 ],
               ),
@@ -218,16 +221,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final statsAsync = ref.watch(podcastStatsProvider);
+    final historyAsync = ref.watch(playbackHistoryProvider);
 
     final episodeCount = statsAsync.when(
       data: (stats) => stats?.totalEpisodes.toString() ?? '0',
       loading: () => '...',
-      error: (_, __) => '0',
+      error: (error, stackTrace) => '0',
     );
     final summaryCount = statsAsync.when(
       data: (stats) => stats?.summariesGenerated.toString() ?? '0',
       loading: () => '...',
-      error: (_, __) => '0',
+      error: (error, stackTrace) => '0',
+    );
+    final historyCount = historyAsync.when(
+      data: (history) => history?.total.toString() ?? '0',
+      loading: () => '...',
+      error: (error, stackTrace) => '0',
     );
 
     // On narrow screens, stack cards vertically to prevent squishing
@@ -248,6 +257,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             l10n.profile_ai_summary,
             summaryCount,
             Theme.of(context).colorScheme.tertiary,
+          ),
+          const SizedBox(height: 12),
+          _buildActivityCard(
+            context,
+            Icons.history,
+            l10n.profile_viewed_title,
+            historyCount,
+            Theme.of(context).colorScheme.secondary,
+            onTap: () => context.push('/profile/history'),
           ),
         ],
       );
@@ -275,40 +293,61 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             Theme.of(context).colorScheme.tertiary,
           ),
         ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildActivityCard(
+            context,
+            Icons.history,
+            l10n.profile_viewed_title,
+            historyCount,
+            Theme.of(context).colorScheme.secondary,
+            onTap: () => context.push('/profile/history'),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildActivityCard(BuildContext context, IconData icon, String label, String value, Color color) {
+  Widget _buildActivityCard(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+    Color color, {
+    VoidCallback? onTap,
+  }) {
     return Card(
       margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ],
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -453,146 +492,154 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       return Column(
         children: [
           Row(
-        children: [
-          Expanded(
-            child: Column(
-              children: [
-                _buildSettingsSection(context, l10n.profile_account_settings, [
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.person,
-                    title: l10n.profile_edit_profile,
-                    subtitle: l10n.profile_edit_profile_subtitle,
-                    onTap: () => _showEditProfileDialog(context),
-                  ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.security,
-                    title: l10n.profile_security,
-                    subtitle: l10n.profile_security_subtitle,
-                    onTap: () => _showSecurityDialog(context),
-                  ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.notifications,
-                    title: l10n.profile_notifications,
-                    subtitle: l10n.profile_notifications_subtitle,
-                    trailing: Switch(
-                      value: _notificationsEnabled,
-                      onChanged: (value) {
-                        setState(() {
-                          _notificationsEnabled = value;
-                        });
-                      },
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildSettingsSection(
+                      context,
+                      l10n.profile_account_settings,
+                      [
+                        _buildSettingsItem(
+                          context,
+                          icon: Icons.person,
+                          title: l10n.profile_edit_profile,
+                          subtitle: l10n.profile_edit_profile_subtitle,
+                          onTap: () => _showEditProfileDialog(context),
+                        ),
+                        _buildSettingsItem(
+                          context,
+                          icon: Icons.security,
+                          title: l10n.profile_security,
+                          subtitle: l10n.profile_security_subtitle,
+                          onTap: () => _showSecurityDialog(context),
+                        ),
+                        _buildSettingsItem(
+                          context,
+                          icon: Icons.notifications,
+                          title: l10n.profile_notifications,
+                          subtitle: l10n.profile_notifications_subtitle,
+                          trailing: Switch(
+                            value: _notificationsEnabled,
+                            onChanged: (value) {
+                              setState(() {
+                                _notificationsEnabled = value;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ]),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              children: [
-                _buildSettingsSection(context, l10n.preferences, [
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final localeNotifier = ref.watch(localeProvider.notifier);
-                      final currentCode = localeNotifier.languageCode;
-                      final l10n = AppLocalizations.of(context)!;
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  children: [
+                    _buildSettingsSection(context, l10n.preferences, [
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final localeNotifier = ref.watch(
+                            localeProvider.notifier,
+                          );
+                          final currentCode = localeNotifier.languageCode;
+                          final l10n = AppLocalizations.of(context)!;
 
-                      String languageName;
-                      if (currentCode == kLanguageSystem) {
-                        languageName = l10n.languageFollowSystem;
-                      } else if (currentCode == kLanguageChinese) {
-                        languageName = l10n.languageChinese;
-                      } else {
-                        languageName = l10n.languageEnglish;
-                      }
+                          String languageName;
+                          if (currentCode == kLanguageSystem) {
+                            languageName = l10n.languageFollowSystem;
+                          } else if (currentCode == kLanguageChinese) {
+                            languageName = l10n.languageChinese;
+                          } else {
+                            languageName = l10n.languageEnglish;
+                          }
 
-                      return _buildSettingsItem(
+                          return _buildSettingsItem(
+                            context,
+                            icon: Icons.language,
+                            title: l10n.language,
+                            subtitle: languageName,
+                            onTap: () => _showLanguageDialog(context),
+                          );
+                        },
+                      ),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final themeNotifier = ref.watch(
+                            themeModeProvider.notifier,
+                          );
+                          final currentCode = themeNotifier.themeModeCode;
+                          final l10n = AppLocalizations.of(context)!;
+
+                          String themeModeName;
+                          if (currentCode == kThemeModeSystem) {
+                            themeModeName = l10n.theme_mode_follow_system;
+                          } else if (currentCode == kThemeModeLight) {
+                            themeModeName = l10n.theme_mode_light;
+                          } else {
+                            themeModeName = l10n.theme_mode_dark;
+                          }
+
+                          return _buildSettingsItem(
+                            context,
+                            icon: Icons.dark_mode,
+                            title: l10n.theme_mode,
+                            subtitle: themeModeName,
+                            onTap: () => _showThemeModeDialog(context),
+                          );
+                        },
+                      ),
+                      _buildSettingsItem(
                         context,
-                        icon: Icons.language,
-                        title: l10n.language,
-                        subtitle: languageName,
-                        onTap: () => _showLanguageDialog(context),
-                      );
-                    },
-                  ),
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final themeNotifier = ref.watch(themeModeProvider.notifier);
-                      final currentCode = themeNotifier.themeModeCode;
-                      final l10n = AppLocalizations.of(context)!;
-
-                      String themeModeName;
-                      if (currentCode == kThemeModeSystem) {
-                        themeModeName = l10n.theme_mode_follow_system;
-                      } else if (currentCode == kThemeModeLight) {
-                        themeModeName = l10n.theme_mode_light;
-                      } else {
-                        themeModeName = l10n.theme_mode_dark;
-                      }
-
-                      return _buildSettingsItem(
-                        context,
-                        icon: Icons.dark_mode,
-                        title: l10n.theme_mode,
-                        subtitle: themeModeName,
-                        onTap: () => _showThemeModeDialog(context),
-                      );
-                    },
-                  ),
-                  _buildSettingsItem(
-                    context,
-                    icon: Icons.sync,
-                    title: l10n.profile_auto_sync,
-                    subtitle: l10n.profile_auto_sync_subtitle,
-                    trailing: Switch(
-                      value: _autoSyncEnabled,
-                      onChanged: (value) {
-                        setState(() {
-                          _autoSyncEnabled = value;
-                        });
-                      },
-                    ),
-                  ),
-                ]),
-              ],
+                        icon: Icons.sync,
+                        title: l10n.profile_auto_sync,
+                        subtitle: l10n.profile_auto_sync_subtitle,
+                        trailing: Switch(
+                          value: _autoSyncEnabled,
+                          onChanged: (value) {
+                            setState(() {
+                              _autoSyncEnabled = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ]),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildSettingsSection(context, 'Support', [
+            _buildSettingsItem(
+              context,
+              icon: Icons.help,
+              title: l10n.profile_help_center,
+              subtitle: l10n.profile_help_center_subtitle,
+              onTap: () => _showHelpDialog(context),
             ),
-          ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        _buildSettingsSection(context, 'Support', [
-          _buildSettingsItem(
-            context,
-            icon: Icons.help,
-            title: l10n.profile_help_center,
-            subtitle: l10n.profile_help_center_subtitle,
-            onTap: () => _showHelpDialog(context),
-          ),
-        ]),
-        const SizedBox(height: 24),
-        _buildSettingsSection(context, l10n.about, [
-          _buildSettingsItem(
-            context,
-            icon: Icons.system_update_alt,
-            title: l10n.update_check_updates,
-            subtitle: l10n.update_auto_check,
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showUpdateCheckDialog(context),
-          ),
-          _buildSettingsItem(
-            context,
-            icon: Icons.info_outline,
-            title: l10n.version,
-            subtitle: _getVersionSubtitle(),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showAboutDialog(context),
-          ),
-        ]),
-      ],
+          ]),
+          const SizedBox(height: 24),
+          _buildSettingsSection(context, l10n.about, [
+            _buildSettingsItem(
+              context,
+              icon: Icons.system_update_alt,
+              title: l10n.update_check_updates,
+              subtitle: l10n.update_auto_check,
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _showUpdateCheckDialog(context),
+            ),
+            _buildSettingsItem(
+              context,
+              icon: Icons.info_outline,
+              title: l10n.version,
+              subtitle: _getVersionSubtitle(),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _showAboutDialog(context),
+            ),
+          ]),
+        ],
       );
     }
   }
@@ -600,13 +647,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   /// 统一的 Card 样式封装，确保所有卡片 margin 一致
   // 保留此方法以便将来统一使用，目前所有卡片已手动设置 margin: EdgeInsets.zero
   // ignore: unused_element
-  Widget _buildCard(Widget child) => Card(
-        margin: EdgeInsets.zero,
-        child: child,
-      );
+  Widget _buildCard(Widget child) =>
+      Card(margin: EdgeInsets.zero, child: child);
 
   /// 构建设置分组
-  Widget _buildSettingsSection(BuildContext context, String title, List<Widget> children) {
+  Widget _buildSettingsSection(
+    BuildContext context,
+    String title,
+    List<Widget> children,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -615,9 +664,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           child: Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
         ),
         Card(
@@ -697,7 +746,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   onPressed: () {
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(l10n.profile_updated_successfully)),
+                      SnackBar(
+                        content: Text(l10n.profile_updated_successfully),
+                      ),
                     );
                   },
                   child: Text(l10n.save),
@@ -802,7 +853,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         selected: {currentCode},
                         onSelectionChanged: (Set<String> selection) async {
                           final value = selection.first;
-                          await ref.read(localeProvider.notifier).setLanguageCode(value);
+                          await ref
+                              .read(localeProvider.notifier)
+                              .setLanguageCode(value);
                           if (context.mounted) {
                             Navigator.of(context).pop();
                           }
@@ -884,11 +937,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           } else {
                             modeName = l10n.theme_mode_dark;
                           }
-                          await ref.read(themeModeProvider.notifier).setThemeModeCode(value);
+                          await ref
+                              .read(themeModeProvider.notifier)
+                              .setThemeModeCode(value);
                           if (context.mounted) {
                             Navigator.of(context).pop();
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.theme_mode_changed(modeName))),
+                              SnackBar(
+                                content: Text(
+                                  l10n.theme_mode_changed(modeName),
+                                ),
+                              ),
                             );
                           }
                         },
@@ -981,7 +1040,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           return ConstrainedBox(
             constraints: BoxConstraints(maxWidth: dialogMaxWidth),
             child: AlertDialog(
-              insetPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 4,
+                vertical: 16,
+              ),
               title: Row(
                 children: [
                   const Icon(Icons.psychology, size: 48),

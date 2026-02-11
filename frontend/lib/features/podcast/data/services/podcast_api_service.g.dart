@@ -366,6 +366,33 @@ class _PodcastApiService implements PodcastApiService {
   }
 
   @override
+  Future<PodcastEpisodeListResponse> getPlaybackHistory(int page, int size) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'page': page, r'size': size};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<PodcastEpisodeListResponse>(
+      Options(method: 'GET', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/podcasts/episodes/history',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late PodcastEpisodeListResponse _value;
+    try {
+      _value = PodcastEpisodeListResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<PodcastEpisodeDetailResponse> getEpisode(int episodeId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};

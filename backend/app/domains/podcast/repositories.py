@@ -1047,6 +1047,44 @@ class PodcastRepository:
 
         return episodes, total
 
+    async def get_playback_history_paginated(
+        self,
+        user_id: int,
+        page: int = 1,
+        size: int = 20,
+    ) -> tuple[list[PodcastEpisode], int]:
+        """Get user playback/view history ordered by latest activity."""
+        query = (
+            select(PodcastEpisode)
+            .join(
+                PodcastPlaybackState,
+                and_(
+                    PodcastPlaybackState.episode_id == PodcastEpisode.id,
+                    PodcastPlaybackState.user_id == user_id,
+                ),
+            )
+            .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .options(joinedload(PodcastEpisode.subscription))
+            .where(
+                and_(
+                    UserSubscription.user_id == user_id,
+                    UserSubscription.is_archived == False,
+                )
+            )
+        )
+
+        count_query = select(func.count()).select_from(query.subquery())
+        total_result = await self.db.execute(count_query)
+        total = total_result.scalar() or 0
+
+        query = query.order_by(PodcastPlaybackState.last_updated_at.desc())
+        query = query.offset((page - 1) * size).limit(size)
+
+        result = await self.db.execute(query)
+        episodes = list(result.unique().scalars().all())
+        return episodes, total
+
     async def search_episodes(
         self,
         user_id: int,

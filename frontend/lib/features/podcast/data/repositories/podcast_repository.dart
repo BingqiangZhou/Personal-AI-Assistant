@@ -158,6 +158,17 @@ class PodcastRepository {
     }
   }
 
+  Future<PodcastEpisodeListResponse> getPlaybackHistory({
+    int page = 1,
+    int size = 50,
+  }) async {
+    try {
+      return await _apiService.getPlaybackHistory(page, size);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   // === Playback Management ===
 
   Future<PodcastPlaybackStateResponse> updatePlaybackProgress({
@@ -414,10 +425,9 @@ class PodcastRepository {
     String? title,
   }) async {
     try {
-      return await _apiService.createConversationSession(
-        episodeId,
-        {'title': title},
-      );
+      return await _apiService.createConversationSession(episodeId, {
+        'title': title,
+      });
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
@@ -440,7 +450,11 @@ class PodcastRepository {
     int? sessionId,
   }) async {
     try {
-      return await _apiService.getConversationHistory(episodeId, limit, sessionId);
+      return await _apiService.getConversationHistory(
+        episodeId,
+        limit,
+        sessionId,
+      );
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }

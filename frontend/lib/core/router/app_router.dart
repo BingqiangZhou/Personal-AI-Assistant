@@ -16,6 +16,7 @@ import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episode_detail_page.dart';
 import '../../features/podcast/presentation/pages/global_rss_settings_page.dart';
 import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
+import '../../features/profile/presentation/pages/profile_history_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/ai/presentation/pages/model_management_page.dart';
 import '../../core/localization/app_localizations.dart';
@@ -25,7 +26,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash', // Will be redirected by redirect logic
     debugLogDiagnostics: true,
-    refreshListenable: AuthStateListenable(ref), // Trigger refresh on auth state change
+    refreshListenable: AuthStateListenable(
+      ref,
+    ), // Trigger refresh on auth state change
     routes: [
       // Splash (minimal, will auto-redirect via redirect logic)
       GoRoute(
@@ -121,7 +124,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'episode/detail/:episodeId',
             name: 'episodeDetailDirect',
             builder: (context, state) {
-              final episodeId = int.tryParse(state.pathParameters['episodeId'] ?? '');
+              final episodeId = int.tryParse(
+                state.pathParameters['episodeId'] ?? '',
+              );
               if (episodeId == null) {
                 final l10n = AppLocalizations.of(context)!;
                 return Scaffold(
@@ -156,6 +161,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const HomePage(initialTab: 3),
         routes: [
           GoRoute(
+            path: 'history',
+            name: 'profile-history',
+            builder: (context, state) => const ProfileHistoryPage(),
+          ),
+          GoRoute(
             path: 'settings',
             name: 'settings',
             builder: (context, state) => const SettingsPage(),
@@ -185,8 +195,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isRegistering = state.matchedLocation == '/register';
       final isSplash = state.matchedLocation == '/splash';
       final isAuthTest = state.matchedLocation.startsWith('/auth-test');
-      final isForgotPassword = state.matchedLocation.startsWith('/forgot-password');
-      final isResetPassword = state.matchedLocation.startsWith('/reset-password');
+      final isForgotPassword = state.matchedLocation.startsWith(
+        '/forgot-password',
+      );
+      final isResetPassword = state.matchedLocation.startsWith(
+        '/reset-password',
+      );
 
       // Allow Splash
       if (isSplash) return null;
@@ -224,7 +238,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 // Helper for refreshListenable
 class AuthStateListenable extends ChangeNotifier {
   final Ref ref;
-  
+
   AuthStateListenable(this.ref) {
     ref.listen(authProvider, (previous, next) {
       notifyListeners();
@@ -242,18 +256,12 @@ class ErrorPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.error),
-      ),
+      appBar: AppBar(title: Text(l10n.error)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: colorScheme.error,
-            ),
+            Icon(Icons.error_outline, size: 64, color: colorScheme.error),
             const SizedBox(height: 16),
             Text(
               l10n.unknown_error,
@@ -267,9 +275,7 @@ class ErrorPage extends StatelessWidget {
             Text(
               error?.toString() ?? l10n.unknown_error,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 32),
             ElevatedButton(

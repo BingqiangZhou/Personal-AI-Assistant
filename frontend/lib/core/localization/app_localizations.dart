@@ -2120,6 +2120,12 @@ abstract class AppLocalizations {
   /// **'History'**
   String get server_history_title;
 
+  /// Profile viewed history title
+  ///
+  /// In en, this message translates to:
+  /// **'Viewed'**
+  String get profile_viewed_title;
+
   /// No server history message
   ///
   /// In en, this message translates to:

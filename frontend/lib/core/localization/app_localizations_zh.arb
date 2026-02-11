@@ -1704,6 +1704,11 @@
     "description": "服务器历史记录标题"
   },
 
+  "profile_viewed_title": "查看历史",
+  "@profile_viewed_title": {
+    "description": "个人中心查看历史标题"
+  },
+
   "server_history_empty": "暂无历史记录",
   "@server_history_empty": {
     "description": "没有历史记录消息"

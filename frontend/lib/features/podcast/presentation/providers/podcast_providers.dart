@@ -641,9 +641,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       sleepTimerRemainingLabel: _formatRemainingTime(duration),
     );
 
-    logger.AppLogger.debug(
-      '😴 Sleep timer set: ${duration.inMinutes} minutes',
-    );
+    logger.AppLogger.debug('😴 Sleep timer set: ${duration.inMinutes} minutes');
 
     _sleepTimerTickTimer = Timer.periodic(
       const Duration(seconds: 1),
@@ -1342,6 +1340,18 @@ final podcastStatsProvider = FutureProvider<PodcastStatsResponse?>((ref) async {
   try {
     return await repository.getStats();
   } catch (error) {
+    return null;
+  }
+});
+
+final playbackHistoryProvider = FutureProvider<PodcastEpisodeListResponse?>((
+  ref,
+) async {
+  final repository = ref.read(podcastRepositoryProvider);
+  try {
+    return await repository.getPlaybackHistory(page: 1, size: 100);
+  } catch (error) {
+    logger.AppLogger.debug('Failed to load playback history: $error');
     return null;
   }
 });

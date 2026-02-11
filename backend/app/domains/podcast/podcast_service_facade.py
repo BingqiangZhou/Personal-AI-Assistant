@@ -108,6 +108,13 @@ class PodcastService:
     ) -> tuple[list[dict], int]:
         return await self.episode_service.list_episodes(filters, page, size)
 
+    async def get_playback_history(
+        self,
+        page: int = 1,
+        size: int = 20,
+    ) -> tuple[list[dict], int]:
+        return await self.episode_service.list_playback_history(page=page, size=size)
+
     async def get_episode_by_id(
         self,
         episode_id: int,

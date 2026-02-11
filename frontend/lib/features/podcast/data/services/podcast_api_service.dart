@@ -85,6 +85,12 @@ abstract class PodcastApiService {
     @Query('is_played') bool? isPlayed,
   );
 
+  @GET('/podcasts/episodes/history')
+  Future<PodcastEpisodeListResponse> getPlaybackHistory(
+    @Query('page') int page,
+    @Query('size') int size,
+  );
+
   @GET('/podcasts/episodes/{episodeId}')
   Future<PodcastEpisodeDetailResponse> getEpisode(
     @Path('episodeId') int episodeId,

@@ -1047,6 +1047,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get server_history_title => '历史记录';
 
   @override
+  String get profile_viewed_title => '查看历史';
+
+  @override
   String get server_history_empty => '暂无历史记录';
 
   @override

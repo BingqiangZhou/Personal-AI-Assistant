@@ -1704,6 +1704,11 @@
     "description": "Server history title"
   },
 
+  "profile_viewed_title": "Viewed",
+  "@profile_viewed_title": {
+    "description": "Profile viewed history title"
+  },
+
   "server_history_empty": "No history",
   "@server_history_empty": {
     "description": "No server history message"

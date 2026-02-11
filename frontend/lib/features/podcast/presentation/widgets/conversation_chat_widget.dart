@@ -19,10 +19,12 @@ class ConversationChatWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ConversationChatWidget> createState() => ConversationChatWidgetState();
+  ConsumerState<ConversationChatWidget> createState() =>
+      ConversationChatWidgetState();
 }
 
-class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> {
+class ConversationChatWidgetState
+    extends ConsumerState<ConversationChatWidget> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
@@ -64,7 +66,7 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
           }
         },
         loading: () {},
-        error: (_, __) {},
+        error: (_, _) {},
       );
     });
   }
@@ -78,7 +80,8 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
   }
 
   void _scrollToBottom() {
-    if (_scrollController.hasClients && _scrollController.position.maxScrollExtent > 0) {
+    if (_scrollController.hasClients &&
+        _scrollController.position.maxScrollExtent > 0) {
       _scrollController.animateTo(
         _scrollController.position.maxScrollExtent,
         duration: const Duration(milliseconds: 300),
@@ -91,41 +94,13 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
     final message = _messageController.text.trim();
     if (message.isEmpty) return;
 
-    final notifier = ref.read(getConversationProvider(widget.episodeId).notifier);
+    final notifier = ref.read(
+      getConversationProvider(widget.episodeId).notifier,
+    );
     notifier.sendMessage(message, modelName: _selectedModel?.name);
 
     _messageController.clear();
     _focusNode.requestFocus();
-  }
-
-  void _clearHistory() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        final l10n = AppLocalizations.of(context)!;
-        return AlertDialog(
-          title: Text(l10n.podcast_conversation_clear_history),
-          content: Text(l10n.podcast_conversation_clear_confirm),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(l10n.cancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
-              ),
-              child: Text(l10n.podcast_transcription_clear),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed == true && mounted) {
-      await ref.read(getConversationProvider(widget.episodeId).notifier).clearHistory();
-    }
   }
 
   void _startNewChat() async {
@@ -151,7 +126,9 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
     );
 
     if (confirmed == true && mounted) {
-      await ref.read(getConversationProvider(widget.episodeId).notifier).startNewChat();
+      await ref
+          .read(getConversationProvider(widget.episodeId).notifier)
+          .startNewChat();
       _messageController.clear();
       _focusNode.requestFocus();
     }
@@ -159,17 +136,19 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
 
   @override
   Widget build(BuildContext context) {
-    final conversationState = ref.watch(getConversationProvider(widget.episodeId));
+    final conversationState = ref.watch(
+      getConversationProvider(widget.episodeId),
+    );
 
     // Scroll to bottom when new messages arrive
-    ref.listen<ConversationState>(
-      getConversationProvider(widget.episodeId),
-      (previous, next) {
-        if (next.messages.length > (previous?.messages.length ?? 0)) {
-          Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
-        }
-      },
-    );
+    ref.listen<ConversationState>(getConversationProvider(widget.episodeId), (
+      previous,
+      next,
+    ) {
+      if (next.messages.length > (previous?.messages.length ?? 0)) {
+        Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
+      }
+    });
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -180,9 +159,7 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
           _buildHeader(context, conversationState),
 
           // Messages list
-          Expanded(
-            child: _buildMessagesList(context, conversationState),
-          ),
+          Expanded(child: _buildMessagesList(context, conversationState)),
 
           // Input field
           _buildInputArea(context, conversationState),
@@ -194,7 +171,9 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
   Widget _buildSessionsDrawer(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final sessionsAsync = ref.watch(getSessionListProvider(widget.episodeId));
-    final currentSessionId = ref.watch(getCurrentSessionIdProvider(widget.episodeId));
+    final currentSessionId = ref.watch(
+      getCurrentSessionIdProvider(widget.episodeId),
+    );
 
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.75,
@@ -230,8 +209,8 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                     child: Text(
                       l10n.podcast_conversation_empty_title,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   );
                 }
@@ -258,12 +237,16 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                           color: isSelected
                               ? Theme.of(context).colorScheme.primary
                               : null,
-                          fontWeight:
-                              isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
                       subtitle: Text(
-                        session.createdAt.substring(0, 10), // Simple date format
+                        session.createdAt.substring(
+                          0,
+                          10,
+                        ), // Simple date format
                         style: Theme.of(context).textTheme.labelSmall,
                       ),
                       trailing: IconButton(
@@ -272,9 +255,12 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: Text(l10n.podcast_conversation_delete_title),
+                              title: Text(
+                                l10n.podcast_conversation_delete_title,
+                              ),
                               content: Text(
-                                  l10n.podcast_conversation_delete_confirm),
+                                l10n.podcast_conversation_delete_confirm,
+                              ),
                               actions: [
                                 TextButton(
                                   onPressed: () =>
@@ -282,14 +268,13 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                                   child: Text(l10n.cancel),
                                 ),
                                 TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, true),
+                                  onPressed: () => Navigator.pop(context, true),
                                   child: Text(
                                     l10n.delete,
                                     style: TextStyle(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .error,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
                                     ),
                                   ),
                                 ),
@@ -298,8 +283,11 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                           );
                           if (confirm == true) {
                             ref
-                                .read(getSessionListProvider(widget.episodeId)
-                                    .notifier)
+                                .read(
+                                  getSessionListProvider(
+                                    widget.episodeId,
+                                  ).notifier,
+                                )
                                 .deleteSession(session.id);
                           }
                         },
@@ -307,8 +295,11 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                       selected: isSelected,
                       onTap: () {
                         ref
-                            .read(getCurrentSessionIdProvider(widget.episodeId)
-                                .notifier)
+                            .read(
+                              getCurrentSessionIdProvider(
+                                widget.episodeId,
+                              ).notifier,
+                            )
                             .set(session.id);
                         Navigator.pop(context); // Close drawer
                       },
@@ -317,7 +308,7 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, __) => Center(child: Text('Error: $e')),
+              error: (e, _) => Center(child: Text('Error: $e')),
             ),
           ),
           Padding(
@@ -365,15 +356,18 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                   child: Text(
                     l10n.podcast_conversation_title,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (messageCount > 0) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
@@ -381,8 +375,8 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                     child: Text(
                       l10n.podcast_conversation_message_count(messageCount),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onPrimaryContainer,
-                          ),
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
                     ),
                   ),
                 ],
@@ -396,7 +390,7 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
               return _buildModelSelector(context, models);
             },
             loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
           if (state.hasMessages)
             IconButton(
@@ -419,17 +413,25 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
               tooltip: l10n.podcast_conversation_reload,
               onPressed: state.isSending
                   ? null
-                  : () => ref.read(getConversationProvider(widget.episodeId).notifier).refresh(),
+                  : () => ref
+                        .read(
+                          getConversationProvider(widget.episodeId).notifier,
+                        )
+                        .refresh(),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildModelSelector(BuildContext context, List<SummaryModelInfo> models) {
+  Widget _buildModelSelector(
+    BuildContext context,
+    List<SummaryModelInfo> models,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     // 确保_selectedModel在可用列表中
-    if (_selectedModel != null && !models.any((m) => m.id == _selectedModel!.id)) {
+    if (_selectedModel != null &&
+        !models.any((m) => m.id == _selectedModel!.id)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
@@ -444,7 +446,9 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
       child: DropdownButton<SummaryModelInfo>(
@@ -457,8 +461,8 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
           style: Theme.of(context).textTheme.bodySmall,
         ),
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
         items: models.map((model) {
           return DropdownMenuItem<SummaryModelInfo>(
             value: model,
@@ -475,10 +479,9 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                         vertical: 1,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.1),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -503,9 +506,7 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
 
   Widget _buildMessagesList(BuildContext context, ConversationState state) {
     if (state.isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (state.hasError) {
@@ -527,8 +528,8 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
             Text(
               state.errorMessage ?? '',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),
@@ -573,8 +574,8 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
             Text(
               l10n.podcast_conversation_empty_hint,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -600,8 +601,11 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          AppLocalizations.of(context)!.podcast_filter_with_summary,
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          AppLocalizations.of(
+                            context,
+                          )!.podcast_filter_with_summary,
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
                                 color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -614,9 +618,9 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                           ? '${widget.aiSummary!.substring(0, 200)}...'
                           : widget.aiSummary!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            height: 1.5,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
                     ),
                   ],
                 ),
@@ -627,7 +631,10 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
     );
   }
 
-  Widget _buildMessageBubble(BuildContext context, PodcastConversationMessage message) {
+  Widget _buildMessageBubble(
+    BuildContext context,
+    PodcastConversationMessage message,
+  ) {
     final isUser = message.isUser;
 
     return Align(
@@ -645,7 +652,9 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
           border: Border.all(
             color: isUser
                 ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
-                : Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                : Theme.of(
+                    context,
+                  ).colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
         ),
         child: Column(
@@ -664,13 +673,17 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  isUser ? AppLocalizations.of(context)!.podcast_conversation_user : AppLocalizations.of(context)!.podcast_conversation_assistant,
+                  isUser
+                      ? AppLocalizations.of(context)!.podcast_conversation_user
+                      : AppLocalizations.of(
+                          context,
+                        )!.podcast_conversation_assistant,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: isUser
-                            ? Theme.of(context).colorScheme.onPrimaryContainer
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: isUser
+                        ? Theme.of(context).colorScheme.onPrimaryContainer
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -679,11 +692,11 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
             SelectableText(
               message.content,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: isUser
-                        ? Theme.of(context).colorScheme.onPrimaryContainer
-                        : Theme.of(context).colorScheme.onSurface,
-                    height: 1.5,
-                  ),
+                color: isUser
+                    ? Theme.of(context).colorScheme.onPrimaryContainer
+                    : Theme.of(context).colorScheme.onSurface,
+                height: 1.5,
+              ),
             ),
           ],
         ),
@@ -749,7 +762,8 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
             ),
             const SizedBox(width: 8),
             IconButton.filled(
-              onPressed: (state.isReady &&
+              onPressed:
+                  (state.isReady &&
                       _messageController.text.trim().isNotEmpty &&
                       widget.aiSummary != null)
                   ? _sendMessage
@@ -764,9 +778,7 @@ class ConversationChatWidgetState extends ConsumerState<ConversationChatWidget> 
                       ),
                     )
                   : const Icon(Icons.send),
-              style: IconButton.styleFrom(
-                padding: const EdgeInsets.all(12),
-              ),
+              style: IconButton.styleFrom(padding: const EdgeInsets.all(12)),
             ),
           ],
         ),

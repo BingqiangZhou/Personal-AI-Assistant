@@ -1065,6 +1065,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get server_history_title => 'History';
 
   @override
+  String get profile_viewed_title => 'Viewed';
+
+  @override
   String get server_history_empty => 'No history';
 
   @override
