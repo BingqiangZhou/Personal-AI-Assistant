@@ -143,3 +143,5 @@ docker/.env.dev
 frontend/android/release.keystore.b64
 docker/storage/
 docker/temp/
+
+specs/

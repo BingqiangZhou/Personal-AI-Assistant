@@ -51,7 +51,7 @@ void main() {
     expect(find.byTooltip('Share All'), findsOneWidget);
   });
 
-  testWidgets('Conversation message count follows assistant replies only', (
+  testWidgets('Conversation header does not show message count badge', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -90,10 +90,7 @@ void main() {
     final context = tester.element(find.byType(ConversationChatWidget));
     final l10n = AppLocalizations.of(context)!;
 
-    expect(
-      find.text(l10n.podcast_conversation_message_count(1)),
-      findsOneWidget,
-    );
+    expect(find.text(l10n.podcast_conversation_message_count(1)), findsNothing);
     expect(find.text(l10n.podcast_conversation_message_count(2)), findsNothing);
   });
 
@@ -144,7 +141,7 @@ void main() {
       await tester.tap(assistantIconFinder);
       await tester.pumpAndSettle();
 
-      expect(find.text(l10n.podcast_selected_count(1)), findsOneWidget);
+      expect(find.text(l10n.podcast_selected_count(1)), findsNothing);
 
       await tester.tap(assistantIconFinder);
       await tester.pumpAndSettle();

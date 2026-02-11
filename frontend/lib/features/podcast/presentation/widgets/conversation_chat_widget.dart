@@ -197,29 +197,6 @@ class ConversationChatWidgetState
         : l10n.podcast_conversation_assistant;
   }
 
-  Widget _buildMessageSelectBadge(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    if (!_isMessageSelectMode) {
-      return const SizedBox.shrink();
-    }
-    return Padding(
-      padding: const EdgeInsets.only(left: 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.secondaryContainer,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          l10n.podcast_selected_count(_selectedMessageCount),
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSecondaryContainer,
-          ),
-        ),
-      ),
-    );
-  }
-
   List<PodcastConversationMessage> _resolveSelectedMessages(
     ConversationState state,
   ) {
@@ -552,7 +529,6 @@ class ConversationChatWidgetState
   Widget _buildHeader(BuildContext context, ConversationState state) {
     final l10n = AppLocalizations.of(context)!;
     final availableModelsAsync = ref.watch(availableModelsProvider);
-    final assistantReplyCount = state.assistantMessages.length;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -582,31 +558,6 @@ class ConversationChatWidgetState
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    if (assistantReplyCount > 0) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          l10n.podcast_conversation_message_count(
-                            assistantReplyCount,
-                          ),
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onPrimaryContainer,
-                              ),
-                        ),
-                      ),
-                      _buildMessageSelectBadge(context),
-                    ],
                   ],
                 ),
               ),

@@ -258,6 +258,41 @@ void main() {
     });
   });
 
+  group('resolveImageExportBehavior', () {
+    test('maps Android and iOS to share behavior', () {
+      expect(
+        resolveImageExportBehavior(TargetPlatform.android),
+        ShareImageExportBehavior.share,
+      );
+      expect(
+        resolveImageExportBehavior(TargetPlatform.iOS),
+        ShareImageExportBehavior.share,
+      );
+    });
+
+    test('maps desktop platforms to save behavior', () {
+      expect(
+        resolveImageExportBehavior(TargetPlatform.windows),
+        ShareImageExportBehavior.save,
+      );
+      expect(
+        resolveImageExportBehavior(TargetPlatform.macOS),
+        ShareImageExportBehavior.save,
+      );
+      expect(
+        resolveImageExportBehavior(TargetPlatform.linux),
+        ShareImageExportBehavior.save,
+      );
+    });
+
+    test('maps fuchsia to unsupported behavior', () {
+      expect(
+        resolveImageExportBehavior(TargetPlatform.fuchsia),
+        ShareImageExportBehavior.unsupported,
+      );
+    });
+  });
+
   group('share image pixel ratio strategy', () {
     test('uses higher pixel ratio on short mobile content', () {
       final ratio = resolveShareImagePixelRatio(

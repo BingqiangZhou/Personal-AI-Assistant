@@ -47,7 +47,7 @@ enum ShareContentType { summary, transcript, chat }
 
 enum ShareImageRenderMode { plainText, markdown, conversation }
 
-enum _ImageExportAction { share, save }
+enum ShareImageExportBehavior { share, save, unsupported }
 
 class ShareConversationItem {
   final String roleLabel;
@@ -937,6 +937,21 @@ double resolveShareImagePixelRatio({
   );
 }
 
+@visibleForTesting
+ShareImageExportBehavior resolveImageExportBehavior(TargetPlatform platform) {
+  switch (platform) {
+    case TargetPlatform.android:
+    case TargetPlatform.iOS:
+      return ShareImageExportBehavior.share;
+    case TargetPlatform.windows:
+    case TargetPlatform.macOS:
+    case TargetPlatform.linux:
+      return ShareImageExportBehavior.save;
+    case TargetPlatform.fuchsia:
+      return ShareImageExportBehavior.unsupported;
+  }
+}
+
 class ContentImageShareService {
   static final ScreenshotController _screenshotController =
       ScreenshotController();
@@ -974,7 +989,11 @@ class ContentImageShareService {
       throw ContentImageShareException(l10n.podcast_share_selection_required);
     }
 
-    if (!_isSupportedPlatform()) {
+    if (kIsWeb) {
+      throw ContentImageShareException(l10n.podcast_share_not_supported);
+    }
+    final exportBehavior = resolveImageExportBehavior(defaultTargetPlatform);
+    if (exportBehavior == ShareImageExportBehavior.unsupported) {
       throw ContentImageShareException(l10n.podcast_share_not_supported);
     }
     if (_isShareInProgress) {
@@ -1011,11 +1030,6 @@ class ContentImageShareService {
 
     OverlayEntry? preparingOverlayEntry;
     try {
-      final exportAction = await _pickExportAction(context);
-      if (exportAction == null || !context.mounted) {
-        return;
-      }
-
       preparingOverlayEntry = _showPreparingOverlay(
         context,
         message: l10n.podcast_share_preparing_image,
@@ -1067,8 +1081,8 @@ class ContentImageShareService {
         return;
       }
 
-      switch (exportAction) {
-        case _ImageExportAction.share:
+      switch (exportBehavior) {
+        case ShareImageExportBehavior.share:
           final tempFile = await _writeTemporaryShareImage(
             bytes: bytes,
             fileName: fileName,
@@ -1089,10 +1103,12 @@ class ContentImageShareService {
           } finally {
             unawaited(_deleteTemporaryShareImage(tempFile));
           }
-          break;
-        case _ImageExportAction.save:
+          return;
+        case ShareImageExportBehavior.save:
           await _saveImage(context, bytes: bytes, fileName: fileName);
-          break;
+          return;
+        case ShareImageExportBehavior.unsupported:
+          throw ContentImageShareException(l10n.podcast_share_not_supported);
       }
     } on ContentImageShareException {
       rethrow;
@@ -1355,22 +1371,6 @@ class ContentImageShareService {
     );
   }
 
-  static bool _isSupportedPlatform() {
-    if (kIsWeb) {
-      return false;
-    }
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-      case TargetPlatform.iOS:
-      case TargetPlatform.windows:
-      case TargetPlatform.macOS:
-        return true;
-      case TargetPlatform.linux:
-      case TargetPlatform.fuchsia:
-        return false;
-    }
-  }
-
   static String _resolveTypeLabel(BuildContext context, ShareContentType type) {
     final l10n = AppLocalizations.of(context)!;
     switch (type) {
@@ -1395,40 +1395,6 @@ class ContentImageShareService {
     return const Rect.fromLTWH(0, 0, 1, 1);
   }
 
-  static Future<_ImageExportAction?> _pickExportAction(
-    BuildContext context,
-  ) async {
-    final l10n = AppLocalizations.of(context)!;
-    return showModalBottomSheet<_ImageExportAction>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.ios_share_outlined),
-                title: Text(l10n.podcast_share_as_image),
-                onTap: () {
-                  Navigator.of(sheetContext).pop(_ImageExportAction.share);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.image_outlined),
-                title: Text(l10n.podcast_save_as_image),
-                onTap: () {
-                  Navigator.of(sheetContext).pop(_ImageExportAction.save);
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   static Future<void> _saveImage(
     BuildContext context, {
     required Uint8List bytes,
@@ -1442,6 +1408,7 @@ class ContentImageShareService {
         break;
       case TargetPlatform.windows:
       case TargetPlatform.macOS:
+      case TargetPlatform.linux:
         final location = await file_selector.getSaveLocation(
           suggestedName: fileName,
           confirmButtonText: l10n.save,
@@ -1462,7 +1429,6 @@ class ContentImageShareService {
         );
         await file.saveTo(location.path);
         break;
-      case TargetPlatform.linux:
       case TargetPlatform.fuchsia:
         throw ContentImageShareException(l10n.podcast_share_not_supported);
     }
