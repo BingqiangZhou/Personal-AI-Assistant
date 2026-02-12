@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.5.4](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.5.3...v0.5.4) - 2026-02-12 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.5.4))
+
+### 🚀 Features
+
+- Hide bottom player when switching to chat tab; add tests for player behavior ([dcd00e7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/dcd00e77aaa7fd94b54c67503c5fa885738408ec))
+
+### 🚜 Refactor
+
+- Improve layout and styling of podcast episode detail page tabs; enhance logging for better debugging ([c8b650b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c8b650b6d080cffdf0bf783066b859632dbd8779))
+
+
+
 ## [0.5.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.5.1...v0.5.2) - 2026-02-11 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.5.2))
 
 ### 🚀 Features
