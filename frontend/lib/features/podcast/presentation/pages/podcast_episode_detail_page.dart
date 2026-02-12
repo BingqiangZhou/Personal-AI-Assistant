@@ -203,7 +203,9 @@ class _PodcastEpisodeDetailPageState
           .read(transcriptionProvider.notifier)
           .checkOrStartTranscription();
     } catch (error) {
-      logger.AppLogger.debug('[Error] Failed to load transcription status: $error');
+      logger.AppLogger.debug(
+        '[Error] Failed to load transcription status: $error',
+      );
     }
   }
 
@@ -444,10 +446,12 @@ class _PodcastEpisodeDetailPageState
           final totalTopPadding = topPadding > 0 ? topPadding + 8.0 : 8.0;
 
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
                 padding: EdgeInsets.only(top: totalTopPadding),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     ClipRect(
                       child: Align(
@@ -1188,7 +1192,8 @@ class _PodcastEpisodeDetailPageState
 
   Widget _buildTopButtonBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
@@ -1200,12 +1205,15 @@ class _PodcastEpisodeDetailPageState
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             // Shownotes Tab
             _buildTabButton(
-              AppLocalizations.of(context)!.podcast_tab_shownotes,
-              _selectedTabIndex == 0,
-              () {
+              tabIndex: 0,
+              text: AppLocalizations.of(context)!.podcast_tab_shownotes,
+              isSelected: _selectedTabIndex == 0,
+              onTap: () {
                 if (_selectedTabIndex != 0) {
                   setState(() {
                     _updateHeaderStateForTab(0);
@@ -1220,9 +1228,10 @@ class _PodcastEpisodeDetailPageState
             ),
             // Transcript Tab
             _buildTabButton(
-              AppLocalizations.of(context)!.podcast_tab_transcript,
-              _selectedTabIndex == 1,
-              () {
+              tabIndex: 1,
+              text: AppLocalizations.of(context)!.podcast_tab_transcript,
+              isSelected: _selectedTabIndex == 1,
+              onTap: () {
                 if (_selectedTabIndex != 1) {
                   setState(() {
                     _updateHeaderStateForTab(1);
@@ -1237,9 +1246,10 @@ class _PodcastEpisodeDetailPageState
             ),
             // AI Summary Tab
             _buildTabButton(
-              AppLocalizations.of(context)!.podcast_filter_with_summary,
-              _selectedTabIndex == 2,
-              () {
+              tabIndex: 2,
+              text: AppLocalizations.of(context)!.podcast_filter_with_summary,
+              isSelected: _selectedTabIndex == 2,
+              onTap: () {
                 if (_selectedTabIndex != 2) {
                   setState(() {
                     _updateHeaderStateForTab(2);
@@ -1254,9 +1264,10 @@ class _PodcastEpisodeDetailPageState
             ),
             // Conversation Tab
             _buildTabButton(
-              AppLocalizations.of(context)!.podcast_tab_chat,
-              _selectedTabIndex == 3,
-              () {
+              tabIndex: 3,
+              text: AppLocalizations.of(context)!.podcast_tab_chat,
+              isSelected: _selectedTabIndex == 3,
+              onTap: () {
                 if (_selectedTabIndex != 3) {
                   setState(() {
                     _updateHeaderStateForTab(3);
@@ -1390,26 +1401,50 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  Widget _buildTabButton(String text, bool isSelected, VoidCallback onTap) {
+  Widget _buildTabButton({
+    required int tabIndex,
+    required String text,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textStyle = DefaultTextStyle.of(context).style.copyWith(
+      color: isSelected ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
+      fontSize: 13,
+      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+      decoration: TextDecoration.none,
+      decorationColor: Colors.transparent,
+    );
+    final textPainter = TextPainter(
+      text: TextSpan(text: text, style: textStyle),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      locale: Localizations.maybeLocaleOf(context),
+      maxLines: 1,
+    )..layout(minWidth: 0, maxWidth: double.infinity);
+    final indicatorWidth = textPainter.width;
+
     return GestureDetector(
+      key: Key('episode_detail_mobile_tab_$tabIndex'),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.primary
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isSelected
-                ? Theme.of(context).colorScheme.onPrimary
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 13,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-          ),
+        padding: const EdgeInsets.only(left: 10, right: 10, top: 6),
+        color: Colors.transparent,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(text, style: textStyle),
+            const SizedBox(height: 6),
+            Container(
+              key: Key('episode_detail_mobile_tab_indicator_$tabIndex'),
+              width: indicatorWidth,
+              height: 3,
+              decoration: BoxDecoration(
+                color: isSelected ? colorScheme.primary : Colors.transparent,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -1999,14 +2034,18 @@ class _PodcastEpisodeDetailPageState
       logger.AppLogger.debug(
         '[Playback] ===== didUpdateWidget: Episode ID changed =====',
       );
-      logger.AppLogger.debug('[Playback] Old Episode ID: ${oldWidget.episodeId}');
+      logger.AppLogger.debug(
+        '[Playback] Old Episode ID: ${oldWidget.episodeId}',
+      );
       logger.AppLogger.debug('[Playback] New Episode ID: ${widget.episodeId}');
       logger.AppLogger.debug(
         '[Playback] Reloading episode data and auto-playing new episode',
       );
 
       // Invalidate old episode detail provider to force refresh
-      logger.AppLogger.debug('[Playback] Invalidating old episode detail provider');
+      logger.AppLogger.debug(
+        '[Playback] Invalidating old episode detail provider',
+      );
       ref.invalidate(episodeDetailProvider(oldWidget.episodeId));
       _hasTrackedEpisodeView = false;
 
