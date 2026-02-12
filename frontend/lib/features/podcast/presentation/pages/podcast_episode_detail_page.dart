@@ -262,6 +262,8 @@ class _PodcastEpisodeDetailPageState
     final episodeDetailAsync = ref.watch(
       episodeDetailProvider(widget.episodeId),
     );
+    final isChatTab = _selectedTabIndex == 3;
+    final hideBottomPlayer = isChatTab;
 
     // Listen to transcription status changes to provide user feedback
     ref.listen(getTranscriptionProvider(widget.episodeId), (previous, next) {
@@ -329,7 +331,9 @@ class _PodcastEpisodeDetailPageState
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      bottomNavigationBar: const PodcastBottomPlayerWidget(),
+      bottomNavigationBar: hideBottomPlayer
+          ? null
+          : const PodcastBottomPlayerWidget(),
       body: episodeDetailAsync.when(
         data: (episodeDetail) {
           if (episodeDetail == null) {

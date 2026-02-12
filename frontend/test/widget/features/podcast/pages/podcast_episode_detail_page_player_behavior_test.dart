@@ -3,11 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_conversation_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_playback_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_episode_detail_page.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/conversation_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/summary_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/transcription_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_bottom_player_widget.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/shownotes_display_widget.dart';
 
 void main() {
@@ -68,6 +73,8 @@ void main() {
 
       await tester.pumpWidget(_createWidget(notifier));
       await tester.pumpAndSettle();
+      notifier.setExpanded(false);
+      await tester.pump();
 
       final context = tester.element(find.byType(PageView).first);
       final metrics = FixedScrollMetrics(
@@ -216,6 +223,110 @@ void main() {
       expect(collapsedActions, findsNothing);
     });
 
+    testWidgets(
+      'hides bottom player on mobile when switching to chat tab without changing playback state',
+      (tester) async {
+        addTearDown(() async {
+          await tester.binding.setSurfaceSize(null);
+        });
+        await tester.binding.setSurfaceSize(const Size(390, 844));
+
+        final notifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _episode(),
+            duration: 180000,
+            isExpanded: true,
+            isPlaying: true,
+          ),
+        );
+
+        await tester.pumpWidget(_createWidget(notifier));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(PodcastBottomPlayerWidget), findsOneWidget);
+        expect(
+          find.byKey(const Key('podcast_bottom_player_expanded')),
+          findsOneWidget,
+        );
+
+        await _setMobilePage(tester, 3);
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.byType(PodcastBottomPlayerWidget), findsNothing);
+        expect(
+          find.byKey(const Key('podcast_bottom_player_expanded')),
+          findsNothing,
+        );
+        expect(find.byKey(const Key('podcast_bottom_player_mini')), findsNothing);
+        expect(notifier.state.isPlaying, isTrue);
+        expect(notifier.playEpisodeCalls, 0);
+        expect(notifier.resumeCalls, 0);
+      },
+    );
+
+    testWidgets('restores bottom player on mobile when leaving chat tab', (
+      tester,
+    ) async {
+      addTearDown(() async {
+        await tester.binding.setSurfaceSize(null);
+      });
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _episode(),
+          duration: 180000,
+          isExpanded: true,
+          isPlaying: true,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      await _setMobilePage(tester, 3);
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(PodcastBottomPlayerWidget), findsNothing);
+
+      await _setMobilePage(tester, 0);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(PodcastBottomPlayerWidget), findsOneWidget);
+      expect(
+        find.byKey(const Key('podcast_bottom_player_expanded')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('hides bottom player on wide screen after switching to chat', (
+      tester,
+    ) async {
+      addTearDown(() async {
+        await tester.binding.setSurfaceSize(null);
+      });
+      await tester.binding.setSurfaceSize(const Size(1200, 900));
+
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _episode(),
+          duration: 180000,
+          isExpanded: true,
+          isPlaying: true,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PageView), findsNothing);
+      expect(find.byType(PodcastBottomPlayerWidget), findsOneWidget);
+
+      await tester.tap(find.text('Chat').first);
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(PodcastBottomPlayerWidget), findsNothing);
+    });
+
     testWidgets('same episode paused tap should call resume only', (
       tester,
     ) async {
@@ -304,6 +415,12 @@ Widget _createWidget(TestAudioPlayerNotifier notifier) {
       getTranscriptionProvider(
         1,
       ).overrideWith(() => MockTranscriptionNotifier(1)),
+      getConversationProvider(
+        1,
+      ).overrideWith(() => _ConversationWithoutMessagesNotifier()),
+      getSessionListProvider(1).overrideWith(() => _EmptySessionListNotifier()),
+      getCurrentSessionIdProvider(1).overrideWith(() => _NullSessionIdNotifier()),
+      availableModelsProvider.overrideWith((ref) async => <SummaryModelInfo>[]),
     ],
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -439,4 +556,33 @@ class MockTranscriptionNotifier extends TranscriptionNotifier {
 
   @override
   Future<void> loadTranscription() async {}
+}
+
+class _ConversationWithoutMessagesNotifier extends ConversationNotifier {
+  _ConversationWithoutMessagesNotifier() : super(1);
+
+  @override
+  ConversationState build() {
+    return const ConversationState(messages: []);
+  }
+}
+
+class _EmptySessionListNotifier extends SessionListNotifier {
+  _EmptySessionListNotifier() : super(1);
+
+  @override
+  Future<List<ConversationSession>> build() async => [];
+}
+
+class _NullSessionIdNotifier extends SessionIdNotifier {
+  @override
+  int? build() => null;
+}
+
+Future<void> _setMobilePage(WidgetTester tester, int pageIndex) async {
+  final pageViewFinder = find.byType(PageView);
+  expect(pageViewFinder, findsOneWidget);
+  final pageView = tester.widget<PageView>(pageViewFinder);
+  pageView.onPageChanged?.call(pageIndex);
+  await tester.pump();
 }
