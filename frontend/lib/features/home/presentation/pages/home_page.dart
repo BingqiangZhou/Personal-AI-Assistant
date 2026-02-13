@@ -26,7 +26,17 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialTab ?? 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final audioState = ref.read(audioPlayerProvider);
+      if (!_isPodcastTab(_currentIndex) && audioState.isExpanded) {
+        ref.read(audioPlayerProvider.notifier).setExpanded(false);
+      }
+    });
   }
+
+  bool _isPodcastTab(int index) => index == 0 || index == 1;
 
   List<NavigationDestination> _buildDestinations(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -72,7 +82,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget? _buildBottomAccessory() {
-    final isPodcastTab = _currentIndex == 0 || _currentIndex == 1;
+    final isPodcastTab = _isPodcastTab(_currentIndex);
     if (!isPodcastTab) {
       return null;
     }
@@ -87,6 +97,10 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _handleNavigation(int index) {
+    if (!_isPodcastTab(index) && ref.read(audioPlayerProvider).isExpanded) {
+      ref.read(audioPlayerProvider.notifier).setExpanded(false);
+    }
+
     if (_currentIndex != index) {
       setState(() {
         _currentIndex = index;
@@ -98,10 +112,12 @@ class _HomePageState extends ConsumerState<HomePage> {
     final content = _buildPageContent(index);
 
     // Watch global audio player state for expansion only
-    final isExpanded = ref.watch(audioPlayerProvider.select((s) => s.isExpanded));
+    final isExpanded = ref.watch(
+      audioPlayerProvider.select((s) => s.isExpanded),
+    );
 
     // If expanded, wrap content with a barrier to detect outside taps
-    if (isExpanded) {
+    if (isExpanded && _isPodcastTab(_currentIndex)) {
       return Stack(
         children: [
           content,
@@ -113,7 +129,9 @@ class _HomePageState extends ConsumerState<HomePage> {
               },
               behavior: HitTestBehavior.opaque, // Opaque to catch all touches
               child: Container(
-                color: Colors.black.withValues(alpha: 0.01), // Almost transparent but touchable
+                color: Colors.black.withValues(
+                  alpha: 0.01,
+                ), // Almost transparent but touchable
               ),
             ),
           ),
