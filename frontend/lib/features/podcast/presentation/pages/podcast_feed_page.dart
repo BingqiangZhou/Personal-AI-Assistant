@@ -81,7 +81,9 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.failed_to_add_to_queue(error.toString()))),
+          SnackBar(
+            content: Text(l10n.failed_to_add_to_queue(error.toString())),
+          ),
         );
       }
     }
@@ -173,13 +175,14 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
             0.0; // ResponsiveContainer handles padding? Checking...
         // ResponsiveContainer has default padding, so we might not need extra.
         // But GridView needs spacing.
-        final spacing = 8.0;
+        final spacing = 6.0;
         final availableWidth =
             screenWidth - horizontalPadding - (crossAxisCount - 1) * spacing;
         final cardWidth = availableWidth / crossAxisCount;
 
         // 优化宽高比：卡片内容高度约180-200，确保不溢出
-        final childAspectRatio = cardWidth / 210;
+        const desktopCardHeight = 172.0;
+        final childAspectRatio = cardWidth / desktopCardHeight;
 
         return RefreshIndicator(
           onRefresh: () async {
@@ -213,11 +216,30 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   /// 构建移动端卡片
   Widget _buildMobileCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     // Get display description: AI summary main topics or plain shownotes
     final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
       aiSummary: episode.aiSummary,
       description: episode.description,
     );
+    final titleStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+      fontSize: 13,
+    );
+    final titleFontSize = titleStyle?.fontSize ?? 13;
+    final titleLineHeightFactor = titleStyle?.height ?? 1.0;
+    final coverSize = 2 * (titleFontSize * titleLineHeightFactor);
+    final coverIconSize = (coverSize * 0.58).clamp(14.0, 28.0).toDouble();
+
+    void playAndOpenDetail() {
+      ref.read(audioPlayerProvider.notifier).playEpisode(episode);
+      PodcastNavigation.goToEpisodeDetail(
+        context,
+        episodeId: episode.id,
+        subscriptionId: episode.subscriptionId,
+        episodeTitle: episode.title,
+      );
+    }
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
@@ -233,272 +255,207 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IntrinsicHeight(
-                child: Stack(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 56,
-                          height: 56,
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              // 可点击的图像区域 - 点击播放
-                              Positioned(
-                                left: 0,
-                                top: 0,
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () {
-                                      ref
-                                          .read(audioPlayerProvider.notifier)
-                                          .playEpisode(episode);
-                                      PodcastNavigation.goToEpisodeDetail(
-                                        context,
-                                        episodeId: episode.id,
-                                        subscriptionId: episode.subscriptionId,
-                                        episodeTitle: episode.title,
-                                      );
-                                    },
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Container(
-                                      width: 48,
-                                      height: 48,
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primaryContainer,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child:
-                                            (episode.imageUrl != null ||
-                                                episode.subscriptionImageUrl !=
-                                                    null)
-                                            ? Image.network(
-                                                episode.imageUrl ??
-                                                    episode
-                                                        .subscriptionImageUrl!,
-                                                fit: BoxFit.cover,
-                                                errorBuilder:
-                                                    (
-                                                      context,
-                                                      error,
-                                                      stackTrace,
-                                                    ) => Icon(
-                                                      Icons.podcasts,
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .onPrimaryContainer,
-                                                      size: 28,
-                                                    ),
-                                              )
-                                            : Icon(
-                                                Icons.podcasts,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onPrimaryContainer,
-                                                size: 28,
-                                              ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              // 播放按钮覆盖在图像右下角
-                              Positioned(
-                                right: 4,
-                                bottom: 4,
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () {
-                                      ref
-                                          .read(audioPlayerProvider.notifier)
-                                          .playEpisode(episode);
-                                      PodcastNavigation.goToEpisodeDetail(
-                                        context,
-                                        episodeId: episode.id,
-                                        subscriptionId: episode.subscriptionId,
-                                        episodeTitle: episode.title,
-                                      );
-                                    },
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Container(
-                                      width: 16,
-                                      height: 16,
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.3,
-                                            ),
-                                            blurRadius: 4,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Icon(
-                                        Icons.play_arrow,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onPrimary,
-                                        size: 10,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+              Row(
+                key: const Key('podcast_feed_mobile_header_row'),
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: playAndOpenDetail,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        key: const Key('podcast_feed_mobile_cover'),
+                        width: coverSize,
+                        height: coverSize,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      episode.title,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13,
-                                          ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    tooltip: l10n.podcast_add_to_queue,
-                                    onPressed: () => _addToQueue(episode),
-                                    icon: const Icon(
-                                      Icons.playlist_add,
-                                      size: 18,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 6,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      episode.subscriptionTitle ??
-                                          l10n.podcast_default_podcast,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onPrimary,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 10,
-                                          ),
-                                    ),
-                                  ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child:
+                              (episode.imageUrl != null ||
+                                  episode.subscriptionImageUrl != null)
+                              ? Image.network(
+                                  episode.imageUrl ??
+                                      episode.subscriptionImageUrl!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
                                       Icon(
-                                        Icons.calendar_today_outlined,
-                                        size: 13,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
+                                        Icons.podcasts,
+                                        color: theme
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                        size: coverIconSize,
                                       ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        _formatDate(episode.publishedAt),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.onSurfaceVariant,
-                                              fontSize: 11,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.schedule,
-                                        size: 13,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        episode.formattedDuration,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.onSurfaceVariant,
-                                              fontSize: 11,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                )
+                              : Icon(
+                                  Icons.podcasts,
+                                  color: theme.colorScheme.onPrimaryContainer,
+                                  size: coverIconSize,
+                                ),
                         ),
-                      ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: coverSize,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          episode.title,
+                          style: titleStyle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               if (displayDescription.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(
+                  key: const Key('podcast_feed_mobile_description'),
                   displayDescription,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                  maxLines: 4,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 4),
+              ] else ...[
+                const SizedBox(height: 4),
               ],
+              Row(
+                key: const Key('podcast_feed_mobile_meta_action_row'),
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          key: const Key('podcast_feed_mobile_metadata'),
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 112),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  episode.subscriptionTitle ??
+                                      l10n.podcast_default_podcast,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onPrimary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.calendar_today_outlined,
+                                  size: 13,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  _formatDate(episode.publishedAt),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 8),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.schedule,
+                                  size: 13,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  episode.formattedDuration,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  IconButton(
+                    key: const Key('podcast_feed_mobile_add_to_queue'),
+                    tooltip: l10n.podcast_add_to_queue,
+                    onPressed: () => _addToQueue(episode),
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(28, 28),
+                      maximumSize: const Size(28, 28),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      foregroundColor: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    icon: const Icon(Icons.playlist_add, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  IconButton(
+                    key: const Key('podcast_feed_mobile_play'),
+                    tooltip: l10n.podcast_play,
+                    onPressed: playAndOpenDetail,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(28, 28),
+                      maximumSize: const Size(28, 28),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      foregroundColor: theme.colorScheme.primary,
+                      shape: const CircleBorder(),
+                      side: BorderSide(
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.65,
+                        ),
+                        width: 1,
+                      ),
+                    ),
+                    icon: const Icon(Icons.play_arrow, size: 18),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -509,11 +466,29 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   /// 构建桌面端卡片（使用小图标布局）
   Widget _buildDesktopCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
-    // Get display description: AI summary main topics or plain shownotes
+    final theme = Theme.of(context);
     final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
       aiSummary: episode.aiSummary,
       description: episode.description,
     );
+    final titleStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+      fontSize: 13,
+    );
+    final titleFontSize = titleStyle?.fontSize ?? 13;
+    final titleLineHeightFactor = titleStyle?.height ?? 1.0;
+    final coverSize = 2 * (titleFontSize * titleLineHeightFactor);
+    final coverIconSize = (coverSize * 0.58).clamp(14.0, 28.0).toDouble();
+
+    void playAndOpenDetail() {
+      ref.read(audioPlayerProvider.notifier).playEpisode(episode);
+      PodcastNavigation.goToEpisodeDetail(
+        context,
+        episodeId: episode.id,
+        subscriptionId: episode.subscriptionId,
+        episodeTitle: episode.title,
+      );
+    }
 
     return Card(
       child: InkWell(
@@ -527,20 +502,19 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 第一行：小图标 + 标题
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                key: const Key('podcast_feed_desktop_header_row'),
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // 小图标（48x48）
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: coverSize,
+                    height: coverSize,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
+                      color: theme.colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: ClipRRect(
@@ -554,166 +528,167 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                               errorBuilder: (context, error, stackTrace) =>
                                   Icon(
                                     Icons.podcasts,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimaryContainer,
-                                    size: 28,
+                                    color: theme.colorScheme.onPrimaryContainer,
+                                    size: coverIconSize,
                                   ),
                             )
                           : Icon(
                               Icons.podcasts,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onPrimaryContainer,
-                              size: 28,
+                              color: theme.colorScheme.onPrimaryContainer,
+                              size: coverIconSize,
                             ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // 标题
                   Expanded(
-                    child: Text(
-                      episode.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                    child: SizedBox(
+                      height: coverSize,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          episode.title,
+                          style: titleStyle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
-
-              // 描述 - 自适应填充剩余高度
               if (displayDescription.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Expanded(
-                  child: Text(
-                    displayDescription,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                    overflow: TextOverflow.fade,
+                const SizedBox(height: 8),
+                Text(
+                  key: const Key('podcast_feed_desktop_description'),
+                  displayDescription,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
                 ),
+                const SizedBox(height: 4),
+              ] else ...[
+                const SizedBox(height: 4),
               ],
-
-              // 底部一行：元数据（左侧） + Play 按钮（右侧）
               Row(
+                key: const Key('podcast_feed_desktop_meta_action_row'),
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // 左侧：元数据
                   Expanded(
-                    child: Wrap(
-                      spacing: 12,
-                      runSpacing: 8,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        // 播客名 (圆角框)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            episode.subscriptionTitle ??
-                                l10n.podcast_default_podcast,
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          key: const Key('podcast_feed_desktop_metadata'),
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 140),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 3,
                                 ),
-                          ),
-                        ),
-                        // 日期
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.calendar_today_outlined,
-                              size: 13,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              _formatDate(episode.publishedAt),
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  episode.subscriptionTitle ??
+                                      l10n.podcast_default_podcast,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onPrimary,
+                                    fontWeight: FontWeight.bold,
                                     fontSize: 11,
                                   ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.calendar_today_outlined,
+                                  size: 13,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  _formatDate(episode.publishedAt),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 8),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.schedule,
+                                  size: 13,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  episode.formattedDuration,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        // 时长
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.schedule,
-                              size: 13,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              episode.formattedDuration,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton(
-                    tooltip: 'Add to queue',
-                    onPressed: () => _addToQueue(episode),
-                    icon: const Icon(Icons.playlist_add),
-                  ),
-                  const SizedBox(width: 8),
-                  // 右侧：Play 按钮（播放并跳转到详情页）
-                  FilledButton.tonal(
-                    onPressed: () {
-                      // Start playback asynchronously (don't wait)
-                      ref
-                          .read(audioPlayerProvider.notifier)
-                          .playEpisode(episode);
-                      // Navigate to detail page immediately
-                      PodcastNavigation.goToEpisodeDetail(
-                        context,
-                        episodeId: episode.id,
-                        subscriptionId: episode.subscriptionId,
-                        episodeTitle: episode.title,
-                      );
-                    },
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(70, 36),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
                       ),
                     ),
-                    child: Text(l10n.podcast_play),
+                  ),
+                  const SizedBox(width: 6),
+                  IconButton(
+                    key: const Key('podcast_feed_desktop_add_to_queue'),
+                    tooltip: l10n.podcast_add_to_queue,
+                    onPressed: () => _addToQueue(episode),
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(28, 28),
+                      maximumSize: const Size(28, 28),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      foregroundColor: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    icon: const Icon(Icons.playlist_add, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  IconButton(
+                    key: const Key('podcast_feed_desktop_play'),
+                    tooltip: l10n.podcast_play,
+                    onPressed: playAndOpenDetail,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(28, 28),
+                      maximumSize: const Size(28, 28),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      foregroundColor: theme.colorScheme.primary,
+                      shape: const CircleBorder(),
+                      side: BorderSide(
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.65,
+                        ),
+                        width: 1,
+                      ),
+                    ),
+                    icon: const Icon(Icons.play_arrow, size: 18),
                   ),
                 ],
               ),

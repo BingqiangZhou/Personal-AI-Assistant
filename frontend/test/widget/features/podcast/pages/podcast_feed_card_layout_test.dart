@@ -1,0 +1,235 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_feed_page.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+
+void main() {
+  group('PodcastFeedPage card layout', () {
+    testWidgets(
+      'mobile card shows 2-line description and metadata/action row below',
+      (WidgetTester tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final container = ProviderContainer(
+          overrides: [
+            podcastFeedProvider.overrideWith(
+              () => _MockPodcastFeedNotifier(
+                PodcastFeedState(
+                  episodes: [_buildEpisode()],
+                  isLoading: false,
+                  hasMore: false,
+                  total: 1,
+                ),
+              ),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PodcastFeedPage(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final descriptionFinder = find.byKey(
+          const Key('podcast_feed_mobile_description'),
+        );
+        final metadataFinder = find.byKey(
+          const Key('podcast_feed_mobile_metadata'),
+        );
+        final addButtonFinder = find.byKey(
+          const Key('podcast_feed_mobile_add_to_queue'),
+        );
+        final playButtonFinder = find.byKey(
+          const Key('podcast_feed_mobile_play'),
+        );
+        final headerRowFinder = find.byKey(
+          const Key('podcast_feed_mobile_header_row'),
+        );
+        final metaActionRowFinder = find.byKey(
+          const Key('podcast_feed_mobile_meta_action_row'),
+        );
+        final coverFinder = find.byKey(const Key('podcast_feed_mobile_cover'));
+        final titleFinder = find.text('S2E7 Why does luck look effortless?');
+
+        expect(descriptionFinder, findsOneWidget);
+        expect(metadataFinder, findsOneWidget);
+        expect(addButtonFinder, findsOneWidget);
+        expect(playButtonFinder, findsOneWidget);
+        expect(headerRowFinder, findsOneWidget);
+        expect(metaActionRowFinder, findsOneWidget);
+        expect(coverFinder, findsOneWidget);
+        expect(titleFinder, findsOneWidget);
+        expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+
+        final descriptionText = tester.widget<Text>(descriptionFinder);
+        expect(descriptionText.maxLines, 2);
+        final titleText = tester.widget<Text>(titleFinder);
+
+        final descriptionRect = tester.getRect(descriptionFinder);
+        final metadataRect = tester.getRect(metadataFinder);
+        final addButtonRect = tester.getRect(addButtonFinder);
+        final playButtonRect = tester.getRect(playButtonFinder);
+        final headerRowRect = tester.getRect(headerRowFinder);
+        final metaActionRowRect = tester.getRect(metaActionRowFinder);
+        final coverRect = tester.getRect(coverFinder);
+        final cardRect = tester.getRect(find.byType(Card).first);
+        final expectedCoverSize =
+            2 *
+            ((titleText.style?.fontSize ?? 13) *
+                (titleText.style?.height ?? 1.0));
+
+        expect(metadataRect.top, greaterThanOrEqualTo(descriptionRect.bottom));
+        expect(addButtonRect.center.dx, greaterThan(metadataRect.center.dx));
+        expect(playButtonRect.center.dx, greaterThan(addButtonRect.center.dx));
+        expect((playButtonRect.center.dy - addButtonRect.center.dy).abs(), 0.0);
+        expect(
+          (playButtonRect.center.dy - metadataRect.center.dy).abs(),
+          lessThan(6),
+        );
+        expect(addButtonRect.height, lessThanOrEqualTo(32));
+        expect(playButtonRect.height, lessThanOrEqualTo(32));
+        expect(coverRect.height, closeTo(expectedCoverSize, 0.5));
+        expect(coverRect.width, closeTo(expectedCoverSize, 0.5));
+        final topGap = headerRowRect.top - cardRect.top;
+        final bottomGap = cardRect.bottom - metaActionRowRect.bottom;
+        expect(topGap, closeTo(bottomGap, 3));
+      },
+    );
+
+    testWidgets(
+      'desktop card keeps play action and shows 4-line description with metadata below',
+      (WidgetTester tester) async {
+        tester.view.physicalSize = const Size(1200, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final container = ProviderContainer(
+          overrides: [
+            podcastFeedProvider.overrideWith(
+              () => _MockPodcastFeedNotifier(
+                PodcastFeedState(
+                  episodes: [_buildEpisode()],
+                  isLoading: false,
+                  hasMore: false,
+                  total: 1,
+                ),
+              ),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PodcastFeedPage(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final descriptionFinder = find.byKey(
+          const Key('podcast_feed_desktop_description'),
+        );
+        final metadataFinder = find.byKey(
+          const Key('podcast_feed_desktop_metadata'),
+        );
+        final addButtonFinder = find.byKey(
+          const Key('podcast_feed_desktop_add_to_queue'),
+        );
+        final playButtonFinder = find.byKey(
+          const Key('podcast_feed_desktop_play'),
+        );
+        final headerRowFinder = find.byKey(
+          const Key('podcast_feed_desktop_header_row'),
+        );
+        final metaActionRowFinder = find.byKey(
+          const Key('podcast_feed_desktop_meta_action_row'),
+        );
+
+        expect(descriptionFinder, findsOneWidget);
+        expect(metadataFinder, findsOneWidget);
+        expect(addButtonFinder, findsOneWidget);
+        expect(playButtonFinder, findsOneWidget);
+        expect(headerRowFinder, findsOneWidget);
+        expect(metaActionRowFinder, findsOneWidget);
+        expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+
+        final descriptionText = tester.widget<Text>(descriptionFinder);
+        expect(descriptionText.maxLines, 4);
+
+        final descriptionRect = tester.getRect(descriptionFinder);
+        final metadataRect = tester.getRect(metadataFinder);
+        final addButtonRect = tester.getRect(addButtonFinder);
+        final playButtonRect = tester.getRect(playButtonFinder);
+        final metaActionRowRect = tester.getRect(metaActionRowFinder);
+
+        expect(metadataRect.top, greaterThanOrEqualTo(descriptionRect.bottom));
+        expect(addButtonRect.center.dx, greaterThan(metadataRect.center.dx));
+        expect(playButtonRect.center.dx, greaterThan(addButtonRect.center.dx));
+        expect(addButtonRect.height, lessThanOrEqualTo(32));
+        expect(playButtonRect.height, lessThanOrEqualTo(32));
+        final descriptionToMetaGap =
+            metaActionRowRect.top - descriptionRect.bottom;
+        expect(descriptionToMetaGap, lessThanOrEqualTo(12));
+      },
+    );
+  });
+}
+
+class _MockPodcastFeedNotifier extends PodcastFeedNotifier {
+  _MockPodcastFeedNotifier(this._initialState);
+
+  final PodcastFeedState _initialState;
+
+  @override
+  PodcastFeedState build() {
+    return _initialState;
+  }
+
+  @override
+  Future<void> loadInitialFeed() async {}
+
+  @override
+  Future<void> loadMoreFeed() async {}
+
+  @override
+  Future<void> refreshFeed() async {}
+}
+
+PodcastEpisodeModel _buildEpisode() {
+  return PodcastEpisodeModel(
+    id: 1,
+    subscriptionId: 1,
+    subscriptionTitle: 'Sample Show',
+    title: 'S2E7 Why does luck look effortless?',
+    description:
+        'What is luck, really? Is it money, connections, or freedom? '
+        'Why do some people burn out while others seem to move smoothly? '
+        'This episode explores myths and reality around good fortune.',
+    audioUrl: 'https://example.com/audio.mp3',
+    audioDuration: 4143,
+    publishedAt: DateTime(2026, 2, 13),
+    createdAt: DateTime(2026, 2, 13),
+  );
+}
