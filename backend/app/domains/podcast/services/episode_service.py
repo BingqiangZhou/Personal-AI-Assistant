@@ -118,6 +118,18 @@ class PodcastEpisodeService:
         results = self._build_episode_response(episodes, playback_states)
         return results, total
 
+    async def list_playback_history_lite(
+        self,
+        page: int = 1,
+        size: int = 20,
+    ) -> tuple[list[dict[str, Any]], int]:
+        """List lightweight playback history for profile history page."""
+        return await self.repo.get_playback_history_lite_paginated(
+            self.user_id,
+            page=page,
+            size=size,
+        )
+
     async def get_episode_by_id(self, episode_id: int) -> PodcastEpisode | None:
         """
         Get episode by ID.

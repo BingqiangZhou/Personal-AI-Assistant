@@ -17,6 +17,8 @@ import '../../data/models/podcast_queue_model.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import '../../data/models/audio_player_state_model.dart';
 import '../../data/models/podcast_state_models.dart';
+import '../../data/models/profile_stats_model.dart';
+import '../../data/models/playback_history_lite_model.dart';
 import '../../data/repositories/podcast_repository.dart';
 import '../../data/services/podcast_api_service.dart';
 import 'playback_progress_policy.dart';
@@ -188,7 +190,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
     // If sleep timer is set to "after episode", stop here
     if (state.sleepTimerAfterEpisode) {
-      logger.AppLogger.debug('[Sleep Timer] Sleep timer: stop after episode triggered');
+      logger.AppLogger.debug(
+        '[Sleep Timer] Sleep timer: stop after episode triggered',
+      );
       cancelSleepTimer();
       return;
     }
@@ -220,7 +224,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         queueEpisodeId: next.episodeId,
       );
     } catch (error) {
-      logger.AppLogger.debug('[Error] Failed to advance queue on completion: $error');
+      logger.AppLogger.debug(
+        '[Error] Failed to advance queue on completion: $error',
+      );
     } finally {
       _isHandlingQueueCompletion = false;
     }
@@ -289,7 +295,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       logger.AppLogger.debug('[Playback] Episode ID: ${episode.id}');
       logger.AppLogger.debug('[Playback] Episode Title: ${episode.title}');
       logger.AppLogger.debug('[Playback] Audio URL: ${episode.audioUrl}');
-      logger.AppLogger.debug('[Playback] Subscription ID: ${episode.subscriptionId}');
+      logger.AppLogger.debug(
+        '[Playback] Subscription ID: ${episode.subscriptionId}',
+      );
 
       if (!ref.mounted || _isDisposed) {
         _isPlayingEpisode = false;
@@ -356,11 +364,15 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       // ===== STEP 3: Set new episode with metadata =====
       // CRITICAL: Use setEpisode() to properly set MediaItem, validate artUri, and load audio
       // artUri validation is built into setEpisode() - only http/https URLs are accepted
-      logger.AppLogger.debug('[Playback] Step 3: Setting new episode with metadata');
+      logger.AppLogger.debug(
+        '[Playback] Step 3: Setting new episode with metadata',
+      );
       logger.AppLogger.debug(
         '[Playback] Backend duration already set: ${state.duration}ms',
       );
-      logger.AppLogger.debug('[Playback] Image URL: ${episode.imageUrl ?? "NULL"}');
+      logger.AppLogger.debug(
+        '[Playback] Image URL: ${episode.imageUrl ?? "NULL"}',
+      );
 
       try {
         await _audioHandler.setEpisode(
@@ -641,7 +653,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       sleepTimerRemainingLabel: _formatRemainingTime(duration),
     );
 
-    logger.AppLogger.debug('[Sleep Timer] Sleep timer set: ${duration.inMinutes} minutes');
+    logger.AppLogger.debug(
+      '[Sleep Timer] Sleep timer set: ${duration.inMinutes} minutes',
+    );
 
     _sleepTimerTickTimer = Timer.periodic(
       const Duration(seconds: 1),
@@ -679,7 +693,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       sleepTimerRemainingLabel: '本集',
     );
 
-    logger.AppLogger.debug('[Sleep Timer] Sleep timer set: after current episode');
+    logger.AppLogger.debug(
+      '[Sleep Timer] Sleep timer set: after current episode',
+    );
   }
 
   void cancelSleepTimer() {
@@ -706,7 +722,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     final remaining = endTime.difference(DateTime.now());
     if (remaining.isNegative || remaining.inSeconds <= 0) {
       // Timer expired, pause playback
-      logger.AppLogger.debug('[Sleep Timer] Sleep timer expired, pausing playback');
+      logger.AppLogger.debug(
+        '[Sleep Timer] Sleep timer expired, pausing playback',
+      );
       _sleepTimerTickTimer?.cancel();
       _sleepTimerTickTimer = null;
       state = state.copyWith(clearSleepTimer: true);
@@ -1354,6 +1372,16 @@ final podcastStatsProvider = FutureProvider<PodcastStatsResponse?>((ref) async {
   }
 });
 
+final profileStatsProvider = FutureProvider<ProfileStatsModel?>((ref) async {
+  final repository = ref.read(podcastRepositoryProvider);
+  try {
+    return await repository.getProfileStats();
+  } catch (error) {
+    logger.AppLogger.debug('Failed to load profile stats: $error');
+    return null;
+  }
+});
+
 final playbackHistoryProvider = FutureProvider<PodcastEpisodeListResponse?>((
   ref,
 ) async {
@@ -1365,6 +1393,17 @@ final playbackHistoryProvider = FutureProvider<PodcastEpisodeListResponse?>((
     return null;
   }
 });
+
+final playbackHistoryLiteProvider =
+    FutureProvider<PlaybackHistoryLiteResponse?>((ref) async {
+      final repository = ref.read(podcastRepositoryProvider);
+      try {
+        return await repository.getPlaybackHistoryLite(page: 1, size: 100);
+      } catch (error) {
+        logger.AppLogger.debug('Failed to load playback history lite: $error');
+        return null;
+      }
+    });
 
 // === Episode Detail Provider ===
 final episodeDetailProvider =

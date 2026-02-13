@@ -115,6 +115,15 @@ class PodcastService:
     ) -> tuple[list[dict], int]:
         return await self.episode_service.list_playback_history(page=page, size=size)
 
+    async def get_playback_history_lite(
+        self,
+        page: int = 1,
+        size: int = 20,
+    ) -> tuple[list[dict[str, Any]], int]:
+        return await self.episode_service.list_playback_history_lite(
+            page=page, size=size
+        )
+
     async def get_episode_by_id(
         self,
         episode_id: int,
@@ -250,6 +259,9 @@ class PodcastService:
     # Stats
     async def get_user_stats(self) -> dict[str, Any]:
         return await self.stats_service.get_user_stats()
+
+    async def get_profile_stats(self) -> dict[str, int]:
+        return await self.stats_service.get_profile_stats()
 
     # Deprecated private compatibility methods (still used by tasks/tests)
     async def _generate_summary_task(self, episode: PodcastEpisode):

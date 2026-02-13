@@ -220,8 +220,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final l10n = AppLocalizations.of(context)!;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
-    final statsAsync = ref.watch(podcastStatsProvider);
-    final historyAsync = ref.watch(playbackHistoryProvider);
+    final statsAsync = ref.watch(profileStatsProvider);
 
     final episodeCount = statsAsync.when(
       data: (stats) => stats?.totalEpisodes.toString() ?? '0',
@@ -233,8 +232,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       loading: () => '...',
       error: (error, stackTrace) => '0',
     );
-    final historyCount = historyAsync.when(
-      data: (history) => history?.total.toString() ?? '0',
+    final historyCount = statsAsync.when(
+      data: (stats) => stats?.playedEpisodes.toString() ?? '0',
       loading: () => '...',
       error: (error, stackTrace) => '0',
     );
@@ -266,6 +265,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             historyCount,
             Theme.of(context).colorScheme.secondary,
             onTap: () => context.push('/profile/history'),
+            showChevron: true,
           ),
         ],
       );
@@ -302,6 +302,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             historyCount,
             Theme.of(context).colorScheme.secondary,
             onTap: () => context.push('/profile/history'),
+            showChevron: true,
           ),
         ),
       ],
@@ -315,6 +316,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     String value,
     Color color, {
     VoidCallback? onTap,
+    bool showChevron = false,
   }) {
     return Card(
       margin: EdgeInsets.zero,
@@ -346,6 +348,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   ],
                 ),
               ),
+              if (showChevron)
+                Icon(
+                  Icons.chevron_right,
+                  key: const Key('profile_viewed_card_chevron'),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  size: 22,
+                ),
             ],
           ),
         ),

@@ -8,6 +8,8 @@ import '../models/podcast_subscription_model.dart';
 import '../models/schedule_config_model.dart';
 import '../models/podcast_transcription_model.dart';
 import '../models/podcast_conversation_model.dart';
+import '../models/profile_stats_model.dart';
+import '../models/playback_history_lite_model.dart';
 
 part 'podcast_api_service.g.dart';
 
@@ -87,6 +89,12 @@ abstract class PodcastApiService {
 
   @GET('/podcasts/episodes/history')
   Future<PodcastEpisodeListResponse> getPlaybackHistory(
+    @Query('page') int page,
+    @Query('size') int size,
+  );
+
+  @GET('/podcasts/episodes/history-lite')
+  Future<PlaybackHistoryLiteResponse> getPlaybackHistoryLite(
     @Query('page') int page,
     @Query('size') int size,
   );
@@ -175,6 +183,9 @@ abstract class PodcastApiService {
 
   @GET('/podcasts/stats')
   Future<PodcastStatsResponse> getStats();
+
+  @GET('/podcasts/stats/profile')
+  Future<ProfileStatsModel> getProfileStats();
 
   // === Recommendations ===
 

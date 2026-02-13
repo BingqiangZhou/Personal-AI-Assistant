@@ -17,6 +17,8 @@ from app.domains.podcast.schemas import (
     PlaybackRateEffectiveResponse,
     PodcastEpisodeDetailResponse,
     PodcastEpisodeFilter,
+    PodcastPlaybackHistoryItemResponse,
+    PodcastPlaybackHistoryListResponse,
     PodcastEpisodeListResponse,
     PodcastEpisodeResponse,
     PodcastFeedResponse,
@@ -144,6 +146,29 @@ async def list_playback_history(
         size=size,
         pages=pages,
         subscription_id=0,
+    )
+
+
+@router.get(
+    "/episodes/history-lite",
+    response_model=PodcastPlaybackHistoryListResponse,
+    summary="List lightweight playback history",
+)
+async def list_playback_history_lite(
+    page: int = Query(1, ge=1, description="Page number"),
+    size: int = Query(20, ge=1, le=100, description="Page size"),
+    service: PodcastService = Depends(get_podcast_service),
+):
+    episodes, total = await service.get_playback_history_lite(page=page, size=size)
+    episode_responses = [PodcastPlaybackHistoryItemResponse(**ep) for ep in episodes]
+    pages = (total + size - 1) // size
+
+    return PodcastPlaybackHistoryListResponse(
+        episodes=episode_responses,
+        total=total,
+        page=page,
+        size=size,
+        pages=pages,
     )
 
 

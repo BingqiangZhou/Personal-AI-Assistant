@@ -203,6 +203,21 @@ class PodcastRedis:
         key = f"podcast:stats:{user_id}"
         await self.cache_delete(key)
 
+    async def get_profile_stats(self, user_id: int) -> dict | None:
+        """Get cached profile statistics (10 minutes TTL)."""
+        key = f"podcast:stats:profile:{user_id}"
+        return await self.cache_get_json(key)
+
+    async def set_profile_stats(self, user_id: int, stats: dict) -> bool:
+        """Cache profile statistics (10 minutes TTL)."""
+        key = f"podcast:stats:profile:{user_id}"
+        return await self.cache_set_json(key, stats, ttl=600)
+
+    async def invalidate_profile_stats(self, user_id: int) -> None:
+        """Invalidate profile stats cache."""
+        key = f"podcast:stats:profile:{user_id}"
+        await self.cache_delete(key)
+
     # === Episode List Cache ===
 
     async def get_episode_list(self, subscription_id: int, page: int, size: int) -> dict | None:

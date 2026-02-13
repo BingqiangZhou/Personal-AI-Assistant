@@ -65,3 +65,23 @@ class PodcastStatsService:
             logger.warning("Redis cache write failed for user stats, skipping cache")
 
         return result
+
+    async def get_profile_stats(self) -> dict[str, int]:
+        """Get lightweight profile stats for profile page cards."""
+        try:
+            cached = await self.redis.get_profile_stats(self.user_id)
+            if cached:
+                logger.info("Cache HIT for profile stats: user_id=%s", self.user_id)
+                return cached
+        except Exception:
+            logger.warning("Redis cache read failed for profile stats, skipping cache")
+
+        logger.info("Cache MISS for profile stats: user_id=%s", self.user_id)
+        result = await self.repo.get_profile_stats_aggregated(self.user_id)
+
+        try:
+            await self.redis.set_profile_stats(self.user_id, result)
+        except Exception:
+            logger.warning("Redis cache write failed for profile stats, skipping cache")
+
+        return result

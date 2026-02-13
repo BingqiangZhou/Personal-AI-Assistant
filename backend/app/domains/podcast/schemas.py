@@ -186,6 +186,31 @@ class PodcastEpisodeListResponse(PodcastBaseSchema):
     subscription_id: int
 
 
+class PodcastPlaybackHistoryItemResponse(PodcastBaseSchema):
+    """Lightweight playback history item for profile history page."""
+
+    id: int
+    subscription_id: int
+    subscription_title: str | None = None
+    subscription_image_url: str | None = None
+    title: str
+    image_url: str | None = None
+    audio_duration: int | None = None
+    playback_position: int | None = None
+    last_played_at: datetime | None = None
+    published_at: datetime
+
+
+class PodcastPlaybackHistoryListResponse(PodcastBaseSchema):
+    """Lightweight playback history list response."""
+
+    episodes: list[PodcastPlaybackHistoryItemResponse]
+    total: int
+    page: int
+    size: int
+    pages: int
+
+
 class PodcastEpisodeDetailResponse(PodcastEpisodeResponse):
     """播客单集详情响应（包含更多信息）"""
 
@@ -421,6 +446,16 @@ class PodcastStatsResponse(PodcastBaseSchema):
 
 
 # === Import/Export相关 ===
+
+
+class PodcastProfileStatsResponse(PodcastBaseSchema):
+    """Lightweight profile stats response."""
+
+    total_subscriptions: int
+    total_episodes: int
+    summaries_generated: int
+    pending_summaries: int
+    played_episodes: int
 
 
 class PodcastOPMLImport(PodcastBaseSchema):

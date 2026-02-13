@@ -8,6 +8,8 @@ import '../models/podcast_subscription_model.dart';
 import '../models/podcast_transcription_model.dart';
 import '../models/podcast_conversation_model.dart';
 import '../models/schedule_config_model.dart';
+import '../models/profile_stats_model.dart';
+import '../models/playback_history_lite_model.dart';
 import '../services/podcast_api_service.dart';
 
 class PodcastRepository {
@@ -164,6 +166,17 @@ class PodcastRepository {
   }) async {
     try {
       return await _apiService.getPlaybackHistory(page, size);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PlaybackHistoryLiteResponse> getPlaybackHistoryLite({
+    int page = 1,
+    int size = 100,
+  }) async {
+    try {
+      return await _apiService.getPlaybackHistoryLite(page, size);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
@@ -339,6 +352,14 @@ class PodcastRepository {
   Future<PodcastStatsResponse> getStats() async {
     try {
       return await _apiService.getStats();
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<ProfileStatsModel> getProfileStats() async {
+    try {
+      return await _apiService.getProfileStats();
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }

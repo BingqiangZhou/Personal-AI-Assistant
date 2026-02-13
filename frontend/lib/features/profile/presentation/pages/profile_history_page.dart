@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/utils/time_formatter.dart';
-import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/playback_history_lite_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 
@@ -13,20 +13,20 @@ class ProfileHistoryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final historyAsync = ref.watch(playbackHistoryProvider);
+    final historyAsync = ref.watch(playbackHistoryLiteProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profile_viewed_title)),
       body: RefreshIndicator(
         onRefresh: () {
-          ref.invalidate(playbackHistoryProvider);
-          return ref.read(playbackHistoryProvider.future);
+          ref.invalidate(playbackHistoryLiteProvider);
+          return ref.read(playbackHistoryLiteProvider.future);
         },
         child: historyAsync.when(
           data: (response) {
             final episodes =
-                List<PodcastEpisodeModel>.from(
-                  response?.episodes ?? const <PodcastEpisodeModel>[],
+                List<PlaybackHistoryLiteItem>.from(
+                  response?.episodes ?? const <PlaybackHistoryLiteItem>[],
                 )..sort((a, b) {
                   final aTime =
                       a.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
@@ -127,7 +127,7 @@ class ProfileHistoryPage extends ConsumerWidget {
     );
   }
 
-  String _buildSubtitle(BuildContext context, PodcastEpisodeModel episode) {
+  String _buildSubtitle(BuildContext context, PlaybackHistoryLiteItem episode) {
     final lastPlayedAt = episode.lastPlayedAt;
     final playedAtText = lastPlayedAt == null
         ? '--'
