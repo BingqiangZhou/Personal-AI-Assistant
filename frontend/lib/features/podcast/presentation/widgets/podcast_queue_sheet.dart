@@ -34,13 +34,15 @@ class PodcastQueueSheet extends ConsumerWidget {
       );
     });
 
-    _activeShowFuture = showFuture.whenComplete(() {
-      if (identical(_activeShowFuture, showFuture)) {
+    late final Future<void> trackedFuture;
+    trackedFuture = showFuture.whenComplete(() {
+      if (identical(_activeShowFuture, trackedFuture)) {
         _activeShowFuture = null;
       }
     });
 
-    return _activeShowFuture!;
+    _activeShowFuture = trackedFuture;
+    return trackedFuture;
   }
 
   @override

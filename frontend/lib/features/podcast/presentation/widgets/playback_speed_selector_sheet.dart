@@ -25,6 +25,7 @@ Future<PlaybackSpeedSelection?> showPlaybackSpeedSelectorSheet({
       var selectedSpeed = initialSpeed;
       var applyToSubscription = initialApplyToSubscription;
       final theme = Theme.of(context);
+      final l10n = AppLocalizations.of(context);
 
       return StatefulBuilder(
         builder: (context, setState) {
@@ -37,7 +38,7 @@ Future<PlaybackSpeedSelection?> showPlaybackSpeedSelectorSheet({
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Playback Speed',
+                      l10n?.player_playback_speed_title ?? 'Playback Speed',
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -67,11 +68,13 @@ Future<PlaybackSpeedSelection?> showPlaybackSpeedSelectorSheet({
                           applyToSubscription = checked ?? false;
                         });
                       },
-                      title: const Text(
-                        'Only apply to current show (current subscription)',
+                      title: Text(
+                        l10n?.player_apply_subscription_only ??
+                            'Only apply to current show (current subscription)',
                       ),
-                      subtitle: const Text(
-                        'Checked: subscription only; unchecked: global',
+                      subtitle: Text(
+                        l10n?.player_apply_subscription_subtitle ??
+                            'Checked: subscription only; unchecked: global',
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -86,7 +89,7 @@ Future<PlaybackSpeedSelection?> showPlaybackSpeedSelectorSheet({
                             ),
                           );
                         },
-                        child: Text(AppLocalizations.of(context)!.apply_button),
+                        child: Text(l10n?.apply_button ?? 'Apply'),
                       ),
                     ),
                   ],
