@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_feed_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
@@ -20,7 +22,9 @@ void main() {
       container.dispose();
     });
 
-    testWidgets('displays loading shimmer initially', (WidgetTester tester) async {
+    testWidgets('displays loading shimmer initially', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -38,18 +42,60 @@ void main() {
       expect(find.text('信息流'), findsOneWidget);
     });
 
-    testWidgets('displays empty state when no episodes', (WidgetTester tester) async {
+    testWidgets(
+      'calls restoreLastPlayedEpisodeIfNeeded on init when authenticated',
+      (WidgetTester tester) async {
+        final audioNotifier = RestoreTrackingAudioPlayerNotifier();
+        final testContainer = ProviderContainer(
+          overrides: [
+            authProvider.overrideWith(TestAuthenticatedAuthNotifier.new),
+            audioPlayerProvider.overrideWith(() => audioNotifier),
+            podcastFeedProvider.overrideWith(
+              () => MockPodcastFeedNotifier(
+                const PodcastFeedState(
+                  episodes: [],
+                  isLoading: false,
+                  hasMore: false,
+                  total: 0,
+                ),
+              ),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: testContainer,
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: PodcastFeedPage(),
+            ),
+          ),
+        );
+
+        await tester.pump();
+        expect(audioNotifier.restoreCallCount, 1);
+        testContainer.dispose();
+      },
+    );
+
+    testWidgets('displays empty state when no episodes', (
+      WidgetTester tester,
+    ) async {
       // Arrange - Override provider to return empty state
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
-            const PodcastFeedState(
-              episodes: [],
-              isLoading: false,
-              hasMore: false,
-              total: 0,
+          podcastFeedProvider.overrideWith(
+            () => MockPodcastFeedNotifier(
+              const PodcastFeedState(
+                episodes: [],
+                isLoading: false,
+                hasMore: false,
+                total: 0,
+              ),
             ),
-          )),
+          ),
         ],
       );
 
@@ -74,7 +120,9 @@ void main() {
       testContainer.dispose();
     });
 
-    testWidgets('displays episode cards when data is loaded', (WidgetTester tester) async {
+    testWidgets('displays episode cards when data is loaded', (
+      WidgetTester tester,
+    ) async {
       // Arrange - Create mock episodes
       final mockEpisodes = [
         PodcastEpisodeModel(
@@ -98,14 +146,16 @@ void main() {
       // Override provider with mock data
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
-            PodcastFeedState(
-              episodes: mockEpisodes,
-              isLoading: false,
-              hasMore: true,
-              total: 2,
+          podcastFeedProvider.overrideWith(
+            () => MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: mockEpisodes,
+                isLoading: false,
+                hasMore: true,
+                total: 2,
+              ),
             ),
-          )),
+          ),
         ],
       );
 
@@ -130,19 +180,23 @@ void main() {
       testContainer.dispose();
     });
 
-    testWidgets('displays error state when loading fails', (WidgetTester tester) async {
+    testWidgets('displays error state when loading fails', (
+      WidgetTester tester,
+    ) async {
       // Arrange - Override provider to return error state
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
-            const PodcastFeedState(
-              episodes: [],
-              isLoading: false,
-              hasMore: false,
-              total: 0,
-              error: 'Network error occurred',
+          podcastFeedProvider.overrideWith(
+            () => MockPodcastFeedNotifier(
+              const PodcastFeedState(
+                episodes: [],
+                isLoading: false,
+                hasMore: false,
+                total: 0,
+                error: 'Network error occurred',
+              ),
             ),
-          )),
+          ),
         ],
       );
 
@@ -183,15 +237,17 @@ void main() {
       // Override provider with mock data and loading more state
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
-            PodcastFeedState(
-              episodes: mockEpisodes,
-              isLoading: false,
-              isLoadingMore: true,
-              hasMore: true,
-              total: 1,
+          podcastFeedProvider.overrideWith(
+            () => MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: mockEpisodes,
+                isLoading: false,
+                isLoadingMore: true,
+                hasMore: true,
+                total: 1,
+              ),
             ),
-          )),
+          ),
         ],
       );
 
@@ -231,14 +287,16 @@ void main() {
       // Override provider with mock data and no more content
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
-            PodcastFeedState(
-              episodes: mockEpisodes,
-              isLoading: false,
-              hasMore: false,
-              total: 1,
+          podcastFeedProvider.overrideWith(
+            () => MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: mockEpisodes,
+                isLoading: false,
+                hasMore: false,
+                total: 1,
+              ),
             ),
-          )),
+          ),
         ],
       );
 
@@ -265,20 +323,22 @@ void main() {
     testWidgets('respects top safe area padding', (WidgetTester tester) async {
       // Arrange
       const double topPadding = 50.0;
-      
+
       final testContainer = ProviderContainer(
         overrides: [
-          podcastFeedProvider.overrideWith(() => MockPodcastFeedNotifier(
-            const PodcastFeedState(
-              episodes: [],
-              isLoading: false,
-              hasMore: false,
-              total: 0,
+          podcastFeedProvider.overrideWith(
+            () => MockPodcastFeedNotifier(
+              const PodcastFeedState(
+                episodes: [],
+                isLoading: false,
+                hasMore: false,
+                total: 0,
+              ),
             ),
-          )),
+          ),
         ],
       );
-      
+
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: testContainer,
@@ -295,7 +355,7 @@ void main() {
           ),
         ),
       );
-      
+
       await tester.pumpAndSettle();
 
       // Assert
@@ -304,13 +364,13 @@ void main() {
 
       // Verify SafeArea is present
       expect(find.byType(SafeArea), findsOneWidget);
-      
+
       final titlePosition = tester.getTopLeft(titleFinder);
       debugPrint('Title Y: ${titlePosition.dy}, TopPadding: $topPadding');
-      
+
       // The Y position should be greater than the top padding because of SafeArea
       expect(titlePosition.dy, greaterThan(topPadding));
-      
+
       testContainer.dispose();
     });
   });
@@ -341,5 +401,26 @@ class MockPodcastFeedNotifier extends PodcastFeedNotifier {
   @override
   Future<void> refreshFeed() async {
     // Do nothing for testing
+  }
+}
+
+class RestoreTrackingAudioPlayerNotifier extends AudioPlayerNotifier {
+  int restoreCallCount = 0;
+
+  @override
+  AudioPlayerState build() {
+    return const AudioPlayerState();
+  }
+
+  @override
+  Future<void> restoreLastPlayedEpisodeIfNeeded() async {
+    restoreCallCount++;
+  }
+}
+
+class TestAuthenticatedAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() {
+    return const AuthState(isAuthenticated: true);
   }
 }

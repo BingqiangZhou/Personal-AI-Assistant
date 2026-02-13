@@ -8,17 +8,17 @@ void main() {
       expect(result, 120000);
     });
 
-    test('resets to zero when position is within tail threshold', () {
+    test('keeps near-tail progress instead of resetting to zero', () {
       final result = normalizeResumePositionMs(1799, 1800);
-      expect(result, 0);
+      expect(result, 1799000);
     });
   });
 
   group('buildPersistPayload', () {
-    test('resets to zero and paused when near completed tail', () {
+    test('keeps near-tail progress and current play state', () {
       final payload = buildPersistPayload(1799000, 1800000, true);
-      expect(payload.positionSec, 0);
-      expect(payload.isPlaying, isFalse);
+      expect(payload.positionSec, 1799);
+      expect(payload.isPlaying, isTrue);
     });
 
     test('keeps normal middle progress with second rounding', () {
@@ -30,6 +30,12 @@ void main() {
     test('clamps negative milliseconds to zero seconds', () {
       final payload = buildPersistPayload(-1000, 1800000, false);
       expect(payload.positionSec, 0);
+      expect(payload.isPlaying, isFalse);
+    });
+
+    test('clamps progress that exceeds duration', () {
+      final payload = buildPersistPayload(2100000, 1800000, false);
+      expect(payload.positionSec, 1800);
       expect(payload.isPlaying, isFalse);
     });
   });

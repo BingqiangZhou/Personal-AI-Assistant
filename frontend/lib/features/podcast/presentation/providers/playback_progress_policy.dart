@@ -8,21 +8,13 @@ class PlaybackPersistPayload {
   });
 }
 
-int normalizeResumePositionMs(
-  int? savedPositionSec,
-  int? durationSec, {
-  int tailSec = 2,
-}) {
+int normalizeResumePositionMs(int? savedPositionSec, int? durationSec) {
   final positionSec = (savedPositionSec ?? 0).clamp(0, 1 << 31);
   if (positionSec <= 0) {
     return 0;
   }
 
   if (durationSec != null && durationSec > 0) {
-    final completedThresholdSec = durationSec - tailSec;
-    if (positionSec >= completedThresholdSec) {
-      return 0;
-    }
     final clampedSec = positionSec > durationSec ? durationSec : positionSec;
     return clampedSec * 1000;
   }
@@ -33,9 +25,8 @@ int normalizeResumePositionMs(
 PlaybackPersistPayload buildPersistPayload(
   int positionMs,
   int durationMs,
-  bool isPlaying, {
-  int tailSec = 2,
-}) {
+  bool isPlaying,
+) {
   var positionSec = (positionMs / 1000).round();
   if (positionSec < 0) {
     positionSec = 0;
@@ -43,14 +34,8 @@ PlaybackPersistPayload buildPersistPayload(
 
   if (durationMs > 0) {
     final durationSec = (durationMs / 1000).round();
-    if (durationSec > 0) {
-      final completedThresholdSec = durationSec - tailSec;
-      if (positionSec >= completedThresholdSec) {
-        return const PlaybackPersistPayload(positionSec: 0, isPlaying: false);
-      }
-      if (positionSec > durationSec) {
-        positionSec = durationSec;
-      }
+    if (durationSec > 0 && positionSec > durationSec) {
+      positionSec = durationSec;
     }
   }
 
