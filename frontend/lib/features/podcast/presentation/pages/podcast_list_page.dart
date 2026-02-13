@@ -234,6 +234,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             const SizedBox(height: 18),
             RichText(
               key: const Key('podcast_list_subscriptions_title'),
+              textScaler: MediaQuery.textScalerOf(context),
               text: TextSpan(
                 style: sectionTitleStyle,
                 children: [

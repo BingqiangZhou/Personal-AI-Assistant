@@ -347,15 +347,15 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           ),
 
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: _refreshEpisodes,
-              child: episodesState.isLoading && episodesState.episodes.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : episodesState.error != null
-                  ? _buildErrorState(episodesState.error!)
-                  : episodesState.episodes.isEmpty
-                  ? _buildEmptyState()
-                  : Column(
+            child: episodesState.isLoading && episodesState.episodes.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : episodesState.error != null
+                ? _buildErrorState(episodesState.error!)
+                : episodesState.episodes.isEmpty
+                ? _buildEmptyState()
+                : RefreshIndicator(
+                    onRefresh: _refreshEpisodes,
+                    child: Column(
                       children: [
                         // Episodes list - Grid Layout
                         Expanded(
@@ -541,7 +541,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                         ),
                       ],
                     ),
-            ),
+                  ),
           ),
         ],
       ),

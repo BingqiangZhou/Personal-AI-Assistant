@@ -21,120 +21,160 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Get display description: AI summary main topics or plain shownotes
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
       aiSummary: episode.aiSummary,
       description: episode.description,
     );
 
     return Card(
-      margin: const EdgeInsets.all(6),
+      margin: isMobile
+          ? const EdgeInsets.symmetric(horizontal: 4, vertical: 6)
+          : EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Title + Play button row
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                key: const Key('simplified_episode_header_row'),
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Text(
                       episode.title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // Play button aligned with title
-                  FilledButton.tonalIcon(
-                    onPressed: onPlay,
-                    icon: const Icon(Icons.play_arrow, size: 16),
-                    label: Text(AppLocalizations.of(context)!.play_button_short),
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(70, 32),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    tooltip: 'Add to queue',
-                    onPressed: onAddToQueue,
-                    icon: const Icon(Icons.playlist_add),
-                  ),
                 ],
               ),
               const SizedBox(height: 8),
-
-              // Metadata row
-              Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                crossAxisAlignment: WrapCrossAlignment.center,
+              if (displayDescription.isNotEmpty) ...[
+                Text(
+                  key: const Key('simplified_episode_description'),
+                  displayDescription,
+                  style: isMobile
+                      ? theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        )
+                      : theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                  maxLines: isMobile ? 2 : 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+              ] else ...[
+                const SizedBox(height: 4),
+              ],
+              Row(
+                key: const Key('simplified_episode_meta_action_row'),
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Date
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _formatDate(episode.publishedAt),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 11,
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          key: const Key('simplified_episode_metadata'),
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.calendar_today_outlined,
+                                  size: 13,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  _formatDate(episode.publishedAt),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 8),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.schedule,
+                                  size: 13,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 3),
+                                Text(
+                                  episode.formattedDuration,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                  // Duration
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.schedule,
-                        size: 14,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        episode.formattedDuration,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 11,
+                  const SizedBox(width: 6),
+                  IconButton(
+                    key: const Key('simplified_episode_add_to_queue'),
+                    tooltip: l10n.podcast_add_to_queue,
+                    onPressed: onAddToQueue,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(28, 28),
+                      maximumSize: const Size(28, 28),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      foregroundColor: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    icon: const Icon(Icons.playlist_add, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  IconButton(
+                    key: const Key('simplified_episode_play'),
+                    tooltip: l10n.podcast_play,
+                    onPressed: onPlay,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(28, 28),
+                      maximumSize: const Size(28, 28),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      foregroundColor: theme.colorScheme.primary,
+                      shape: const CircleBorder(),
+                      side: BorderSide(
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.65,
                         ),
+                        width: 1,
                       ),
-                    ],
+                    ),
+                    icon: const Icon(Icons.play_arrow, size: 18),
                   ),
                 ],
               ),
-
-              // Description - expanded to fill remaining space
-              // Display description: AI summary main topics or plain shownotes
-              if (displayDescription.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  displayDescription,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 4,
-                ),
-              ],
             ],
           ),
         ),

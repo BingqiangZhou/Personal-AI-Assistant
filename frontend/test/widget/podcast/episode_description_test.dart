@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/core/utils/episode_description_helper.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/feed_style_episode_card.dart';
@@ -20,7 +21,9 @@ void main() {
 深入洞察内容...
 ''';
 
-        final result = EpisodeDescriptionHelper.extractMainTopicsFromAiSummary(aiSummary);
+        final result = EpisodeDescriptionHelper.extractMainTopicsFromAiSummary(
+          aiSummary,
+        );
         expect(result, isNotNull);
         expect(result!.contains('AI'), isTrue);
         expect(result.contains('医疗'), isTrue);
@@ -37,14 +40,18 @@ void main() {
 Deep insights...
 ''';
 
-        final result = EpisodeDescriptionHelper.extractMainTopicsFromAiSummary(aiSummary);
+        final result = EpisodeDescriptionHelper.extractMainTopicsFromAiSummary(
+          aiSummary,
+        );
         expect(result, isNotNull);
         expect(result!.contains('AI'), isTrue);
         expect(result.contains('healthcare'), isTrue);
       });
 
       test('returns null when AI summary is empty', () {
-        final result = EpisodeDescriptionHelper.extractMainTopicsFromAiSummary(null);
+        final result = EpisodeDescriptionHelper.extractMainTopicsFromAiSummary(
+          null,
+        );
         expect(result, isNull);
       });
 
@@ -57,14 +64,17 @@ Deep insights...
 一些建议...
 ''';
 
-        final result = EpisodeDescriptionHelper.extractMainTopicsFromAiSummary(aiSummary);
+        final result = EpisodeDescriptionHelper.extractMainTopicsFromAiSummary(
+          aiSummary,
+        );
         expect(result, isNull);
       });
     });
 
     group('stripHtmlTags', () {
       test('removes HTML tags from content', () {
-        const html = '<p>This is <strong>bold</strong> text with <a href="#">link</a>.</p>';
+        const html =
+            '<p>This is <strong>bold</strong> text with <a href="#">link</a>.</p>';
         final result = EpisodeDescriptionHelper.stripHtmlTags(html);
         expect(result, contains('This is'));
         expect(result, contains('bold'));
@@ -140,7 +150,8 @@ Deep insights...
       });
 
       test('handles HTML with special characters and symbols', () {
-        const html = '<p>Copyright &copy; 2024 &mdash; All rights reserved &reg;</p>';
+        const html =
+            '<p>Copyright &copy; 2024 &mdash; All rights reserved &reg;</p>';
         final result = EpisodeDescriptionHelper.stripHtmlTags(html);
         expect(result, contains('©'));
         expect(result, contains('—'));
@@ -174,7 +185,8 @@ Deep insights...
       });
 
       test('returns plain text description when no AI summary', () {
-        const description = '<p>This is the <strong>original</strong> shownotes content.</p>';
+        const description =
+            '<p>This is the <strong>original</strong> shownotes content.</p>';
 
         final result = EpisodeDescriptionHelper.getDisplayDescription(
           aiSummary: null,
@@ -207,7 +219,9 @@ Deep insights...
   });
 
   group('FeedStyleEpisodeCard', () {
-    testWidgets('displays plain shownotes regardless of AI summary', (tester) async {
+    testWidgets('displays plain shownotes regardless of AI summary', (
+      tester,
+    ) async {
       final episode = PodcastEpisodeModel(
         id: 1,
         subscriptionId: 1,
@@ -227,9 +241,9 @@ Deep insights...
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: FeedStyleEpisodeCard(episode: episode),
-            ),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: FeedStyleEpisodeCard(episode: episode)),
           ),
         ),
       );
@@ -247,7 +261,8 @@ Deep insights...
         subscriptionId: 1,
         subscriptionTitle: 'Test Podcast',
         title: 'Test Episode',
-        description: '<p>This is the <strong>original</strong> shownotes content.</p>',
+        description:
+            '<p>This is the <strong>original</strong> shownotes content.</p>',
         audioUrl: 'https://example.com/audio.mp3',
         publishedAt: DateTime.now(),
         createdAt: DateTime.now(),
@@ -256,9 +271,9 @@ Deep insights...
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: FeedStyleEpisodeCard(episode: episode),
-            ),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: FeedStyleEpisodeCard(episode: episode)),
           ),
         ),
       );
@@ -286,9 +301,9 @@ Deep insights...
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: FeedStyleEpisodeCard(episode: episode),
-            ),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: FeedStyleEpisodeCard(episode: episode)),
           ),
         ),
       );
@@ -301,7 +316,9 @@ Deep insights...
   });
 
   group('SimplifiedEpisodeCard', () {
-    testWidgets('displays plain shownotes regardless of AI summary', (tester) async {
+    testWidgets('displays plain shownotes regardless of AI summary', (
+      tester,
+    ) async {
       final episode = PodcastEpisodeModel(
         id: 1,
         subscriptionId: 1,
@@ -320,9 +337,9 @@ Deep insights...
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: SimplifiedEpisodeCard(episode: episode),
-            ),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: SimplifiedEpisodeCard(episode: episode)),
           ),
         ),
       );
@@ -339,7 +356,8 @@ Deep insights...
         id: 1,
         subscriptionId: 1,
         title: 'Test Episode',
-        description: '<p>This is the <strong>original</strong> shownotes content.</p>',
+        description:
+            '<p>This is the <strong>original</strong> shownotes content.</p>',
         audioUrl: 'https://example.com/audio.mp3',
         publishedAt: DateTime.now(),
         createdAt: DateTime.now(),
@@ -348,9 +366,9 @@ Deep insights...
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: SimplifiedEpisodeCard(episode: episode),
-            ),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: SimplifiedEpisodeCard(episode: episode)),
           ),
         ),
       );
@@ -375,9 +393,9 @@ Deep insights...
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
-            home: Scaffold(
-              body: SimplifiedEpisodeCard(episode: episode),
-            ),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: SimplifiedEpisodeCard(episode: episode)),
           ),
         ),
       );
