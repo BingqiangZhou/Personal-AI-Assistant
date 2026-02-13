@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,7 @@ import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
 
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
+import '../../../../shared/widgets/server_config_dialog.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../podcast/presentation/providers/podcast_providers.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
@@ -22,13 +25,23 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _notificationsEnabled = true;
-  bool _autoSyncEnabled = true;
   String _appVersion = 'Loading...';
+  int _versionTapCount = 0;
+  DateTime? _lastVersionTapAt;
+  Timer? _versionTapTimer;
+
+  static const Duration _versionTapWindow = Duration(milliseconds: 1200);
 
   @override
   void initState() {
     super.initState();
     _loadVersion();
+  }
+
+  @override
+  void dispose() {
+    _versionTapTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadVersion() async {
@@ -51,6 +64,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   bool _isMobile(BuildContext context) =>
       MediaQuery.of(context).size.width < 600;
+
+  double _dialogMaxWidth(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    return screenWidth < 600 ? screenWidth - 32 : 560.0;
+  }
+
+  EdgeInsets _dialogInsetPadding(BuildContext context) =>
+      const EdgeInsets.all(16);
 
   EdgeInsetsGeometry _profileCardMargin(BuildContext context) =>
       _isMobile(context)
@@ -90,13 +111,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  // 设置按钮
+                  // 顶部退出按钮
                   IconButton(
                     onPressed: () {
-                      context.push('/profile/settings');
+                      _showLogoutDialog(context);
                     },
-                    icon: const Icon(Icons.settings),
-                    tooltip: l10n.settings,
+                    key: const Key('profile_top_logout_button'),
+                    icon: const Icon(Icons.logout),
+                    tooltip: l10n.logout,
+                    style: IconButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ],
               ),
@@ -216,16 +241,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
             ),
             const SizedBox(width: 16),
-            // 登出按钮
+            // 编辑按钮
             IconButton(
               onPressed: () {
-                _showLogoutDialog(context);
+                _showEditProfileDialog(context);
               },
-              icon: const Icon(Icons.logout),
-              tooltip: l10n.logout,
-              style: IconButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
-              ),
+              key: const Key('profile_user_edit_button'),
+              icon: const Icon(Icons.edit_note),
+              tooltip: l10n.profile_edit_profile,
             ),
           ],
         ),
@@ -392,14 +415,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildSettingsSection(context, l10n.profile_account_settings, [
             _buildSettingsItem(
               context,
-              icon: Icons.person,
-              title: l10n.profile_edit_profile,
-              subtitle: l10n.profile_edit_profile_subtitle,
-              onTap: () => _showEditProfileDialog(context),
-            ),
-            _buildSettingsItem(
-              context,
-              icon: Icons.security,
+              icon: Icons.shield,
               title: l10n.profile_security,
               subtitle: l10n.profile_security_subtitle,
               onTap: () => _showSecurityDialog(context),
@@ -468,20 +484,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 );
               },
             ),
-            _buildSettingsItem(
-              context,
-              icon: Icons.sync,
-              title: l10n.profile_auto_sync,
-              subtitle: l10n.profile_auto_sync_subtitle,
-              trailing: Switch(
-                value: _autoSyncEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _autoSyncEnabled = value;
-                  });
-                },
-              ),
-            ),
           ]),
           const SizedBox(height: 24),
           _buildSettingsSection(context, l10n.profile_support_section, [
@@ -509,7 +511,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               title: l10n.version,
               subtitle: _getVersionSubtitle(),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showAboutDialog(context),
+              tileKey: const Key('profile_version_item'),
+              onTap: () => _handleVersionTap(context),
             ),
           ]),
         ],
@@ -529,14 +532,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       [
                         _buildSettingsItem(
                           context,
-                          icon: Icons.person,
-                          title: l10n.profile_edit_profile,
-                          subtitle: l10n.profile_edit_profile_subtitle,
-                          onTap: () => _showEditProfileDialog(context),
-                        ),
-                        _buildSettingsItem(
-                          context,
-                          icon: Icons.security,
+                          icon: Icons.shield,
                           title: l10n.profile_security,
                           subtitle: l10n.profile_security_subtitle,
                           onTap: () => _showSecurityDialog(context),
@@ -617,20 +613,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           );
                         },
                       ),
-                      _buildSettingsItem(
-                        context,
-                        icon: Icons.sync,
-                        title: l10n.profile_auto_sync,
-                        subtitle: l10n.profile_auto_sync_subtitle,
-                        trailing: Switch(
-                          value: _autoSyncEnabled,
-                          onChanged: (value) {
-                            setState(() {
-                              _autoSyncEnabled = value;
-                            });
-                          },
-                        ),
-                      ),
                     ]),
                   ],
                 ),
@@ -638,7 +620,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ],
           ),
           const SizedBox(height: 24),
-          _buildSettingsSection(context, 'Support', [
+          _buildSettingsSection(context, l10n.profile_support_section, [
             _buildSettingsItem(
               context,
               icon: Icons.help,
@@ -663,7 +645,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               title: l10n.version,
               subtitle: _getVersionSubtitle(),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showAboutDialog(context),
+              tileKey: const Key('profile_version_item'),
+              onTap: () => _handleVersionTap(context),
             ),
           ]),
         ],
@@ -708,6 +691,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   /// 构建设置项目
   Widget _buildSettingsItem(
     BuildContext context, {
+    Key? tileKey,
     required IconData icon,
     required String title,
     required String subtitle,
@@ -715,6 +699,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     VoidCallback? onTap,
   }) {
     return ListTile(
+      key: tileKey,
       leading: Icon(icon),
       title: Text(title),
       subtitle: Text(subtitle),
@@ -730,40 +715,39 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context: context,
       builder: (context) => LayoutBuilder(
         builder: (context, constraints) {
-          // 计算对话框最大宽度，与卡片列宽度保持一致
-          final screenWidth = MediaQuery.of(context).size.width;
-          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
-
           return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
             child: AlertDialog(
-              insetPadding: const EdgeInsets.all(16),
+              insetPadding: _dialogInsetPadding(context),
               title: Text(l10n.profile_edit_profile),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: l10n.profile_name,
-                      border: const OutlineInputBorder(),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: l10n.profile_name,
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: l10n.profile_email_field,
-                      border: const OutlineInputBorder(),
+                    const SizedBox(height: 16),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: l10n.profile_email_field,
+                        border: const OutlineInputBorder(),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    decoration: InputDecoration(
-                      labelText: l10n.profile_bio,
-                      border: const OutlineInputBorder(),
+                    const SizedBox(height: 16),
+                    TextField(
+                      decoration: InputDecoration(
+                        labelText: l10n.profile_bio,
+                        border: const OutlineInputBorder(),
+                      ),
+                      maxLines: 3,
                     ),
-                    maxLines: 3,
-                  ),
-                ],
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -796,33 +780,33 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context: context,
       builder: (context) => LayoutBuilder(
         builder: (context, constraints) {
-          final screenWidth = MediaQuery.of(context).size.width;
-          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
-
           return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
             child: AlertDialog(
-              insetPadding: const EdgeInsets.all(16),
+              insetPadding: _dialogInsetPadding(context),
               title: Text(l10n.profile_security),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.password),
-                    title: Text(l10n.profile_change_password),
-                    trailing: const Icon(Icons.chevron_right),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.fingerprint),
-                    title: Text(l10n.profile_biometric_auth),
-                    trailing: Switch(value: true, onChanged: null),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.phone_android),
-                    title: Text(l10n.profile_two_factor_auth),
-                    trailing: const Icon(Icons.chevron_right),
-                  ),
-                ],
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.password),
+                      title: Text(l10n.profile_change_password),
+                      trailing: const Icon(Icons.chevron_right),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.fingerprint),
+                      title: Text(l10n.profile_biometric_auth),
+                      trailing: Switch(value: true, onChanged: null),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.phone_android),
+                      title: Text(l10n.profile_two_factor_auth),
+                      trailing: const Icon(Icons.chevron_right),
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -843,11 +827,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context: context,
       builder: (context) => LayoutBuilder(
         builder: (context, constraints) {
-          final screenWidth = MediaQuery.of(context).size.width;
-          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
-
           return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
             child: Consumer(
               builder: (context, ref, _) {
                 final localeNotifier = ref.watch(localeProvider.notifier);
@@ -855,7 +836,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 final l10n = AppLocalizations.of(context)!;
 
                 return AlertDialog(
-                  insetPadding: const EdgeInsets.all(16),
+                  insetPadding: _dialogInsetPadding(context),
                   title: Text(l10n.language),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -919,11 +900,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context: context,
       builder: (context) => LayoutBuilder(
         builder: (context, constraints) {
-          final screenWidth = MediaQuery.of(context).size.width;
-          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
-
           return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
             child: Consumer(
               builder: (context, ref, _) {
                 final themeNotifier = ref.watch(themeModeProvider.notifier);
@@ -931,7 +909,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 final l10n = AppLocalizations.of(context)!;
 
                 return AlertDialog(
-                  insetPadding: const EdgeInsets.all(16),
+                  insetPadding: _dialogInsetPadding(context),
                   title: Text(l10n.theme_mode_select_title),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1011,33 +989,33 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context: context,
       builder: (context) => LayoutBuilder(
         builder: (context, constraints) {
-          final screenWidth = MediaQuery.of(context).size.width;
-          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
-
           return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
             child: AlertDialog(
-              insetPadding: const EdgeInsets.all(16),
+              insetPadding: _dialogInsetPadding(context),
               title: Text(l10n.profile_help_center),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    leading: const Icon(Icons.book),
-                    title: Text(l10n.profile_user_guide),
-                    subtitle: Text(l10n.profile_user_guide_subtitle),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.video_library),
-                    title: Text(l10n.profile_video_tutorials),
-                    subtitle: Text(l10n.profile_video_tutorials_subtitle),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.contact_support),
-                    title: Text(l10n.profile_contact_support),
-                    subtitle: Text(l10n.profile_contact_support_subtitle),
-                  ),
-                ],
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.book),
+                      title: Text(l10n.profile_user_guide),
+                      subtitle: Text(l10n.profile_user_guide_subtitle),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.video_library),
+                      title: Text(l10n.profile_video_tutorials),
+                      subtitle: Text(l10n.profile_video_tutorials_subtitle),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.contact_support),
+                      title: Text(l10n.profile_contact_support),
+                      subtitle: Text(l10n.profile_contact_support_subtitle),
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -1062,16 +1040,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context: context,
       builder: (dialogContext) => LayoutBuilder(
         builder: (context, constraints) {
-          final screenWidth = MediaQuery.of(context).size.width;
-          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 8 : 560.0;
-
           return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
             child: AlertDialog(
-              insetPadding: const EdgeInsets.symmetric(
-                horizontal: 4,
-                vertical: 16,
-              ),
+              insetPadding: _dialogInsetPadding(context),
               title: Row(
                 children: [
                   const Icon(Icons.psychology, size: 48),
@@ -1079,16 +1051,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   Expanded(child: Text(l10n.appTitle)),
                 ],
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(l10n.version_label(packageInfo.version)),
-                  const SizedBox(height: 4),
-                  Text(l10n.build_label(packageInfo.buildNumber)),
-                  const SizedBox(height: 8),
-                  Text(l10n.profile_about_subtitle),
-                ],
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l10n.version_label(packageInfo.version)),
+                    const SizedBox(height: 4),
+                    Text(l10n.build_label(packageInfo.buildNumber)),
+                    const SizedBox(height: 8),
+                    Text(l10n.profile_about_subtitle),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -1108,6 +1083,51 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     return _appVersion;
   }
 
+  void _handleVersionTap(BuildContext context) {
+    final now = DateTime.now();
+    final isWithinWindow =
+        _lastVersionTapAt != null &&
+        now.difference(_lastVersionTapAt!) <= _versionTapWindow;
+
+    if (!isWithinWindow) {
+      _versionTapCount = 0;
+    }
+
+    _lastVersionTapAt = now;
+    _versionTapCount += 1;
+    _versionTapTimer?.cancel();
+
+    if (_versionTapCount >= 5) {
+      _resetVersionTapState();
+      _showServerConfigDialog(context);
+      return;
+    }
+
+    _versionTapTimer = Timer(_versionTapWindow, () {
+      if (!mounted) return;
+      final shouldShowAbout = _versionTapCount == 1;
+      _resetVersionTapState();
+      if (shouldShowAbout) {
+        _showAboutDialog(context);
+      }
+    });
+  }
+
+  void _resetVersionTapState() {
+    _versionTapTimer?.cancel();
+    _versionTapTimer = null;
+    _versionTapCount = 0;
+    _lastVersionTapAt = null;
+  }
+
+  void _showServerConfigDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const ServerConfigDialog(),
+    );
+  }
+
   /// 显示更新检查对话框
   void _showUpdateCheckDialog(BuildContext context) {
     ManualUpdateCheckDialog.show(context);
@@ -1120,13 +1140,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context: context,
       builder: (dialogContext) => LayoutBuilder(
         builder: (context, constraints) {
-          final screenWidth = MediaQuery.of(context).size.width;
-          final dialogMaxWidth = screenWidth < 600 ? screenWidth - 32 : 560.0;
-
           return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: dialogMaxWidth),
+            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
             child: AlertDialog(
-              insetPadding: const EdgeInsets.all(16),
+              insetPadding: _dialogInsetPadding(context),
               title: Text(l10n.profile_logout_title),
               content: Text(l10n.profile_logout_message),
               actions: [

@@ -92,6 +92,31 @@ void main() {
       await tester.tap(find.text('Close'));
       await tester.pumpAndSettle();
     });
+
+    testWidgets('uses mobile width consistent with profile dialogs', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final service = _FakeAppUpdateService(error: Exception('network error'));
+
+      await tester.pumpWidget(_buildHost(service: service));
+      await tester.tap(find.text('Open Check Dialog'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is SizedBox && widget.width == 358.0,
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Close'));
+      await tester.pumpAndSettle();
+    });
   });
 }
 

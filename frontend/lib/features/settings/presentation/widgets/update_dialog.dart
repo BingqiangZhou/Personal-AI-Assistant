@@ -48,12 +48,10 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     final theme = Theme.of(context);
     final isMobile = MediaQuery.of(context).size.width < 600;
     final screenWidth = MediaQuery.of(context).size.width;
-    final dialogWidth = screenWidth < 600 ? screenWidth - 8 : 500.0;
+    final dialogWidth = screenWidth < 600 ? screenWidth - 32 : 500.0;
 
     return AlertDialog(
-      insetPadding: isMobile
-          ? const EdgeInsets.symmetric(horizontal: 4, vertical: 16)
-          : null,
+      insetPadding: isMobile ? const EdgeInsets.all(16) : null,
       title: Row(
         children: [
           Icon(
@@ -220,11 +218,14 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                 color: theme.colorScheme.primary,
               ),
               const SizedBox(width: 8),
-              Text(
-                l10n.update_latest_version,
-                style: theme.textTheme.labelMedium,
+              Expanded(
+                child: Text(
+                  l10n.update_latest_version,
+                  style: theme.textTheme.labelMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Text(
                 'v${widget.release.version}',
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -350,7 +351,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                   child: MarkdownBody(
                     data: releaseNotes,
                     onTapLink: (text, href, title) {
-                      _handleReleaseNotesLinkTap(context, href);
+                      _handleReleaseNotesLinkTap(href);
                     },
                     styleSheet: MarkdownStyleSheet(
                       p: theme.textTheme.bodySmall?.copyWith(
@@ -387,10 +388,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     );
   }
 
-  Future<void> _handleReleaseNotesLinkTap(
-    BuildContext context,
-    String? href,
-  ) async {
+  Future<void> _handleReleaseNotesLinkTap(String? href) async {
     if (href == null || href.isEmpty) {
       return;
     }
@@ -398,21 +396,24 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     try {
       final uri = Uri.parse(href);
       final canOpen = await canLaunchUrl(uri);
+      if (!mounted) return;
       if (!canOpen) {
-        _showReleaseNotesLinkError(context);
+        _showReleaseNotesLinkError();
         return;
       }
 
       final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!mounted) return;
       if (!opened) {
-        _showReleaseNotesLinkError(context);
+        _showReleaseNotesLinkError();
       }
     } catch (_) {
-      _showReleaseNotesLinkError(context);
+      if (!mounted) return;
+      _showReleaseNotesLinkError();
     }
   }
 
-  void _showReleaseNotesLinkError(BuildContext context) {
+  void _showReleaseNotesLinkError() {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -559,13 +560,11 @@ class _ManualUpdateCheckDialogState
     final state = ref.watch(manualUpdateCheckProvider);
     _maybeRedirectToDetailedDialog(context, state);
     final screenWidth = MediaQuery.of(context).size.width;
-    final dialogWidth = screenWidth < 600 ? screenWidth - 8 : 400.0;
+    final dialogWidth = screenWidth < 600 ? screenWidth - 32 : 400.0;
     final isMobile = screenWidth < 600;
 
     return AlertDialog(
-      insetPadding: isMobile
-          ? const EdgeInsets.symmetric(horizontal: 4, vertical: 16)
-          : null,
+      insetPadding: isMobile ? const EdgeInsets.all(16) : null,
       title: Text(l10n.update_check_updates),
       content: SizedBox(
         width: dialogWidth,

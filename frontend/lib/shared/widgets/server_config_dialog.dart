@@ -97,136 +97,140 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final dialogWidth = isMobile ? screenWidth - 32 : 500.0;
     return AlertDialog(
+      insetPadding: isMobile ? const EdgeInsets.all(16) : null,
       title: Text(l10n.backend_api_server_config),
       content: SizedBox(
-        width: 500,
+        width: dialogWidth,
         // FIX: Wrap in SingleChildScrollView to prevent overflow when keyboard is shown
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            // Connection status row (icon and text in same row) - width matches TextField
-            SizedBox(
-              width: double.infinity,
-              child: _buildConnectionStatusPanel(),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _serverUrlController,
-              decoration: InputDecoration(
-                labelText: l10n.backend_api_url_label,
-                hintText: l10n.backend_api_url_hint,
-                border: const OutlineInputBorder(),
-                errorText: _connectionStatus == ConnectionStatus.failed
-                    ? _connectionMessage ?? l10n.connection_error_hint
-                    : null,
-                suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _serverUrlController,
-                  builder: (context, value, child) {
-                    return value.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () {
-                              _serverUrlController.clear();
-                              _onServerUrlChanged('', setState);
-                            },
-                            tooltip: l10n.clear,
-                          )
-                        : const SizedBox.shrink();
-                  },
+              // Connection status row (icon and text in same row) - width matches TextField
+              SizedBox(
+                width: double.infinity,
+                child: _buildConnectionStatusPanel(),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _serverUrlController,
+                decoration: InputDecoration(
+                  labelText: l10n.backend_api_url_label,
+                  hintText: l10n.backend_api_url_hint,
+                  border: const OutlineInputBorder(),
+                  errorText: _connectionStatus == ConnectionStatus.failed
+                      ? _connectionMessage ?? l10n.connection_error_hint
+                      : null,
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _serverUrlController,
+                    builder: (context, value, child) {
+                      return value.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () {
+                                _serverUrlController.clear();
+                                _onServerUrlChanged('', setState);
+                              },
+                              tooltip: l10n.clear,
+                            )
+                          : const SizedBox.shrink();
+                    },
+                  ),
                 ),
+                onChanged: (value) => _onServerUrlChanged(value, setState),
               ),
-              onChanged: (value) => _onServerUrlChanged(value, setState),
-            ),
-            const SizedBox(height: 8),
+              const SizedBox(height: 8),
 
-            // Description note (below input, above history)
-            Text(
-              l10n.backend_api_description,
-              style: TextStyle(
-                fontSize: 11,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Server history list
-            if (_serverHistory.isNotEmpty) ...[
+              // Description note (below input, above history)
               Text(
-                l10n.server_history_title,
+                l10n.backend_api_description,
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 11,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(height: 4),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: _serverHistory.map((url) {
-                  return InputChip(
-                    label: Text(url, style: const TextStyle(fontSize: 11)),
-                    onPressed: () {
-                      _serverUrlController.text = url;
-                      _onServerUrlChanged(url, setState);
-                    },
-                    labelStyle: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest,
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant,
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 12),
-            ],
-            // Action buttons
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Local server button
-                OutlinedButton.icon(
-                  onPressed: () {
-                    _serverUrlController.text = _localServerUrl;
-                    _onServerUrlChanged(_localServerUrl, setState);
-                  },
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(36),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+              const SizedBox(height: 8),
+
+              // Server history list
+              if (_serverHistory.isNotEmpty) ...[
+                Text(
+                  l10n.server_history_title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                  icon: const Icon(Icons.computer, size: 16),
-                  label: Text(l10n.use_local_url),
                 ),
-                const SizedBox(height: 8),
-                // Cancel and Save buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l10n.cancel),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: _connectionStatus == ConnectionStatus.success
-                          ? () => _saveServerConfig(context)
-                          : null,
-                      child: Text(l10n.save),
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: _serverHistory.map((url) {
+                    return InputChip(
+                      label: Text(url, style: const TextStyle(fontSize: 11)),
+                      onPressed: () {
+                        _serverUrlController.text = url;
+                        _onServerUrlChanged(url, setState);
+                      },
+                      labelStyle: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    );
+                  }).toList(),
                 ),
+                const SizedBox(height: 12),
               ],
-            ),
-          ],
+              // Action buttons
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Local server button
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      _serverUrlController.text = _localServerUrl;
+                      _onServerUrlChanged(_localServerUrl, setState);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(36),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    icon: const Icon(Icons.computer, size: 16),
+                    label: Text(l10n.use_local_url),
+                  ),
+                  const SizedBox(height: 8),
+                  // Cancel and Save buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: Text(l10n.cancel),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: _connectionStatus == ConnectionStatus.success
+                            ? () => _saveServerConfig(context)
+                            : null,
+                        child: Text(l10n.save),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),

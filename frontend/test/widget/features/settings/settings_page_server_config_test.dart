@@ -86,7 +86,11 @@ class MockLocalStorageService implements LocalStorageService {
   }
 
   @override
-  Future<void> cacheData(String key, dynamic data, {Duration? expiration}) async {
+  Future<void> cacheData(
+    String key,
+    dynamic data, {
+    Duration? expiration,
+  }) async {
     _storage[key] = data;
   }
 
@@ -123,21 +127,23 @@ class MockLocalStorageService implements LocalStorageService {
 
 void main() {
   group('ServerConfigDialog Widget Tests', () {
-    testWidgets('displays server config dialog with all elements', (tester) async {
+    testWidgets('displays server config dialog with all elements', (
+      tester,
+    ) async {
       // Set up mock SharedPreferences
       SharedPreferences.setMockInitialValues({});
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: ServerConfigDialog(),
-            ),
+            home: Scaffold(body: ServerConfigDialog()),
           ),
         ),
       );
@@ -160,14 +166,14 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: ServerConfigDialog(),
-            ),
+            home: Scaffold(body: ServerConfigDialog()),
           ),
         ),
       );
@@ -184,14 +190,14 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: ServerConfigDialog(),
-            ),
+            home: Scaffold(body: ServerConfigDialog()),
           ),
         ),
       );
@@ -208,14 +214,14 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: ServerConfigDialog(),
-            ),
+            home: Scaffold(body: ServerConfigDialog()),
           ),
         ),
       );
@@ -226,20 +232,22 @@ void main() {
       expect(find.textContaining('Unverified'), findsOneWidget);
     });
 
-    testWidgets('clear button shows and hides based on text input', (tester) async {
+    testWidgets('clear button shows and hides based on text input', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({});
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: ServerConfigDialog(initialUrl: ''),
-            ),
+            home: Scaffold(body: ServerConfigDialog(initialUrl: '')),
           ),
         ),
       );
@@ -266,14 +274,14 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: ServerConfigDialog(),
-            ),
+            home: Scaffold(body: ServerConfigDialog()),
           ),
         ),
       );
@@ -284,21 +292,22 @@ void main() {
       expect(find.text('History'), findsNothing);
     });
 
-    testWidgets('save button is disabled when connection is not successful',
-        (tester) async {
+    testWidgets('save button is disabled when connection is not successful', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({});
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: ServerConfigDialog(),
-            ),
+            home: Scaffold(body: ServerConfigDialog()),
           ),
         ),
       );
@@ -314,6 +323,40 @@ void main() {
       // Save button should be disabled when status is not success
       expect(textButton.onPressed, isNull);
     });
+
+    testWidgets('uses mobile width consistent with profile dialogs', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: ServerConfigDialog()),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is SizedBox && widget.width == 358.0,
+        ),
+        findsOneWidget,
+      );
+    });
   });
 
   group('ServerConfigDialog Bilingual Tests', () {
@@ -323,15 +366,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             locale: Locale('en'),
-            home: Scaffold(
-              body: ServerConfigDialog(),
-            ),
+            home: Scaffold(body: ServerConfigDialog()),
           ),
         ),
       );
@@ -350,15 +393,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             locale: Locale('zh'),
-            home: Scaffold(
-              body: ServerConfigDialog(),
-            ),
+            home: Scaffold(body: ServerConfigDialog()),
           ),
         ),
       );
@@ -378,15 +421,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             locale: Locale('en'),
-            home: Scaffold(
-              body: ServerConfigDialog(),
-            ),
+            home: Scaffold(body: ServerConfigDialog()),
           ),
         ),
       );
@@ -405,15 +448,15 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            localStorageServiceProvider.overrideWithValue(MockLocalStorageService()),
+            localStorageServiceProvider.overrideWithValue(
+              MockLocalStorageService(),
+            ),
           ],
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             locale: Locale('zh'),
-            home: Scaffold(
-              body: ServerConfigDialog(),
-            ),
+            home: Scaffold(body: ServerConfigDialog()),
           ),
         ),
       );

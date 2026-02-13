@@ -91,6 +91,26 @@ This is an **important** update.
         expect(firstLaunchArgs['url'], 'https://openai.com');
       }
     });
+
+    testWidgets('uses mobile width consistent with profile dialogs', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final release = _buildRelease('## Notes');
+      await tester.pumpWidget(_buildTestApp(release));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byWidgetPredicate(
+          (widget) => widget is SizedBox && widget.width == 358.0,
+        ),
+        findsOneWidget,
+      );
+    });
   });
 }
 

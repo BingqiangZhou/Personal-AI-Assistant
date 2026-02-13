@@ -14,11 +14,8 @@ import '../../features/podcast/presentation/pages/podcast_list_page.dart';
 import '../../features/podcast/presentation/pages/podcast_player_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episode_detail_page.dart';
-import '../../features/podcast/presentation/pages/global_rss_settings_page.dart';
 import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
 import '../../features/profile/presentation/pages/profile_history_page.dart';
-import '../../features/settings/presentation/pages/settings_page.dart';
-import '../../features/ai/presentation/pages/model_management_page.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
@@ -164,23 +161,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'history',
             name: 'profile-history',
             builder: (context, state) => const ProfileHistoryPage(),
-          ),
-          GoRoute(
-            path: 'settings',
-            name: 'settings',
-            builder: (context, state) => const SettingsPage(),
-            routes: [
-              GoRoute(
-                path: 'ai-models',
-                name: 'ai-models',
-                builder: (context, state) => const ModelManagementPage(),
-              ),
-              GoRoute(
-                path: 'rss-schedule',
-                name: 'rss-schedule',
-                builder: (context, state) => const GlobalRSSSettingsPage(),
-              ),
-            ],
           ),
         ],
       ),
