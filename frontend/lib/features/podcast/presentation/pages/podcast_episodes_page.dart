@@ -52,6 +52,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   String _selectedFilter = 'all';
   bool _showOnlyWithSummary = false;
   bool _isReparsing = false; // 重新解析状态
+  static const double _mobileMenuBarHeight = 65.0;
 
   @override
   void initState() {
@@ -198,8 +199,12 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final episodesState = ref.watch(podcastEpisodesProvider);
-    // Don't watch audioPlayerProvider to avoid initializing it on startup
-    // final audioPlayerState = ref.watch(audioPlayerProvider);
+    final hasPlayer =
+        ref.watch(
+          audioPlayerProvider.select((state) => state.currentEpisode),
+        ) !=
+        null;
+    final isMobileLayout = MediaQuery.of(context).size.width < 600;
 
     // Debug: 输出分集图像链接信息（已注释）
     // if (episodesState.episodes.isNotEmpty) {
@@ -214,7 +219,10 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     // }
 
     return Scaffold(
-      bottomNavigationBar: const PodcastBottomPlayerWidget(),
+      bottomNavigationBar: _buildBottomPlayerBar(
+        hasPlayer: hasPlayer,
+        isMobileLayout: isMobileLayout,
+      ),
       body: Column(
         children: [
           // Custom Header with top padding to align with Feed page
@@ -401,24 +409,32 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                               )
                                               .addToQueue(episode.id);
                                           if (context.mounted) {
-                                            final l10n = AppLocalizations.of(context)!;
-                                            ScaffoldMessenger.of(
+                                            final l10n = AppLocalizations.of(
                                               context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(l10n.added_to_queue),
-                                              ),
-                                            );
-                                          }
-                                        } catch (error) {
-                                          if (context.mounted) {
-                                            final l10n = AppLocalizations.of(context)!;
+                                            )!;
                                             ScaffoldMessenger.of(
                                               context,
                                             ).showSnackBar(
                                               SnackBar(
                                                 content: Text(
-                                                  l10n.failed_to_add_to_queue(error.toString()),
+                                                  l10n.added_to_queue,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        } catch (error) {
+                                          if (context.mounted) {
+                                            final l10n = AppLocalizations.of(
+                                              context,
+                                            )!;
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  l10n.failed_to_add_to_queue(
+                                                    error.toString(),
+                                                  ),
                                                 ),
                                               ),
                                             );
@@ -486,7 +502,11 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                             context,
                                           ).showSnackBar(
                                             SnackBar(
-                                              content: Text(AppLocalizations.of(context)!.added_to_queue),
+                                              content: Text(
+                                                AppLocalizations.of(
+                                                  context,
+                                                )!.added_to_queue,
+                                              ),
                                             ),
                                           );
                                         }
@@ -497,7 +517,11 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                           ).showSnackBar(
                                             SnackBar(
                                               content: Text(
-                                                AppLocalizations.of(context)!.failed_to_add_to_queue(error.toString()),
+                                                AppLocalizations.of(
+                                                  context,
+                                                )!.failed_to_add_to_queue(
+                                                  error.toString(),
+                                                ),
                                               ),
                                             ),
                                           );
@@ -516,6 +540,33 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget? _buildBottomPlayerBar({
+    required bool hasPlayer,
+    required bool isMobileLayout,
+  }) {
+    if (!hasPlayer) {
+      return null;
+    }
+
+    if (!isMobileLayout) {
+      return const PodcastBottomPlayerWidget();
+    }
+
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const PodcastBottomPlayerWidget(applySafeArea: false),
+        Container(
+          key: const Key('podcast_episodes_mobile_bottom_spacer'),
+          height: _mobileMenuBarHeight,
+          width: double.infinity,
+          color: surfaceColor,
+        ),
+      ],
     );
   }
 

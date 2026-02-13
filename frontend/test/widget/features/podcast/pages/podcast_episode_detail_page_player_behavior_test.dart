@@ -257,7 +257,10 @@ void main() {
           find.byKey(const Key('podcast_bottom_player_expanded')),
           findsNothing,
         );
-        expect(find.byKey(const Key('podcast_bottom_player_mini')), findsNothing);
+        expect(
+          find.byKey(const Key('podcast_bottom_player_mini')),
+          findsNothing,
+        );
         expect(notifier.state.isPlaying, isTrue);
         expect(notifier.playEpisodeCalls, 0);
         expect(notifier.resumeCalls, 0);
@@ -296,6 +299,40 @@ void main() {
         find.byKey(const Key('podcast_bottom_player_expanded')),
         findsOneWidget,
       );
+    });
+
+    testWidgets('shows mobile white spacer under player with menu-bar height', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _episode(),
+          duration: 180000,
+          isExpanded: true,
+          isPlaying: true,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      final playerFinder = find.byType(PodcastBottomPlayerWidget);
+      expect(playerFinder, findsOneWidget);
+      final playerWidget = tester.widget<PodcastBottomPlayerWidget>(
+        playerFinder,
+      );
+      expect(playerWidget.applySafeArea, isFalse);
+
+      final spacerFinder = find.byKey(
+        const Key('podcast_episode_detail_mobile_bottom_spacer'),
+      );
+      expect(spacerFinder, findsOneWidget);
+      expect(tester.getRect(spacerFinder).height, closeTo(65.0, 0.1));
     });
 
     testWidgets('hides bottom player on wide screen after switching to chat', (
@@ -419,7 +456,9 @@ Widget _createWidget(TestAudioPlayerNotifier notifier) {
         1,
       ).overrideWith(() => _ConversationWithoutMessagesNotifier()),
       getSessionListProvider(1).overrideWith(() => _EmptySessionListNotifier()),
-      getCurrentSessionIdProvider(1).overrideWith(() => _NullSessionIdNotifier()),
+      getCurrentSessionIdProvider(
+        1,
+      ).overrideWith(() => _NullSessionIdNotifier()),
       availableModelsProvider.overrideWith((ref) async => <SummaryModelInfo>[]),
     ],
     child: MaterialApp(

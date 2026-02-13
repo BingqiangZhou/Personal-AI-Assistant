@@ -48,6 +48,7 @@ class _PodcastEpisodeDetailPageState
   static const double _headerScrollThreshold =
       50.0; // Header starts fading after 50px scroll
   static const double _autoCollapseScrollDeltaThreshold = 6.0;
+  static const double _mobileMenuBarHeight = 65.0;
 
   // Scroll to top button
   final Map<int, double> _tabScrollPositions = {
@@ -264,6 +265,7 @@ class _PodcastEpisodeDetailPageState
     );
     final isChatTab = _selectedTabIndex == 3;
     final hideBottomPlayer = isChatTab;
+    final isMobileLayout = MediaQuery.of(context).size.width < 600;
 
     // Listen to transcription status changes to provide user feedback
     ref.listen(getTranscriptionProvider(widget.episodeId), (previous, next) {
@@ -331,9 +333,10 @@ class _PodcastEpisodeDetailPageState
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      bottomNavigationBar: hideBottomPlayer
-          ? null
-          : const PodcastBottomPlayerWidget(),
+      bottomNavigationBar: _buildBottomPlayerBar(
+        hideBottomPlayer: hideBottomPlayer,
+        isMobileLayout: isMobileLayout,
+      ),
       body: episodeDetailAsync.when(
         data: (episodeDetail) {
           if (episodeDetail == null) {
@@ -346,6 +349,33 @@ class _PodcastEpisodeDetailPageState
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => _buildErrorState(context, error),
       ),
+    );
+  }
+
+  Widget? _buildBottomPlayerBar({
+    required bool hideBottomPlayer,
+    required bool isMobileLayout,
+  }) {
+    if (hideBottomPlayer) {
+      return null;
+    }
+
+    if (!isMobileLayout) {
+      return const PodcastBottomPlayerWidget();
+    }
+
+    final surfaceColor = Theme.of(context).colorScheme.surface;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const PodcastBottomPlayerWidget(applySafeArea: false),
+        Container(
+          key: const Key('podcast_episode_detail_mobile_bottom_spacer'),
+          height: _mobileMenuBarHeight,
+          width: double.infinity,
+          color: surfaceColor,
+        ),
+      ],
     );
   }
 

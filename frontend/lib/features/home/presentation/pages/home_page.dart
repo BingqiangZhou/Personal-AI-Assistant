@@ -73,6 +73,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       appBar: null,
       floatingActionButton: _buildFloatingActionButton(),
       bottomAccessory: _buildBottomAccessory(),
+      bottomAccessoryBodyPadding: _bottomAccessoryBodyPadding(),
       body: _buildTabContent(_currentIndex),
     );
   }
@@ -94,6 +95,24 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     return const PodcastBottomPlayerWidget(applySafeArea: false);
+  }
+
+  double _bottomAccessoryBodyPadding() {
+    final isPodcastTab = _isPodcastTab(_currentIndex);
+    if (!isPodcastTab) {
+      return 0;
+    }
+
+    final audioState = ref.watch(audioPlayerProvider);
+    if (audioState.currentEpisode == null) {
+      return 0;
+    }
+
+    // Collapsed mini player should float over content with transparent backdrop.
+    if (!audioState.isExpanded) {
+      return 0;
+    }
+    return 60;
   }
 
   void _handleNavigation(int index) {

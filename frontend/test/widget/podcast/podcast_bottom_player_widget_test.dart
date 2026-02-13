@@ -210,6 +210,34 @@ void main() {
         expect(find.text('Now Playing (1.75x)'), findsNothing);
       },
     );
+
+    testWidgets('expanded play button stays horizontally centered', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          duration: 180000,
+          isExpanded: true,
+        ),
+      );
+      final queueController = TestPodcastQueueController();
+
+      await tester.pumpWidget(
+        _createWidget(notifier: notifier, queueController: queueController),
+      );
+      await tester.pumpAndSettle();
+
+      final playCenter = tester.getCenter(
+        find.byKey(const Key('podcast_bottom_player_play_pause')),
+      );
+      expect(playCenter.dx, closeTo(390 / 2, 1));
+    });
   });
 
   group('PodcastBottomPlayerWidget mini styling', () {
@@ -243,6 +271,9 @@ void main() {
 
         final miniMaterial = tester.widget<Material>(miniFinder);
         expect(miniMaterial.shape, isA<RoundedRectangleBorder>());
+        final theme = Theme.of(tester.element(miniFinder));
+        expect(miniMaterial.color, theme.colorScheme.surface);
+        expect(miniMaterial.elevation, 0);
         final roundedShape = miniMaterial.shape! as RoundedRectangleBorder;
         final borderRadius = roundedShape.borderRadius.resolve(
           TextDirection.ltr,

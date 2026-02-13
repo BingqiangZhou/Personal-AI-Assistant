@@ -14,6 +14,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
     this.floatingActionButton,
     this.appBar,
     this.bottomAccessory,
+    this.bottomAccessoryBodyPadding = 60.0,
   });
 
   final List<NavigationDestination> destinations;
@@ -23,6 +24,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
   final Widget? floatingActionButton;
   final PreferredSizeWidget? appBar;
   final Widget? bottomAccessory;
+  final double bottomAccessoryBodyPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +61,9 @@ class CustomAdaptiveNavigation extends StatelessWidget {
         children: [
           // Body content with padding for bottom accessory (Mini Player height approx)
           Padding(
-            padding: EdgeInsets.only(bottom: bottomAccessory != null ? 60.0 : 0),
+            padding: EdgeInsets.only(
+              bottom: bottomAccessory != null ? bottomAccessoryBodyPadding : 0,
+            ),
             child: body ?? const SizedBox.shrink(),
           ),
           // Floating Action Button
@@ -71,12 +75,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
             ),
           // Bottom Accessory (Player) Overlay
           if (bottomAccessory != null)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: bottomAccessory!,
-            ),
+            Positioned(left: 0, right: 0, bottom: 0, child: bottomAccessory!),
         ],
       ),
       bottomNavigationBar: navigationBar,
@@ -179,7 +178,9 @@ class CustomAdaptiveNavigation extends StatelessWidget {
               children: [
                 Padding(
                   padding: EdgeInsets.only(
-                    bottom: bottomAccessory != null ? 60.0 : 0,
+                    bottom: bottomAccessory != null
+                        ? bottomAccessoryBodyPadding
+                        : 0,
                   ),
                   child: body ?? const SizedBox.shrink(),
                 ),
@@ -319,7 +320,9 @@ class CustomAdaptiveNavigation extends StatelessWidget {
               children: [
                 Padding(
                   padding: EdgeInsets.only(
-                    bottom: bottomAccessory != null ? 60.0 : 0,
+                    bottom: bottomAccessory != null
+                        ? bottomAccessoryBodyPadding
+                        : 0,
                   ),
                   child: body ?? const SizedBox.shrink(),
                 ),

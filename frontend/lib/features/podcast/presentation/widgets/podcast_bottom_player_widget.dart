@@ -76,7 +76,7 @@ class _MiniBottomPlayer extends ConsumerWidget {
         child: Material(
           key: const Key('podcast_bottom_player_mini'),
           color: theme.colorScheme.surface,
-          elevation: isWideLayout ? 0 : 6,
+          elevation: 0,
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(_miniRadius),
@@ -381,47 +381,62 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: _withSpacing([
-                    Container(
-                      key: const Key('podcast_bottom_player_speed'),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: theme.dividerColor.withValues(alpha: 0.3),
-                        ),
-                        color: theme.colorScheme.surface.withValues(alpha: 0.5),
-                      ),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: showSpeedSelector,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          child: Text(
-                            formatPlaybackSpeed(state.playbackRate),
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
+                  children: [
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            key: const Key('podcast_bottom_player_speed'),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: theme.dividerColor.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
+                              color: theme.colorScheme.surface.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: showSpeedSelector,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                child: Text(
+                                  formatPlaybackSpeed(state.playbackRate),
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            key: const Key('podcast_bottom_player_rewind_10'),
+                            tooltip:
+                                l10n?.podcast_player_rewind_10 ?? 'Rewind 10s',
+                            iconSize: 32,
+                            onPressed: () {
+                              final next = (state.position - 10000).clamp(
+                                0,
+                                state.duration,
+                              );
+                              ref
+                                  .read(audioPlayerProvider.notifier)
+                                  .seekTo(next);
+                            },
+                            icon: const Icon(Icons.replay_10),
+                          ),
+                        ],
                       ),
                     ),
-                    IconButton(
-                      key: const Key('podcast_bottom_player_rewind_10'),
-                      tooltip: l10n?.podcast_player_rewind_10 ?? 'Rewind 10s',
-                      iconSize: 32,
-                      onPressed: () {
-                        final next = (state.position - 10000).clamp(
-                          0,
-                          state.duration,
-                        );
-                        ref.read(audioPlayerProvider.notifier).seekTo(next);
-                      },
-                      icon: const Icon(Icons.replay_10),
-                    ),
+                    const SizedBox(width: 12),
                     Container(
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primaryContainer,
@@ -460,27 +475,48 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                               ),
                       ),
                     ),
-                    IconButton(
-                      key: const Key('podcast_bottom_player_forward_30'),
-                      tooltip: l10n?.podcast_player_forward_30 ?? 'Forward 30s',
-                      iconSize: 32,
-                      onPressed: () {
-                        final next = (state.position + 30000).clamp(
-                          0,
-                          state.duration,
-                        );
-                        ref.read(audioPlayerProvider.notifier).seekTo(next);
-                      },
-                      icon: const Icon(Icons.forward_30),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          IconButton(
+                            key: const Key('podcast_bottom_player_forward_30'),
+                            tooltip:
+                                l10n?.podcast_player_forward_30 ??
+                                'Forward 30s',
+                            iconSize: 32,
+                            onPressed: () {
+                              final next = (state.position + 30000).clamp(
+                                0,
+                                state.duration,
+                              );
+                              ref
+                                  .read(audioPlayerProvider.notifier)
+                                  .seekTo(next);
+                            },
+                            icon: const Icon(Icons.forward_30),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            key: const Key('podcast_bottom_player_sleep'),
+                            tooltip:
+                                l10n?.podcast_player_sleep_mode ?? 'Sleep Mode',
+                            iconSize: 32,
+                            onPressed: showSleepSelector,
+                            icon: Icon(
+                              state.isSleepTimerActive
+                                  ? Icons.bedtime_rounded
+                                  : Icons.bedtime_outlined,
+                              color: state.isSleepTimerActive
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    IconButton(
-                      key: const Key('podcast_bottom_player_sleep'),
-                      tooltip: l10n?.podcast_player_sleep_mode ?? 'Sleep Mode',
-                      iconSize: 32,
-                      onPressed: showSleepSelector,
-                      icon: const Icon(Icons.nights_stay_rounded),
-                    ),
-                  ]),
+                  ],
                 ),
               ],
             ),
@@ -532,17 +568,4 @@ Future<void> _showQueueSheet(BuildContext context, WidgetRef ref) async {
       await ref.read(podcastQueueControllerProvider.notifier).loadQueue();
     },
   );
-}
-
-List<Widget> _withSpacing(List<Widget> children, {double spacing = 8}) {
-  if (children.isEmpty) return const [];
-
-  final result = <Widget>[];
-  for (var i = 0; i < children.length; i++) {
-    if (i > 0) {
-      result.add(SizedBox(width: spacing));
-    }
-    result.add(children[i]);
-  }
-  return result;
 }
