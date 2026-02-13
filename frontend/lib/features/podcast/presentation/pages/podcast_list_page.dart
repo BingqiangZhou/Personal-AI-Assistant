@@ -25,6 +25,8 @@ class PodcastListPage extends ConsumerStatefulWidget {
 
 class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   final ScrollController _scrollController = ScrollController();
+  static const double _mobileSubscriptionCardHorizontalMargin = 4.0;
+  static const double _mobileSubscriptionCardRadius = 12.0;
 
   @override
   void initState() {
@@ -71,14 +73,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     }
 
     try {
-      await ref.read(podcastSubscriptionProvider.notifier).addSubscription(
-        feedUrl: result.feedUrl!,
-      );
+      await ref
+          .read(podcastSubscriptionProvider.notifier)
+          .addSubscription(feedUrl: result.feedUrl!);
 
       if (mounted) {
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text(l10n.podcast_subscribe_success(result.collectionName!)),
+            content: Text(
+              l10n.podcast_subscribe_success(result.collectionName!),
+            ),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -119,8 +123,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                         ? l10n.podcast_bulk_select_mode
                         : '${l10n.podcast_title} (${subscriptionState.total})',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 if (!isSelectionMode) ...[
@@ -155,7 +159,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   // 批量选择按钮
                   IconButton(
                     onPressed: () {
-                      ref.read(bulkSelectionProvider.notifier).toggleSelectionMode();
+                      ref
+                          .read(bulkSelectionProvider.notifier)
+                          .toggleSelectionMode();
                     },
                     icon: const Icon(Icons.checklist),
                     tooltip: l10n.podcast_enter_select_mode,
@@ -164,7 +170,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   // Selection mode actions
                   IconButton(
                     onPressed: bulkSelectionState.selectedIds.isNotEmpty
-                        ? () => ref.read(bulkSelectionProvider.notifier).deselectAll()
+                        ? () => ref
+                              .read(bulkSelectionProvider.notifier)
+                              .deselectAll()
                         : null,
                     icon: const Icon(Icons.deselect),
                     tooltip: l10n.podcast_deselect_all,
@@ -195,28 +203,31 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           const SizedBox(height: 16),
 
           // 搜索面板（始终显示）
-          SearchPanel(
-            expanded: true,
-            onSubscribe: _handleSubscribeFromSearch,
-          ),
+          SearchPanel(expanded: true, onSubscribe: _handleSubscribeFromSearch),
 
           const SizedBox(height: 16),
 
           // 订阅列表（仅在没有搜索结果时显示）
           if (!searchState.hasSearched)
-            Expanded(
-              child: _buildSubscriptionContent(context),
-            ),
+            Expanded(child: _buildSubscriptionContent(context)),
 
           // Bottom action bar for selection mode
           if (isSelectionMode && bulkSelectionState.selectedIds.isNotEmpty)
-            _buildBottomActionBar(context, l10n, bulkSelectionState.selectedIds.length),
+            _buildBottomActionBar(
+              context,
+              l10n,
+              bulkSelectionState.selectedIds.length,
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildBottomActionBar(BuildContext context, AppLocalizations l10n, int selectedCount) {
+  Widget _buildBottomActionBar(
+    BuildContext context,
+    AppLocalizations l10n,
+    int selectedCount,
+  ) {
     final theme = Theme.of(context);
     final subscriptionState = ref.watch(podcastSubscriptionProvider);
 
@@ -242,9 +253,13 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   value: ref.read(bulkSelectionProvider).isSelectedAll,
                   onChanged: (value) {
                     if (value == true) {
-                      ref.read(bulkSelectionProvider.notifier).selectAll(
-                        subscriptionState.subscriptions.map((s) => s.id).toList(),
-                      );
+                      ref
+                          .read(bulkSelectionProvider.notifier)
+                          .selectAll(
+                            subscriptionState.subscriptions
+                                .map((s) => s.id)
+                                .toList(),
+                          );
                     } else {
                       ref.read(bulkSelectionProvider.notifier).deselectAll();
                     }
@@ -281,12 +296,14 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final isMobile = screenWidth < 600;
 
     // 显示初始加载状态
-    if (subscriptionState.isLoading && subscriptionState.subscriptions.isEmpty) {
+    if (subscriptionState.isLoading &&
+        subscriptionState.subscriptions.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
     // 显示错误状态
-    if (subscriptionState.error != null && subscriptionState.subscriptions.isEmpty) {
+    if (subscriptionState.error != null &&
+        subscriptionState.subscriptions.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -294,12 +311,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             const Icon(Icons.error_outline, size: 48, color: Colors.orange),
             const SizedBox(height: 16),
             Text(l10n.podcast_failed_load_subscriptions),
-            Text(subscriptionState.error!,
-                style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              subscriptionState.error!,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: () {
-                ref.read(podcastSubscriptionProvider.notifier).loadSubscriptions();
+                ref
+                    .read(podcastSubscriptionProvider.notifier)
+                    .loadSubscriptions();
               },
               icon: const Icon(Icons.refresh),
               label: Text(l10n.retry),
@@ -324,8 +345,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             Text(
               l10n.podcast_no_podcasts,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 8),
             TextButton(
@@ -391,17 +412,27 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         final isSelected = bulkSelectionState.isSelected(subscription.id);
 
         return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          key: Key('podcast_subscription_mobile_card_${subscription.id}'),
+          margin: const EdgeInsets.symmetric(
+            horizontal: _mobileSubscriptionCardHorizontalMargin,
+            vertical: 2,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(_mobileSubscriptionCardRadius),
+          ),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: bulkSelectionState.isSelectionMode
                 ? () => ref
-                    .read(bulkSelectionProvider.notifier)
-                    .toggleSelection(subscription.id)
+                      .read(bulkSelectionProvider.notifier)
+                      .toggleSelection(subscription.id)
                 : () {
-                    context.push('/podcast/episodes/${subscription.id}',
-                        extra: subscription);
+                    context.push(
+                      '/podcast/episodes/${subscription.id}',
+                      extra: subscription,
+                    );
                   },
+            borderRadius: BorderRadius.circular(_mobileSubscriptionCardRadius),
             child: Padding(
               padding: const EdgeInsets.all(8),
               child: Row(
@@ -423,7 +454,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                                     child: Icon(
                                       Icons.podcasts,
                                       size: 24,
-                                      color: theme.colorScheme.onPrimaryContainer,
+                                      color:
+                                          theme.colorScheme.onPrimaryContainer,
                                     ),
                                   ),
                                 );
@@ -453,8 +485,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                         Text(
                           subscription.title,
                           style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                            fontWeight: FontWeight.bold,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -464,11 +496,13 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                         // Description (2 lines with ellipsis)
                         Text(
                           subscription.description != null
-                              ? EpisodeDescriptionHelper.stripHtmlTags(subscription.description!)
+                              ? EpisodeDescriptionHelper.stripHtmlTags(
+                                  subscription.description!,
+                                )
                               : l10n.podcast_description,
                           style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -533,11 +567,13 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               child: InkWell(
                 onTap: bulkSelectionState.isSelectionMode
                     ? () => ref
-                        .read(bulkSelectionProvider.notifier)
-                        .toggleSelection(subscription.id)
+                          .read(bulkSelectionProvider.notifier)
+                          .toggleSelection(subscription.id)
                     : () {
-                        context.push('/podcast/episodes/${subscription.id}',
-                            extra: subscription);
+                        context.push(
+                          '/podcast/episodes/${subscription.id}',
+                          extra: subscription,
+                        );
                       },
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -557,7 +593,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                                       child: Icon(
                                         Icons.podcasts,
                                         size: 48,
-                                        color: theme.colorScheme.onPrimaryContainer,
+                                        color: theme
+                                            .colorScheme
+                                            .onPrimaryContainer,
                                       ),
                                     ),
                                   );
@@ -585,19 +623,21 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                           Text(
                             subscription.title,
                             style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              fontWeight: FontWeight.bold,
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 4),
                           Text(
                             subscription.description != null
-                                ? EpisodeDescriptionHelper.stripHtmlTags(subscription.description!)
+                                ? EpisodeDescriptionHelper.stripHtmlTags(
+                                    subscription.description!,
+                                  )
                                 : l10n.podcast_description,
                             style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -640,10 +680,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 child: IgnorePointer(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.1),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1),
                       border: Border.all(
                         color: Theme.of(context).colorScheme.primary,
                         width: 2,
@@ -660,7 +699,11 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   }
 
   Widget _buildLoadingIndicator(
-      bool hasMore, bool isLoadingMore, int total, AppLocalizations l10n) {
+    bool hasMore,
+    bool isLoadingMore,
+    int total,
+    AppLocalizations l10n,
+  ) {
     if (isLoadingMore) {
       return const Padding(
         padding: EdgeInsets.all(16),
@@ -674,10 +717,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         child: Center(
           child: Text(
             '已加载全部 $total 个订阅',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
         ),
       );
@@ -713,10 +753,12 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   content: Text(
                     response.failedCount > 0
                         ? l10n.podcast_bulk_delete_partial_success(
-                              response.successCount,
-                              response.failedCount,
-                            )
-                        : l10n.podcast_bulk_delete_success(response.successCount),
+                            response.successCount,
+                            response.failedCount,
+                          )
+                        : l10n.podcast_bulk_delete_success(
+                            response.successCount,
+                          ),
                   ),
                   backgroundColor: response.failedCount > 0
                       ? theme.colorScheme.surfaceContainerHighest
@@ -739,7 +781,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             if (mounted) {
               scaffoldMessenger.showSnackBar(
                 SnackBar(
-                  content: Text(l10n.podcast_bulk_delete_failed(error.toString())),
+                  content: Text(
+                    l10n.podcast_bulk_delete_failed(error.toString()),
+                  ),
                   backgroundColor: theme.colorScheme.error,
                   duration: const Duration(seconds: 3),
                   action: SnackBarAction(
@@ -759,7 +803,10 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     );
   }
 
-  void _showErrorDetailsDialog(BuildContext context, List<Map<String, dynamic>> errors) {
+  void _showErrorDetailsDialog(
+    BuildContext context,
+    List<Map<String, dynamic>> errors,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,

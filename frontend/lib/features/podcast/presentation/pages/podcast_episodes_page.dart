@@ -204,6 +204,9 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           audioPlayerProvider.select((state) => state.currentEpisode),
         ) !=
         null;
+    final isPlayerExpanded = ref.watch(
+      audioPlayerProvider.select((state) => state.isExpanded),
+    );
     final isMobileLayout = MediaQuery.of(context).size.width < 600;
 
     // Debug: 输出分集图像链接信息（已注释）
@@ -219,9 +222,11 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     // }
 
     return Scaffold(
+      extendBody: isMobileLayout && hasPlayer,
       bottomNavigationBar: _buildBottomPlayerBar(
         hasPlayer: hasPlayer,
         isMobileLayout: isMobileLayout,
+        isPlayerExpanded: isPlayerExpanded,
       ),
       body: Column(
         children: [
@@ -546,6 +551,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   Widget? _buildBottomPlayerBar({
     required bool hasPlayer,
     required bool isMobileLayout,
+    required bool isPlayerExpanded,
   }) {
     if (!hasPlayer) {
       return null;
@@ -555,7 +561,9 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
       return const PodcastBottomPlayerWidget();
     }
 
-    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final spacerColor = isPlayerExpanded
+        ? Theme.of(context).colorScheme.surface
+        : Colors.transparent;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -564,7 +572,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           key: const Key('podcast_episodes_mobile_bottom_spacer'),
           height: _mobileMenuBarHeight,
           width: double.infinity,
-          color: surfaceColor,
+          color: spacerColor,
         ),
       ],
     );

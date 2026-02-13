@@ -266,6 +266,9 @@ class _PodcastEpisodeDetailPageState
     final isChatTab = _selectedTabIndex == 3;
     final hideBottomPlayer = isChatTab;
     final isMobileLayout = MediaQuery.of(context).size.width < 600;
+    final isPlayerExpanded = ref.watch(
+      audioPlayerProvider.select((state) => state.isExpanded),
+    );
 
     // Listen to transcription status changes to provide user feedback
     ref.listen(getTranscriptionProvider(widget.episodeId), (previous, next) {
@@ -333,9 +336,11 @@ class _PodcastEpisodeDetailPageState
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
+      extendBody: isMobileLayout && !hideBottomPlayer,
       bottomNavigationBar: _buildBottomPlayerBar(
         hideBottomPlayer: hideBottomPlayer,
         isMobileLayout: isMobileLayout,
+        isPlayerExpanded: isPlayerExpanded,
       ),
       body: episodeDetailAsync.when(
         data: (episodeDetail) {
@@ -355,6 +360,7 @@ class _PodcastEpisodeDetailPageState
   Widget? _buildBottomPlayerBar({
     required bool hideBottomPlayer,
     required bool isMobileLayout,
+    required bool isPlayerExpanded,
   }) {
     if (hideBottomPlayer) {
       return null;
@@ -364,7 +370,9 @@ class _PodcastEpisodeDetailPageState
       return const PodcastBottomPlayerWidget();
     }
 
-    final surfaceColor = Theme.of(context).colorScheme.surface;
+    final spacerColor = isPlayerExpanded
+        ? Theme.of(context).colorScheme.surface
+        : Colors.transparent;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -373,7 +381,7 @@ class _PodcastEpisodeDetailPageState
           key: const Key('podcast_episode_detail_mobile_bottom_spacer'),
           height: _mobileMenuBarHeight,
           width: double.infinity,
-          color: surfaceColor,
+          color: spacerColor,
         ),
       ],
     );

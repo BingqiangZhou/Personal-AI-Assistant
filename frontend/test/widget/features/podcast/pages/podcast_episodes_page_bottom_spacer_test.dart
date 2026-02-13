@@ -45,6 +45,45 @@ void main() {
         const Key('podcast_episodes_mobile_bottom_spacer'),
       );
       expect(spacerFinder, findsOneWidget);
+      final spacerContainer = tester.widget<Container>(spacerFinder);
+      expect(spacerContainer.color, Colors.transparent);
+      expect(tester.getRect(spacerFinder).height, closeTo(65.0, 0.1));
+    });
+
+    testWidgets('mobile expanded player keeps white spacer background', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final audioNotifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _episode(),
+          duration: 180000,
+          isExpanded: true,
+        ),
+      );
+      final episodesNotifier = TestPodcastEpisodesNotifier(
+        const PodcastEpisodesState(episodes: [], hasMore: false, total: 0),
+      );
+
+      await tester.pumpWidget(
+        _createWidget(
+          audioNotifier: audioNotifier,
+          episodesNotifier: episodesNotifier,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final spacerFinder = find.byKey(
+        const Key('podcast_episodes_mobile_bottom_spacer'),
+      );
+      expect(spacerFinder, findsOneWidget);
+      final spacerContainer = tester.widget<Container>(spacerFinder);
+      final theme = Theme.of(tester.element(spacerFinder));
+      expect(spacerContainer.color, theme.colorScheme.surface);
       expect(tester.getRect(spacerFinder).height, closeTo(65.0, 0.1));
     });
 
