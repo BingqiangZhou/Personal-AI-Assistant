@@ -1098,6 +1098,7 @@ class PodcastRepository:
                 PodcastEpisode.subscription_id.label("subscription_id"),
                 Subscription.title.label("subscription_title"),
                 Subscription.image_url.label("subscription_image_url"),
+                Subscription.config.label("subscription_config"),
                 PodcastEpisode.title.label("title"),
                 PodcastEpisode.image_url.label("image_url"),
                 PodcastEpisode.audio_duration.label("audio_duration"),
@@ -1131,7 +1132,32 @@ class PodcastRepository:
 
         result = await self.db.execute(query)
         rows = result.mappings().all()
-        return [dict(row) for row in rows], total
+        items: list[dict[str, Any]] = []
+        for row in rows:
+            item = dict(row)
+            subscription_config = item.pop("subscription_config", None)
+
+            config_image_url = None
+            if isinstance(subscription_config, dict):
+                config_image_url = self._normalize_optional_image_url(
+                    subscription_config.get("image_url")
+                )
+
+            subscription_image_url = self._normalize_optional_image_url(
+                item.get("subscription_image_url")
+            )
+            item["subscription_image_url"] = config_image_url or subscription_image_url
+            items.append(item)
+
+        return items, total
+
+    @staticmethod
+    def _normalize_optional_image_url(value: Any) -> str | None:
+        """Normalize image URL values and treat blank strings as missing."""
+        if not isinstance(value, str):
+            return None
+        normalized = value.strip()
+        return normalized or None
 
     async def search_episodes(
         self,

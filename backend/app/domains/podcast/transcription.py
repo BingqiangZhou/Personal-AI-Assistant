@@ -5,7 +5,6 @@
 """
 
 import asyncio
-import hashlib
 import logging
 import os
 import time
@@ -836,14 +835,6 @@ class PodcastTranscriptionService:
         filename = re.sub(r'[<>:"/\\|?*]', '', filename)
         filename = filename.replace(' ', '_')
         return filename[:100]  # 限制长度
-
-    def _get_file_hash(self, file_path: str) -> str:
-        """计算文件的MD5哈希"""
-        hash_md5 = hashlib.md5()
-        with open(file_path, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                hash_md5.update(chunk)
-        return hash_md5.hexdigest()
 
     async def update_task_progress(
         self,
@@ -1759,4 +1750,3 @@ class PodcastTranscriptionService:
         )
 
         return True
-

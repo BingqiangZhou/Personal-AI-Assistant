@@ -117,20 +117,6 @@ class PodcastEpisode(Base):
         return f"<PodcastEpisode(id={self.id}, title='{self.title[:30]}...', status='{self.status}')>"
 
 
-# 在Subscription中添加反向关系
-def _add_podcast_relationship():
-    """为Subscription添加podcast_episodes关系"""
-    capsule = relationship(
-        "PodcastEpisode",
-        back_populates="subscription",
-        cascade="all, delete-orphan",
-        uselist=False,  # 不直接使用，通过方法访问
-    )
-
-
-# 直接用赋值方式添加
-
-
 Subscription.podcast_episodes = relationship(
     "PodcastEpisode", back_populates="subscription", cascade="all, delete-orphan"
 )
