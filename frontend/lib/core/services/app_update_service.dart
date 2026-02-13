@@ -234,35 +234,6 @@ class AppUpdateService {
     return platforms.toList()..sort();
   }
 
-  /// Parse release notes to extract key information
-  static List<String> parseReleaseNotes(String body) {
-    final lines = body.split('\n');
-    final notes = <String>[];
-
-    for (final line in lines) {
-      final trimmed = line.trim();
-      if (trimmed.isEmpty) continue;
-
-      // Remove markdown formatting
-      String cleaned = trimmed
-          .replaceAll(RegExp(r'^#+\s*'), '') // Remove headers
-          .replaceAll(RegExp(r'\*\*([^*]+)\*\*'), r'\1') // Remove bold
-          .replaceAll(RegExp(r'\*([^*]+)\*'), r'\1') // Remove italic
-          .replaceAll(RegExp(r'^-\s*'), '• '); // Convert bullets
-
-      if (cleaned.startsWith('•')) {
-        notes.add(cleaned);
-      } else if (cleaned.isNotEmpty) {
-        notes.add(cleaned);
-      }
-
-      // Limit to reasonable number of notes
-      if (notes.length >= 20) break;
-    }
-
-    return notes;
-  }
-
   /// Setup MethodChannel for native communication
   void _setupMethodChannel() {
     _channel.setMethodCallHandler((call) async {

@@ -140,12 +140,6 @@ class AppUpdate extends _$AppUpdate {
     if (state.latestRelease == null) return [];
     return _updateService.getAvailablePlatforms(state.latestRelease!);
   }
-
-  /// Parse release notes
-  List<String> getReleaseNotes() {
-    if (state.latestRelease == null) return [];
-    return AppUpdateService.parseReleaseNotes(state.latestRelease!.body);
-  }
 }
 
 /// Provider for AppUpdateService

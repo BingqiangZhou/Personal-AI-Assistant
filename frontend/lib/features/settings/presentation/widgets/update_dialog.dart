@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
@@ -29,10 +30,8 @@ class AppUpdateDialog extends ConsumerStatefulWidget {
     return showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AppUpdateDialog(
-        release: release,
-        currentVersion: currentVersion,
-      ),
+      builder: (context) =>
+          AppUpdateDialog(release: release, currentVersion: currentVersion),
     );
   }
 
@@ -52,7 +51,9 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     final dialogWidth = screenWidth < 600 ? screenWidth - 8 : 500.0;
 
     return AlertDialog(
-      insetPadding: isMobile ? const EdgeInsets.symmetric(horizontal: 4, vertical: 16) : null,
+      insetPadding: isMobile
+          ? const EdgeInsets.symmetric(horizontal: 4, vertical: 16)
+          : null,
       title: Row(
         children: [
           Icon(
@@ -95,7 +96,9 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           ),
         ),
       ),
-      actions: isMobile ? _buildMobileActions(context, theme) : _buildDesktopActions(context, theme),
+      actions: isMobile
+          ? _buildMobileActions(context, theme)
+          : _buildDesktopActions(context, theme),
     );
   }
 
@@ -321,58 +324,102 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   Widget _buildReleaseNotes(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final notes = AppUpdateService.parseReleaseNotes(widget.release.body);
+    final releaseNotes = widget.release.body.trim();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(
-              Icons.description,
-              size: 18,
-              color: theme.colorScheme.primary,
-            ),
+            Icon(Icons.description, size: 18, color: theme.colorScheme.primary),
             const SizedBox(width: 8),
-            Text(
-              l10n.update_release_notes,
-              style: theme.textTheme.labelMedium,
-            ),
+            Text(l10n.update_release_notes, style: theme.textTheme.labelMedium),
           ],
         ),
         const SizedBox(height: 8),
         Container(
           constraints: const BoxConstraints(maxHeight: 200),
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: notes.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '• ',
-                      style: theme.textTheme.bodySmall?.copyWith(
+          child: releaseNotes.isEmpty
+              ? Text(
+                  l10n.no_data,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                )
+              : SingleChildScrollView(
+                  child: MarkdownBody(
+                    data: releaseNotes,
+                    onTapLink: (text, href, title) {
+                      _handleReleaseNotesLinkTap(context, href);
+                    },
+                    styleSheet: MarkdownStyleSheet(
+                      p: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        notes[index],
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                      h1: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      h2: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      h3: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      listBullet: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      strong: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      a: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        decoration: TextDecoration.underline,
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              );
-            },
-          ),
         ),
       ],
+    );
+  }
+
+  Future<void> _handleReleaseNotesLinkTap(
+    BuildContext context,
+    String? href,
+  ) async {
+    if (href == null || href.isEmpty) {
+      return;
+    }
+
+    try {
+      final uri = Uri.parse(href);
+      final canOpen = await canLaunchUrl(uri);
+      if (!canOpen) {
+        _showReleaseNotesLinkError(context);
+        return;
+      }
+
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!opened) {
+        _showReleaseNotesLinkError(context);
+      }
+    } catch (_) {
+      _showReleaseNotesLinkError(context);
+    }
+  }
+
+  void _showReleaseNotesLinkError(BuildContext context) {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.update_download_failed),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
     );
   }
 
@@ -474,13 +521,18 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
 /// then displays the result (update available or up to date).
 class ManualUpdateCheckDialog extends ConsumerStatefulWidget {
   const ManualUpdateCheckDialog({super.key});
+  static bool _isShowing = false;
 
   static Future<void> show(BuildContext context) {
+    if (_isShowing) return Future.value();
+    _isShowing = true;
     return showDialog(
       context: context,
       barrierDismissible: true,
       builder: (context) => const ManualUpdateCheckDialog(),
-    );
+    ).whenComplete(() {
+      _isShowing = false;
+    });
   }
 
   @override
@@ -490,6 +542,8 @@ class ManualUpdateCheckDialog extends ConsumerStatefulWidget {
 
 class _ManualUpdateCheckDialogState
     extends ConsumerState<ManualUpdateCheckDialog> {
+  bool _redirectingToUpdateDialog = false;
+
   @override
   void initState() {
     super.initState();
@@ -503,12 +557,15 @@ class _ManualUpdateCheckDialogState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(manualUpdateCheckProvider);
+    _maybeRedirectToDetailedDialog(context, state);
     final screenWidth = MediaQuery.of(context).size.width;
     final dialogWidth = screenWidth < 600 ? screenWidth - 8 : 400.0;
     final isMobile = screenWidth < 600;
 
     return AlertDialog(
-      insetPadding: isMobile ? const EdgeInsets.symmetric(horizontal: 4, vertical: 16) : null,
+      insetPadding: isMobile
+          ? const EdgeInsets.symmetric(horizontal: 4, vertical: 16)
+          : null,
       title: Text(l10n.update_check_updates),
       content: SizedBox(
         width: dialogWidth,
@@ -516,6 +573,36 @@ class _ManualUpdateCheckDialogState
       ),
       actions: _buildActions(context, state),
     );
+  }
+
+  void _maybeRedirectToDetailedDialog(
+    BuildContext context,
+    AppUpdateState state,
+  ) {
+    final shouldRedirect =
+        !state.isLoading &&
+        state.error == null &&
+        state.hasUpdate &&
+        state.latestRelease != null &&
+        !_redirectingToUpdateDialog;
+
+    if (!shouldRedirect) {
+      return;
+    }
+
+    _redirectingToUpdateDialog = true;
+    final release = state.latestRelease!;
+    final currentVersion = state.currentVersion;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      AppUpdateDialog.show(
+        context: context,
+        release: release,
+        currentVersion: currentVersion,
+      );
+    });
   }
 
   Widget _buildContent(BuildContext context, AppUpdateState state) {
@@ -537,16 +624,9 @@ class _ManualUpdateCheckDialogState
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.error_outline,
-            size: 48,
-            color: theme.colorScheme.error,
-          ),
+          Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
           const SizedBox(height: 16),
-          Text(
-            l10n.update_check_failed,
-            style: theme.textTheme.titleMedium,
-          ),
+          Text(l10n.update_check_failed, style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(
             state.error!,
@@ -560,44 +640,7 @@ class _ManualUpdateCheckDialogState
     }
 
     if (state.hasUpdate && state.latestRelease != null) {
-      final release = state.latestRelease!;
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.new_releases,
-                color: theme.colorScheme.primary,
-                size: 32,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${l10n.update_new_version_available}: v${release.version}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    Text(
-                      '${l10n.update_current_version}: v${state.currentVersion}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(l10n.update_available_description),
-        ],
-      );
+      return const SizedBox.shrink();
     }
 
     // Up to date
@@ -650,23 +693,7 @@ class _ManualUpdateCheckDialogState
     }
 
     if (state.hasUpdate && state.latestRelease != null) {
-      return [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            AppUpdateDialog.show(
-              context: context,
-              release: state.latestRelease!,
-              currentVersion: state.currentVersion,
-            );
-          },
-          child: Text(l10n.update_download),
-        ),
-      ];
+      return [];
     }
 
     return [
@@ -682,7 +709,6 @@ class _ManualUpdateCheckDialogState
 void showUpdateAvailableSnackBar({
   required BuildContext context,
   required GitHubRelease release,
-  VoidCallback? onUpdate,
 }) {
   final l10n = AppLocalizations.of(context)!;
 

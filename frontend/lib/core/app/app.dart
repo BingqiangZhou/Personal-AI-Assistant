@@ -158,15 +158,18 @@ class _PersonalAIAssistantAppState
 
       // Check authentication status with timeout to prevent infinite loading
       // If backend is down, we still want the app to load
-      await ref.read(authProvider.notifier).checkAuthStatus().timeout(
-        const Duration(seconds: 5),
-        onTimeout: () {
-          debugPrint('⚠️ [AppInit] Auth check timed out after 5 seconds');
-          // Mark as incomplete - the background task will complete eventually
-          // but we won't wait for it
-          throw TimeoutException('Auth check timed out');
-        },
-      );
+      await ref
+          .read(authProvider.notifier)
+          .checkAuthStatus()
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () {
+              debugPrint('⚠️ [AppInit] Auth check timed out after 5 seconds');
+              // Mark as incomplete - the background task will complete eventually
+              // but we won't wait for it
+              throw TimeoutException('Auth check timed out');
+            },
+          );
     } on TimeoutException catch (_) {
       debugPrint('⚠️ [AppInit] Auth check timed out - continuing anyway');
       // CRITICAL: Reset loading state to prevent infinite loading
@@ -175,7 +178,9 @@ class _PersonalAIAssistantAppState
       // The router will redirect to login since isAuthenticated defaults to false
       // Background auth check may complete later but won't affect UI
     } catch (e) {
-      debugPrint('⚠️ [AppInit] Auth check failed: $e, continuing initialization');
+      debugPrint(
+        '⚠️ [AppInit] Auth check failed: $e, continuing initialization',
+      );
       // CRITICAL: Reset loading state on error
       ref.read(authProvider.notifier).resetLoadingState();
       // Don't block app initialization on auth errors
@@ -217,14 +222,6 @@ class _PersonalAIAssistantAppState
         showUpdateAvailableSnackBar(
           context: context,
           release: updateState.latestRelease!,
-          onUpdate: () {
-            // Open dialog when user clicks download
-            AppUpdateDialog.show(
-              context: context,
-              release: updateState.latestRelease!,
-              currentVersion: updateState.currentVersion,
-            );
-          },
         );
       }
     } catch (e) {
