@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.5.5](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.5.4...v0.5.5) - 2026-02-13 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.5.5))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(claude)* Add smart commit command for automated commit message generation ([6a13f10](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6a13f1044ec4461745a0f1c5d4580df22bfd9d42))
+
+### 📚 Documentation
+
+- *(claude)* Translate commit.md command from Chinese to English ([18dfd76](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/18dfd76e5a027db66abd3e9c35c8e8144fe00051))
+
+### 🚀 Features
+
+- *(settings)* Render release notes as Markdown and improve update dialog flow ([bc2ba43](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/bc2ba4395e5d948622adae7b9408d29146e049ef))
+- *(podcast)* Add profile stats API and lightweight playback history endpoint ([d6ab74b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d6ab74b5f79bc4f844d5b0e9188576c387f7fa4e))
+
+
+
 ## [0.5.4](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.5.3...v0.5.4) - 2026-02-12 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.5.4))
 
 ### 🚀 Features
