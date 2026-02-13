@@ -46,7 +46,8 @@ void main() {
       );
       expect(spacerFinder, findsOneWidget);
       final spacerContainer = tester.widget<Container>(spacerFinder);
-      expect(spacerContainer.color, Colors.transparent);
+      final theme = Theme.of(tester.element(spacerFinder));
+      expect(spacerContainer.color, theme.colorScheme.surface);
       expect(tester.getRect(spacerFinder).height, closeTo(65.0, 0.1));
     });
 

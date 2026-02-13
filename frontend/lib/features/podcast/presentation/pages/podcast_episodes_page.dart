@@ -53,6 +53,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   bool _showOnlyWithSummary = false;
   bool _isReparsing = false; // 重新解析状态
   static const double _mobileMenuBarHeight = 65.0;
+  static const double _desktopEpisodeCardHeight = 160.0;
 
   @override
   void initState() {
@@ -204,9 +205,6 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           audioPlayerProvider.select((state) => state.currentEpisode),
         ) !=
         null;
-    final isPlayerExpanded = ref.watch(
-      audioPlayerProvider.select((state) => state.isExpanded),
-    );
     final isMobileLayout = MediaQuery.of(context).size.width < 600;
 
     // Debug: 输出分集图像链接信息（已注释）
@@ -226,7 +224,6 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
       bottomNavigationBar: _buildBottomPlayerBar(
         hasPlayer: hasPlayer,
         isMobileLayout: isMobileLayout,
-        isPlayerExpanded: isPlayerExpanded,
       ),
       body: Column(
         children: [
@@ -463,7 +460,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                       crossAxisCount: crossAxisCount,
                                       crossAxisSpacing: 12,
                                       mainAxisSpacing: 12,
-                                      mainAxisExtent: 180,
+                                      mainAxisExtent: _desktopEpisodeCardHeight,
                                     ),
                                 itemCount:
                                     episodesState.episodes.length +
@@ -551,7 +548,6 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   Widget? _buildBottomPlayerBar({
     required bool hasPlayer,
     required bool isMobileLayout,
-    required bool isPlayerExpanded,
   }) {
     if (!hasPlayer) {
       return null;
@@ -561,9 +557,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
       return const PodcastBottomPlayerWidget();
     }
 
-    final spacerColor = isPlayerExpanded
-        ? Theme.of(context).colorScheme.surface
-        : Colors.transparent;
+    final spacerColor = Theme.of(context).colorScheme.surface;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

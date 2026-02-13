@@ -24,6 +24,13 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isMobile = MediaQuery.of(context).size.width < 600;
+    final titleTextStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+      fontSize: 13,
+    );
+    final titleLineHeight =
+        (titleTextStyle?.fontSize ?? 13) * (titleTextStyle?.height ?? 1.25);
+    final titleSlotHeight = titleLineHeight * 2;
 
     final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
       aiSummary: episode.aiSummary,
@@ -48,14 +55,17 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: Text(
-                      episode.title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                    child: SizedBox(
+                      height: titleSlotHeight,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          episode.title,
+                          style: titleTextStyle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

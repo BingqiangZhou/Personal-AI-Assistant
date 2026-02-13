@@ -49,6 +49,7 @@ class _PodcastEpisodeDetailPageState
       50.0; // Header starts fading after 50px scroll
   static const double _autoCollapseScrollDeltaThreshold = 6.0;
   static const double _mobileMenuBarHeight = 65.0;
+  static const double _scrollToTopFixedLift = 72.0;
 
   // Scroll to top button
   final Map<int, double> _tabScrollPositions = {
@@ -264,11 +265,16 @@ class _PodcastEpisodeDetailPageState
       episodeDetailProvider(widget.episodeId),
     );
     final isChatTab = _selectedTabIndex == 3;
-    final hideBottomPlayer = isChatTab;
-    final isMobileLayout = MediaQuery.of(context).size.width < 600;
-    final isPlayerExpanded = ref.watch(
+    final isTranscriptOrSummaryTab =
+        _selectedTabIndex == 1 || _selectedTabIndex == 2;
+    final isPlayerCollapsed = !ref.watch(
       audioPlayerProvider.select((state) => state.isExpanded),
     );
+    final shouldHideOnTranscriptOrSummary =
+        isTranscriptOrSummaryTab && isPlayerCollapsed && !_isHeaderExpanded;
+    final hideBottomPlayer =
+        isChatTab || shouldHideOnTranscriptOrSummary;
+    final isMobileLayout = MediaQuery.of(context).size.width < 600;
 
     // Listen to transcription status changes to provide user feedback
     ref.listen(getTranscriptionProvider(widget.episodeId), (previous, next) {
@@ -334,33 +340,43 @@ class _PodcastEpisodeDetailPageState
       }
     });
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      extendBody: isMobileLayout && !hideBottomPlayer,
-      bottomNavigationBar: _buildBottomPlayerBar(
-        hideBottomPlayer: hideBottomPlayer,
-        isMobileLayout: isMobileLayout,
-        isPlayerExpanded: isPlayerExpanded,
-      ),
-      body: episodeDetailAsync.when(
-        data: (episodeDetail) {
-          if (episodeDetail == null) {
-            final l10n = AppLocalizations.of(context)!;
-            return _buildErrorState(context, l10n.podcast_episode_not_found);
-          }
-          _trackEpisodeViewOnce(episodeDetail);
-          return _buildNewLayout(context, episodeDetail);
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => _buildErrorState(context, error),
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWideLayout = constraints.maxWidth > 800;
+
+        return Scaffold(
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          extendBody: isMobileLayout && !hideBottomPlayer,
+          bottomNavigationBar: isWideLayout
+              ? null
+              : _buildBottomPlayerBar(
+                  hideBottomPlayer: hideBottomPlayer,
+                  isMobileLayout: isMobileLayout,
+                ),
+          body: episodeDetailAsync.when(
+            data: (episodeDetail) {
+              if (episodeDetail == null) {
+                final l10n = AppLocalizations.of(context)!;
+                return _buildErrorState(context, l10n.podcast_episode_not_found);
+              }
+              _trackEpisodeViewOnce(episodeDetail);
+              return _buildNewLayout(
+                context,
+                episodeDetail,
+                hideBottomPlayer: hideBottomPlayer,
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stack) => _buildErrorState(context, error),
+          ),
+        );
+      },
     );
   }
 
   Widget? _buildBottomPlayerBar({
     required bool hideBottomPlayer,
     required bool isMobileLayout,
-    required bool isPlayerExpanded,
   }) {
     if (hideBottomPlayer) {
       return null;
@@ -370,9 +386,7 @@ class _PodcastEpisodeDetailPageState
       return const PodcastBottomPlayerWidget();
     }
 
-    final spacerColor = isPlayerExpanded
-        ? Theme.of(context).colorScheme.surface
-        : Colors.transparent;
+    final spacerColor = Theme.of(context).colorScheme.surface;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -387,7 +401,11 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  Widget _buildNewLayout(BuildContext context, dynamic episode) {
+  Widget _buildNewLayout(
+    BuildContext context,
+    dynamic episode, {
+    required bool hideBottomPlayer,
+  }) {
     return LayoutBuilder(
       builder: (context, layoutConstraints) {
         // Use split-pane layout on desktop/tablet widths.
@@ -417,48 +435,75 @@ class _PodcastEpisodeDetailPageState
                     ),
                   ),
                   Expanded(
-                    child: Stack(
-                      children: [
-                        NotificationListener<ScrollNotification>(
-                          onNotification: (scrollNotification) {
-                            _handleAutoCollapseOnRead(scrollNotification);
-                            if (scrollNotification
-                                is ScrollUpdateNotification) {
-                              final metrics = scrollNotification.metrics;
-                              if (metrics.axis == Axis.vertical) {
-                                final scrollPosition = metrics.pixels;
-                                final maxScroll = metrics.maxScrollExtent;
-                                final scrollPercent = maxScroll > 0
-                                    ? (scrollPosition / maxScroll)
-                                    : 0.0;
+                    child: Container(
+                      key: const Key('podcast_episode_detail_wide_right_pane'),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                NotificationListener<ScrollNotification>(
+                                  onNotification: (scrollNotification) {
+                                    _handleAutoCollapseOnRead(scrollNotification);
+                                    if (scrollNotification
+                                        is ScrollUpdateNotification) {
+                                      final metrics =
+                                          scrollNotification.metrics;
+                                      if (metrics.axis == Axis.vertical) {
+                                        final scrollPosition = metrics.pixels;
+                                        final maxScroll =
+                                            metrics.maxScrollExtent;
+                                        final scrollPercent = maxScroll > 0
+                                            ? (scrollPosition / maxScroll)
+                                            : 0.0;
 
-                                setState(() {
-                                  _scrollOffset = scrollPosition;
-                                  _tabScrollPositions[_selectedTabIndex] =
-                                      scrollPosition;
-                                  _tabScrollPercentages[_selectedTabIndex] =
-                                      scrollPercent;
-                                });
-                              }
-                            }
-                            return false;
-                          },
-                          child: Container(
-                            padding: EdgeInsets.only(
-                              top: _isHeaderExpanded ? 90 : 16,
-                              right: 16,
-                              bottom: 16,
+                                        setState(() {
+                                          _scrollOffset = scrollPosition;
+                                          _tabScrollPositions[_selectedTabIndex] =
+                                              scrollPosition;
+                                          _tabScrollPercentages[_selectedTabIndex] =
+                                              scrollPercent;
+                                        });
+                                      }
+                                    }
+                                    return false;
+                                  },
+                                  child: Container(
+                                    padding: EdgeInsets.only(
+                                      top: _isHeaderExpanded ? 90 : 16,
+                                      right: 16,
+                                      bottom: 16,
+                                    ),
+                                    child: _buildTabContent(episode),
+                                  ),
+                                ),
+                                if (_shouldShowScrollToTopButton())
+                                  Positioned(
+                                    right: 16,
+                                    bottom: 16,
+                                    child: _buildScrollToTopButton(),
+                                  ),
+                              ],
                             ),
-                            child: _buildTabContent(episode),
                           ),
-                        ),
-                        if (_shouldShowScrollToTopButton())
-                          Positioned(
-                            right: 16,
-                            bottom: 16,
-                            child: _buildScrollToTopButton(),
-                          ),
-                      ],
+                          if (!hideBottomPlayer)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              child: Container(
+                                key: const Key(
+                                  'podcast_episode_detail_desktop_player_region',
+                                ),
+                                width: double.infinity,
+                                child: const PodcastBottomPlayerWidget(
+                                  applySafeArea: false,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -2198,9 +2243,12 @@ class _PodcastEpisodeDetailPageState
     final isMobile = screenSize.width < 600;
 
     final rightMargin = isMobile ? 32.0 : (screenSize.width * 0.1);
-    final bottomMargin = isMobile ? (screenSize.height * 0.1) : 32.0;
+    final bottomMargin =
+        (isMobile ? (screenSize.height * 0.1) : 32.0) +
+        _scrollToTopFixedLift;
 
     return Padding(
+      key: const Key('podcast_episode_detail_scroll_to_top_button'),
       padding: EdgeInsets.only(right: rightMargin, bottom: bottomMargin),
       child: Material(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,

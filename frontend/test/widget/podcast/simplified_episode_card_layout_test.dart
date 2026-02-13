@@ -150,6 +150,56 @@ void main() {
         expect(playButtonRect.center.dx, greaterThan(addButtonRect.center.dx));
       },
     );
+
+    testWidgets(
+      'single-line title reserves two-line slot and stays vertically centered',
+      (WidgetTester tester) async {
+        tester.view.physicalSize = const Size(1200, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final episode = _buildSingleLineTitleEpisode();
+
+        await tester.pumpWidget(
+          ProviderScope(
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: Center(
+                  child: SizedBox(
+                    width: 360,
+                    child: SimplifiedEpisodeCard(
+                      episode: episode,
+                      onTap: () {},
+                      onPlay: () {},
+                      onAddToQueue: () {},
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final headerFinder = find.byKey(
+          const Key('simplified_episode_header_row'),
+        );
+        final titleFinder = find.text(episode.title);
+        expect(headerFinder, findsOneWidget);
+        expect(titleFinder, findsOneWidget);
+
+        final headerRect = tester.getRect(headerFinder);
+        final titleRect = tester.getRect(titleFinder);
+        expect(headerRect.height, greaterThan(titleRect.height * 1.7));
+        expect(
+          (headerRect.center.dy - titleRect.center.dy).abs(),
+          lessThan(2.0),
+        );
+      },
+    );
   });
 }
 
@@ -167,5 +217,20 @@ PodcastEpisodeModel _buildEpisode() {
     audioDuration: 4143,
     publishedAt: DateTime(2026, 2, 10),
     createdAt: DateTime(2026, 2, 10),
+  );
+}
+
+PodcastEpisodeModel _buildSingleLineTitleEpisode() {
+  return PodcastEpisodeModel(
+    id: 2,
+    subscriptionId: 1,
+    subscriptionTitle: 'Sample Show',
+    title: 'Short Title',
+    description:
+        'Short description to keep layout deterministic for single-line title validation.',
+    audioUrl: 'https://example.com/audio-short.mp3',
+    audioDuration: 1800,
+    publishedAt: DateTime(2026, 2, 11),
+    createdAt: DateTime(2026, 2, 11),
   );
 }

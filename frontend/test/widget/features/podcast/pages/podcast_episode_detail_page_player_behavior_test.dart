@@ -301,6 +301,192 @@ void main() {
       );
     });
 
+    testWidgets(
+      'keeps bottom player visible on mobile transcript tab when header is expanded',
+      (tester) async {
+        addTearDown(() async {
+          await tester.binding.setSurfaceSize(null);
+        });
+        await tester.binding.setSurfaceSize(const Size(390, 844));
+
+        final notifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _episode(),
+            duration: 180000,
+            isExpanded: false,
+            isPlaying: true,
+          ),
+        );
+
+        await tester.pumpWidget(_createWidget(notifier));
+        await tester.pumpAndSettle();
+        notifier.setExpanded(false);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('podcast_bottom_player_mini')),
+          findsOneWidget,
+        );
+
+        await _setMobilePage(tester, 1);
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.byType(PodcastBottomPlayerWidget), findsOneWidget);
+        expect(
+          find.byKey(const Key('podcast_bottom_player_mini')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'keeps bottom player visible on mobile summary tab when header is expanded',
+      (tester) async {
+        addTearDown(() async {
+          await tester.binding.setSurfaceSize(null);
+        });
+        await tester.binding.setSurfaceSize(const Size(390, 844));
+
+        final notifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _episode(),
+            duration: 180000,
+            isExpanded: false,
+            isPlaying: true,
+          ),
+        );
+
+        await tester.pumpWidget(_createWidget(notifier));
+        await tester.pumpAndSettle();
+        notifier.setExpanded(false);
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('podcast_bottom_player_mini')),
+          findsOneWidget,
+        );
+
+        await _setMobilePage(tester, 2);
+        await tester.pump(const Duration(milliseconds: 400));
+
+        expect(find.byType(PodcastBottomPlayerWidget), findsOneWidget);
+        expect(
+          find.byKey(const Key('podcast_bottom_player_mini')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'keeps bottom player visible on mobile transcript and summary tabs when expanded',
+      (tester) async {
+        addTearDown(() async {
+          await tester.binding.setSurfaceSize(null);
+        });
+        await tester.binding.setSurfaceSize(const Size(390, 844));
+
+        final notifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _episode(),
+            duration: 180000,
+            isExpanded: true,
+            isPlaying: true,
+          ),
+        );
+
+        await tester.pumpWidget(_createWidget(notifier));
+        await tester.pumpAndSettle();
+
+        await _setMobilePage(tester, 1);
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.byType(PodcastBottomPlayerWidget), findsOneWidget);
+        expect(
+          find.byKey(const Key('podcast_bottom_player_expanded')),
+          findsOneWidget,
+        );
+
+        await _setMobilePage(tester, 2);
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(find.byType(PodcastBottomPlayerWidget), findsOneWidget);
+        expect(
+          find.byKey(const Key('podcast_bottom_player_expanded')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'hides bottom player on wide layout when collapsed in transcript and summary tabs after header collapse',
+      (tester) async {
+        addTearDown(() async {
+          await tester.binding.setSurfaceSize(null);
+        });
+        await tester.binding.setSurfaceSize(const Size(390, 844));
+
+        final notifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _episode(),
+            duration: 180000,
+            isExpanded: false,
+            isPlaying: true,
+          ),
+        );
+
+        await tester.pumpWidget(_createWidget(notifier));
+        await tester.pumpAndSettle();
+        notifier.setExpanded(false);
+        await tester.pumpAndSettle();
+
+        await _setMobilePage(tester, 1);
+        await tester.pump(const Duration(milliseconds: 300));
+        final transcriptPageContext = tester.element(find.byType(PageView).first);
+        final transcriptMetrics = FixedScrollMetrics(
+          minScrollExtent: 0,
+          maxScrollExtent: 400,
+          pixels: 120,
+          viewportDimension: 500,
+          axisDirection: AxisDirection.down,
+          devicePixelRatio: 1.0,
+        );
+        ScrollUpdateNotification(
+          metrics: transcriptMetrics,
+          context: transcriptPageContext,
+          scrollDelta: 12.0,
+        ).dispatch(transcriptPageContext);
+        await tester.pumpAndSettle();
+        await tester.binding.setSurfaceSize(const Size(1200, 900));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(PageView), findsNothing);
+        expect(find.byType(PodcastBottomPlayerWidget), findsNothing);
+
+        await tester.binding.setSurfaceSize(const Size(390, 844));
+        await tester.pumpAndSettle();
+        await _setMobilePage(tester, 2);
+        await tester.pump(const Duration(milliseconds: 300));
+        final summaryPageContext = tester.element(find.byType(PageView).first);
+        final summaryMetrics = FixedScrollMetrics(
+          minScrollExtent: 0,
+          maxScrollExtent: 400,
+          pixels: 120,
+          viewportDimension: 500,
+          axisDirection: AxisDirection.down,
+          devicePixelRatio: 1.0,
+        );
+        ScrollUpdateNotification(
+          metrics: summaryMetrics,
+          context: summaryPageContext,
+          scrollDelta: 12.0,
+        ).dispatch(summaryPageContext);
+        await tester.pumpAndSettle();
+        await tester.binding.setSurfaceSize(const Size(1200, 900));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(PageView), findsNothing);
+        expect(find.byType(PodcastBottomPlayerWidget), findsNothing);
+      },
+    );
+
     testWidgets('shows mobile white spacer under player with menu-bar height', (
       tester,
     ) async {
@@ -338,7 +524,55 @@ void main() {
       expect(tester.getRect(spacerFinder).height, closeTo(65.0, 0.1));
     });
 
-    testWidgets('mobile collapsed player uses transparent spacer background', (
+    testWidgets('scroll-to-top button is above mini player when visible', (
+      tester,
+    ) async {
+      addTearDown(() async {
+        await tester.binding.setSurfaceSize(null);
+      });
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _episode(),
+          duration: 180000,
+          isExpanded: false,
+          isPlaying: true,
+        ),
+      );
+
+      await tester.pumpWidget(_createWidget(notifier));
+      await tester.pumpAndSettle();
+
+      final pageContext = tester.element(find.byType(PageView).first);
+      final metrics = FixedScrollMetrics(
+        minScrollExtent: 0,
+        maxScrollExtent: 400,
+        pixels: 120,
+        viewportDimension: 500,
+        axisDirection: AxisDirection.down,
+        devicePixelRatio: 1.0,
+      );
+      ScrollUpdateNotification(
+        metrics: metrics,
+        context: pageContext,
+        scrollDelta: 12.0,
+      ).dispatch(pageContext);
+      await tester.pumpAndSettle();
+
+      final scrollToTopFinder = find.byKey(
+        const Key('podcast_episode_detail_scroll_to_top_button'),
+      );
+      final miniPlayerFinder = find.byKey(const Key('podcast_bottom_player_mini'));
+      expect(scrollToTopFinder, findsOneWidget);
+      expect(miniPlayerFinder, findsOneWidget);
+
+      final scrollButtonBottom = tester.getBottomLeft(scrollToTopFinder).dy;
+      final miniPlayerTop = tester.getTopLeft(miniPlayerFinder).dy;
+      expect(scrollButtonBottom, lessThan(miniPlayerTop));
+    });
+
+    testWidgets('mobile collapsed player uses surface spacer background', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(390, 844);
@@ -365,7 +599,8 @@ void main() {
       );
       expect(spacerFinder, findsOneWidget);
       final spacerContainer = tester.widget<Container>(spacerFinder);
-      expect(spacerContainer.color, Colors.transparent);
+      final theme = Theme.of(tester.element(spacerFinder));
+      expect(spacerContainer.color, theme.colorScheme.surface);
       expect(tester.getRect(spacerFinder).height, closeTo(65.0, 0.1));
     });
 
@@ -397,6 +632,81 @@ void main() {
 
       expect(find.byType(PodcastBottomPlayerWidget), findsNothing);
     });
+
+    testWidgets(
+      'desktop player is constrained to the right content area bottom',
+      (tester) async {
+        addTearDown(() async {
+          await tester.binding.setSurfaceSize(null);
+        });
+        await tester.binding.setSurfaceSize(const Size(1200, 900));
+
+        final notifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _episode(),
+            duration: 180000,
+            isExpanded: true,
+            isPlaying: true,
+          ),
+        );
+
+        await tester.pumpWidget(_createWidget(notifier));
+        await tester.pumpAndSettle();
+
+        final rightPaneFinder = find.byKey(
+          const Key('podcast_episode_detail_wide_right_pane'),
+        );
+        final playerRegionFinder = find.byKey(
+          const Key('podcast_episode_detail_desktop_player_region'),
+        );
+        expect(rightPaneFinder, findsOneWidget);
+        expect(playerRegionFinder, findsOneWidget);
+
+        final rightPaneRect = tester.getRect(rightPaneFinder);
+        final playerRegionRect = tester.getRect(playerRegionFinder);
+
+        expect(playerRegionRect.left, closeTo(rightPaneRect.left + 12, 0.5));
+        expect(playerRegionRect.right, closeTo(rightPaneRect.right - 12, 0.5));
+        expect(playerRegionRect.bottom, closeTo(rightPaneRect.bottom, 0.5));
+        expect(playerRegionRect.left, greaterThan(0));
+      },
+    );
+
+    testWidgets(
+      'keeps bottom player visible on wide transcript and summary tabs when expanded',
+      (tester) async {
+        addTearDown(() async {
+          await tester.binding.setSurfaceSize(null);
+        });
+        await tester.binding.setSurfaceSize(const Size(1200, 900));
+
+        final notifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _episode(),
+            duration: 180000,
+            isExpanded: true,
+            isPlaying: true,
+          ),
+        );
+
+        await tester.pumpWidget(_createWidget(notifier));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Transcript').first);
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(
+          find.byKey(const Key('podcast_episode_detail_desktop_player_region')),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.text('Summary').first);
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(
+          find.byKey(const Key('podcast_episode_detail_desktop_player_region')),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('same episode paused tap should call resume only', (
       tester,
