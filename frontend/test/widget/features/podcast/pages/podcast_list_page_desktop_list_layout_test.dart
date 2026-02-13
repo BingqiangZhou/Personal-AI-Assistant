@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_list_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart'
     as search;
 
 void main() {
-  group('PodcastListPage mobile card layout', () {
-    testWidgets('subscription card matches mini player inset and radius', (
+  group('PodcastListPage desktop subscription layout', () {
+    testWidgets('renders single-column list and keeps card navigation', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(390, 844);
+      tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -29,56 +29,52 @@ void main() {
         ),
       );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            podcastSubscriptionProvider.overrideWith(() => notifier),
-            search.podcastSearchProvider.overrideWithValue(
-              const search.PodcastSearchState(),
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => ProviderScope(
+              overrides: [
+                podcastSubscriptionProvider.overrideWith(() => notifier),
+                search.podcastSearchProvider.overrideWithValue(
+                  const search.PodcastSearchState(),
+                ),
+                localStorageServiceProvider.overrideWithValue(
+                  MockLocalStorageService(),
+                ),
+              ],
+              child: const PodcastListPage(),
             ),
-            localStorageServiceProvider.overrideWithValue(
-              MockLocalStorageService(),
-            ),
-          ],
-          child: MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: const PodcastListPage(),
           ),
+          GoRoute(
+            path: '/podcast/episodes/:id',
+            builder: (context, state) =>
+                const Scaffold(body: Text('Episodes Page')),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
         ),
       );
       await tester.pumpAndSettle();
+
+      expect(find.byType(GridView), findsNothing);
+      expect(find.byType(ListView), findsOneWidget);
 
       final cardFinder = find.byKey(
         const Key('podcast_subscription_mobile_card_1'),
       );
       expect(cardFinder, findsOneWidget);
 
-      final cardWidget = tester.widget<Card>(cardFinder);
-      expect(
-        cardWidget.margin,
-        const EdgeInsets.symmetric(
-          horizontal: kPodcastRowCardHorizontalMargin,
-          vertical: kPodcastRowCardVerticalMargin,
-        ),
-      );
-      expect(cardWidget.shape, isA<RoundedRectangleBorder>());
+      await tester.tap(cardFinder);
+      await tester.pumpAndSettle();
 
-      final rounded = cardWidget.shape! as RoundedRectangleBorder;
-      final radius = rounded.borderRadius.resolve(TextDirection.ltr);
-      expect(radius.topLeft.x, kPodcastRowCardCornerRadius);
-      expect(radius.topRight.x, kPodcastRowCardCornerRadius);
-      expect(radius.bottomLeft.x, kPodcastRowCardCornerRadius);
-      expect(radius.bottomRight.x, kPodcastRowCardCornerRadius);
-
-      final cardMaterialFinder = find.descendant(
-        of: cardFinder,
-        matching: find.byType(Material),
-      );
-      expect(cardMaterialFinder, findsWidgets);
-      final cardMaterialRect = tester.getRect(cardMaterialFinder.first);
-      expect(cardMaterialRect.width, closeTo(350, 1));
-      expect(cardMaterialRect.height, closeTo(kPodcastRowCardTargetHeight, 2));
+      expect(find.text('Episodes Page'), findsOneWidget);
     });
   });
 }

@@ -5,6 +5,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_search_model.dart';
 import '../../data/models/podcast_state_models.dart';
 import '../../data/utils/podcast_url_utils.dart';
+import '../constants/podcast_ui_constants.dart';
 import '../providers/country_selector_provider.dart';
 import '../providers/podcast_providers.dart' as providers;
 import '../providers/podcast_search_provider.dart';
@@ -154,115 +155,79 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
       return SizeTransition(
         sizeFactor: _expandAnimation,
         axisAlignment: -1,
-        child: AnimatedContainer(
+        child: SearchBar(
           key: const Key('podcast_list_discover_card'),
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(
-              alpha: 0.45,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+          controller: _searchController,
+          focusNode: _focusNode,
+          hintText: l10n.podcast_search_hint,
+          hintStyle: WidgetStateProperty.all(
+            TextStyle(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          constraints: const BoxConstraints(
+            minWidth: double.infinity,
+            maxWidth: double.infinity,
+            minHeight: 42,
+            maxHeight: 42,
+          ),
+          shape: WidgetStateProperty.all(
+            RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
+              side: BorderSide(
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+              ),
             ),
           ),
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SearchBar(
-                controller: _searchController,
-                focusNode: _focusNode,
-                hintText: l10n.podcast_search_hint,
-                hintStyle: WidgetStateProperty.all(
-                  TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                ),
-                constraints: const BoxConstraints(
-                  minWidth: double.infinity,
-                  maxWidth: double.infinity,
-                  minHeight: 42,
-                  maxHeight: 42,
-                ),
-                leading: InkWell(
-                  key: _countryButtonKey,
-                  onTap: _toggleCountrySelector,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          countryState.selectedCountry.code.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          _countrySelectorOverlay != null
-                              ? Icons.arrow_drop_up
-                              : Icons.arrow_drop_down,
-                          size: 18,
-                          color: theme.colorScheme.onPrimaryContainer,
-                        ),
-                      ],
+          leading: InkWell(
+            key: _countryButtonKey,
+            onTap: _toggleCountrySelector,
+            child: Container(
+              key: const Key('podcast_list_discover_country_button_container'),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              margin: const EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    countryState.selectedCountry.code.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onPrimaryContainer,
                     ),
                   ),
-                ),
-                trailing: [
-                  if (_searchController.text.isNotEmpty)
-                    Center(
-                      child: IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: _handleClearSearch,
-                        iconSize: 18,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    _countrySelectorOverlay != null
+                        ? Icons.arrow_drop_up
+                        : Icons.arrow_drop_down,
+                    size: 18,
+                    color: theme.colorScheme.onPrimaryContainer,
+                  ),
                 ],
-                onChanged: _handleSearch,
-                elevation: WidgetStateProperty.all(0),
-                backgroundColor: WidgetStateProperty.all(
-                  theme.colorScheme.surface,
-                ),
-                padding: WidgetStateProperty.all(
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              ),
+            ),
+          ),
+          trailing: [
+            if (_searchController.text.isNotEmpty)
+              Center(
+                child: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: _handleClearSearch,
+                  iconSize: 18,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(6, 10, 6, 2),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.info_outline,
-                      size: 12,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        l10n.podcast_network_hint,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          ],
+          onChanged: _handleSearch,
+          elevation: WidgetStateProperty.all(0),
+          backgroundColor: WidgetStateProperty.all(theme.colorScheme.surface),
+          padding: WidgetStateProperty.all(
+            const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           ),
         ),
       );

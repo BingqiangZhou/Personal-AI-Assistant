@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_search_model.dart';
+import '../constants/podcast_ui_constants.dart';
 
-/// 播客搜索结果卡片组件
-///
-/// Material 3 Card 设计，显示播客封面、标题、作者等信息
 class PodcastSearchResultCard extends StatelessWidget {
   const PodcastSearchResultCard({
     super.key,
@@ -27,177 +25,182 @@ class PodcastSearchResultCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    // 如果缺少必要字段，不显示此卡片
     if (result.collectionName == null || result.feedUrl == null) {
       return const SizedBox.shrink();
     }
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      margin: const EdgeInsets.symmetric(
+        horizontal: kPodcastRowCardHorizontalMargin,
+        vertical: kPodcastRowCardVerticalMargin,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => onSubscribe?.call(result),
+        borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
         child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Row(
-            children: [
-              // 播客封面
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: SizedBox(
-                  width: 56,
-                  height: 56,
-                  child: result.artworkUrl100 != null
-                      ? Image.network(
-                          result.artworkUrl100!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: theme.colorScheme.primaryContainer,
-                              child: Center(
-                                child: Icon(
-                                  Icons.podcasts,
-                                  size: 24,
-                                  color: theme.colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                            );
-                          },
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                              color: theme.colorScheme.primaryContainer,
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  value: loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                          loadingProgress.expectedTotalBytes!
-                                      : null,
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            );
-                          },
-                        )
-                      : Container(
-                          color: theme.colorScheme.primaryContainer,
-                          child: Center(
-                            child: Icon(
-                              Icons.podcasts,
-                              size: 24,
-                              color: theme.colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                        ),
-                ),
-              ),
-
-              const SizedBox(width: 10),
-
-              // 播客信息
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 标题（使用更小的字体）
-                    Text(
-                      result.collectionName!,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    const SizedBox(height: 2),
-
-                    // 作者（使用更小的字体）
-                    Text(
-                      result.artistName ?? l10n.podcast_unknown_author,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    const SizedBox(height: 2),
-
-                    // 分类和集数（使用更小的图标和字体）
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (result.primaryGenreName != null) ...[
-                          Icon(
-                            Icons.category,
-                            size: 12,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 3),
-                          Flexible(
-                            child: Text(
-                              result.primaryGenreName!,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
+          padding: const EdgeInsets.symmetric(
+            horizontal: kPodcastRowCardHorizontalPadding,
+            vertical: kPodcastRowCardVerticalPadding,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: kPodcastRowCardImageSize,
+            ),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                    kPodcastRowCardImageRadius,
+                  ),
+                  child: SizedBox(
+                    key: const Key('podcast_search_result_card_artwork'),
+                    width: kPodcastRowCardImageSize,
+                    height: kPodcastRowCardImageSize,
+                    child: result.artworkUrl100 != null
+                        ? Image.network(
+                            result.artworkUrl100!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: theme.colorScheme.primaryContainer,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.podcasts,
+                                    size: 24,
+                                    color: theme.colorScheme.onPrimaryContainer,
                                   ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            },
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) {
+                                return child;
+                              }
+                              return Container(
+                                color: theme.colorScheme.primaryContainer,
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    value:
+                                        loadingProgress.expectedTotalBytes !=
+                                            null
+                                        ? loadingProgress
+                                                  .cumulativeBytesLoaded /
+                                              loadingProgress
+                                                  .expectedTotalBytes!
+                                        : null,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        : Container(
+                            color: theme.colorScheme.primaryContainer,
+                            child: Center(
+                              child: Icon(
+                                Icons.podcasts,
+                                size: 24,
+                                color: theme.colorScheme.onPrimaryContainer,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 6),
-                        ],
-                        Icon(
-                          Icons.podcasts,
-                          size: 12,
+                  ),
+                ),
+                const SizedBox(width: kPodcastRowCardHorizontalGap),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        result.collectionName!,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        result.artistName ?? l10n.podcast_unknown_author,
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${result.trackCount ?? 0} ${l10n.podcast_episodes}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontSize: 11,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (result.primaryGenreName != null) ...[
+                            Icon(
+                              Icons.category,
+                              size: 14,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                result.primaryGenreName!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ],
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Icon(
+                            Icons.podcasts,
+                            size: 14,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${result.trackCount ?? 0} ${l10n.podcast_episodes}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-
-              const SizedBox(width: 6),
-
-              // 订阅状态图标（带过渡动画）
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                transitionBuilder: (child, animation) {
-                  return FadeTransition(
-                    opacity: animation,
-                    child: ScaleTransition(
-                      scale: animation,
-                      child: child,
-                    ),
-                  );
-                },
-                child: _buildSubscribeButton(context, l10n, theme),
-              ),
-            ],
+                const SizedBox(width: 6),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(scale: animation, child: child),
+                    );
+                  },
+                  child: _buildSubscribeButton(context, l10n, theme),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  /// 构建订阅按钮
   Widget _buildSubscribeButton(
     BuildContext context,
     AppLocalizations l10n,
     ThemeData theme,
   ) {
-    // 已订阅状态
     if (isSubscribed) {
       return Tooltip(
         key: const ValueKey('subscribed'),
@@ -217,19 +220,15 @@ class PodcastSearchResultCard extends StatelessWidget {
       );
     }
 
-    // 订阅中状态 - 显示加载动画（与订阅图标大小一致）
     if (isSubscribing) {
       return const SizedBox(
         key: ValueKey('subscribing'),
         width: 24,
         height: 24,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-        ),
+        child: CircularProgressIndicator(strokeWidth: 2),
       );
     }
 
-    // 未订阅状态
     return Tooltip(
       key: const ValueKey('not_subscribed'),
       message: l10n.podcast_subscribe,
@@ -239,10 +238,7 @@ class PodcastSearchResultCard extends StatelessWidget {
         iconSize: 24,
         color: theme.colorScheme.onSurfaceVariant,
         padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(
-          minWidth: 36,
-          minHeight: 36,
-        ),
+        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       ),
     );
   }

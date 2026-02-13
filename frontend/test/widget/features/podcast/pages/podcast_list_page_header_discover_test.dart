@@ -5,6 +5,7 @@ import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_list_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/bulk_selection_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
@@ -51,6 +52,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(PodcastListPage)),
+      );
+      expect(l10n, isNotNull);
+
       expect(
         find.byKey(const Key('podcast_list_header_title')),
         findsOneWidget,
@@ -69,7 +75,19 @@ void main() {
         findsOneWidget,
       );
       expect(
+        find.byKey(const Key('podcast_list_discover_hint_action')),
+        findsOneWidget,
+      );
+      expect(
         find.byKey(const Key('podcast_list_discover_card')),
+        findsOneWidget,
+      );
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SearchBar &&
+              widget.key == const Key('podcast_list_discover_card'),
+        ),
         findsOneWidget,
       );
       expect(
@@ -81,6 +99,48 @@ void main() {
         find.byKey(const Key('podcast_list_subscriptions_title')),
       );
       expect(subscriptionsTitle.text.toPlainText(), contains('(1)'));
+
+      expect(find.text(l10n!.podcast_network_hint), findsNothing);
+
+      final searchBar = tester.widget<SearchBar>(
+        find.byKey(const Key('podcast_list_discover_card')),
+      );
+      final searchBarShape = searchBar.shape?.resolve(<WidgetState>{});
+      expect(searchBarShape, isA<RoundedRectangleBorder>());
+      final resolvedSearchBarRadius =
+          (searchBarShape! as RoundedRectangleBorder).borderRadius.resolve(
+            TextDirection.ltr,
+          );
+      expect(
+        resolvedSearchBarRadius.topLeft.x,
+        equals(kPodcastMiniCornerRadius),
+      );
+      expect(
+        resolvedSearchBarRadius.topRight.x,
+        equals(kPodcastMiniCornerRadius),
+      );
+
+      final countryButtonContainer = tester.widget<Container>(
+        find.byKey(const Key('podcast_list_discover_country_button_container')),
+      );
+      final countryButtonDecoration =
+          countryButtonContainer.decoration! as BoxDecoration;
+      final resolvedCountryRadius =
+          (countryButtonDecoration.borderRadius! as BorderRadius).resolve(
+            TextDirection.ltr,
+          );
+      expect(resolvedCountryRadius.topLeft.x, equals(kPodcastMiniCornerRadius));
+      expect(
+        resolvedCountryRadius.topRight.x,
+        equals(kPodcastMiniCornerRadius),
+      );
+
+      await tester.tap(
+        find.byKey(const Key('podcast_list_discover_hint_action')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(l10n.podcast_network_hint), findsOneWidget);
     });
 
     testWidgets('maps top-right actions to existing behaviors', (tester) async {

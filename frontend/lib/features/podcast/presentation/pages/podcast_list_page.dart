@@ -7,6 +7,7 @@ import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../core/utils/episode_description_helper.dart';
 import '../../data/models/podcast_search_model.dart';
 import '../../data/models/podcast_subscription_model.dart';
+import '../constants/podcast_ui_constants.dart';
 import '../providers/bulk_selection_provider.dart';
 import '../providers/podcast_providers.dart';
 import '../providers/podcast_search_provider.dart' as search;
@@ -24,9 +25,8 @@ class PodcastListPage extends ConsumerStatefulWidget {
 
 class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   final ScrollController _scrollController = ScrollController();
-
-  static const double _mobileSubscriptionCardHorizontalMargin = 4.0;
-  static const double _mobileSubscriptionCardRadius = 12.0;
+  final GlobalKey<TooltipState> _discoverHintTooltipKey =
+      GlobalKey<TooltipState>();
 
   @override
   void initState() {
@@ -198,10 +198,35 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            l10n.podcast_discover_new,
-            key: const Key('podcast_list_discover_title'),
-            style: sectionTitleStyle,
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.podcast_discover_new,
+                  key: const Key('podcast_list_discover_title'),
+                  style: sectionTitleStyle,
+                ),
+              ),
+              Tooltip(
+                key: _discoverHintTooltipKey,
+                message: l10n.podcast_network_hint,
+                triggerMode: TooltipTriggerMode.manual,
+                preferBelow: false,
+                child: IconButton(
+                  key: const Key('podcast_list_discover_hint_action'),
+                  onPressed: () {
+                    _discoverHintTooltipKey.currentState
+                        ?.ensureTooltipVisible();
+                  },
+                  icon: Icon(
+                    Icons.info_outline,
+                    size: 20,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
           SearchPanel(expanded: true, onSubscribe: _handleSubscribeFromSearch),
@@ -302,8 +327,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final l10n = AppLocalizations.of(context)!;
     final subscriptionState = ref.watch(podcastSubscriptionProvider);
     final bulkSelectionState = ref.watch(bulkSelectionProvider);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
 
     if (subscriptionState.isLoading &&
         subscriptionState.subscriptions.isEmpty) {
@@ -373,30 +396,19 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     return RefreshIndicator(
       onRefresh: () =>
           ref.read(podcastSubscriptionProvider.notifier).refreshSubscriptions(),
-      child: isMobile
-          ? _buildMobileList(
-              context,
-              subscriptionState.subscriptions,
-              bulkSelectionState,
-              subscriptionState.hasMore,
-              subscriptionState.isLoadingMore,
-              subscriptionState.total,
-              l10n,
-            )
-          : _buildDesktopGrid(
-              context,
-              subscriptionState.subscriptions,
-              bulkSelectionState,
-              subscriptionState.hasMore,
-              subscriptionState.isLoadingMore,
-              subscriptionState.total,
-              l10n,
-              screenWidth,
-            ),
+      child: _buildSubscriptionList(
+        context,
+        subscriptionState.subscriptions,
+        bulkSelectionState,
+        subscriptionState.hasMore,
+        subscriptionState.isLoadingMore,
+        subscriptionState.total,
+        l10n,
+      ),
     );
   }
 
-  Widget _buildMobileList(
+  Widget _buildSubscriptionList(
     BuildContext context,
     List<PodcastSubscriptionModel> subscriptions,
     BulkSelectionState bulkSelectionState,
@@ -405,8 +417,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     int total,
     AppLocalizations l10n,
   ) {
-    final theme = Theme.of(context);
-
     return ListView.builder(
       controller: _scrollController,
       itemCount: subscriptions.length + 1,
@@ -418,251 +428,128 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         final subscription = subscriptions[index];
         final isSelected = bulkSelectionState.isSelected(subscription.id);
 
-        return Card(
-          key: Key('podcast_subscription_mobile_card_${subscription.id}'),
-          margin: const EdgeInsets.symmetric(
-            horizontal: _mobileSubscriptionCardHorizontalMargin,
-            vertical: 2,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_mobileSubscriptionCardRadius),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: bulkSelectionState.isSelectionMode
-                ? () => ref
-                      .read(bulkSelectionProvider.notifier)
-                      .toggleSelection(subscription.id)
-                : () {
-                    context.push(
-                      '/podcast/episodes/${subscription.id}',
-                      extra: subscription,
-                    );
-                  },
-            borderRadius: BorderRadius.circular(_mobileSubscriptionCardRadius),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: SizedBox(
-                      width: 60,
-                      height: 60,
-                      child: subscription.imageUrl != null
-                          ? Image.network(
-                              subscription.imageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: theme.colorScheme.primaryContainer,
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.podcasts,
-                                      size: 24,
-                                      color:
-                                          theme.colorScheme.onPrimaryContainer,
-                                    ),
-                                  ),
-                                );
-                              },
-                            )
-                          : Container(
-                              color: theme.colorScheme.primaryContainer,
-                              child: Center(
-                                child: Icon(
-                                  Icons.podcasts,
-                                  size: 24,
-                                  color: theme.colorScheme.onPrimaryContainer,
-                                ),
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          subscription.title,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          subscription.description != null
-                              ? EpisodeDescriptionHelper.stripHtmlTags(
-                                  subscription.description!,
-                                )
-                              : l10n.podcast_description,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (bulkSelectionState.isSelectionMode)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: Checkbox(
-                        value: isSelected,
-                        onChanged: (_) {
-                          ref
-                              .read(bulkSelectionProvider.notifier)
-                              .toggleSelection(subscription.id);
-                        },
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
+        return _buildSubscriptionRowCard(
+          context,
+          subscription,
+          bulkSelectionState,
+          isSelected,
+          l10n,
         );
       },
     );
   }
 
-  Widget _buildDesktopGrid(
+  Widget _buildSubscriptionRowCard(
     BuildContext context,
-    List<PodcastSubscriptionModel> subscriptions,
+    PodcastSubscriptionModel subscription,
     BulkSelectionState bulkSelectionState,
-    bool hasMore,
-    bool isLoadingMore,
-    int total,
+    bool isSelected,
     AppLocalizations l10n,
-    double screenWidth,
   ) {
     final theme = Theme.of(context);
 
-    return GridView.builder(
-      controller: _scrollController,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: screenWidth < 900 ? 2 : (screenWidth < 1200 ? 3 : 4),
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.76,
+    return Card(
+      key: Key('podcast_subscription_mobile_card_${subscription.id}'),
+      margin: const EdgeInsets.symmetric(
+        horizontal: kPodcastRowCardHorizontalMargin,
+        vertical: kPodcastRowCardVerticalMargin,
       ),
-      itemCount: subscriptions.length + 1,
-      itemBuilder: (context, index) {
-        if (index == subscriptions.length) {
-          return _buildLoadingIndicator(hasMore, isLoadingMore, total, l10n);
-        }
-
-        final subscription = subscriptions[index];
-        final isSelected = bulkSelectionState.isSelected(subscription.id);
-
-        return Stack(
-          children: [
-            Card(
-              clipBehavior: Clip.antiAlias,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(
-                  color: theme.colorScheme.outlineVariant.withValues(
-                    alpha: 0.55,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: bulkSelectionState.isSelectionMode
+            ? () => ref
+                  .read(bulkSelectionProvider.notifier)
+                  .toggleSelection(subscription.id)
+            : () {
+                context.push(
+                  '/podcast/episodes/${subscription.id}',
+                  extra: subscription,
+                );
+              },
+        borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: kPodcastRowCardHorizontalPadding,
+            vertical: kPodcastRowCardVerticalPadding,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: kPodcastRowCardImageSize,
+            ),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                    kPodcastRowCardImageRadius,
                   ),
-                ),
-              ),
-              child: InkWell(
-                onTap: bulkSelectionState.isSelectionMode
-                    ? () => ref
-                          .read(bulkSelectionProvider.notifier)
-                          .toggleSelection(subscription.id)
-                    : () {
-                        context.push(
-                          '/podcast/episodes/${subscription.id}',
-                          extra: subscription,
-                        );
-                      },
-                borderRadius: BorderRadius.circular(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: subscription.imageUrl != null
-                            ? Image.network(
-                                subscription.imageUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    color: theme.colorScheme.primaryContainer,
-                                    child: Center(
-                                      child: Icon(
-                                        Icons.podcasts,
-                                        size: 48,
-                                        color: theme
-                                            .colorScheme
-                                            .onPrimaryContainer,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              )
-                            : Container(
+                  child: SizedBox(
+                    width: kPodcastRowCardImageSize,
+                    height: kPodcastRowCardImageSize,
+                    child: subscription.imageUrl != null
+                        ? Image.network(
+                            subscription.imageUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
                                 color: theme.colorScheme.primaryContainer,
                                 child: Center(
                                   child: Icon(
                                     Icons.podcasts,
-                                    size: 48,
+                                    size: 24,
                                     color: theme.colorScheme.onPrimaryContainer,
                                   ),
                                 ),
+                              );
+                            },
+                          )
+                        : Container(
+                            color: theme.colorScheme.primaryContainer,
+                            child: Center(
+                              child: Icon(
+                                Icons.podcasts,
+                                size: 24,
+                                color: theme.colorScheme.onPrimaryContainer,
                               ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            subscription.title,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            subscription.description != null
-                                ? EpisodeDescriptionHelper.stripHtmlTags(
-                                    subscription.description!,
-                                  )
-                                : l10n.podcast_description,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            if (bulkSelectionState.isSelectionMode)
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Material(
-                    color: Colors.transparent,
+                ),
+                const SizedBox(width: kPodcastRowCardHorizontalGap),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        subscription.title,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subscription.description != null
+                            ? EpisodeDescriptionHelper.stripHtmlTags(
+                                subscription.description!,
+                              )
+                            : l10n.podcast_description,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                if (bulkSelectionState.isSelectionMode)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
                     child: Checkbox(
                       value: isSelected,
                       onChanged: (_) {
@@ -672,26 +559,11 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                       },
                     ),
                   ),
-                ),
-              ),
-            if (isSelected)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.08),
-                      border: Border.all(
-                        color: theme.colorScheme.primary,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        );
-      },
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/audio_player_state_model.dart';
 import '../constants/playback_speed_options.dart';
+import '../constants/podcast_ui_constants.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import 'playback_speed_selector_sheet.dart';
@@ -49,7 +50,6 @@ class _MiniBottomPlayer extends ConsumerWidget {
 
   final AudioPlayerState state;
   static const double _miniHeight = 56;
-  static const double _miniRadius = 12;
   static const double _mobileHorizontalInset = 20;
 
   @override
@@ -79,7 +79,7 @@ class _MiniBottomPlayer extends ConsumerWidget {
           elevation: 0,
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_miniRadius),
+            borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
             side: BorderSide(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
               width: 1,
