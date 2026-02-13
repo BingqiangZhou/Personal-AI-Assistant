@@ -1,63 +1,65 @@
 ---
 name: /commit
-description: 智能分析代码更改并生成符合规范的 commit message
+description: Smart commit workflow - analyze changes and generate conventional commit messages
 usage: /commit [type]
 example: /commit or /commit feat
 ---
 
 # Smart Commit Workflow Command
 
-当收到 `/commit [类型]` 命令时，按以下步骤自动执行提交流程：
+When receiving `/commit [type]` command, follow these steps:
 
-## 步骤1: 分析更改
-1. 运行 `git status` 查看所有更改的文件
-2. 运行 `git diff` 查看具体更改内容
-3. 区分 staged 和 unstaged 的更改
+## Step 1: Analyze Changes
+1. Run `git status` to see all changed files
+2. Run `git diff` to see specific changes
+3. Distinguish between staged and unstaged changes
 
-## 步骤2: 确定 Commit 类型
-根据更改内容自动推断类型（若用户未指定）：
-- `test` - 测试文件改动
-- `doc` - 文档改动
-- `chore` - 构建、配置、依赖相关
-- `feat` - 新功能（默认）
-- `fix` - bug 修复
-- `refactor` - 代码重构
-- `style` - 代码风格调整
-- `perf` - 性能优化
+## Step 2: Determine Commit Type
+Auto-detect type based on changes (if user not specified):
+- `test` - Test file changes
+- `doc` - Documentation changes
+- `chore` - Build, config, dependency related
+- `feat` - New feature (default)
+- `fix` - Bug fix
+- `refactor` - Code refactoring
+- `style` - Code style adjustments
+- `perf` - Performance optimization
 
-## 步骤3: 确定 Scope
-根据文件路径推断功能模块：
-- `auth` - 认证相关
-- `podcast` - 播客相关
-- `chat` - 聊天相关
-- `settings` - 设置相关
-- `user` - 用户相关
-- `api` - API 相关
-- `models` - 数据模型相关
-- `services` - 服务层相关
-- `core` - 核心功能
-- `ui` - UI 组件
+## Step 3: Determine Scope
+Infer scope from file paths:
+- `auth` - Authentication related
+- `podcast` - Podcast related
+- `chat` - Chat related
+- `settings` - Settings related
+- `user` - User related
+- `api` - API related
+- `models` - Data models related
+- `services` - Service layer related
+- `core` - Core functionality
+- `ui` - UI components
 
-## 步骤4: 生成 Commit Message
-格式遵循 [Conventional Commits](https://www.conventionalcommits.org/)：
+## Step 4: Generate Commit Message
+Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
 ```
 <type>[optional scope]: <description>
 
 [optional body]
 ```
 
-## 步骤5: 等待确认
-1. 显示生成的 commit message
-2. 询问用户是否接受
-3. 如不接受，取消操作
+## Step 5: Wait for Confirmation
+1. Display generated commit message
+2. Ask user to confirm
+3. Cancel if not accepted
 
-## 步骤6: 执行提交
-1. 若有 unstaged 更改，先 `git add`
-2. 执行 `git commit`
-3. 显示提交结果
+## Step 6: Execute Commit
+1. If unstaged changes exist, run `git add` first
+2. Execute `git commit`
+3. Display commit result
 
-## Commit Message 格式参考
-根据项目 `cliff.toml` 中的 commit_parsers：
+**IMPORTANT**: Do NOT include `Co-Authored-By:` in commit messages.
+
+## Commit Message Format Reference
+Based on project `cliff.toml` commit_parsers:
 
 | Pattern | Group |
 |---------|-------|
@@ -70,14 +72,14 @@ example: /commit or /commit feat
 | `^test` | 🧪 Testing |
 | `^chore` | ⚙️ Miscellaneous Tasks |
 
-## 示例
-输入: `/commit`
-- 分析更改: `frontend/lib/features/settings/...`
-- 自动推断类型: `feat`
-- 自动推断 scope: `settings`
-- 生成: `feat(settings): add markdown rendering to update_dialog.dart, app_update_provider.dart`
-- 确认后执行提交
+## Examples
+Input: `/commit`
+- Analyze changes: `frontend/lib/features/settings/...`
+- Auto-detect type: `feat`
+- Auto-detect scope: `settings`
+- Generate: `feat(settings): add markdown rendering to update_dialog.dart, app_update_provider.dart`
+- Execute commit after confirmation
 
-输入: `/commit test`
-- 指定类型: `test`
-- 生成: `test: add tests for update_dialog markdown rendering`
+Input: `/commit test`
+- Specified type: `test`
+- Generate: `test: add tests for update_dialog markdown rendering`
