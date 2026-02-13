@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.7.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.6.0...v0.7.0) - 2026-02-13 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.7.0))
+
+### 🐛 Bug Fixes
+
+- *(podcast)* Make mobile bottom spacer transparent when player collapsed ([f277036](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f2770362de2bddb45381a13a4a2083736c878f26))
+
+### 📚 Documentation
+
+- Update README.md with current features, API endpoints, and testing requirements ([5c96024](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5c96024eabfa497320c63d476b3c801a47ad2c39))
+
+### 🚀 Features
+
+- *(home)* Auto-collapse audio player when navigating away from podcast tabs ([5a57dab](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5a57dab6df460bdf0eaaeb5a83eadf4d611b2115))
+- *(podcast)* Add mobile bottom spacer and redesign expanded player controls ([9c0f7c4](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9c0f7c416b47a86b52b49a165f4b01acff5463ad))
+- *(podcast)* Redesign podcast list page with Discover New section ([200faa6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/200faa604f5243603c934a5849cff2a87cda0bb5))
+
+### 🚜 Refactor
+
+- *(podcast)* Consolidate audio player into bottom player widget ([35d975c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/35d975c9d5420403d43f822a0551e373282d43bd))
+- *(podcast)* Extract UI constants and reorganize podcast layout code ([b5d5c5a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b5d5c5a5d76c0b2a9d5ccbc58cc86f45d4cc65ac))
+- *(podcast)* Restructure simplified episode card layout and add widget tests ([0ff6459](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0ff6459cc28bd7ae8bdd5b1c2612f5cb2fdd440f))
+- *(podcast)* Restructure desktop player position and update player visibility logic ([261081d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/261081d4d12e48d0a098126f7afeb9fa69b56e40))
+- *(profile)* Apply feed-style card layout to history page and responsive card styling ([e945297](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e9452977ccdc0ad72496ab53f1f22ea45951327b))
+- *(profile)* Restructure profile page and remove settings page ([a98737f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a98737f574642901b0cd4ab4a80c57744aad7a21))
+
+
+
 ## [0.6.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.5.5...v0.6.0) - 2026-02-13 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.6.0))
 
 ### 🚀 Features
