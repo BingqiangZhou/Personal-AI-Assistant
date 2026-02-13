@@ -41,9 +41,49 @@ Infer scope from file paths:
 ## Step 4: Generate Commit Message
 Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
 ```
-<type>[optional scope]: <description>
+<type>[optional scope]: <summary>
 
-[optional body]
+<bullet list of changes>
+```
+
+The commit message must include:
+1. **Summary line**: One-line description in `<type>[optional scope]: <summary>` format
+2. **Body bulleted list**: Each significant change listed as a separate bullet point
+
+### Commit Message Structure:
+```
+<type>[optional scope]: <summary>
+
+- <Bullet point 1>
+
+- <Bullet point 2>
+
+- <Bullet point 3>
+...
+```
+
+### Bullet Point Format:
+- Start with capital letter
+- Use imperative mood ("Add", "Fix", "Move", not "Adds", "Fixed", "Moving")
+- Be specific and concise
+- No period at the end
+- Maximum 80 characters per line
+
+### Example:
+```
+refactor(podcast): restructure simplified episode card layout and add widget tests
+
+- Move play/add to queue buttons to bottom row with metadata
+
+- Reorganize card to show title, description, then actions
+
+- Add proper test keys for widget testing
+
+- Fix RefreshIndicator placement in episodes page
+
+- Add textScaler to RichText in list page
+
+- Add new widget test for simplified episode card layout
 ```
 
 ## Step 5: Wait for Confirmation
@@ -73,13 +113,58 @@ Based on project `cliff.toml` commit_parsers:
 | `^chore` | ⚙️ Miscellaneous Tasks |
 
 ## Examples
+
+### Example 1:
 Input: `/commit`
-- Analyze changes: `frontend/lib/features/settings/...`
-- Auto-detect type: `feat`
-- Auto-detect scope: `settings`
-- Generate: `feat(settings): add markdown rendering to update_dialog.dart, app_update_provider.dart`
+- Analyze changes: `frontend/lib/features/podcast/...`
+- Auto-detect type: `refactor`
+- Auto-detect scope: `podcast`
+- Generate:
+```
+refactor(podcast): restructure desktop player position and update player visibility logic
+
+- Move desktop player from bottomNavigationBar to right pane bottom
+
+- Update player visibility logic for transcript/summary tabs on mobile
+
+- Add scroll-to-top button positioning adjustment above mini player
+
+- Change spacer background color from transparent to surface
+
+- Add LayoutBuilder wrapper for wide layout detection
+
+- Improve title layout in simplified episode card with fixed two-line slot
+
+- Add extensive widget tests for new player behavior
+```
 - Execute commit after confirmation
 
+### Example 2:
 Input: `/commit test`
 - Specified type: `test`
-- Generate: `test: add tests for update_dialog markdown rendering`
+- Generate:
+```
+test(podcast): add widget tests for desktop player positioning
+
+- Verify desktop player is constrained to right content area bottom
+
+- Test player visibility on transcript and summary tabs when expanded
+
+- Validate scroll-to-top button positioning above mini player
+
+- Add tests for mobile player visibility on transcript/summary tabs
+```
+
+### Example 3:
+Input: `/commit feat`
+- Analyze changes: `frontend/lib/features/settings/...`
+- Generate:
+```
+feat(settings): add markdown rendering to update dialog
+
+- Implement markdown rendering in update_dialog.dart
+
+- Add markdown support in app_update_provider.dart
+
+- Update error handling for markdown parsing failures
+```

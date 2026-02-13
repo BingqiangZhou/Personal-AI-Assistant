@@ -148,4 +148,96 @@ void main() {
 
     expect(find.text('0'), findsNWidgets(3));
   });
+
+  testWidgets('uses feed-style card shape and width on mobile profile cards', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          profileStatsProvider.overrideWith((ref) async {
+            return const ProfileStatsModel(
+              totalSubscriptions: 1,
+              totalEpisodes: 23,
+              summariesGenerated: 12,
+              pendingSummaries: 11,
+              playedEpisodes: 8,
+            );
+          }),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: ProfilePage()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final cards = tester.widgetList<Card>(find.byType(Card)).toList();
+    expect(cards, isNotEmpty);
+
+    for (final card in cards) {
+      expect(card.margin, const EdgeInsets.symmetric(horizontal: 4));
+      expect(card.shape, isA<RoundedRectangleBorder>());
+
+      final shape = card.shape! as RoundedRectangleBorder;
+      expect(shape.borderRadius, BorderRadius.circular(12));
+      expect(shape.side.style, BorderStyle.none);
+      expect(shape.side.width, 0);
+    }
+  });
+
+  testWidgets('keeps desktop profile cards unchanged', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          profileStatsProvider.overrideWith((ref) async {
+            return const ProfileStatsModel(
+              totalSubscriptions: 1,
+              totalEpisodes: 23,
+              summariesGenerated: 12,
+              pendingSummaries: 11,
+              playedEpisodes: 8,
+            );
+          }),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: ProfilePage()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('profile_viewed_card_chevron')),
+      findsOneWidget,
+    );
+
+    final cards = tester.widgetList<Card>(find.byType(Card)).toList();
+    expect(cards, isNotEmpty);
+
+    for (final card in cards) {
+      expect(card.margin, EdgeInsets.zero);
+      expect(card.shape, isNull);
+    }
+  });
 }

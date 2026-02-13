@@ -49,6 +49,24 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
   }
 
+  bool _isMobile(BuildContext context) =>
+      MediaQuery.of(context).size.width < 600;
+
+  EdgeInsetsGeometry _profileCardMargin(BuildContext context) =>
+      _isMobile(context)
+      ? const EdgeInsets.symmetric(horizontal: 4)
+      : EdgeInsets.zero;
+
+  ShapeBorder? _profileCardShape(BuildContext context) {
+    if (!_isMobile(context)) {
+      return null;
+    }
+    return RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+      side: BorderSide.none,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -109,13 +127,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   /// 构建用户信息卡片
   Widget _buildUserProfileCard(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final isMobile = _isMobile(context);
     final authState = ref.watch(authProvider);
     final user = authState.user;
 
     return Card(
-      margin: EdgeInsets.zero,
+      margin: _profileCardMargin(context),
+      shape: _profileCardShape(context),
       child: Padding(
         padding: EdgeInsets.all(isMobile ? 16 : 24),
         child: Row(
@@ -218,8 +236,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   /// 构建活动统计卡片
   Widget _buildActivityCards(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isMobile = screenWidth < 600;
+    final isMobile = _isMobile(context);
     final statsAsync = ref.watch(profileStatsProvider);
 
     final episodeCount = statsAsync.when(
@@ -319,7 +336,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     bool showChevron = false,
   }) {
     return Card(
-      margin: EdgeInsets.zero,
+      margin: _profileCardMargin(context),
+      shape: _profileCardShape(context),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -679,7 +697,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
         ),
         Card(
-          margin: EdgeInsets.zero,
+          margin: _profileCardMargin(context),
+          shape: _profileCardShape(context),
           child: Column(children: children),
         ),
       ],

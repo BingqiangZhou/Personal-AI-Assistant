@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/playback_history_lite_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_history_page.dart';
@@ -12,6 +13,11 @@ void main() {
     WidgetTester tester,
   ) async {
     final now = DateTime.now();
+
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
       ProviderScope(
@@ -63,7 +69,53 @@ void main() {
 
     expect(find.text('Episode X'), findsOneWidget);
     expect(find.text('Episode Y'), findsOneWidget);
-    expect(find.byType(ListTile), findsNWidgets(2));
+    expect(find.byType(ListTile), findsNothing);
     expect(find.byType(PodcastImageWidget), findsNWidgets(2));
+    expect(find.byIcon(Icons.calendar_today_outlined), findsNWidgets(2));
+    expect(find.byIcon(Icons.schedule), findsNWidgets(2));
+    expect(
+      find.byKey(const Key('profile_history_meta_podcast')),
+      findsNWidgets(2),
+    );
+    expect(find.byKey(const Key('profile_history_meta_row')), findsNWidgets(2));
+
+    final cards = tester.widgetList<Card>(find.byType(Card)).toList();
+    expect(cards.length, 2);
+    for (final card in cards) {
+      expect(
+        card.margin,
+        const EdgeInsets.symmetric(
+          horizontal: kPodcastRowCardHorizontalMargin,
+          vertical: kPodcastRowCardVerticalMargin,
+        ),
+      );
+      expect(card.shape, isA<RoundedRectangleBorder>());
+      final shape = card.shape! as RoundedRectangleBorder;
+      expect(
+        shape.borderRadius,
+        BorderRadius.circular(kPodcastRowCardCornerRadius),
+      );
+      expect(shape.side.style, BorderStyle.none);
+      expect(shape.side.width, 0);
+    }
+
+    final cardContentFinder = find.byKey(
+      const ValueKey('profile_history_card_content_101'),
+    );
+    expect(cardContentFinder, findsOneWidget);
+    final contentRect = tester.getRect(cardContentFinder);
+    expect(contentRect.height, closeTo(kPodcastRowCardTargetHeight, 0.01));
+
+    final titleFinder = find.byKey(const ValueKey('profile_history_title_101'));
+    expect(titleFinder, findsOneWidget);
+    final titleText = tester.widget<Text>(titleFinder);
+    expect(titleText.maxLines, 2);
+
+    final titleBoxFinder = find.byKey(
+      const ValueKey('profile_history_title_box_101'),
+    );
+    expect(titleBoxFinder, findsOneWidget);
+    final titleBoxRect = tester.getRect(titleBoxFinder);
+    expect(titleBoxRect.height, closeTo(38, 0.01));
   });
 }
