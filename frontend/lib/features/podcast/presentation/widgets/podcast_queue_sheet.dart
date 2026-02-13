@@ -1,25 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_queue_model.dart';
 import '../providers/podcast_providers.dart';
-import '../../../../core/localization/app_localizations.dart';
 
 class PodcastQueueSheet extends ConsumerWidget {
   const PodcastQueueSheet({super.key});
 
-  static Future<void> show(BuildContext context) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (context) => const PodcastQueueSheet(),
-    );
+  static Future<void>? _activeShowFuture;
+
+  static Future<void> show(
+    BuildContext context, {
+    Future<void> Function()? beforeShow,
+  }) {
+    final existing = _activeShowFuture;
+    if (existing != null) {
+      return existing;
+    }
+
+    final showFuture = Future.sync(() async {
+      if (beforeShow != null) {
+        await beforeShow();
+        if (!context.mounted) {
+          return;
+        }
+      }
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (context) => const PodcastQueueSheet(),
+      );
+    });
+
+    _activeShowFuture = showFuture.whenComplete(() {
+      if (identical(_activeShowFuture, showFuture)) {
+        _activeShowFuture = null;
+      }
+    });
+
+    return _activeShowFuture!;
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
+    final title = l10n?.podcast_rss_list ?? 'Playlist';
     final queueAsync = ref.watch(podcastQueueControllerProvider);
     final notifier = ref.read(podcastQueueControllerProvider.notifier);
 
@@ -29,14 +56,16 @@ class PodcastQueueSheet extends ConsumerWidget {
         data: (queue) {
           if (queue.items.isEmpty) {
             return _QueueScaffold(
-              title: l10n.podcast_rss_list,
+              title: title,
               onRefresh: () => notifier.loadQueue(),
-              child: Center(child: Text(l10n.queue_is_empty)),
+              child: Center(
+                child: Text(l10n?.queue_is_empty ?? 'Queue is empty'),
+              ),
             );
           }
 
           return _QueueScaffold(
-            title: l10n.podcast_rss_list,
+            title: title,
             onRefresh: () => notifier.loadQueue(),
             child: _QueueList(queue: queue),
           );
@@ -44,9 +73,14 @@ class PodcastQueueSheet extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) {
           return _QueueScaffold(
-            title: l10n.podcast_rss_list,
+            title: title,
             onRefresh: () => notifier.loadQueue(),
-            child: Center(child: Text(l10n.failed_to_load_queue(error.toString()))),
+            child: Center(
+              child: Text(
+                l10n?.failed_to_load_queue(error.toString()) ??
+                    'Failed to load queue: $error',
+              ),
+            ),
           );
         },
       ),
@@ -108,6 +142,7 @@ class _QueueList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(podcastQueueControllerProvider.notifier);
+    final audioPlayerState = ref.watch(audioPlayerProvider);
     final currentEpisodeId = queue.currentEpisodeId;
 
     return ReorderableListView.builder(
@@ -129,9 +164,14 @@ class _QueueList extends ConsumerWidget {
           await notifier.reorderQueue(orderedIds);
         } catch (error) {
           if (context.mounted) {
-            final l10n = AppLocalizations.of(context)!;
+            final l10n = AppLocalizations.of(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.failed_to_reorder_queue(error.toString()))),
+              SnackBar(
+                content: Text(
+                  l10n?.failed_to_reorder_queue(error.toString()) ??
+                      'Failed to reorder queue: $error',
+                ),
+              ),
             );
           }
         }
@@ -156,9 +196,14 @@ class _QueueList extends ConsumerWidget {
                 await notifier.playFromQueue(item.episodeId);
               } catch (error) {
                 if (context.mounted) {
-                  final l10n = AppLocalizations.of(context)!;
+                  final l10n = AppLocalizations.of(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(l10n.failed_to_play_item(error.toString()))),
+                    SnackBar(
+                      content: Text(
+                        l10n?.failed_to_play_item(error.toString()) ??
+                            'Failed to play item: $error',
+                      ),
+                    ),
                   );
                 }
               }
@@ -180,11 +225,7 @@ class _QueueList extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  _QueueItemCover(
-                    item: item,
-                    isCurrent: isCurrent,
-                    size: 44,
-                  ),
+                  _QueueItemCover(item: item, isCurrent: isCurrent, size: 44),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -203,7 +244,11 @@ class _QueueList extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _formatSubtitle(item),
+                          _formatSubtitle(
+                            item,
+                            isCurrent: isCurrent,
+                            currentPositionMs: audioPlayerState.position,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyLarge?.copyWith(
@@ -216,7 +261,7 @@ class _QueueList extends ConsumerWidget {
                   const SizedBox(width: 8),
                   IconButton(
                     key: Key('queue_item_remove_${item.episodeId}'),
-                    tooltip: AppLocalizations.of(context)!.delete,
+                    tooltip: AppLocalizations.of(context)?.delete ?? 'Delete',
                     constraints: const BoxConstraints.tightFor(
                       width: 40,
                       height: 40,
@@ -227,9 +272,14 @@ class _QueueList extends ConsumerWidget {
                         await notifier.removeFromQueue(item.episodeId);
                       } catch (error) {
                         if (context.mounted) {
-                          final l10n = AppLocalizations.of(context)!;
+                          final l10n = AppLocalizations.of(context);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(l10n.failed_to_remove_item(error.toString()))),
+                            SnackBar(
+                              content: Text(
+                                l10n?.failed_to_remove_item(error.toString()) ??
+                                    'Failed to remove item: $error',
+                              ),
+                            ),
                           );
                         }
                       }
@@ -245,19 +295,50 @@ class _QueueList extends ConsumerWidget {
     );
   }
 
-  String _formatSubtitle(PodcastQueueItemModel item) {
+  String _formatSubtitle(
+    PodcastQueueItemModel item, {
+    required bool isCurrent,
+    required int currentPositionMs,
+  }) {
     final title = item.subscriptionTitle;
-    final duration = item.duration;
-    if (duration == null) {
-      return title ?? '';
+    final durationSec = item.duration;
+    var playedSec = isCurrent
+        ? (currentPositionMs / 1000).round()
+        : (item.playbackPosition ?? 0);
+    if (playedSec < 0) {
+      playedSec = 0;
     }
-    final minutes = duration ~/ 60;
-    final seconds = duration % 60;
-    final durationText = '$minutes:${seconds.toString().padLeft(2, '0')}';
+
+    final progressText = _formatProgress(
+      playedSec: playedSec,
+      durationSec: durationSec,
+    );
     if (title == null || title.isEmpty) {
-      return durationText;
+      return progressText;
     }
-    return '$title · $durationText';
+    return '$title · $progressText';
+  }
+
+  String _formatProgress({required int playedSec, required int? durationSec}) {
+    if (durationSec == null || durationSec <= 0) {
+      return '${_formatClock(playedSec)} / --:--';
+    }
+
+    final clampedPlayed = playedSec > durationSec ? durationSec : playedSec;
+    return '${_formatClock(clampedPlayed)} / ${_formatClock(durationSec)}';
+  }
+
+  String _formatClock(int seconds) {
+    final safeSeconds = seconds < 0 ? 0 : seconds;
+    final duration = Duration(seconds: safeSeconds);
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final remainingSeconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 }
 

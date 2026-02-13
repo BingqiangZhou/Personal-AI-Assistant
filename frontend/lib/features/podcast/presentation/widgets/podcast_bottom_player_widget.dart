@@ -69,7 +69,8 @@ class _MiniBottomPlayer extends ConsumerWidget {
             child: Row(
               children: [
                 GestureDetector(
-                  onTap: () => ref.read(audioPlayerProvider.notifier).setExpanded(true),
+                  onTap: () =>
+                      ref.read(audioPlayerProvider.notifier).setExpanded(true),
                   child: _CoverImage(
                     imageUrl:
                         state.currentEpisode!.subscriptionImageUrl ??
@@ -84,11 +85,16 @@ class _MiniBottomPlayer extends ConsumerWidget {
                     onTap: () {
                       final episode = state.currentEpisode!;
                       // Check if already on this episode's detail page
-                      final currentLocation = GoRouterState.of(context).uri.toString();
-                      final episodeDetailPath = '/podcast/episodes/${episode.subscriptionId}/${episode.id}';
+                      final currentLocation = GoRouterState.of(
+                        context,
+                      ).uri.toString();
+                      final episodeDetailPath =
+                          '/podcast/episodes/${episode.subscriptionId}/${episode.id}';
                       if (currentLocation.startsWith(episodeDetailPath)) {
                         // Already on detail page, just expand the player
-                        ref.read(audioPlayerProvider.notifier).setExpanded(true);
+                        ref
+                            .read(audioPlayerProvider.notifier)
+                            .setExpanded(true);
                       } else {
                         PodcastNavigation.goToEpisodeDetail(
                           context,
@@ -140,26 +146,26 @@ class _MiniBottomPlayer extends ConsumerWidget {
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Icon(
-                          state.isPlaying ? Icons.pause : Icons.play_arrow,
-                        ),
+                      : Icon(state.isPlaying ? Icons.pause : Icons.play_arrow),
                 ),
                 IconButton(
                   key: const Key('podcast_bottom_player_mini_playlist'),
                   tooltip: l10n?.podcast_player_list ?? 'List',
                   onPressed: () async {
-                    await ref
-                        .read(podcastQueueControllerProvider.notifier)
-                        .loadQueue();
-                    if (!context.mounted) {
-                      return;
-                    }
-                    await PodcastQueueSheet.show(context);
+                    await PodcastQueueSheet.show(
+                      context,
+                      beforeShow: () async {
+                        await ref
+                            .read(podcastQueueControllerProvider.notifier)
+                            .loadQueue();
+                      },
+                    );
                   },
                   icon: const Icon(Icons.playlist_play),
                 ),
                 GestureDetector(
-                  onTap: () => ref.read(audioPlayerProvider.notifier).setExpanded(true),
+                  onTap: () =>
+                      ref.read(audioPlayerProvider.notifier).setExpanded(true),
                   child: Icon(
                     Icons.keyboard_arrow_up,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -222,7 +228,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                           .setExpanded(false),
                       icon: const Icon(Icons.keyboard_arrow_down),
                     ),
-                     // Removed separate Sleep timer button
+                    // Removed separate Sleep timer button
                     const SizedBox(width: 8),
                     IconButton(
                       tooltip: 'Close',
@@ -259,13 +265,17 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                               Icon(
                                 Icons.calendar_today_outlined,
                                 size: 12,
-                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.7),
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                state.currentEpisode!.publishedAt.toString().split(' ')[0],
+                                state.currentEpisode!.publishedAt
+                                    .toString()
+                                    .split(' ')[0],
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                  color: theme.colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.7),
                                   fontSize: 11,
                                 ),
                               ),
@@ -273,13 +283,15 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                               Icon(
                                 Icons.access_time,
                                 size: 12,
-                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.7),
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 state.currentEpisode!.formattedDuration,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                  color: theme.colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.7),
                                   fontSize: 11,
                                 ),
                               ),
@@ -338,9 +350,11 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                                         selection.applyToSubscription,
                                   );
                             },
-                             onTimerChanged: (selection) {
+                            onTimerChanged: (selection) {
                               if (!context.mounted) return;
-                              final notifier = ref.read(audioPlayerProvider.notifier);
+                              final notifier = ref.read(
+                                audioPlayerProvider.notifier,
+                              );
                               if (selection.cancel) {
                                 notifier.cancelSleepTimer();
                               } else if (selection.afterEpisode) {
@@ -423,13 +437,14 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                         tooltip: l10n?.podcast_player_list ?? 'List',
                         iconSize: 32,
                         onPressed: () async {
-                          await ref
-                              .read(podcastQueueControllerProvider.notifier)
-                              .loadQueue();
-                          if (!context.mounted) {
-                            return;
-                          }
-                          await PodcastQueueSheet.show(context);
+                          await PodcastQueueSheet.show(
+                            context,
+                            beforeShow: () async {
+                              await ref
+                                  .read(podcastQueueControllerProvider.notifier)
+                                  .loadQueue();
+                            },
+                          );
                         },
                         icon: const Icon(Icons.playlist_play),
                       ),

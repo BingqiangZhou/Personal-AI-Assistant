@@ -307,6 +307,7 @@ class PodcastQueueItemResponse(PodcastBaseSchema):
 
     episode_id: int
     position: int
+    playback_position: int | None = None
     title: str
     podcast_id: int
     audio_url: str
@@ -643,7 +644,9 @@ class PodcastConversationSendRequest(PodcastBaseSchema):
 
     message: str = Field(..., min_length=1, max_length=5000, description="用户消息内容")
     model_name: str | None = Field(None, description="使用的AI模型名称")
-    session_id: int | None = Field(None, description="会话ID，不提供则使用或创建默认会话")
+    session_id: int | None = Field(
+        None, description="会话ID，不提供则使用或创建默认会话"
+    )
 
 
 class PodcastConversationSendResponse(PodcastBaseSchema):

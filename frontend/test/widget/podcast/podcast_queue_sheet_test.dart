@@ -1,30 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_queue_sheet.dart';
 
 void main() {
   group('PodcastQueueSheet', () {
-    testWidgets('uses custom left drag handle and does not overlap delete icon', (
-      tester,
-    ) async {
-      final controller = TestPodcastQueueController(_queue());
-      await tester.pumpWidget(_createWidget(controller));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'uses custom left drag handle and does not overlap delete icon',
+      (tester) async {
+        final controller = TestPodcastQueueController(_queue());
+        await tester.pumpWidget(_createWidget(controller));
+        await tester.pumpAndSettle();
 
-      final list = tester.widget<ReorderableListView>(
-        find.byType(ReorderableListView),
-      );
-      expect(list.buildDefaultDragHandles, isFalse);
+        final list = tester.widget<ReorderableListView>(
+          find.byType(ReorderableListView),
+        );
+        expect(list.buildDefaultDragHandles, isFalse);
 
-      final dragRect = tester.getRect(find.byKey(const Key('queue_item_drag_1')));
-      final deleteRect = tester.getRect(
-        find.byKey(const Key('queue_item_remove_1')),
-      );
-      expect(dragRect.overlaps(deleteRect), isFalse);
-    });
+        final dragRect = tester.getRect(
+          find.byKey(const Key('queue_item_drag_1')),
+        );
+        final deleteRect = tester.getRect(
+          find.byKey(const Key('queue_item_remove_1')),
+        );
+        expect(dragRect.overlaps(deleteRect), isFalse);
+      },
+    );
 
     testWidgets('shows fallback podcast icon when item has no image', (
       tester,
@@ -33,7 +38,10 @@ void main() {
       await tester.pumpWidget(_createWidget(controller));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('queue_item_cover_fallback_1')), findsOneWidget);
+      expect(
+        find.byKey(const Key('queue_item_cover_fallback_1')),
+        findsOneWidget,
+      );
       expect(find.byIcon(Icons.podcasts), findsWidgets);
     });
 
@@ -53,17 +61,53 @@ void main() {
       final image = tester.widget<Image>(imageFinder);
       final provider = image.image;
       expect(provider, isA<NetworkImage>());
-      expect((provider as NetworkImage).url, 'https://example.com/subscription-1.jpg');
+      expect(
+        (provider as NetworkImage).url,
+        'https://example.com/subscription-1.jpg',
+      );
     });
 
-    testWidgets('shows equalizer badge only on current queue item', (tester) async {
+    testWidgets('shows equalizer badge only on current queue item', (
+      tester,
+    ) async {
       final controller = TestPodcastQueueController(_queue());
       await tester.pumpWidget(_createWidget(controller));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('queue_item_playing_badge_1')), findsOneWidget);
+      expect(
+        find.byKey(const Key('queue_item_playing_badge_1')),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('queue_item_playing_badge_2')), findsNothing);
     });
+
+    testWidgets('shows played and total duration for non-current queue items', (
+      tester,
+    ) async {
+      final controller = TestPodcastQueueController(_queue());
+      await tester.pumpWidget(_createWidget(controller));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Podcast B · 02:05 / 40:00'), findsOneWidget);
+      expect(find.text('Podcast C · 01:30 / --:--'), findsOneWidget);
+    });
+
+    testWidgets(
+      'current item uses realtime playback position from audio state',
+      (tester) async {
+        final controller = TestPodcastQueueController(_queue());
+        final audioNotifier = TestAudioPlayerNotifier(
+          const AudioPlayerState(position: 65000),
+        );
+
+        await tester.pumpWidget(
+          _createWidget(controller, audioNotifier: audioNotifier),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Podcast A · 01:05 / 1:00:00'), findsOneWidget);
+      },
+    );
 
     testWidgets('tapping item and delete trigger expected controller methods', (
       tester,
@@ -99,16 +143,23 @@ void main() {
   });
 }
 
-Widget _createWidget(TestPodcastQueueController controller) {
+Widget _createWidget(
+  TestPodcastQueueController controller, {
+  TestAudioPlayerNotifier? audioNotifier,
+}) {
   return ProviderScope(
-    overrides: [podcastQueueControllerProvider.overrideWith(() => controller)],
-    child: const MaterialApp(
-      home: Scaffold(
-        body: SizedBox(
-          width: 430,
-          height: 760,
-          child: PodcastQueueSheet(),
-        ),
+    overrides: [
+      podcastQueueControllerProvider.overrideWith(() => controller),
+      audioPlayerProvider.overrideWith(
+        () =>
+            audioNotifier ?? TestAudioPlayerNotifier(const AudioPlayerState()),
+      ),
+    ],
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: const Scaffold(
+        body: SizedBox(width: 430, height: 760, child: PodcastQueueSheet()),
       ),
     ),
   );
@@ -121,6 +172,7 @@ PodcastQueueModel _queue({bool withImages = false}) {
       PodcastQueueItemModel(
         episodeId: 1,
         position: 0,
+        playbackPosition: 10,
         title: 'Episode 1',
         podcastId: 10,
         audioUrl: 'https://example.com/1.mp3',
@@ -131,26 +183,39 @@ PodcastQueueModel _queue({bool withImages = false}) {
             ? 'https://example.com/subscription-1.jpg'
             : null,
       ),
-      PodcastQueueItemModel(
+      const PodcastQueueItemModel(
         episodeId: 2,
         position: 1,
+        playbackPosition: 125,
         title: 'Episode 2',
         podcastId: 11,
         audioUrl: 'https://example.com/2.mp3',
         duration: 2400,
         subscriptionTitle: 'Podcast B',
       ),
-      PodcastQueueItemModel(
+      const PodcastQueueItemModel(
         episodeId: 3,
         position: 2,
+        playbackPosition: 90,
         title: 'Episode 3',
         podcastId: 12,
         audioUrl: 'https://example.com/3.mp3',
-        duration: 1800,
+        duration: null,
         subscriptionTitle: 'Podcast C',
       ),
     ],
   );
+}
+
+class TestAudioPlayerNotifier extends AudioPlayerNotifier {
+  TestAudioPlayerNotifier(this._initialState);
+
+  final AudioPlayerState _initialState;
+
+  @override
+  AudioPlayerState build() {
+    return _initialState;
+  }
 }
 
 class TestPodcastQueueController extends PodcastQueueController {

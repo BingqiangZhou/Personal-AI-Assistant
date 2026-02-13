@@ -5,6 +5,7 @@ import 'podcast_episode_model.dart';
 class PodcastQueueItemModel extends Equatable {
   final int episodeId;
   final int position;
+  final int? playbackPosition;
   final String title;
   final int podcastId;
   final String audioUrl;
@@ -17,6 +18,7 @@ class PodcastQueueItemModel extends Equatable {
   const PodcastQueueItemModel({
     required this.episodeId,
     required this.position,
+    this.playbackPosition,
     required this.title,
     required this.podcastId,
     required this.audioUrl,
@@ -31,6 +33,7 @@ class PodcastQueueItemModel extends Equatable {
     return PodcastQueueItemModel(
       episodeId: json['episode_id'] as int,
       position: json['position'] as int,
+      playbackPosition: json['playback_position'] as int?,
       title: json['title'] as String? ?? '',
       podcastId: json['podcast_id'] as int? ?? 0,
       audioUrl: json['audio_url'] as String? ?? '',
@@ -48,6 +51,7 @@ class PodcastQueueItemModel extends Equatable {
     return {
       'episode_id': episodeId,
       'position': position,
+      'playback_position': playbackPosition,
       'title': title,
       'podcast_id': podcastId,
       'audio_url': audioUrl,
@@ -69,6 +73,7 @@ class PodcastQueueItemModel extends Equatable {
       subscriptionTitle: subscriptionTitle,
       audioUrl: audioUrl,
       audioDuration: duration,
+      playbackPosition: playbackPosition,
       publishedAt: publishedAt ?? now,
       imageUrl: imageUrl,
       createdAt: now,
@@ -79,6 +84,7 @@ class PodcastQueueItemModel extends Equatable {
   List<Object?> get props => [
     episodeId,
     position,
+    playbackPosition,
     title,
     podcastId,
     audioUrl,
