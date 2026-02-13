@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.6.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.5.5...v0.6.0) - 2026-02-13 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.6.0))
+
+### 🚀 Features
+
+- *(podcast)* Restore last played episode on authenticated startup ([5b39617](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5b39617fe4e05837d3ec66e5554a39102f55003f))
+- *(podcast)* Add playback position display to queue items ([5f23220](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5f2322090c73a3d59ca4cbb5f8040242bca7a1cd))
+
+### 🚜 Refactor
+
+- *(podcast)* Format code, refactor tests and adjust tab bar padding ([3e9e4d3](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3e9e4d3cccdf0ecb3e2577740496d4ba72d38fe8))
+- *(podcast)* Optimize card layout spacing and add widget layout tests ([87ee2f6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/87ee2f65330c2ef6de778112f4d692f92e9f5a2b))
+- *(podcast)* Remove unused code and add config image_url fallback ([b138132](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b138132b8aa1f4541979795f5b471553baf6c03a))
+
+
+
 ## [0.5.5](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.5.4...v0.5.5) - 2026-02-13 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.5.5))
 
 ### ⚙️ Miscellaneous Tasks
