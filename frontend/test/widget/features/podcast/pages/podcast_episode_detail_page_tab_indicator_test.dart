@@ -60,6 +60,34 @@ void main() {
       expect(firstTabLeft, lessThanOrEqualTo(14));
     });
 
+    testWidgets('tab bar top padding is reduced to 6px', (tester) async {
+      addTearDown(() async => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(const Size(390, 844));
+
+      await tester.pumpWidget(_createWidget(themeMode: ThemeMode.light));
+      await tester.pumpAndSettle();
+
+      final tabBarContainer = find
+          .ancestor(
+            of: find.byKey(const Key('episode_detail_mobile_tab_0')),
+            matching: find.byWidgetPredicate((widget) {
+              if (widget is! Container) return false;
+              final decoration = widget.decoration;
+              if (decoration is! BoxDecoration) return false;
+              final border = decoration.border;
+              if (border is! Border) return false;
+              return border.bottom.width == 1;
+            }),
+          )
+          .first;
+
+      final containerWidget = tester.widget<Container>(tabBarContainer);
+      final padding = containerWidget.padding;
+
+      expect(padding, isA<EdgeInsets>());
+      expect((padding as EdgeInsets).top, 6);
+    });
+
     testWidgets('indicator line is aligned with tab bar bottom divider line', (
       tester,
     ) async {

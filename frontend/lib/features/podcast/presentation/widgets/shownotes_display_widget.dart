@@ -11,16 +11,15 @@ import '../../../../core/utils/app_logger.dart' as logger;
 class ShownotesDisplayWidget extends ConsumerStatefulWidget {
   final PodcastEpisodeDetailResponse episode;
 
-  const ShownotesDisplayWidget({
-    super.key,
-    required this.episode,
-  });
+  const ShownotesDisplayWidget({super.key, required this.episode});
 
   @override
-  ConsumerState<ShownotesDisplayWidget> createState() => ShownotesDisplayWidgetState();
+  ConsumerState<ShownotesDisplayWidget> createState() =>
+      ShownotesDisplayWidgetState();
 }
 
-class ShownotesDisplayWidgetState extends ConsumerState<ShownotesDisplayWidget> {
+class ShownotesDisplayWidgetState
+    extends ConsumerState<ShownotesDisplayWidget> {
   final ScrollController _scrollController = ScrollController();
 
   /// 滚动到顶部
@@ -46,7 +45,8 @@ class ShownotesDisplayWidgetState extends ConsumerState<ShownotesDisplayWidget> 
     final shownotes = _getShownotesContent();
 
     // Debug: Log the shownotes content
-    if (widget.episode.description != null && widget.episode.description!.isNotEmpty) {
+    if (widget.episode.description != null &&
+        widget.episode.description!.isNotEmpty) {
       final preview = widget.episode.description!.length > 100
           ? '${widget.episode.description!.substring(0, 100)}...'
           : widget.episode.description!;
@@ -55,7 +55,8 @@ class ShownotesDisplayWidgetState extends ConsumerState<ShownotesDisplayWidget> 
       logger.AppLogger.debug('📝 [Shownotes] Description: NULL or EMPTY');
     }
 
-    if (widget.episode.aiSummary != null && widget.episode.aiSummary!.isNotEmpty) {
+    if (widget.episode.aiSummary != null &&
+        widget.episode.aiSummary!.isNotEmpty) {
       final preview = widget.episode.aiSummary!.length > 100
           ? '${widget.episode.aiSummary!.substring(0, 100)}...'
           : widget.episode.aiSummary!;
@@ -64,17 +65,25 @@ class ShownotesDisplayWidgetState extends ConsumerState<ShownotesDisplayWidget> 
       logger.AppLogger.debug('📝 [Shownotes] AI Summary: NULL or EMPTY');
     }
 
-    logger.AppLogger.debug('📝 [Shownotes] Metadata shownotes: ${widget.episode.metadata?['shownotes']}');
-    logger.AppLogger.debug('📝 [Shownotes] Final content length: ${shownotes.length}');
+    logger.AppLogger.debug(
+      '📝 [Shownotes] Metadata shownotes: ${widget.episode.metadata?['shownotes']}',
+    );
+    logger.AppLogger.debug(
+      '📝 [Shownotes] Final content length: ${shownotes.length}',
+    );
 
     if (shownotes.isEmpty) {
-      logger.AppLogger.debug('📝 [Shownotes] No content found, showing empty state');
+      logger.AppLogger.debug(
+        '📝 [Shownotes] No content found, showing empty state',
+      );
       return _buildEmptyState(context);
     }
 
     // Sanitize HTML to prevent XSS attacks
     final sanitizedHtml = HtmlSanitizer.sanitize(shownotes);
-    logger.AppLogger.debug('📝 [Shownotes] Sanitized HTML length: ${sanitizedHtml.length}');
+    logger.AppLogger.debug(
+      '📝 [Shownotes] Sanitized HTML length: ${sanitizedHtml.length}',
+    );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -90,6 +99,10 @@ class ShownotesDisplayWidgetState extends ConsumerState<ShownotesDisplayWidget> 
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.onSurface,
+                fontFamily: Theme.of(context).textTheme.titleLarge?.fontFamily,
+                fontFamilyFallback: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.fontFamilyFallback,
               ),
             ),
             const SizedBox(height: 12),
@@ -157,15 +170,21 @@ class ShownotesDisplayWidgetState extends ConsumerState<ShownotesDisplayWidget> 
 
                   // Blockquote styling
                   if (element.localName == 'blockquote') {
-                    styles['border-left'] = '4px solid ${_colorToHex(Theme.of(context).colorScheme.primary)}';
+                    styles['border-left'] =
+                        '4px solid ${_colorToHex(Theme.of(context).colorScheme.primary)}';
                     styles['padding-left'] = '16px';
                     styles['margin-left'] = '0';
-                    styles['color'] = _colorToHex(Theme.of(context).colorScheme.onSurfaceVariant);
+                    styles['color'] = _colorToHex(
+                      Theme.of(context).colorScheme.onSurfaceVariant,
+                    );
                   }
 
                   // Code block styling
-                  if (element.localName == 'pre' || element.localName == 'code') {
-                    styles['background-color'] = _colorToHex(Theme.of(context).colorScheme.surfaceContainerHighest);
+                  if (element.localName == 'pre' ||
+                      element.localName == 'code') {
+                    styles['background-color'] = _colorToHex(
+                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                    );
                     styles['padding'] = '8px';
                     styles['border-radius'] = '4px';
                     styles['font-family'] = 'monospace';
@@ -173,13 +192,17 @@ class ShownotesDisplayWidgetState extends ConsumerState<ShownotesDisplayWidget> 
 
                   // Heading styling
                   if (element.localName?.startsWith('h') == true) {
-                    styles['color'] = _colorToHex(Theme.of(context).colorScheme.onSurface);
+                    styles['color'] = _colorToHex(
+                      Theme.of(context).colorScheme.onSurface,
+                    );
                     styles['font-weight'] = 'bold';
                   }
 
                   // Link styling
                   if (element.localName == 'a') {
-                    styles['color'] = _colorToHex(Theme.of(context).colorScheme.primary);
+                    styles['color'] = _colorToHex(
+                      Theme.of(context).colorScheme.primary,
+                    );
                     styles['text-decoration'] = 'underline';
                   }
 
@@ -215,7 +238,8 @@ class ShownotesDisplayWidgetState extends ConsumerState<ShownotesDisplayWidget> 
     }
 
     // 3. Try to get from metadata
-    if (widget.episode.metadata != null && widget.episode.metadata!['shownotes'] != null) {
+    if (widget.episode.metadata != null &&
+        widget.episode.metadata!['shownotes'] != null) {
       return widget.episode.metadata!['shownotes'].toString();
     }
 

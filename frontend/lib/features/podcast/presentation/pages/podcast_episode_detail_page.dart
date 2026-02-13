@@ -1197,7 +1197,7 @@ class _PodcastEpisodeDetailPageState
   Widget _buildTopButtonBar() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
