@@ -510,6 +510,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_title => 'Podcasts';
 
   @override
+  String get podcast_discover_new => 'Discover New';
+
+  @override
   String get podcast_no_podcasts => 'No podcasts yet';
 
   @override

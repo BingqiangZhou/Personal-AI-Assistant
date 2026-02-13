@@ -831,6 +831,11 @@
     "description": "Podcasts page title"
   },
 
+  "podcast_discover_new": "Discover New",
+  "@podcast_discover_new": {
+    "description": "Discover new podcasts section title"
+  },
+
   "podcast_add_podcast": "Add Podcast",
   "@podcast_add_podcast": {
     "description": "Add podcast button"

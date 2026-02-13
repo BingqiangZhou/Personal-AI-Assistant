@@ -503,6 +503,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_title => '播客';
 
   @override
+  String get podcast_discover_new => '发现新播客';
+
+  @override
   String get podcast_no_podcasts => '还没有播客';
 
   @override

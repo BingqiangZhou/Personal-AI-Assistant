@@ -5,17 +5,16 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../core/utils/episode_description_helper.dart';
-import '../../data/models/podcast_subscription_model.dart';
 import '../../data/models/podcast_search_model.dart';
+import '../../data/models/podcast_subscription_model.dart';
+import '../providers/bulk_selection_provider.dart';
 import '../providers/podcast_providers.dart';
 import '../providers/podcast_search_provider.dart' as search;
-import '../providers/bulk_selection_provider.dart';
 import '../widgets/add_podcast_dialog.dart';
 import '../widgets/bulk_import_dialog.dart';
 import '../widgets/podcast_bulk_delete_dialog.dart';
 import '../widgets/search_panel.dart';
 
-/// Material Design 3自适应播客列表页面
 class PodcastListPage extends ConsumerStatefulWidget {
   const PodcastListPage({super.key});
 
@@ -25,17 +24,15 @@ class PodcastListPage extends ConsumerStatefulWidget {
 
 class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   final ScrollController _scrollController = ScrollController();
+
   static const double _mobileSubscriptionCardHorizontalMargin = 4.0;
   static const double _mobileSubscriptionCardRadius = 12.0;
 
   @override
   void initState() {
     super.initState();
-
-    // 添加滚动监听器
     _scrollController.addListener(_onScroll);
 
-    // 加载初始数据
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(podcastSubscriptionProvider.notifier).loadSubscriptions();
     });
@@ -48,19 +45,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   }
 
   void _onScroll() {
-    // 当滚动到距离底部200像素时触发加载更多
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
       ref.read(podcastSubscriptionProvider.notifier).loadMoreSubscriptions();
     }
   }
 
-  /// 处理从搜索结果订阅播客
   Future<void> _handleSubscribeFromSearch(PodcastSearchResult result) async {
     final l10n = AppLocalizations.of(context)!;
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-    // 验证必要字段
     if (result.feedUrl == null || result.collectionName == null) {
       scaffoldMessenger.showSnackBar(
         SnackBar(
@@ -103,16 +97,19 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
     final bulkSelectionState = ref.watch(bulkSelectionProvider);
     final isSelectionMode = bulkSelectionState.isSelectionMode;
     final searchState = ref.watch(search.podcastSearchProvider);
     final subscriptionState = ref.watch(podcastSubscriptionProvider);
+    final sectionTitleStyle = theme.textTheme.titleLarge?.copyWith(
+      fontWeight: FontWeight.w700,
+    );
 
     return ResponsiveContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 页面标题和操作区域
           SizedBox(
             height: 56,
             child: Row(
@@ -121,15 +118,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   child: Text(
                     isSelectionMode
                         ? l10n.podcast_bulk_select_mode
-                        : '${l10n.podcast_title} (${subscriptionState.total})',
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        : l10n.podcast_title,
+                    key: const Key('podcast_list_header_title'),
+                    style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
                 if (!isSelectionMode) ...[
-                  // 添加播客按钮
                   IconButton(
+                    key: const Key('podcast_list_action_add'),
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -139,8 +137,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                     icon: const Icon(Icons.add),
                     tooltip: l10n.podcast_add_podcast,
                   ),
-                  // 批量导入按钮
                   IconButton(
+                    key: const Key('podcast_list_action_bulk_import'),
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -153,28 +151,27 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.note_add),
+                    icon: const Icon(Icons.playlist_add_outlined),
                     tooltip: l10n.podcast_bulk_import,
                   ),
-                  // 批量选择按钮
                   IconButton(
+                    key: const Key('podcast_list_action_select_mode'),
                     onPressed: () {
                       ref
                           .read(bulkSelectionProvider.notifier)
                           .toggleSelectionMode();
                     },
-                    icon: const Icon(Icons.checklist),
+                    icon: const Icon(Icons.sort),
                     tooltip: l10n.podcast_enter_select_mode,
                   ),
                 ] else ...[
-                  // Selection mode actions
                   IconButton(
                     onPressed: bulkSelectionState.selectedIds.isNotEmpty
                         ? () => ref
                               .read(bulkSelectionProvider.notifier)
                               .deselectAll()
                         : null,
-                    icon: const Icon(Icons.deselect),
+                    icon: const Icon(Icons.deselect_outlined),
                     tooltip: l10n.podcast_deselect_all,
                   ),
                   IconButton(
@@ -182,10 +179,10 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                         ? () => _showBulkDeleteDialog(context)
                         : null,
                     icon: Icon(
-                      Icons.delete_sweep,
+                      Icons.delete_sweep_outlined,
                       color: bulkSelectionState.selectedIds.isNotEmpty
-                          ? Theme.of(context).colorScheme.error
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
+                          ? theme.colorScheme.error
+                          : theme.colorScheme.onSurfaceVariant,
                     ),
                     tooltip: l10n.delete,
                   ),
@@ -200,18 +197,34 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-
-          // 搜索面板（始终显示）
+          const SizedBox(height: 8),
+          Text(
+            l10n.podcast_discover_new,
+            key: const Key('podcast_list_discover_title'),
+            style: sectionTitleStyle,
+          ),
+          const SizedBox(height: 10),
           SearchPanel(expanded: true, onSubscribe: _handleSubscribeFromSearch),
-
-          const SizedBox(height: 16),
-
-          // 订阅列表（仅在没有搜索结果时显示）
-          if (!searchState.hasSearched)
+          if (!searchState.hasSearched) ...[
+            const SizedBox(height: 18),
+            RichText(
+              key: const Key('podcast_list_subscriptions_title'),
+              text: TextSpan(
+                style: sectionTitleStyle,
+                children: [
+                  TextSpan(text: l10n.podcast_my_subscriptions),
+                  TextSpan(
+                    text: ' (${subscriptionState.total})',
+                    style: sectionTitleStyle?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
             Expanded(child: _buildSubscriptionContent(context)),
-
-          // Bottom action bar for selection mode
+          ],
           if (isSelectionMode && bulkSelectionState.selectedIds.isNotEmpty)
             _buildBottomActionBar(
               context,
@@ -247,7 +260,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              // Select all checkbox
               if (subscriptionState.subscriptions.isNotEmpty)
                 Checkbox(
                   value: ref.read(bulkSelectionProvider).isSelectedAll,
@@ -266,13 +278,11 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   },
                 ),
               const SizedBox(width: 12),
-              // Selected count text
               Text(
                 l10n.podcast_selected_count(selectedCount),
                 style: theme.textTheme.titleSmall,
               ),
               const Spacer(),
-              // Delete button
               FilledButton.tonalIcon(
                 onPressed: () => _showBulkDeleteDialog(context),
                 icon: const Icon(Icons.delete),
@@ -295,13 +305,11 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
 
-    // 显示初始加载状态
     if (subscriptionState.isLoading &&
         subscriptionState.subscriptions.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    // 显示错误状态
     if (subscriptionState.error != null &&
         subscriptionState.subscriptions.isEmpty) {
       return Center(
@@ -330,7 +338,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       );
     }
 
-    // 显示空状态
     if (subscriptionState.subscriptions.isEmpty) {
       return Center(
         child: Column(
@@ -363,7 +370,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       );
     }
 
-    // 使用 RefreshIndicator 支持下拉刷新
     return RefreshIndicator(
       onRefresh: () =>
           ref.read(podcastSubscriptionProvider.notifier).refreshSubscriptions(),
@@ -393,16 +399,17 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   Widget _buildMobileList(
     BuildContext context,
     List<PodcastSubscriptionModel> subscriptions,
-    dynamic bulkSelectionState,
+    BulkSelectionState bulkSelectionState,
     bool hasMore,
     bool isLoadingMore,
     int total,
     AppLocalizations l10n,
   ) {
     final theme = Theme.of(context);
+
     return ListView.builder(
       controller: _scrollController,
-      itemCount: subscriptions.length + 1, // +1 for loading indicator
+      itemCount: subscriptions.length + 1,
       itemBuilder: (context, index) {
         if (index == subscriptions.length) {
           return _buildLoadingIndicator(hasMore, isLoadingMore, total, l10n);
@@ -434,15 +441,14 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   },
             borderRadius: BorderRadius.circular(_mobileSubscriptionCardRadius),
             child: Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               child: Row(
                 children: [
-                  // Podcast artwork (56x56)
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(10),
                     child: SizedBox(
-                      width: 56,
-                      height: 56,
+                      width: 60,
+                      height: 60,
                       child: subscription.imageUrl != null
                           ? Image.network(
                               subscription.imageUrl!,
@@ -473,27 +479,20 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                             ),
                     ),
                   ),
-
-                  const SizedBox(width: 10),
-
-                  // Podcast info - title and 2-line description
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Title
                         Text(
                           subscription.title,
                           style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-
-                        const SizedBox(height: 2),
-
-                        // Description (2 lines with ellipsis)
+                        const SizedBox(height: 4),
                         Text(
                           subscription.description != null
                               ? EpisodeDescriptionHelper.stripHtmlTags(
@@ -509,8 +508,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                       ],
                     ),
                   ),
-
-                  // Checkbox in selection mode
                   if (bulkSelectionState.isSelectionMode)
                     Padding(
                       padding: const EdgeInsets.only(left: 8),
@@ -535,22 +532,24 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   Widget _buildDesktopGrid(
     BuildContext context,
     List<PodcastSubscriptionModel> subscriptions,
-    dynamic bulkSelectionState,
+    BulkSelectionState bulkSelectionState,
     bool hasMore,
     bool isLoadingMore,
     int total,
     AppLocalizations l10n,
     double screenWidth,
   ) {
+    final theme = Theme.of(context);
+
     return GridView.builder(
       controller: _scrollController,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: screenWidth < 900 ? 2 : (screenWidth < 1200 ? 3 : 4),
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        childAspectRatio: 0.72,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.76,
       ),
-      itemCount: subscriptions.length + 1, // +1 for loading indicator
+      itemCount: subscriptions.length + 1,
       itemBuilder: (context, index) {
         if (index == subscriptions.length) {
           return _buildLoadingIndicator(hasMore, isLoadingMore, total, l10n);
@@ -558,12 +557,19 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
         final subscription = subscriptions[index];
         final isSelected = bulkSelectionState.isSelected(subscription.id);
-        final theme = Theme.of(context);
 
         return Stack(
           children: [
             Card(
               clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.55,
+                  ),
+                ),
+              ),
               child: InkWell(
                 onTap: bulkSelectionState.isSelectionMode
                     ? () => ref
@@ -575,10 +581,10 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                           extra: subscription,
                         );
                       },
+                borderRadius: BorderRadius.circular(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Podcast cover image
                     Expanded(
                       child: SizedBox(
                         width: double.infinity,
@@ -613,17 +619,15 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                               ),
                       ),
                     ),
-
-                    // Podcast info
                     Padding(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             subscription.title,
                             style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -648,46 +652,39 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 ),
               ),
             ),
-            // Checkbox overlay in selection mode
             if (bulkSelectionState.isSelectionMode)
               Positioned(
                 top: 8,
                 left: 8,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(4),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 4,
-                      ),
-                    ],
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Checkbox(
-                    value: isSelected,
-                    onChanged: (_) {
-                      ref
-                          .read(bulkSelectionProvider.notifier)
-                          .toggleSelection(subscription.id);
-                    },
+                  child: Material(
+                    color: Colors.transparent,
+                    child: Checkbox(
+                      value: isSelected,
+                      onChanged: (_) {
+                        ref
+                            .read(bulkSelectionProvider.notifier)
+                            .toggleSelection(subscription.id);
+                      },
+                    ),
                   ),
                 ),
               ),
-            // Selection indicator (use IgnorePointer to allow clicks to pass through)
             if (isSelected)
               Positioned.fill(
                 child: IgnorePointer(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.08),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.primary,
+                        color: theme.colorScheme.primary,
                         width: 2,
                       ),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                 ),
@@ -716,7 +713,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         padding: const EdgeInsets.all(16),
         child: Center(
           child: Text(
-            '已加载全部 $total 个订阅',
+            '${l10n.podcast_my_subscriptions}: $total',
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
         ),
@@ -729,8 +726,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   void _showBulkDeleteDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final selectedIds = ref.read(bulkSelectionProvider).selectedIds.toList();
-
-    // Save ScaffoldMessenger before showing dialog to avoid using deactivated context
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final theme = Theme.of(context);
 
@@ -746,7 +741,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               subscriptionIds: selectedIds,
             );
 
-            // Show success message using saved ScaffoldMessenger
             if (mounted) {
               scaffoldMessenger.showSnackBar(
                 SnackBar(
@@ -777,7 +771,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               );
             }
           } catch (error) {
-            // Show error message using saved ScaffoldMessenger
             if (mounted) {
               scaffoldMessenger.showSnackBar(
                 SnackBar(
@@ -795,7 +788,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               );
             }
           } finally {
-            // Clear selection after deletion attempt
             ref.read(bulkSelectionProvider.notifier).clearSelection();
           }
         },

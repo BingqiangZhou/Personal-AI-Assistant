@@ -586,6 +586,10 @@
     "description": "刷新信息流按钮提示"
   },
 
+  "podcast_discover_new": "发现新播客",
+  "@podcast_discover_new": {
+    "description": "发现新播客分区标题"
+  },
   "podcast_add_podcast": "添加播客",
   "@podcast_add_podcast": {
     "description": "添加播客按钮提示"

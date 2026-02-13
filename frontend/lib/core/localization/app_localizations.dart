@@ -1082,6 +1082,12 @@ abstract class AppLocalizations {
   /// **'Podcasts'**
   String get podcast_title;
 
+  /// Discover new podcasts section title
+  ///
+  /// In en, this message translates to:
+  /// **'Discover New'**
+  String get podcast_discover_new;
+
   /// No podcasts state
   ///
   /// In en, this message translates to:
