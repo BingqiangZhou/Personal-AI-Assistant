@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_discover_chart_model.dart';
+import '../../data/models/itunes_episode_lookup_model.dart';
+import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_search_model.dart';
 import '../../data/utils/podcast_url_utils.dart';
 import '../constants/podcast_ui_constants.dart';
@@ -14,6 +15,8 @@ import '../providers/podcast_discover_provider.dart';
 import '../providers/podcast_providers.dart';
 import '../providers/podcast_search_provider.dart' as search;
 import '../widgets/country_selector_dropdown.dart';
+import '../widgets/discover_episode_detail_sheet.dart';
+import '../widgets/discover_show_episodes_sheet.dart';
 import '../widgets/podcast_image_widget.dart';
 import '../widgets/podcast_search_result_card.dart';
 
@@ -182,25 +185,180 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     }
   }
 
-  Future<void> _openExternalLink(String url) async {
+  void _showErrorNotice(String message) {
+    if (!mounted) return;
+    showTopFloatingNotice(context, message: message, isError: true);
+  }
+
+  Future<void> _handleChartRowTap(PodcastDiscoverItem item) async {
+    if (item.isPodcastShow) {
+      await _showPodcastEpisodeInfoSheet(item);
+      return;
+    }
+    await _showEpisodeDetailSheet(item);
+  }
+
+  int? _resolveShowIdForPodcast(PodcastDiscoverItem item) {
+    final searchService = ref.read(search.iTunesSearchServiceProvider);
+    return item.itunesId ??
+        searchService.extractShowIdFromApplePodcastUrl(item.url);
+  }
+
+  Future<_DiscoverEpisodeSelection?> _resolveDiscoverEpisodeSelection(
+    PodcastDiscoverItem item,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
-    final uri = Uri.tryParse(url);
-    if (uri == null) {
-      showTopFloatingNotice(
-        context,
-        message: l10n.podcast_discover_open_link_failed,
-        isError: true,
+    final country = ref.read(countrySelectorProvider).selectedCountry;
+    final searchService = ref.read(search.iTunesSearchServiceProvider);
+    final showId = searchService.extractShowIdFromApplePodcastUrl(item.url);
+    final episodeTrackId =
+        searchService.extractEpisodeIdFromApplePodcastUrl(item.url) ??
+        item.itunesId;
+
+    if (showId == null || episodeTrackId == null) {
+      _showErrorNotice(l10n.podcast_failed_load_episodes);
+      return null;
+    }
+
+    try {
+      final episode = await searchService.findEpisodeInLookup(
+        showId: showId,
+        episodeTrackId: episodeTrackId,
+        country: country,
       );
+      if (episode == null) {
+        _showErrorNotice(l10n.podcast_failed_load_episodes);
+        return null;
+      }
+      return _DiscoverEpisodeSelection(showId: showId, episode: episode);
+    } catch (_) {
+      _showErrorNotice(l10n.podcast_failed_load_episodes);
+      return null;
+    }
+  }
+
+  Future<void> _showPodcastEpisodeInfoSheet(PodcastDiscoverItem item) async {
+    final l10n = AppLocalizations.of(context)!;
+    final country = ref.read(countrySelectorProvider).selectedCountry;
+    final showId = _resolveShowIdForPodcast(item);
+    if (showId == null) {
+      _showErrorNotice(l10n.podcast_failed_load_episodes);
       return;
     }
 
-    final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!opened && mounted) {
-      showTopFloatingNotice(
-        context,
-        message: l10n.podcast_discover_open_link_failed,
-        isError: true,
+    try {
+      final searchService = ref.read(search.iTunesSearchServiceProvider);
+      final lookup = await searchService.lookupPodcastEpisodes(
+        showId: showId,
+        country: country,
       );
+      if (!mounted) return;
+      if (lookup.episodes.isEmpty) {
+        _showErrorNotice(l10n.podcast_no_episodes_found);
+        return;
+      }
+
+      await showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        isScrollControlled: true,
+        builder: (sheetContext) {
+          return ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(sheetContext).size.height * 0.8,
+            ),
+            child: DiscoverShowEpisodesSheet(
+              showTitle: lookup.collectionName ?? item.title,
+              episodes: lookup.episodes,
+            ),
+          );
+        },
+      );
+    } catch (_) {
+      _showErrorNotice(l10n.podcast_failed_load_episodes);
+    }
+  }
+
+  Future<void> _showEpisodeDetailSheet(PodcastDiscoverItem item) async {
+    final selection = await _resolveDiscoverEpisodeSelection(item);
+    if (selection == null || !mounted) {
+      return;
+    }
+
+    final episode = selection.episode;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(sheetContext).size.height * 0.9,
+          ),
+          child: DiscoverEpisodeDetailSheet(
+            episode: episode,
+            onPlay: () async {
+              Navigator.of(sheetContext).pop();
+              await _playDiscoverEpisode(
+                episode: episode,
+                showId: selection.showId,
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _playEpisodeFromChartRow(PodcastDiscoverItem item) async {
+    final selection = await _resolveDiscoverEpisodeSelection(item);
+    if (selection == null) {
+      return;
+    }
+    await _playDiscoverEpisode(
+      episode: selection.episode,
+      showId: selection.showId,
+    );
+  }
+
+  Future<void> _playDiscoverEpisode({
+    required ITunesPodcastEpisodeResult episode,
+    required int showId,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final audioUrl = episode.resolvedAudioUrl;
+    if (audioUrl == null || audioUrl.isEmpty) {
+      _showErrorNotice(l10n.podcast_player_no_audio);
+      return;
+    }
+
+    final now = DateTime.now();
+    final discoverEpisode = PodcastEpisodeModel(
+      id: episode.trackId,
+      subscriptionId: 0,
+      title: episode.trackName,
+      subscriptionTitle: episode.collectionName,
+      description: episode.description ?? episode.shortDescription,
+      audioUrl: audioUrl,
+      audioDuration: episode.trackTimeMillis == null
+          ? null
+          : (episode.trackTimeMillis! / 1000).round(),
+      publishedAt: episode.releaseDate ?? now,
+      imageUrl: episode.artworkUrl600 ?? episode.artworkUrl100,
+      itemLink: episode.trackViewUrl,
+      metadata: {
+        'discover_preview': true,
+        'source': 'top_charts',
+        'show_id': showId,
+        'track_id': episode.trackId,
+      },
+      createdAt: now,
+    );
+
+    try {
+      await ref.read(audioPlayerProvider.notifier).playEpisode(discoverEpisode);
+    } catch (_) {
+      _showErrorNotice(l10n.podcast_player_no_audio);
     }
   }
 
@@ -544,7 +702,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => _openExternalLink(item.url),
+        onTap: () => _handleChartRowTap(item),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
           child: Row(
@@ -617,15 +775,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                           ),
                         ),
                 ),
-              SizedBox(
-                width: 36,
-                height: 36,
-                child: IconButton(
-                  key: Key('podcast_discover_open_${item.itemId}'),
-                  onPressed: () => _openExternalLink(item.url),
-                  icon: const Icon(Icons.play_circle_outline),
+              if (!showSubscribe)
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: IconButton(
+                    key: Key('podcast_discover_play_${item.itemId}'),
+                    onPressed: () => _playEpisodeFromChartRow(item),
+                    icon: const Icon(Icons.play_arrow),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -814,4 +973,14 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       _ => country.code.toUpperCase(),
     };
   }
+}
+
+class _DiscoverEpisodeSelection {
+  const _DiscoverEpisodeSelection({
+    required this.showId,
+    required this.episode,
+  });
+
+  final int showId;
+  final ITunesPodcastEpisodeResult episode;
 }

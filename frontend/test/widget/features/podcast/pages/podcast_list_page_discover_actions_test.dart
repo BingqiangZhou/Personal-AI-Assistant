@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/itunes_episode_lookup_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
@@ -65,18 +67,61 @@ void main() {
       );
     });
 
-    testWidgets('episode open action launches external url', (tester) async {
-      const channel = MethodChannel('plugins.flutter.io/url_launcher');
-      final calls = <MethodCall>[];
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(channel, (call) async {
-            calls.add(call);
-            return true;
-          });
-      addTearDown(() {
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(channel, null);
-      });
+    testWidgets(
+      'podcast row opens episodes info sheet and has no open button',
+      (tester) async {
+        final fakeLookupService = _FakeITunesSearchService();
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              localStorageServiceProvider.overrideWithValue(
+                _MockLocalStorageService(),
+              ),
+              applePodcastRssServiceProvider.overrideWithValue(
+                _FakeApplePodcastRssService(),
+              ),
+              search.iTunesSearchServiceProvider.overrideWithValue(
+                fakeLookupService,
+              ),
+              podcastSubscriptionProvider.overrideWith(
+                () => _FakePodcastSubscriptionNotifier(),
+              ),
+              search.podcastSearchProvider.overrideWithValue(
+                const search.PodcastSearchState(),
+              ),
+            ],
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PodcastListPage(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('podcast_discover_open_111')),
+          findsNothing,
+        );
+        await tester.tap(
+          find.byKey(const Key('podcast_discover_chart_row_111')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(fakeLookupService.lookupEpisodesCalled, isTrue);
+        expect(
+          find.byKey(const Key('discover_show_episodes_sheet')),
+          findsOneWidget,
+        );
+        expect(find.text('Show Episode Preview'), findsOneWidget);
+      },
+    );
+
+    testWidgets('episodes support detail sheet and internal play button', (
+      tester,
+    ) async {
+      final audioNotifier = _MockAudioPlayerNotifier();
 
       await tester.pumpWidget(
         ProviderScope(
@@ -87,9 +132,13 @@ void main() {
             applePodcastRssServiceProvider.overrideWithValue(
               _FakeApplePodcastRssService(),
             ),
+            search.iTunesSearchServiceProvider.overrideWithValue(
+              _FakeITunesSearchService(),
+            ),
             podcastSubscriptionProvider.overrideWith(
               () => _FakePodcastSubscriptionNotifier(),
             ),
+            audioPlayerProvider.overrideWith(() => audioNotifier),
             search.podcastSearchProvider.overrideWithValue(
               const search.PodcastSearchState(),
             ),
@@ -106,15 +155,29 @@ void main() {
       await tester.tap(find.byKey(const Key('podcast_discover_tab_episodes')));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('podcast_discover_open_222')));
+      expect(find.byKey(const Key('podcast_discover_open_222')), findsNothing);
+      expect(
+        find.byKey(const Key('podcast_discover_play_222')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const Key('podcast_discover_chart_row_222')));
       await tester.pumpAndSettle();
 
       expect(
-        calls.any(
-          (call) => call.method == 'launch' || call.method == 'launchUrl',
-        ),
-        isTrue,
+        find.byKey(const Key('discover_episode_detail_sheet')),
+        findsOneWidget,
       );
+
+      await tester.tap(
+        find.byKey(const Key('discover_episode_detail_play_button')),
+      );
+      await tester.pumpAndSettle();
+
+      final played = audioNotifier.lastPlayedEpisode;
+      expect(played, isNotNull);
+      expect(played!.id, 222);
+      expect(played.metadata?['discover_preview'], isTrue);
     });
   });
 }
@@ -143,7 +206,7 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
             'genres': [
               {'name': 'Technology'},
             ],
-            'url': 'https://podcasts.apple.com/us/podcast/id111',
+            'url': 'https://podcasts.apple.com/us/podcast/show-one/id111',
           }),
         ],
       ),
@@ -171,7 +234,8 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
             'genres': [
               {'name': 'News'},
             ],
-            'url': 'https://podcasts.apple.com/us/podcast/id222',
+            'url':
+                'https://podcasts.apple.com/us/podcast/episode-one/id333?i=222',
           }),
         ],
       ),
@@ -183,6 +247,7 @@ class _FakeITunesSearchService extends ITunesSearchService {
   _FakeITunesSearchService() : super();
 
   bool lookupCalled = false;
+  bool lookupEpisodesCalled = false;
 
   @override
   Future<PodcastSearchResult?> lookupPodcast({
@@ -196,6 +261,76 @@ class _FakeITunesSearchService extends ITunesSearchService {
       artistName: 'Show Artist',
       feedUrl: 'https://example.com/feed.xml',
     );
+  }
+
+  @override
+  Future<ITunesPodcastLookupResult> lookupPodcastEpisodes({
+    required int showId,
+    PodcastCountry country = PodcastCountry.china,
+    int limit = 50,
+  }) async {
+    lookupEpisodesCalled = true;
+
+    if (showId == 111) {
+      return ITunesPodcastLookupResult(
+        showId: showId,
+        collectionName: 'Show One',
+        artistName: 'Show Artist',
+        feedUrl: 'https://example.com/feed.xml',
+        collectionViewUrl:
+            'https://podcasts.apple.com/us/podcast/show-one/id111',
+        episodes: [
+          ITunesPodcastEpisodeResult(
+            trackId: 1001,
+            collectionId: 111,
+            trackName: 'Show Episode Preview',
+            collectionName: 'Show One',
+            feedUrl: 'https://example.com/feed.xml',
+            releaseDate: DateTime(2026, 2, 14),
+            trackTimeMillis: 120000,
+          ),
+        ],
+      );
+    }
+
+    return ITunesPodcastLookupResult(
+      showId: showId,
+      collectionName: 'Top Episode Show',
+      artistName: 'Episode Artist',
+      feedUrl: 'https://example.com/episode-feed.xml',
+      collectionViewUrl:
+          'https://podcasts.apple.com/us/podcast/top-episode/id333',
+      episodes: [
+        ITunesPodcastEpisodeResult(
+          trackId: 222,
+          collectionId: 333,
+          trackName: 'Episode One',
+          collectionName: 'Top Episode Show',
+          feedUrl: 'https://example.com/episode-feed.xml',
+          episodeUrl: 'https://example.com/episode-222.mp3',
+          releaseDate: DateTime(2026, 2, 14),
+          trackTimeMillis: 180000,
+        ),
+      ],
+    );
+  }
+}
+
+class _MockAudioPlayerNotifier extends AudioPlayerNotifier {
+  PodcastEpisodeModel? lastPlayedEpisode;
+
+  @override
+  AudioPlayerState build() {
+    return const AudioPlayerState();
+  }
+
+  @override
+  Future<void> playEpisode(
+    PodcastEpisodeModel episode, {
+    PlaySource source = PlaySource.direct,
+    int? queueEpisodeId,
+  }) async {
+    lastPlayedEpisode = episode;
   }
 }
 

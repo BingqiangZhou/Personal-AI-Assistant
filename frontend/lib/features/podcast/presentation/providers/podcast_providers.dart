@@ -54,6 +54,31 @@ String? _extractSubscriptionTitle(Map<String, dynamic>? subscription) {
 }
 
 @visibleForTesting
+bool isDiscoverPreviewEpisode(PodcastEpisodeModel episode) {
+  final metadata = episode.metadata;
+  if (metadata == null) {
+    return false;
+  }
+
+  final raw = metadata['discover_preview'];
+  if (raw is bool) {
+    return raw;
+  }
+  if (raw is String) {
+    return raw.toLowerCase() == 'true';
+  }
+  if (raw is num) {
+    return raw != 0;
+  }
+  return false;
+}
+
+@visibleForTesting
+bool shouldSyncPlaybackToServer(PodcastEpisodeModel episode) {
+  return !isDiscoverPreviewEpisode(episode);
+}
+
+@visibleForTesting
 PodcastEpisodeModel mergeEpisodeForPlayback(
   PodcastEpisodeModel incoming,
   PodcastEpisodeDetailResponse latest,
@@ -500,9 +525,12 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
     _isPlayingEpisode = true;
     var episodeForPlayback = episode;
+    final skipServerSync = isDiscoverPreviewEpisode(episode);
 
     try {
-      episodeForPlayback = await _resolveEpisodeForPlayback(episode);
+      if (!skipServerSync) {
+        episodeForPlayback = await _resolveEpisodeForPlayback(episode);
+      }
       if (!ref.mounted || _isDisposed) {
         _isPlayingEpisode = false;
         return;
@@ -511,7 +539,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       var effectiveSource = source;
       var effectiveQueueEpisodeId = queueEpisodeId;
 
-      if (source == PlaySource.direct) {
+      if (!skipServerSync && source == PlaySource.direct) {
         final preparedQueue = await _prepareManualPlayQueue(
           episodeForPlayback.id,
         );
@@ -989,6 +1017,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
     final episode = state.currentEpisode;
     if (episode == null) return;
+    if (!shouldSyncPlaybackToServer(episode)) return;
 
     // If immediate (pause/seek/stop/completed), send right away
     if (immediate) {
@@ -1030,6 +1059,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
   Future<void> _sendPlaybackUpdate(PodcastEpisodeModel episode) async {
     if (_isDisposed) return;
+    if (!shouldSyncPlaybackToServer(episode)) return;
 
     final payload = buildPersistPayload(
       state.position,
