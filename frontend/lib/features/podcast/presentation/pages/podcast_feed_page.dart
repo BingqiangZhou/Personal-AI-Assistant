@@ -1,12 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
@@ -29,13 +26,6 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(podcastFeedProvider.notifier).loadInitialFeed();
-      if (ref.read(authProvider).isAuthenticated) {
-        unawaited(
-          ref
-              .read(audioPlayerProvider.notifier)
-              .restoreLastPlayedEpisodeIfNeeded(),
-        );
-      }
     });
   }
 
@@ -310,7 +300,9 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: PodcastImageWidget(
-                            imageUrl: episode.imageUrl ?? episode.subscriptionImageUrl,
+                            imageUrl:
+                                episode.imageUrl ??
+                                episode.subscriptionImageUrl,
                             width: coverSize,
                             height: coverSize,
                             iconSize: coverIconSize,
@@ -548,7 +540,8 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: PodcastImageWidget(
-                        imageUrl: episode.imageUrl ?? episode.subscriptionImageUrl,
+                        imageUrl:
+                            episode.imageUrl ?? episode.subscriptionImageUrl,
                         width: coverSize,
                         height: coverSize,
                         iconSize: coverIconSize,

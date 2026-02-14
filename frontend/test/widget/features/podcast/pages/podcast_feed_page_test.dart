@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
-import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_feed_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
@@ -52,50 +50,43 @@ void main() {
         ),
       );
 
-      final l10n = AppLocalizations.of(tester.element(find.byType(PodcastFeedPage)))!;
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(PodcastFeedPage)),
+      )!;
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text(l10n.podcast_feed_page_title), findsOneWidget);
 
       testContainer.dispose();
     });
 
-    testWidgets(
-      'calls restoreLastPlayedEpisodeIfNeeded on init when authenticated',
-      (WidgetTester tester) async {
-        final audioNotifier = RestoreTrackingAudioPlayerNotifier();
-        final testContainer = ProviderContainer(
-          overrides: [
-            authProvider.overrideWith(TestAuthenticatedAuthNotifier.new),
-            audioPlayerProvider.overrideWith(() => audioNotifier),
-            podcastFeedProvider.overrideWith(
-              () => MockPodcastFeedNotifier(
-                const PodcastFeedState(
-                  episodes: [],
-                  isLoading: false,
-                  hasMore: false,
-                  total: 0,
-                ),
-              ),
-            ),
-          ],
-        );
+    testWidgets('calls loadInitialFeed on init', (WidgetTester tester) async {
+      final feedNotifier = LoadTrackingPodcastFeedNotifier(
+        const PodcastFeedState(
+          episodes: [],
+          isLoading: false,
+          hasMore: false,
+          total: 0,
+        ),
+      );
+      final testContainer = ProviderContainer(
+        overrides: [podcastFeedProvider.overrideWith(() => feedNotifier)],
+      );
 
-        await tester.pumpWidget(
-          UncontrolledProviderScope(
-            container: testContainer,
-            child: MaterialApp(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: PodcastFeedPage(),
-            ),
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: testContainer,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: PodcastFeedPage(),
           ),
-        );
+        ),
+      );
 
-        await tester.pump();
-        expect(audioNotifier.restoreCallCount, 1);
-        testContainer.dispose();
-      },
-    );
+      await tester.pump();
+      expect(feedNotifier.loadInitialFeedCallCount, 1);
+      testContainer.dispose();
+    });
 
     testWidgets('displays empty state when no episodes', (
       WidgetTester tester,
@@ -130,7 +121,9 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      final l10n = AppLocalizations.of(tester.element(find.byType(PodcastFeedPage)))!;
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(PodcastFeedPage)),
+      )!;
       expect(find.text(l10n.podcast_no_episodes_found), findsOneWidget);
 
       testContainer.dispose();
@@ -231,8 +224,13 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      final l10n = AppLocalizations.of(tester.element(find.byType(PodcastFeedPage)))!;
-      expect(find.textContaining(l10n.podcast_failed_to_load_feed), findsOneWidget);
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(PodcastFeedPage)),
+      )!;
+      expect(
+        find.textContaining(l10n.podcast_failed_to_load_feed),
+        findsOneWidget,
+      );
       expect(find.textContaining('Network error occurred'), findsOneWidget);
       expect(find.text(l10n.podcast_retry), findsOneWidget);
 
@@ -377,23 +375,19 @@ class MockPodcastFeedNotifier extends PodcastFeedNotifier {
   }
 }
 
-class RestoreTrackingAudioPlayerNotifier extends AudioPlayerNotifier {
-  int restoreCallCount = 0;
+class LoadTrackingPodcastFeedNotifier extends PodcastFeedNotifier {
+  LoadTrackingPodcastFeedNotifier(this._initialState);
+
+  final PodcastFeedState _initialState;
+  int loadInitialFeedCallCount = 0;
 
   @override
-  AudioPlayerState build() {
-    return const AudioPlayerState();
+  PodcastFeedState build() {
+    return _initialState;
   }
 
   @override
-  Future<void> restoreLastPlayedEpisodeIfNeeded() async {
-    restoreCallCount++;
-  }
-}
-
-class TestAuthenticatedAuthNotifier extends AuthNotifier {
-  @override
-  AuthState build() {
-    return const AuthState(isAuthenticated: true);
+  Future<void> loadInitialFeed() async {
+    loadInitialFeedCallCount += 1;
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,6 +23,7 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   late int _currentIndex;
+  bool _hasAttemptedPlaybackRestore = false;
 
   @override
   void initState() {
@@ -29,11 +32,24 @@ class _HomePageState extends ConsumerState<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
+      _restoreMiniPlayerOnHomeEnter();
+
       final audioState = ref.read(audioPlayerProvider);
       if (!_isPodcastTab(_currentIndex) && audioState.isExpanded) {
         ref.read(audioPlayerProvider.notifier).setExpanded(false);
       }
     });
+  }
+
+  void _restoreMiniPlayerOnHomeEnter() {
+    if (_hasAttemptedPlaybackRestore) {
+      return;
+    }
+
+    _hasAttemptedPlaybackRestore = true;
+    unawaited(
+      ref.read(audioPlayerProvider.notifier).restoreLastPlayedEpisodeIfNeeded(),
+    );
   }
 
   bool _isPodcastTab(int index) => index == 0 || index == 1;
