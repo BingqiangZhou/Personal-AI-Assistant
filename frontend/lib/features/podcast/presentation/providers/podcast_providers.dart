@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
@@ -9,6 +10,7 @@ import '../../../../main.dart' as main_app;
 import 'audio_handler.dart';
 
 import '../../../../core/providers/core_providers.dart';
+import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/podcast_episode_model.dart';
@@ -135,6 +137,22 @@ Future<PodcastEpisodeModel> resolveEpisodeForPlayback(
   }
 }
 
+class _LastPlaybackSnapshot {
+  final PodcastEpisodeModel episode;
+  final int positionMs;
+  final int durationMs;
+  final double playbackRate;
+  final DateTime? savedAt;
+
+  const _LastPlaybackSnapshot({
+    required this.episode,
+    required this.positionMs,
+    required this.durationMs,
+    required this.playbackRate,
+    this.savedAt,
+  });
+}
+
 class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   late PodcastRepository _repository;
   bool _isDisposed = false;
@@ -150,6 +168,10 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   Timer? _sleepTimerTickTimer;
   DateTime? _lastPlaybackSyncAt;
   static const Duration _syncInterval = Duration(seconds: 2);
+  static const String _lastPlaybackSnapshotKey =
+      'podcast_last_playback_snapshot_v1';
+  static const Duration _lastPlaybackSnapshotDebounce = Duration(seconds: 2);
+  Timer? _snapshotPersistTimer;
 
   PodcastAudioHandler get _audioHandler => main_app.audioHandler;
 
@@ -167,9 +189,135 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       _durationSubscription?.cancel();
       _syncThrottleTimer?.cancel();
       _sleepTimerTickTimer?.cancel();
+      _snapshotPersistTimer?.cancel();
     });
 
     return const AudioPlayerState();
+  }
+
+  void _schedulePersistLastPlaybackSnapshot({bool immediate = false}) {
+    if (_isDisposed || !ref.mounted) return;
+    if (state.currentEpisode == null) return;
+
+    if (immediate) {
+      _snapshotPersistTimer?.cancel();
+      _snapshotPersistTimer = null;
+      unawaited(_persistLastPlaybackSnapshot());
+      return;
+    }
+
+    if (_snapshotPersistTimer != null) return;
+    _snapshotPersistTimer = Timer(_lastPlaybackSnapshotDebounce, () {
+      _snapshotPersistTimer = null;
+      unawaited(_persistLastPlaybackSnapshot());
+    });
+  }
+
+  Future<void> _persistLastPlaybackSnapshot() async {
+    if (_isDisposed || !ref.mounted) return;
+    final episode = state.currentEpisode;
+    if (episode == null) return;
+
+    final payload = <String, dynamic>{
+      'episode': <String, dynamic>{
+        'id': episode.id,
+        'subscription_id': episode.subscriptionId,
+        'subscription_image_url': episode.subscriptionImageUrl,
+        'title': episode.title,
+        'subscription_title': episode.subscriptionTitle,
+        'description': null,
+        'audio_url': episode.audioUrl,
+        'audio_duration': episode.audioDuration,
+        'audio_file_size': episode.audioFileSize,
+        'published_at': episode.publishedAt.toIso8601String(),
+        'image_url': episode.imageUrl,
+        'item_link': episode.itemLink,
+        'transcript_url': null,
+        'transcript_content': null,
+        'ai_summary': null,
+        'summary_version': null,
+        'ai_confidence_score': null,
+        'play_count': episode.playCount,
+        'last_played_at': episode.lastPlayedAt?.toIso8601String(),
+        'season': episode.season,
+        'episode_number': episode.episodeNumber,
+        'explicit': episode.explicit,
+        'status': episode.status,
+        'metadata': episode.metadata,
+        'playback_position': (state.position / 1000).round(),
+        'is_playing': false,
+        'playback_rate': state.playbackRate,
+        'is_played': episode.isPlayed,
+        'created_at': episode.createdAt.toIso8601String(),
+        'updated_at': episode.updatedAt?.toIso8601String(),
+      },
+      'position_ms': state.position,
+      'duration_ms': state.duration,
+      'playback_rate': state.playbackRate,
+      'saved_at': DateTime.now().toIso8601String(),
+    };
+
+    try {
+      final storage = ref.read(localStorageServiceProvider);
+      await storage.saveString(_lastPlaybackSnapshotKey, jsonEncode(payload));
+    } catch (_) {}
+  }
+
+  Future<_LastPlaybackSnapshot?> _loadLastPlaybackSnapshot() async {
+    try {
+      final storage = ref.read(localStorageServiceProvider);
+      final raw = await storage.getString(_lastPlaybackSnapshotKey);
+      if (raw == null || raw.isEmpty) return null;
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      final episodeJson = decoded['episode'];
+      if (episodeJson is! Map) return null;
+      final episode = PodcastEpisodeModel.fromJson(
+        Map<String, dynamic>.from(episodeJson as Map),
+      );
+      final positionMs = (decoded['position_ms'] as num?)?.toInt() ?? 0;
+      final durationMs = (decoded['duration_ms'] as num?)?.toInt() ??
+          (episode.audioDuration ?? 0) * 1000;
+      final playbackRate =
+          (decoded['playback_rate'] as num?)?.toDouble() ?? episode.playbackRate;
+      final savedAtRaw = decoded['saved_at'];
+      final savedAt = savedAtRaw is String ? DateTime.tryParse(savedAtRaw) : null;
+      return _LastPlaybackSnapshot(
+        episode: episode,
+        positionMs: positionMs,
+        durationMs: durationMs,
+        playbackRate: playbackRate,
+        savedAt: savedAt,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> _restoreLastPlaybackSnapshotIfPossible() async {
+    if (_isDisposed || !ref.mounted) return false;
+    if (!ref.read(authProvider).isAuthenticated) return false;
+    if (_isPlayingEpisode || state.currentEpisode != null) return false;
+
+    final snapshot = await _loadLastPlaybackSnapshot();
+    if (_isDisposed || !ref.mounted) return false;
+    if (snapshot == null) return false;
+    if (_isPlayingEpisode || state.currentEpisode != null) return false;
+
+    state = state.copyWith(
+      currentEpisode: snapshot.episode.copyWith(
+        playbackRate: snapshot.playbackRate,
+        playbackPosition: (snapshot.positionMs / 1000).round(),
+      ),
+      isPlaying: false,
+      isLoading: false,
+      isExpanded: false,
+      position: snapshot.positionMs,
+      duration: snapshot.durationMs,
+      playbackRate: snapshot.playbackRate,
+      error: null,
+    );
+    return true;
   }
 
   void _setupListeners() {
@@ -207,6 +355,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         isLoading: false,
         processingState: processingState,
       );
+      _schedulePersistLastPlaybackSnapshot(immediate: !playbackState.playing);
 
       if (completedJustNow) {
         unawaited(_handleTrackCompleted());
@@ -220,6 +369,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       if (_isDisposed || !ref.mounted) return;
 
       state = state.copyWith(position: position.inMilliseconds);
+      if (state.currentEpisode != null) {
+        _schedulePersistLastPlaybackSnapshot();
+      }
       if (state.isPlaying) {
         unawaited(_updatePlaybackStateOnServer());
       }
@@ -370,10 +522,15 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
     _isRestoringLastPlayed = true;
     try {
+      final restoredFromLocal = await _restoreLastPlaybackSnapshotIfPossible();
+      final expectedEpisodeId = state.currentEpisode?.id;
+      if (restoredFromLocal) {
+        unawaited(_restoreLastPlayedEpisodeFromServer(expectedEpisodeId));
+        return;
+      }
       logger.AppLogger.debug(
         '[PlaybackRestore] Restoring last played episode for mini player',
       );
-
       final response = await _repository.getPlaybackHistory(page: 1, size: 20);
       if (_isDisposed || !ref.mounted) {
         return;
@@ -459,6 +616,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       logger.AppLogger.debug(
         '[PlaybackRestore] Restored episode ${latest.id} to ${state.formattedPosition}',
       );
+      _schedulePersistLastPlaybackSnapshot(immediate: true);
     } catch (error) {
       logger.AppLogger.debug(
         '[PlaybackRestore] Failed to restore last played episode: $error',
@@ -466,6 +624,55 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     } finally {
       _isRestoringLastPlayed = false;
     }
+  }
+
+  Future<void> _restoreLastPlayedEpisodeFromServer(int? expectedEpisodeId) async {
+    if (_isDisposed || !ref.mounted) return;
+    if (_isPlayingEpisode) return;
+    if (!ref.read(authProvider).isAuthenticated) return;
+
+    try {
+      final response = await _repository.getPlaybackHistory(page: 1, size: 20);
+      if (_isDisposed || !ref.mounted) return;
+      if (_isPlayingEpisode) return;
+      if (expectedEpisodeId != null && state.currentEpisode?.id != expectedEpisodeId) {
+        return;
+      }
+      if (response.episodes.isEmpty) return;
+
+      final episodes = [...response.episodes]
+        ..sort((a, b) {
+          final aTime = a.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bTime = b.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return bTime.compareTo(aTime);
+        });
+      final latest = episodes.first;
+      final resolvedPlaybackRate = latest.playbackRate > 0 ? latest.playbackRate : 1.0;
+      final resumePositionMs = normalizeResumePositionMs(
+        latest.playbackPosition,
+        latest.audioDuration,
+      );
+      final durationMs = (latest.audioDuration ?? 0) * 1000;
+
+      if (expectedEpisodeId != null && state.currentEpisode?.id != expectedEpisodeId) {
+        return;
+      }
+
+      state = state.copyWith(
+        currentEpisode: latest.copyWith(
+          playbackRate: resolvedPlaybackRate,
+          playbackPosition: (resumePositionMs / 1000).round(),
+        ),
+        isPlaying: false,
+        isLoading: false,
+        isExpanded: false,
+        position: resumePositionMs,
+        duration: durationMs,
+        playbackRate: resolvedPlaybackRate,
+        error: null,
+      );
+      _schedulePersistLastPlaybackSnapshot(immediate: true);
+    } catch (_) {}
   }
 
   Future<PodcastEpisodeModel> _resolveEpisodeForPlayback(
@@ -621,6 +828,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         duration: durationMs, // Convert seconds to milliseconds
         error: null,
       );
+      _schedulePersistLastPlaybackSnapshot(immediate: true);
 
       // ===== STEP 3: Set new episode with metadata =====
       // CRITICAL: Use setEpisode() to properly set MediaItem, validate artUri, and load audio
@@ -693,6 +901,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
             position: resumePositionMs,
             playbackRate: targetPlaybackRate,
           );
+          _schedulePersistLastPlaybackSnapshot(immediate: true);
         }
       } catch (playError) {
         logger.AppLogger.debug('[Error] Failed to start playback: $playError');
@@ -1919,11 +2128,46 @@ final podcastEpisodesProvider =
 
 class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
   late PodcastRepository _repository;
+  static const Duration _episodesCacheExpiration = Duration(hours: 6);
 
   @override
   PodcastEpisodesState build() {
     _repository = ref.read(podcastRepositoryProvider);
     return const PodcastEpisodesState();
+  }
+
+  String _episodesCacheKey({
+    required int subscriptionId,
+    required String? status,
+    required bool? hasSummary,
+    required int size,
+  }) {
+    final effectiveStatus = status?.trim().isEmpty ?? true ? null : status;
+    final effectiveHasSummary = hasSummary == true ? true : null;
+    return 'podcast_episodes_v1_sub_${subscriptionId}_status_${effectiveStatus ?? "all"}_summary_${effectiveHasSummary == true ? "1" : "0"}_size_$size';
+  }
+
+  Future<PodcastEpisodeListResponse?> _loadEpisodesPage1FromCache({
+    required int subscriptionId,
+    required int size,
+    required String? status,
+    required bool? hasSummary,
+  }) async {
+    try {
+      final storage = ref.read(localStorageServiceProvider);
+      final cached = await storage.getCachedData<dynamic>(
+        _episodesCacheKey(
+          subscriptionId: subscriptionId,
+          status: status,
+          hasSummary: hasSummary,
+          size: size,
+        ),
+      );
+      if (cached is Map<String, dynamic>) {
+        return PodcastEpisodeListResponse.fromJson(cached);
+      }
+    } catch (_) {}
+    return null;
   }
 
   // Load episodes for a specific subscription
@@ -1955,16 +2199,54 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
       '[Playback] Loading episodes for subscription $subscriptionId, page $page',
     );
 
-    // When loading first page, clear existing episodes immediately to avoid showing old data
     if (page == 1) {
-      logger.AppLogger.debug(
-        '[Playback] Clearing old episodes and showing loading state',
+      final cacheKey = _episodesCacheKey(
+        subscriptionId: subscriptionId,
+        status: normalizedStatus,
+        hasSummary: normalizedHasSummary,
+        size: size,
       );
-      state = state.copyWith(
-        isLoading: true,
-        episodes: [], // Clear immediately
-        error: null,
-      );
+      final cachedResponse = forceRefresh
+          ? null
+          : await _loadEpisodesPage1FromCache(
+              subscriptionId: subscriptionId,
+              size: size,
+              status: normalizedStatus,
+              hasSummary: normalizedHasSummary,
+            );
+
+      final shouldClearImmediately =
+          state.cachedSubscriptionId != subscriptionId ||
+          state.cachedStatus != normalizedStatus ||
+          state.cachedHasSummary != normalizedHasSummary;
+
+      if (cachedResponse != null && cachedResponse.episodes.isNotEmpty) {
+        state = state.copyWith(
+          episodes: cachedResponse.episodes,
+          hasMore: 1 < cachedResponse.pages,
+          nextPage: 1 < cachedResponse.pages ? 2 : null,
+          currentPage: 1,
+          total: cachedResponse.total,
+          isLoading: true,
+          error: null,
+          cachedSubscriptionId: subscriptionId,
+          cachedStatus: normalizedStatus,
+          cachedHasSummary: normalizedHasSummary,
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: true,
+          episodes: shouldClearImmediately ? [] : state.episodes,
+          error: null,
+        );
+      }
+      if (state.episodes.isEmpty) {
+        logger.AppLogger.debug('[Playback] No cached episodes for $cacheKey');
+      } else {
+        logger.AppLogger.debug(
+          '[Playback] Showing cached episodes first for $cacheKey',
+        );
+      }
     } else {
       state = state.copyWith(isLoading: true);
     }
@@ -1999,6 +2281,22 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
         lastRefreshTime: DateTime.now(), // Record refresh time
       );
       logger.AppLogger.debug('[OK] Episode data loaded at ${DateTime.now()}');
+
+      if (page == 1) {
+        try {
+          final storage = ref.read(localStorageServiceProvider);
+          await storage.cacheData(
+            _episodesCacheKey(
+              subscriptionId: subscriptionId,
+              status: normalizedStatus,
+              hasSummary: normalizedHasSummary,
+              size: size,
+            ),
+            response.toJson(),
+            expiration: _episodesCacheExpiration,
+          );
+        } catch (_) {}
+      }
     } catch (error) {
       logger.AppLogger.debug('[Error] Failed to load episodes: $error');
       state = state.copyWith(isLoading: false, error: error.toString());

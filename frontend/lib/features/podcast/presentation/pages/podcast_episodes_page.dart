@@ -75,16 +75,23 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
 
     // Setup scroll listener for infinite scroll
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels ==
-          _scrollController.position.maxScrollExtent) {
-        ref
-            .read(podcastEpisodesProvider.notifier)
-            .loadMoreEpisodesForSubscription(
-              subscriptionId: widget.subscriptionId,
-              status: _statusFilter,
-              hasSummary: _hasSummaryFilter,
-            );
-      }
+      const preloadThresholdPx = 240.0;
+      if (!_scrollController.hasClients) return;
+      final position = _scrollController.position;
+      if (!position.hasPixels || !position.hasContentDimensions) return;
+      final remaining = position.maxScrollExtent - position.pixels;
+      if (remaining > preloadThresholdPx) return;
+
+      final episodesState = ref.read(podcastEpisodesProvider);
+      if (episodesState.isLoadingMore || !episodesState.hasMore) return;
+
+      ref
+          .read(podcastEpisodesProvider.notifier)
+          .loadMoreEpisodesForSubscription(
+            subscriptionId: widget.subscriptionId,
+            status: _statusFilter,
+            hasSummary: _hasSummaryFilter,
+          );
     });
   }
 

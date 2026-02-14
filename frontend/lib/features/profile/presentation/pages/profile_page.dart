@@ -1038,13 +1038,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           final noticeMessage = l10n.theme_mode_changed(modeName);
                           Navigator.of(dialogContext).pop();
                           WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (!pageContext.mounted) {
-                              return;
-                            }
-                            showTopFloatingNotice(
-                              pageContext,
-                              message: noticeMessage,
-                            );
+                            Future<void>.delayed(kThemeAnimationDuration, () {
+                              if (!pageContext.mounted) {
+                                return;
+                              }
+                              showTopFloatingNotice(
+                                pageContext,
+                                message: noticeMessage,
+                              );
+                            });
                           });
                         },
                       ),

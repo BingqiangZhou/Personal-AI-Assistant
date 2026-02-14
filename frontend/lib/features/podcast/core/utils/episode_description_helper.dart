@@ -1,7 +1,5 @@
 import 'dart:collection';
 
-import 'package:html/parser.dart' as parser;
-
 /// Helper utility for extracting and formatting episode descriptions
 ///
 /// This class provides functions to:
@@ -93,12 +91,14 @@ class EpisodeDescriptionHelper {
       return cached;
     }
 
-    String text = '';
+    String text = htmlContent;
 
     try {
-      // Parse HTML and extract text content
-      final document = parser.parse(htmlContent);
-      text = document.body?.text ?? htmlContent;
+      text = text.replaceAll(RegExp(r'(?i)<br\s*/?>'), '\n');
+      text = text.replaceAll(RegExp(r'(?i)</p\s*>'), '\n');
+      text = text.replaceAll(RegExp(r'(?i)</div\s*>'), '\n');
+      text = text.replaceAll(RegExp(r'(?i)</li\s*>'), '\n');
+      text = text.replaceAll(RegExp(r'<[^>]*>'), '');
 
       // Decode HTML entities (common ones)
       final htmlEntities = {
@@ -146,12 +146,7 @@ class EpisodeDescriptionHelper {
       text = htmlContent;
     }
 
-    // Always apply regex fallback to catch any remaining HTML-like tags
-    // This handles malformed HTML that the parser might miss
-    // (e.g., <p data-flag="normal"style="color:#333"> with missing space)
     text = text.replaceAll(RegExp(r'<[^>]*>'), '');
-
-    // Decode basic entities again in case the parser missed them
     text = text.replaceAll('&nbsp;', ' ');
     text = text.replaceAll('&amp;', '&');
     text = text.replaceAll('&lt;', '<');

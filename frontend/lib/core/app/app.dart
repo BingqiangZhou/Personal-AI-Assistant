@@ -147,6 +147,7 @@ class _PersonalAIAssistantAppState
   }
 
   Future<void> _initializeApp() async {
+    final startedAt = DateTime.now();
     // Wrap auth check in timeout to prevent infinite loading
     try {
       // Load saved locale from storage
@@ -186,8 +187,11 @@ class _PersonalAIAssistantAppState
       // The router will handle redirecting to login if needed
     }
 
-    // Small delay to ensure the splash screen is visible
-    await Future.delayed(const Duration(milliseconds: 600));
+    const minSplash = Duration(milliseconds: 120);
+    final elapsed = DateTime.now().difference(startedAt);
+    if (elapsed < minSplash) {
+      await Future.delayed(minSplash - elapsed);
+    }
 
     if (mounted) {
       setState(() {

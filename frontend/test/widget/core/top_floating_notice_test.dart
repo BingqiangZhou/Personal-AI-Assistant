@@ -217,7 +217,7 @@ void main() {
       await tester.pumpWidget(const _ThemeSwitchingApp());
 
       await tester.tap(find.byKey(const Key('toggle_theme')));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('show_notice_default')));
       await tester.pump();
