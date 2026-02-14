@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.9.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.8.0...v0.9.0) - 2026-02-14 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.9.0))
+
+### 🎨 Styling
+
+- *(profile)* Switch dark theme to pure black and add cache item count display ([bdac20f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/bdac20f32fec02e2149964d8aca90874ad01c54d))
+- *(core)* Fix splash screen flash and improve theme consistency ([0ee403d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0ee403dd1067cc9cb34d3a0bc1d61b09393d776f))
+
+### 🚀 Features
+
+- *(profile)* Add clear cache functionality with integrated media cache service ([e19662c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e19662c5c0c02dffe13748d4452b60af178ce43c))
+- *(profile)* Add dedicated cache management page with category selection ([dd2b7b5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/dd2b7b5cda75cba293a2710037f0631644d4fb25))
+
+### 🚜 Refactor
+
+- *(podcast)* Consolidate image handling and reorganize subscription actions ([db9493f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/db9493f3f7849262075dd1325e9fc8776d011667))
+
+
+
 ## [0.8.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.7.0...v0.8.0) - 2026-02-14 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.8.0))
 
 ### ⚡ Performance
