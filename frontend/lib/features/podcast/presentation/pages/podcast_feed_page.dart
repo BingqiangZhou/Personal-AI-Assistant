@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
@@ -51,10 +52,10 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                 ),
                 IconButton(
                   onPressed: () {
-                    ref.read(podcastFeedProvider.notifier).refreshFeed();
+                    context.push('/profile/subscriptions');
                   },
-                  icon: const Icon(Icons.refresh),
-                  tooltip: l10n.podcast_refresh_feed,
+                  icon: const Icon(Icons.subscriptions_outlined),
+                  tooltip: l10n.profile_subscriptions,
                 ),
               ],
             ),

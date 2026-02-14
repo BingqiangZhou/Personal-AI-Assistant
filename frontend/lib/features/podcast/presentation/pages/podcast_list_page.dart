@@ -332,8 +332,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             child: _buildTabItem(
               context: context,
               key: const Key('podcast_discover_tab_podcasts'),
-              label: l10n.podcast_discover_title,
-              icon: Icons.travel_explore,
+              label: l10n.podcast_title,
+              icon: Icons.podcasts,
               selected: state.selectedTab == PodcastDiscoverTab.podcasts,
               onTap: () => ref
                   .read(podcastDiscoverProvider.notifier)
@@ -345,8 +345,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             child: _buildTabItem(
               context: context,
               key: const Key('podcast_discover_tab_episodes'),
-              label: l10n.nav_feed,
-              icon: Icons.library_books,
+              label: l10n.podcast_episodes,
+              icon: Icons.headphones_outlined,
               selected: state.selectedTab == PodcastDiscoverTab.episodes,
               onTap: () => ref
                   .read(podcastDiscoverProvider.notifier)
