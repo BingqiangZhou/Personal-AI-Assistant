@@ -73,6 +73,28 @@ void main() {
         throwsA(isA<FormatException>()),
       );
     });
+
+    test('normalizes limit above 100 to 100', () async {
+      final adapter = _FakeHttpClientAdapter(
+        responder: (_) => ResponseBody.fromString(
+          jsonEncode(_sampleResponse('Top Shows', 'podcasts')),
+          200,
+          headers: {
+            Headers.contentTypeHeader: [Headers.jsonContentType],
+          },
+        ),
+      );
+      final dio = Dio()..httpClientAdapter = adapter;
+      final service = ApplePodcastRssService(dio: dio);
+
+      await service.fetchTopShows(country: PodcastCountry.usa, limit: 999);
+
+      expect(adapter.lastRequestOptions, isNotNull);
+      expect(
+        adapter.lastRequestOptions!.uri.toString(),
+        contains('/top/100/podcasts.json'),
+      );
+    });
   });
 }
 
@@ -81,6 +103,7 @@ class _FakeHttpClientAdapter implements HttpClientAdapter {
 
   final ResponseBody Function(RequestOptions options) responder;
   int requestCount = 0;
+  RequestOptions? lastRequestOptions;
 
   @override
   void close({bool force = false}) {}
@@ -92,6 +115,7 @@ class _FakeHttpClientAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     requestCount += 1;
+    lastRequestOptions = options;
     return responder(options);
   }
 }

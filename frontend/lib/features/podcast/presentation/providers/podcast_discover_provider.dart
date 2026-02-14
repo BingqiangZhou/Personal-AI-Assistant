@@ -9,6 +9,11 @@ import 'country_selector_provider.dart';
 
 enum PodcastDiscoverTab { podcasts, episodes }
 
+const int _kDiscoverCollapsedVisibleLimit = 5;
+const int _kDiscoverInitialFetchLimit = 25;
+const int _kDiscoverTopChartMaxLimit = 100;
+const int _kDiscoverHydrationStep = 25;
+
 class PodcastDiscoverState {
   final PodcastCountry country;
   final bool isLoading;
@@ -109,11 +114,14 @@ class PodcastDiscoverState {
 
   List<PodcastDiscoverItem> get visibleItems {
     final source = filteredActiveItems;
-    final limit = isCurrentTabExpanded ? 25 : 5;
+    final limit = isCurrentTabExpanded
+        ? _kDiscoverTopChartMaxLimit
+        : _kDiscoverCollapsedVisibleLimit;
     return source.take(limit).toList();
   }
 
-  bool get canSeeAll => filteredActiveItems.length > 5;
+  bool get canSeeAll =>
+      filteredActiveItems.length > _kDiscoverCollapsedVisibleLimit;
 }
 
 final applePodcastRssServiceProvider = Provider<ApplePodcastRssService>((ref) {
@@ -128,6 +136,8 @@ final podcastDiscoverProvider =
 class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
   late final ApplePodcastRssService _rssService;
   Future<void>? _inFlightLoad;
+  Future<void>? _inFlightShowsHydration;
+  Future<void>? _inFlightEpisodesHydration;
   int _activeRequestId = 0;
 
   @override
@@ -167,8 +177,8 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
     state = state.copyWith(
       country: country,
       selectedCategory: PodcastDiscoverState.allCategoryValue,
-      showsExpanded: false,
-      episodesExpanded: false,
+      showsExpanded: true,
+      episodesExpanded: true,
       clearError: true,
     );
     await _loadCharts(country: country, isRefresh: false, forceRefresh: true);
@@ -180,6 +190,7 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
       selectedTab: tab,
       selectedCategory: PodcastDiscoverState.allCategoryValue,
     );
+    unawaited(_hydrateExpandedTabToTop100(tab));
   }
 
   void selectCategory(String category) {
@@ -192,10 +203,31 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
 
   void toggleSeeAll() {
     if (state.selectedTab == PodcastDiscoverTab.podcasts) {
-      state = state.copyWith(showsExpanded: !state.showsExpanded);
+      final shouldExpand = !state.showsExpanded;
+      state = state.copyWith(showsExpanded: shouldExpand);
+      if (shouldExpand) {
+        unawaited(_hydrateExpandedTabToTop100(PodcastDiscoverTab.podcasts));
+      }
       return;
     }
-    state = state.copyWith(episodesExpanded: !state.episodesExpanded);
+    final shouldExpand = !state.episodesExpanded;
+    state = state.copyWith(episodesExpanded: shouldExpand);
+    if (shouldExpand) {
+      unawaited(_hydrateExpandedTabToTop100(PodcastDiscoverTab.episodes));
+    }
+  }
+
+  void expandCurrentTabIfNeeded() {
+    if (!state.canSeeAll || state.isCurrentTabExpanded) {
+      return;
+    }
+    if (state.selectedTab == PodcastDiscoverTab.podcasts) {
+      state = state.copyWith(showsExpanded: true);
+      unawaited(_hydrateExpandedTabToTop100(PodcastDiscoverTab.podcasts));
+      return;
+    }
+    state = state.copyWith(episodesExpanded: true);
+    unawaited(_hydrateExpandedTabToTop100(PodcastDiscoverTab.episodes));
   }
 
   void clearRuntimeCache() {
@@ -204,6 +236,8 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
     rssService.clearCache();
     _activeRequestId += 1;
     _inFlightLoad = null;
+    _inFlightShowsHydration = null;
+    _inFlightEpisodesHydration = null;
     state = PodcastDiscoverState(country: selectedCountry);
   }
 
@@ -226,6 +260,8 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
 
     final requestId = ++_activeRequestId;
     final selectedTab = state.selectedTab;
+    _inFlightShowsHydration = null;
+    _inFlightEpisodesHydration = null;
 
     state = state.copyWith(
       country: country,
@@ -238,12 +274,12 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
       try {
         final showsFuture = _rssService.fetchTopShows(
           country: country,
-          limit: 25,
+          limit: _kDiscoverInitialFetchLimit,
           format: ApplePodcastRssFormat.json,
         );
         final episodesFuture = _rssService.fetchTopEpisodes(
           country: country,
-          limit: 25,
+          limit: _kDiscoverInitialFetchLimit,
           format: ApplePodcastRssFormat.json,
         );
 
@@ -262,8 +298,8 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
               isRefreshing: false,
               topShows: shows,
               selectedCategory: PodcastDiscoverState.allCategoryValue,
-              showsExpanded: false,
-              episodesExpanded: false,
+              showsExpanded: true,
+              episodesExpanded: true,
               clearError: true,
             );
           }
@@ -284,8 +320,8 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
               isRefreshing: false,
               topEpisodes: episodes,
               selectedCategory: PodcastDiscoverState.allCategoryValue,
-              showsExpanded: false,
-              episodesExpanded: false,
+              showsExpanded: true,
+              episodesExpanded: true,
               clearError: true,
             );
           }
@@ -307,11 +343,12 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
           topShows: shows ?? state.topShows,
           topEpisodes: episodes ?? state.topEpisodes,
           selectedCategory: PodcastDiscoverState.allCategoryValue,
-          showsExpanded: false,
-          episodesExpanded: false,
+          showsExpanded: true,
+          episodesExpanded: true,
           clearError: true,
           lastRefreshTime: DateTime.now(),
         );
+        unawaited(_hydrateExpandedTabToTop100(state.selectedTab));
       } catch (error) {
         if (!_isRequestActive(requestId)) {
           return;
@@ -339,6 +376,111 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
 
   bool _isRequestActive(int requestId) =>
       ref.mounted && requestId == _activeRequestId;
+
+  Future<void> _hydrateExpandedTabToTop100(PodcastDiscoverTab tab) async {
+    final inFlight = tab == PodcastDiscoverTab.podcasts
+        ? _inFlightShowsHydration
+        : _inFlightEpisodesHydration;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final requestId = _activeRequestId;
+    final country = state.country;
+    final startCount = tab == PodcastDiscoverTab.podcasts
+        ? state.topShows.length
+        : state.topEpisodes.length;
+
+    final firstTarget = _nextHydrationTarget(startCount);
+    if (firstTarget == null) {
+      return;
+    }
+
+    final hydrationFuture = () async {
+      for (
+        var targetLimit = firstTarget;
+        targetLimit <= _kDiscoverTopChartMaxLimit;
+        targetLimit += _kDiscoverHydrationStep
+      ) {
+        if (!_isRequestActive(requestId) || state.country != country) {
+          return;
+        }
+
+        try {
+          if (tab == PodcastDiscoverTab.podcasts) {
+            final response = await _rssService.fetchTopShows(
+              country: country,
+              limit: targetLimit,
+              format: ApplePodcastRssFormat.json,
+            );
+            if (!_isRequestActive(requestId) || state.country != country) {
+              return;
+            }
+            state = state.copyWith(
+              topShows: _mapChartItems(
+                response,
+                defaultKind: PodcastDiscoverKind.podcasts,
+              ),
+              clearError: true,
+            );
+          } else {
+            final response = await _rssService.fetchTopEpisodes(
+              country: country,
+              limit: targetLimit,
+              format: ApplePodcastRssFormat.json,
+            );
+            if (!_isRequestActive(requestId) || state.country != country) {
+              return;
+            }
+            state = state.copyWith(
+              topEpisodes: _mapChartItems(
+                response,
+                defaultKind: PodcastDiscoverKind.podcastEpisodes,
+              ),
+              clearError: true,
+            );
+          }
+        } catch (error) {
+          if (_isRequestActive(requestId)) {
+            state = state.copyWith(error: error.toString());
+          }
+          return;
+        }
+      }
+    }();
+
+    if (tab == PodcastDiscoverTab.podcasts) {
+      _inFlightShowsHydration = hydrationFuture;
+    } else {
+      _inFlightEpisodesHydration = hydrationFuture;
+    }
+
+    try {
+      await hydrationFuture;
+    } finally {
+      if (tab == PodcastDiscoverTab.podcasts) {
+        if (identical(_inFlightShowsHydration, hydrationFuture)) {
+          _inFlightShowsHydration = null;
+        }
+      } else if (identical(_inFlightEpisodesHydration, hydrationFuture)) {
+        _inFlightEpisodesHydration = null;
+      }
+    }
+  }
+
+  int? _nextHydrationTarget(int currentCount) {
+    if (currentCount >= _kDiscoverTopChartMaxLimit) {
+      return null;
+    }
+    final normalized = currentCount <= 0
+        ? _kDiscoverInitialFetchLimit
+        : currentCount;
+    final nextStep =
+        ((normalized ~/ _kDiscoverHydrationStep) + 1) * _kDiscoverHydrationStep;
+    return nextStep > _kDiscoverTopChartMaxLimit
+        ? _kDiscoverTopChartMaxLimit
+        : nextStep;
+  }
 
   List<PodcastDiscoverItem> _mapChartItems(
     ApplePodcastChartResponse response, {

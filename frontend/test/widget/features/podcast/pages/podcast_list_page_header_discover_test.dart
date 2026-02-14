@@ -106,8 +106,8 @@ void main() {
       final topChartsTop = tester
           .getTopLeft(find.byKey(const Key('podcast_discover_top_charts')))
           .dy;
-      expect(chipsTop, lessThan(topChartsTop));
-      expect(find.byKey(const Key('podcast_discover_see_all')), findsOneWidget);
+      expect(chipsTop, greaterThan(topChartsTop));
+      expect(find.byKey(const Key('podcast_discover_see_all')), findsNothing);
       expect(
         find.byKey(const Key('podcast_discover_category_chip_all')),
         findsOneWidget,

@@ -66,6 +66,56 @@ void main() {
       },
     );
 
+    test('hydrates expanded tab from top 25 to top 100', () async {
+      final fakeService = _FakeApplePodcastRssService();
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            _MockLocalStorageService(),
+          ),
+          applePodcastRssServiceProvider.overrideWithValue(fakeService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      Future<void> waitFor(bool Function() condition) async {
+        for (var attempt = 0; attempt < 50; attempt++) {
+          if (condition()) {
+            return;
+          }
+          await Future<void>.delayed(const Duration(milliseconds: 10));
+        }
+        fail('Timed out waiting for discover hydration');
+      }
+
+      await container.read(podcastDiscoverProvider.notifier).loadInitialData();
+      var state = container.read(podcastDiscoverProvider);
+      expect(state.topShows.length, 25);
+      expect(state.topEpisodes.length, 25);
+
+      container.read(podcastDiscoverProvider.notifier).toggleSeeAll();
+      await waitFor(
+        () => container.read(podcastDiscoverProvider).topShows.length == 100,
+      );
+      state = container.read(podcastDiscoverProvider);
+      expect(state.showsExpanded, isTrue);
+      expect(state.topShows.length, 100);
+      expect(fakeService.showsLimits, containsAllInOrder([25, 50, 75, 100]));
+      expect(fakeService.episodeLimits, equals([25]));
+
+      container
+          .read(podcastDiscoverProvider.notifier)
+          .setTab(PodcastDiscoverTab.episodes);
+      container.read(podcastDiscoverProvider.notifier).toggleSeeAll();
+      await waitFor(
+        () => container.read(podcastDiscoverProvider).topEpisodes.length == 100,
+      );
+      state = container.read(podcastDiscoverProvider);
+      expect(state.episodesExpanded, isTrue);
+      expect(state.topEpisodes.length, 100);
+      expect(fakeService.episodeLimits, containsAllInOrder([25, 50, 75, 100]));
+    });
+
     test('reloads on country change', () async {
       final fakeService = _FakeApplePodcastRssService();
       final container = ProviderContainer(
@@ -184,6 +234,8 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
   int showsCalls = 0;
   int episodeCalls = 0;
   int clearCacheCalls = 0;
+  final List<int> showsLimits = [];
+  final List<int> episodeLimits = [];
 
   @override
   Future<ApplePodcastChartResponse> fetchTopShows({
@@ -192,7 +244,8 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
     ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
   }) async {
     showsCalls += 1;
-    return _responseFor(kind: 'podcasts', country: country.code);
+    showsLimits.add(limit);
+    return _responseFor(kind: 'podcasts', country: country.code, count: limit);
   }
 
   @override
@@ -202,7 +255,12 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
     ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
   }) async {
     episodeCalls += 1;
-    return _responseFor(kind: 'podcast-episodes', country: country.code);
+    episodeLimits.add(limit);
+    return _responseFor(
+      kind: 'podcast-episodes',
+      country: country.code,
+      count: limit,
+    );
   }
 
   @override
@@ -214,9 +272,10 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
   ApplePodcastChartResponse _responseFor({
     required String kind,
     required String country,
+    required int count,
   }) {
     final items = List.generate(
-      8,
+      count,
       (index) => ApplePodcastChartEntry.fromJson({
         'artistName': 'Artist $index',
         'id': '${1000 + index}',
@@ -249,8 +308,9 @@ class _DelayedApplePodcastRssService extends _FakeApplePodcastRssService {
     ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
   }) async {
     showsCalls += 1;
+    showsLimits.add(limit);
     await Future<void>.delayed(const Duration(milliseconds: 120));
-    return _responseFor(kind: 'podcasts', country: country.code);
+    return _responseFor(kind: 'podcasts', country: country.code, count: limit);
   }
 
   @override
@@ -260,8 +320,13 @@ class _DelayedApplePodcastRssService extends _FakeApplePodcastRssService {
     ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
   }) async {
     episodeCalls += 1;
+    episodeLimits.add(limit);
     await Future<void>.delayed(const Duration(milliseconds: 20));
-    return _responseFor(kind: 'podcast-episodes', country: country.code);
+    return _responseFor(
+      kind: 'podcast-episodes',
+      country: country.code,
+      count: limit,
+    );
   }
 }
 

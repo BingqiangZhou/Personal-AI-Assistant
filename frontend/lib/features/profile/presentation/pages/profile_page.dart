@@ -335,7 +335,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             Icons.auto_awesome,
             l10n.profile_ai_summary,
             summaryCount,
-            Theme.of(context).colorScheme.tertiary,
+            Theme.of(context).colorScheme.primary,
+            showChevron: true,
           ),
           const SizedBox(height: 12),
           _buildActivityCard(
@@ -380,7 +381,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             Icons.auto_awesome,
             l10n.profile_ai_summary,
             summaryCount,
-            Theme.of(context).colorScheme.tertiary,
+            Theme.of(context).colorScheme.primary,
+            showChevron: true,
           ),
           _buildActivityCard(
             context,
@@ -467,7 +469,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final diff = (proposed.computeLuminance() - cardColor.computeLuminance())
         .abs();
     if (diff < 0.25) {
-      return scheme.onSurface;
+      return scheme.onSurfaceVariant;
     }
     return proposed;
   }

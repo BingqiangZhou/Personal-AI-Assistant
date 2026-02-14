@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+const Duration _kBottomAccessoryPaddingTransition = Duration(milliseconds: 180);
+
 /// Material Design 3自定义自适应导航组件
 ///
 /// 完全绕过NavigationRail，使用自定义的Drawer和Column组合
@@ -60,7 +62,9 @@ class CustomAdaptiveNavigation extends StatelessWidget {
       body: Stack(
         children: [
           // Body content with padding for bottom accessory (Mini Player height approx)
-          Padding(
+          AnimatedPadding(
+            duration: _kBottomAccessoryPaddingTransition,
+            curve: Curves.easeOutCubic,
             padding: EdgeInsets.only(
               bottom: bottomAccessory != null ? bottomAccessoryBodyPadding : 0,
             ),
@@ -176,7 +180,9 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           Expanded(
             child: Stack(
               children: [
-                Padding(
+                AnimatedPadding(
+                  duration: _kBottomAccessoryPaddingTransition,
+                  curve: Curves.easeOutCubic,
                   padding: EdgeInsets.only(
                     bottom: bottomAccessory != null
                         ? bottomAccessoryBodyPadding
@@ -318,7 +324,9 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           Expanded(
             child: Stack(
               children: [
-                Padding(
+                AnimatedPadding(
+                  duration: _kBottomAccessoryPaddingTransition,
+                  curve: Curves.easeOutCubic,
                   padding: EdgeInsets.only(
                     bottom: bottomAccessory != null
                         ? bottomAccessoryBodyPadding

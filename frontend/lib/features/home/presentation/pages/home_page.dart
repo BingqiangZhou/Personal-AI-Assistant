@@ -8,6 +8,7 @@ import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
+import '../../../podcast/presentation/constants/podcast_ui_constants.dart';
 import '../../../podcast/presentation/providers/podcast_providers.dart';
 import '../../../podcast/presentation/widgets/podcast_bottom_player_widget.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
@@ -126,7 +127,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       bottomAccessory: _buildBottomAccessory(hasCurrentEpisode),
       bottomAccessoryBodyPadding: _bottomAccessoryBodyPadding(
         hasCurrentEpisode: hasCurrentEpisode,
-        isExpanded: isExpanded,
       ),
       body: _buildTabContent(isExpanded),
     );
@@ -149,24 +149,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     return const PodcastBottomPlayerWidget(applySafeArea: false);
   }
 
-  double _bottomAccessoryBodyPadding({
-    required bool hasCurrentEpisode,
-    required bool isExpanded,
-  }) {
+  double _bottomAccessoryBodyPadding({required bool hasCurrentEpisode}) {
     final isPodcastTab = _isPodcastTab(_currentIndex);
-    if (!isPodcastTab) {
+    if (!isPodcastTab || !hasCurrentEpisode) {
       return 0;
     }
 
-    if (!hasCurrentEpisode) {
-      return 0;
-    }
-
-    // Collapsed mini player should float over content with transparent backdrop.
-    if (!isExpanded) {
-      return 0;
-    }
-    return 60;
+    return kPodcastMiniPlayerBodyReserve;
   }
 
   void _handleNavigation(int index) {

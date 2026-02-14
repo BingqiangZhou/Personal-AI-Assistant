@@ -458,16 +458,29 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
     return RefreshIndicator(
       onRefresh: () => ref.read(podcastDiscoverProvider.notifier).refresh(),
-      child: ListView(
-        key: const Key('podcast_discover_list'),
-        children: [
-          _buildTabSelector(context, discoverState),
-          const SizedBox(height: 12),
-          _buildCategorySection(context, discoverState),
-          const SizedBox(height: 14),
-          _buildTopChartsSection(context, discoverState),
-          const SizedBox(height: 16),
-        ],
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (discoverState.canSeeAll &&
+              !discoverState.isCurrentTabExpanded &&
+              notification is ScrollUpdateNotification &&
+              notification.scrollDelta != null &&
+              notification.scrollDelta! > 0 &&
+              notification.metrics.pixels > 80) {
+            ref
+                .read(podcastDiscoverProvider.notifier)
+                .expandCurrentTabIfNeeded();
+          }
+          return false;
+        },
+        child: ListView(
+          key: const Key('podcast_discover_list'),
+          children: [
+            _buildTabSelector(context, discoverState),
+            const SizedBox(height: 12),
+            _buildTopChartsSection(context, discoverState),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -555,6 +568,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   disabledBorder: InputBorder.none,
                   errorBorder: InputBorder.none,
                   focusedErrorBorder: InputBorder.none,
+                  filled: false,
+                  fillColor: Colors.transparent,
                   hintText: l10n.podcast_discover_search_hint,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
@@ -639,7 +654,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       context,
     ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold);
     final subtitleColor = Theme.of(context).colorScheme.onSurfaceVariant;
-    final notifier = ref.read(podcastDiscoverProvider.notifier);
     final countryName = _countryDisplayName(state.country, l10n);
 
     return Column(
@@ -651,24 +665,26 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             Expanded(
               child: Text(l10n.podcast_discover_top_charts, style: titleStyle),
             ),
-            if (state.canSeeAll)
-              TextButton(
-                key: const Key('podcast_discover_see_all'),
-                onPressed: notifier.toggleSeeAll,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
                 child: Text(
-                  state.isCurrentTabExpanded
-                      ? l10n.podcast_discover_collapse
-                      : l10n.podcast_discover_see_all,
+                  l10n.podcast_discover_trending_in(countryName),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: subtitleColor,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
+            ),
           ],
         ),
-        const SizedBox(height: 2),
-        Text(
-          l10n.podcast_discover_trending_in(countryName),
-          style: TextStyle(color: subtitleColor),
-        ),
         const SizedBox(height: 10),
+        _buildCategorySection(context, state),
+        const SizedBox(height: 14),
         if (state.visibleItems.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -692,6 +708,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final theme = Theme.of(context);
     final showSubscribe = item.isPodcastShow;
     final itunesId = item.itunesId;
+    final rankLabel = '$rank';
+    const rankSlotWidth = 48.0;
+    const actionSlotWidth = rankSlotWidth;
     final isSubscribing =
         itunesId != null && _subscribingShowIds.contains(itunesId);
     final isSubscribed =
@@ -704,20 +723,30 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         borderRadius: BorderRadius.circular(12),
         onTap: () => _handleChartRowTap(item),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(
             children: [
               SizedBox(
-                width: 24,
-                child: Text(
-                  '$rank',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
+                width: rankSlotWidth,
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      key: Key(
+                        'podcast_discover_chart_rank_text_${item.itemId}',
+                      ),
+                      rankLabel,
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 6),
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: PodcastImageWidget(
@@ -756,33 +785,60 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               const SizedBox(width: 8),
               if (showSubscribe)
                 SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: isSubscribing
-                      ? const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : IconButton(
-                          key: Key('podcast_discover_subscribe_${item.itemId}'),
-                          onPressed: isSubscribed
-                              ? null
-                              : () => _handleSubscribeFromChart(item),
-                          icon: Icon(
-                            isSubscribed
-                                ? Icons.check_circle
-                                : Icons.add_circle_outline,
-                          ),
-                        ),
+                  width: actionSlotWidth,
+                  child: Center(
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: isSubscribing
+                          ? const Padding(
+                              padding: EdgeInsets.all(8),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : IconButton(
+                              key: Key(
+                                'podcast_discover_subscribe_${item.itemId}',
+                              ),
+                              onPressed: isSubscribed
+                                  ? null
+                                  : () => _handleSubscribeFromChart(item),
+                              style: IconButton.styleFrom(
+                                minimumSize: const Size(36, 36),
+                                maximumSize: const Size(36, 36),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                              ),
+                              icon: Icon(
+                                isSubscribed
+                                    ? Icons.check_circle
+                                    : Icons.add_circle_outline,
+                              ),
+                            ),
+                    ),
+                  ),
                 ),
               if (!showSubscribe)
                 SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: IconButton(
-                    key: Key('podcast_discover_play_${item.itemId}'),
-                    onPressed: () => _playEpisodeFromChartRow(item),
-                    icon: const Icon(Icons.play_arrow),
+                  width: actionSlotWidth,
+                  child: Center(
+                    child: SizedBox(
+                      width: 36,
+                      height: 36,
+                      child: IconButton(
+                        key: Key('podcast_discover_play_${item.itemId}'),
+                        onPressed: () => _playEpisodeFromChartRow(item),
+                        style: IconButton.styleFrom(
+                          minimumSize: const Size(36, 36),
+                          maximumSize: const Size(36, 36),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          foregroundColor: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        icon: const Icon(Icons.play_circle_outline, size: 24),
+                      ),
+                    ),
                   ),
                 ),
             ],

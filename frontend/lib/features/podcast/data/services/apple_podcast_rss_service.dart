@@ -147,7 +147,7 @@ class ApplePodcastRssService {
 
   int _normalizeLimit(int limit) {
     if (limit <= 0) return 10;
-    if (limit > 50) return 50;
+    if (limit > 100) return 100;
     return limit;
   }
 

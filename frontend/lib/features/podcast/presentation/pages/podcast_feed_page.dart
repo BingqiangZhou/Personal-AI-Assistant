@@ -463,16 +463,9 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       visualDensity: VisualDensity.compact,
                       padding: EdgeInsets.zero,
-                      foregroundColor: theme.colorScheme.primary,
-                      shape: const CircleBorder(),
-                      side: BorderSide(
-                        color: theme.colorScheme.primary.withValues(
-                          alpha: 0.65,
-                        ),
-                        width: 1,
-                      ),
+                      foregroundColor: theme.colorScheme.onSurfaceVariant,
                     ),
-                    icon: const Icon(Icons.play_arrow, size: 18),
+                    icon: const Icon(Icons.play_circle_outline, size: 22),
                   ),
                 ],
               ),

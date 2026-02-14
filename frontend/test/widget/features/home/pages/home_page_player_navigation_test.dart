@@ -15,6 +15,7 @@ import 'package:personal_ai_assistant/features/podcast/data/models/podcast_searc
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/profile_stats_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/apple_podcast_rss_service.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_feed_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_page.dart';
@@ -227,6 +228,76 @@ void main() {
         expect(tester.takeException(), isNull);
       },
     );
+
+    testWidgets(
+      'discover list viewport stays above mini player when current episode exists',
+      (tester) async {
+        final audioNotifier = TestAudioPlayerNotifier(
+          AudioPlayerState(currentEpisode: _testEpisode(), isExpanded: false),
+        );
+
+        await _pumpHomePage(
+          tester,
+          audioNotifier: audioNotifier,
+          initialTab: 0,
+        );
+
+        final discoverListFinder = find.byKey(
+          const Key('podcast_discover_list'),
+        );
+        final miniPlayerFinder = find.byKey(
+          const Key('podcast_bottom_player_mini_wrapper'),
+        );
+
+        expect(discoverListFinder, findsOneWidget);
+        expect(miniPlayerFinder, findsOneWidget);
+
+        final discoverRect = tester.getRect(discoverListFinder);
+        final miniPlayerRect = tester.getRect(miniPlayerFinder);
+        expect(
+          discoverRect.bottom,
+          lessThanOrEqualTo(miniPlayerRect.top + 0.1),
+        );
+      },
+    );
+
+    testWidgets(
+      'feed list viewport stays above mini player when current episode exists',
+      (tester) async {
+        final audioNotifier = TestAudioPlayerNotifier(
+          AudioPlayerState(currentEpisode: _testEpisode(), isExpanded: false),
+        );
+        final feedNotifier = TestPodcastFeedNotifier(
+          PodcastFeedState(
+            episodes: [_testEpisode()],
+            hasMore: false,
+            total: 1,
+          ),
+        );
+
+        await _pumpHomePage(
+          tester,
+          audioNotifier: audioNotifier,
+          feedNotifier: feedNotifier,
+          initialTab: 1,
+        );
+
+        final feedListFinder = find.descendant(
+          of: find.byType(PodcastFeedPage),
+          matching: find.byType(ListView),
+        );
+        final miniPlayerFinder = find.byKey(
+          const Key('podcast_bottom_player_mini_wrapper'),
+        );
+
+        expect(feedListFinder, findsOneWidget);
+        expect(miniPlayerFinder, findsOneWidget);
+
+        final feedRect = tester.getRect(feedListFinder);
+        final miniPlayerRect = tester.getRect(miniPlayerFinder);
+        expect(feedRect.bottom, lessThanOrEqualTo(miniPlayerRect.top + 0.1));
+      },
+    );
   });
 }
 
@@ -342,13 +413,16 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
 }
 
 class TestPodcastFeedNotifier extends PodcastFeedNotifier {
+  TestPodcastFeedNotifier([this._initialState = const PodcastFeedState()]);
+
+  final PodcastFeedState _initialState;
   int loadInitialFeedCallCount = 0;
   int backgroundLoadCallCount = 0;
   int foregroundLoadCallCount = 0;
 
   @override
   PodcastFeedState build() {
-    return const PodcastFeedState();
+    return _initialState;
   }
 
   @override

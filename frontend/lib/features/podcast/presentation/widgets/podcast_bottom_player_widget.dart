@@ -56,7 +56,7 @@ class _MiniBottomPlayer extends ConsumerWidget {
   const _MiniBottomPlayer({super.key, required this.state});
 
   final AudioPlayerState state;
-  static const double _miniHeight = 56;
+  static const double _miniHeight = kPodcastMiniPlayerHeight;
   static const double _mobileHorizontalInset = 20;
 
   @override
@@ -172,13 +172,26 @@ class _MiniBottomPlayer extends ConsumerWidget {
                       await ref.read(audioPlayerProvider.notifier).resume();
                     }
                   },
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(40, 40),
+                    maximumSize: const Size(40, 40),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    foregroundColor: theme.colorScheme.onSurfaceVariant,
+                  ),
                   icon: state.isLoading
                       ? const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Icon(state.isPlaying ? Icons.pause : Icons.play_arrow),
+                      : Icon(
+                          state.isPlaying
+                              ? Icons.pause_circle_outline
+                              : Icons.play_circle_outline,
+                          size: 26,
+                        ),
                 ),
                 IconButton(
                   key: const Key('podcast_bottom_player_mini_playlist'),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
@@ -16,9 +17,9 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 void main() {
   group('PodcastListPage mobile discover list', () {
     testWidgets(
-      'shows preview rows, filters by category chip, and expands via See All',
+      'shows rows, filters by category chip, and keeps loading while scrolling',
       (tester) async {
-        tester.view.physicalSize = const Size(390, 844);
+        tester.view.physicalSize = const Size(390, 600);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
@@ -63,7 +64,7 @@ void main() {
         );
         expect(
           find.byKey(const Key('podcast_discover_chart_row_1006')),
-          findsNothing,
+          findsOneWidget,
         );
 
         await tester.tap(
@@ -85,13 +86,31 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byKey(const Key('podcast_discover_see_all')));
+        final listFinder = find.byKey(const Key('podcast_discover_list'));
+        await tester.fling(listFinder, const Offset(0, -1200), 3000);
+        await tester.pumpAndSettle();
+        await tester.fling(listFinder, const Offset(0, -1200), 3000);
         await tester.pumpAndSettle();
 
         expect(
           find.byKey(const Key('podcast_discover_chart_row_1006')),
           findsOneWidget,
         );
+
+        expect(
+          find.byKey(const Key('podcast_discover_chart_row_1099')),
+          findsOneWidget,
+        );
+
+        final rankTextFinder =
+            find.byKey(const Key('podcast_discover_chart_rank_text_1099'));
+        expect(rankTextFinder, findsOneWidget);
+        expect(tester.widget<Text>(rankTextFinder).data, equals('100'));
+
+        final rankParagraph = tester.renderObject<RenderParagraph>(
+          find.descendant(of: rankTextFinder, matching: find.byType(RichText)),
+        );
+        expect(rankParagraph.didExceedMaxLines, isFalse);
       },
     );
   });
@@ -106,7 +125,7 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
     int limit = 25,
     ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
   }) async {
-    return _buildResponse('podcasts', country.code);
+    return _buildResponse('podcasts', country.code, limit);
   }
 
   @override
@@ -115,12 +134,16 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
     int limit = 25,
     ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
   }) async {
-    return _buildResponse('podcast-episodes', country.code);
+    return _buildResponse('podcast-episodes', country.code, limit);
   }
 
-  ApplePodcastChartResponse _buildResponse(String kind, String country) {
+  ApplePodcastChartResponse _buildResponse(
+    String kind,
+    String country,
+    int limit,
+  ) {
     final items = List.generate(
-      8,
+      limit,
       (index) => ApplePodcastChartEntry.fromJson({
         'artistName': 'Artist $index',
         'id': '${1000 + index}',
