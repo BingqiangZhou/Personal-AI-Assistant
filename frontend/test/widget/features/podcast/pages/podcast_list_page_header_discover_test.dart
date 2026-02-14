@@ -66,23 +66,56 @@ void main() {
         findsOneWidget,
       );
       expect(
+        find.byKey(const Key('podcast_discover_search_input')),
+        findsOneWidget,
+      );
+      final searchInputWidget = tester.widget<TextField>(
+        find.byKey(const Key('podcast_discover_search_input')),
+      );
+      final decoration = searchInputWidget.decoration;
+      expect(decoration, isNotNull);
+      expect(decoration!.border, InputBorder.none);
+      expect(decoration.enabledBorder, InputBorder.none);
+      expect(decoration.focusedBorder, InputBorder.none);
+      expect(decoration.disabledBorder, InputBorder.none);
+      expect(decoration.errorBorder, InputBorder.none);
+      expect(decoration.focusedErrorBorder, InputBorder.none);
+      expect(
         find.byKey(const Key('podcast_discover_tab_selector')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('podcast_discover_tab_podcasts')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('podcast_discover_tab_episodes')),
         findsOneWidget,
       );
       expect(
         find.byKey(const Key('podcast_discover_top_charts')),
         findsOneWidget,
       );
-      expect(find.byKey(const Key('podcast_discover_see_all')), findsOneWidget);
-      await tester.drag(
-        find.byKey(const Key('podcast_discover_list')),
-        const Offset(0, -500),
-      );
-      await tester.pumpAndSettle();
       expect(
-        find.byKey(const Key('podcast_discover_categories')),
+        find.byKey(const Key('podcast_discover_category_chips')),
         findsOneWidget,
       );
+      final chipsTop = tester
+          .getTopLeft(find.byKey(const Key('podcast_discover_category_chips')))
+          .dy;
+      final topChartsTop = tester
+          .getTopLeft(find.byKey(const Key('podcast_discover_top_charts')))
+          .dy;
+      expect(chipsTop, lessThan(topChartsTop));
+      expect(find.byKey(const Key('podcast_discover_see_all')), findsOneWidget);
+      expect(
+        find.byKey(const Key('podcast_discover_category_chip_all')),
+        findsOneWidget,
+      );
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(PodcastListPage)),
+      )!;
+      expect(find.text(l10n.podcast_discover_browse_by_category), findsNothing);
 
       expect(find.byKey(const Key('podcast_list_header_title')), findsNothing);
       expect(

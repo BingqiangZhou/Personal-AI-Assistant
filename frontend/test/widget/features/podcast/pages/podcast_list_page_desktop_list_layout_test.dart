@@ -53,14 +53,31 @@ void main() {
 
       expect(find.byKey(const Key('podcast_discover_list')), findsOneWidget);
       expect(
+        find.byKey(const Key('podcast_discover_category_chips')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('podcast_discover_category_chip_all')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('podcast_discover_category_chip_technology')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('podcast_discover_chart_row_1000')),
+        findsOneWidget,
+      );
+      await tester.tap(
+        find.byKey(const Key('podcast_discover_category_chip_technology')),
+      );
+      await tester.pumpAndSettle();
+      expect(
         find.byKey(const Key('podcast_discover_chart_row_1000')),
         findsOneWidget,
       );
 
-      final l10n = AppLocalizations.of(
-        tester.element(find.byType(PodcastListPage)),
-      )!;
-      await tester.tap(find.text(l10n.podcast_episodes));
+      await tester.tap(find.byKey(const Key('podcast_discover_tab_episodes')));
       await tester.pumpAndSettle();
 
       expect(

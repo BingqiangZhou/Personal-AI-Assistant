@@ -15,63 +15,85 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 
 void main() {
   group('PodcastListPage mobile discover list', () {
-    testWidgets('shows preview rows and expands via See All', (tester) async {
-      tester.view.physicalSize = const Size(390, 844);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+    testWidgets(
+      'shows preview rows, filters by category chip, and expands via See All',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(
-            _MockLocalStorageService(),
-          ),
-          applePodcastRssServiceProvider.overrideWithValue(
-            _FakeApplePodcastRssService(),
-          ),
-          podcastSubscriptionProvider.overrideWith(
-            () => _TestPodcastSubscriptionNotifier(),
-          ),
-          search.podcastSearchProvider.overrideWithValue(
-            const search.PodcastSearchState(),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
+        final container = ProviderContainer(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(
+              _MockLocalStorageService(),
+            ),
+            applePodcastRssServiceProvider.overrideWithValue(
+              _FakeApplePodcastRssService(),
+            ),
+            podcastSubscriptionProvider.overrideWith(
+              () => _TestPodcastSubscriptionNotifier(),
+            ),
+            search.podcastSearchProvider.overrideWithValue(
+              const search.PodcastSearchState(),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: const PodcastListPage(),
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PodcastListPage(),
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('podcast_discover_chart_row_1000')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('podcast_discover_chart_row_1004')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('podcast_discover_chart_row_1006')),
-        findsNothing,
-      );
+        expect(
+          find.byKey(const Key('podcast_discover_chart_row_1000')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('podcast_discover_chart_row_1004')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('podcast_discover_chart_row_1006')),
+          findsNothing,
+        );
 
-      await tester.tap(find.byKey(const Key('podcast_discover_see_all')));
-      await tester.pumpAndSettle();
+        await tester.tap(
+          find.byKey(const Key('podcast_discover_category_chip_technology')),
+        );
+        await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('podcast_discover_chart_row_1006')),
-        findsOneWidget,
-      );
-    });
+        expect(
+          find.byKey(const Key('podcast_discover_chart_row_1001')),
+          findsNothing,
+        );
+        expect(
+          find.byKey(const Key('podcast_discover_chart_row_1006')),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.byKey(const Key('podcast_discover_category_chip_all')),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('podcast_discover_see_all')));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('podcast_discover_chart_row_1006')),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }
 

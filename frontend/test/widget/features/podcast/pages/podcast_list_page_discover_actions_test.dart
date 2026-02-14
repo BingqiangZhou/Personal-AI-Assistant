@@ -103,10 +103,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final l10n = AppLocalizations.of(
-        tester.element(find.byType(PodcastListPage)),
-      )!;
-      await tester.tap(find.text(l10n.podcast_episodes));
+      await tester.tap(find.byKey(const Key('podcast_discover_tab_episodes')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('podcast_discover_open_222')));

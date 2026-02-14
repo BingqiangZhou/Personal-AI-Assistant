@@ -8,6 +8,7 @@ import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_discover_chart_model.dart';
 import '../../data/models/podcast_search_model.dart';
 import '../../data/utils/podcast_url_utils.dart';
+import '../constants/podcast_ui_constants.dart';
 import '../providers/country_selector_provider.dart';
 import '../providers/podcast_discover_provider.dart';
 import '../providers/podcast_providers.dart';
@@ -83,7 +84,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   }
 
   void _clearSearch() {
-    _searchController.clear();
+    setState(() {
+      _searchController.clear();
+    });
     ref.read(search.podcastSearchProvider.notifier).clearSearch();
     _searchFocusNode.requestFocus();
   }
@@ -247,30 +250,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               ),
             ),
             const SizedBox(height: 8),
-            SearchBar(
-              key: const Key('podcast_discover_search_bar'),
-              controller: _searchController,
-              focusNode: _searchFocusNode,
-              hintText: l10n.podcast_discover_search_hint,
-              constraints: const BoxConstraints(
-                minWidth: double.infinity,
-                maxWidth: double.infinity,
-                minHeight: 48,
-                maxHeight: 48,
-              ),
-              leading: const Icon(Icons.search),
-              trailing: [
-                if (_searchController.text.isNotEmpty)
-                  IconButton(
-                    onPressed: _clearSearch,
-                    icon: const Icon(Icons.clear),
-                  ),
-              ],
-              onChanged: (value) {
-                setState(() {});
-                _onSearchChanged(value);
-              },
-            ),
+            _buildDiscoverSearchInput(context, l10n),
             const SizedBox(height: 12),
             Expanded(
               child: searchState.hasSearched
@@ -324,10 +304,10 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         key: const Key('podcast_discover_list'),
         children: [
           _buildTabSelector(context, discoverState),
-          const SizedBox(height: 20),
-          _buildTopChartsSection(context, discoverState),
-          const SizedBox(height: 22),
+          const SizedBox(height: 12),
           _buildCategorySection(context, discoverState),
+          const SizedBox(height: 14),
+          _buildTopChartsSection(context, discoverState),
           const SizedBox(height: 16),
         ],
       ),
@@ -336,25 +316,145 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
   Widget _buildTabSelector(BuildContext context, PodcastDiscoverState state) {
     final l10n = AppLocalizations.of(context)!;
-    return SegmentedButton<PodcastDiscoverTab>(
+    final theme = Theme.of(context);
+
+    return Container(
       key: const Key('podcast_discover_tab_selector'),
-      segments: [
-        ButtonSegment(
-          value: PodcastDiscoverTab.podcasts,
-          label: Text(l10n.podcast_title),
+      height: 44,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildTabItem(
+              context: context,
+              key: const Key('podcast_discover_tab_podcasts'),
+              label: l10n.podcast_title,
+              selected: state.selectedTab == PodcastDiscoverTab.podcasts,
+              onTap: () => ref
+                  .read(podcastDiscoverProvider.notifier)
+                  .setTab(PodcastDiscoverTab.podcasts),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: _buildTabItem(
+              context: context,
+              key: const Key('podcast_discover_tab_episodes'),
+              label: l10n.podcast_episodes,
+              selected: state.selectedTab == PodcastDiscoverTab.episodes,
+              onTap: () => ref
+                  .read(podcastDiscoverProvider.notifier)
+                  .setTab(PodcastDiscoverTab.episodes),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDiscoverSearchInput(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
+    final theme = Theme.of(context);
+
+    return Material(
+      key: const Key('podcast_discover_search_bar'),
+      color: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: SizedBox(
+        height: 48,
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Icon(
+                Icons.search,
+                size: 20,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                key: const Key('podcast_discover_search_input'),
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
+                  hintText: l10n.podcast_discover_search_hint,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {});
+                  _onSearchChanged(value);
+                },
+              ),
+            ),
+            if (_searchController.text.isNotEmpty)
+              IconButton(
+                onPressed: _clearSearch,
+                icon: Icon(
+                  Icons.clear,
+                  size: 18,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              )
+            else
+              const SizedBox(width: 8),
+          ],
         ),
-        ButtonSegment(
-          value: PodcastDiscoverTab.episodes,
-          label: Text(l10n.podcast_episodes),
+      ),
+    );
+  }
+
+  Widget _buildTabItem({
+    required BuildContext context,
+    required Key key,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final labelStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+      color: selected
+          ? theme.colorScheme.onSurface
+          : theme.colorScheme.onSurfaceVariant,
+    );
+
+    return AnimatedContainer(
+      key: key,
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        color: selected ? theme.colorScheme.surface : Colors.transparent,
+        borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
+          onTap: onTap,
+          child: Center(child: Text(label, style: labelStyle)),
         ),
-      ],
-      selected: {state.selectedTab},
-      onSelectionChanged: (selection) {
-        ref.read(podcastDiscoverProvider.notifier).setTab(selection.first);
-      },
-      showSelectedIcon: false,
-      style: ButtonStyle(
-        minimumSize: WidgetStateProperty.all(const Size.fromHeight(44)),
       ),
     );
   }
@@ -528,67 +628,88 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final notifier = ref.read(podcastDiscoverProvider.notifier);
     final categories = state.categories;
     final theme = Theme.of(context);
+    final selected = state.selectedCategory;
 
-    return Column(
-      key: const Key('podcast_discover_categories'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          l10n.podcast_discover_browse_by_category,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Card(
-          margin: EdgeInsets.zero,
-          child: Column(
-            children: [
-              _buildCategoryTile(
-                context,
-                label: l10n.podcast_filter_all,
-                selected:
-                    state.selectedCategory ==
-                    PodcastDiscoverState.allCategoryValue,
-                onTap: () => notifier.selectCategory(
-                  PodcastDiscoverState.allCategoryValue,
-                ),
-              ),
-              for (final category in categories)
-                _buildCategoryTile(
-                  context,
-                  label: category,
-                  selected:
-                      state.selectedCategory.toLowerCase() ==
-                      category.toLowerCase(),
-                  onTap: () => notifier.selectCategory(category),
-                ),
-            ],
-          ),
-        ),
-      ],
+    final chipItems = <String>[
+      PodcastDiscoverState.allCategoryValue,
+      ...categories,
+    ];
+    final keyOccurrences = <String, int>{};
+
+    return SingleChildScrollView(
+      key: const Key('podcast_discover_category_chips'),
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          for (var index = 0; index < chipItems.length; index++) ...[
+            () {
+              final rawValue = chipItems[index];
+              final baseKey = _normalizeCategoryKey(rawValue);
+              final count = (keyOccurrences[baseKey] ?? 0) + 1;
+              keyOccurrences[baseKey] = count;
+              final uniqueKey = count == 1 ? baseKey : '${baseKey}_$count';
+
+              return _buildCategoryChip(
+                theme: theme,
+                label: rawValue == PodcastDiscoverState.allCategoryValue
+                    ? l10n.podcast_filter_all
+                    : rawValue,
+                selected: rawValue == PodcastDiscoverState.allCategoryValue
+                    ? selected == PodcastDiscoverState.allCategoryValue
+                    : selected.toLowerCase() == rawValue.toLowerCase(),
+                onSelected: (_) => notifier.selectCategory(rawValue),
+                keyValue: uniqueKey,
+              );
+            }(),
+            if (index != chipItems.length - 1) const SizedBox(width: 8),
+          ],
+        ],
+      ),
     );
   }
 
-  Widget _buildCategoryTile(
-    BuildContext context, {
+  Widget _buildCategoryChip({
+    required ThemeData theme,
     required String label,
     required bool selected,
-    required VoidCallback onTap,
+    required ValueChanged<bool> onSelected,
+    required String keyValue,
   }) {
-    final theme = Theme.of(context);
-    return ListTile(
-      key: Key('podcast_discover_category_$label'),
-      selected: selected,
-      selectedColor: theme.colorScheme.primary,
-      selectedTileColor: theme.colorScheme.primaryContainer.withValues(
-        alpha: 0.35,
+    return ChoiceChip(
+      key: Key(
+        'podcast_discover_category_chip_${_normalizeCategoryKey(keyValue)}',
       ),
-      leading: const Icon(Icons.category_outlined),
-      title: Text(label),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
+      label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      selected: selected,
+      onSelected: onSelected,
+      showCheckmark: false,
+      visualDensity: const VisualDensity(horizontal: -1, vertical: -2),
+      side: BorderSide(
+        color: selected
+            ? theme.colorScheme.primary
+            : theme.colorScheme.outlineVariant,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      labelStyle: theme.textTheme.labelLarge?.copyWith(
+        fontWeight: FontWeight.w600,
+        color: selected
+            ? theme.colorScheme.onPrimary
+            : theme.colorScheme.onSurfaceVariant,
+      ),
+      selectedColor: theme.colorScheme.primary,
+      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
     );
+  }
+
+  String _normalizeCategoryKey(String value) {
+    final normalized = value.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]+'),
+      '_',
+    );
+    final trimmed = normalized.replaceAll(RegExp(r'^_+|_+$'), '');
+    return trimmed.isEmpty ? 'category' : trimmed;
   }
 
   Widget _buildSearchResults(
