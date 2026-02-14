@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.10.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.9.0...v0.10.0) - 2026-02-14 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.0))
+
+### 🎨 Styling
+
+- *(podcast)* Redesign discover page with custom chips and tab selector ([09da603](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/09da6039898164cd9632602b4f902a42dbe5c522))
+- *(podcast)* Reorganize navigation labels and swap tab positions ([b825206](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b825206138d42a2b8e3f8a607044cd89181538a0))
+- *(podcast)* Improve navigation labels and icons for better UX ([092d967](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/092d967db3cc9d747fa9ee2376918195a6df728e))
+
+### 🚀 Features
+
+- *(podcast)* Add Apple Podcast RSS discover feature with top charts ([9b7186d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9b7186d125716fa769ce3e5b9b32a1e02f679d35))
+- *(podcast)* Add cache layer and optimize data loading strategy ([053f505](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/053f505d90e14a42b224dc3792208df4b4c5b7d3))
+- *(podcast)* Add cache layer to profile stats and history providers with filter caching ([365fed0](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/365fed025d58b2c46473f791a07f4eca54df14f0))
+- *(podcast)* Add iTunes episode lookup and in-app preview for discover chart ([3712b00](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3712b00ccc81d24ecfd626ea42cfd7318f3e44b6))
+- *(podcast)* Add auto-expand on scroll and hydration for discover charts ([0497221](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/04972215fb7a9c9544c98c7cfefc0a9eb026cc01))
+
+### 🚜 Refactor
+
+- *(podcast)* Move episode restore logic to HomePage for single execution ([829eacb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/829eacbf4e686518d880a0f029761cf9f5c06c03))
+
+
+
 ## [0.9.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.8.0...v0.9.0) - 2026-02-14 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.9.0))
 
 ### 🎨 Styling
