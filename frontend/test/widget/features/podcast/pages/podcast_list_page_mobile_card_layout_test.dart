@@ -3,43 +3,45 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
-import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
+import 'package:personal_ai_assistant/features/podcast/data/services/apple_podcast_rss_service.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_list_page.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart'
     as search;
 
 void main() {
-  group('PodcastListPage mobile card layout', () {
-    testWidgets('subscription card matches mini player inset and radius', (
-      tester,
-    ) async {
+  group('PodcastListPage mobile discover list', () {
+    testWidgets('shows preview rows and expands via See All', (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final notifier = TestPodcastSubscriptionNotifier(
-        PodcastSubscriptionState(
-          subscriptions: [_subscription()],
-          hasMore: false,
-          total: 1,
-        ),
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            _MockLocalStorageService(),
+          ),
+          applePodcastRssServiceProvider.overrideWithValue(
+            _FakeApplePodcastRssService(),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            () => _TestPodcastSubscriptionNotifier(),
+          ),
+          search.podcastSearchProvider.overrideWithValue(
+            const search.PodcastSearchState(),
+          ),
+        ],
       );
+      addTearDown(container.dispose);
 
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            podcastSubscriptionProvider.overrideWith(() => notifier),
-            search.podcastSearchProvider.overrideWithValue(
-              const search.PodcastSearchState(),
-            ),
-            localStorageServiceProvider.overrideWithValue(
-              MockLocalStorageService(),
-            ),
-          ],
+        UncontrolledProviderScope(
+          container: container,
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -49,117 +51,128 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final cardFinder = find.byKey(
-        const Key('podcast_subscription_mobile_card_1'),
-      );
-      expect(cardFinder, findsOneWidget);
-
-      final cardWidget = tester.widget<Card>(cardFinder);
       expect(
-        cardWidget.margin,
-        const EdgeInsets.symmetric(
-          horizontal: kPodcastRowCardHorizontalMargin,
-          vertical: kPodcastRowCardVerticalMargin,
-        ),
+        find.byKey(const Key('podcast_discover_chart_row_1000')),
+        findsOneWidget,
       );
-      expect(cardWidget.shape, isA<RoundedRectangleBorder>());
-
-      final rounded = cardWidget.shape! as RoundedRectangleBorder;
-      final radius = rounded.borderRadius.resolve(TextDirection.ltr);
-      expect(radius.topLeft.x, kPodcastRowCardCornerRadius);
-      expect(radius.topRight.x, kPodcastRowCardCornerRadius);
-      expect(radius.bottomLeft.x, kPodcastRowCardCornerRadius);
-      expect(radius.bottomRight.x, kPodcastRowCardCornerRadius);
-
-      final cardMaterialFinder = find.descendant(
-        of: cardFinder,
-        matching: find.byType(Material),
+      expect(
+        find.byKey(const Key('podcast_discover_chart_row_1004')),
+        findsOneWidget,
       );
-      expect(cardMaterialFinder, findsWidgets);
-      final cardMaterialRect = tester.getRect(cardMaterialFinder.first);
-      expect(cardMaterialRect.width, closeTo(350, 1));
-      expect(cardMaterialRect.height, closeTo(kPodcastRowCardTargetHeight, 2));
+      expect(
+        find.byKey(const Key('podcast_discover_chart_row_1006')),
+        findsNothing,
+      );
+
+      await tester.tap(find.byKey(const Key('podcast_discover_see_all')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('podcast_discover_chart_row_1006')),
+        findsOneWidget,
+      );
     });
   });
 }
 
-class MockLocalStorageService implements LocalStorageService {
+class _FakeApplePodcastRssService extends ApplePodcastRssService {
+  _FakeApplePodcastRssService() : super();
+
+  @override
+  Future<ApplePodcastChartResponse> fetchTopShows({
+    required PodcastCountry country,
+    int limit = 25,
+    ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
+  }) async {
+    return _buildResponse('podcasts', country.code);
+  }
+
+  @override
+  Future<ApplePodcastChartResponse> fetchTopEpisodes({
+    required PodcastCountry country,
+    int limit = 25,
+    ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
+  }) async {
+    return _buildResponse('podcast-episodes', country.code);
+  }
+
+  ApplePodcastChartResponse _buildResponse(String kind, String country) {
+    final items = List.generate(
+      8,
+      (index) => ApplePodcastChartEntry.fromJson({
+        'artistName': 'Artist $index',
+        'id': '${1000 + index}',
+        'name': 'Chart Item $index',
+        'kind': kind,
+        'artworkUrl100': 'https://example.com/$index.png',
+        'genres': [
+          {'name': index.isEven ? 'Technology' : 'News'},
+        ],
+        'url': 'https://podcasts.apple.com/$country/podcast/id${1000 + index}',
+      }),
+    );
+    return ApplePodcastChartResponse(
+      feed: ApplePodcastChartFeed(
+        title: kind,
+        country: country,
+        updated: '2026-02-14T00:00:00Z',
+        results: items,
+      ),
+    );
+  }
+}
+
+class _MockLocalStorageService implements LocalStorageService {
   final Map<String, dynamic> _storage = {};
 
   @override
-  Future<void> saveString(String key, String value) async {
-    _storage[key] = value;
-  }
+  Future<void> saveString(String key, String value) async =>
+      _storage[key] = value;
 
   @override
-  Future<String?> getString(String key) async {
-    return _storage[key] as String?;
-  }
+  Future<String?> getString(String key) async => _storage[key] as String?;
 
   @override
-  Future<void> saveBool(String key, bool value) async {
-    _storage[key] = value;
-  }
+  Future<void> saveBool(String key, bool value) async => _storage[key] = value;
 
   @override
-  Future<bool?> getBool(String key) async {
-    return _storage[key] as bool?;
-  }
+  Future<bool?> getBool(String key) async => _storage[key] as bool?;
 
   @override
-  Future<void> saveInt(String key, int value) async {
-    _storage[key] = value;
-  }
+  Future<void> saveInt(String key, int value) async => _storage[key] = value;
 
   @override
-  Future<int?> getInt(String key) async {
-    return _storage[key] as int?;
-  }
+  Future<int?> getInt(String key) async => _storage[key] as int?;
 
   @override
-  Future<void> saveDouble(String key, double value) async {
-    _storage[key] = value;
-  }
+  Future<void> saveDouble(String key, double value) async =>
+      _storage[key] = value;
 
   @override
-  Future<double?> getDouble(String key) async {
-    return _storage[key] as double?;
-  }
+  Future<double?> getDouble(String key) async => _storage[key] as double?;
 
   @override
-  Future<void> saveStringList(String key, List<String> value) async {
-    _storage[key] = value;
-  }
+  Future<void> saveStringList(String key, List<String> value) async =>
+      _storage[key] = value;
 
   @override
-  Future<List<String>?> getStringList(String key) async {
-    return _storage[key] as List<String>?;
-  }
+  Future<List<String>?> getStringList(String key) async =>
+      _storage[key] as List<String>?;
 
   @override
-  Future<void> save<T>(String key, T value) async {
-    _storage[key] = value;
-  }
+  Future<void> save<T>(String key, T value) async => _storage[key] = value;
 
   @override
-  Future<T?> get<T>(String key) async {
-    return _storage[key] as T?;
-  }
+  Future<T?> get<T>(String key) async => _storage[key] as T?;
 
   @override
-  Future<void> remove(String key) async {
-    _storage.remove(key);
-  }
+  Future<void> remove(String key) async => _storage.remove(key);
 
   @override
-  Future<void> clear() async {
-    _storage.clear();
-  }
+  Future<void> clear() async => _storage.clear();
 
   @override
-  Future<bool> containsKey(String key) async {
-    return _storage.containsKey(key);
-  }
+  Future<bool> containsKey(String key) async => _storage.containsKey(key);
 
   @override
   Future<void> cacheData(
@@ -171,42 +184,35 @@ class MockLocalStorageService implements LocalStorageService {
   }
 
   @override
-  Future<T?> getCachedData<T>(String key) async {
-    return _storage[key] as T?;
-  }
+  Future<T?> getCachedData<T>(String key) async => _storage[key] as T?;
 
   @override
   Future<void> clearExpiredCache() async {}
 
   @override
-  Future<void> saveApiBaseUrl(String url) async {
-    _storage['api_base_url'] = url;
-  }
+  Future<void> saveApiBaseUrl(String url) async =>
+      _storage['api_base_url'] = url;
 
   @override
-  Future<String?> getApiBaseUrl() async {
-    return _storage['api_base_url'] as String?;
-  }
+  Future<String?> getApiBaseUrl() async => _storage['api_base_url'] as String?;
 
   @override
-  Future<void> saveServerBaseUrl(String url) async {
-    _storage['server_base_url'] = url;
-  }
+  Future<void> saveServerBaseUrl(String url) async =>
+      _storage['server_base_url'] = url;
 
   @override
-  Future<String?> getServerBaseUrl() async {
-    return _storage['server_base_url'] as String?;
-  }
+  Future<String?> getServerBaseUrl() async =>
+      _storage['server_base_url'] as String?;
 }
 
-class TestPodcastSubscriptionNotifier extends PodcastSubscriptionNotifier {
-  TestPodcastSubscriptionNotifier(this._initialState);
-
-  final PodcastSubscriptionState _initialState;
-
+class _TestPodcastSubscriptionNotifier extends PodcastSubscriptionNotifier {
   @override
   PodcastSubscriptionState build() {
-    return _initialState;
+    return const PodcastSubscriptionState(
+      subscriptions: [],
+      hasMore: false,
+      total: 0,
+    );
   }
 
   @override
@@ -223,20 +229,4 @@ class TestPodcastSubscriptionNotifier extends PodcastSubscriptionNotifier {
 
   @override
   Future<void> refreshSubscriptions({int? categoryId, String? status}) async {}
-}
-
-PodcastSubscriptionModel _subscription() {
-  final now = DateTime.now();
-  return PodcastSubscriptionModel(
-    id: 1,
-    userId: 1,
-    title: 'Sample Podcast',
-    description: 'Sample Description',
-    sourceUrl: 'https://example.com/feed.xml',
-    status: 'active',
-    fetchInterval: 3600,
-    episodeCount: 10,
-    unplayedCount: 3,
-    createdAt: now,
-  );
 }

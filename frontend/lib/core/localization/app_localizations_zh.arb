@@ -2572,6 +2572,56 @@
     "description": "播客搜索输入占位符"
   },
 
+  "podcast_discover_title": "发现",
+  "@podcast_discover_title": {
+    "description": "播客发现页标题"
+  },
+
+  "podcast_discover_search_hint": "搜索播客和单集...",
+  "@podcast_discover_search_hint": {
+    "description": "播客发现页搜索框占位文案"
+  },
+
+  "podcast_discover_top_charts": "热门榜单",
+  "@podcast_discover_top_charts": {
+    "description": "播客发现页热门榜单分区标题"
+  },
+
+  "podcast_discover_trending_in": "{country} 热门",
+  "@podcast_discover_trending_in": {
+    "description": "播客发现页榜单地区副标题",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_discover_see_all": "查看全部",
+  "@podcast_discover_see_all": {
+    "description": "播客发现页榜单查看全部按钮"
+  },
+
+  "podcast_discover_collapse": "收起",
+  "@podcast_discover_collapse": {
+    "description": "播客发现页榜单收起按钮"
+  },
+
+  "podcast_discover_no_chart_data": "暂无榜单数据",
+  "@podcast_discover_no_chart_data": {
+    "description": "播客发现页榜单空状态文案"
+  },
+
+  "podcast_discover_browse_by_category": "按分类浏览",
+  "@podcast_discover_browse_by_category": {
+    "description": "播客发现页分类分区标题"
+  },
+
+  "podcast_discover_open_link_failed": "打开链接失败",
+  "@podcast_discover_open_link_failed": {
+    "description": "打开 Apple Podcasts 链接失败时的提示"
+  },
+
   "podcast_country_label": "国家",
   "@podcast_country_label": {
     "description": "国家选择器标签"

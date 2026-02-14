@@ -2571,6 +2571,56 @@
     "description": "Search input placeholder for podcasts"
   },
 
+  "podcast_discover_title": "Discover",
+  "@podcast_discover_title": {
+    "description": "Podcast discover page title"
+  },
+
+  "podcast_discover_search_hint": "Search podcasts & episodes...",
+  "@podcast_discover_search_hint": {
+    "description": "Search hint on podcast discover page"
+  },
+
+  "podcast_discover_top_charts": "Top Charts",
+  "@podcast_discover_top_charts": {
+    "description": "Top charts section title on podcast discover page"
+  },
+
+  "podcast_discover_trending_in": "Trending in {country}",
+  "@podcast_discover_trending_in": {
+    "description": "Subtitle showing trending country on podcast discover page",
+    "placeholders": {
+      "country": {
+        "type": "String"
+      }
+    }
+  },
+
+  "podcast_discover_see_all": "See All",
+  "@podcast_discover_see_all": {
+    "description": "See all button text on podcast discover charts"
+  },
+
+  "podcast_discover_collapse": "Collapse",
+  "@podcast_discover_collapse": {
+    "description": "Collapse button text on podcast discover charts"
+  },
+
+  "podcast_discover_no_chart_data": "No chart data available",
+  "@podcast_discover_no_chart_data": {
+    "description": "Empty state text when discover charts are unavailable"
+  },
+
+  "podcast_discover_browse_by_category": "Browse by Category",
+  "@podcast_discover_browse_by_category": {
+    "description": "Category section title on podcast discover page"
+  },
+
+  "podcast_discover_open_link_failed": "Failed to open link",
+  "@podcast_discover_open_link_failed": {
+    "description": "Error message shown when opening Apple Podcasts link fails"
+  },
+
   "podcast_country_label": "Country",
   "@podcast_country_label": {
     "description": "Country selector label"

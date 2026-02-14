@@ -1601,6 +1601,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_search_hint => 'Search podcasts...';
 
   @override
+  String get podcast_discover_title => 'Discover';
+
+  @override
+  String get podcast_discover_search_hint => 'Search podcasts & episodes...';
+
+  @override
+  String get podcast_discover_top_charts => 'Top Charts';
+
+  @override
+  String podcast_discover_trending_in(String country) {
+    return 'Trending in $country';
+  }
+
+  @override
+  String get podcast_discover_see_all => 'See All';
+
+  @override
+  String get podcast_discover_collapse => 'Collapse';
+
+  @override
+  String get podcast_discover_no_chart_data => 'No chart data available';
+
+  @override
+  String get podcast_discover_browse_by_category => 'Browse by Category';
+
+  @override
+  String get podcast_discover_open_link_failed => 'Failed to open link';
+
+  @override
   String get podcast_country_label => 'Country';
 
   @override

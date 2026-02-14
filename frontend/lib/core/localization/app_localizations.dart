@@ -3074,6 +3074,60 @@ abstract class AppLocalizations {
   /// **'Search podcasts...'**
   String get podcast_search_hint;
 
+  /// Podcast discover page title
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get podcast_discover_title;
+
+  /// Search hint on podcast discover page
+  ///
+  /// In en, this message translates to:
+  /// **'Search podcasts & episodes...'**
+  String get podcast_discover_search_hint;
+
+  /// Top charts section title on podcast discover page
+  ///
+  /// In en, this message translates to:
+  /// **'Top Charts'**
+  String get podcast_discover_top_charts;
+
+  /// Subtitle showing trending country on podcast discover page
+  ///
+  /// In en, this message translates to:
+  /// **'Trending in {country}'**
+  String podcast_discover_trending_in(String country);
+
+  /// See all button text on podcast discover charts
+  ///
+  /// In en, this message translates to:
+  /// **'See All'**
+  String get podcast_discover_see_all;
+
+  /// Collapse button text on podcast discover charts
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get podcast_discover_collapse;
+
+  /// Empty state text when discover charts are unavailable
+  ///
+  /// In en, this message translates to:
+  /// **'No chart data available'**
+  String get podcast_discover_no_chart_data;
+
+  /// Category section title on podcast discover page
+  ///
+  /// In en, this message translates to:
+  /// **'Browse by Category'**
+  String get podcast_discover_browse_by_category;
+
+  /// Error message shown when opening Apple Podcasts link fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to open link'**
+  String get podcast_discover_open_link_failed;
+
   /// Country selector label
   ///
   /// In en, this message translates to:

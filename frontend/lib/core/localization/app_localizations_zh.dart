@@ -1554,6 +1554,35 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_search_hint => '搜索播客...';
 
   @override
+  String get podcast_discover_title => '发现';
+
+  @override
+  String get podcast_discover_search_hint => '搜索播客和单集...';
+
+  @override
+  String get podcast_discover_top_charts => '热门榜单';
+
+  @override
+  String podcast_discover_trending_in(String country) {
+    return '$country 热门';
+  }
+
+  @override
+  String get podcast_discover_see_all => '查看全部';
+
+  @override
+  String get podcast_discover_collapse => '收起';
+
+  @override
+  String get podcast_discover_no_chart_data => '暂无榜单数据';
+
+  @override
+  String get podcast_discover_browse_by_category => '按分类浏览';
+
+  @override
+  String get podcast_discover_open_link_failed => '打开链接失败';
+
+  @override
   String get podcast_country_label => '国家';
 
   @override
