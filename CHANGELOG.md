@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.8.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.7.0...v0.8.0) - 2026-02-14 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.8.0))
+
+### ⚡ Performance
+
+- *(podcast)* Optimize queue operations and add loading states to add-to-queue ([1a10a5a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1a10a5a87928652943898fb6670c994f0a3a2a27))
+
+### 🚀 Features
+
+- *(core)* Add top floating notice widget and integrate across app ([ef467ce](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ef467ce2670498ad39cf7820ce72a2d2fbc4cfda))
+
+### 🚜 Refactor
+
+- *(profile)* Replace logout button with user dropdown menu and update localization ([0675179](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/067517925fc55f00bd4d192b6e707741388eaff6))
+- *(podcast)* Improve queue sheet UI styling and localization ([c87284e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c87284eeac73d7d7f73e69556a222f05e5239451))
+- *(profile)* Move subscriptions to profile section and add dedicated subscriptions page ([83e3e5f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/83e3e5fe795998eaf0c564fcd17912848184e9c9))
+
+
+
 ## [0.7.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.6.0...v0.7.0) - 2026-02-13 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.7.0))
 
 ### 🐛 Bug Fixes
