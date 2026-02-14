@@ -767,13 +767,13 @@ abstract class AppLocalizations {
   /// Navigation item: Feed
   ///
   /// In en, this message translates to:
-  /// **'Episodes'**
+  /// **'Library'**
   String get nav_feed;
 
   /// Navigation item: Podcast
   ///
   /// In en, this message translates to:
-  /// **'Podcasts'**
+  /// **'Discover'**
   String get nav_podcast;
 
   /// Navigation item: Chat
@@ -791,7 +791,7 @@ abstract class AppLocalizations {
   /// Podcast feed page title
   ///
   /// In en, this message translates to:
-  /// **'Feed'**
+  /// **'Library'**
   String get podcast_feed_page_title;
 
   /// Refresh feed button tooltip

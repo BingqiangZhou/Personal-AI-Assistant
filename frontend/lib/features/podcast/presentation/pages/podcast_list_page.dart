@@ -332,7 +332,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             child: _buildTabItem(
               context: context,
               key: const Key('podcast_discover_tab_podcasts'),
-              label: l10n.podcast_title,
+              label: l10n.podcast_discover_title,
+              icon: Icons.travel_explore,
               selected: state.selectedTab == PodcastDiscoverTab.podcasts,
               onTap: () => ref
                   .read(podcastDiscoverProvider.notifier)
@@ -344,7 +345,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             child: _buildTabItem(
               context: context,
               key: const Key('podcast_discover_tab_episodes'),
-              label: l10n.podcast_episodes,
+              label: l10n.nav_feed,
+              icon: Icons.library_books,
               selected: state.selectedTab == PodcastDiscoverTab.episodes,
               onTap: () => ref
                   .read(podcastDiscoverProvider.notifier)
@@ -429,15 +431,17 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     required BuildContext context,
     required Key key,
     required String label,
+    required IconData icon,
     required bool selected,
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
+    final foregroundColor = selected
+        ? theme.colorScheme.onSurface
+        : theme.colorScheme.onSurfaceVariant;
     final labelStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-      color: selected
-          ? theme.colorScheme.onSurface
-          : theme.colorScheme.onSurfaceVariant,
+      color: foregroundColor,
     );
 
     return AnimatedContainer(
@@ -453,7 +457,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         child: InkWell(
           borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
           onTap: onTap,
-          child: Center(child: Text(label, style: labelStyle)),
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: foregroundColor),
+                const SizedBox(width: 6),
+                Text(label, style: labelStyle),
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -34,7 +34,7 @@ void main() {
         AudioPlayerState(currentEpisode: _testEpisode(), isExpanded: true),
       );
 
-      await _pumpHomePage(tester, audioNotifier: audioNotifier, initialTab: 0);
+      await _pumpHomePage(tester, audioNotifier: audioNotifier, initialTab: 1);
 
       expect(audioNotifier.state.isExpanded, isTrue);
 
@@ -98,7 +98,7 @@ void main() {
         await _pumpHomePage(
           tester,
           audioNotifier: audioNotifier,
-          initialTab: 0,
+          initialTab: 1,
         );
 
         expect(

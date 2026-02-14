@@ -342,10 +342,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get nav_assistant => '助手';
 
   @override
-  String get nav_feed => '单集';
+  String get nav_feed => '资料库';
 
   @override
-  String get nav_podcast => '播客';
+  String get nav_podcast => '发现';
 
   @override
   String get nav_chat => '对话';
@@ -354,7 +354,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get nav_profile => '个人资料';
 
   @override
-  String get podcast_feed_page_title => '信息流';
+  String get podcast_feed_page_title => '资料库';
 
   @override
   String get podcast_refresh_feed => '刷新信息流';

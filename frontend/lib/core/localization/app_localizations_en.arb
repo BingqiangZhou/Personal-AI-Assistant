@@ -559,12 +559,12 @@
     "description": "Navigation item: Assistant"
   },
 
-  "nav_feed": "Episodes",
+  "nav_feed": "Library",
   "@nav_feed": {
     "description": "Navigation item: Feed"
   },
 
-  "nav_podcast": "Podcasts",
+  "nav_podcast": "Discover",
   "@nav_podcast": {
     "description": "Navigation item: Podcast"
   },
@@ -579,7 +579,7 @@
     "description": "Navigation item: Profile"
   },
 
-  "podcast_feed_page_title": "Feed",
+  "podcast_feed_page_title": "Library",
   "@podcast_feed_page_title": {
     "description": "Podcast feed page title"
   },

@@ -42,14 +42,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     final l10n = AppLocalizations.of(context)!;
     return [
       NavigationDestination(
-        icon: const Icon(Icons.home_outlined),
-        selectedIcon: const Icon(Icons.home),
-        label: l10n.nav_feed,
+        icon: const Icon(Icons.travel_explore_outlined),
+        selectedIcon: const Icon(Icons.travel_explore),
+        label: l10n.nav_podcast,
       ),
       NavigationDestination(
-        icon: const Icon(Icons.podcasts_outlined),
-        selectedIcon: const Icon(Icons.podcasts),
-        label: l10n.nav_podcast,
+        icon: const Icon(Icons.library_books_outlined),
+        selectedIcon: const Icon(Icons.library_books),
+        label: l10n.nav_feed,
       ),
       NavigationDestination(
         icon: const Icon(Icons.person_outline),
@@ -164,9 +164,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildPageContent(int index) {
     switch (index) {
       case 0:
-        return const PodcastFeedPage();
-      case 1:
         return const PodcastListPage();
+      case 1:
+        return const PodcastFeedPage();
       case 2:
         return const ProfilePage();
       default:

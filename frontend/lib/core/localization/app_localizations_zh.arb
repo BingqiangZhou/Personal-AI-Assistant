@@ -561,12 +561,12 @@
     "description": "导航项：助手"
   },
 
-  "nav_feed": "单集",
+  "nav_feed": "资料库",
   "@nav_feed": {
     "description": "Navigation item: Feed"
   },
 
-  "nav_podcast": "播客",
+  "nav_podcast": "发现",
   "@nav_podcast": {
     "description": "Navigation item: Podcast"
   },
@@ -581,7 +581,7 @@
     "description": "导航项：个人资料"
   },
 
-  "podcast_feed_page_title": "信息流",
+  "podcast_feed_page_title": "资料库",
   "@podcast_feed_page_title": {
     "description": "播客信息流页面标题"
   },

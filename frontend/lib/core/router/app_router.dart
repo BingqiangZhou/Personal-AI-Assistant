@@ -157,7 +157,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         name: 'profile',
-        builder: (context, state) => const HomePage(initialTab: 3),
+        builder: (context, state) => const HomePage(initialTab: 2),
         routes: [
           GoRoute(
             path: 'cache',

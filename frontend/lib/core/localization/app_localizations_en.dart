@@ -345,10 +345,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nav_assistant => 'Assistant';
 
   @override
-  String get nav_feed => 'Episodes';
+  String get nav_feed => 'Library';
 
   @override
-  String get nav_podcast => 'Podcasts';
+  String get nav_podcast => 'Discover';
 
   @override
   String get nav_chat => 'Chat';
@@ -357,7 +357,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nav_profile => 'Profile';
 
   @override
-  String get podcast_feed_page_title => 'Feed';
+  String get podcast_feed_page_title => 'Library';
 
   @override
   String get podcast_refresh_feed => 'Refresh Feed';
