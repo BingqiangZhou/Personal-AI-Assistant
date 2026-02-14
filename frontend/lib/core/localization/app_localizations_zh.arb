@@ -1345,6 +1345,41 @@
     "description": "帮助中心副标题"
   },
 
+  "profile_clear_cache": "清理缓存",
+  "@profile_clear_cache": {
+    "description": "清理缓存标题"
+  },
+
+  "profile_clear_cache_subtitle": "清理图片、音频等缓存数据",
+  "@profile_clear_cache_subtitle": {
+    "description": "清理缓存副标题"
+  },
+
+  "profile_clear_cache_confirm": "将清理图片、音频以及接口缓存，是否继续？",
+  "@profile_clear_cache_confirm": {
+    "description": "清理缓存确认提示"
+  },
+
+  "profile_clearing_cache": "正在清理缓存…",
+  "@profile_clearing_cache": {
+    "description": "清理缓存进行中提示"
+  },
+
+  "profile_cache_cleared": "缓存已清理",
+  "@profile_cache_cleared": {
+    "description": "清理缓存成功提示"
+  },
+
+  "profile_cache_clear_failed": "清理缓存失败：{error}",
+  "@profile_cache_clear_failed": {
+    "description": "清理缓存失败提示",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
   "profile_about_subtitle": "应用版本和信息",
   "@profile_about_subtitle": {
     "description": "关于副标题"

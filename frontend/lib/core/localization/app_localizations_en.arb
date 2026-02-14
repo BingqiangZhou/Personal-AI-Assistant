@@ -1344,6 +1344,41 @@
     "description": "Help center subtitle"
   },
 
+  "profile_clear_cache": "Clear Cache",
+  "@profile_clear_cache": {
+    "description": "Clear cache title"
+  },
+
+  "profile_clear_cache_subtitle": "Clear images, audio, and other cached data",
+  "@profile_clear_cache_subtitle": {
+    "description": "Clear cache subtitle"
+  },
+
+  "profile_clear_cache_confirm": "This will remove cached images, audio, and API caches. Continue?",
+  "@profile_clear_cache_confirm": {
+    "description": "Clear cache confirm message"
+  },
+
+  "profile_clearing_cache": "Clearing cache...",
+  "@profile_clearing_cache": {
+    "description": "Clearing cache in progress message"
+  },
+
+  "profile_cache_cleared": "Cache cleared",
+  "@profile_cache_cleared": {
+    "description": "Cache cleared success message"
+  },
+
+  "profile_cache_clear_failed": "Failed to clear cache: {error}",
+  "@profile_cache_clear_failed": {
+    "description": "Clear cache failed message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
   "profile_about_subtitle": "App version and information",
   "@profile_about_subtitle": {
     "description": "About subtitle"

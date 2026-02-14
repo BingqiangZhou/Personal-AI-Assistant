@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import '../app/config/app_config.dart';
 import '../network/dio_client.dart';
 import '../network/api_services.dart';
+import '../services/app_cache_service.dart';
 import '../storage/local_storage_service.dart';
 import '../../features/user/presentation/providers/user_provider.dart' show simpleAuthServiceProvider;
 
@@ -17,6 +18,10 @@ final dioClientProvider = Provider<DioClient>((ref) {
 final apiServiceProvider = Provider<ApiServices>((ref) {
   final dioClient = ref.watch(dioClientProvider);
   return ApiServices(dioClient.dio);
+});
+
+final appCacheServiceProvider = Provider<AppCacheService>((ref) {
+  return AppCacheServiceImpl();
 });
 
 // Current Date/Time Provider

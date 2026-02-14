@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
+import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
@@ -549,6 +550,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               subtitle: l10n.profile_help_center_subtitle,
               onTap: () => _showHelpDialog(context),
             ),
+            _buildSettingsItem(
+              context,
+              icon: Icons.cleaning_services,
+              title: l10n.profile_clear_cache,
+              subtitle: l10n.profile_clear_cache_subtitle,
+              tileKey: const Key('profile_clear_cache_item'),
+              onTap: () => _showClearCacheDialog(context),
+            ),
           ]),
           const SizedBox(height: 24),
           _buildSettingsSection(context, l10n.about, [
@@ -682,6 +691,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               title: l10n.profile_help_center,
               subtitle: l10n.profile_help_center_subtitle,
               onTap: () => _showHelpDialog(context),
+            ),
+            _buildSettingsItem(
+              context,
+              icon: Icons.cleaning_services,
+              title: l10n.profile_clear_cache,
+              subtitle: l10n.profile_clear_cache_subtitle,
+              tileKey: const Key('profile_clear_cache_item'),
+              onTap: () => _showClearCacheDialog(context),
             ),
           ]),
           const SizedBox(height: 24),
@@ -1079,6 +1096,83 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         },
       ),
     );
+  }
+
+  Future<void> _showClearCacheDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+
+    final shouldClear = await showDialog<bool>(
+      context: context,
+      builder: (context) => LayoutBuilder(
+        builder: (context, constraints) {
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
+            child: AlertDialog(
+              insetPadding: _dialogInsetPadding(context),
+              title: Text(l10n.profile_clear_cache),
+              content: Text(l10n.profile_clear_cache_confirm),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(l10n.cancel),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(l10n.clear),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
+    if (shouldClear != true || !mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => LayoutBuilder(
+        builder: (context, constraints) {
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
+            child: AlertDialog(
+              insetPadding: _dialogInsetPadding(context),
+              content: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(child: Text(l10n.profile_clearing_cache)),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    try {
+      final dioClient = ref.read(dioClientProvider);
+      await dioClient.clearCache();
+      dioClient.clearETagCache();
+      await ref.read(appCacheServiceProvider).clearAll();
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      showTopFloatingNotice(context, message: l10n.profile_cache_cleared);
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      showTopFloatingNotice(
+        context,
+        message: l10n.profile_cache_clear_failed(e.toString()),
+      );
+    }
   }
 
   /// 显示关于对话框

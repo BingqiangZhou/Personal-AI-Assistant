@@ -810,6 +810,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profile_help_center_subtitle => '获取帮助和支持';
 
   @override
+  String get profile_clear_cache => '清理缓存';
+
+  @override
+  String get profile_clear_cache_subtitle => '清理图片、音频等缓存数据';
+
+  @override
+  String get profile_clear_cache_confirm => '将清理图片、音频以及接口缓存，是否继续？';
+
+  @override
+  String get profile_clearing_cache => '正在清理缓存…';
+
+  @override
+  String get profile_cache_cleared => '缓存已清理';
+
+  @override
+  String profile_cache_clear_failed(String error) {
+    return '清理缓存失败：$error';
+  }
+
+  @override
   String get profile_about_subtitle => '应用版本和信息';
 
   @override

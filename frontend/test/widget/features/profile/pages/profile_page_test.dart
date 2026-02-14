@@ -6,6 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/network/dio_client.dart';
+import 'package:personal_ai_assistant/core/providers/core_providers.dart';
+import 'package:personal_ai_assistant/core/services/app_cache_service.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/features/auth/domain/models/user.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
@@ -65,6 +68,30 @@ class _TestPodcastSubscriptionNotifier extends PodcastSubscriptionNotifier {
 
   @override
   Future<void> refreshSubscriptions({int? categoryId, String? status}) async {}
+}
+
+class _MockDioClient extends Mock implements DioClient {
+  @override
+  Future<void> clearCache() => super.noSuchMethod(
+        Invocation.method(#clearCache, []),
+        returnValue: Future<void>.value(),
+        returnValueForMissingStub: Future<void>.value(),
+      ) as Future<void>;
+
+  @override
+  void clearETagCache() => super.noSuchMethod(
+        Invocation.method(#clearETagCache, []),
+        returnValueForMissingStub: null,
+      );
+}
+
+class _MockAppCacheService extends Mock implements AppCacheService {
+  @override
+  Future<void> clearAll() => super.noSuchMethod(
+        Invocation.method(#clearAll, []),
+        returnValue: Future<void>.value(),
+        returnValueForMissingStub: Future<void>.value(),
+      ) as Future<void>;
 }
 
 const MethodChannel _packageInfoChannel = MethodChannel(
@@ -221,6 +248,62 @@ void main() {
 
       expect(find.text('0'), findsNWidgets(3));
       expect(find.text('5'), findsOneWidget);
+  });
+
+  testWidgets('clear cache entry triggers cache clear flow', (
+    WidgetTester tester,
+  ) async {
+    final dioClient = _MockDioClient();
+    final cacheService = _MockAppCacheService();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          profileStatsProvider.overrideWith((ref) async {
+            return const ProfileStatsModel(
+              totalSubscriptions: 1,
+              totalEpisodes: 23,
+              summariesGenerated: 12,
+              pendingSummaries: 11,
+              playedEpisodes: 8,
+            );
+          }),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
+          dioClientProvider.overrideWithValue(dioClient),
+          appCacheServiceProvider.overrideWithValue(cacheService),
+        ],
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: ProfilePage()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final clearCacheItem = find.byKey(const Key('profile_clear_cache_item'));
+    await tester.scrollUntilVisible(
+      clearCacheItem,
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(clearCacheItem);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Clear'));
+    await tester.pumpAndSettle();
+
+    verify(dioClient.clearCache()).called(1);
+    verify(dioClient.clearETagCache()).called(1);
+    verify(cacheService.clearAll()).called(1);
+
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('removes settings entries and updates action buttons', (

@@ -1676,6 +1676,42 @@ abstract class AppLocalizations {
   /// **'Get help and support'**
   String get profile_help_center_subtitle;
 
+  /// Clear cache title
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Cache'**
+  String get profile_clear_cache;
+
+  /// Clear cache subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'Clear images, audio, and other cached data'**
+  String get profile_clear_cache_subtitle;
+
+  /// Clear cache confirm message
+  ///
+  /// In en, this message translates to:
+  /// **'This will remove cached images, audio, and API caches. Continue?'**
+  String get profile_clear_cache_confirm;
+
+  /// Clearing cache in progress message
+  ///
+  /// In en, this message translates to:
+  /// **'Clearing cache...'**
+  String get profile_clearing_cache;
+
+  /// Cache cleared success message
+  ///
+  /// In en, this message translates to:
+  /// **'Cache cleared'**
+  String get profile_cache_cleared;
+
+  /// Clear cache failed message
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to clear cache: {error}'**
+  String profile_cache_clear_failed(String error);
+
   /// About subtitle
   ///
   /// In en, this message translates to:

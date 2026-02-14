@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
+import '../../../../core/services/app_cache_service.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
 /// AudioHandler for podcast playback with system media controls
@@ -268,6 +269,30 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     }
   }
 
+  Future<void> _setAudioSourceWithCache(String url) async {
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      await _player.setSourceUrl(url);
+      return;
+    }
+
+    try {
+      final cached = await AppMediaCacheManager.instance.getFileFromCache(url);
+      final file = cached?.file;
+      if (file != null && await file.exists()) {
+        await _player.setSource(DeviceFileSource(file.path));
+        return;
+      }
+    } catch (_) {}
+
+    Future(() async {
+      try {
+        await AppMediaCacheManager.instance.downloadFile(url);
+      } catch (_) {}
+    });
+
+    await _player.setSourceUrl(url);
+  }
+
   /// Set episode with full metadata support
   Future<void> setEpisode({
     required String id,
@@ -317,7 +342,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
 
     // 2) Set source URL
     try {
-      await _player.setSourceUrl(url);
+      await _setAudioSourceWithCache(url);
       if (kDebugMode) {
         logger.AppLogger.debug('✅ Audio source set: $url${validArtUri != null ? ' with cover' : ' (no cover)'}');
       }
@@ -351,7 +376,7 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
     );
 
     try {
-      await _player.setSourceUrl(url);
+      await _setAudioSourceWithCache(url);
       _broadcastState();
 
       if (kDebugMode) {

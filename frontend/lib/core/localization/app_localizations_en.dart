@@ -824,6 +824,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile_help_center_subtitle => 'Get help and support';
 
   @override
+  String get profile_clear_cache => 'Clear Cache';
+
+  @override
+  String get profile_clear_cache_subtitle =>
+      'Clear images, audio, and other cached data';
+
+  @override
+  String get profile_clear_cache_confirm =>
+      'This will remove cached images, audio, and API caches. Continue?';
+
+  @override
+  String get profile_clearing_cache => 'Clearing cache...';
+
+  @override
+  String get profile_cache_cleared => 'Cache cleared';
+
+  @override
+  String profile_cache_clear_failed(String error) {
+    return 'Failed to clear cache: $error';
+  }
+
+  @override
   String get profile_about_subtitle => 'App version and information';
 
   @override
