@@ -767,13 +767,13 @@ abstract class AppLocalizations {
   /// Navigation item: Feed
   ///
   /// In en, this message translates to:
-  /// **'Feed'**
+  /// **'Episodes'**
   String get nav_feed;
 
   /// Navigation item: Podcast
   ///
   /// In en, this message translates to:
-  /// **'Podcast'**
+  /// **'Podcasts'**
   String get nav_podcast;
 
   /// Navigation item: Chat

@@ -282,7 +282,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_invalid_url => '请输入有效的 URL';
 
   @override
-  String get podcast_episodes => '剧集';
+  String get podcast_episodes => '单集';
 
   @override
   String get podcast_unknown_author => '未知作者';
@@ -342,7 +342,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get nav_assistant => '助手';
 
   @override
-  String get nav_feed => '信息流';
+  String get nav_feed => '单集';
 
   @override
   String get nav_podcast => '播客';

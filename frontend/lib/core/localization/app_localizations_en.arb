@@ -556,12 +556,12 @@
     "description": "Navigation item: Assistant"
   },
 
-  "nav_feed": "Feed",
+  "nav_feed": "Episodes",
   "@nav_feed": {
     "description": "Navigation item: Feed"
   },
 
-  "nav_podcast": "Podcast",
+  "nav_podcast": "Podcasts",
   "@nav_podcast": {
     "description": "Navigation item: Podcast"
   },

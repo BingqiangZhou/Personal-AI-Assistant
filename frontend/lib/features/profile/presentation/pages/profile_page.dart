@@ -32,6 +32,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   static const Duration _versionTapWindow = Duration(milliseconds: 1200);
 
+  bool _isMenuOpen = false;
+
   @override
   void initState() {
     super.initState();
@@ -91,6 +93,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
 
     return ResponsiveContainer(
       child: SingleChildScrollView(
@@ -111,26 +115,141 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ),
                   ),
                   const SizedBox(width: 16),
-                  // 顶部退出按钮
-                  IconButton(
-                    onPressed: () {
-                      _showLogoutDialog(context);
+                  PopupMenuButton<String>(
+                    onOpened: () {
+                      setState(() {
+                        _isMenuOpen = true;
+                      });
                     },
-                    key: const Key('profile_top_logout_button'),
-                    icon: const Icon(Icons.logout),
-                    tooltip: l10n.logout,
-                    style: IconButton.styleFrom(
-                      foregroundColor: Theme.of(context).colorScheme.error,
+                    onCanceled: () {
+                      setState(() {
+                        _isMenuOpen = false;
+                      });
+                    },
+                    onSelected: (value) {
+                      setState(() {
+                        _isMenuOpen = false;
+                      });
+                      if (value == 'edit') {
+                        _showEditProfileDialog(context);
+                      } else if (value == 'logout') {
+                        _showLogoutDialog(context);
+                      }
+                    },
+                    offset: const Offset(0, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    itemBuilder: (context) => [
+                      PopupMenuItem<String>(
+                        enabled: false,
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.email_outlined,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                user?.email ?? l10n.profile_please_login,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuDivider(),
+                      PopupMenuItem<String>(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.edit_note, size: 20),
+                            const SizedBox(width: 8),
+                            Text(l10n.profile_edit_profile),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.logout,
+                              size: 20,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.logout,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: null, // Let PopupMenuButton handle tap
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.outlineVariant,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            color: _isMenuOpen
+                                ? Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest
+                                : null,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                user?.displayName ?? l10n.profile_guest_user,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(width: 8),
+                              AnimatedRotation(
+                                turns: _isMenuOpen ? 0.5 : 0,
+                                duration: const Duration(milliseconds: 200),
+                                child: Icon(
+                                  Icons.expand_more,
+                                  size: 20,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 8),
-
-            // 用户信息卡片
-            _buildUserProfileCard(context),
-
             const SizedBox(height: 8),
 
             // 统计和活动卡片
@@ -143,113 +262,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
             // 底部空间
             const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 构建用户信息卡片
-  Widget _buildUserProfileCard(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final isMobile = _isMobile(context);
-    final authState = ref.watch(authProvider);
-    final user = authState.user;
-
-    return Card(
-      margin: _profileCardMargin(context),
-      shape: _profileCardShape(context),
-      child: Padding(
-        padding: EdgeInsets.all(isMobile ? 16 : 24),
-        child: Row(
-          children: [
-            // 头像
-            Container(
-              width: isMobile ? 80 : 100,
-              height: isMobile ? 80 : 100,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                shape: BoxShape.circle,
-                image: user?.avatarUrl != null
-                    ? DecorationImage(
-                        image: NetworkImage(user!.avatarUrl!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-              ),
-              child: user?.avatarUrl == null
-                  ? Icon(
-                      Icons.person,
-                      size: isMobile ? 40 : 50,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    )
-                  : null,
-            ),
-            const SizedBox(width: 24),
-            // 用户信息
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 用户名 + Verified 图标
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Tooltip(
-                          message: user?.email ?? '',
-                          child: Text(
-                            user?.displayName ?? l10n.profile_guest_user,
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Tooltip(
-                        message: l10n.profile_verified,
-                        child: Icon(
-                          Icons.verified,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // Premium Chip
-                  Chip(
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    labelPadding: const EdgeInsets.only(left: 2, right: 8),
-                    avatar: Icon(
-                      Icons.workspace_premium,
-                      size: 14,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
-                    label: Text(l10n.profile_premium),
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.primaryContainer,
-                    labelStyle: Theme.of(context).textTheme.labelSmall
-                        ?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onPrimaryContainer,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 16),
-            // 编辑按钮
-            IconButton(
-              onPressed: () {
-                _showEditProfileDialog(context);
-              },
-              key: const Key('profile_user_edit_button'),
-              icon: const Icon(Icons.edit_note),
-              tooltip: l10n.profile_edit_profile,
-            ),
           ],
         ),
       ),
@@ -285,7 +297,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           _buildActivityCard(
             context,
             Icons.podcasts,
-            l10n.nav_podcast,
+            l10n.podcast_episodes,
             episodeCount,
             Theme.of(context).colorScheme.primary,
           ),
@@ -318,7 +330,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           child: _buildActivityCard(
             context,
             Icons.podcasts,
-            l10n.nav_podcast,
+            l10n.podcast_episodes,
             episodeCount,
             Theme.of(context).colorScheme.primary,
           ),

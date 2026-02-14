@@ -456,7 +456,7 @@
     "description": "无效 URL 错误"
   },
 
-  "podcast_episodes": "剧集",
+  "podcast_episodes": "单集",
   "@podcast_episodes": {
     "description": "剧集标签"
   },
@@ -556,14 +556,14 @@
     "description": "导航项：助手"
   },
 
-  "nav_feed": "信息流",
+  "nav_feed": "单集",
   "@nav_feed": {
-    "description": "导航项：信息流"
+    "description": "Navigation item: Feed"
   },
 
   "nav_podcast": "播客",
   "@nav_podcast": {
-    "description": "导航项：播客"
+    "description": "Navigation item: Podcast"
   },
 
   "nav_chat": "对话",
