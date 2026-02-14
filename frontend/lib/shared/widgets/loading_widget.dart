@@ -85,12 +85,16 @@ class ShimmerLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final resolvedBaseColor = baseColor ?? scheme.surfaceContainerHighest;
+    final resolvedHighlightColor = highlightColor ?? scheme.surfaceContainerHigh;
+
     return Shimmer(
       gradient: LinearGradient(
         colors: [
-          baseColor ?? Colors.grey[300]!,
-          highlightColor ?? Colors.grey[100]!,
-          baseColor ?? Colors.grey[300]!,
+          resolvedBaseColor,
+          resolvedHighlightColor,
+          resolvedBaseColor,
         ],
         stops: const [0.0, 0.5, 1.0],
         begin: const Alignment(-1.0, -0.3),

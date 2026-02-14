@@ -11,6 +11,8 @@ const kThemeModeSystem = 'system';
 /// Theme mode provider
 final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
 
+final initialThemeModeCodeProvider = Provider<String>((ref) => kThemeModeSystem);
+
 /// Theme mode notifier for managing app theme
 class ThemeModeNotifier extends Notifier<ThemeMode> {
   LocalStorageService get _storage => ref.read(localStorageServiceProvider);
@@ -20,6 +22,7 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
 
   @override
   ThemeMode build() {
+    _themeModeCode = ref.read(initialThemeModeCodeProvider);
     return _getResolvedThemeMode(_themeModeCode);
   }
 

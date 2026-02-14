@@ -7,7 +7,9 @@ import 'dart:io' show Platform;
 
 import 'core/app/app.dart';
 import 'core/app/config/app_config.dart';
+import 'core/constants/app_constants.dart' as core_constants;
 import 'core/storage/local_storage_service.dart';
+import 'core/theme/theme_provider.dart';
 import 'features/podcast/presentation/providers/audio_handler.dart';
 
 // Import AudioService only for mobile platforms
@@ -117,6 +119,10 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final storageService = LocalStorageServiceImpl(prefs);
 
+  final initialThemeModeCode =
+      await storageService.getString(core_constants.AppConstants.themeKey) ??
+      kThemeModeSystem;
+
   // Load Server Base URL (backend server address without /api/v1 suffix)
   final customServerUrl = await storageService.getServerBaseUrl();
   if (customServerUrl != null && customServerUrl.isNotEmpty) {
@@ -140,6 +146,7 @@ void main() async {
     ProviderScope(
       overrides: [
         localStorageServiceProvider.overrideWithValue(storageService),
+        initialThemeModeCodeProvider.overrideWithValue(initialThemeModeCode),
       ],
       child: const _AppWithSplashScreen(),
     ),

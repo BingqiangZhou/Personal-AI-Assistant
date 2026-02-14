@@ -313,6 +313,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         children: [
           _buildActivityCard(
             context,
+            Icons.subscriptions_outlined,
+            l10n.profile_subscriptions,
+            subscriptionCount,
+            Theme.of(context).colorScheme.primary,
+            onTap: () => context.push('/profile/subscriptions'),
+            showChevron: true,
+          ),
+          const SizedBox(height: 12),
+          _buildActivityCard(
+            context,
             Icons.podcasts,
             l10n.podcast_episodes,
             episodeCount,
@@ -336,16 +346,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             onTap: () => context.push('/profile/history'),
             showChevron: true,
             chevronKey: const Key('profile_viewed_card_chevron'),
-          ),
-          const SizedBox(height: 12),
-          _buildActivityCard(
-            context,
-            Icons.subscriptions_outlined,
-            l10n.profile_subscriptions,
-            subscriptionCount,
-            Theme.of(context).colorScheme.primary,
-            onTap: () => context.push('/profile/subscriptions'),
-            showChevron: true,
           ),
         ],
       );
@@ -360,6 +360,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         final cards = <Widget>[
           _buildActivityCard(
             context,
+            Icons.subscriptions_outlined,
+            l10n.profile_subscriptions,
+            subscriptionCount,
+            Theme.of(context).colorScheme.primary,
+            onTap: () => context.push('/profile/subscriptions'),
+            showChevron: true,
+          ),
+          _buildActivityCard(
+            context,
             Icons.podcasts,
             l10n.podcast_episodes,
             episodeCount,
@@ -381,15 +390,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             onTap: () => context.push('/profile/history'),
             showChevron: true,
             chevronKey: const Key('profile_viewed_card_chevron'),
-          ),
-          _buildActivityCard(
-            context,
-            Icons.subscriptions_outlined,
-            l10n.profile_subscriptions,
-            subscriptionCount,
-            Theme.of(context).colorScheme.primary,
-            onTap: () => context.push('/profile/subscriptions'),
-            showChevron: true,
           ),
         ];
 
@@ -414,6 +414,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     bool showChevron = false,
     Key? chevronKey,
   }) {
+    final effectiveIconColor = _ensureIconContrast(context, color);
     return Card(
       margin: _profileCardMargin(context),
       shape: _profileCardShape(context),
@@ -424,7 +425,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(icon, color: color, size: 24),
+              Icon(icon, color: effectiveIconColor, size: 24),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -457,6 +458,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ),
       ),
     );
+  }
+
+  Color _ensureIconContrast(BuildContext context, Color proposed) {
+    final scheme = Theme.of(context).colorScheme;
+    final cardColor = Theme.of(context).cardTheme.color ?? scheme.surface;
+    final diff = (proposed.computeLuminance() - cardColor.computeLuminance()).abs();
+    if (diff < 0.25) {
+      return scheme.onSurface;
+    }
+    return proposed;
   }
 
   /// 构建设置内容

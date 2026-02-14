@@ -8,17 +8,18 @@ class PodcastFeedShimmer extends StatelessWidget {
     return ListView.builder(
       itemCount: 10,
       itemBuilder: (context, index) {
-        return const _EpisodeCardShimmer();
+        return _EpisodeCardShimmer();
       },
     );
   }
 }
 
 class _EpisodeCardShimmer extends StatelessWidget {
-  const _EpisodeCardShimmer();
-
   @override
   Widget build(BuildContext context) {
+    final placeholderColor =
+        Theme.of(context).colorScheme.surfaceContainerHighest;
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
@@ -31,7 +32,7 @@ class _EpisodeCardShimmer extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: placeholderColor,
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
@@ -47,7 +48,7 @@ class _EpisodeCardShimmer extends StatelessWidget {
                     width: double.infinity,
                     height: 16,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: placeholderColor,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -58,7 +59,7 @@ class _EpisodeCardShimmer extends StatelessWidget {
                     width: 150,
                     height: 14,
                     decoration: BoxDecoration(
-                      color: Colors.grey[300],
+                      color: placeholderColor,
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -71,7 +72,7 @@ class _EpisodeCardShimmer extends StatelessWidget {
                         width: 60,
                         height: 12,
                         decoration: BoxDecoration(
-                          color: Colors.grey[300],
+                          color: placeholderColor,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -80,7 +81,7 @@ class _EpisodeCardShimmer extends StatelessWidget {
                         width: 40,
                         height: 12,
                         decoration: BoxDecoration(
-                          color: Colors.grey[300],
+                          color: placeholderColor,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -95,7 +96,7 @@ class _EpisodeCardShimmer extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: placeholderColor,
                 shape: BoxShape.circle,
               ),
             ),
