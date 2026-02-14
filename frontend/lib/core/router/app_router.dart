@@ -16,6 +16,7 @@ import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episode_detail_page.dart';
 import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
 import '../../features/profile/presentation/pages/profile_history_page.dart';
+import '../../features/profile/presentation/pages/profile_subscriptions_page.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
@@ -161,6 +162,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: 'history',
             name: 'profile-history',
             builder: (context, state) => const ProfileHistoryPage(),
+          ),
+          GoRoute(
+            path: 'subscriptions',
+            name: 'profile-subscriptions',
+            builder: (context, state) => const ProfileSubscriptionsPage(),
           ),
         ],
       ),

@@ -273,7 +273,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_my_subscriptions => 'My Subscriptions';
 
   @override
-  String get podcast_add_subscription => 'Add Subscription';
+  String get profile_subscriptions => 'Subscriptions';
 
   @override
   String get podcast_feed_url => 'Feed URL';

@@ -620,11 +620,11 @@ abstract class AppLocalizations {
   /// **'My Subscriptions'**
   String get podcast_my_subscriptions;
 
-  /// Add subscription button
+  /// Subscriptions label (without "My")
   ///
   /// In en, this message translates to:
-  /// **'Add Subscription'**
-  String get podcast_add_subscription;
+  /// **'Subscriptions'**
+  String get profile_subscriptions;
 
   /// Feed URL field label
   ///

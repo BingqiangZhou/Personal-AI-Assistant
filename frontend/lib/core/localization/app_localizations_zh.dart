@@ -270,7 +270,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_my_subscriptions => '我的订阅';
 
   @override
-  String get podcast_add_subscription => '添加订阅';
+  String get profile_subscriptions => '订阅';
 
   @override
   String get podcast_feed_url => '订阅源 URL';

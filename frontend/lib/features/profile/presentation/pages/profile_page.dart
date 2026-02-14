@@ -39,6 +39,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   void initState() {
     super.initState();
     _loadVersion();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref
+          .read(podcastSubscriptionProvider.notifier)
+          .loadSubscriptions()
+          .catchError((_) {});
+    });
   }
 
   @override
@@ -117,6 +123,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   ),
                   const SizedBox(width: 16),
                   PopupMenuButton<String>(
+                    key: const Key('profile_user_menu_button'),
                     onOpened: () {
                       setState(() {
                         _isMenuOpen = true;
@@ -171,6 +178,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       const PopupMenuDivider(),
                       PopupMenuItem<String>(
                         value: 'edit',
+                        key: const Key('profile_user_menu_item_edit'),
                         child: Row(
                           children: [
                             const Icon(Icons.edit_note, size: 20),
@@ -181,6 +189,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ),
                       PopupMenuItem<String>(
                         value: 'logout',
+                        key: const Key('profile_user_menu_item_logout'),
                         child: Row(
                           children: [
                             Icon(
@@ -274,6 +283,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final l10n = AppLocalizations.of(context)!;
     final isMobile = _isMobile(context);
     final statsAsync = ref.watch(profileStatsProvider);
+    final subscriptionState = ref.watch(podcastSubscriptionProvider);
 
     final episodeCount = statsAsync.when(
       data: (stats) => stats?.totalEpisodes.toString() ?? '0',
@@ -290,6 +300,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       loading: () => '...',
       error: (error, stackTrace) => '0',
     );
+    final subscriptionCount = subscriptionState.isLoading
+        ? '...'
+        : (subscriptionState.error != null
+              ? '0'
+              : subscriptionState.total.toString());
 
     // On narrow screens, stack cards vertically to prevent squishing
     if (isMobile) {
@@ -319,36 +334,44 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             Theme.of(context).colorScheme.secondary,
             onTap: () => context.push('/profile/history'),
             showChevron: true,
+            chevronKey: const Key('profile_viewed_card_chevron'),
+          ),
+          const SizedBox(height: 12),
+          _buildActivityCard(
+            context,
+            Icons.subscriptions_outlined,
+            l10n.profile_subscriptions,
+            subscriptionCount,
+            Theme.of(context).colorScheme.primary,
+            onTap: () => context.push('/profile/subscriptions'),
+            showChevron: true,
           ),
         ],
       );
     }
 
-    // Desktop: horizontal layout
-    return Row(
-      children: [
-        Expanded(
-          child: _buildActivityCard(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final columns = maxWidth >= 1000 ? 4 : 2;
+        final cardWidth = (maxWidth - (columns - 1) * 16) / columns;
+
+        final cards = <Widget>[
+          _buildActivityCard(
             context,
             Icons.podcasts,
             l10n.podcast_episodes,
             episodeCount,
             Theme.of(context).colorScheme.primary,
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildActivityCard(
+          _buildActivityCard(
             context,
             Icons.auto_awesome,
             l10n.profile_ai_summary,
             summaryCount,
             Theme.of(context).colorScheme.tertiary,
           ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildActivityCard(
+          _buildActivityCard(
             context,
             Icons.history,
             l10n.profile_viewed_title,
@@ -356,9 +379,27 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             Theme.of(context).colorScheme.secondary,
             onTap: () => context.push('/profile/history'),
             showChevron: true,
+            chevronKey: const Key('profile_viewed_card_chevron'),
           ),
-        ),
-      ],
+          _buildActivityCard(
+            context,
+            Icons.subscriptions_outlined,
+            l10n.profile_subscriptions,
+            subscriptionCount,
+            Theme.of(context).colorScheme.primary,
+            onTap: () => context.push('/profile/subscriptions'),
+            showChevron: true,
+          ),
+        ];
+
+        return Wrap(
+          spacing: 16,
+          runSpacing: 16,
+          children: [
+            for (final card in cards) SizedBox(width: cardWidth, child: card),
+          ],
+        );
+      },
     );
   }
 
@@ -370,6 +411,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     Color color, {
     VoidCallback? onTap,
     bool showChevron = false,
+    Key? chevronKey,
   }) {
     return Card(
       margin: _profileCardMargin(context),
@@ -405,7 +447,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               if (showChevron)
                 Icon(
                   Icons.chevron_right,
-                  key: const Key('profile_viewed_card_chevron'),
+                  key: chevronKey,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                   size: 22,
                 ),

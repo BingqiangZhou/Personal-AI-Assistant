@@ -10,6 +10,7 @@ import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/features/auth/domain/models/user.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/profile_stats_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/podcast_api_service.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
@@ -42,6 +43,28 @@ class _ThrowingPodcastRepository extends PodcastRepository {
   Future<ProfileStatsModel> getProfileStats() async {
     throw Exception('profile stats failed');
   }
+}
+
+class _TestPodcastSubscriptionNotifier extends PodcastSubscriptionNotifier {
+  @override
+  PodcastSubscriptionState build() {
+    return const PodcastSubscriptionState(total: 5);
+  }
+
+  @override
+  Future<void> loadSubscriptions({
+    int page = 1,
+    int size = 10,
+    int? categoryId,
+    String? status,
+    bool forceRefresh = false,
+  }) async {}
+
+  @override
+  Future<void> loadMoreSubscriptions({int? categoryId, String? status}) async {}
+
+  @override
+  Future<void> refreshSubscriptions({int? categoryId, String? status}) async {}
 }
 
 const MethodChannel _packageInfoChannel = MethodChannel(
@@ -93,6 +116,9 @@ void main() {
                 playedEpisodes: 8,
               );
             }),
+            podcastSubscriptionProvider.overrideWith(
+              _TestPodcastSubscriptionNotifier.new,
+            ),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -107,6 +133,7 @@ void main() {
       expect(find.text('23'), findsOneWidget);
       expect(find.text('12'), findsOneWidget);
       expect(find.text('8'), findsOneWidget);
+      expect(find.text('5'), findsOneWidget);
       expect(
         find.byKey(const Key('profile_viewed_card_chevron')),
         findsOneWidget,
@@ -124,6 +151,9 @@ void main() {
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
           profileStatsProvider.overrideWith((ref) => pending.future),
+            podcastSubscriptionProvider.overrideWith(
+              _TestPodcastSubscriptionNotifier.new,
+            ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -136,6 +166,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('...'), findsNWidgets(3));
+    expect(find.text('5'), findsOneWidget);
   });
 
   testWidgets('falls back to 0 when profile stats provider returns null', (
@@ -146,6 +177,9 @@ void main() {
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
           profileStatsProvider.overrideWith((ref) async => null),
+            podcastSubscriptionProvider.overrideWith(
+              _TestPodcastSubscriptionNotifier.new,
+            ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -157,7 +191,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('0'), findsNWidgets(3));
+      expect(find.text('0'), findsNWidgets(3));
+      expect(find.text('5'), findsOneWidget);
   });
 
   testWidgets('falls back to 0 when repository throws in provider chain', (
@@ -170,6 +205,9 @@ void main() {
           podcastRepositoryProvider.overrideWithValue(
             _ThrowingPodcastRepository(),
           ),
+            podcastSubscriptionProvider.overrideWith(
+              _TestPodcastSubscriptionNotifier.new,
+            ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -181,7 +219,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('0'), findsNWidgets(3));
+      expect(find.text('0'), findsNWidgets(3));
+      expect(find.text('5'), findsOneWidget);
   });
 
   testWidgets('removes settings entries and updates action buttons', (
@@ -200,6 +239,9 @@ void main() {
               playedEpisodes: 8,
             );
           }),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -217,8 +259,10 @@ void main() {
     expect(find.text(l10n.profile_edit_profile), findsNothing);
     expect(find.text(l10n.profile_auto_sync), findsNothing);
 
-    expect(find.byKey(const Key('profile_top_logout_button')), findsOneWidget);
-    expect(find.byKey(const Key('profile_user_edit_button')), findsOneWidget);
+    expect(
+      find.byKey(const Key('profile_user_menu_button')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('top logout and user edit buttons open expected dialogs', (
@@ -237,6 +281,9 @@ void main() {
               playedEpisodes: 8,
             );
           }),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -250,14 +297,18 @@ void main() {
     final context = tester.element(find.byType(ProfilePage));
     final l10n = AppLocalizations.of(context)!;
 
-    await tester.tap(find.byKey(const Key('profile_top_logout_button')));
+    await tester.tap(find.byKey(const Key('profile_user_menu_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile_user_menu_item_logout')));
     await tester.pumpAndSettle();
     expect(find.text(l10n.profile_logout_message), findsOneWidget);
 
     await tester.tap(find.text(l10n.cancel));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('profile_user_edit_button')));
+    await tester.tap(find.byKey(const Key('profile_user_menu_button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('profile_user_menu_item_edit')));
     await tester.pumpAndSettle();
     expect(find.text(l10n.profile_edit_profile), findsOneWidget);
   });
@@ -283,6 +334,9 @@ void main() {
               playedEpisodes: 8,
             );
           }),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -296,21 +350,29 @@ void main() {
     final context = tester.element(find.byType(ProfilePage));
     final l10n = AppLocalizations.of(context)!;
 
-    final topLogoutButton = tester.widget<IconButton>(
-      find.byKey(const Key('profile_top_logout_button')),
-    );
-    final userEditButton = tester.widget<IconButton>(
-      find.byKey(const Key('profile_user_edit_button')),
-    );
     final securityTile = tester.widget<ListTile>(
       find.widgetWithText(ListTile, l10n.profile_security),
     );
 
-    expect((topLogoutButton.icon as Icon).icon, Icons.logout);
-    expect((userEditButton.icon as Icon).icon, Icons.edit_note);
     expect((securityTile.leading as Icon).icon, Icons.shield);
 
-    await tester.tap(find.byKey(const Key('profile_user_edit_button')));
+    await tester.tap(find.byKey(const Key('profile_user_menu_button')));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('profile_user_menu_item_logout')),
+        matching: find.byIcon(Icons.logout),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('profile_user_menu_item_edit')),
+        matching: find.byIcon(Icons.edit_note),
+      ),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const Key('profile_user_menu_item_edit')));
     await tester.pumpAndSettle();
     final editDialogWidth = tester.getSize(find.byType(AlertDialog)).width;
     await tester.tap(find.text(l10n.cancel));
@@ -378,6 +440,9 @@ void main() {
           localStorageServiceProvider.overrideWithValue(
             LocalStorageServiceImpl(prefs),
           ),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -426,6 +491,9 @@ void main() {
               playedEpisodes: 8,
             );
           }),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -472,6 +540,9 @@ void main() {
               playedEpisodes: 8,
             );
           }),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -518,6 +589,9 @@ void main() {
               playedEpisodes: 8,
             );
           }),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,

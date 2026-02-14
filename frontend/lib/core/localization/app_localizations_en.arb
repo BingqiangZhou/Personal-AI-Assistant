@@ -435,8 +435,11 @@
   "@podcast_my_subscriptions": {
     "description": "My subscriptions section"
   },
+  "profile_subscriptions": "Subscriptions",
+  "@profile_subscriptions": {
+    "description": "Subscriptions label (without \"My\")"
+  },
 
-  "podcast_add_subscription": "Add Subscription",
   "@podcast_add_subscription": {
     "description": "Add subscription button"
   },

@@ -90,8 +90,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final bulkSelectionState = ref.watch(bulkSelectionProvider);
-    final isSelectionMode = bulkSelectionState.isSelectionMode;
     final searchState = ref.watch(search.podcastSearchProvider);
     final subscriptionState = ref.watch(podcastSubscriptionProvider);
     final sectionTitleStyle = theme.textTheme.titleLarge?.copyWith(
@@ -108,84 +106,41 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               children: [
                 Expanded(
                   child: Text(
-                    isSelectionMode
-                        ? l10n.podcast_bulk_select_mode
-                        : l10n.podcast_title,
+                    l10n.podcast_title,
                     key: const Key('podcast_list_header_title'),
                     style: theme.textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                if (!isSelectionMode) ...[
-                  IconButton(
-                    key: const Key('podcast_list_action_add'),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => const AddPodcastDialog(),
-                      );
-                    },
-                    icon: const Icon(Icons.add),
-                    tooltip: l10n.podcast_add_podcast,
-                  ),
-                  IconButton(
-                    key: const Key('podcast_list_action_bulk_import'),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => BulkImportDialog(
-                          onImport: (urls) async {
-                            await ref
-                                .read(podcastSubscriptionProvider.notifier)
-                                .addSubscriptionsBatch(feedUrls: urls);
-                          },
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.playlist_add_outlined),
-                    tooltip: l10n.podcast_bulk_import,
-                  ),
-                  IconButton(
-                    key: const Key('podcast_list_action_select_mode'),
-                    onPressed: () {
-                      ref
-                          .read(bulkSelectionProvider.notifier)
-                          .toggleSelectionMode();
-                    },
-                    icon: const Icon(Icons.sort),
-                    tooltip: l10n.podcast_enter_select_mode,
-                  ),
-                ] else ...[
-                  IconButton(
-                    onPressed: bulkSelectionState.selectedIds.isNotEmpty
-                        ? () => ref
-                              .read(bulkSelectionProvider.notifier)
-                              .deselectAll()
-                        : null,
-                    icon: const Icon(Icons.deselect_outlined),
-                    tooltip: l10n.podcast_deselect_all,
-                  ),
-                  IconButton(
-                    onPressed: bulkSelectionState.selectedIds.isNotEmpty
-                        ? () => _showBulkDeleteDialog(context)
-                        : null,
-                    icon: Icon(
-                      Icons.delete_sweep_outlined,
-                      color: bulkSelectionState.selectedIds.isNotEmpty
-                          ? theme.colorScheme.error
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                    tooltip: l10n.delete,
-                  ),
-                  IconButton(
-                    onPressed: () {
-                      ref.read(bulkSelectionProvider.notifier).clearSelection();
-                    },
-                    icon: const Icon(Icons.close),
-                    tooltip: l10n.cancel,
-                  ),
-                ],
+                IconButton(
+                  key: const Key('podcast_list_action_add'),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => const AddPodcastDialog(),
+                    );
+                  },
+                  icon: const Icon(Icons.add),
+                  tooltip: l10n.podcast_add_podcast,
+                ),
+                IconButton(
+                  key: const Key('podcast_list_action_bulk_import'),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => BulkImportDialog(
+                        onImport: (urls) async {
+                          await ref
+                              .read(podcastSubscriptionProvider.notifier)
+                              .addSubscriptionsBatch(feedUrls: urls);
+                        },
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.playlist_add_outlined),
+                  tooltip: l10n.podcast_bulk_import,
+                ),
               ],
             ),
           ),
@@ -224,31 +179,35 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           SearchPanel(expanded: true, onSubscribe: _handleSubscribeFromSearch),
           if (!searchState.hasSearched) ...[
             const SizedBox(height: 18),
-            RichText(
-              key: const Key('podcast_list_subscriptions_title'),
-              textScaler: MediaQuery.textScalerOf(context),
-              text: TextSpan(
-                style: sectionTitleStyle,
-                children: [
-                  TextSpan(text: l10n.podcast_my_subscriptions),
-                  TextSpan(
-                    text: ' (${subscriptionState.total})',
-                    style: sectionTitleStyle?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+            Card(
+              child: ListTile(
+                key: const Key('podcast_list_subscriptions_shortcut'),
+                leading: const Icon(Icons.subscriptions_outlined),
+                title: Text(l10n.podcast_my_subscriptions),
+                subtitle: Text(l10n.profile),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      subscriptionState.isLoading
+                          ? '...'
+                          : subscriptionState.total.toString(),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right,
+                      color: theme.colorScheme.onSurfaceVariant,
+                      size: 22,
+                    ),
+                  ],
+                ),
+                onTap: () => context.push('/profile/subscriptions'),
               ),
             ),
-            const SizedBox(height: 10),
-            Expanded(child: _buildSubscriptionContent(context)),
           ],
-          if (isSelectionMode && bulkSelectionState.selectedIds.isNotEmpty)
-            _buildBottomActionBar(
-              context,
-              l10n,
-              bulkSelectionState.selectedIds.length,
-            ),
         ],
       ),
     );

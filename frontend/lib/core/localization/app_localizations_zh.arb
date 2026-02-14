@@ -436,6 +436,11 @@
     "description": "我的订阅部分"
   },
 
+  "profile_subscriptions": "订阅",
+  "@profile_subscriptions": {
+    "description": "Subscriptions label (without \"My\")"
+  },
+
   "podcast_add_subscription": "添加订阅",
   "@podcast_add_subscription": {
     "description": "添加订阅按钮"
