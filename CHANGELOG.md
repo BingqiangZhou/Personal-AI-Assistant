@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.10.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.10.0...v0.10.1) - 2026-02-14 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.1))
+
+### ⚡ Performance
+
+- *(ui,podcast)* Optimize app startup and add local caching for playback and episodes ([e47c380](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e47c380f7db232afd8ce9f57904e4d3d2238cce1))
+
+### 🐛 Bug Fixes
+
+- *(ui)* Fix top floating notice theme context and dense layout detection ([d61906a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d61906a7375f3fe46169f979b41b611ee89e35d5))
+
+### 🚀 Features
+
+- *(podcast)* Add dense layout mode for power users and improve dark mode visibility ([1ed0a9c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1ed0a9c86da105ee8da42ae9aa5d1278ab1a65d7))
+
+### 🚜 Refactor
+
+- *(podcast)* Force dense layout and simplify initialization ([88d3dff](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/88d3dff5c2b522f2528b59e935a061f6136e3961))
+
+
+
 ## [0.10.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.9.0...v0.10.0) - 2026-02-14 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.0))
 
 ### 🎨 Styling
