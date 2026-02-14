@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -562,10 +564,7 @@ class _CoverImage extends StatelessWidget {
 }
 
 Future<void> _showQueueSheet(BuildContext context, WidgetRef ref) async {
-  await PodcastQueueSheet.show(
-    context,
-    beforeShow: () async {
-      await ref.read(podcastQueueControllerProvider.notifier).loadQueue();
-    },
-  );
+  final queueController = ref.read(podcastQueueControllerProvider.notifier);
+  unawaited(queueController.refreshQueueInBackground());
+  await PodcastQueueSheet.show(context);
 }

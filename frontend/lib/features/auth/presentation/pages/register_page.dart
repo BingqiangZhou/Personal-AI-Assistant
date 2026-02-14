@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/app/config/app_config.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -47,25 +48,32 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     final l10n = AppLocalizations.of(context)!;
     if (_formKey.currentState!.validate() && _agreeToTerms) {
       if (_rememberMe) {
-        await _secureStorage.write(key: AppConstants.savedUsernameKey, value: _emailController.text.trim());
-        await _secureStorage.write(key: AppConstants.savedPasswordKey, value: _passwordController.text);
+        await _secureStorage.write(
+          key: AppConstants.savedUsernameKey,
+          value: _emailController.text.trim(),
+        );
+        await _secureStorage.write(
+          key: AppConstants.savedPasswordKey,
+          value: _passwordController.text,
+        );
       } else {
         await _secureStorage.delete(key: AppConstants.savedUsernameKey);
         await _secureStorage.delete(key: AppConstants.savedPasswordKey);
       }
 
-      ref.read(authProvider.notifier).register(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        username: _usernameController.text.trim(),
-        rememberMe: _rememberMe,
-      );
+      ref
+          .read(authProvider.notifier)
+          .register(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            username: _usernameController.text.trim(),
+            rememberMe: _rememberMe,
+          );
     } else if (!_agreeToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.auth_agree_terms),
-          backgroundColor: AppTheme.warningColor,
-        ),
+      showTopFloatingNotice(
+        context,
+        message: l10n.auth_agree_terms,
+        isError: true,
       );
     }
   }
@@ -85,16 +93,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       if (isAuthenticated && !wasAuthenticated) {
         context.go('/home');
       } else if (next.error != null &&
-                 next.error != previous?.error &&
-                 next.fieldErrors == null) {
+          next.error != previous?.error &&
+          next.fieldErrors == null) {
         // Only show snackbar for new errors without field errors
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(next.error!),
-              backgroundColor: AppTheme.errorColor,
-            ),
-          );
+          showTopFloatingNotice(context, message: next.error!, isError: true);
         }
       }
     });
@@ -132,17 +135,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         const SizedBox(height: 12),
                         Text(
                           l10n.auth_create_account,
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           l10n.auth_sign_up_subtitle,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
                         ),
                       ],
                     ),
@@ -157,7 +164,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     prefixIcon: const Icon(Icons.person_outline),
                     onChanged: (value) {
                       _clearFieldErrors();
-                      setState(() {}); // Trigger rebuild to update password requirements
+                      setState(
+                        () {},
+                      ); // Trigger rebuild to update password requirements
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -181,7 +190,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     prefixIcon: const Icon(Icons.email_outlined),
                     onChanged: (value) {
                       _clearFieldErrors();
-                      setState(() {}); // Trigger rebuild to update password requirements
+                      setState(
+                        () {},
+                      ); // Trigger rebuild to update password requirements
                     },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -209,7 +220,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         suffixIcon: IconButton(
                           key: const Key('password_visibility_toggle'),
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            _obscurePassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                           onPressed: () {
                             setState(() {
@@ -238,14 +251,18 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         },
                         errorText: authState.fieldErrors?['password'],
                       ),
-                        const SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.5),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surface.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Column(
@@ -253,10 +270,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                           children: [
                             Text(
                               '${l10n.auth_password}:',
-                              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                              ),
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                             const SizedBox(height: 4),
                             PasswordRequirementItem(
@@ -265,15 +285,21 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                             ),
                             PasswordRequirementItem(
                               text: l10n.auth_password_req_uppercase_short,
-                              isValid: _passwordController.text.contains(RegExp(r'[A-Z]')),
+                              isValid: _passwordController.text.contains(
+                                RegExp(r'[A-Z]'),
+                              ),
                             ),
                             PasswordRequirementItem(
                               text: l10n.auth_password_req_lowercase_short,
-                              isValid: _passwordController.text.contains(RegExp(r'[a-z]')),
+                              isValid: _passwordController.text.contains(
+                                RegExp(r'[a-z]'),
+                              ),
                             ),
                             PasswordRequirementItem(
                               text: l10n.auth_password_req_number_short,
-                              isValid: _passwordController.text.contains(RegExp(r'[0-9]')),
+                              isValid: _passwordController.text.contains(
+                                RegExp(r'[0-9]'),
+                              ),
                             ),
                           ],
                         ),
@@ -291,7 +317,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -322,8 +350,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                             _rememberMe = value ?? false;
                           });
                           if (!_rememberMe) {
-                            await _secureStorage.delete(key: AppConstants.savedUsernameKey);
-                            await _secureStorage.delete(key: AppConstants.savedPasswordKey);
+                            await _secureStorage.delete(
+                              key: AppConstants.savedUsernameKey,
+                            );
+                            await _secureStorage.delete(
+                              key: AppConstants.savedPasswordKey,
+                            );
                           }
                         },
                       ),
@@ -358,7 +390,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   child: Text(
                                     l10n.auth_terms_and_conditions,
                                     style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       decoration: TextDecoration.underline,
                                     ),
                                   ),
@@ -373,7 +407,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                                   child: Text(
                                     l10n.auth_privacy_policy,
                                     style: TextStyle(
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       decoration: TextDecoration.underline,
                                     ),
                                   ),
@@ -422,10 +458,11 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         onTap: () => context.go('/login'),
                         child: Text(
                           l10n.auth_sign_in_link,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
                     ],

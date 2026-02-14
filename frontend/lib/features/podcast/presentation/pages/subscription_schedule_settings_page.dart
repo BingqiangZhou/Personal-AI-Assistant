@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/schedule_config_model.dart';
 import '../providers/schedule_provider.dart';
 
@@ -32,7 +33,9 @@ class _SubscriptionScheduleSettingsPageState
     super.initState();
     // Load existing config
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(scheduleConfigProvider.notifier).loadConfig(widget.subscriptionId);
+      ref
+          .read(scheduleConfigProvider.notifier)
+          .loadConfig(widget.subscriptionId);
     });
   }
 
@@ -50,7 +53,9 @@ class _SubscriptionScheduleSettingsPageState
             IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: () {
-                ref.read(scheduleConfigProvider.notifier).loadConfig(widget.subscriptionId);
+                ref
+                    .read(scheduleConfigProvider.notifier)
+                    .loadConfig(widget.subscriptionId);
               },
             ),
         ],
@@ -59,7 +64,11 @@ class _SubscriptionScheduleSettingsPageState
     );
   }
 
-  Widget _buildBody(ScheduleConfigState configState, ThemeData theme, AppLocalizations l10n) {
+  Widget _buildBody(
+    ScheduleConfigState configState,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
     if (configState.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -71,10 +80,7 @@ class _SubscriptionScheduleSettingsPageState
           children: [
             const Icon(Icons.error_outline, size: 48, color: Colors.red),
             const SizedBox(height: 16),
-            Text(
-              l10n.schedule_load_failed,
-              style: theme.textTheme.titleLarge,
-            ),
+            Text(l10n.schedule_load_failed, style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
               configState.error!,
@@ -84,7 +90,9 @@ class _SubscriptionScheduleSettingsPageState
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () {
-                ref.read(scheduleConfigProvider.notifier).loadConfig(widget.subscriptionId);
+                ref
+                    .read(scheduleConfigProvider.notifier)
+                    .loadConfig(widget.subscriptionId);
               },
               child: Text(l10n.retry),
             ),
@@ -143,7 +151,9 @@ class _SubscriptionScheduleSettingsPageState
             SizedBox(
               width: double.infinity,
               child: FilledButton.tonalIcon(
-                onPressed: configState.isSaving ? null : () => _saveConfig(l10n),
+                onPressed: configState.isSaving
+                    ? null
+                    : () => _saveConfig(l10n),
                 icon: configState.isSaving
                     ? const SizedBox(
                         width: 20,
@@ -151,7 +161,11 @@ class _SubscriptionScheduleSettingsPageState
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.save),
-                label: Text(configState.isSaving ? l10n.schedule_saving : l10n.schedule_save_settings),
+                label: Text(
+                  configState.isSaving
+                      ? l10n.schedule_saving
+                      : l10n.schedule_save_settings,
+                ),
               ),
             ),
           ],
@@ -160,7 +174,11 @@ class _SubscriptionScheduleSettingsPageState
     );
   }
 
-  Widget _buildCurrentScheduleCard(ScheduleConfigResponse config, ThemeData theme, AppLocalizations l10n) {
+  Widget _buildCurrentScheduleCard(
+    ScheduleConfigResponse config,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -178,11 +196,20 @@ class _SubscriptionScheduleSettingsPageState
               ],
             ),
             const SizedBox(height: 12),
-            _buildScheduleInfoRow(l10n.schedule_update_frequency, config.frequency?.displayName ?? '-'),
+            _buildScheduleInfoRow(
+              l10n.schedule_update_frequency,
+              config.frequency?.displayName ?? '-',
+            ),
             if (config.updateTime != null)
-              _buildScheduleInfoRow(l10n.schedule_update_time, config.updateTime!),
+              _buildScheduleInfoRow(
+                l10n.schedule_update_time,
+                config.updateTime!,
+              ),
             if (config.updateDayOfWeek != null)
-              _buildScheduleInfoRow(l10n.schedule_update_day, '${l10n.schedule_week_short} ${_dayOfWeekToString(config.updateDayOfWeek!, l10n)}'),
+              _buildScheduleInfoRow(
+                l10n.schedule_update_day,
+                '${l10n.schedule_week_short} ${_dayOfWeekToString(config.updateDayOfWeek!, l10n)}',
+              ),
             if (config.nextUpdateAt != null)
               _buildScheduleInfoRow(
                 l10n.schedule_next_update,
@@ -211,7 +238,10 @@ class _SubscriptionScheduleSettingsPageState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.schedule_update_frequency, style: theme.textTheme.titleMedium),
+        Text(
+          l10n.schedule_update_frequency,
+          style: theme.textTheme.titleMedium,
+        ),
         const SizedBox(height: 12),
         SegmentedButton<UpdateFrequency>(
           segments: [
@@ -283,7 +313,9 @@ class _SubscriptionScheduleSettingsPageState
           segments: List.generate(7, (index) {
             return ButtonSegment(
               value: index + 1,
-              label: Text('${l10n.schedule_week_short} ${_dayOfWeekToString(index + 1, l10n)}'),
+              label: Text(
+                '${l10n.schedule_week_short} ${_dayOfWeekToString(index + 1, l10n)}',
+              ),
             );
           }),
           selected: {_selectedDayOfWeek ?? 1},
@@ -320,16 +352,20 @@ class _SubscriptionScheduleSettingsPageState
 
     // Validate based on frequency
     if (_selectedFrequency == UpdateFrequency.daily && _selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.schedule_select_update_time)),
+      showTopFloatingNotice(
+        context,
+        message: l10n.schedule_select_update_time,
+        isError: true,
       );
       return;
     }
 
     if (_selectedFrequency == UpdateFrequency.weekly) {
       if (_selectedTime == null || _selectedDayOfWeek == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.schedule_select_time_and_day)),
+        showTopFloatingNotice(
+          context,
+          message: l10n.schedule_select_time_and_day,
+          isError: true,
         );
         return;
       }
@@ -346,28 +382,35 @@ class _SubscriptionScheduleSettingsPageState
     );
 
     // Save
-    final success = await ref.read(scheduleConfigProvider.notifier).updateConfig(
-      widget.subscriptionId,
-      request,
-    );
+    final success = await ref
+        .read(scheduleConfigProvider.notifier)
+        .updateConfig(widget.subscriptionId, request);
 
     if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.schedule_settings_saved)),
-      );
+      showTopFloatingNotice(context, message: l10n.schedule_settings_saved);
       Navigator.of(context).pop();
     } else if (mounted) {
       final error = ref.read(scheduleConfigProvider).error;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${l10n.schedule_save_failed}: ${error ?? l10n.schedule_unknown_error}')),
+      showTopFloatingNotice(
+        context,
+        message:
+            '${l10n.schedule_save_failed}: ${error ?? l10n.schedule_unknown_error}',
+        isError: true,
       );
     }
   }
 
   String _dayOfWeekToString(int day, AppLocalizations l10n) {
     // Use localized day names
-    final days = [l10n.schedule_day_mon, l10n.schedule_day_tue, l10n.schedule_day_wed,
-                   l10n.schedule_day_thu, l10n.schedule_day_fri, l10n.schedule_day_sat, l10n.schedule_day_sun];
+    final days = [
+      l10n.schedule_day_mon,
+      l10n.schedule_day_tue,
+      l10n.schedule_day_wed,
+      l10n.schedule_day_thu,
+      l10n.schedule_day_fri,
+      l10n.schedule_day_sat,
+      l10n.schedule_day_sun,
+    ];
     return days[day - 1];
   }
 }

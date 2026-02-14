@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/schedule_config_model.dart';
 import '../providers/global_schedule_provider.dart';
 
@@ -8,7 +9,8 @@ class GlobalRSSSettingsPage extends ConsumerStatefulWidget {
   const GlobalRSSSettingsPage({super.key});
 
   @override
-  ConsumerState<GlobalRSSSettingsPage> createState() => _GlobalRSSSettingsPageState();
+  ConsumerState<GlobalRSSSettingsPage> createState() =>
+      _GlobalRSSSettingsPageState();
 }
 
 class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
@@ -99,7 +101,9 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
           _buildGlobalSettingsCard(theme, state.schedules.length),
           const SizedBox(height: 24),
           Text(
-            AppLocalizations.of(context)!.global_rss_affected_count(state.schedules.length),
+            AppLocalizations.of(
+              context,
+            )!.global_rss_affected_count(state.schedules.length),
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -153,7 +157,9 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        AppLocalizations.of(context)!.global_rss_apply_desc(subscriptionCount),
+                        AppLocalizations.of(
+                          context,
+                        )!.global_rss_apply_desc(subscriptionCount),
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -217,10 +223,15 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
                     border: const OutlineInputBorder(),
                     filled: true,
                     suffixIcon: const Icon(Icons.access_time),
-                    hintText: AppLocalizations.of(context)!.global_rss_select_time,
+                    hintText: AppLocalizations.of(
+                      context,
+                    )!.global_rss_select_time,
                   ),
                   child: Text(
-                    _selectedTime?.format(context) ?? AppLocalizations.of(context)!.global_rss_select_time_button,
+                    _selectedTime?.format(context) ??
+                        AppLocalizations.of(
+                          context,
+                        )!.global_rss_select_time_button,
                   ),
                 ),
               ),
@@ -237,7 +248,15 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
               SegmentedButton<int>(
                 segments: List.generate(7, (index) {
                   final l10n = AppLocalizations.of(context)!;
-                  final days = [l10n.global_rss_mon, l10n.global_rss_tue, l10n.global_rss_wed, l10n.global_rss_thu, l10n.global_rss_fri, l10n.global_rss_sat, l10n.global_rss_sun];
+                  final days = [
+                    l10n.global_rss_mon,
+                    l10n.global_rss_tue,
+                    l10n.global_rss_wed,
+                    l10n.global_rss_thu,
+                    l10n.global_rss_fri,
+                    l10n.global_rss_sat,
+                    l10n.global_rss_sun,
+                  ];
                   return ButtonSegment(
                     value: index + 1,
                     label: Text(days[index]),
@@ -266,7 +285,11 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
                         ),
                       )
                     : const Icon(Icons.check_circle),
-                label: Text(_isSaving ? AppLocalizations.of(context)!.global_rss_applying : AppLocalizations.of(context)!.global_rss_apply_all),
+                label: Text(
+                  _isSaving
+                      ? AppLocalizations.of(context)!.global_rss_applying
+                      : AppLocalizations.of(context)!.global_rss_apply_all,
+                ),
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -278,7 +301,10 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
     );
   }
 
-  Widget _buildSubscriptionsList(List<ScheduleConfigResponse> schedules, ThemeData theme) {
+  Widget _buildSubscriptionsList(
+    List<ScheduleConfigResponse> schedules,
+    ThemeData theme,
+  ) {
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -304,14 +330,13 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
                     '${schedule.updateTime != null ? " ${schedule.updateTime}" : ""}'
                     '${schedule.updateDayOfWeek != null ? " ${_getDayName(schedule.updateDayOfWeek!)}" : ""}',
                   ),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 if (schedule.nextUpdateAt != null)
                   Text(
-                    l10n.global_rss_next_label(schedule.nextUpdateDisplay ?? "-"),
+                    l10n.global_rss_next_label(
+                      schedule.nextUpdateDisplay ?? "-",
+                    ),
                     style: TextStyle(
                       fontSize: 12,
                       color: theme.colorScheme.primary,
@@ -327,7 +352,15 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
 
   String _getDayName(int day) {
     final l10n = AppLocalizations.of(context)!;
-    final days = [l10n.global_rss_mon, l10n.global_rss_tue, l10n.global_rss_wed, l10n.global_rss_thu, l10n.global_rss_fri, l10n.global_rss_sat, l10n.global_rss_sun];
+    final days = [
+      l10n.global_rss_mon,
+      l10n.global_rss_tue,
+      l10n.global_rss_wed,
+      l10n.global_rss_thu,
+      l10n.global_rss_fri,
+      l10n.global_rss_sat,
+      l10n.global_rss_sun,
+    ];
     return days[day - 1];
   }
 
@@ -348,16 +381,20 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
 
     final l10n = AppLocalizations.of(context);
     if (_selectedFrequency == UpdateFrequency.daily && _selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n!.podcast_please_select_time)),
+      showTopFloatingNotice(
+        context,
+        message: l10n!.podcast_please_select_time,
+        isError: true,
       );
       return;
     }
 
     if (_selectedFrequency == UpdateFrequency.weekly) {
       if (_selectedTime == null || _selectedDayOfWeek == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n!.podcast_please_select_time_and_day)),
+        showTopFloatingNotice(
+          context,
+          message: l10n!.podcast_please_select_time_and_day,
+          isError: true,
         );
         return;
       }
@@ -375,13 +412,17 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
       final state = ref.read(globalScheduleProvider);
       final allIds = state.schedules.map((s) => s.id).toList();
 
-      final success = await ref.read(globalScheduleProvider.notifier).batchUpdateSchedules(
+      final success = await ref
+          .read(globalScheduleProvider.notifier)
+          .batchUpdateSchedules(
             allIds,
             ScheduleConfigUpdateRequest(
               updateFrequency: _selectedFrequency!.value,
               updateTime: timeStr,
               updateDayOfWeek: _selectedDayOfWeek,
-              fetchInterval: _selectedFrequency == UpdateFrequency.hourly ? 3600 : null,
+              fetchInterval: _selectedFrequency == UpdateFrequency.hourly
+                  ? 3600
+                  : null,
             ),
           );
 
@@ -392,18 +433,17 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
 
         if (success) {
           final l10n = AppLocalizations.of(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n!.podcast_updated_subscriptions(allIds.length)),
-              backgroundColor: Colors.green,
-            ),
+          showTopFloatingNotice(
+            context,
+            message: l10n!.podcast_updated_subscriptions(allIds.length),
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.error ?? AppLocalizations.of(context)!.global_rss_failed_update),
-              backgroundColor: Colors.red,
-            ),
+          showTopFloatingNotice(
+            context,
+            message:
+                state.error ??
+                AppLocalizations.of(context)!.global_rss_failed_update,
+            isError: true,
           );
         }
       }
@@ -412,11 +452,10 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
         setState(() {
           _isSaving = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.error_prefix(e.toString())),
-            backgroundColor: Colors.red,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: AppLocalizations.of(context)!.error_prefix(e.toString()),
+          isError: true,
         );
       }
     }

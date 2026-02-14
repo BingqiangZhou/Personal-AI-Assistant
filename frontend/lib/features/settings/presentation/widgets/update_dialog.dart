@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/services/app_update_service.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/providers/app_update_provider.dart';
 
@@ -416,11 +417,10 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   void _showReleaseNotesLinkError() {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.update_download_failed),
-        backgroundColor: Theme.of(context).colorScheme.error,
-      ),
+    showTopFloatingNotice(
+      context,
+      message: l10n.update_download_failed,
+      isError: true,
     );
   }
 
@@ -448,22 +448,20 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
 
         if (!success && context.mounted) {
           final l10n = AppLocalizations.of(context)!;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.update_download_failed),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
+          showTopFloatingNotice(
+            context,
+            message: l10n.update_download_failed,
+            isError: true,
           );
         } else if (success && context.mounted) {
           // Download started, close dialog and show message
           final l10n = AppLocalizations.of(context)!;
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.downloading_in_background),
-              duration: const Duration(seconds: 5),
-            ),
+          showTopFloatingNotice(
+            context,
+            message: l10n.downloading_in_background,
+            duration: const Duration(seconds: 5),
           );
+          Navigator.of(context).pop();
         }
       } else {
         // Fallback to browser for other platforms
@@ -481,11 +479,10 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     } catch (e) {
       if (context.mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.update_download_failed}: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: '${l10n.update_download_failed}: $e',
+          isError: true,
         );
       }
     } finally {

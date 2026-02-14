@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_queue_model.dart';
 import '../providers/podcast_providers.dart';
 
@@ -167,13 +168,12 @@ class _QueueList extends ConsumerWidget {
         } catch (error) {
           if (context.mounted) {
             final l10n = AppLocalizations.of(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
+            showTopFloatingNotice(
+              context,
+              message:
                   l10n?.failed_to_reorder_queue(error.toString()) ??
-                      'Failed to reorder queue: $error',
-                ),
-              ),
+                  'Failed to reorder queue: $error',
+              isError: true,
             );
           }
         }
@@ -199,13 +199,12 @@ class _QueueList extends ConsumerWidget {
               } catch (error) {
                 if (context.mounted) {
                   final l10n = AppLocalizations.of(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
+                  showTopFloatingNotice(
+                    context,
+                    message:
                         l10n?.failed_to_play_item(error.toString()) ??
-                            'Failed to play item: $error',
-                      ),
-                    ),
+                        'Failed to play item: $error',
+                    isError: true,
                   );
                 }
               }
@@ -275,13 +274,12 @@ class _QueueList extends ConsumerWidget {
                       } catch (error) {
                         if (context.mounted) {
                           final l10n = AppLocalizations.of(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
+                          showTopFloatingNotice(
+                            context,
+                            message:
                                 l10n?.failed_to_remove_item(error.toString()) ??
-                                    'Failed to remove item: $error',
-                              ),
-                            ),
+                                'Failed to remove item: $error',
+                            isError: true,
                           );
                         }
                       }

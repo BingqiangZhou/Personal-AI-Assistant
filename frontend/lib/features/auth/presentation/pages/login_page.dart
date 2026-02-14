@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/app/config/app_config.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/core_providers.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../../../../shared/widgets/server_config_dialog.dart';
@@ -117,12 +117,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       } else if (next.error != null && next.error != previous?.error) {
         // Only show snackbar for new errors
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(next.error!),
-              backgroundColor: AppTheme.errorColor,
-            ),
-          );
+          showTopFloatingNotice(context, message: next.error!, isError: true);
         }
       }
     });

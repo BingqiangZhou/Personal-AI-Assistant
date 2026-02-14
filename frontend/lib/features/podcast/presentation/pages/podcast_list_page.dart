@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../core/utils/episode_description_helper.dart';
 import '../../data/models/podcast_search_model.dart';
 import '../../data/models/podcast_subscription_model.dart';
@@ -53,15 +54,12 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
   Future<void> _handleSubscribeFromSearch(PodcastSearchResult result) async {
     final l10n = AppLocalizations.of(context)!;
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     if (result.feedUrl == null || result.collectionName == null) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text(l10n.podcast_subscribe_failed('Invalid podcast data')),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          duration: const Duration(seconds: 3),
-        ),
+      showTopFloatingNotice(
+        context,
+        message: l10n.podcast_subscribe_failed('Invalid podcast data'),
+        isError: true,
       );
       return;
     }
@@ -72,23 +70,17 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           .addSubscription(feedUrl: result.feedUrl!);
 
       if (mounted) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              l10n.podcast_subscribe_success(result.collectionName!),
-            ),
-            duration: const Duration(seconds: 2),
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.podcast_subscribe_success(result.collectionName!),
         );
       }
     } catch (error) {
       if (mounted) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text(l10n.podcast_subscribe_failed(error.toString())),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            duration: const Duration(seconds: 3),
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.podcast_subscribe_failed(error.toString()),
+          isError: true,
         );
       }
     }
@@ -615,33 +607,34 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             );
 
             if (mounted) {
-              scaffoldMessenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    response.failedCount > 0
-                        ? l10n.podcast_bulk_delete_partial_success(
-                            response.successCount,
-                            response.failedCount,
-                          )
-                        : l10n.podcast_bulk_delete_success(
-                            response.successCount,
-                          ),
+              if (response.failedCount > 0) {
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      l10n.podcast_bulk_delete_partial_success(
+                        response.successCount,
+                        response.failedCount,
+                      ),
+                    ),
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    duration: const Duration(seconds: 3),
+                    action: SnackBarAction(
+                      label: l10n.podcast_view_errors,
+                      textColor: theme.colorScheme.error,
+                      onPressed: () {
+                        _showErrorDetailsDialog(context, response.errors);
+                      },
+                    ),
                   ),
-                  backgroundColor: response.failedCount > 0
-                      ? theme.colorScheme.surfaceContainerHighest
-                      : theme.colorScheme.primary,
-                  duration: const Duration(seconds: 3),
-                  action: response.failedCount > 0
-                      ? SnackBarAction(
-                          label: l10n.podcast_view_errors,
-                          textColor: theme.colorScheme.error,
-                          onPressed: () {
-                            _showErrorDetailsDialog(context, response.errors);
-                          },
-                        )
-                      : null,
-                ),
-              );
+                );
+              } else {
+                showTopFloatingNotice(
+                  context,
+                  message: l10n.podcast_bulk_delete_success(
+                    response.successCount,
+                  ),
+                );
+              }
             }
           } catch (error) {
             if (mounted) {

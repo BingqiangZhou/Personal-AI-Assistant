@@ -232,7 +232,7 @@ class TestPodcastQueueController extends PodcastQueueController {
   }
 
   @override
-  Future<PodcastQueueModel> loadQueue() async {
+  Future<PodcastQueueModel> loadQueue({bool forceRefresh = true}) async {
     state = AsyncValue.data(initialQueue);
     return initialQueue;
   }

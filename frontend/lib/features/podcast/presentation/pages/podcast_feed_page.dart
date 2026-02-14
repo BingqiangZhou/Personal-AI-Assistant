@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../navigation/podcast_navigation.dart';
@@ -83,17 +84,20 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           .addToQueue(episode.id);
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(
+        showTopFloatingNotice(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.added_to_queue)));
+          message: l10n.added_to_queue,
+          extraTopOffset: 64,
+        );
       }
     } catch (error) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.failed_to_add_to_queue(error.toString())),
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.failed_to_add_to_queue(error.toString()),
+          isError: true,
+          extraTopOffset: 64,
         );
       }
     }

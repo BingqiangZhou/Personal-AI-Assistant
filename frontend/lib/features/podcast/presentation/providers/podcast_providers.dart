@@ -1076,31 +1076,96 @@ final podcastQueueControllerProvider =
 
 class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
   late PodcastRepository _repository;
+  Future<PodcastQueueModel>? _inFlightQueueLoad;
+  DateTime? _lastQueueRefreshAt;
+  static const Duration _queueRefreshThrottle = Duration(seconds: 20);
 
   @override
   FutureOr<PodcastQueueModel> build() async {
     _repository = ref.read(podcastRepositoryProvider);
     try {
-      final queue = await _repository.getQueue();
-      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
-      return queue;
+      return await _loadQueueInternal(
+        forceRefresh: false,
+        trackSyncing: false,
+        setErrorStateOnFailure: false,
+      );
     } catch (_) {
       return PodcastQueueModel.empty();
     }
   }
 
-  Future<PodcastQueueModel> loadQueue() async {
-    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+  bool _hasFreshQueueState() {
+    if (_lastQueueRefreshAt == null) {
+      return false;
+    }
+    return DateTime.now().difference(_lastQueueRefreshAt!) <
+        _queueRefreshThrottle;
+  }
+
+  void _applyQueue(PodcastQueueModel queue) {
+    state = AsyncValue.data(queue);
+    _lastQueueRefreshAt = DateTime.now();
+    ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+  }
+
+  Future<PodcastQueueModel> _loadQueueInternal({
+    required bool forceRefresh,
+    bool trackSyncing = true,
+    bool setErrorStateOnFailure = true,
+  }) {
+    final inFlight = _inFlightQueueLoad;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final cachedQueue = state.value;
+    if (!forceRefresh && cachedQueue != null && _hasFreshQueueState()) {
+      return Future.value(cachedQueue);
+    }
+
+    if (trackSyncing) {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    }
+
+    final loadFuture = () async {
+      try {
+        final queue = await _repository.getQueue();
+        _applyQueue(queue);
+        return queue;
+      } catch (error, stackTrace) {
+        if (setErrorStateOnFailure || state.value == null) {
+          state = AsyncValue.error(error, stackTrace);
+        }
+        rethrow;
+      } finally {
+        _inFlightQueueLoad = null;
+        if (trackSyncing) {
+          ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+        }
+      }
+    }();
+
+    _inFlightQueueLoad = loadFuture;
+    return loadFuture;
+  }
+
+  Future<PodcastQueueModel> loadQueue({bool forceRefresh = true}) async {
+    return _loadQueueInternal(
+      forceRefresh: forceRefresh,
+      trackSyncing: true,
+      setErrorStateOnFailure: true,
+    );
+  }
+
+  Future<void> refreshQueueInBackground() async {
     try {
-      final queue = await _repository.getQueue();
-      state = AsyncValue.data(queue);
-      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
-      return queue;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
-    } finally {
-      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+      await _loadQueueInternal(
+        forceRefresh: false,
+        trackSyncing: false,
+        setErrorStateOnFailure: false,
+      );
+    } catch (_) {
+      // Keep existing queue UI state when background refresh fails.
     }
   }
 
@@ -1108,8 +1173,7 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
     ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
     try {
       final queue = await _repository.addQueueItem(episodeId);
-      state = AsyncValue.data(queue);
-      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+      _applyQueue(queue);
       return queue;
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -1123,8 +1187,7 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
     ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
     try {
       final queue = await _repository.removeQueueItem(episodeId);
-      state = AsyncValue.data(queue);
-      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+      _applyQueue(queue);
       return queue;
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -1138,8 +1201,7 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
     ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
     try {
       final queue = await _repository.reorderQueueItems(episodeIds);
-      state = AsyncValue.data(queue);
-      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+      _applyQueue(queue);
       return queue;
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -1153,8 +1215,7 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
     ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
     try {
       final queue = await _repository.setQueueCurrent(episodeId);
-      state = AsyncValue.data(queue);
-      ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+      _applyQueue(queue);
       return queue;
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -1187,8 +1248,7 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
 
   Future<PodcastQueueModel> onQueueTrackCompleted() async {
     final queue = await _repository.completeQueueCurrent();
-    state = AsyncValue.data(queue);
-    ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+    _applyQueue(queue);
     return queue;
   }
 }

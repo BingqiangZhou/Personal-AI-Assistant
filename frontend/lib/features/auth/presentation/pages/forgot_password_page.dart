@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -27,9 +28,9 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
   void _submitForgotPassword() {
     if (_formKey.currentState!.validate()) {
-      ref.read(authProvider.notifier).forgotPassword(
-        _emailController.text.trim(),
-      );
+      ref
+          .read(authProvider.notifier)
+          .forgotPassword(_emailController.text.trim());
     }
   }
 
@@ -40,19 +41,16 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     final isLoading = authState.isLoading;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (!isLoading && !next.isLoading && next.error == null &&
+      if (!isLoading &&
+          !next.isLoading &&
+          next.error == null &&
           next.currentOperation == AuthOperation.forgotPassword) {
         // Success - email sent
         setState(() {
           _emailSent = true;
         });
       } else if (next.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        showTopFloatingNotice(context, message: next.error!, isError: true);
       }
     });
 
@@ -87,7 +85,9 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Icon(
@@ -99,17 +99,20 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                           const SizedBox(height: 16),
                           Text(
                             l10n.auth_forgot_password,
-                            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             l10n.auth_reset_password_subtitle,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.7),
+                                ),
                             textAlign: TextAlign.center,
                           ),
                         ],
@@ -177,25 +180,30 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                           const SizedBox(height: 16),
                           Text(
                             l10n.auth_reset_email_sent,
-                            style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.green,
-                            ),
+                            style: Theme.of(context).textTheme.headlineLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             'We\'ve sent a password reset link to\n${_emailController.text.trim()}',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.7),
+                                ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'Please check your email and click the link to reset your password',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.6),
+                                ),
                             textAlign: TextAlign.center,
                           ),
                         ],

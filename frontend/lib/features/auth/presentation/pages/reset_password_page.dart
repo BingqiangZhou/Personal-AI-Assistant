@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -31,7 +32,10 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
     // Check if token is provided
     if (widget.token == null || widget.token!.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showErrorDialog('Invalid reset link. Please request a new password reset.', context);
+        _showErrorDialog(
+          'Invalid reset link. Please request a new password reset.',
+          context,
+        );
       });
     }
   }
@@ -66,14 +70,19 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
   void _submitResetPassword() {
     if (_formKey.currentState!.validate()) {
       if (widget.token == null || widget.token!.isEmpty) {
-        _showErrorDialog('Invalid reset link. Please request a new password reset.', context);
+        _showErrorDialog(
+          'Invalid reset link. Please request a new password reset.',
+          context,
+        );
         return;
       }
 
-      ref.read(authProvider.notifier).resetPassword(
-        token: widget.token!,
-        newPassword: _passwordController.text,
-      );
+      ref
+          .read(authProvider.notifier)
+          .resetPassword(
+            token: widget.token!,
+            newPassword: _passwordController.text,
+          );
     }
   }
 
@@ -89,19 +98,16 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
     final isLoading = authState.isLoading;
 
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (!isLoading && !next.isLoading && next.error == null &&
+      if (!isLoading &&
+          !next.isLoading &&
+          next.error == null &&
           next.currentOperation == AuthOperation.resetPassword) {
         // Success - password reset
         setState(() {
           _passwordReset = true;
         });
       } else if (next.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ),
-        );
+        showTopFloatingNotice(context, message: next.error!, isError: true);
       }
     });
 
@@ -140,7 +146,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                   Text(
                     'Your password has been successfully reset. You can now login with your new password.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -192,7 +200,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                           width: 80,
                           height: 80,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Icon(
@@ -204,17 +214,21 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                         const SizedBox(height: 16),
                         Text(
                           l10n.auth_set_new_password,
-                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
+                          style: Theme.of(context).textTheme.headlineLarge
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Your new password must be different from\nprevious used passwords',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -231,7 +245,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -260,7 +276,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -290,9 +308,8 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                         children: [
                           Text(
                             l10n.auth_password_requirements_title,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 8),
                           PasswordRequirementItem(

@@ -8,12 +8,13 @@ import 'package:xml/xml.dart';
 import 'package:dio/dio.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
 /// Model to represent URL validation status
 class UrlValidationItem {
   String url;
-  final String? title;  // Optional title from OPML file
+  final String? title; // Optional title from OPML file
   bool isValid;
   bool isChecking;
   String? errorMessage;
@@ -32,36 +33,31 @@ class UrlWithTitle {
   final String url;
   final String? title;
 
-  UrlWithTitle({
-    required this.url,
-    this.title,
-  });
+  UrlWithTitle({required this.url, this.title});
 }
 
 class BulkImportDialog extends StatefulWidget {
   final Future<void> Function(List<String> urls) onImport;
 
-  const BulkImportDialog({
-    super.key,
-    required this.onImport,
-  });
+  const BulkImportDialog({super.key, required this.onImport});
 
   @override
   State<BulkImportDialog> createState() => _BulkImportDialogState();
 }
 
-class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerProviderStateMixin {
+class _BulkImportDialogState extends State<BulkImportDialog>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _textController = TextEditingController();
   List<String> _previewUrls = [];
   List<UrlValidationItem> _validationItems = [];
   bool _isImporting = false;
   bool _isDragging = false;
-  
+
   // UI State
   bool _isInputExpanded = true;
   int _selectedFilterIndex = 0; // 0: Valid, 1: Invalid
-  
+
   final Dio _dio = Dio();
 
   @override
@@ -102,8 +98,10 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
     if (urls.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.podcast_bulk_import_no_urls_text)),
+        showTopFloatingNotice(
+          context,
+          message: l10n.podcast_bulk_import_no_urls_text,
+          isError: true,
         );
       }
       return;
@@ -121,17 +119,19 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       });
 
       final validCount = _validationItems.where((item) => item.isValid).length;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.podcast_bulk_import_links_found(urls.length, validCount)),
-          duration: const Duration(seconds: 3),
-        ),
+      showTopFloatingNotice(
+        context,
+        message: l10n.podcast_bulk_import_links_found(urls.length, validCount),
       );
     }
   }
 
   List<String> _extractUrls(String content) {
-    final urls = _urlRegex.allMatches(content).map((m) => m.group(0)!.trim()).toSet().toList();
+    final urls = _urlRegex
+        .allMatches(content)
+        .map((m) => m.group(0)!.trim())
+        .toSet()
+        .toList();
     return urls;
   }
 
@@ -160,16 +160,15 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
         }
 
         // Extract title from title attribute (not text)
-        feedTitle = outline.getAttribute('title') ??
-                    outline.getAttribute('xmlUrl');
+        feedTitle =
+            outline.getAttribute('title') ?? outline.getAttribute('xmlUrl');
 
-        urlsWithTitles.add(UrlWithTitle(
-          url: feedUrl,
-          title: feedTitle,
-        ));
+        urlsWithTitles.add(UrlWithTitle(url: feedUrl, title: feedTitle));
       }
 
-      logger.AppLogger.debug('== OPML parsing: found ${urlsWithTitles.length} RSS feeds with titles ==');
+      logger.AppLogger.debug(
+        '== OPML parsing: found ${urlsWithTitles.length} RSS feeds with titles ==',
+      );
     } catch (e) {
       logger.AppLogger.debug('Error parsing OPML: $e');
       // If OPML parsing fails, fall back to regex extraction (without titles)
@@ -195,20 +194,22 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
           responseType: ResponseType.plain,
           sendTimeout: const Duration(seconds: 5),
           receiveTimeout: const Duration(seconds: 5),
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Compatible; RSS Reader)',
-          },
+          headers: {'User-Agent': 'Mozilla/5.0 (Compatible; RSS Reader)'},
         ),
       );
 
       final content = response.data.toString().toLowerCase();
 
       // Check for RSS/Atom feed indicators
-      final hasRssTag = content.contains('<rss') || content.contains('<rdf:rdf');
-      final hasAtomTag = content.contains('<feed') || content.contains('<entry>');
+      final hasRssTag =
+          content.contains('<rss') || content.contains('<rdf:rdf');
+      final hasAtomTag =
+          content.contains('<feed') || content.contains('<entry>');
       final hasXmlDecl = content.contains('<?xml');
 
-      return hasRssTag || hasAtomTag || (hasXmlDecl && (hasRssTag || hasAtomTag));
+      return hasRssTag ||
+          hasAtomTag ||
+          (hasXmlDecl && (hasRssTag || hasAtomTag));
     } catch (e) {
       logger.AppLogger.debug('Error validating RSS URL $url: $e');
       return false;
@@ -219,7 +220,9 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
   Future<void> _validateUrls(List<String> urls, {bool append = false}) async {
     final l10n = AppLocalizations.of(context)!;
     // Remove duplicates from new URLs
-    final existingUrls = _validationItems.map((item) => item.url.trim()).toSet();
+    final existingUrls = _validationItems
+        .map((item) => item.url.trim())
+        .toSet();
     final newUrls = urls
         .map((u) => u.trim())
         .where((url) => !existingUrls.contains(url))
@@ -228,12 +231,11 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
     if (newUrls.isEmpty) {
       if (mounted && append) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.podcast_bulk_import_urls_exist),
-            duration: Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.podcast_bulk_import_urls_exist,
+          isError: true,
+          duration: const Duration(seconds: 2),
         );
       }
       return;
@@ -258,10 +260,15 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
   }
 
   /// Validate all URLs with titles and update the validation items
-  Future<void> _validateUrlsWithTitles(List<UrlWithTitle> urlsWithTitles, {bool append = false}) async {
+  Future<void> _validateUrlsWithTitles(
+    List<UrlWithTitle> urlsWithTitles, {
+    bool append = false,
+  }) async {
     final l10n = AppLocalizations.of(context)!;
     // Remove duplicates from new URLs
-    final existingUrls = _validationItems.map((item) => item.url.trim()).toSet();
+    final existingUrls = _validationItems
+        .map((item) => item.url.trim())
+        .toSet();
     final newUrlsWithTitles = urlsWithTitles
         .where((item) => !existingUrls.contains(item.url.trim()))
         .toList(); // Should also dedupe within itself
@@ -275,20 +282,21 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
     if (finalizedNewItems.isEmpty) {
       if (mounted && append) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.podcast_bulk_import_urls_exist),
-            duration: Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.podcast_bulk_import_urls_exist,
+          isError: true,
+          duration: const Duration(seconds: 2),
         );
       }
       return;
     }
 
-    final items = finalizedNewItems.map((item) =>
-      UrlValidationItem(url: item.url.trim(), title: item.title)
-    ).toList();
+    final items = finalizedNewItems
+        .map(
+          (item) => UrlValidationItem(url: item.url.trim(), title: item.title),
+        )
+        .toList();
     final newUrls = finalizedNewItems.map((item) => item.url.trim()).toList();
 
     setState(() {
@@ -303,22 +311,22 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
     _startValidation(items);
   }
-  
+
   void _startValidation(List<UrlValidationItem> items) async {
     // Validate each URL in parallel with concurrency limit
     final futures = <Future<void>>[];
     const concurrencyLimit = 5;
 
     for (var i = 0; i < items.length; i++) {
-        if (futures.length >= concurrencyLimit) {
-            await Future.wait(futures);
-            futures.clear();
-        }
-        final item = items[i];
-        futures.add(_validateSingleUrl(item));
+      if (futures.length >= concurrencyLimit) {
+        await Future.wait(futures);
+        futures.clear();
+      }
+      final item = items[i];
+      futures.add(_validateSingleUrl(item));
     }
     if (futures.isNotEmpty) {
-        await Future.wait(futures);
+      await Future.wait(futures);
     }
     setState(() {}); // Trigger rebuild after batch
   }
@@ -330,8 +338,8 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
     // Optimistic update if re-validating
     setState(() {
-        item.isChecking = true;
-        item.errorMessage = null;
+      item.isChecking = true;
+      item.errorMessage = null;
     });
 
     final isValid = await _validateRssUrl(item.url);
@@ -375,12 +383,12 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
     );
 
     if (result != null && result.isNotEmpty && result != item.url) {
-       // Check duplication with OTHER items?
-       // For now, let's just update this one.
-       setState(() {
-         item.url = result;
-       });
-       await _validateSingleUrl(item);
+      // Check duplication with OTHER items?
+      // For now, let's just update this one.
+      setState(() {
+        item.url = result;
+      });
+      await _validateSingleUrl(item);
     }
   }
 
@@ -400,8 +408,10 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
         if (urlsWithTitles.isEmpty) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.podcast_bulk_import_no_urls_file)),
+            showTopFloatingNotice(
+              context,
+              message: l10n.podcast_bulk_import_no_urls_file,
+              isError: true,
             );
           }
           return;
@@ -414,11 +424,14 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
           setState(() {
             _isInputExpanded = false;
           });
-          final validCount = _validationItems.where((item) => item.isValid).length;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.podcast_bulk_import_links_found(urlsWithTitles.length, validCount)),
-              duration: const Duration(seconds: 3),
+          final validCount = _validationItems
+              .where((item) => item.isValid)
+              .length;
+          showTopFloatingNotice(
+            context,
+            message: l10n.podcast_bulk_import_links_found(
+              urlsWithTitles.length,
+              validCount,
             ),
           );
         }
@@ -428,8 +441,10 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
         if (urls.isEmpty) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.podcast_bulk_import_no_urls_file)),
+            showTopFloatingNotice(
+              context,
+              message: l10n.podcast_bulk_import_no_urls_file,
+              isError: true,
             );
           }
           return;
@@ -442,11 +457,14 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
           setState(() {
             _isInputExpanded = false;
           });
-          final validCount = _validationItems.where((item) => item.isValid).length;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.podcast_bulk_import_links_found(urls.length, validCount)),
-              duration: const Duration(seconds: 3),
+          final validCount = _validationItems
+              .where((item) => item.isValid)
+              .length;
+          showTopFloatingNotice(
+            context,
+            message: l10n.podcast_bulk_import_links_found(
+              urls.length,
+              validCount,
             ),
           );
         }
@@ -454,8 +472,10 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
     } catch (e) {
       logger.AppLogger.debug('Error reading file: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.podcast_bulk_import_file_error(e.toString())), backgroundColor: Colors.red),
+        showTopFloatingNotice(
+          context,
+          message: l10n.podcast_bulk_import_file_error(e.toString()),
+          isError: true,
         );
       }
     }
@@ -488,12 +508,10 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
     if (validUrls.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.podcast_bulk_import_no_valid_feeds),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 3),
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.podcast_bulk_import_no_valid_feeds,
+          isError: true,
         );
       }
       return;
@@ -507,14 +525,17 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       await widget.onImport(validUrls);
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.podcast_bulk_import_imported_count(validUrls.length))),
+        showTopFloatingNotice(
+          context,
+          message: l10n.podcast_bulk_import_imported_count(validUrls.length),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.podcast_bulk_import_failed(e.toString())), backgroundColor: Colors.red),
+        showTopFloatingNotice(
+          context,
+          message: l10n.podcast_bulk_import_failed(e.toString()),
+          isError: true,
         );
       }
     } finally {
@@ -541,12 +562,18 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
 
   Widget _buildFilterTabs() {
     final l10n = AppLocalizations.of(context)!;
-    final validCount = _validationItems.where((item) => item.isValid || item.isChecking).length;
-    final invalidCount = _validationItems.where((item) => !item.isValid && !item.isChecking).length;
+    final validCount = _validationItems
+        .where((item) => item.isValid || item.isChecking)
+        .length;
+    final invalidCount = _validationItems
+        .where((item) => !item.isValid && !item.isChecking)
+        .length;
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(4),
@@ -591,7 +618,9 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant,
+            color: isSelected
+                ? Colors.white
+                : Theme.of(context).colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w600,
             fontSize: 13,
           ),
@@ -613,9 +642,12 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
         decoration: BoxDecoration(
           border: Border.all(
             color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-            style: BorderStyle.none, // We'll rely on the background color mostly or use dashed border if we could
+            style: BorderStyle
+                .none, // We'll rely on the background color mostly or use dashed border if we could
           ),
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+          color: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
         ),
         // Dashed border effect can be achieved with CustomPainter, but for simplicity we use simple border or look
@@ -626,11 +658,16 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.upload_file, color: Theme.of(context).colorScheme.primary),
+                Icon(
+                  Icons.upload_file,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
                 RichText(
                   text: TextSpan(
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
                     children: [
                       TextSpan(text: l10n.podcast_bulk_import_drag_drop),
                       TextSpan(
@@ -672,7 +709,9 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
     return Container(
       margin: const EdgeInsets.only(bottom: 2), // More compact margin
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(6), // Smaller radius
         border: Border.all(
           color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
@@ -680,8 +719,16 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       ),
       child: ListTile(
         dense: true,
-        visualDensity: const VisualDensity(horizontal: 0, vertical: -4), // Compact density
-        contentPadding: const EdgeInsets.fromLTRB(8, 0, 4, 0), // More compact padding
+        visualDensity: const VisualDensity(
+          horizontal: 0,
+          vertical: -4,
+        ), // Compact density
+        contentPadding: const EdgeInsets.fromLTRB(
+          8,
+          0,
+          4,
+          0,
+        ), // More compact padding
         leading: Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
@@ -732,7 +779,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
             ),
             const SizedBox(width: 4),
             if (!isValid && !isChecking)
-               IconButton(
+              IconButton(
                 icon: const Icon(Icons.edit, color: Colors.blue, size: 14),
                 onPressed: () => _showEditUrlDialog(item),
                 tooltip: l10n.podcast_edit_retry,
@@ -741,23 +788,27 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                 splashRadius: 16,
               )
             else
-               IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.grey, size: 14),
+              IconButton(
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: Colors.grey,
+                  size: 14,
+                ),
                 onPressed: () {
-                   setState(() {
-                     final originalIndex = _validationItems.indexOf(item);
-                     if (originalIndex != -1) {
-                       _validationItems.removeAt(originalIndex);
-                       // Update _previewUrls as well
-                       if (_previewUrls.contains(item.url)) {
-                         _previewUrls.remove(item.url);
-                       }
+                  setState(() {
+                    final originalIndex = _validationItems.indexOf(item);
+                    if (originalIndex != -1) {
+                      _validationItems.removeAt(originalIndex);
+                      // Update _previewUrls as well
+                      if (_previewUrls.contains(item.url)) {
+                        _previewUrls.remove(item.url);
+                      }
 
-                       if (_validationItems.isEmpty && !_isInputExpanded) {
-                         _isInputExpanded = true;
-                       }
-                     }
-                   });
+                      if (_validationItems.isEmpty && !_isInputExpanded) {
+                        _isInputExpanded = true;
+                      }
+                    }
+                  });
                 },
                 tooltip: l10n.podcast_remove,
                 padding: EdgeInsets.zero,
@@ -775,12 +826,10 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
     final text = (title != null && title.isNotEmpty) ? '$title - $url' : url;
     await Clipboard.setData(ClipboardData(text: text));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.podcast_copied(text)),
-          duration: const Duration(seconds: 1),
-          behavior: SnackBarBehavior.floating,
-        ),
+      showTopFloatingNotice(
+        context,
+        message: l10n.podcast_copied(text),
+        duration: const Duration(seconds: 1),
       );
     }
   }
@@ -788,7 +837,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Filter items based on selection
     final filteredItems = _validationItems.where((item) {
       if (_selectedFilterIndex == 0) {
@@ -814,10 +863,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       child: Dialog(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        insetPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 24,
-        ),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Center(
           child: Container(
             width: 600,
@@ -827,12 +873,18 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                   ? Theme.of(context).primaryColor.withValues(alpha: 0.15)
                   : Theme.of(context).colorScheme.surface,
               border: Border.all(
-                color: _isDragging ? Theme.of(context).primaryColor : Colors.transparent,
+                color: _isDragging
+                    ? Theme.of(context).primaryColor
+                    : Colors.transparent,
                 width: 2,
               ),
               borderRadius: BorderRadius.circular(24),
               boxShadow: const [
-                BoxShadow(color: Colors.black26, blurRadius: 16, offset: Offset(0, 8)),
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 16,
+                  offset: Offset(0, 8),
+                ),
               ],
             ),
             padding: const EdgeInsets.all(20),
@@ -855,17 +907,28 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                       // Input Tabs aligned to the right of title
                       Container(
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest
+                              .withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.3),
                           ),
                         ),
                         padding: const EdgeInsets.all(3),
                         child: Row(
                           children: [
-                            _buildInputTab(l10n.podcast_bulk_import_input_text, 0),
-                            _buildInputTab(l10n.podcast_bulk_import_input_file, 1),
+                            _buildInputTab(
+                              l10n.podcast_bulk_import_input_text,
+                              0,
+                            ),
+                            _buildInputTab(
+                              l10n.podcast_bulk_import_input_file,
+                              1,
+                            ),
                           ],
                         ),
                       ),
@@ -885,7 +948,9 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                     Container(
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: Theme.of(context).colorScheme.primary,
@@ -896,7 +961,11 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                       child: Center(
                         child: Column(
                           children: [
-                            Icon(Icons.file_upload, size: 48, color: Theme.of(context).colorScheme.primary),
+                            Icon(
+                              Icons.file_upload,
+                              size: 48,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               l10n.drop_files_here,
@@ -915,7 +984,8 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                       height: 180,
                       child: TabBarView(
                         controller: _tabController,
-                        physics: const NeverScrollableScrollPhysics(), // Prevent swiping
+                        physics:
+                            const NeverScrollableScrollPhysics(), // Prevent swiping
                         children: [
                           // Tab 0: Paste Text
                           Column(
@@ -931,8 +1001,11 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     filled: true,
-                                    fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
-                                    hintText: l10n.podcast_bulk_import_paste_hint,
+                                    fillColor: Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerLow,
+                                    hintText:
+                                        l10n.podcast_bulk_import_paste_hint,
                                     contentPadding: const EdgeInsets.all(12),
                                   ),
                                 ),
@@ -942,7 +1015,10 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                                 alignment: Alignment.centerRight,
                                 child: FilledButton.icon(
                                   onPressed: _analyzeText,
-                                  icon: const Icon(Icons.auto_awesome, size: 18),
+                                  icon: const Icon(
+                                    Icons.auto_awesome,
+                                    size: 18,
+                                  ),
                                   label: Text(l10n.podcast_bulk_import_extract),
                                   style: FilledButton.styleFrom(
                                     visualDensity: VisualDensity.compact,
@@ -954,9 +1030,13 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                           // Tab 1: File Upload
                           Container(
                             decoration: BoxDecoration(
-                              border: Border.all(color: Theme.of(context).dividerColor),
+                              border: Border.all(
+                                color: Theme.of(context).dividerColor,
+                              ),
                               borderRadius: BorderRadius.circular(12),
-                              color: Theme.of(context).colorScheme.surfaceContainerLow,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerLow,
                             ),
                             child: InkWell(
                               onTap: _pickFile,
@@ -965,18 +1045,31 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.folder_open, size: 40, color: Theme.of(context).colorScheme.primary),
+                                    Icon(
+                                      Icons.folder_open,
+                                      size: 40,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                                     const SizedBox(height: 12),
                                     Text(
                                       l10n.podcast_bulk_import_click_select,
-                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                        color: Theme.of(context).colorScheme.primary,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                          ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       l10n.podcast_bulk_import_or_drag_drop,
-                                      style: Theme.of(context).textTheme.bodySmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
                                   ],
                                 ),
@@ -989,7 +1082,7 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                   else
                     // Collapsed Input
                     _buildCompressedInput(),
-                    
+
                   if (_validationItems.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     _buildFilterTabs(),
@@ -1001,11 +1094,16 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                     const SizedBox(height: 8),
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.only(right: 4), // Space for scrollbar
+                        padding: const EdgeInsets.only(
+                          right: 4,
+                        ), // Space for scrollbar
                         child: ListView.builder(
                           itemCount: filteredItems.length,
                           itemBuilder: (context, index) {
-                            return _buildUrlListItem(filteredItems[index], index);
+                            return _buildUrlListItem(
+                              filteredItems[index],
+                              index,
+                            );
                           },
                         ),
                       ),
@@ -1020,20 +1118,32 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
                         ),
                         const SizedBox(width: 12),
                         FilledButton(
-                          onPressed: _hasValidUrls() && !_isImporting ? _import : null,
+                          onPressed: _hasValidUrls() && !_isImporting
+                              ? _import
+                              : null,
                           style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
                           ),
                           child: _isImporting
-                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
                               : Text(_getImportButtonText()),
                         ),
                       ],
                     ),
                   ] else if (!_isInputExpanded) ...[
-                     // This state shouldn't theoretically happen if logic is correct (collapsed only if items exist),
-                     // but as a fallback:
-                     Expanded(child: Center(child: Text(l10n.podcast_no_items)))
+                    // This state shouldn't theoretically happen if logic is correct (collapsed only if items exist),
+                    // but as a fallback:
+                    Expanded(child: Center(child: Text(l10n.podcast_no_items))),
                   ],
                 ],
               ),
@@ -1058,18 +1168,30 @@ class _BulkImportDialogState extends State<BulkImportDialog> with SingleTickerPr
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
-          boxShadow: isSelected ? [
-            BoxShadow(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2)),
-          ] : null,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           text,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurfaceVariant,
+            color: isSelected
+                ? Theme.of(context).colorScheme.onPrimary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       ),
@@ -1082,7 +1204,12 @@ class DottedBorderWidget extends StatelessWidget {
   final Color color;
   final double radius;
 
-  const DottedBorderWidget({super.key, required this.child, required this.color, required this.radius});
+  const DottedBorderWidget({
+    super.key,
+    required this.child,
+    required this.color,
+    required this.radius,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1107,17 +1234,19 @@ class _DottedBorderPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        Radius.circular(radius),
-      ));
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(0, 0, size.width, size.height),
+          Radius.circular(radius),
+        ),
+      );
 
     // Simple implementation for dotted effect
     final dashPath = Path();
     double dashWidth = 5.0;
     double dashSpace = 5.0;
     double distance = 0.0;
-    
+
     for (PathMetric pathMetric in path.computeMetrics()) {
       while (distance < pathMetric.length) {
         dashPath.addPath(

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 
 import '../providers/podcast_providers.dart';
 import '../providers/transcription_providers.dart';
@@ -272,8 +273,7 @@ class _PodcastEpisodeDetailPageState
     );
     final shouldHideOnTranscriptOrSummary =
         isTranscriptOrSummaryTab && isPlayerCollapsed && !_isHeaderExpanded;
-    final hideBottomPlayer =
-        isChatTab || shouldHideOnTranscriptOrSummary;
+    final hideBottomPlayer = isChatTab || shouldHideOnTranscriptOrSummary;
     final isMobileLayout = MediaQuery.of(context).size.width < 600;
 
     // Listen to transcription status changes to provide user feedback
@@ -284,58 +284,24 @@ class _PodcastEpisodeDetailPageState
       if (nextData != null && prevData != null) {
         // Only notify if status changed from something else to processing or if we just started
         if (nextData.isProcessing && !prevData.isProcessing) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    AppLocalizations.of(
-                      context,
-                    )!.podcast_transcription_processing,
-                  ),
-                ],
-              ),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              duration: const Duration(seconds: 2),
-            ),
+          showTopFloatingNotice(
+            context,
+            message: AppLocalizations.of(
+              context,
+            )!.podcast_transcription_processing,
+            extraTopOffset: 72,
           );
         }
       } else if (nextData != null &&
           prevData == null &&
           nextData.isProcessing) {
         // Auto-start case
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  AppLocalizations.of(
-                    context,
-                  )!.podcast_transcription_auto_starting,
-                ),
-              ],
-            ),
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            duration: const Duration(seconds: 3),
-          ),
+        showTopFloatingNotice(
+          context,
+          message: AppLocalizations.of(
+            context,
+          )!.podcast_transcription_auto_starting,
+          extraTopOffset: 72,
         );
       }
     });
@@ -357,7 +323,10 @@ class _PodcastEpisodeDetailPageState
             data: (episodeDetail) {
               if (episodeDetail == null) {
                 final l10n = AppLocalizations.of(context)!;
-                return _buildErrorState(context, l10n.podcast_episode_not_found);
+                return _buildErrorState(
+                  context,
+                  l10n.podcast_episode_not_found,
+                );
               }
               _trackEpisodeViewOnce(episodeDetail);
               return _buildNewLayout(
@@ -445,7 +414,9 @@ class _PodcastEpisodeDetailPageState
                               children: [
                                 NotificationListener<ScrollNotification>(
                                   onNotification: (scrollNotification) {
-                                    _handleAutoCollapseOnRead(scrollNotification);
+                                    _handleAutoCollapseOnRead(
+                                      scrollNotification,
+                                    );
                                     if (scrollNotification
                                         is ScrollUpdateNotification) {
                                       final metrics =
@@ -1102,19 +1073,20 @@ class _PodcastEpisodeDetailPageState
                   .addToQueue(widget.episodeId);
               if (mounted) {
                 final l10n = AppLocalizations.of(context)!;
-                ScaffoldMessenger.of(
+                showTopFloatingNotice(
                   context,
-                ).showSnackBar(SnackBar(content: Text(l10n.added_to_queue)));
+                  message: l10n.added_to_queue,
+                  extraTopOffset: 72,
+                );
               }
             } catch (error) {
               if (mounted) {
                 final l10n = AppLocalizations.of(context)!;
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      l10n.failed_to_add_to_queue(error.toString()),
-                    ),
-                  ),
+                showTopFloatingNotice(
+                  context,
+                  message: l10n.failed_to_add_to_queue(error.toString()),
+                  isError: true,
+                  extraTopOffset: 72,
                 );
               }
             }
@@ -1629,13 +1601,16 @@ class _PodcastEpisodeDetailPageState
     );
   }
 
-  void _showShareErrorSnackBar(String message) {
+  void _showShareErrorNotice(String message) {
     if (!mounted) {
       return;
     }
-    ScaffoldMessenger.of(
+    showTopFloatingNotice(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+      message: message,
+      isError: true,
+      extraTopOffset: 72,
+    );
   }
 
   Future<void> _shareSelectedSummaryAsImage(
@@ -1659,7 +1634,7 @@ class _PodcastEpisodeDetailPageState
         ),
       );
     } on ContentImageShareException catch (e) {
-      _showShareErrorSnackBar(e.message);
+      _showShareErrorNotice(e.message);
     }
   }
 
@@ -1680,7 +1655,7 @@ class _PodcastEpisodeDetailPageState
         ),
       );
     } on ContentImageShareException catch (e) {
-      _showShareErrorSnackBar(e.message);
+      _showShareErrorNotice(e.message);
     }
   }
 
@@ -2244,8 +2219,7 @@ class _PodcastEpisodeDetailPageState
 
     final rightMargin = isMobile ? 32.0 : (screenSize.width * 0.1);
     final bottomMargin =
-        (isMobile ? (screenSize.height * 0.1) : 32.0) +
-        _scrollToTopFixedLift;
+        (isMobile ? (screenSize.height * 0.1) : 32.0) + _scrollToTopFixedLift;
 
     return Padding(
       key: const Key('podcast_episode_detail_scroll_to_top_button'),

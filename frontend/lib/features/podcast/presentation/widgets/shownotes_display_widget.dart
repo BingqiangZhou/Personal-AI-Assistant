@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 
 import '../../data/models/podcast_episode_model.dart';
 import '../../core/utils/html_sanitizer.dart';
@@ -132,11 +133,10 @@ class ShownotesDisplayWidgetState
                   } catch (e) {
                     if (context.mounted) {
                       final l10n = AppLocalizations.of(context)!;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.error_opening_link(e.toString())),
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                        ),
+                      showTopFloatingNotice(
+                        context,
+                        message: l10n.error_opening_link(e.toString()),
+                        isError: true,
                       );
                     }
                     return false;

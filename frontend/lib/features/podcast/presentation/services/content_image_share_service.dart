@@ -12,6 +12,7 @@ import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_conversation_model.dart';
 
 const int kDefaultShareMaxChars = 10000;
@@ -1434,9 +1435,7 @@ class ContentImageShareService {
     }
 
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.podcast_save_image_success)));
+      showTopFloatingNotice(context, message: l10n.podcast_save_image_success);
     }
   }
 

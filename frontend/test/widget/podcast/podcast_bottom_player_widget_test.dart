@@ -33,9 +33,40 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(PodcastQueueSheet), findsOneWidget);
-      expect(queueController.loadQueueCalls, 1);
+      expect(queueController.refreshQueueInBackgroundCalls, 1);
       await _closeQueueSheet(tester);
     });
+
+    testWidgets(
+      'queue sheet opens immediately while refreshing in background',
+      (tester) async {
+        final notifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _testEpisode(),
+            duration: 180000,
+            isExpanded: false,
+          ),
+        );
+        final queueController = TestPodcastQueueController(
+          refreshDelay: const Duration(seconds: 1),
+        );
+
+        await tester.pumpWidget(
+          _createWidget(notifier: notifier, queueController: queueController),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.byKey(const Key('podcast_bottom_player_mini_playlist')),
+        );
+        await tester.pump(const Duration(milliseconds: 250));
+
+        expect(find.byType(PodcastQueueSheet), findsOneWidget);
+        expect(queueController.refreshQueueInBackgroundCalls, 1);
+        await tester.pump(const Duration(seconds: 1));
+        await _closeQueueSheet(tester);
+      },
+    );
   });
 
   group('PodcastBottomPlayerWidget interaction updates', () {
@@ -178,7 +209,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(PodcastQueueSheet), findsOneWidget);
-      expect(queueController.loadQueueCalls, 1);
+      expect(queueController.refreshQueueInBackgroundCalls, 1);
       await _closeQueueSheet(tester);
     });
 
@@ -448,10 +479,10 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
 }
 
 class TestPodcastQueueController extends PodcastQueueController {
-  TestPodcastQueueController({this.loadDelay = Duration.zero});
+  TestPodcastQueueController({this.refreshDelay = Duration.zero});
 
-  final Duration loadDelay;
-  int loadQueueCalls = 0;
+  final Duration refreshDelay;
+  int refreshQueueInBackgroundCalls = 0;
 
   @override
   Future<PodcastQueueModel> build() async {
@@ -459,13 +490,18 @@ class TestPodcastQueueController extends PodcastQueueController {
   }
 
   @override
-  Future<PodcastQueueModel> loadQueue() async {
-    loadQueueCalls += 1;
-    if (loadDelay > Duration.zero) {
-      await Future<void>.delayed(loadDelay);
-    }
+  Future<PodcastQueueModel> loadQueue({bool forceRefresh = true}) async {
     state = const AsyncValue.data(PodcastQueueModel());
     return PodcastQueueModel.empty();
+  }
+
+  @override
+  Future<void> refreshQueueInBackground() async {
+    refreshQueueInBackgroundCalls += 1;
+    if (refreshDelay > Duration.zero) {
+      await Future<void>.delayed(refreshDelay);
+    }
+    state = const AsyncValue.data(PodcastQueueModel());
   }
 }
 
@@ -480,12 +516,10 @@ class _TestNavigatorObserver extends NavigatorObserver {
 }
 
 Future<void> _closeQueueSheet(WidgetTester tester) async {
-  final closeButton = find.descendant(
-    of: find.byType(PodcastQueueSheet),
-    matching: find.byIcon(Icons.close),
-  );
-  if (closeButton.evaluate().isNotEmpty) {
-    await tester.tap(closeButton.first);
+  final sheetFinder = find.byType(PodcastQueueSheet);
+  if (sheetFinder.evaluate().isNotEmpty) {
+    final context = tester.element(sheetFinder.first);
+    Navigator.of(context).pop();
     await tester.pumpAndSettle();
   }
 }

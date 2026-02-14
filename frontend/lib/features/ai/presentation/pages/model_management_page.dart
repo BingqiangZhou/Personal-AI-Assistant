@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../providers/ai_model_provider.dart';
 import '../widgets/model_list_item.dart';
 import '../widgets/model_create_dialog.dart';
@@ -13,7 +14,8 @@ class ModelManagementPage extends ConsumerStatefulWidget {
   const ModelManagementPage({super.key});
 
   @override
-  ConsumerState<ModelManagementPage> createState() => _ModelManagementPageState();
+  ConsumerState<ModelManagementPage> createState() =>
+      _ModelManagementPageState();
 }
 
 class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
@@ -28,7 +30,9 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
   }
 
   void _loadModels() {
-    ref.read(modelListProvider.notifier).loadModels(
+    ref
+        .read(modelListProvider.notifier)
+        .loadModels(
           modelType: _selectedType.toString().split('.').last,
           isActive: _showOnlyActive,
           search: _searchQuery.isEmpty ? null : _searchQuery,
@@ -36,7 +40,9 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
   }
 
   void _refreshModels() {
-    ref.read(modelListProvider.notifier).refresh(
+    ref
+        .read(modelListProvider.notifier)
+        .refresh(
           modelType: _selectedType.toString().split('.').last,
           isActive: _showOnlyActive,
           search: _searchQuery.isEmpty ? null : _searchQuery,
@@ -51,11 +57,9 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
         initialType: _selectedType,
         onModelCreated: (model) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10n.ai_model_created(model.displayName)),
-                backgroundColor: Colors.green,
-              ),
+            showTopFloatingNotice(
+              context,
+              message: l10n.ai_model_created(model.displayName),
             );
             _refreshModels();
           }
@@ -72,11 +76,9 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
         model: model,
         onModelUpdated: (updatedModel) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(l10n.ai_model_updated_msg(updatedModel.displayName)),
-                backgroundColor: Colors.green,
-              ),
+            showTopFloatingNotice(
+              context,
+              message: l10n.ai_model_updated_msg(updatedModel.displayName),
             );
             _refreshModels();
           }
@@ -117,19 +119,16 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
       final success = await notifier.deleteModel();
       if (mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.ai_model_deleted_msg(model.displayName)),
-              backgroundColor: Colors.green,
-            ),
+          showTopFloatingNotice(
+            context,
+            message: l10n.ai_model_deleted_msg(model.displayName),
           );
           _refreshModels();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.ai_delete_failed),
-              backgroundColor: Colors.red,
-            ),
+          showTopFloatingNotice(
+            context,
+            message: l10n.ai_delete_failed,
+            isError: true,
           );
         }
       }
@@ -144,19 +143,16 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.ai_set_as_default_success(model.displayName)),
-            backgroundColor: Colors.green,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.ai_set_as_default_success(model.displayName),
         );
         _refreshModels();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.ai_set_default_failed),
-            backgroundColor: Colors.red,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.ai_set_default_failed,
+          isError: true,
         );
       }
     }
@@ -165,25 +161,22 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
   void _toggleModelActive(AIModelConfigModel model) async {
     final l10n = AppLocalizations.of(context)!;
     final notifier = ref.read(modelNotifierProvider(model.id).notifier);
-    final success = await notifier.updateModel({
-      'is_active': !model.isActive,
-    });
+    final success = await notifier.updateModel({'is_active': !model.isActive});
 
     if (mounted) {
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(model.isActive ? l10n.ai_model_disabled : l10n.ai_model_enabled),
-            backgroundColor: Colors.green,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: model.isActive
+              ? l10n.ai_model_disabled
+              : l10n.ai_model_enabled,
         );
         _refreshModels();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.ai_operation_failed),
-            backgroundColor: Colors.red,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.ai_operation_failed,
+          isError: true,
         );
       }
     }
@@ -216,9 +209,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
           _buildFilterBar(),
           const Divider(),
           // 内容区域
-          Expanded(
-            child: _buildContent(modelListState),
-          ),
+          Expanded(child: _buildContent(modelListState)),
         ],
       ),
     );
@@ -260,7 +251,10 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
                 hintText: l10n.ai_search_models,
                 prefixIcon: const Icon(Icons.search),
                 border: const OutlineInputBorder(),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
               ),
               onChanged: (value) {
                 setState(() {
@@ -313,10 +307,7 @@ class _ModelManagementPageState extends ConsumerState<ModelManagementPage> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _refreshModels,
-              child: Text(l10n.retry),
-            ),
+            ElevatedButton(onPressed: _refreshModels, child: Text(l10n.retry)),
           ],
         ),
       );

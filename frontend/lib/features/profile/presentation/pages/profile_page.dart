@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
 
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
@@ -154,13 +155,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                             Expanded(
                               child: Text(
                                 user?.email ?? l10n.profile_please_login,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
+                                style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
                                       fontWeight: FontWeight.w500,
                                     ),
                                 overflow: TextOverflow.ellipsis,
@@ -212,13 +211,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           ),
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: Theme.of(context).colorScheme.outlineVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outlineVariant,
                             ),
                             borderRadius: BorderRadius.circular(20),
                             color: _isMenuOpen
-                                ? Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHighest
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest
                                 : null,
                           ),
                           child: Row(
@@ -236,9 +237,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                 child: Icon(
                                   Icons.expand_more,
                                   size: 20,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
                             ],
@@ -769,10 +770,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 FilledButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.profile_updated_successfully),
-                      ),
+                    showTopFloatingNotice(
+                      context,
+                      message: l10n.profile_updated_successfully,
                     );
                   },
                   child: Text(l10n.save),
@@ -960,12 +960,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                               .setThemeModeCode(value);
                           if (context.mounted) {
                             Navigator.of(context).pop();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  l10n.theme_mode_changed(modeName),
-                                ),
-                              ),
+                            showTopFloatingNotice(
+                              context,
+                              message: l10n.theme_mode_changed(modeName),
                             );
                           }
                         },
@@ -1173,8 +1170,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
                     // Show success message
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.profile_logged_out)),
+                      showTopFloatingNotice(
+                        context,
+                        message: l10n.profile_logged_out,
                       );
                     }
 

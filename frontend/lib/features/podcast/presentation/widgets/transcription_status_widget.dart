@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 
 import '../providers/transcription_providers.dart';
 import '../../data/models/podcast_transcription_model.dart';
@@ -57,7 +58,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: Icon(
@@ -100,7 +103,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               child: ElevatedButton.icon(
                 onPressed: () => _startTranscriptionWithFeedback(ref, context),
                 icon: const Icon(Icons.play_arrow),
-                label: Text(AppLocalizations.of(context)!.transcription_start_button),
+                label: Text(
+                  AppLocalizations.of(context)!.transcription_start_button,
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -116,7 +121,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -135,9 +142,10 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.primary,
                       ),
+                    ),
                   ),
-                ),
-              ]),
+                ],
+              ),
             ),
           ],
         ),
@@ -145,24 +153,14 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     );
   }
 
-  Future<void> _startTranscriptionWithFeedback(WidgetRef ref, BuildContext context) async {
+  Future<void> _startTranscriptionWithFeedback(
+    WidgetRef ref,
+    BuildContext context,
+  ) async {
     // Show immediate feedback
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(width: 12),
-            Text(AppLocalizations.of(context)!.transcription_starting),
-          ],
-        ),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
+    showTopFloatingNotice(
+      context,
+      message: AppLocalizations.of(context)!.transcription_starting,
     );
 
     try {
@@ -171,24 +169,19 @@ class TranscriptionStatusWidget extends ConsumerWidget {
 
       // Show success feedback
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.transcription_started_success),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.green,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: AppLocalizations.of(context)!.transcription_started_success,
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.transcription_start_failed(e.toString())),
-            duration: const Duration(seconds: 3),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: Colors.red,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: AppLocalizations.of(
+            context,
+          )!.transcription_start_failed(e.toString()),
+          isError: true,
         );
       }
     }
@@ -204,7 +197,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
         // 响应式尺寸
         final iconSize = isSmallScreen ? 50.0 : (isLargeScreen ? 100.0 : 80.0);
         final iconInnerSize = iconSize * 0.5;
-        final titleFontSize = isSmallScreen ? 16.0 : (isLargeScreen ? 20.0 : 18.0);
+        final titleFontSize = isSmallScreen
+            ? 16.0
+            : (isLargeScreen ? 20.0 : 18.0);
         final descriptionFontSize = isSmallScreen ? 13.0 : 14.0;
 
         return Container(
@@ -213,7 +208,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
           child: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: isLargeScreen ? 600 : double.infinity),
+              constraints: BoxConstraints(
+                maxWidth: isLargeScreen ? 600 : double.infinity,
+              ),
               child: Padding(
                 padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                 child: Column(
@@ -269,7 +266,10 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildProcessingState(BuildContext context, PodcastTranscriptionResponse transcription) {
+  Widget _buildProcessingState(
+    BuildContext context,
+    PodcastTranscriptionResponse transcription,
+  ) {
     final progress = transcription.progressPercentage;
     final statusText = transcription.getLocalizedStatusDescription(context);
     final currentStep = _getCurrentStep(transcription);
@@ -281,10 +281,14 @@ class TranscriptionStatusWidget extends ConsumerWidget {
         final isLargeScreen = constraints.maxWidth > 800;
 
         // 响应式尺寸
-        final progressContainerSize = isSmallScreen ? 70.0 : (isLargeScreen ? 120.0 : 100.0);
+        final progressContainerSize = isSmallScreen
+            ? 70.0
+            : (isLargeScreen ? 120.0 : 100.0);
         final progressIndicatorSize = progressContainerSize * 0.8;
         final progressStrokeWidth = isSmallScreen ? 4.0 : 6.0;
-        final percentageFontSize = isSmallScreen ? 16.0 : (isLargeScreen ? 24.0 : 20.0);
+        final percentageFontSize = isSmallScreen
+            ? 16.0
+            : (isLargeScreen ? 24.0 : 20.0);
         final labelFontSize = isSmallScreen ? 8.0 : 10.0;
         final statusFontSize = isSmallScreen ? 14.0 : 16.0;
 
@@ -294,7 +298,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
           child: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: isLargeScreen ? 700 : double.infinity),
+              constraints: BoxConstraints(
+                maxWidth: isLargeScreen ? 700 : double.infinity,
+              ),
               child: SingleChildScrollView(
                 padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                 child: Column(
@@ -307,7 +313,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                       height: progressContainerSize,
                       decoration: BoxDecoration(
                         color: Colors.blue.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(progressContainerSize / 2),
+                        borderRadius: BorderRadius.circular(
+                          progressContainerSize / 2,
+                        ),
                       ),
                       child: Stack(
                         alignment: Alignment.center,
@@ -319,8 +327,12 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                             child: CircularProgressIndicator(
                               value: progress / 100,
                               strokeWidth: progressStrokeWidth,
-                              backgroundColor: Colors.blue.withValues(alpha: 0.2),
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                              backgroundColor: Colors.blue.withValues(
+                                alpha: 0.2,
+                              ),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.blue,
+                              ),
                             ),
                           ),
                           // Center percentage - 响应式字体大小
@@ -336,7 +348,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                                 ),
                               ),
                               Text(
-                                AppLocalizations.of(context)!.transcription_progress_complete,
+                                AppLocalizations.of(
+                                  context,
+                                )!.transcription_progress_complete,
                                 style: TextStyle(
                                   fontSize: labelFontSize,
                                   color: Colors.blue.withValues(alpha: 0.8),
@@ -357,7 +371,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                         vertical: isSmallScreen ? 8 : 10,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -392,8 +408,12 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(6),
                       child: LinearProgressIndicator(
                         value: progress / 100,
-                        backgroundColor: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
-                        valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.outline.withValues(alpha: 0.2),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).colorScheme.primary,
+                        ),
                         minHeight: isSmallScreen ? 4 : 6,
                       ),
                     ),
@@ -407,7 +427,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.1),
                           ),
                         ),
                         child: Row(
@@ -424,7 +446,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                                 style: TextStyle(
                                   fontSize: isSmallScreen ? 10 : 11,
                                   fontFamily: 'monospace',
-                                  color: Theme.of(context).colorScheme.secondary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary,
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -436,7 +460,8 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                     ],
 
                     // Additional info
-                    if (transcription.wordCount != null || transcription.durationSeconds != null) ...[
+                    if (transcription.wordCount != null ||
+                        transcription.durationSeconds != null) ...[
                       SizedBox(height: isSmallScreen ? 10 : 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -445,31 +470,49 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                             Icon(
                               Icons.schedule,
                               size: isSmallScreen ? 12 : 14,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             SizedBox(width: isSmallScreen ? 3 : 4),
                             Text(
-                              AppLocalizations.of(context)!.transcription_duration_label(_formatDuration(transcription.durationSeconds!)),
+                              AppLocalizations.of(
+                                context,
+                              )!.transcription_duration_label(
+                                _formatDuration(transcription.durationSeconds!),
+                              ),
                               style: TextStyle(
                                 fontSize: isSmallScreen ? 11 : 12,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
-                          if (transcription.wordCount != null && transcription.durationSeconds != null)
+                          if (transcription.wordCount != null &&
+                              transcription.durationSeconds != null)
                             SizedBox(width: isSmallScreen ? 12 : 16),
                           if (transcription.wordCount != null) ...[
                             Icon(
                               Icons.text_fields,
                               size: isSmallScreen ? 12 : 14,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             SizedBox(width: isSmallScreen ? 3 : 4),
                             Text(
-                              AppLocalizations.of(context)!.transcription_words_label((transcription.wordCount! / 1000).toStringAsFixed(1)),
+                              AppLocalizations.of(
+                                context,
+                              )!.transcription_words_label(
+                                (transcription.wordCount! / 1000)
+                                    .toStringAsFixed(1),
+                              ),
                               style: TextStyle(
                                 fontSize: isSmallScreen ? 11 : 12,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -486,14 +529,37 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildStepIndicators(BuildContext context, PodcastTranscriptionResponse transcription) {
+  Widget _buildStepIndicators(
+    BuildContext context,
+    PodcastTranscriptionResponse transcription,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     final steps = [
-      {'icon': Icons.download, 'label': l10n.transcription_step_download, 'status': _getStepStatus(transcription, 0)},
-      {'icon': Icons.transform, 'label': l10n.transcription_step_convert, 'status': _getStepStatus(transcription, 1)},
-      {'icon': Icons.content_cut, 'label': l10n.transcription_step_split, 'status': _getStepStatus(transcription, 2)},
-      {'icon': Icons.transcribe, 'label': l10n.transcription_step_transcribe, 'status': _getStepStatus(transcription, 3)},
-      {'icon': Icons.merge_type, 'label': l10n.transcription_step_merge, 'status': _getStepStatus(transcription, 4)},
+      {
+        'icon': Icons.download,
+        'label': l10n.transcription_step_download,
+        'status': _getStepStatus(transcription, 0),
+      },
+      {
+        'icon': Icons.transform,
+        'label': l10n.transcription_step_convert,
+        'status': _getStepStatus(transcription, 1),
+      },
+      {
+        'icon': Icons.content_cut,
+        'label': l10n.transcription_step_split,
+        'status': _getStepStatus(transcription, 2),
+      },
+      {
+        'icon': Icons.transcribe,
+        'label': l10n.transcription_step_transcribe,
+        'status': _getStepStatus(transcription, 3),
+      },
+      {
+        'icon': Icons.merge_type,
+        'label': l10n.transcription_step_merge,
+        'status': _getStepStatus(transcription, 4),
+      },
     ];
 
     return Row(
@@ -519,7 +585,12 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   child: Container(
                     height: 2,
                     width: 16,
-                    color: _getStepConnectorColor(context, index, steps.length, transcription.progressPercentage),
+                    color: _getStepConnectorColor(
+                      context,
+                      index,
+                      steps.length,
+                      transcription.progressPercentage,
+                    ),
                   ),
                 ),
               ),
@@ -530,7 +601,12 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildStepIndicator(BuildContext context, IconData icon, String label, String status) {
+  Widget _buildStepIndicator(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String status,
+  ) {
     Color iconColor;
     Color bgColor;
 
@@ -541,11 +617,15 @@ class TranscriptionStatusWidget extends ConsumerWidget {
         break;
       case 'current':
         iconColor = Theme.of(context).colorScheme.primary;
-        bgColor = Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5);
+        bgColor = Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.5);
         break;
       case 'pending':
       default:
-        iconColor = Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4);
+        iconColor = Theme.of(
+          context,
+        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4);
         bgColor = Theme.of(context).colorScheme.surface;
         break;
     }
@@ -582,7 +662,10 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     );
   }
 
-  String _getStepStatus(PodcastTranscriptionResponse transcription, int stepIndex) {
+  String _getStepStatus(
+    PodcastTranscriptionResponse transcription,
+    int stepIndex,
+  ) {
     final progress = transcription.progressPercentage;
 
     // Step thresholds based on backend progress percentages
@@ -591,7 +674,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     // Split: 35-45% (Index 2)
     // Transcribe: 45-95% (Index 3)
     // Merge: 95-100% (Index 4)
-    
+
     // Determine the current active step index based on progress
     int currentActiveIndex = 0;
     if (progress >= 95) {
@@ -615,7 +698,12 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     }
   }
 
-  Color _getStepConnectorColor(BuildContext context, int stepIndex, int totalSteps, double progress) {
+  Color _getStepConnectorColor(
+    BuildContext context,
+    int stepIndex,
+    int totalSteps,
+    double progress,
+  ) {
     // Determine current active step index
     int currentActiveIndex = 0;
     if (progress >= 95) {
@@ -629,7 +717,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     } else {
       currentActiveIndex = 0;
     }
-    
+
     // Connector is colored if the step it originates from is completed or current
     // stepIndex is the index of the step BEFORE the connector
     if (stepIndex < currentActiveIndex) {
@@ -665,7 +753,11 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     }
   }
 
-  Widget _buildCompletedState(BuildContext context, PodcastTranscriptionResponse transcription, WidgetRef ref) {
+  Widget _buildCompletedState(
+    BuildContext context,
+    PodcastTranscriptionResponse transcription,
+    WidgetRef ref,
+  ) {
     final wordCount = transcription.wordCount ?? 0;
     final duration = transcription.durationSeconds ?? 0;
     final completedAt = transcription.completedAt;
@@ -675,9 +767,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
       color: Colors.green.withValues(alpha: 0.05),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Colors.green.withValues(alpha: 0.2),
-        ),
+        side: BorderSide(color: Colors.green.withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -692,11 +782,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                 color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(40),
               ),
-              child: Icon(
-                Icons.check_circle,
-                size: 40,
-                color: Colors.green,
-              ),
+              child: Icon(Icons.check_circle, size: 40, color: Colors.green),
             ),
 
             const SizedBox(height: 16),
@@ -733,7 +819,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.2),
                 ),
               ),
               child: Column(
@@ -750,13 +838,17 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                       _buildStatItem(
                         context,
                         _formatDuration(duration),
-                        AppLocalizations.of(context)!.transcription_stat_duration,
+                        AppLocalizations.of(
+                          context,
+                        )!.transcription_stat_duration,
                         Icons.schedule,
                       ),
                       _buildStatItem(
                         context,
                         _formatAccuracy(null),
-                        AppLocalizations.of(context)!.transcription_stat_accuracy,
+                        AppLocalizations.of(
+                          context,
+                        )!.transcription_stat_accuracy,
                         Icons.speed,
                       ),
                     ],
@@ -768,7 +860,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
             if (completedAt != null) ...[
               const SizedBox(height: 8),
               Text(
-                AppLocalizations.of(context)!.transcription_completed_at(_formatDateTime(completedAt)),
+                AppLocalizations.of(
+                  context,
+                )!.transcription_completed_at(_formatDateTime(completedAt)),
                 style: TextStyle(
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -785,7 +879,11 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _deleteTranscription(ref),
                     icon: const Icon(Icons.delete_outline),
-                    label: Text(AppLocalizations.of(context)!.podcast_transcription_delete),
+                    label: Text(
+                      AppLocalizations.of(
+                        context,
+                      )!.podcast_transcription_delete,
+                    ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -803,7 +901,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _viewTranscription(ref),
                     icon: const Icon(Icons.visibility),
-                    label: Text(AppLocalizations.of(context)!.transcription_view_button),
+                    label: Text(
+                      AppLocalizations.of(context)!.transcription_view_button,
+                    ),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -820,8 +920,14 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildFailedState(BuildContext context, PodcastTranscriptionResponse transcription, WidgetRef ref) {
-    final errorMessage = transcription.errorMessage ?? AppLocalizations.of(context)!.transcription_unknown_error;
+  Widget _buildFailedState(
+    BuildContext context,
+    PodcastTranscriptionResponse transcription,
+    WidgetRef ref,
+  ) {
+    final errorMessage =
+        transcription.errorMessage ??
+        AppLocalizations.of(context)!.transcription_unknown_error;
     final friendlyMessage = _getFriendlyErrorMessage(context, errorMessage);
     final suggestion = _getErrorSuggestion(context, errorMessage);
 
@@ -830,9 +936,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
       color: Colors.red.withValues(alpha: 0.05),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: Colors.red.withValues(alpha: 0.2),
-        ),
+        side: BorderSide(color: Colors.red.withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -847,11 +951,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                 color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(40),
               ),
-              child: Icon(
-                Icons.error_outline,
-                size: 40,
-                color: Colors.red,
-              ),
+              child: Icon(Icons.error_outline, size: 40, color: Colors.red),
             ),
 
             const SizedBox(height: 16),
@@ -887,9 +987,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Colors.orange.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.orange.withValues(alpha: 0.3),
-                ),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -954,7 +1052,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _deleteTranscription(ref),
                     icon: const Icon(Icons.delete_outline),
-                    label: Text(AppLocalizations.of(context)!.podcast_transcription_clear),
+                    label: Text(
+                      AppLocalizations.of(context)!.podcast_transcription_clear,
+                    ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -968,7 +1068,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     onPressed: () => _retryTranscription(ref),
                     icon: const Icon(Icons.refresh),
-                    label: Text(AppLocalizations.of(context)!.transcription_retry_button),
+                    label: Text(
+                      AppLocalizations.of(context)!.transcription_retry_button,
+                    ),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
@@ -990,10 +1092,14 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   String _getFriendlyErrorMessage(BuildContext context, String error) {
     final lowerError = error.toLowerCase();
 
-    if (lowerError.contains('already in progress') || lowerError.contains('already exists') || lowerError.contains('locked')) {
+    if (lowerError.contains('already in progress') ||
+        lowerError.contains('already exists') ||
+        lowerError.contains('locked')) {
       return AppLocalizations.of(context)!.transcription_error_already_progress;
     }
-    if (lowerError.contains('network') || lowerError.contains('connection') || lowerError.contains('timeout')) {
+    if (lowerError.contains('network') ||
+        lowerError.contains('connection') ||
+        lowerError.contains('timeout')) {
       return AppLocalizations.of(context)!.transcription_error_network;
     }
     if (lowerError.contains('audio') || lowerError.contains('download')) {
@@ -1015,7 +1121,9 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   String _getErrorSuggestion(BuildContext context, String error) {
     final lowerError = error.toLowerCase();
 
-    if (lowerError.contains('network') || lowerError.contains('connection') || lowerError.contains('timeout')) {
+    if (lowerError.contains('network') ||
+        lowerError.contains('connection') ||
+        lowerError.contains('timeout')) {
       return AppLocalizations.of(context)!.transcription_suggest_network;
     }
     if (lowerError.contains('audio') || lowerError.contains('download')) {
@@ -1034,14 +1142,15 @@ class TranscriptionStatusWidget extends ConsumerWidget {
     return AppLocalizations.of(context)!.transcription_suggest_generic;
   }
 
-  Widget _buildStatItem(BuildContext context, String value, String label, IconData icon) {
+  Widget _buildStatItem(
+    BuildContext context,
+    String value,
+    String label,
+    IconData icon,
+  ) {
     return Column(
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
         const SizedBox(height: 4),
         Text(
           value,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_conversation_model.dart';
 import '../../data/models/podcast_playback_model.dart';
 import '../providers/conversation_providers.dart';
@@ -248,9 +249,7 @@ class ConversationChatWidgetState
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      showTopFloatingNotice(context, message: e.message, isError: true);
     }
   }
 
@@ -283,9 +282,7 @@ class ConversationChatWidgetState
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      showTopFloatingNotice(context, message: e.message, isError: true);
     }
   }
 

@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/network/server_health_service.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
+import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Server configuration dialog widget
@@ -371,7 +372,6 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
 
   Future<void> _saveServerConfig(BuildContext dialogContext) async {
     final l10n = AppLocalizations.of(context)!;
-    final messenger = ScaffoldMessenger.of(context);
     final baseUrl = _serverUrlController.text.trim();
     if (baseUrl.isEmpty) return;
 
@@ -385,23 +385,18 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
       if (!context.mounted) return;
       Navigator.of(dialogContext).pop();
       if (!context.mounted) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(l10n.restore_defaults_success),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 80),
-          duration: const Duration(milliseconds: 1500),
-        ),
+      showTopFloatingNotice(
+        context,
+        message: l10n.restore_defaults_success,
+        duration: const Duration(milliseconds: 1500),
       );
       widget.onSave?.call();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.save_failed(e.toString())),
-            backgroundColor: Colors.red,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.save_failed(e.toString()),
+          isError: true,
         );
       }
     }

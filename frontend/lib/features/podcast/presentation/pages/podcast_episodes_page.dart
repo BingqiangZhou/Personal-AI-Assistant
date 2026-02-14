@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
@@ -144,12 +145,10 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     try {
       // 显示 loading 提示
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.podcast_reparsing),
-            duration: Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.podcast_reparsing,
+          extraTopOffset: 72,
         );
       }
 
@@ -166,25 +165,20 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
 
       // 显示成功提示
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.podcast_reparse_completed),
-            duration: Duration(seconds: 2),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: l10n.podcast_reparse_completed,
+          extraTopOffset: 72,
         );
       }
     } catch (error) {
       // 显示错误提示
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.podcast_reparse_failed} $error'),
-            duration: Duration(seconds: 3),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: '${l10n.podcast_reparse_failed} $error',
+          isError: true,
+          extraTopOffset: 72,
         );
       }
     } finally {
@@ -414,14 +408,10 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                             final l10n = AppLocalizations.of(
                                               context,
                                             )!;
-                                            ScaffoldMessenger.of(
+                                            showTopFloatingNotice(
                                               context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  l10n.added_to_queue,
-                                                ),
-                                              ),
+                                              message: l10n.added_to_queue,
+                                              extraTopOffset: 72,
                                             );
                                           }
                                         } catch (error) {
@@ -429,16 +419,14 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                             final l10n = AppLocalizations.of(
                                               context,
                                             )!;
-                                            ScaffoldMessenger.of(
+                                            showTopFloatingNotice(
                                               context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  l10n.failed_to_add_to_queue(
+                                              message: l10n
+                                                  .failed_to_add_to_queue(
                                                     error.toString(),
                                                   ),
-                                                ),
-                                              ),
+                                              isError: true,
+                                              extraTopOffset: 72,
                                             );
                                           }
                                         }
@@ -500,32 +488,26 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                             )
                                             .addToQueue(episode.id);
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(
+                                          showTopFloatingNotice(
                                             context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                AppLocalizations.of(
-                                                  context,
-                                                )!.added_to_queue,
-                                              ),
-                                            ),
+                                            message: AppLocalizations.of(
+                                              context,
+                                            )!.added_to_queue,
+                                            extraTopOffset: 72,
                                           );
                                         }
                                       } catch (error) {
                                         if (context.mounted) {
-                                          ScaffoldMessenger.of(
+                                          showTopFloatingNotice(
                                             context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
+                                            message:
                                                 AppLocalizations.of(
                                                   context,
                                                 )!.failed_to_add_to_queue(
                                                   error.toString(),
                                                 ),
-                                              ),
-                                            ),
+                                            isError: true,
+                                            extraTopOffset: 72,
                                           );
                                         }
                                       }

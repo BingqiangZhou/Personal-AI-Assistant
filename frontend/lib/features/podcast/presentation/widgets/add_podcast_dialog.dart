@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../providers/podcast_providers.dart';
 import 'bulk_import_dialog.dart';
 
@@ -31,27 +32,24 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
     });
 
     try {
-      await ref.read(podcastSubscriptionProvider.notifier).addSubscription(
-            feedUrl: _feedUrlController.text.trim(),
-          );
+      await ref
+          .read(podcastSubscriptionProvider.notifier)
+          .addSubscription(feedUrl: _feedUrlController.text.trim());
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.podcast_added_successfully),
-            backgroundColor: Colors.green,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: AppLocalizations.of(context)!.podcast_added_successfully,
         );
       }
     } catch (error) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('${l10n.podcast_failed_add} $error'),
-            backgroundColor: Colors.red,
-          ),
+        showTopFloatingNotice(
+          context,
+          message: '${l10n.podcast_failed_add} $error',
+          isError: true,
         );
       }
     } finally {
@@ -75,91 +73,99 @@ class _AddPodcastDialogState extends ConsumerState<AddPodcastDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            Text(
-              l10n.podcast_add_dialog_title,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 24),
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _feedUrlController,
-                    minLines: 1,
-                    maxLines: 1,
-                    decoration: InputDecoration(
-                      labelText: l10n.podcast_rss_feed_url,
-                      hintText: l10n.podcast_feed_url_hint,
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.rss_feed),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 12,
+              Text(
+                l10n.podcast_add_dialog_title,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 24),
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _feedUrlController,
+                      minLines: 1,
+                      maxLines: 1,
+                      decoration: InputDecoration(
+                        labelText: l10n.podcast_rss_feed_url,
+                        hintText: l10n.podcast_feed_url_hint,
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.rss_feed),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
+                        isDense: true,
                       ),
-                      isDense: true,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return l10n.podcast_enter_url;
+                        }
+                        if (!value.startsWith('http')) {
+                          return l10n.validation_invalid_url;
+                        }
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.podcast_enter_url;
-                      }
-                      if (!value.startsWith('http')) {
-                        return l10n.validation_invalid_url;
-                      }
-                      return null;
-                    },
+                    const SizedBox(height: 24),
+                    const SizedBox(height: 24),
+                    Row(
+                      children: [
+                        Text(l10n.podcast_need_many),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            showDialog(
+                              context: context,
+                              builder: (context) => BulkImportDialog(
+                                onImport: (urls) async {
+                                  await ref
+                                      .read(
+                                        podcastSubscriptionProvider.notifier,
+                                      )
+                                      .addSubscriptionsBatch(feedUrls: urls);
+                                },
+                              ),
+                            );
+                          },
+                          child: Text(l10n.podcast_bulk_import),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    child: Text(l10n.cancel),
                   ),
-                  const SizedBox(height: 24),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Text(l10n.podcast_need_many),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          showDialog(
-                            context: context,
-                            builder: (context) => BulkImportDialog(
-                              onImport: (urls) async {
-                                await ref
-                                    .read(podcastSubscriptionProvider.notifier)
-                                    .addSubscriptionsBatch(feedUrls: urls);
-                              },
-                            ),
-                          );
-                        },
-                        child: Text(l10n.podcast_bulk_import),
-                      ),
-                    ],
+                  const SizedBox(width: 16),
+                  ElevatedButton.icon(
+                    onPressed: _isLoading ? null : _addSubscription,
+                    icon: _isLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.add),
+                    label: Text(
+                      _isLoading
+                          ? l10n.podcast_adding
+                          : l10n.podcast_add_dialog_title,
+                    ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-                  child: Text(l10n.cancel),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _addSubscription,
-                  icon: _isLoading
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.add),
-                  label: Text(_isLoading ? l10n.podcast_adding : l10n.podcast_add_dialog_title),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

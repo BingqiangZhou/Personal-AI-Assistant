@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/top_floating_notice.dart';
 import '../providers/transcription_providers.dart';
 import '../../data/models/podcast_transcription_model.dart';
 import '../services/content_image_share_service.dart';
@@ -173,9 +174,7 @@ class TranscriptDisplayWidgetState
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      showTopFloatingNotice(context, message: e.message, isError: true);
     }
   }
 
@@ -195,9 +194,7 @@ class TranscriptDisplayWidgetState
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      showTopFloatingNotice(context, message: e.message, isError: true);
     }
   }
 
