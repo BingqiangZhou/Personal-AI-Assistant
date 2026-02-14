@@ -5,6 +5,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_queue_model.dart';
 import '../providers/podcast_providers.dart';
+import 'podcast_image_widget.dart';
 
 class PodcastQueueSheet extends ConsumerWidget {
   const PodcastQueueSheet({super.key});
@@ -435,10 +436,12 @@ class _QueueItemCover extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: imageUrl != null && imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _fallback(theme),
+                  ? PodcastImageWidget(
+                      imageUrl: imageUrl,
+                      width: size,
+                      height: size,
+                      iconSize: size * 0.52,
+                      iconColor: theme.colorScheme.primary,
                     )
                   : _fallback(theme),
             ),

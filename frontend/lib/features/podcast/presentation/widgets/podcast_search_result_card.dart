@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_search_model.dart';
 import '../constants/podcast_ui_constants.dart';
+import 'podcast_image_widget.dart';
 
 class PodcastSearchResultCard extends StatelessWidget {
   const PodcastSearchResultCard({
@@ -60,54 +61,13 @@ class PodcastSearchResultCard extends StatelessWidget {
                     key: const Key('podcast_search_result_card_artwork'),
                     width: kPodcastRowCardImageSize,
                     height: kPodcastRowCardImageSize,
-                    child: result.artworkUrl100 != null
-                        ? Image.network(
-                            result.artworkUrl100!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: theme.colorScheme.primaryContainer,
-                                child: Center(
-                                  child: Icon(
-                                    Icons.podcasts,
-                                    size: 24,
-                                    color: theme.colorScheme.onPrimaryContainer,
-                                  ),
-                                ),
-                              );
-                            },
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) {
-                                return child;
-                              }
-                              return Container(
-                                color: theme.colorScheme.primaryContainer,
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    value:
-                                        loadingProgress.expectedTotalBytes !=
-                                            null
-                                        ? loadingProgress
-                                                  .cumulativeBytesLoaded /
-                                              loadingProgress
-                                                  .expectedTotalBytes!
-                                        : null,
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                              );
-                            },
-                          )
-                        : Container(
-                            color: theme.colorScheme.primaryContainer,
-                            child: Center(
-                              child: Icon(
-                                Icons.podcasts,
-                                size: 24,
-                                color: theme.colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                          ),
+                    child: PodcastImageWidget(
+                      imageUrl: result.artworkUrl100,
+                      width: kPodcastRowCardImageSize,
+                      height: kPodcastRowCardImageSize,
+                      iconSize: 24,
+                      iconColor: theme.colorScheme.onPrimaryContainer,
+                    ),
                   ),
                 ),
                 const SizedBox(width: kPodcastRowCardHorizontalGap),

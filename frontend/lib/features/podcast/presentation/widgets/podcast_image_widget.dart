@@ -34,6 +34,8 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
   String? _currentImageUrl;
   String? _precacheUrl;
   String? _precacheKey;
+  int? _precacheWidth;
+  int? _precacheHeight;
 
   @override
   void initState() {
@@ -63,18 +65,31 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
     }
   }
 
-  void _maybePrecache(String url, String cacheKey) {
-    if (_precacheUrl == url && _precacheKey == cacheKey) return;
+  void _maybePrecache(String url, String cacheKey, int? width, int? height) {
+    if (_precacheUrl == url &&
+        _precacheKey == cacheKey &&
+        _precacheWidth == width &&
+        _precacheHeight == height) {
+      return;
+    }
     _precacheUrl = url;
     _precacheKey = cacheKey;
+    _precacheWidth = width;
+    _precacheHeight = height;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final provider = CachedNetworkImageProvider(
+      final baseProvider = CachedNetworkImageProvider(
         url,
         cacheKey: cacheKey,
         cacheManager: AppMediaCacheManager.instance,
       );
+      final ImageProvider provider;
+      if (width != null && height != null && width > 0 && height > 0) {
+        provider = ResizeImage(baseProvider, width: width, height: height);
+      } else {
+        provider = baseProvider;
+      }
       precacheImage(provider, context);
     });
   }
@@ -129,13 +144,24 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
         (_useFallback ? widget.fallbackImageUrl : widget.imageUrl) ??
         _currentImageUrl!;
 
-    _maybePrecache(_currentImageUrl!, stableCacheKey);
+    final dpr = MediaQuery.of(context).devicePixelRatio;
+    final cacheWidth = (widget.width * dpr).round();
+    final cacheHeight = (widget.height * dpr).round();
 
-    final provider = CachedNetworkImageProvider(
+    _maybePrecache(_currentImageUrl!, stableCacheKey, cacheWidth, cacheHeight);
+
+    final baseProvider = CachedNetworkImageProvider(
       _currentImageUrl!,
       cacheKey: stableCacheKey,
       cacheManager: AppMediaCacheManager.instance,
     );
+
+    final ImageProvider provider;
+    if (cacheWidth > 0 && cacheHeight > 0) {
+      provider = ResizeImage(baseProvider, width: cacheWidth, height: cacheHeight);
+    } else {
+      provider = baseProvider;
+    }
 
     return Image(
       image: provider,
@@ -149,14 +175,16 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.05),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.5,
+            ),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
             child: Icon(
               Icons.podcasts,
               size: iconSize * 0.6,
-              color: iconColor.withValues(alpha: 0.35),
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
           ),
         );
@@ -173,13 +201,15 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
             width: widget.width,
             height: widget.height,
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withValues(alpha: 0.05),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.5,
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               Icons.refresh,
               size: iconSize * 0.5,
-              color: iconColor.withValues(alpha: 0.3),
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
           );
         }

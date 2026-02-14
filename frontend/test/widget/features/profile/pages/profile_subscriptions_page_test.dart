@@ -5,6 +5,8 @@ import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/add_podcast_dialog.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/bulk_import_dialog.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_subscriptions_page.dart';
 
 class _TestPodcastSubscriptionNotifier extends PodcastSubscriptionNotifier {
@@ -108,5 +110,55 @@ void main() {
       findsOneWidget,
     );
   });
-}
 
+  testWidgets('shows add/import actions in app bar and opens dialogs', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          podcastSubscriptionProvider.overrideWith(
+            () => _TestPodcastSubscriptionNotifier(
+              const PodcastSubscriptionState(
+                subscriptions: [],
+                total: 0,
+                hasMore: false,
+                isLoading: false,
+              ),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ProfileSubscriptionsPage(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('profile_subscriptions_action_add')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('profile_subscriptions_action_bulk_import')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const Key('profile_subscriptions_action_add')));
+    await tester.pumpAndSettle();
+    expect(find.byType(AddPodcastDialog), findsOneWidget);
+    Navigator.of(tester.element(find.byType(AddPodcastDialog))).pop();
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const Key('profile_subscriptions_action_bulk_import')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(BulkImportDialog), findsOneWidget);
+    Navigator.of(tester.element(find.byType(BulkImportDialog))).pop();
+    await tester.pumpAndSettle();
+  });
+}

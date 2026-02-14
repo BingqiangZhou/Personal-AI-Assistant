@@ -7,6 +7,8 @@ import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/add_podcast_dialog.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/bulk_import_dialog.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 
 class ProfileSubscriptionsPage extends ConsumerStatefulWidget {
@@ -54,7 +56,39 @@ class _ProfileSubscriptionsPageState
     final subscriptions = state.subscriptions;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.profile_subscriptions)),
+      appBar: AppBar(
+        title: Text(l10n.profile_subscriptions),
+        actions: [
+          IconButton(
+            key: const Key('profile_subscriptions_action_add'),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const AddPodcastDialog(),
+              );
+            },
+            icon: const Icon(Icons.add),
+            tooltip: l10n.podcast_add_podcast,
+          ),
+          IconButton(
+            key: const Key('profile_subscriptions_action_bulk_import'),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => BulkImportDialog(
+                  onImport: (urls) async {
+                    await ref
+                        .read(podcastSubscriptionProvider.notifier)
+                        .addSubscriptionsBatch(feedUrls: urls);
+                  },
+                ),
+              );
+            },
+            icon: const Icon(Icons.playlist_add_outlined),
+            tooltip: l10n.podcast_bulk_import,
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         onRefresh: () =>
             ref.read(podcastSubscriptionProvider.notifier).refreshSubscriptions(),

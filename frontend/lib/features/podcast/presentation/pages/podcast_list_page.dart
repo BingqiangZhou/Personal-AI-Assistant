@@ -15,6 +15,7 @@ import '../providers/podcast_search_provider.dart' as search;
 import '../widgets/add_podcast_dialog.dart';
 import '../widgets/bulk_import_dialog.dart';
 import '../widgets/podcast_bulk_delete_dialog.dart';
+import '../widgets/podcast_image_widget.dart';
 import '../widgets/search_panel.dart';
 
 class PodcastListPage extends ConsumerStatefulWidget {
@@ -112,34 +113,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                IconButton(
-                  key: const Key('podcast_list_action_add'),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => const AddPodcastDialog(),
-                    );
-                  },
-                  icon: const Icon(Icons.add),
-                  tooltip: l10n.podcast_add_podcast,
-                ),
-                IconButton(
-                  key: const Key('podcast_list_action_bulk_import'),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => BulkImportDialog(
-                        onImport: (urls) async {
-                          await ref
-                              .read(podcastSubscriptionProvider.notifier)
-                              .addSubscriptionsBatch(feedUrls: urls);
-                        },
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.playlist_add_outlined),
-                  tooltip: l10n.podcast_bulk_import,
                 ),
               ],
             ),
@@ -440,33 +413,13 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   child: SizedBox(
                     width: kPodcastRowCardImageSize,
                     height: kPodcastRowCardImageSize,
-                    child: subscription.imageUrl != null
-                        ? Image.network(
-                            subscription.imageUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                color: theme.colorScheme.primaryContainer,
-                                child: Center(
-                                  child: Icon(
-                                    Icons.podcasts,
-                                    size: 24,
-                                    color: theme.colorScheme.onPrimaryContainer,
-                                  ),
-                                ),
-                              );
-                            },
-                          )
-                        : Container(
-                            color: theme.colorScheme.primaryContainer,
-                            child: Center(
-                              child: Icon(
-                                Icons.podcasts,
-                                size: 24,
-                                color: theme.colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                          ),
+                    child: PodcastImageWidget(
+                      imageUrl: subscription.imageUrl,
+                      width: kPodcastRowCardImageSize,
+                      height: kPodcastRowCardImageSize,
+                      iconSize: 24,
+                      iconColor: theme.colorScheme.onPrimaryContainer,
+                    ),
                   ),
                 ),
                 const SizedBox(width: kPodcastRowCardHorizontalGap),

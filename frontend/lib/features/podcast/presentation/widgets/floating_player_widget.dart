@@ -6,6 +6,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../providers/podcast_providers.dart';
 import '../providers/floating_player_visibility_provider.dart';
+import 'podcast_image_widget.dart';
 
 /// Material 3 floating player widget that appears when podcast is playing
 /// Shows podcast cover image with play/pause control
@@ -149,21 +150,27 @@ class _FloatingPlayerButton extends StatelessWidget {
                 // Priority: subscriptionImageUrl > imageUrl > default cover
                 if (episode.subscriptionImageUrl != null &&
                     episode.subscriptionImageUrl!.isNotEmpty)
-                  Image.network(
-                    episode.subscriptionImageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return episode.imageUrl != null && episode.imageUrl!.isNotEmpty
-                          ? _buildEpisodeImage(context, episode.imageUrl!)
-                          : _buildDefaultCover(context);
-                    },
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return _buildLoadingCover(context);
-                    },
+                  PodcastImageWidget(
+                    imageUrl: episode.subscriptionImageUrl,
+                    width: 56,
+                    height: 56,
+                    iconSize: 28,
+                    iconColor: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withValues(alpha: 0.7),
                   )
                 else if (episode.imageUrl != null && episode.imageUrl!.isNotEmpty)
-                  _buildEpisodeImage(context, episode.imageUrl!)
+                  PodcastImageWidget(
+                    imageUrl: episode.imageUrl,
+                    width: 56,
+                    height: 56,
+                    iconSize: 28,
+                    iconColor: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant
+                        .withValues(alpha: 0.7),
+                  )
                 else
                   _buildDefaultCover(context),
 
@@ -228,30 +235,12 @@ class _FloatingPlayerButton extends StatelessWidget {
     return Container(
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: Center(
-        child: SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+        child: Icon(
+          Icons.podcasts,
+          size: 28,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
-    );
-  }
-
-  /// Build episode-specific image
-  Widget _buildEpisodeImage(BuildContext context, String imageUrl) {
-    return Image.network(
-      imageUrl,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return _buildDefaultCover(context);
-      },
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return _buildLoadingCover(context);
-      },
     );
   }
 }

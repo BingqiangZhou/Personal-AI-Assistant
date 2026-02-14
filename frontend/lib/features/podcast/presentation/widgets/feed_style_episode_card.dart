@@ -5,6 +5,7 @@ import '../navigation/podcast_navigation.dart';
 import '../../../../core/utils/time_formatter.dart';
 import '../../core/utils/episode_description_helper.dart';
 import '../../../../core/localization/app_localizations.dart';
+import 'podcast_image_widget.dart';
 
 class FeedStyleEpisodeCard extends ConsumerWidget {
   final PodcastEpisodeModel episode;
@@ -59,32 +60,13 @@ class FeedStyleEpisodeCard extends ConsumerWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child:
-                          (episode.imageUrl != null ||
-                              episode.subscriptionImageUrl != null)
-                          ? Image.network(
-                              episode.imageUrl ?? episode.subscriptionImageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Icon(
-                                    episode.isPlayed
-                                        ? Icons.play_arrow
-                                        : Icons.play_circle_filled,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimaryContainer,
-                                    size: 28,
-                                  ),
-                            )
-                          : Icon(
-                              episode.isPlayed
-                                  ? Icons.play_arrow
-                                  : Icons.play_circle_filled,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onPrimaryContainer,
-                              size: 28,
-                            ),
+                      child: PodcastImageWidget(
+                        imageUrl: episode.imageUrl ?? episode.subscriptionImageUrl,
+                        width: 48,
+                        height: 48,
+                        iconSize: 28,
+                        iconColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),

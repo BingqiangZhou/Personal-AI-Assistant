@@ -11,8 +11,6 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/bu
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart'
     as search;
-import 'package:personal_ai_assistant/features/podcast/presentation/widgets/add_podcast_dialog.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/widgets/bulk_import_dialog.dart';
 
 void main() {
   group('PodcastListPage header and discover layout', () {
@@ -61,15 +59,6 @@ void main() {
         find.byKey(const Key('podcast_list_header_title')),
         findsOneWidget,
       );
-      expect(find.byKey(const Key('podcast_list_action_add')), findsOneWidget);
-      expect(
-        find.byKey(const Key('podcast_list_action_bulk_import')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('podcast_list_action_select_mode')),
-        findsOneWidget,
-      );
       expect(
         find.byKey(const Key('podcast_list_discover_title')),
         findsOneWidget,
@@ -91,14 +80,9 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.byKey(const Key('podcast_list_subscriptions_title')),
+        find.byKey(const Key('podcast_list_subscriptions_shortcut')),
         findsOneWidget,
       );
-
-      final subscriptionsTitle = tester.widget<RichText>(
-        find.byKey(const Key('podcast_list_subscriptions_title')),
-      );
-      expect(subscriptionsTitle.text.toPlainText(), contains('(1)'));
 
       expect(find.text(l10n!.podcast_network_hint), findsNothing);
 
@@ -143,7 +127,9 @@ void main() {
       expect(find.text(l10n.podcast_network_hint), findsOneWidget);
     });
 
-    testWidgets('maps top-right actions to existing behaviors', (tester) async {
+    testWidgets('does not show subscription add/import actions in header', (
+      tester,
+    ) async {
       final container = ProviderContainer(
         overrides: [
           podcastSubscriptionProvider.overrideWith(
@@ -177,30 +163,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('podcast_list_action_add')));
-      await tester.pumpAndSettle();
-      expect(find.byType(AddPodcastDialog), findsOneWidget);
-      Navigator.of(tester.element(find.byType(AddPodcastDialog))).pop();
-      await tester.pumpAndSettle();
-
-      await tester.tap(
+      expect(find.byKey(const Key('podcast_list_action_add')), findsNothing);
+      expect(
         find.byKey(const Key('podcast_list_action_bulk_import')),
+        findsNothing,
       );
-      await tester.pumpAndSettle();
-      expect(find.byType(BulkImportDialog), findsOneWidget);
-      Navigator.of(tester.element(find.byType(BulkImportDialog))).pop();
-      await tester.pumpAndSettle();
-
-      await tester.tap(
-        find.byKey(const Key('podcast_list_action_select_mode')),
-      );
-      await tester.pumpAndSettle();
-
-      expect(container.read(bulkSelectionProvider).isSelectionMode, isTrue);
       expect(
         find.byKey(const Key('podcast_list_action_select_mode')),
         findsNothing,
       );
+
+      expect(container.read(bulkSelectionProvider).isSelectionMode, isFalse);
     });
   });
 }

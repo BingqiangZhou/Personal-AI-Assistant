@@ -13,7 +13,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 
 void main() {
   group('PodcastListPage desktop subscription layout', () {
-    testWidgets('renders single-column list and keeps card navigation', (
+    testWidgets('renders subscriptions shortcut and keeps navigation', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 900);
@@ -47,9 +47,9 @@ void main() {
             ),
           ),
           GoRoute(
-            path: '/podcast/episodes/:id',
+            path: '/profile/subscriptions',
             builder: (context, state) =>
-                const Scaffold(body: Text('Episodes Page')),
+                const Scaffold(body: Text('Subscriptions Page')),
           ),
         ],
       );
@@ -63,18 +63,15 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(GridView), findsNothing);
-      expect(find.byType(ListView), findsOneWidget);
-
-      final cardFinder = find.byKey(
-        const Key('podcast_subscription_mobile_card_1'),
+      final shortcutFinder = find.byKey(
+        const Key('podcast_list_subscriptions_shortcut'),
       );
-      expect(cardFinder, findsOneWidget);
+      expect(shortcutFinder, findsOneWidget);
 
-      await tester.tap(cardFinder);
+      await tester.tap(shortcutFinder);
       await tester.pumpAndSettle();
 
-      expect(find.text('Episodes Page'), findsOneWidget);
+      expect(find.text('Subscriptions Page'), findsOneWidget);
     });
   });
 }

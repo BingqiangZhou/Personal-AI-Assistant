@@ -10,6 +10,7 @@ import '../constants/playback_speed_options.dart';
 import '../constants/podcast_ui_constants.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
+import 'podcast_image_widget.dart';
 import 'playback_speed_selector_sheet.dart';
 import 'podcast_queue_sheet.dart';
 import 'sleep_timer_selector_sheet.dart';
@@ -543,22 +544,14 @@ class _CoverImage extends StatelessWidget {
       child: SizedBox(
         width: size,
         height: size,
-        child: imageUrl != null && imageUrl!.isNotEmpty
-            ? Image.network(
-                imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, error, stackTrace) => _fallback(theme),
-              )
-            : _fallback(theme),
+        child: PodcastImageWidget(
+          imageUrl: imageUrl,
+          width: size,
+          height: size,
+          iconSize: size * 0.52,
+          iconColor: theme.colorScheme.primary,
+        ),
       ),
-    );
-  }
-
-  Widget _fallback(ThemeData theme) {
-    return Container(
-      color: theme.colorScheme.primary.withValues(alpha: 0.12),
-      alignment: Alignment.center,
-      child: Icon(Icons.podcasts, color: theme.colorScheme.primary),
     );
   }
 }

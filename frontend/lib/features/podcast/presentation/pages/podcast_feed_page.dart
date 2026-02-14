@@ -11,6 +11,7 @@ import '../../data/models/podcast_episode_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../../core/utils/episode_description_helper.dart';
+import '../widgets/podcast_image_widget.dart';
 
 /// Material Design 3自适应Feed页面
 class PodcastFeedPage extends ConsumerStatefulWidget {
@@ -308,27 +309,13 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child:
-                              (episode.imageUrl != null ||
-                                  episode.subscriptionImageUrl != null)
-                              ? Image.network(
-                                  episode.imageUrl ??
-                                      episode.subscriptionImageUrl!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Icon(
-                                        Icons.podcasts,
-                                        color: theme
-                                            .colorScheme
-                                            .onPrimaryContainer,
-                                        size: coverIconSize,
-                                      ),
-                                )
-                              : Icon(
-                                  Icons.podcasts,
-                                  color: theme.colorScheme.onPrimaryContainer,
-                                  size: coverIconSize,
-                                ),
+                          child: PodcastImageWidget(
+                            imageUrl: episode.imageUrl ?? episode.subscriptionImageUrl,
+                            width: coverSize,
+                            height: coverSize,
+                            iconSize: coverIconSize,
+                            iconColor: theme.colorScheme.onPrimaryContainer,
+                          ),
                         ),
                       ),
                     ),
@@ -560,24 +547,13 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child:
-                          (episode.imageUrl != null ||
-                              episode.subscriptionImageUrl != null)
-                          ? Image.network(
-                              episode.imageUrl ?? episode.subscriptionImageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Icon(
-                                    Icons.podcasts,
-                                    color: theme.colorScheme.onPrimaryContainer,
-                                    size: coverIconSize,
-                                  ),
-                            )
-                          : Icon(
-                              Icons.podcasts,
-                              color: theme.colorScheme.onPrimaryContainer,
-                              size: coverIconSize,
-                            ),
+                      child: PodcastImageWidget(
+                        imageUrl: episode.imageUrl ?? episode.subscriptionImageUrl,
+                        width: coverSize,
+                        height: coverSize,
+                        iconSize: coverIconSize,
+                        iconColor: theme.colorScheme.onPrimaryContainer,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),

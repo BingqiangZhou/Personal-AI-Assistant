@@ -10,6 +10,7 @@ import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../widgets/simplified_episode_card.dart';
 import '../widgets/podcast_bottom_player_widget.dart';
+import '../widgets/podcast_image_widget.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
 class PodcastEpisodesPage extends ConsumerStatefulWidget {
@@ -291,34 +292,28 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                         builder: (context) {
                           final sub = widget.subscription;
                           if (sub?.imageUrl != null) {
-                            return Image.network(
-                              sub!.imageUrl!,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Icon(
-                                    Icons.podcasts,
-                                    size: 24,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimaryContainer,
-                                  ),
+                            return PodcastImageWidget(
+                              imageUrl: sub!.imageUrl,
+                              width: 40,
+                              height: 40,
+                              iconSize: 24,
+                              iconColor: Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer,
                             );
                           }
 
                           if (episodesState.episodes.isNotEmpty) {
                             final firstEp = episodesState.episodes.first;
                             if (firstEp.subscriptionImageUrl != null) {
-                              return Image.network(
-                                firstEp.subscriptionImageUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Icon(
-                                      Icons.podcasts,
-                                      size: 24,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onPrimaryContainer,
-                                    ),
+                              return PodcastImageWidget(
+                                imageUrl: firstEp.subscriptionImageUrl,
+                                width: 40,
+                                height: 40,
+                                iconSize: 24,
+                                iconColor: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer,
                               );
                             }
                           }
