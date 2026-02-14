@@ -4,6 +4,7 @@
 
 import logging
 from datetime import date, datetime, timedelta, timezone
+from time import perf_counter
 from typing import Any
 
 from sqlalchemy import and_, case, desc, func, or_, select
@@ -33,6 +34,7 @@ class PodcastRepository:
     def __init__(self, db: AsyncSession, redis: PodcastRedis | None = None):
         self.db = db
         self.redis = redis or PodcastRedis()
+        self._queue_position_compaction_threshold = 100_000
 
     # === 订阅管理 ===
 
@@ -816,6 +818,7 @@ class PodcastRepository:
         max_items: int = 500,
     ) -> PodcastQueue:
         """Add episode into queue, or move existing one to the tail."""
+        started_at = perf_counter()
         queue = await self.get_queue_with_items(user_id)
         ordered_items = self._sorted_queue_items(queue)
         existing = next(
@@ -825,26 +828,53 @@ class PodcastRepository:
         if existing is None and len(ordered_items) >= max_items:
             raise ValueError("QUEUE_LIMIT_EXCEEDED")
 
+        tail_position = ordered_items[-1].position if ordered_items else -1
+
+        added_item = None
         if existing:
-            ordered_items = [item for item in ordered_items if item.id != existing.id]
-            ordered_items.append(existing)
+            if existing.position != tail_position:
+                existing.position = tail_position + 1
+                await self.db.flush()
         else:
             new_item = PodcastQueueItem(
                 queue_id=queue.id,
                 episode_id=episode_id,
-                position=len(ordered_items),
+                position=tail_position + 1,
             )
             self.db.add(new_item)
             await self.db.flush()
-            ordered_items.append(new_item)
+            added_item = new_item
 
-        await self._rewrite_queue_positions(ordered_items)
+        ordered_items = self._sorted_queue_items(queue)
+        if added_item is not None and all(
+            item.id != added_item.id for item in ordered_items
+        ):
+            ordered_items.append(added_item)
+            ordered_items = sorted(ordered_items, key=lambda item: (item.position, item.id))
+        if (
+            ordered_items
+            and ordered_items[-1].position
+            >= self._queue_position_compaction_threshold
+        ):
+            await self._rewrite_queue_positions(ordered_items)
+            logger.debug(
+                "[Queue] Compacted queue positions for user_id=%s at size=%s",
+                user_id,
+                len(ordered_items),
+            )
 
         if queue.current_episode_id is None and ordered_items:
             queue.current_episode_id = ordered_items[0].episode_id
 
         self._touch_queue(queue)
         await self.db.commit()
+        logger.debug(
+            "[Queue] add_or_move_to_tail user_id=%s episode_id=%s size=%s elapsed_ms=%.2f",
+            user_id,
+            episode_id,
+            len(ordered_items),
+            (perf_counter() - started_at) * 1000,
+        )
         return await self.get_queue_with_items(user_id)
 
     async def remove_item(self, user_id: int, episode_id: int) -> PodcastQueue:

@@ -40,6 +40,7 @@ class _PodcastEpisodeDetailPageState
   Timer? _summaryPollingTimer;
   bool _isPolling = false; // Guard flag to prevent multiple polls
   bool _hasTrackedEpisodeView = false;
+  bool _isAddingToQueue = false;
   String _selectedSummaryText = '';
 
   // Sticky header animation
@@ -1016,6 +1017,45 @@ class _PodcastEpisodeDetailPageState
     await notifier.playEpisode(episodeModel);
   }
 
+  Future<void> _addCurrentEpisodeToQueue() async {
+    if (_isAddingToQueue) {
+      return;
+    }
+    setState(() {
+      _isAddingToQueue = true;
+    });
+
+    try {
+      await ref
+          .read(podcastQueueControllerProvider.notifier)
+          .addToQueue(widget.episodeId);
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        showTopFloatingNotice(
+          context,
+          message: l10n.added_to_queue,
+          extraTopOffset: 72,
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        showTopFloatingNotice(
+          context,
+          message: l10n.failed_to_add_to_queue(error.toString()),
+          isError: true,
+          extraTopOffset: 72,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAddingToQueue = false;
+        });
+      }
+    }
+  }
+
   Widget _buildPlayButton(dynamic episode, AppLocalizations l10n) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -1066,31 +1106,8 @@ class _PodcastEpisodeDetailPageState
         ),
         const SizedBox(width: 8),
         InkWell(
-          onTap: () async {
-            try {
-              await ref
-                  .read(podcastQueueControllerProvider.notifier)
-                  .addToQueue(widget.episodeId);
-              if (mounted) {
-                final l10n = AppLocalizations.of(context)!;
-                showTopFloatingNotice(
-                  context,
-                  message: l10n.added_to_queue,
-                  extraTopOffset: 72,
-                );
-              }
-            } catch (error) {
-              if (mounted) {
-                final l10n = AppLocalizations.of(context)!;
-                showTopFloatingNotice(
-                  context,
-                  message: l10n.failed_to_add_to_queue(error.toString()),
-                  isError: true,
-                  extraTopOffset: 72,
-                );
-              }
-            }
-          },
+          key: const Key('podcast_episode_detail_add_to_queue'),
+          onTap: _isAddingToQueue ? null : _addCurrentEpisodeToQueue,
           child: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
@@ -1105,11 +1122,20 @@ class _PodcastEpisodeDetailPageState
                 width: 1,
               ),
             ),
-            child: Icon(
-              Icons.playlist_add,
-              size: 18,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            child: _isAddingToQueue
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  )
+                : Icon(
+                    Icons.playlist_add,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
           ),
         ),
       ],

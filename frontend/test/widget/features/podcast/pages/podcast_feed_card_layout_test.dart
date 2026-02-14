@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_feed_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
@@ -194,6 +197,82 @@ void main() {
         expect(descriptionToMetaGap, lessThanOrEqualTo(12));
       },
     );
+
+    testWidgets(
+      'mobile add-to-queue button shows loading, disables repeat taps, and restores after completion',
+      (WidgetTester tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final queueController = _ControlledQueueController();
+        final container = ProviderContainer(
+          overrides: [
+            podcastFeedProvider.overrideWith(
+              () => _MockPodcastFeedNotifier(
+                PodcastFeedState(
+                  episodes: [_buildEpisode()],
+                  isLoading: false,
+                  hasMore: false,
+                  total: 1,
+                ),
+              ),
+            ),
+            podcastQueueControllerProvider.overrideWith(() => queueController),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PodcastFeedPage(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final addButtonFinder = find.byKey(
+          const Key('podcast_feed_mobile_add_to_queue'),
+        );
+        expect(addButtonFinder, findsOneWidget);
+        expect(
+          find.descendant(
+            of: addButtonFinder,
+            matching: find.byIcon(Icons.playlist_add),
+          ),
+          findsOneWidget,
+        );
+
+        await tester.tap(addButtonFinder);
+        await tester.pump();
+        expect(queueController.addToQueueCallCount, 1);
+        expect(tester.widget<IconButton>(addButtonFinder).onPressed, isNull);
+        expect(
+          find.descendant(
+            of: addButtonFinder,
+            matching: find.byType(CircularProgressIndicator),
+          ),
+          findsOneWidget,
+        );
+
+        queueController.completeAddToQueue();
+        await tester.pumpAndSettle();
+        expect(tester.widget<IconButton>(addButtonFinder).onPressed, isNotNull);
+        expect(
+          find.descendant(
+            of: addButtonFinder,
+            matching: find.byIcon(Icons.playlist_add),
+          ),
+          findsOneWidget,
+        );
+        await tester.pump(const Duration(seconds: 4));
+      },
+    );
   });
 }
 
@@ -232,4 +311,39 @@ PodcastEpisodeModel _buildEpisode() {
     publishedAt: DateTime(2026, 2, 13),
     createdAt: DateTime(2026, 2, 13),
   );
+}
+
+class _ControlledQueueController extends PodcastQueueController {
+  final Completer<void> _addToQueueCompleter = Completer<void>();
+  int addToQueueCallCount = 0;
+
+  @override
+  Future<PodcastQueueModel> build() async {
+    return PodcastQueueModel.empty();
+  }
+
+  @override
+  Future<PodcastQueueModel> addToQueue(int episodeId) async {
+    addToQueueCallCount += 1;
+    await _addToQueueCompleter.future;
+    return PodcastQueueModel(
+      currentEpisodeId: episodeId,
+      revision: 1,
+      items: [
+        PodcastQueueItemModel(
+          episodeId: episodeId,
+          position: 0,
+          title: 'Episode $episodeId',
+          podcastId: 1,
+          audioUrl: 'https://example.com/$episodeId.mp3',
+        ),
+      ],
+    );
+  }
+
+  void completeAddToQueue() {
+    if (!_addToQueueCompleter.isCompleted) {
+      _addToQueueCompleter.complete();
+    }
+  }
 }

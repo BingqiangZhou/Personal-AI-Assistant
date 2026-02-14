@@ -10,6 +10,7 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
   final VoidCallback? onTap;
   final VoidCallback? onPlay;
   final VoidCallback? onAddToQueue;
+  final bool isAddingToQueue;
 
   const SimplifiedEpisodeCard({
     super.key,
@@ -17,6 +18,7 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
     this.onTap,
     this.onPlay,
     this.onAddToQueue,
+    this.isAddingToQueue = false,
   });
 
   @override
@@ -149,8 +151,10 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
                   const SizedBox(width: 6),
                   IconButton(
                     key: const Key('simplified_episode_add_to_queue'),
-                    tooltip: l10n.podcast_add_to_queue,
-                    onPressed: onAddToQueue,
+                    tooltip: isAddingToQueue
+                        ? l10n.podcast_adding
+                        : l10n.podcast_add_to_queue,
+                    onPressed: isAddingToQueue ? null : onAddToQueue,
                     style: IconButton.styleFrom(
                       minimumSize: const Size(28, 28),
                       maximumSize: const Size(28, 28),
@@ -159,7 +163,13 @@ class SimplifiedEpisodeCard extends ConsumerWidget {
                       padding: EdgeInsets.zero,
                       foregroundColor: theme.colorScheme.onSurfaceVariant,
                     ),
-                    icon: const Icon(Icons.playlist_add, size: 18),
+                    icon: isAddingToQueue
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.playlist_add, size: 18),
                   ),
                   const SizedBox(width: 10),
                   IconButton(

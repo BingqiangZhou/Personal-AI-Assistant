@@ -200,6 +200,53 @@ void main() {
         );
       },
     );
+
+    testWidgets('add-to-queue button shows loading and becomes disabled', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final episode = _buildEpisode();
+      var tapCount = 0;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: SimplifiedEpisodeCard(
+                episode: episode,
+                isAddingToQueue: true,
+                onAddToQueue: () {
+                  tapCount += 1;
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final addButtonFinder = find.byKey(
+        const Key('simplified_episode_add_to_queue'),
+      );
+      expect(addButtonFinder, findsOneWidget);
+      expect(
+        find.descendant(
+          of: addButtonFinder,
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(addButtonFinder);
+      await tester.pump();
+      expect(tapCount, 0);
+    });
   });
 }
 

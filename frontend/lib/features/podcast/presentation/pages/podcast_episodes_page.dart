@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
+import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
@@ -50,6 +51,7 @@ class PodcastEpisodesPage extends ConsumerStatefulWidget {
 
 class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   final ScrollController _scrollController = ScrollController();
+  final Set<int> _addingEpisodeIds = <int>{};
   String _selectedFilter = 'all';
   bool _showOnlyWithSummary = false;
   bool _isReparsing = false; // 重新解析状态
@@ -133,6 +135,45 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   }
 
   // 重新解析订阅
+  Future<void> _handleAddToQueue(PodcastEpisodeModel episode) async {
+    if (_addingEpisodeIds.contains(episode.id)) {
+      return;
+    }
+    setState(() {
+      _addingEpisodeIds.add(episode.id);
+    });
+
+    try {
+      await ref
+          .read(podcastQueueControllerProvider.notifier)
+          .addToQueue(episode.id);
+      if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        showTopFloatingNotice(
+          context,
+          message: l10n.added_to_queue,
+          extraTopOffset: 72,
+        );
+      }
+    } catch (error) {
+      if (context.mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        showTopFloatingNotice(
+          context,
+          message: l10n.failed_to_add_to_queue(error.toString()),
+          isError: true,
+          extraTopOffset: 72,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _addingEpisodeIds.remove(episode.id);
+        });
+      }
+    }
+  }
+
   Future<void> _reparseSubscription() async {
     if (_isReparsing) return; // 防止重复点击
 
@@ -379,6 +420,8 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                         episodesState.episodes[index];
                                     return SimplifiedEpisodeCard(
                                       episode: episode,
+                                      isAddingToQueue: _addingEpisodeIds
+                                          .contains(episode.id),
                                       onTap: () {
                                         context.push(
                                           '/podcast/episode/detail/${episode.id}',
@@ -396,41 +439,8 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                           );
                                         }
                                       },
-                                      onAddToQueue: () async {
-                                        try {
-                                          await ref
-                                              .read(
-                                                podcastQueueControllerProvider
-                                                    .notifier,
-                                              )
-                                              .addToQueue(episode.id);
-                                          if (context.mounted) {
-                                            final l10n = AppLocalizations.of(
-                                              context,
-                                            )!;
-                                            showTopFloatingNotice(
-                                              context,
-                                              message: l10n.added_to_queue,
-                                              extraTopOffset: 72,
-                                            );
-                                          }
-                                        } catch (error) {
-                                          if (context.mounted) {
-                                            final l10n = AppLocalizations.of(
-                                              context,
-                                            )!;
-                                            showTopFloatingNotice(
-                                              context,
-                                              message: l10n
-                                                  .failed_to_add_to_queue(
-                                                    error.toString(),
-                                                  ),
-                                              isError: true,
-                                              extraTopOffset: 72,
-                                            );
-                                          }
-                                        }
-                                      },
+                                      onAddToQueue: () =>
+                                          _handleAddToQueue(episode),
                                     );
                                   },
                                 );
@@ -462,6 +472,9 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                   final episode = episodesState.episodes[index];
                                   return SimplifiedEpisodeCard(
                                     episode: episode,
+                                    isAddingToQueue: _addingEpisodeIds.contains(
+                                      episode.id,
+                                    ),
                                     onTap: () {
                                       context.push(
                                         '/podcast/episode/detail/${episode.id}',
@@ -479,39 +492,8 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                         );
                                       }
                                     },
-                                    onAddToQueue: () async {
-                                      try {
-                                        await ref
-                                            .read(
-                                              podcastQueueControllerProvider
-                                                  .notifier,
-                                            )
-                                            .addToQueue(episode.id);
-                                        if (context.mounted) {
-                                          showTopFloatingNotice(
-                                            context,
-                                            message: AppLocalizations.of(
-                                              context,
-                                            )!.added_to_queue,
-                                            extraTopOffset: 72,
-                                          );
-                                        }
-                                      } catch (error) {
-                                        if (context.mounted) {
-                                          showTopFloatingNotice(
-                                            context,
-                                            message:
-                                                AppLocalizations.of(
-                                                  context,
-                                                )!.failed_to_add_to_queue(
-                                                  error.toString(),
-                                                ),
-                                            isError: true,
-                                            extraTopOffset: 72,
-                                          );
-                                        }
-                                      }
-                                    },
+                                    onAddToQueue: () =>
+                                        _handleAddToQueue(episode),
                                   );
                                 },
                               );

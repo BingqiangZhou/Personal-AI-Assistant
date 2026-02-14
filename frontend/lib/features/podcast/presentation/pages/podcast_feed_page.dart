@@ -21,6 +21,8 @@ class PodcastFeedPage extends ConsumerStatefulWidget {
 }
 
 class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
+  final Set<int> _addingEpisodeIds = <int>{};
+
   @override
   void initState() {
     super.initState();
@@ -78,6 +80,13 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 
   /// 构建Feed内容
   Future<void> _addToQueue(PodcastEpisodeModel episode) async {
+    if (_addingEpisodeIds.contains(episode.id)) {
+      return;
+    }
+    setState(() {
+      _addingEpisodeIds.add(episode.id);
+    });
+
     try {
       await ref
           .read(podcastQueueControllerProvider.notifier)
@@ -99,6 +108,12 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           isError: true,
           extraTopOffset: 64,
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _addingEpisodeIds.remove(episode.id);
+        });
       }
     }
   }
@@ -231,6 +246,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   Widget _buildMobileCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
     // Get display description: AI summary main topics or plain shownotes
     final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
       aiSummary: episode.aiSummary,
@@ -434,8 +450,12 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                   const SizedBox(width: 6),
                   IconButton(
                     key: const Key('podcast_feed_mobile_add_to_queue'),
-                    tooltip: l10n.podcast_add_to_queue,
-                    onPressed: () => _addToQueue(episode),
+                    tooltip: isAddingToQueue
+                        ? l10n.podcast_adding
+                        : l10n.podcast_add_to_queue,
+                    onPressed: isAddingToQueue
+                        ? null
+                        : () => _addToQueue(episode),
                     style: IconButton.styleFrom(
                       minimumSize: const Size(28, 28),
                       maximumSize: const Size(28, 28),
@@ -444,7 +464,13 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                       padding: EdgeInsets.zero,
                       foregroundColor: theme.colorScheme.onSurfaceVariant,
                     ),
-                    icon: const Icon(Icons.playlist_add, size: 18),
+                    icon: isAddingToQueue
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.playlist_add, size: 18),
                   ),
                   const SizedBox(width: 10),
                   IconButton(
@@ -481,6 +507,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   Widget _buildDesktopCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
     final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
       aiSummary: episode.aiSummary,
       description: episode.description,
@@ -670,8 +697,12 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                   const SizedBox(width: 6),
                   IconButton(
                     key: const Key('podcast_feed_desktop_add_to_queue'),
-                    tooltip: l10n.podcast_add_to_queue,
-                    onPressed: () => _addToQueue(episode),
+                    tooltip: isAddingToQueue
+                        ? l10n.podcast_adding
+                        : l10n.podcast_add_to_queue,
+                    onPressed: isAddingToQueue
+                        ? null
+                        : () => _addToQueue(episode),
                     style: IconButton.styleFrom(
                       minimumSize: const Size(28, 28),
                       maximumSize: const Size(28, 28),
@@ -680,7 +711,13 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                       padding: EdgeInsets.zero,
                       foregroundColor: theme.colorScheme.onSurfaceVariant,
                     ),
-                    icon: const Icon(Icons.playlist_add, size: 18),
+                    icon: isAddingToQueue
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.playlist_add, size: 18),
                   ),
                   const SizedBox(width: 10),
                   IconButton(

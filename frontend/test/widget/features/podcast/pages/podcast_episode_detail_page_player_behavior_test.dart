@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +8,7 @@ import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_conversation_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_playback_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_transcription_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_episode_detail_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/conversation_providers.dart';
@@ -439,7 +442,9 @@ void main() {
 
         await _setMobilePage(tester, 1);
         await tester.pump(const Duration(milliseconds: 300));
-        final transcriptPageContext = tester.element(find.byType(PageView).first);
+        final transcriptPageContext = tester.element(
+          find.byType(PageView).first,
+        );
         final transcriptMetrics = FixedScrollMetrics(
           minScrollExtent: 0,
           maxScrollExtent: 400,
@@ -563,7 +568,9 @@ void main() {
       final scrollToTopFinder = find.byKey(
         const Key('podcast_episode_detail_scroll_to_top_button'),
       );
-      final miniPlayerFinder = find.byKey(const Key('podcast_bottom_player_mini'));
+      final miniPlayerFinder = find.byKey(
+        const Key('podcast_bottom_player_mini'),
+      );
       expect(scrollToTopFinder, findsOneWidget);
       expect(miniPlayerFinder, findsOneWidget);
 
@@ -708,6 +715,68 @@ void main() {
       },
     );
 
+    testWidgets('add-to-queue shows loading and ignores repeated taps', (
+      tester,
+    ) async {
+      addTearDown(() async {
+        await tester.binding.setSurfaceSize(null);
+      });
+      await tester.binding.setSurfaceSize(const Size(1200, 900));
+
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _episode(),
+          duration: 180000,
+          isExpanded: true,
+          isPlaying: true,
+        ),
+      );
+      final queueController = _ControlledQueueController();
+
+      await tester.pumpWidget(
+        _createWidget(notifier, queueController: queueController),
+      );
+      await tester.pumpAndSettle();
+
+      final addButtonFinder = find.byKey(
+        const Key('podcast_episode_detail_add_to_queue'),
+      );
+      expect(addButtonFinder, findsOneWidget);
+      expect(
+        find.descendant(
+          of: addButtonFinder,
+          matching: find.byIcon(Icons.playlist_add),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(addButtonFinder);
+      await tester.pump();
+      expect(queueController.addToQueueCallCount, 1);
+      expect(
+        find.descendant(
+          of: addButtonFinder,
+          matching: find.byType(CircularProgressIndicator),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(addButtonFinder);
+      await tester.pump();
+      expect(queueController.addToQueueCallCount, 1);
+
+      queueController.completeAddToQueue();
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: addButtonFinder,
+          matching: find.byIcon(Icons.playlist_add),
+        ),
+        findsOneWidget,
+      );
+      await tester.pump(const Duration(seconds: 4));
+    });
+
     testWidgets('same episode paused tap should call resume only', (
       tester,
     ) async {
@@ -786,10 +855,23 @@ void main() {
   });
 }
 
-Widget _createWidget(TestAudioPlayerNotifier notifier) {
+Widget _createWidget(
+  TestAudioPlayerNotifier notifier, {
+  PodcastQueueController? queueController,
+}) {
+  final effectiveQueueController =
+      queueController ?? _ControlledQueueController();
+  if (queueController == null &&
+      effectiveQueueController is _ControlledQueueController) {
+    effectiveQueueController.completeAddToQueue();
+  }
+
   return ProviderScope(
     overrides: [
       audioPlayerProvider.overrideWith(() => notifier),
+      podcastQueueControllerProvider.overrideWith(
+        () => effectiveQueueController,
+      ),
       episodeDetailProvider.overrideWith(
         (ref, episodeId) async => _episodeDetail(),
       ),
@@ -960,6 +1042,41 @@ class _EmptySessionListNotifier extends SessionListNotifier {
 class _NullSessionIdNotifier extends SessionIdNotifier {
   @override
   int? build() => null;
+}
+
+class _ControlledQueueController extends PodcastQueueController {
+  final Completer<void> _addToQueueCompleter = Completer<void>();
+  int addToQueueCallCount = 0;
+
+  @override
+  Future<PodcastQueueModel> build() async {
+    return PodcastQueueModel.empty();
+  }
+
+  @override
+  Future<PodcastQueueModel> addToQueue(int episodeId) async {
+    addToQueueCallCount += 1;
+    await _addToQueueCompleter.future;
+    return PodcastQueueModel(
+      currentEpisodeId: episodeId,
+      revision: addToQueueCallCount,
+      items: [
+        PodcastQueueItemModel(
+          episodeId: episodeId,
+          position: 0,
+          title: 'Episode $episodeId',
+          podcastId: 1,
+          audioUrl: 'https://example.com/$episodeId.mp3',
+        ),
+      ],
+    );
+  }
+
+  void completeAddToQueue() {
+    if (!_addToQueueCompleter.isCompleted) {
+      _addToQueueCompleter.complete();
+    }
+  }
 }
 
 Future<void> _setMobilePage(WidgetTester tester, int pageIndex) async {

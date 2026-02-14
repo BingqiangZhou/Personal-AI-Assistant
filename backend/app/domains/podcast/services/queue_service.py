@@ -1,10 +1,15 @@
 """Podcast Queue Service - manages single persistent queue per user."""
 
+import logging
+from time import perf_counter
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.podcast.repositories import PodcastRepository
+
+
+logger = logging.getLogger(__name__)
 
 
 class PodcastQueueService:
@@ -22,6 +27,7 @@ class PodcastQueueService:
         return await self._serialize_queue(queue)
 
     async def add_to_queue(self, episode_id: int) -> dict[str, Any]:
+        started_at = perf_counter()
         episode = await self.repo.get_episode_by_id(episode_id, self.user_id)
         if not episode:
             raise ValueError("EPISODE_NOT_FOUND")
@@ -31,7 +37,15 @@ class PodcastQueueService:
             episode_id=episode_id,
             max_items=self.MAX_QUEUE_ITEMS,
         )
-        return await self._serialize_queue(queue)
+        result = await self._serialize_queue(queue)
+        logger.debug(
+            "[Queue] add_to_queue user_id=%s episode_id=%s items=%s elapsed_ms=%.2f",
+            self.user_id,
+            episode_id,
+            len(result["items"]),
+            (perf_counter() - started_at) * 1000,
+        )
+        return result
 
     async def remove_from_queue(self, episode_id: int) -> dict[str, Any]:
         queue = await self.repo.remove_item(self.user_id, episode_id)

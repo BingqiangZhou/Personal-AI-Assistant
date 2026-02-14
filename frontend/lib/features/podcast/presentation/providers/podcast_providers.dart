@@ -1077,6 +1077,8 @@ final podcastQueueControllerProvider =
 class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
   late PodcastRepository _repository;
   Future<PodcastQueueModel>? _inFlightQueueLoad;
+  final Map<int, Future<PodcastQueueModel>> _inFlightAddToQueueByEpisodeId =
+      <int, Future<PodcastQueueModel>>{};
   DateTime? _lastQueueRefreshAt;
   static const Duration _queueRefreshThrottle = Duration(seconds: 20);
 
@@ -1170,16 +1172,32 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
   }
 
   Future<PodcastQueueModel> addToQueue(int episodeId) async {
+    final inFlight = _inFlightAddToQueueByEpisodeId[episodeId];
+    if (inFlight != null) {
+      return inFlight;
+    }
+
     ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    final addFuture = () async {
+      try {
+        final queue = await _repository.addQueueItem(episodeId);
+        _applyQueue(queue);
+        return queue;
+      } catch (error, stackTrace) {
+        state = AsyncValue.error(error, stackTrace);
+        rethrow;
+      } finally {
+        ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+      }
+    }();
+
+    _inFlightAddToQueueByEpisodeId[episodeId] = addFuture;
     try {
-      final queue = await _repository.addQueueItem(episodeId);
-      _applyQueue(queue);
-      return queue;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
+      return await addFuture;
     } finally {
-      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+      if (identical(_inFlightAddToQueueByEpisodeId[episodeId], addFuture)) {
+        _inFlightAddToQueueByEpisodeId.remove(episodeId);
+      }
     }
   }
 
