@@ -67,8 +67,13 @@ class _MiniBottomPlayer extends ConsumerWidget {
     final isWideLayout = screenWidth >= 600;
     final isMobileLayout = !isWideLayout;
     final horizontalInset = isMobileLayout ? _mobileHorizontalInset : 0.0;
-    final progressColor = theme.colorScheme.primary;
-    final progressTrackColor = progressColor.withValues(alpha: 0.2);
+    final isDark = theme.brightness == Brightness.dark;
+    final titleColor = theme.textTheme.titleSmall?.color ?? theme.colorScheme.onSurface;
+    final progressColor =
+        isDark ? titleColor : theme.colorScheme.primary;
+    final progressTrackColor = theme.colorScheme.onSurfaceVariant.withValues(
+      alpha: isDark ? 0.35 : 0.25,
+    );
 
     return Padding(
       key: const Key('podcast_bottom_player_mini_wrapper'),
@@ -217,6 +222,13 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final titleColor = theme.textTheme.titleSmall?.color ?? theme.colorScheme.onSurface;
+    final sliderActiveColor =
+        isDark ? titleColor : theme.colorScheme.primary;
+    final sliderInactiveColor = theme.colorScheme.onSurfaceVariant.withValues(
+      alpha: isDark ? 0.35 : 0.25,
+    );
     final maxSlider = state.duration > 0 ? state.duration.toDouble() : 1.0;
     final sliderValue = state.position.toDouble().clamp(0.0, maxSlider);
     final nowPlayingText = l10n?.podcast_player_now_playing ?? 'Now Playing';
@@ -376,12 +388,21 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Slider(
-                  value: sliderValue,
-                  max: maxSlider,
-                  onChanged: (value) => ref
-                      .read(audioPlayerProvider.notifier)
-                      .seekTo(value.round()),
+                SliderTheme(
+                  data: theme.sliderTheme.copyWith(
+                    activeTrackColor: sliderActiveColor,
+                    inactiveTrackColor: sliderInactiveColor,
+                    thumbColor: sliderActiveColor,
+                    overlayColor: sliderActiveColor.withValues(alpha: 0.12),
+                    valueIndicatorColor: sliderActiveColor,
+                  ),
+                  child: Slider(
+                    value: sliderValue,
+                    max: maxSlider,
+                    onChanged: (value) => ref
+                        .read(audioPlayerProvider.notifier)
+                        .seekTo(value.round()),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),

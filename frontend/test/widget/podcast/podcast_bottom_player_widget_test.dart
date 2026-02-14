@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/theme/mindriver_theme.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
@@ -385,12 +386,56 @@ void main() {
       final timeRect = tester.getRect(timeFinder);
       expect(progressRect.center.dx, lessThan(timeRect.center.dx));
     });
+
+    testWidgets('mini progress stays visible in dark theme', (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          position: 45000,
+          duration: 180000,
+          isExpanded: false,
+        ),
+      );
+      final queueController = TestPodcastQueueController();
+
+      await tester.pumpWidget(
+        _createWidget(
+          notifier: notifier,
+          queueController: queueController,
+          theme: MindriverTheme.lightTheme,
+          darkTheme: MindriverTheme.darkTheme,
+          themeMode: ThemeMode.dark,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final progressFinder = find.byKey(
+        const Key('podcast_bottom_player_mini_progress'),
+      );
+      expect(progressFinder, findsOneWidget);
+
+      final progressWidget = tester.widget<LinearProgressIndicator>(
+        progressFinder,
+      );
+      final expectedColor =
+          MindriverTheme.darkTheme.textTheme.titleSmall?.color ??
+          MindriverTheme.darkTheme.colorScheme.onSurface;
+      expect(progressWidget.color, expectedColor);
+    });
   });
 }
 
 Widget _createWidget({
   required TestAudioPlayerNotifier notifier,
   required TestPodcastQueueController queueController,
+  ThemeData? theme,
+  ThemeData? darkTheme,
+  ThemeMode themeMode = ThemeMode.system,
 }) {
   return ProviderScope(
     overrides: [
@@ -400,6 +445,9 @@ Widget _createWidget({
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
+      theme: theme,
+      darkTheme: darkTheme,
+      themeMode: themeMode,
       home: const Scaffold(
         body: SizedBox.shrink(),
         bottomNavigationBar: PodcastBottomPlayerWidget(),

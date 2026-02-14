@@ -13,6 +13,7 @@ class PodcastSearchResultCard extends StatelessWidget {
     this.isSubscribed = false,
     this.isSubscribing = false,
     this.searchCountry = PodcastCountry.china,
+    this.dense = false,
   });
 
   final PodcastSearchResult result;
@@ -20,20 +21,27 @@ class PodcastSearchResultCard extends StatelessWidget {
   final bool isSubscribed;
   final bool isSubscribing;
   final PodcastCountry searchCountry;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final cardHorizontalPadding =
+        dense ? 8.0 : kPodcastRowCardHorizontalPadding;
+    final cardVerticalPadding = dense ? 6.0 : kPodcastRowCardVerticalPadding;
+    final cardVerticalMargin = dense ? 1.0 : kPodcastRowCardVerticalMargin;
+    final imageSize = dense ? 52.0 : kPodcastRowCardImageSize;
+    final horizontalGap = dense ? 10.0 : kPodcastRowCardHorizontalGap;
 
     if (result.collectionName == null || result.feedUrl == null) {
       return const SizedBox.shrink();
     }
 
     return Card(
-      margin: const EdgeInsets.symmetric(
+      margin: EdgeInsets.symmetric(
         horizontal: kPodcastRowCardHorizontalMargin,
-        vertical: kPodcastRowCardVerticalMargin,
+        vertical: cardVerticalMargin,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
@@ -43,13 +51,13 @@ class PodcastSearchResultCard extends StatelessWidget {
         onTap: () => onSubscribe?.call(result),
         borderRadius: BorderRadius.circular(kPodcastRowCardCornerRadius),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: kPodcastRowCardHorizontalPadding,
-            vertical: kPodcastRowCardVerticalPadding,
+          padding: EdgeInsets.symmetric(
+            horizontal: cardHorizontalPadding,
+            vertical: cardVerticalPadding,
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minHeight: kPodcastRowCardImageSize,
+            constraints: BoxConstraints(
+              minHeight: imageSize,
             ),
             child: Row(
               children: [
@@ -59,18 +67,18 @@ class PodcastSearchResultCard extends StatelessWidget {
                   ),
                   child: SizedBox(
                     key: const Key('podcast_search_result_card_artwork'),
-                    width: kPodcastRowCardImageSize,
-                    height: kPodcastRowCardImageSize,
+                    width: imageSize,
+                    height: imageSize,
                     child: PodcastImageWidget(
                       imageUrl: result.artworkUrl100,
-                      width: kPodcastRowCardImageSize,
-                      height: kPodcastRowCardImageSize,
+                      width: imageSize,
+                      height: imageSize,
                       iconSize: 24,
                       iconColor: theme.colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ),
-                const SizedBox(width: kPodcastRowCardHorizontalGap),
+                SizedBox(width: horizontalGap),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

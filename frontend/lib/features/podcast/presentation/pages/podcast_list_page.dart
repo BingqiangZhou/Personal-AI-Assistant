@@ -369,6 +369,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final searchState = ref.watch(search.podcastSearchProvider);
     final discoverState = ref.watch(podcastDiscoverProvider);
     final countryState = ref.watch(countrySelectorProvider);
+    final subscriptionState = ref.watch(podcastSubscriptionProvider);
+    final isDense = subscriptionState.subscriptions.length >= 20;
 
     return ResponsiveContainer(
       child: Material(
@@ -407,13 +409,22 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 8),
-            _buildDiscoverSearchInput(context, l10n),
-            const SizedBox(height: 12),
+            SizedBox(height: isDense ? 6 : 8),
+            _buildDiscoverSearchInput(context, l10n, isDense: isDense),
+            SizedBox(height: isDense ? 8 : 12),
             Expanded(
               child: searchState.hasSearched
-                  ? _buildSearchResults(context, searchState, l10n)
-                  : _buildDiscoverContent(context, discoverState),
+                  ? _buildSearchResults(
+                      context,
+                      searchState,
+                      l10n,
+                      isDense: isDense,
+                    )
+                  : _buildDiscoverContent(
+                      context,
+                      discoverState,
+                      isDense: isDense,
+                    ),
             ),
           ],
         ),
@@ -424,6 +435,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   Widget _buildDiscoverContent(
     BuildContext context,
     PodcastDiscoverState discoverState,
+    {required bool isDense}
   ) {
     final l10n = AppLocalizations.of(context)!;
 
@@ -475,24 +487,28 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         child: ListView(
           key: const Key('podcast_discover_list'),
           children: [
-            _buildTabSelector(context, discoverState),
-            const SizedBox(height: 12),
-            _buildTopChartsSection(context, discoverState),
-            const SizedBox(height: 16),
+            _buildTabSelector(context, discoverState, isDense: isDense),
+            SizedBox(height: isDense ? 8 : 12),
+            _buildTopChartsSection(context, discoverState, isDense: isDense),
+            SizedBox(height: isDense ? 12 : 16),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTabSelector(BuildContext context, PodcastDiscoverState state) {
+  Widget _buildTabSelector(
+    BuildContext context,
+    PodcastDiscoverState state, {
+    required bool isDense,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Container(
       key: const Key('podcast_discover_tab_selector'),
-      height: 44,
-      padding: const EdgeInsets.all(4),
+      height: isDense ? 40 : 44,
+      padding: EdgeInsets.all(isDense ? 3 : 4),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
@@ -506,6 +522,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               label: l10n.podcast_title,
               icon: Icons.podcasts,
               selected: state.selectedTab == PodcastDiscoverTab.podcasts,
+              isDense: isDense,
               onTap: () => ref
                   .read(podcastDiscoverProvider.notifier)
                   .setTab(PodcastDiscoverTab.podcasts),
@@ -519,6 +536,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               label: l10n.podcast_episodes,
               icon: Icons.headphones_outlined,
               selected: state.selectedTab == PodcastDiscoverTab.episodes,
+              isDense: isDense,
               onTap: () => ref
                   .read(podcastDiscoverProvider.notifier)
                   .setTab(PodcastDiscoverTab.episodes),
@@ -532,6 +550,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   Widget _buildDiscoverSearchInput(
     BuildContext context,
     AppLocalizations l10n,
+    {required bool isDense}
   ) {
     final theme = Theme.of(context);
 
@@ -543,18 +562,18 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: SizedBox(
-        height: 48,
+        height: isDense ? 44 : 48,
         child: Row(
           children: [
             Padding(
-              padding: const EdgeInsets.only(left: 12),
+              padding: EdgeInsets.only(left: isDense ? 10 : 12),
               child: Icon(
                 Icons.search,
-                size: 20,
+                size: isDense ? 18 : 20,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(width: 8),
+            SizedBox(width: isDense ? 6 : 8),
             Expanded(
               child: TextField(
                 key: const Key('podcast_discover_search_input'),
@@ -588,12 +607,12 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 onPressed: _clearSearch,
                 icon: Icon(
                   Icons.clear,
-                  size: 18,
+                  size: isDense ? 16 : 18,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               )
             else
-              const SizedBox(width: 8),
+              SizedBox(width: isDense ? 6 : 8),
           ],
         ),
       ),
@@ -607,12 +626,15 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     required IconData icon,
     required bool selected,
     required VoidCallback onTap,
+    bool isDense = false,
   }) {
     final theme = Theme.of(context);
     final foregroundColor = selected
         ? theme.colorScheme.onSurface
         : theme.colorScheme.onSurfaceVariant;
-    final labelStyle = theme.textTheme.titleMedium?.copyWith(
+    final labelStyle =
+        (isDense ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)
+            ?.copyWith(
       fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
       color: foregroundColor,
     );
@@ -634,8 +656,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 18, color: foregroundColor),
-                const SizedBox(width: 6),
+                Icon(icon, size: isDense ? 16 : 18, color: foregroundColor),
+                SizedBox(width: isDense ? 4 : 6),
                 Text(label, style: labelStyle),
               ],
             ),
@@ -648,6 +670,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   Widget _buildTopChartsSection(
     BuildContext context,
     PodcastDiscoverState state,
+    {required bool isDense}
   ) {
     final l10n = AppLocalizations.of(context)!;
     final titleStyle = Theme.of(
@@ -682,9 +705,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        SizedBox(height: isDense ? 6 : 10),
         _buildCategorySection(context, state),
-        const SizedBox(height: 14),
+        SizedBox(height: isDense ? 10 : 14),
         if (state.visibleItems.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -694,7 +717,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           ...state.visibleItems.asMap().entries.map((entry) {
             final rank = entry.key + 1;
             final item = entry.value;
-            return _buildChartRow(context, rank, item);
+            return _buildChartRow(context, rank, item, isDense: isDense);
           }),
       ],
     );
@@ -704,26 +727,38 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     BuildContext context,
     int rank,
     PodcastDiscoverItem item,
+    {required bool isDense}
   ) {
     final theme = Theme.of(context);
     final showSubscribe = item.isPodcastShow;
     final itunesId = item.itunesId;
     final rankLabel = '$rank';
-    const rankSlotWidth = 48.0;
-    const actionSlotWidth = rankSlotWidth;
+    final rankSlotWidth = isDense ? 44.0 : 48.0;
+    final actionSlotWidth = rankSlotWidth;
     final isSubscribing =
         itunesId != null && _subscribingShowIds.contains(itunesId);
     final isSubscribed =
         itunesId != null && _subscribedShowIds.contains(itunesId);
+    final rowOuterPadding = isDense ? 3.0 : 6.0;
+    final rowInnerPadding = isDense ? 4.0 : 6.0;
+    final imageSize = isDense ? 56.0 : 62.0;
+    final titleStyle = (isDense
+            ? theme.textTheme.titleSmall
+            : theme.textTheme.titleMedium)
+        ?.copyWith(fontWeight: FontWeight.w700);
+    final subtitleStyle = (isDense
+            ? theme.textTheme.bodySmall
+            : theme.textTheme.bodyMedium)
+        ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
 
     return Padding(
       key: Key('podcast_discover_chart_row_${item.itemId}'),
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: rowOuterPadding),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () => _handleChartRowTap(item),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: EdgeInsets.symmetric(vertical: rowInnerPadding),
           child: Row(
             children: [
               SizedBox(
@@ -746,18 +781,18 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              SizedBox(width: isDense ? 4 : 6),
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: PodcastImageWidget(
                   imageUrl: item.artworkUrl,
-                  width: 62,
-                  height: 62,
+                  width: imageSize,
+                  height: imageSize,
                   iconSize: 24,
                   iconColor: theme.colorScheme.primary,
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: isDense ? 10 : 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -766,23 +801,19 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                       item.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: titleStyle,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       item.artist,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                      style: subtitleStyle,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: isDense ? 6 : 8),
               if (showSubscribe)
                 SizedBox(
                   width: actionSlotWidth,
@@ -944,6 +975,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     BuildContext context,
     search.PodcastSearchState searchState,
     AppLocalizations l10n,
+    {required bool isDense}
   ) {
     final subscriptionState = ref.watch(podcastSubscriptionProvider);
 
@@ -1002,6 +1034,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           isSubscribed: isSubscribed,
           isSubscribing: isSubscribing,
           searchCountry: searchState.searchCountry,
+          dense: isDense,
           key: ValueKey('search_${result.feedUrl}'),
         );
       },
