@@ -36,10 +36,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(podcastSubscriptionProvider.notifier).loadSubscriptions();
-      ref.read(podcastDiscoverProvider.notifier).loadInitialData();
-    });
+    ref.read(podcastSubscriptionProvider.notifier).loadSubscriptions();
+    ref.read(podcastDiscoverProvider.notifier).loadInitialData();
   }
 
   @override
@@ -369,11 +367,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final searchState = ref.watch(search.podcastSearchProvider);
     final discoverState = ref.watch(podcastDiscoverProvider);
     final countryState = ref.watch(countrySelectorProvider);
-    final subscriptionState = ref.watch(podcastSubscriptionProvider);
-    final subscriptionCount = subscriptionState.total > 0
-        ? subscriptionState.total
-        : subscriptionState.subscriptions.length;
-    final isDense = subscriptionCount >= 20;
+    ref.watch(podcastSubscriptionProvider);
+    const isDense = true;
 
     return ResponsiveContainer(
       child: Material(
