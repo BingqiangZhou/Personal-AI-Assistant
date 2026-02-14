@@ -115,12 +115,46 @@ void main() {
       );
       expect(find.byType(PodcastBottomPlayerWidget), findsNothing);
     });
+
+    testWidgets('switching subscription triggers forced reload once', (
+      tester,
+    ) async {
+      final audioNotifier = TestAudioPlayerNotifier(const AudioPlayerState());
+      final episodesNotifier = TestPodcastEpisodesNotifier(
+        const PodcastEpisodesState(episodes: [], hasMore: false, total: 0),
+      );
+
+      await tester.pumpWidget(
+        _createWidget(
+          audioNotifier: audioNotifier,
+          episodesNotifier: episodesNotifier,
+          subscriptionId: 1,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.pumpWidget(
+        _createWidget(
+          audioNotifier: audioNotifier,
+          episodesNotifier: episodesNotifier,
+          subscriptionId: 2,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(episodesNotifier.loadCalls.length, 2);
+      expect(episodesNotifier.loadCalls.first.subscriptionId, 1);
+      expect(episodesNotifier.loadCalls.first.forceRefresh, isFalse);
+      expect(episodesNotifier.loadCalls.last.subscriptionId, 2);
+      expect(episodesNotifier.loadCalls.last.forceRefresh, isTrue);
+    });
   });
 }
 
 Widget _createWidget({
   required TestAudioPlayerNotifier audioNotifier,
   required TestPodcastEpisodesNotifier episodesNotifier,
+  int subscriptionId = 1,
 }) {
   return ProviderScope(
     overrides: [
@@ -130,7 +164,10 @@ Widget _createWidget({
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const PodcastEpisodesPage(subscriptionId: 1, podcastTitle: 'Demo'),
+      home: PodcastEpisodesPage(
+        subscriptionId: subscriptionId,
+        podcastTitle: 'Demo',
+      ),
     ),
   );
 }
@@ -150,6 +187,7 @@ class TestPodcastEpisodesNotifier extends PodcastEpisodesNotifier {
   TestPodcastEpisodesNotifier(this._initialState);
 
   final PodcastEpisodesState _initialState;
+  final List<_LoadEpisodesCall> loadCalls = [];
 
   @override
   PodcastEpisodesState build() {
@@ -162,19 +200,40 @@ class TestPodcastEpisodesNotifier extends PodcastEpisodesNotifier {
     int page = 1,
     int size = 20,
     String? status,
+    bool? hasSummary,
     bool forceRefresh = false,
-  }) async {}
+  }) async {
+    loadCalls.add(
+      _LoadEpisodesCall(
+        subscriptionId: subscriptionId,
+        forceRefresh: forceRefresh,
+      ),
+    );
+  }
 
   @override
   Future<void> loadMoreEpisodesForSubscription({
     required int subscriptionId,
+    String? status,
+    bool? hasSummary,
   }) async {}
 
   @override
   Future<void> refreshEpisodesForSubscription({
     required int subscriptionId,
     String? status,
+    bool? hasSummary,
   }) async {}
+}
+
+class _LoadEpisodesCall {
+  const _LoadEpisodesCall({
+    required this.subscriptionId,
+    required this.forceRefresh,
+  });
+
+  final int subscriptionId;
+  final bool forceRefresh;
 }
 
 PodcastEpisodeModel _episode() {

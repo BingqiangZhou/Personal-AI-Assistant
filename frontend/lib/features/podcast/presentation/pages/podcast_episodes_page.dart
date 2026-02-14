@@ -55,9 +55,17 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   final Set<int> _addingEpisodeIds = <int>{};
   String _selectedFilter = 'all';
   bool _showOnlyWithSummary = false;
-  bool _isReparsing = false; // 重新解析状态
+  bool _isReparsing = false; // 閲嶆柊瑙ｆ瀽鐘舵€?
   static const double _mobileMenuBarHeight = 65.0;
   static const double _desktopEpisodeCardHeight = 160.0;
+
+  String? get _statusFilter => _selectedFilter == 'played'
+      ? 'played'
+      : _selectedFilter == 'unplayed'
+      ? 'unplayed'
+      : null;
+
+  bool? get _hasSummaryFilter => _showOnlyWithSummary ? true : null;
 
   @override
   void initState() {
@@ -73,6 +81,8 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
             .read(podcastEpisodesProvider.notifier)
             .loadMoreEpisodesForSubscription(
               subscriptionId: widget.subscriptionId,
+              status: _statusFilter,
+              hasSummary: _hasSummaryFilter,
             );
       }
     });
@@ -84,35 +94,40 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     // Check if subscriptionId has changed
     if (oldWidget.subscriptionId != widget.subscriptionId) {
       logger.AppLogger.debug(
-        '🔄 ===== didUpdateWidget: Subscription ID changed =====',
+        '馃攧 ===== didUpdateWidget: Subscription ID changed =====',
       );
       logger.AppLogger.debug(
-        '🔄 Old Subscription ID: ${oldWidget.subscriptionId}',
+        '馃攧 Old Subscription ID: ${oldWidget.subscriptionId}',
       );
       logger.AppLogger.debug(
-        '🔄 New Subscription ID: ${widget.subscriptionId}',
+        '馃攧 New Subscription ID: ${widget.subscriptionId}',
       );
-      logger.AppLogger.debug('🔄 Reloading episodes for new subscription');
+      logger.AppLogger.debug('馃攧 Reloading episodes for new subscription');
 
       // Reset filters
       _selectedFilter = 'all';
       _showOnlyWithSummary = false;
 
       // Reload episodes for the new subscription
-      _loadEpisodesForSubscription();
+      _loadEpisodesForSubscription(forceRefresh: true);
 
-      logger.AppLogger.debug('🔄 ===== didUpdateWidget complete =====');
+      logger.AppLogger.debug('馃攧 ===== didUpdateWidget complete =====');
     }
   }
 
-  Future<void> _loadEpisodesForSubscription() {
+  Future<void> _loadEpisodesForSubscription({bool forceRefresh = false}) {
     return Future.microtask(() {
       logger.AppLogger.debug(
-        '📋 Loading episodes for subscription: ${widget.subscriptionId}',
+        '馃搵 Loading episodes for subscription: ${widget.subscriptionId}',
       );
       ref
           .read(podcastEpisodesProvider.notifier)
-          .loadEpisodesForSubscription(subscriptionId: widget.subscriptionId);
+          .loadEpisodesForSubscription(
+            subscriptionId: widget.subscriptionId,
+            status: _statusFilter,
+            hasSummary: _hasSummaryFilter,
+            forceRefresh: forceRefresh,
+          );
     });
   }
 
@@ -127,15 +142,12 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         .read(podcastEpisodesProvider.notifier)
         .refreshEpisodesForSubscription(
           subscriptionId: widget.subscriptionId,
-          status: _selectedFilter == 'played'
-              ? 'played'
-              : _selectedFilter == 'unplayed'
-              ? 'unplayed'
-              : null,
+          status: _statusFilter,
+          hasSummary: _hasSummaryFilter,
         );
   }
 
-  // 重新解析订阅
+  // 閲嶆柊瑙ｆ瀽璁㈤槄
   Future<void> _handleAddToQueue(PodcastEpisodeModel episode) async {
     if (_addingEpisodeIds.contains(episode.id)) {
       return;
@@ -176,7 +188,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   }
 
   Future<void> _reparseSubscription() async {
-    if (_isReparsing) return; // 防止重复点击
+    if (_isReparsing) return; // 闃叉閲嶅鐐瑰嚮
 
     setState(() {
       _isReparsing = true;
@@ -185,7 +197,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     final l10n = AppLocalizations.of(context)!;
 
     try {
-      // 显示 loading 提示
+      // 鏄剧ず loading 鎻愮ず
       if (mounted) {
         showTopFloatingNotice(
           context,
@@ -194,18 +206,18 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         );
       }
 
-      // 调用重新解析
+      // 璋冪敤閲嶆柊瑙ｆ瀽
       await ref
           .read(podcastSubscriptionProvider.notifier)
           .reparseSubscription(
             widget.subscriptionId,
-            true, // forceAll: 重新解析所有分集
+            true, // forceAll: 閲嶆柊瑙ｆ瀽鎵€鏈夊垎闆?
           );
 
-      // 重新加载分集列表
+      // 閲嶆柊鍔犺浇鍒嗛泦鍒楄〃
       await _refreshEpisodes();
 
-      // 显示成功提示
+      // 鏄剧ず鎴愬姛鎻愮ず
       if (mounted) {
         showTopFloatingNotice(
           context,
@@ -214,7 +226,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         );
       }
     } catch (error) {
-      // 显示错误提示
+      // 鏄剧ず閿欒鎻愮ず
       if (mounted) {
         showTopFloatingNotice(
           context,
@@ -243,10 +255,10 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         null;
     final isMobileLayout = MediaQuery.of(context).size.width < 600;
 
-    // Debug: 输出分集图像链接信息（已注释）
+    // Debug: 杈撳嚭鍒嗛泦鍥惧儚閾炬帴淇℃伅锛堝凡娉ㄩ噴锛?
     // if (episodesState.episodes.isNotEmpty) {
     //   final firstEpisode = episodesState.episodes.first;
-    //   logger.AppLogger.debug('📺 PodcastEpisodesPage - First episode image debug:');
+    //   logger.AppLogger.debug('馃摵 PodcastEpisodesPage - First episode image debug:');
     //   logger.AppLogger.debug('  Episode ID: ${firstEpisode.id}');
     //   logger.AppLogger.debug('  Episode Title: ${firstEpisode.title}');
     //   logger.AppLogger.debug('  Image URL: ${firstEpisode.imageUrl}');
@@ -297,9 +309,9 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                               width: 40,
                               height: 40,
                               iconSize: 24,
-                              iconColor: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer,
+                              iconColor: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
                             );
                           }
 
@@ -311,9 +323,9 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                 width: 40,
                                 height: 40,
                                 iconSize: 24,
-                                iconColor: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
+                                iconColor: Theme.of(
+                                  context,
+                                ).colorScheme.onPrimaryContainer,
                               );
                             }
                           }
@@ -340,7 +352,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  // 重新解析按钮
+                  // 閲嶆柊瑙ｆ瀽鎸夐挳
                   IconButton(
                     icon: _isReparsing
                         ? SizedBox(
@@ -355,7 +367,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                     onPressed: _isReparsing ? null : _reparseSubscription,
                     tooltip: l10n.podcast_reparse_tooltip,
                   ),
-                  // 筛选按钮移到标题行
+                  // 绛涢€夋寜閽Щ鍒版爣棰樿
                   if (MediaQuery.of(context).size.width < 700) ...[
                     IconButton(
                       icon: const Icon(Icons.filter_list),
@@ -423,11 +435,11 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                         );
                                       },
                                       onPlay: () async {
-                                        // 播放分集
+                                        // 鎾斁鍒嗛泦
                                         await ref
                                             .read(audioPlayerProvider.notifier)
                                             .playEpisode(episode);
-                                        // 跳转到详情页
+                                        // 璺宠浆鍒拌鎯呴〉
                                         if (context.mounted) {
                                           context.push(
                                             '/podcast/episode/detail/${episode.id}',
@@ -476,11 +488,11 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                       );
                                     },
                                     onPlay: () async {
-                                      // 播放分集
+                                      // 鎾斁鍒嗛泦
                                       await ref
                                           .read(audioPlayerProvider.notifier)
                                           .playEpisode(episode);
-                                      // 跳转到详情页
+                                      // 璺宠浆鍒拌鎯呴〉
                                       if (context.mounted) {
                                         context.push(
                                           '/podcast/episode/detail/${episode.id}',

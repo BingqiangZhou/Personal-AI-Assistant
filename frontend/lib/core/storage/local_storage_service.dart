@@ -29,14 +29,14 @@ abstract class LocalStorageService {
   Future<void> cacheData(String key, dynamic data, {Duration? expiration});
   Future<T?> getCachedData<T>(String key);
   Future<void> clearExpiredCache();
-  
+
   // App Config
   Future<void> saveApiBaseUrl(String url);
   Future<String?> getApiBaseUrl();
 
   // Server Config (backend server address)
   Future<void> saveServerBaseUrl(String url);
-  Future<String?> getServerBaseUrl(); 
+  Future<String?> getServerBaseUrl();
 }
 
 final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
@@ -47,9 +47,15 @@ class LocalStorageServiceImpl implements LocalStorageService {
   final SharedPreferences _prefs;
   static const String _cachePrefix = 'cache_';
   static const String _timestampPrefix = 'ts_';
-  static const int _defaultCacheDuration = 24 * 60 * 60 * 1000; // 24 hours in ms
+  static const String _expirationSuffix = '_exp';
+  static const int _defaultCacheDuration =
+      24 * 60 * 60 * 1000; // 24 hours in ms
 
   LocalStorageServiceImpl(this._prefs);
+
+  String _cacheKey(String key) => '$_cachePrefix$key';
+  String _timestampKey(String key) => '$_timestampPrefix$key';
+  String _expirationKey(String key) => '$_cachePrefix$key$_expirationSuffix';
 
   @override
   Future<void> saveString(String key, String value) async {
@@ -122,8 +128,9 @@ class LocalStorageServiceImpl implements LocalStorageService {
   @override
   Future<void> remove(String key) async {
     await _prefs.remove(key);
-    await _prefs.remove(_cachePrefix + key);
-    await _prefs.remove(_timestampPrefix + key);
+    await _prefs.remove(_cacheKey(key));
+    await _prefs.remove(_timestampKey(key));
+    await _prefs.remove(_expirationKey(key));
   }
 
   @override
@@ -137,19 +144,26 @@ class LocalStorageServiceImpl implements LocalStorageService {
   }
 
   @override
-  Future<void> cacheData(String key, dynamic data, {Duration? expiration}) async {
+  Future<void> cacheData(
+    String key,
+    dynamic data, {
+    Duration? expiration,
+  }) async {
     final expirationTime = expiration?.inMilliseconds ?? _defaultCacheDuration;
 
-    await _prefs.setString('$_cachePrefix$key', jsonEncode(data));
-    await _prefs.setInt('$_timestampPrefix$key', DateTime.now().millisecondsSinceEpoch);
-    await _prefs.setInt('${_cachePrefix}key${'_exp'}', expirationTime);
+    await _prefs.setString(_cacheKey(key), jsonEncode(data));
+    await _prefs.setInt(
+      _timestampKey(key),
+      DateTime.now().millisecondsSinceEpoch,
+    );
+    await _prefs.setInt(_expirationKey(key), expirationTime);
   }
 
   @override
   Future<T?> getCachedData<T>(String key) async {
-    final cachedData = _prefs.getString('$_cachePrefix$key');
-    final timestamp = _prefs.getInt('$_timestampPrefix$key');
-    final expiration = _prefs.getInt('${_cachePrefix}key${'_exp'}');
+    final cachedData = _prefs.getString(_cacheKey(key));
+    final timestamp = _prefs.getInt(_timestampKey(key));
+    final expiration = _prefs.getInt(_expirationKey(key));
 
     if (cachedData == null || timestamp == null || expiration == null) {
       return null;
@@ -174,15 +188,19 @@ class LocalStorageServiceImpl implements LocalStorageService {
     final keys = _prefs.getKeys();
 
     for (final key in keys) {
-      if (key.startsWith(_cachePrefix) && !key.endsWith('_exp') && !key.startsWith(_timestampPrefix)) {
+      if (key.startsWith(_cachePrefix) &&
+          !key.endsWith(_expirationSuffix) &&
+          !key.startsWith(_timestampPrefix)) {
         final cacheKey = key.substring(_cachePrefix.length);
-        final timestamp = _prefs.getInt('$_timestampPrefix$cacheKey');
-        final expiration = _prefs.getInt('${key}_exp');
+        final timestamp = _prefs.getInt(_timestampKey(cacheKey));
+        final expiration = _prefs.getInt(_expirationKey(cacheKey));
 
-        if (timestamp != null && expiration != null && now - timestamp > expiration) {
-          await _prefs.remove(key);
-          await _prefs.remove('$_timestampPrefix$cacheKey');
-          await _prefs.remove('${key}_exp');
+        if (timestamp != null &&
+            expiration != null &&
+            now - timestamp > expiration) {
+          await _prefs.remove(_cacheKey(cacheKey));
+          await _prefs.remove(_timestampKey(cacheKey));
+          await _prefs.remove(_expirationKey(cacheKey));
         }
       }
     }

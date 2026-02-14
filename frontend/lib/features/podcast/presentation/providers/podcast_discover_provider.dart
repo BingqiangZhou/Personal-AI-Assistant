@@ -198,6 +198,15 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
     state = state.copyWith(episodesExpanded: !state.episodesExpanded);
   }
 
+  void clearRuntimeCache() {
+    final rssService = ref.read(applePodcastRssServiceProvider);
+    final selectedCountry = ref.read(countrySelectorProvider).selectedCountry;
+    rssService.clearCache();
+    _activeRequestId += 1;
+    _inFlightLoad = null;
+    state = PodcastDiscoverState(country: selectedCountry);
+  }
+
   Future<void> _loadCharts({
     required PodcastCountry country,
     required bool isRefresh,

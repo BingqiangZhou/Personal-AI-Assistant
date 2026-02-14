@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,40 +24,42 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          playbackHistoryLiteProvider.overrideWith((ref) async {
-            return PlaybackHistoryLiteResponse(
-              episodes: [
-                PlaybackHistoryLiteItem(
-                  id: 101,
-                  subscriptionId: 2,
-                  subscriptionTitle: 'Podcast X',
-                  subscriptionImageUrl: null,
-                  title: 'Episode X',
-                  imageUrl: null,
-                  audioDuration: 1800,
-                  playbackPosition: 120,
-                  lastPlayedAt: now,
-                  publishedAt: now.subtract(const Duration(days: 1)),
-                ),
-                PlaybackHistoryLiteItem(
-                  id: 102,
-                  subscriptionId: 3,
-                  subscriptionTitle: 'Podcast Y',
-                  subscriptionImageUrl: 'https://example.com/sub.png',
-                  title: 'Episode Y',
-                  imageUrl: 'https://example.com/ep.png',
-                  audioDuration: 2400,
-                  playbackPosition: 300,
-                  lastPlayedAt: now.subtract(const Duration(minutes: 3)),
-                  publishedAt: now.subtract(const Duration(days: 2)),
-                ),
-              ],
-              total: 2,
-              page: 1,
-              size: 100,
-              pages: 1,
-            );
-          }),
+          playbackHistoryLiteProvider.overrideWith(
+            () => _FixedPlaybackHistoryLiteNotifier(
+              PlaybackHistoryLiteResponse(
+                episodes: [
+                  PlaybackHistoryLiteItem(
+                    id: 101,
+                    subscriptionId: 2,
+                    subscriptionTitle: 'Podcast X',
+                    subscriptionImageUrl: null,
+                    title: 'Episode X',
+                    imageUrl: null,
+                    audioDuration: 1800,
+                    playbackPosition: 120,
+                    lastPlayedAt: now,
+                    publishedAt: now.subtract(const Duration(days: 1)),
+                  ),
+                  PlaybackHistoryLiteItem(
+                    id: 102,
+                    subscriptionId: 3,
+                    subscriptionTitle: 'Podcast Y',
+                    subscriptionImageUrl: 'https://example.com/sub.png',
+                    title: 'Episode Y',
+                    imageUrl: 'https://example.com/ep.png',
+                    audioDuration: 2400,
+                    playbackPosition: 300,
+                    lastPlayedAt: now.subtract(const Duration(minutes: 3)),
+                    publishedAt: now.subtract(const Duration(days: 2)),
+                  ),
+                ],
+                total: 2,
+                page: 1,
+                size: 100,
+                pages: 1,
+              ),
+            ),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -118,4 +122,19 @@ void main() {
     final titleBoxRect = tester.getRect(titleBoxFinder);
     expect(titleBoxRect.height, closeTo(38, 0.01));
   });
+}
+
+class _FixedPlaybackHistoryLiteNotifier extends PlaybackHistoryLiteNotifier {
+  _FixedPlaybackHistoryLiteNotifier(this._value);
+
+  final PlaybackHistoryLiteResponse? _value;
+
+  @override
+  FutureOr<PlaybackHistoryLiteResponse?> build() => _value;
+
+  @override
+  Future<PlaybackHistoryLiteResponse?> load({bool forceRefresh = false}) async {
+    state = AsyncValue.data(_value);
+    return _value;
+  }
 }

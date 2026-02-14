@@ -5,6 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/core_providers.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
+import '../../../podcast/presentation/providers/podcast_discover_provider.dart';
+import '../../../podcast/presentation/providers/podcast_providers.dart';
+import '../../../podcast/presentation/providers/podcast_search_provider.dart'
+    as search;
 
 enum _CacheCategory { images, audio, other }
 
@@ -97,7 +101,9 @@ class _ProfileCacheManagementPageState
     try {
       final repo = manager.config.repo;
       await repo.open().timeout(const Duration(seconds: 3));
-      final objects = await repo.getAllObjects().timeout(const Duration(seconds: 3));
+      final objects = await repo.getAllObjects().timeout(
+        const Duration(seconds: 3),
+      );
 
       var imagesCount = 0;
       var audioCount = 0;
@@ -174,7 +180,10 @@ class _ProfileCacheManagementPageState
     }
   }
 
-  Future<void> _deleteCategory(_MediaCacheStats stats, _CacheCategory category) async {
+  Future<void> _deleteCategory(
+    _MediaCacheStats stats,
+    _CacheCategory category,
+  ) async {
     final l10n = AppLocalizations.of(context)!;
     final selectedObjects = stats.objects
         .where((o) => _categoryFor(o) == category)
@@ -278,6 +287,16 @@ class _ProfileCacheManagementPageState
       await dioClient.clearCache();
       dioClient.clearETagCache();
       await ref.read(appCacheServiceProvider).clearAll();
+      ref.read(podcastDiscoverProvider.notifier).clearRuntimeCache();
+      ref.read(search.iTunesSearchServiceProvider).clearCache();
+
+      ref.invalidate(search.podcastSearchProvider);
+      ref.invalidate(podcastDiscoverProvider);
+      ref.invalidate(podcastFeedProvider);
+      ref.invalidate(podcastSubscriptionProvider);
+      ref.invalidate(podcastEpisodesProvider);
+      ref.invalidate(profileStatsProvider);
+      ref.invalidate(playbackHistoryLiteProvider);
 
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -487,8 +506,7 @@ class _ProfileCacheManagementPageState
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                if (isLoading)
-                  const LinearProgressIndicator(minHeight: 2),
+                if (isLoading) const LinearProgressIndicator(minHeight: 2),
                 const SizedBox(height: 12),
                 Card(
                   margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -529,7 +547,9 @@ class _ProfileCacheManagementPageState
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          l10n.profile_cache_manage_item_count(stats.totalCount),
+                          l10n.profile_cache_manage_item_count(
+                            stats.totalCount,
+                          ),
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w600,

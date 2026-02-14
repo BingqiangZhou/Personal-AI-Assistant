@@ -64,6 +64,30 @@ void main() {
       },
     );
 
+    test('forceRefresh requests again and replaces old feed data', () async {
+      final fakeRepository = _FakePodcastRepository(
+        responses: <PodcastFeedResponse>[
+          _responseWithEpisodeIds(<int>[1]),
+          _responseWithEpisodeIds(<int>[2]),
+        ],
+      );
+      final container = ProviderContainer(
+        overrides: [
+          podcastRepositoryProvider.overrideWithValue(fakeRepository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(podcastFeedProvider.notifier);
+      await notifier.loadInitialFeed();
+      expect(container.read(podcastFeedProvider).episodes.first.id, 1);
+
+      await notifier.loadInitialFeed(forceRefresh: true);
+      final refreshedState = container.read(podcastFeedProvider);
+      expect(refreshedState.episodes.first.id, 2);
+      expect(fakeRepository.getPodcastFeedCalls, 2);
+    });
+
     test('deduplicates concurrent initial loads', () async {
       final fakeRepository = _FakePodcastRepository(
         responses: <PodcastFeedResponse>[

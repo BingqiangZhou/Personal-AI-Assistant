@@ -143,6 +143,38 @@ void main() {
       expect(finalState.topEpisodes, isNotEmpty);
       expect(finalState.topShows, isNotEmpty);
     });
+
+    test(
+      'clearRuntimeCache clears discover state and triggers refetch',
+      () async {
+        final fakeService = _FakeApplePodcastRssService();
+        final container = ProviderContainer(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(
+              _MockLocalStorageService(),
+            ),
+            applePodcastRssServiceProvider.overrideWithValue(fakeService),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await container
+            .read(podcastDiscoverProvider.notifier)
+            .loadInitialData();
+        final callsBeforeClear = fakeService.showsCalls;
+
+        container.read(podcastDiscoverProvider.notifier).clearRuntimeCache();
+        final clearedState = container.read(podcastDiscoverProvider);
+        expect(clearedState.topShows, isEmpty);
+        expect(clearedState.topEpisodes, isEmpty);
+        expect(fakeService.clearCacheCalls, 1);
+
+        await container
+            .read(podcastDiscoverProvider.notifier)
+            .loadInitialData();
+        expect(fakeService.showsCalls, greaterThan(callsBeforeClear));
+      },
+    );
   });
 }
 
@@ -151,6 +183,7 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
 
   int showsCalls = 0;
   int episodeCalls = 0;
+  int clearCacheCalls = 0;
 
   @override
   Future<ApplePodcastChartResponse> fetchTopShows({
@@ -170,6 +203,12 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
   }) async {
     episodeCalls += 1;
     return _responseFor(kind: 'podcast-episodes', country: country.code);
+  }
+
+  @override
+  void clearCache() {
+    clearCacheCalls += 1;
+    super.clearCache();
   }
 
   ApplePodcastChartResponse _responseFor({

@@ -16,10 +16,15 @@ import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/features/auth/domain/models/user.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/profile_stats_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/services/apple_podcast_rss_service.dart';
+import 'package:personal_ai_assistant/features/podcast/data/services/itunes_search_service.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/podcast_api_service.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart'
+    as search;
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_cache_management_page.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -39,6 +44,42 @@ class _TestAuthNotifier extends AuthNotifier {
       ),
     );
   }
+}
+
+const _defaultProfileStats = ProfileStatsModel(
+  totalSubscriptions: 1,
+  totalEpisodes: 23,
+  summariesGenerated: 12,
+  pendingSummaries: 11,
+  playedEpisodes: 8,
+);
+
+class _FixedProfileStatsNotifier extends ProfileStatsNotifier {
+  _FixedProfileStatsNotifier(this._value);
+
+  final ProfileStatsModel? _value;
+
+  @override
+  FutureOr<ProfileStatsModel?> build() => _value;
+
+  @override
+  Future<ProfileStatsModel?> load({bool forceRefresh = false}) async {
+    state = AsyncValue.data(_value);
+    return _value;
+  }
+}
+
+class _PendingProfileStatsNotifier extends ProfileStatsNotifier {
+  _PendingProfileStatsNotifier(this._pending);
+
+  final Completer<ProfileStatsModel?> _pending;
+
+  @override
+  FutureOr<ProfileStatsModel?> build() => _pending.future;
+
+  @override
+  Future<ProfileStatsModel?> load({bool forceRefresh = false}) =>
+      _pending.future;
 }
 
 class _ThrowingPodcastApiService extends Mock implements PodcastApiService {}
@@ -76,17 +117,19 @@ class _TestPodcastSubscriptionNotifier extends PodcastSubscriptionNotifier {
 
 class _MockDioClient extends Mock implements DioClient {
   @override
-  Future<void> clearCache() => super.noSuchMethod(
-        Invocation.method(#clearCache, []),
-        returnValue: Future<void>.value(),
-        returnValueForMissingStub: Future<void>.value(),
-      ) as Future<void>;
+  Future<void> clearCache() =>
+      super.noSuchMethod(
+            Invocation.method(#clearCache, []),
+            returnValue: Future<void>.value(),
+            returnValueForMissingStub: Future<void>.value(),
+          )
+          as Future<void>;
 
   @override
   void clearETagCache() => super.noSuchMethod(
-        Invocation.method(#clearETagCache, []),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#clearETagCache, []),
+    returnValueForMissingStub: null,
+  );
 }
 
 class _MockAppCacheService extends Mock implements AppCacheService {
@@ -100,17 +143,37 @@ class _MockAppCacheService extends Mock implements AppCacheService {
   Future<void> clearMemoryImageCache() => Future<void>.value();
 
   @override
-  Future<void> clearAll() => super.noSuchMethod(
-        Invocation.method(#clearAll, []),
-        returnValue: Future<void>.value(),
-        returnValueForMissingStub: Future<void>.value(),
-      ) as Future<void>;
+  Future<void> clearAll() =>
+      super.noSuchMethod(
+            Invocation.method(#clearAll, []),
+            returnValue: Future<void>.value(),
+            returnValueForMissingStub: Future<void>.value(),
+          )
+          as Future<void>;
 
   @override
   Future<FileInfo?> getCachedFileInfo(String url) => Future<FileInfo?>.value();
 
   @override
   Future<void> warmUp(String url) => Future<void>.value();
+}
+
+class _MockITunesSearchService extends Mock implements ITunesSearchService {
+  @override
+  void clearCache() => super.noSuchMethod(
+    Invocation.method(#clearCache, []),
+    returnValueForMissingStub: null,
+  );
+}
+
+class _TrackingApplePodcastRssService extends ApplePodcastRssService {
+  int clearCacheCalls = 0;
+
+  @override
+  void clearCache() {
+    clearCacheCalls += 1;
+    super.clearCache();
+  }
 }
 
 const MethodChannel _packageInfoChannel = MethodChannel(
@@ -173,15 +236,9 @@ void main() {
         ProviderScope(
           overrides: [
             authProvider.overrideWith(_TestAuthNotifier.new),
-            profileStatsProvider.overrideWith((ref) async {
-              return const ProfileStatsModel(
-                totalSubscriptions: 1,
-                totalEpisodes: 23,
-                summariesGenerated: 12,
-                pendingSummaries: 11,
-                playedEpisodes: 8,
-              );
-            }),
+            profileStatsProvider.overrideWith(
+              () => _FixedProfileStatsNotifier(_defaultProfileStats),
+            ),
             podcastSubscriptionProvider.overrideWith(
               _TestPodcastSubscriptionNotifier.new,
             ),
@@ -216,10 +273,12 @@ void main() {
       ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
-          profileStatsProvider.overrideWith((ref) => pending.future),
-            podcastSubscriptionProvider.overrideWith(
-              _TestPodcastSubscriptionNotifier.new,
-            ),
+          profileStatsProvider.overrideWith(
+            () => _PendingProfileStatsNotifier(pending),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -242,10 +301,12 @@ void main() {
       ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
-          profileStatsProvider.overrideWith((ref) async => null),
-            podcastSubscriptionProvider.overrideWith(
-              _TestPodcastSubscriptionNotifier.new,
-            ),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(null),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -257,8 +318,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-      expect(find.text('0'), findsNWidgets(3));
-      expect(find.text('5'), findsOneWidget);
+    expect(find.text('0'), findsNWidgets(3));
+    expect(find.text('5'), findsOneWidget);
   });
 
   testWidgets('falls back to 0 when repository throws in provider chain', (
@@ -271,9 +332,9 @@ void main() {
           podcastRepositoryProvider.overrideWithValue(
             _ThrowingPodcastRepository(),
           ),
-            podcastSubscriptionProvider.overrideWith(
-              _TestPodcastSubscriptionNotifier.new,
-            ),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -285,8 +346,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-      expect(find.text('0'), findsNWidgets(3));
-      expect(find.text('5'), findsOneWidget);
+    expect(find.text('0'), findsNWidgets(3));
+    expect(find.text('5'), findsOneWidget);
   });
 
   testWidgets('clear cache entry triggers cache clear flow', (
@@ -294,6 +355,9 @@ void main() {
   ) async {
     final dioClient = _MockDioClient();
     final cacheService = _MockAppCacheService();
+    final searchService = _MockITunesSearchService();
+    final discoverService = _TrackingApplePodcastRssService();
+    final prefs = await SharedPreferences.getInstance();
 
     final router = GoRouter(
       routes: [
@@ -312,20 +376,19 @@ void main() {
       ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
-          profileStatsProvider.overrideWith((ref) async {
-            return const ProfileStatsModel(
-              totalSubscriptions: 1,
-              totalEpisodes: 23,
-              summariesGenerated: 12,
-              pendingSummaries: 11,
-              playedEpisodes: 8,
-            );
-          }),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),
           dioClientProvider.overrideWithValue(dioClient),
           appCacheServiceProvider.overrideWithValue(cacheService),
+          localStorageServiceProvider.overrideWithValue(
+            LocalStorageServiceImpl(prefs),
+          ),
+          search.iTunesSearchServiceProvider.overrideWithValue(searchService),
+          applePodcastRssServiceProvider.overrideWithValue(discoverService),
         ],
         child: MaterialApp.router(
           locale: const Locale('en'),
@@ -354,13 +417,18 @@ void main() {
     }
     expect(find.byType(ProfileCacheManagementPage), findsOneWidget);
 
-    final deepCleanFinder = find.byKey(const Key('cache_manage_deep_clean_all'));
-    for (var i = 0; i < 30; i++) {
-      await tester.pump(const Duration(milliseconds: 100));
-      if (deepCleanFinder.evaluate().isNotEmpty) {
-        break;
-      }
-    }
+    final deepCleanFinder = find.byKey(
+      const Key('cache_manage_deep_clean_all'),
+    );
+    final cachePageScrollable = find.descendant(
+      of: find.byType(ProfileCacheManagementPage),
+      matching: find.byType(Scrollable),
+    );
+    await tester.scrollUntilVisible(
+      deepCleanFinder,
+      200,
+      scrollable: cachePageScrollable.first,
+    );
     expect(deepCleanFinder, findsOneWidget);
     await tester.ensureVisible(deepCleanFinder);
     await tester.tap(deepCleanFinder);
@@ -374,6 +442,8 @@ void main() {
     verify(dioClient.clearCache()).called(1);
     verify(dioClient.clearETagCache()).called(1);
     verify(cacheService.clearAll()).called(1);
+    verify(searchService.clearCache()).called(1);
+    expect(discoverService.clearCacheCalls, 1);
 
     await tester.pump(const Duration(seconds: 4));
     await tester.pumpAndSettle();
@@ -386,15 +456,9 @@ void main() {
       ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
-          profileStatsProvider.overrideWith((ref) async {
-            return const ProfileStatsModel(
-              totalSubscriptions: 1,
-              totalEpisodes: 23,
-              summariesGenerated: 12,
-              pendingSummaries: 11,
-              playedEpisodes: 8,
-            );
-          }),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),
@@ -415,10 +479,7 @@ void main() {
     expect(find.text(l10n.profile_edit_profile), findsNothing);
     expect(find.text(l10n.profile_auto_sync), findsNothing);
 
-    expect(
-      find.byKey(const Key('profile_user_menu_button')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('profile_user_menu_button')), findsOneWidget);
   });
 
   testWidgets('top logout and user edit buttons open expected dialogs', (
@@ -428,15 +489,9 @@ void main() {
       ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
-          profileStatsProvider.overrideWith((ref) async {
-            return const ProfileStatsModel(
-              totalSubscriptions: 1,
-              totalEpisodes: 23,
-              summariesGenerated: 12,
-              pendingSummaries: 11,
-              playedEpisodes: 8,
-            );
-          }),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),
@@ -481,15 +536,9 @@ void main() {
       ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
-          profileStatsProvider.overrideWith((ref) async {
-            return const ProfileStatsModel(
-              totalSubscriptions: 1,
-              totalEpisodes: 23,
-              summariesGenerated: 12,
-              pendingSummaries: 11,
-              playedEpisodes: 8,
-            );
-          }),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),
@@ -584,15 +633,9 @@ void main() {
       ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
-          profileStatsProvider.overrideWith((ref) async {
-            return const ProfileStatsModel(
-              totalSubscriptions: 1,
-              totalEpisodes: 23,
-              summariesGenerated: 12,
-              pendingSummaries: 11,
-              playedEpisodes: 8,
-            );
-          }),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
           localStorageServiceProvider.overrideWithValue(
             LocalStorageServiceImpl(prefs),
           ),
@@ -638,15 +681,9 @@ void main() {
       ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
-          profileStatsProvider.overrideWith((ref) async {
-            return const ProfileStatsModel(
-              totalSubscriptions: 1,
-              totalEpisodes: 23,
-              summariesGenerated: 12,
-              pendingSummaries: 11,
-              playedEpisodes: 8,
-            );
-          }),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),
@@ -687,15 +724,9 @@ void main() {
       ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
-          profileStatsProvider.overrideWith((ref) async {
-            return const ProfileStatsModel(
-              totalSubscriptions: 1,
-              totalEpisodes: 23,
-              summariesGenerated: 12,
-              pendingSummaries: 11,
-              playedEpisodes: 8,
-            );
-          }),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),
@@ -736,15 +767,9 @@ void main() {
       ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
-          profileStatsProvider.overrideWith((ref) async {
-            return const ProfileStatsModel(
-              totalSubscriptions: 1,
-              totalEpisodes: 23,
-              summariesGenerated: 12,
-              pendingSummaries: 11,
-              playedEpisodes: 8,
-            );
-          }),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),

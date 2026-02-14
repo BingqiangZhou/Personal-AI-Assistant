@@ -8,21 +8,34 @@ import 'package:personal_ai_assistant/features/podcast/presentation/constants/po
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 
-class ProfileHistoryPage extends ConsumerWidget {
+class ProfileHistoryPage extends ConsumerStatefulWidget {
   const ProfileHistoryPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileHistoryPage> createState() => _ProfileHistoryPageState();
+}
+
+class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(playbackHistoryLiteProvider.notifier).load(forceRefresh: false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final historyAsync = ref.watch(playbackHistoryLiteProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.profile_viewed_title)),
       body: RefreshIndicator(
-        onRefresh: () {
-          ref.invalidate(playbackHistoryLiteProvider);
-          return ref.read(playbackHistoryLiteProvider.future);
-        },
+        onRefresh: () => ref
+            .read(playbackHistoryLiteProvider.notifier)
+            .load(forceRefresh: true),
         child: historyAsync.when(
           data: (response) {
             final episodes =

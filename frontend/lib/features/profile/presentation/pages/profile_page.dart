@@ -45,6 +45,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           .read(podcastSubscriptionProvider.notifier)
           .loadSubscriptions()
           .catchError((_) {});
+      ref.read(profileStatsProvider.notifier).load(forceRefresh: false);
     });
   }
 
@@ -463,7 +464,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Color _ensureIconContrast(BuildContext context, Color proposed) {
     final scheme = Theme.of(context).colorScheme;
     final cardColor = Theme.of(context).cardTheme.color ?? scheme.surface;
-    final diff = (proposed.computeLuminance() - cardColor.computeLuminance()).abs();
+    final diff = (proposed.computeLuminance() - cardColor.computeLuminance())
+        .abs();
     if (diff < 0.25) {
       return scheme.onSurface;
     }

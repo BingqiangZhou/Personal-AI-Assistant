@@ -76,6 +76,9 @@ class PodcastEpisodesState extends Equatable {
   final bool isLoading;
   final bool isLoadingMore;
   final String? error;
+  final int? cachedSubscriptionId;
+  final String? cachedStatus;
+  final bool? cachedHasSummary;
 
   /// Last refresh timestamp for cache validation
   final DateTime? lastRefreshTime;
@@ -89,6 +92,9 @@ class PodcastEpisodesState extends Equatable {
     this.isLoading = false,
     this.isLoadingMore = false,
     this.error,
+    this.cachedSubscriptionId,
+    this.cachedStatus,
+    this.cachedHasSummary,
     this.lastRefreshTime,
   });
 
@@ -101,6 +107,9 @@ class PodcastEpisodesState extends Equatable {
     bool? isLoading,
     bool? isLoadingMore,
     String? error,
+    int? cachedSubscriptionId,
+    String? cachedStatus,
+    bool? cachedHasSummary,
     DateTime? lastRefreshTime,
   }) {
     return PodcastEpisodesState(
@@ -112,6 +121,9 @@ class PodcastEpisodesState extends Equatable {
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       error: error ?? this.error,
+      cachedSubscriptionId: cachedSubscriptionId ?? this.cachedSubscriptionId,
+      cachedStatus: cachedStatus ?? this.cachedStatus,
+      cachedHasSummary: cachedHasSummary ?? this.cachedHasSummary,
       lastRefreshTime: lastRefreshTime ?? this.lastRefreshTime,
     );
   }
@@ -132,6 +144,9 @@ class PodcastEpisodesState extends Equatable {
     isLoading,
     isLoadingMore,
     error,
+    cachedSubscriptionId,
+    cachedStatus,
+    cachedHasSummary,
     lastRefreshTime,
   ];
 }

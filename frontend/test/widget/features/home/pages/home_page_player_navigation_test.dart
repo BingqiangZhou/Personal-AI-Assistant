@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -67,6 +69,30 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(feedNotifier.backgroundLoadCallCount, 1);
+    });
+
+    testWidgets('switching tabs does not re-trigger feed first load', (
+      tester,
+    ) async {
+      final audioNotifier = TestAudioPlayerNotifier(const AudioPlayerState());
+      final feedNotifier = TestPodcastFeedNotifier();
+
+      await _pumpHomePage(
+        tester,
+        audioNotifier: audioNotifier,
+        feedNotifier: feedNotifier,
+        initialTab: 0,
+      );
+
+      await tester.tap(find.byIcon(Icons.library_books_outlined));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.travel_explore_outlined));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.library_books_outlined));
+      await tester.pumpAndSettle();
+
+      expect(feedNotifier.foregroundLoadCallCount, 1);
+      expect(feedNotifier.loadInitialFeedCallCount, 2);
     });
 
     testWidgets('initial profile tab auto-collapses expanded player', (
@@ -232,15 +258,17 @@ Future<void> _pumpHomePage(
         applePodcastRssServiceProvider.overrideWithValue(
           _FakeApplePodcastRssService(),
         ),
-        profileStatsProvider.overrideWith((ref) async {
-          return const ProfileStatsModel(
-            totalSubscriptions: 2,
-            totalEpisodes: 8,
-            summariesGenerated: 3,
-            pendingSummaries: 1,
-            playedEpisodes: 4,
-          );
-        }),
+        profileStatsProvider.overrideWith(
+          () => _FixedProfileStatsNotifier(
+            const ProfileStatsModel(
+              totalSubscriptions: 2,
+              totalEpisodes: 8,
+              summariesGenerated: 3,
+              pendingSummaries: 1,
+              playedEpisodes: 4,
+            ),
+          ),
+        ),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -267,6 +295,21 @@ class TestAuthNotifier extends AuthNotifier {
         isActive: true,
       ),
     );
+  }
+}
+
+class _FixedProfileStatsNotifier extends ProfileStatsNotifier {
+  _FixedProfileStatsNotifier(this._value);
+
+  final ProfileStatsModel? _value;
+
+  @override
+  FutureOr<ProfileStatsModel?> build() => _value;
+
+  @override
+  Future<ProfileStatsModel?> load({bool forceRefresh = false}) async {
+    state = AsyncValue.data(_value);
+    return _value;
   }
 }
 

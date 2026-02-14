@@ -1720,15 +1720,69 @@ final podcastStatsProvider = FutureProvider<PodcastStatsResponse?>((ref) async {
   }
 });
 
-final profileStatsProvider = FutureProvider<ProfileStatsModel?>((ref) async {
-  final repository = ref.read(podcastRepositoryProvider);
-  try {
-    return await repository.getProfileStats();
-  } catch (error) {
-    logger.AppLogger.debug('Failed to load profile stats: $error');
-    return null;
+final profileStatsProvider =
+    AsyncNotifierProvider<ProfileStatsNotifier, ProfileStatsModel?>(
+      ProfileStatsNotifier.new,
+    );
+final profileStatsCacheDurationProvider = Provider<Duration>(
+  (ref) => const Duration(minutes: 5),
+);
+
+class ProfileStatsNotifier extends AsyncNotifier<ProfileStatsModel?> {
+  late final PodcastRepository _repository;
+  DateTime? _lastLoadedAt;
+  Future<ProfileStatsModel?>? _inFlightRequest;
+
+  @override
+  FutureOr<ProfileStatsModel?> build() async {
+    _repository = ref.read(podcastRepositoryProvider);
+    return load(forceRefresh: false);
   }
-});
+
+  bool _isFresh() {
+    if (_lastLoadedAt == null) return false;
+    final cacheDuration = ref.read(profileStatsCacheDurationProvider);
+    return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
+  }
+
+  Future<ProfileStatsModel?> load({bool forceRefresh = false}) async {
+    final previousData = state.value;
+    if (!forceRefresh && previousData != null && _isFresh()) {
+      return previousData;
+    }
+
+    final inFlight = _inFlightRequest;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    if (previousData == null) {
+      state = const AsyncValue.loading();
+    }
+
+    final request = () async {
+      try {
+        final data = await _repository.getProfileStats();
+        _lastLoadedAt = DateTime.now();
+        state = AsyncValue.data(data);
+        return data;
+      } catch (error, stackTrace) {
+        logger.AppLogger.debug('Failed to load profile stats: $error');
+        if (previousData == null) {
+          state = AsyncValue.error(error, stackTrace);
+        } else {
+          state = AsyncValue.data(previousData);
+        }
+        return previousData;
+      } finally {
+        _inFlightRequest = null;
+      }
+    }();
+
+    _inFlightRequest = request;
+    return request;
+  }
+}
 
 final playbackHistoryProvider = FutureProvider<PodcastEpisodeListResponse?>((
   ref,
@@ -1743,15 +1797,73 @@ final playbackHistoryProvider = FutureProvider<PodcastEpisodeListResponse?>((
 });
 
 final playbackHistoryLiteProvider =
-    FutureProvider<PlaybackHistoryLiteResponse?>((ref) async {
-      final repository = ref.read(podcastRepositoryProvider);
+    AsyncNotifierProvider<
+      PlaybackHistoryLiteNotifier,
+      PlaybackHistoryLiteResponse?
+    >(PlaybackHistoryLiteNotifier.new);
+final playbackHistoryLiteCacheDurationProvider = Provider<Duration>(
+  (ref) => const Duration(minutes: 5),
+);
+
+class PlaybackHistoryLiteNotifier
+    extends AsyncNotifier<PlaybackHistoryLiteResponse?> {
+  late final PodcastRepository _repository;
+  DateTime? _lastLoadedAt;
+  Future<PlaybackHistoryLiteResponse?>? _inFlightRequest;
+
+  @override
+  FutureOr<PlaybackHistoryLiteResponse?> build() async {
+    _repository = ref.read(podcastRepositoryProvider);
+    return load(forceRefresh: false);
+  }
+
+  bool _isFresh() {
+    if (_lastLoadedAt == null) return false;
+    final cacheDuration = ref.read(playbackHistoryLiteCacheDurationProvider);
+    return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
+  }
+
+  Future<PlaybackHistoryLiteResponse?> load({bool forceRefresh = false}) async {
+    final previousData = state.value;
+    if (!forceRefresh && previousData != null && _isFresh()) {
+      return previousData;
+    }
+
+    final inFlight = _inFlightRequest;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    if (previousData == null) {
+      state = const AsyncValue.loading();
+    }
+
+    final request = () async {
       try {
-        return await repository.getPlaybackHistoryLite(page: 1, size: 100);
-      } catch (error) {
+        final data = await _repository.getPlaybackHistoryLite(
+          page: 1,
+          size: 100,
+        );
+        _lastLoadedAt = DateTime.now();
+        state = AsyncValue.data(data);
+        return data;
+      } catch (error, stackTrace) {
         logger.AppLogger.debug('Failed to load playback history lite: $error');
-        return null;
+        if (previousData == null) {
+          state = AsyncValue.error(error, stackTrace);
+        } else {
+          state = AsyncValue.data(previousData);
+        }
+        return previousData;
+      } finally {
+        _inFlightRequest = null;
       }
-    });
+    }();
+
+    _inFlightRequest = request;
+    return request;
+  }
+}
 
 // === Episode Detail Provider ===
 final episodeDetailProvider =
@@ -1790,10 +1902,19 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
     int page = 1,
     int size = 20,
     String? status,
+    bool? hasSummary,
     bool forceRefresh = false,
   }) async {
+    final normalizedStatus = status?.trim().isEmpty ?? true ? null : status;
+    final normalizedHasSummary = hasSummary == true ? true : null;
+
     // Check if data is fresh and skip refresh if not forced (only for first page)
-    if (!forceRefresh && page == 1 && state.isDataFresh()) {
+    if (!forceRefresh &&
+        page == 1 &&
+        state.isDataFresh() &&
+        state.cachedSubscriptionId == subscriptionId &&
+        state.cachedStatus == normalizedStatus &&
+        state.cachedHasSummary == normalizedHasSummary) {
       logger.AppLogger.debug(
         '[Playback] Using cached episode data for sub $subscriptionId (fresh within 5 min)',
       );
@@ -1823,9 +1944,10 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
         subscriptionId: subscriptionId,
         page: page,
         size: size,
-        isPlayed: status == 'played'
+        hasSummary: normalizedHasSummary,
+        isPlayed: normalizedStatus == 'played'
             ? true
-            : (status == 'unplayed' ? false : null),
+            : (normalizedStatus == 'unplayed' ? false : null),
       );
 
       logger.AppLogger.debug(
@@ -1841,6 +1963,9 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
         currentPage: page,
         total: response.total,
         isLoading: false,
+        cachedSubscriptionId: subscriptionId,
+        cachedStatus: normalizedStatus,
+        cachedHasSummary: normalizedHasSummary,
         lastRefreshTime: DateTime.now(), // Record refresh time
       );
       logger.AppLogger.debug('[OK] Episode data loaded at ${DateTime.now()}');
@@ -1853,9 +1978,17 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
   // Load more episodes for the current subscription
   Future<void> loadMoreEpisodesForSubscription({
     required int subscriptionId,
+    String? status,
+    bool? hasSummary,
   }) async {
     final currentState = state;
     if (currentState.isLoadingMore || !currentState.hasMore) return;
+
+    final normalizedStatus = status?.trim().isEmpty ?? true ? null : status;
+    final effectiveStatus = normalizedStatus ?? currentState.cachedStatus;
+    final normalizedHasSummary = hasSummary == true ? true : null;
+    final effectiveHasSummary =
+        normalizedHasSummary ?? currentState.cachedHasSummary;
 
     state = state.copyWith(isLoadingMore: true);
 
@@ -1864,6 +1997,10 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
         subscriptionId: subscriptionId,
         page: currentState.nextPage ?? 1,
         size: 20,
+        hasSummary: effectiveHasSummary,
+        isPlayed: effectiveStatus == 'played'
+            ? true
+            : (effectiveStatus == 'unplayed' ? false : null),
       );
 
       state = state.copyWith(
@@ -1883,11 +2020,13 @@ class PodcastEpisodesNotifier extends Notifier<PodcastEpisodesState> {
   Future<void> refreshEpisodesForSubscription({
     required int subscriptionId,
     String? status,
+    bool? hasSummary,
   }) async {
-    state = state.copyWith(episodes: []);
+    state = const PodcastEpisodesState();
     await loadEpisodesForSubscription(
       subscriptionId: subscriptionId,
       status: status,
+      hasSummary: hasSummary,
       forceRefresh: true, // Bypass 5-minute cache check on explicit refresh
     );
   }
