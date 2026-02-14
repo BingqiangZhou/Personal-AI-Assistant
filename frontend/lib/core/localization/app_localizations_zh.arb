@@ -1380,6 +1380,112 @@
     }
   },
 
+  "profile_cache_manage_title": "缓存管理",
+  "@profile_cache_manage_title": {
+    "description": "缓存管理页面标题"
+  },
+
+  "profile_cache_manage_total": "总计",
+  "@profile_cache_manage_total": {
+    "description": "缓存管理总计标签"
+  },
+
+  "profile_cache_manage_total_used": "已使用",
+  "@profile_cache_manage_total_used": {
+    "description": "缓存管理已使用标题"
+  },
+
+  "profile_cache_manage_images": "图片",
+  "@profile_cache_manage_images": {
+    "description": "缓存管理图片标签"
+  },
+
+  "profile_cache_manage_audio": "音频",
+  "@profile_cache_manage_audio": {
+    "description": "缓存管理音频标签"
+  },
+
+  "profile_cache_manage_other": "其他",
+  "@profile_cache_manage_other": {
+    "description": "缓存管理其他标签"
+  },
+
+  "profile_cache_manage_items_and_size": "{count} 项 · {size}",
+  "@profile_cache_manage_items_and_size": {
+    "description": "缓存管理数量与大小摘要",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+
+  "profile_cache_manage_item_count": "{count} 项",
+  "@profile_cache_manage_item_count": {
+    "description": "缓存管理数量",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "profile_cache_manage_delete_selected": "删除所选",
+  "@profile_cache_manage_delete_selected": {
+    "description": "缓存管理删除所选按钮"
+  },
+
+  "profile_cache_manage_clear_all": "清空全部",
+  "@profile_cache_manage_clear_all": {
+    "description": "缓存管理清空全部按钮"
+  },
+
+  "profile_cache_manage_select_category_first": "请至少选择一个分类",
+  "@profile_cache_manage_select_category_first": {
+    "description": "缓存管理未选择分类提示"
+  },
+
+  "profile_cache_manage_details": "详情",
+  "@profile_cache_manage_details": {
+    "description": "缓存管理详情标题"
+  },
+
+  "profile_cache_manage_clean": "清理",
+  "@profile_cache_manage_clean": {
+    "description": "缓存管理清理按钮"
+  },
+
+  "profile_cache_manage_notice": "清理缓存会删除已下载的图片和临时文件。你的订阅和偏好设置会保留。",
+  "@profile_cache_manage_notice": {
+    "description": "缓存管理提示文案"
+  },
+
+  "profile_cache_manage_deep_clean_all": "一键深度清理（{size}）",
+  "@profile_cache_manage_deep_clean_all": {
+    "description": "缓存管理一键清理按钮",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+
+  "profile_cache_manage_delete_selected_confirm": "确定删除所选分类中的 {count} 项缓存（{size}）吗？",
+  "@profile_cache_manage_delete_selected_confirm": {
+    "description": "缓存管理删除所选确认提示",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+
   "profile_about_subtitle": "应用版本和信息",
   "@profile_about_subtitle": {
     "description": "关于副标题"

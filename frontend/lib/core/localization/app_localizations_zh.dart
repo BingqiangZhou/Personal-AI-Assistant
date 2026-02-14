@@ -830,6 +830,62 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get profile_cache_manage_title => '缓存管理';
+
+  @override
+  String get profile_cache_manage_total => '总计';
+
+  @override
+  String get profile_cache_manage_total_used => '已使用';
+
+  @override
+  String get profile_cache_manage_images => '图片';
+
+  @override
+  String get profile_cache_manage_audio => '音频';
+
+  @override
+  String get profile_cache_manage_other => '其他';
+
+  @override
+  String profile_cache_manage_items_and_size(int count, String size) {
+    return '$count 项 · $size';
+  }
+
+  @override
+  String profile_cache_manage_item_count(int count) {
+    return '$count 项';
+  }
+
+  @override
+  String get profile_cache_manage_delete_selected => '删除所选';
+
+  @override
+  String get profile_cache_manage_clear_all => '清空全部';
+
+  @override
+  String get profile_cache_manage_select_category_first => '请至少选择一个分类';
+
+  @override
+  String get profile_cache_manage_details => '详情';
+
+  @override
+  String get profile_cache_manage_clean => '清理';
+
+  @override
+  String get profile_cache_manage_notice => '清理缓存会删除已下载的图片和临时文件。你的订阅和偏好设置会保留。';
+
+  @override
+  String profile_cache_manage_deep_clean_all(String size) {
+    return '一键深度清理（$size）';
+  }
+
+  @override
+  String profile_cache_manage_delete_selected_confirm(int count, String size) {
+    return '确定删除所选分类中的 $count 项缓存（$size）吗？';
+  }
+
+  @override
   String get profile_about_subtitle => '应用版本和信息';
 
   @override

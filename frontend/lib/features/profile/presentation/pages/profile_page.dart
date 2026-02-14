@@ -556,7 +556,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               title: l10n.profile_clear_cache,
               subtitle: l10n.profile_clear_cache_subtitle,
               tileKey: const Key('profile_clear_cache_item'),
-              onTap: () => _showClearCacheDialog(context),
+              onTap: () => context.push('/profile/cache'),
             ),
           ]),
           const SizedBox(height: 24),
@@ -698,7 +698,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               title: l10n.profile_clear_cache,
               subtitle: l10n.profile_clear_cache_subtitle,
               tileKey: const Key('profile_clear_cache_item'),
-              onTap: () => _showClearCacheDialog(context),
+              onTap: () => context.push('/profile/cache'),
             ),
           ]),
           const SizedBox(height: 24),
@@ -1096,83 +1096,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         },
       ),
     );
-  }
-
-  Future<void> _showClearCacheDialog(BuildContext context) async {
-    final l10n = AppLocalizations.of(context)!;
-
-    final shouldClear = await showDialog<bool>(
-      context: context,
-      builder: (context) => LayoutBuilder(
-        builder: (context, constraints) {
-          return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
-            child: AlertDialog(
-              insetPadding: _dialogInsetPadding(context),
-              title: Text(l10n.profile_clear_cache),
-              content: Text(l10n.profile_clear_cache_confirm),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(l10n.cancel),
-                ),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(l10n.clear),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-
-    if (shouldClear != true || !mounted) return;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => LayoutBuilder(
-        builder: (context, constraints) {
-          return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
-            child: AlertDialog(
-              insetPadding: _dialogInsetPadding(context),
-              content: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: 12),
-                  Flexible(child: Text(l10n.profile_clearing_cache)),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-
-    try {
-      final dioClient = ref.read(dioClientProvider);
-      await dioClient.clearCache();
-      dioClient.clearETagCache();
-      await ref.read(appCacheServiceProvider).clearAll();
-
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      showTopFloatingNotice(context, message: l10n.profile_cache_cleared);
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.of(context).pop();
-      showTopFloatingNotice(
-        context,
-        message: l10n.profile_cache_clear_failed(e.toString()),
-      );
-    }
   }
 
   /// 显示关于对话框

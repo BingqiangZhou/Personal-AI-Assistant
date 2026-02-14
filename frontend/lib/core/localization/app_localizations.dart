@@ -1682,6 +1682,18 @@ abstract class AppLocalizations {
   /// **'Clear Cache'**
   String get profile_clear_cache;
 
+  /// Cache management title
+  ///
+  /// In en, this message translates to:
+  /// **'Storage & Cache'**
+  String get profile_cache_management;
+
+  /// Cache management subtitle
+  ///
+  /// In en, this message translates to:
+  /// **'View and clear images, audio, and other cached data'**
+  String get profile_cache_management_subtitle;
+
   /// Clear cache subtitle
   ///
   /// In en, this message translates to:
@@ -1711,6 +1723,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to clear cache: {error}'**
   String profile_cache_clear_failed(String error);
+
+  /// Cache management page title
+  ///
+  /// In en, this message translates to:
+  /// **'Cache Management'**
+  String get profile_cache_manage_title;
+
+  /// Cache management total label
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get profile_cache_manage_total;
+
+  /// Cache management total used title
+  ///
+  /// In en, this message translates to:
+  /// **'Total Used'**
+  String get profile_cache_manage_total_used;
+
+  /// Cache management images label
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get profile_cache_manage_images;
+
+  /// Cache management audio label
+  ///
+  /// In en, this message translates to:
+  /// **'Audio'**
+  String get profile_cache_manage_audio;
+
+  /// Cache management other label
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get profile_cache_manage_other;
+
+  /// Cache management items and size summary
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items · {size}'**
+  String profile_cache_manage_items_and_size(int count, String size);
+
+  /// Cache management item count
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String profile_cache_manage_item_count(int count);
+
+  /// Cache management delete selected button
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Selected'**
+  String get profile_cache_manage_delete_selected;
+
+  /// Cache management clear all button
+  ///
+  /// In en, this message translates to:
+  /// **'Clear All'**
+  String get profile_cache_manage_clear_all;
+
+  /// Cache management select category first message
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one category'**
+  String get profile_cache_manage_select_category_first;
+
+  /// Cache management details header
+  ///
+  /// In en, this message translates to:
+  /// **'DETAILS'**
+  String get profile_cache_manage_details;
+
+  /// Cache management clean button label
+  ///
+  /// In en, this message translates to:
+  /// **'Clean'**
+  String get profile_cache_manage_clean;
+
+  /// Cache management notice text
+  ///
+  /// In en, this message translates to:
+  /// **'Clearing cache will remove downloaded images and temporary files. Your subscriptions and preferences will be kept.'**
+  String get profile_cache_manage_notice;
+
+  /// Cache management deep clean all button
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Clean All ({size})'**
+  String profile_cache_manage_deep_clean_all(String size);
+
+  /// Cache management delete selected confirm message
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} cached items ({size}) from selected categories?'**
+  String profile_cache_manage_delete_selected_confirm(int count, String size);
 
   /// About subtitle
   ///

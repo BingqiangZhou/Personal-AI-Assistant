@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mockito/mockito.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/network/dio_client.dart';
@@ -17,6 +20,7 @@ import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state
 import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/podcast_api_service.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_cache_management_page.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -87,15 +91,33 @@ class _MockDioClient extends Mock implements DioClient {
 
 class _MockAppCacheService extends Mock implements AppCacheService {
   @override
+  CacheManager get mediaCacheManager => AppMediaCacheManager.instance;
+
+  @override
+  Future<void> clearMediaCache() => Future<void>.value();
+
+  @override
+  Future<void> clearMemoryImageCache() => Future<void>.value();
+
+  @override
   Future<void> clearAll() => super.noSuchMethod(
         Invocation.method(#clearAll, []),
         returnValue: Future<void>.value(),
         returnValueForMissingStub: Future<void>.value(),
       ) as Future<void>;
+
+  @override
+  Future<FileInfo?> getCachedFileInfo(String url) => Future<FileInfo?>.value();
+
+  @override
+  Future<void> warmUp(String url) => Future<void>.value();
 }
 
 const MethodChannel _packageInfoChannel = MethodChannel(
   'dev.fluttercommunity.plus/package_info',
+);
+const MethodChannel _pathProviderChannel = MethodChannel(
+  'plugins.flutter.io/path_provider',
 );
 
 void main() {
@@ -115,6 +137,23 @@ void main() {
             };
           }
           return null;
+        });
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_pathProviderChannel, (methodCall) async {
+          final base = Directory.systemTemp.path;
+          switch (methodCall.method) {
+            case 'getTemporaryDirectory':
+              return base;
+            case 'getApplicationSupportDirectory':
+              return base;
+            case 'getApplicationDocumentsDirectory':
+              return base;
+            case 'getDownloadsDirectory':
+              return base;
+            default:
+              return base;
+          }
         });
   });
 
@@ -256,6 +295,19 @@ void main() {
     final dioClient = _MockDioClient();
     final cacheService = _MockAppCacheService();
 
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const Scaffold(body: ProfilePage()),
+        ),
+        GoRoute(
+          path: '/profile/cache',
+          builder: (context, state) => const ProfileCacheManagementPage(),
+        ),
+      ],
+    );
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -275,11 +327,11 @@ void main() {
           dioClientProvider.overrideWithValue(dioClient),
           appCacheServiceProvider.overrideWithValue(cacheService),
         ],
-        child: MaterialApp(
+        child: MaterialApp.router(
           locale: const Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: const Scaffold(body: ProfilePage()),
+          routerConfig: router,
         ),
       ),
     );
@@ -293,10 +345,31 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     await tester.tap(clearCacheItem);
-    await tester.pumpAndSettle();
+    await tester.pump();
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      if (find.byType(ProfileCacheManagementPage).evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    expect(find.byType(ProfileCacheManagementPage), findsOneWidget);
+
+    final deepCleanFinder = find.byKey(const Key('cache_manage_deep_clean_all'));
+    for (var i = 0; i < 30; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+      if (deepCleanFinder.evaluate().isNotEmpty) {
+        break;
+      }
+    }
+    expect(deepCleanFinder, findsOneWidget);
+    await tester.ensureVisible(deepCleanFinder);
+    await tester.tap(deepCleanFinder);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
 
     await tester.tap(find.widgetWithText(FilledButton, 'Clear'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
 
     verify(dioClient.clearCache()).called(1);
     verify(dioClient.clearETagCache()).called(1);

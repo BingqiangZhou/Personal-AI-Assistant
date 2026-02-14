@@ -16,6 +16,7 @@ import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episode_detail_page.dart';
 import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
 import '../../features/profile/presentation/pages/profile_history_page.dart';
+import '../../features/profile/presentation/pages/profile_cache_management_page.dart';
 import '../../features/profile/presentation/pages/profile_subscriptions_page.dart';
 import '../../core/localization/app_localizations.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
@@ -158,6 +159,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'profile',
         builder: (context, state) => const HomePage(initialTab: 3),
         routes: [
+          GoRoute(
+            path: 'cache',
+            name: 'profile-cache',
+            builder: (context, state) => const ProfileCacheManagementPage(),
+          ),
           GoRoute(
             path: 'history',
             name: 'profile-history',

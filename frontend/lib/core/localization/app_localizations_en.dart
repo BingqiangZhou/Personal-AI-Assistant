@@ -827,6 +827,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile_clear_cache => 'Clear Cache';
 
   @override
+  String get profile_cache_management => 'Storage & Cache';
+
+  @override
+  String get profile_cache_management_subtitle =>
+      'View and clear images, audio, and other cached data';
+
+  @override
   String get profile_clear_cache_subtitle =>
       'Clear images, audio, and other cached data';
 
@@ -843,6 +850,64 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String profile_cache_clear_failed(String error) {
     return 'Failed to clear cache: $error';
+  }
+
+  @override
+  String get profile_cache_manage_title => 'Cache Management';
+
+  @override
+  String get profile_cache_manage_total => 'Total';
+
+  @override
+  String get profile_cache_manage_total_used => 'Total Used';
+
+  @override
+  String get profile_cache_manage_images => 'Images';
+
+  @override
+  String get profile_cache_manage_audio => 'Audio';
+
+  @override
+  String get profile_cache_manage_other => 'Other';
+
+  @override
+  String profile_cache_manage_items_and_size(int count, String size) {
+    return '$count items · $size';
+  }
+
+  @override
+  String profile_cache_manage_item_count(int count) {
+    return '$count items';
+  }
+
+  @override
+  String get profile_cache_manage_delete_selected => 'Delete Selected';
+
+  @override
+  String get profile_cache_manage_clear_all => 'Clear All';
+
+  @override
+  String get profile_cache_manage_select_category_first =>
+      'Select at least one category';
+
+  @override
+  String get profile_cache_manage_details => 'DETAILS';
+
+  @override
+  String get profile_cache_manage_clean => 'Clean';
+
+  @override
+  String get profile_cache_manage_notice =>
+      'Clearing cache will remove downloaded images and temporary files. Your subscriptions and preferences will be kept.';
+
+  @override
+  String profile_cache_manage_deep_clean_all(String size) {
+    return 'Deep Clean All ($size)';
+  }
+
+  @override
+  String profile_cache_manage_delete_selected_confirm(int count, String size) {
+    return 'Delete $count cached items ($size) from selected categories?';
   }
 
   @override
