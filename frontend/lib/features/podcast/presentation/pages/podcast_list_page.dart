@@ -370,7 +370,10 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final discoverState = ref.watch(podcastDiscoverProvider);
     final countryState = ref.watch(countrySelectorProvider);
     final subscriptionState = ref.watch(podcastSubscriptionProvider);
-    final isDense = subscriptionState.subscriptions.length >= 20;
+    final subscriptionCount = subscriptionState.total > 0
+        ? subscriptionState.total
+        : subscriptionState.subscriptions.length;
+    final isDense = subscriptionCount >= 20;
 
     return ResponsiveContainer(
       child: Material(

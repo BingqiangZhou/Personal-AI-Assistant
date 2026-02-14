@@ -13,6 +13,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart'
     as search;
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 
 void main() {
   group('PodcastListPage discover header', () {
@@ -123,6 +124,57 @@ void main() {
         findsNothing,
       );
     });
+
+    testWidgets(
+      'uses dense layout when subscription total is at least 20',
+      (tester) async {
+        final container = ProviderContainer(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(
+              _MockLocalStorageService(),
+            ),
+            podcastSubscriptionProvider.overrideWith(
+              () => _TestPodcastSubscriptionNotifier(
+                PodcastSubscriptionState(
+                  subscriptions: [_subscription()],
+                  hasMore: true,
+                  total: 25,
+                ),
+              ),
+            ),
+            applePodcastRssServiceProvider.overrideWithValue(
+              _FakeApplePodcastRssService(),
+            ),
+            search.podcastSearchProvider.overrideWithValue(
+              const search.PodcastSearchState(),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PodcastListPage(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final rowFinder = find.byKey(const Key('podcast_discover_chart_row_1000'));
+        expect(rowFinder, findsOneWidget);
+
+        final imageWidget = tester.widget<PodcastImageWidget>(
+          find
+              .descendant(of: rowFinder, matching: find.byType(PodcastImageWidget))
+              .first,
+        );
+        expect(imageWidget.width, 56.0);
+      },
+    );
   });
 }
 

@@ -981,21 +981,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   /// 显示主题模式对话框
-  void _showThemeModeDialog(BuildContext context) {
+  void _showThemeModeDialog(BuildContext pageContext) {
     showDialog(
-      context: context,
-      builder: (context) => LayoutBuilder(
-        builder: (context, constraints) {
+      context: pageContext,
+      builder: (dialogContext) => LayoutBuilder(
+        builder: (dialogContext, constraints) {
           return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(context)),
+            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(dialogContext)),
             child: Consumer(
-              builder: (context, ref, _) {
+              builder: (dialogContext, ref, _) {
                 final themeNotifier = ref.watch(themeModeProvider.notifier);
                 final currentCode = themeNotifier.themeModeCode;
-                final l10n = AppLocalizations.of(context)!;
+                final l10n = AppLocalizations.of(dialogContext)!;
 
                 return AlertDialog(
-                  insetPadding: _dialogInsetPadding(context),
+                  insetPadding: _dialogInsetPadding(dialogContext),
                   title: Text(l10n.theme_mode_select_title),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1032,27 +1032,34 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           await ref
                               .read(themeModeProvider.notifier)
                               .setThemeModeCode(value);
-                          if (context.mounted) {
-                            Navigator.of(context).pop();
-                            showTopFloatingNotice(
-                              context,
-                              message: l10n.theme_mode_changed(modeName),
-                            );
+                          if (!dialogContext.mounted) {
+                            return;
                           }
+                          final noticeMessage = l10n.theme_mode_changed(modeName);
+                          Navigator.of(dialogContext).pop();
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!pageContext.mounted) {
+                              return;
+                            }
+                            showTopFloatingNotice(
+                              pageContext,
+                              message: noticeMessage,
+                            );
+                          });
                         },
                       ),
                       const SizedBox(height: 16),
                       Text(
                         l10n.theme_mode_subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        style: Theme.of(dialogContext).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () => Navigator.of(dialogContext).pop(),
                       child: Text(l10n.close),
                     ),
                   ],

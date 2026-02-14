@@ -22,7 +22,7 @@ void main() {
       expect(noticeFinder, findsOneWidget);
 
       final noticeRect = tester.getRect(noticeFinder);
-      expect(noticeRect.top, greaterThan(0));
+      expect(noticeRect.top, greaterThan(kToolbarHeight));
       expect(noticeRect.top, lessThan(220));
       expect(noticeRect.center.dy, lessThan(400));
 
@@ -212,6 +212,19 @@ void main() {
       expect(decoration.boxShadow!.first.color.alpha, 255);
       await tester.pump(const Duration(seconds: 4));
     });
+
+    testWidgets('uses latest theme when shown after theme toggle', (tester) async {
+      await tester.pumpWidget(const _ThemeSwitchingApp());
+
+      await tester.tap(find.byKey(const Key('toggle_theme')));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('show_notice_default')));
+      await tester.pump();
+      expect(find.byKey(const Key('top_floating_notice')), findsOneWidget);
+      expect(_noticeDecoration(tester).color, AppTheme.darkTheme.colorScheme.primary);
+      await tester.pump(const Duration(seconds: 4));
+    });
   });
 }
 
@@ -237,16 +250,25 @@ BoxDecoration _noticeDecoration(WidgetTester tester) {
 }
 
 class _TopNoticeHost extends StatelessWidget {
-  const _TopNoticeHost();
+  const _TopNoticeHost({this.onToggleTheme});
+
+  final VoidCallback? onToggleTheme;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Host')),
       body: Builder(
         builder: (context) {
           return Column(
             children: [
               const SizedBox(height: 120),
+              if (onToggleTheme != null)
+                TextButton(
+                  key: const Key('toggle_theme'),
+                  onPressed: onToggleTheme,
+                  child: const Text('Toggle theme'),
+                ),
               TextButton(
                 key: const Key('show_notice_default'),
                 onPressed: () {
@@ -301,6 +323,34 @@ class _TopNoticeHost extends StatelessWidget {
               ),
             ],
           );
+        },
+      ),
+    );
+  }
+}
+
+class _ThemeSwitchingApp extends StatefulWidget {
+  const _ThemeSwitchingApp();
+
+  @override
+  State<_ThemeSwitchingApp> createState() => _ThemeSwitchingAppState();
+}
+
+class _ThemeSwitchingAppState extends State<_ThemeSwitchingApp> {
+  ThemeMode _themeMode = ThemeMode.light;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: _themeMode,
+      home: _TopNoticeHost(
+        onToggleTheme: () {
+          setState(() {
+            _themeMode =
+                _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+          });
         },
       ),
     );
