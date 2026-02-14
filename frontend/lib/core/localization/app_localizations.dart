@@ -3131,7 +3131,7 @@ abstract class AppLocalizations {
   /// Playlist button tooltip in floating player
   ///
   /// In en, this message translates to:
-  /// **'List'**
+  /// **'Playlist'**
   String get podcast_player_list;
 
   /// Sleep mode button tooltip in floating player
@@ -3602,7 +3602,7 @@ abstract class AppLocalizations {
   /// **'Select File'**
   String get podcast_bulk_import_select_file;
 
-  /// RSS list tab label in bulk import dialog
+  /// RSS list heading
   ///
   /// In en, this message translates to:
   /// **'RSS List'**

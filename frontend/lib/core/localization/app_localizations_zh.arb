@@ -2591,7 +2591,7 @@
     "description": "浮动播放器中的收起按钮提示"
   },
 
-  "podcast_player_list": "列表",
+  "podcast_player_list": "播放列表",
   "@podcast_player_list": {
     "description": "浮动播放器中的列表按钮提示"
   },
@@ -4065,11 +4065,6 @@
   "profile_support_section": "支持",
   "@profile_support_section": {
     "description": "个人资料中的支持部分"
-  },
-
-  "podcast_rss_list": "RSS 列表",
-  "@podcast_rss_list": {
-    "description": "批量导入对话框中的RSS列表标签"
   },
 
   "error_unknown_dio": "未知的 Dio 错误",

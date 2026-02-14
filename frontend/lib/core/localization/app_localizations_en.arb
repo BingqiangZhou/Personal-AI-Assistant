@@ -2592,7 +2592,7 @@
     "description": "Collapse button tooltip in floating player"
   },
 
-  "podcast_player_list": "List",
+  "podcast_player_list": "Playlist",
   "@podcast_player_list": {
     "description": "Playlist button tooltip in floating player"
   },
@@ -4066,11 +4066,6 @@
   "profile_support_section": "Support",
   "@profile_support_section": {
     "description": "Support section in profile"
-  },
-
-  "podcast_rss_list": "RSS List",
-  "@podcast_rss_list": {
-    "description": "RSS list tab label in bulk import dialog"
   },
 
   "error_unknown_dio": "Unknown Dio error",

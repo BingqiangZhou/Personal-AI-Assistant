@@ -1620,7 +1620,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_player_collapse => 'Collapse';
 
   @override
-  String get podcast_player_list => 'List';
+  String get podcast_player_list => 'Playlist';
 
   @override
   String get podcast_player_sleep_mode => 'Sleep Mode';

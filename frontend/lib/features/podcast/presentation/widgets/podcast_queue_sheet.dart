@@ -30,7 +30,12 @@ class PodcastQueueSheet extends ConsumerWidget {
       await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
+        showDragHandle: true,
         useSafeArea: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
         builder: (context) => const PodcastQueueSheet(),
       );
     });
@@ -49,9 +54,10 @@ class PodcastQueueSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final title = l10n?.podcast_rss_list ?? 'Playlist';
+    final title = l10n?.podcast_player_list ?? 'Playlist';
     final queueAsync = ref.watch(podcastQueueControllerProvider);
     final notifier = ref.read(podcastQueueControllerProvider.notifier);
+    final theme = Theme.of(context);
 
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.72,
@@ -61,8 +67,33 @@ class PodcastQueueSheet extends ConsumerWidget {
             return _QueueScaffold(
               title: title,
               onRefresh: () => notifier.loadQueue(),
-              child: Center(
-                child: Text(l10n?.queue_is_empty ?? 'Queue is empty'),
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                children: [
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.12),
+                  Icon(
+                    Icons.playlist_play,
+                    size: 42,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n?.queue_is_empty ?? 'Queue is empty',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n?.pull_to_refresh ?? 'Pull to refresh',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             );
           }
@@ -78,11 +109,32 @@ class PodcastQueueSheet extends ConsumerWidget {
           return _QueueScaffold(
             title: title,
             onRefresh: () => notifier.loadQueue(),
-            child: Center(
-              child: Text(
-                l10n?.failed_to_load_queue(error.toString()) ??
-                    'Failed to load queue: $error',
-              ),
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              children: [
+                SizedBox(height: MediaQuery.of(context).size.height * 0.12),
+                Icon(
+                  Icons.error_outline,
+                  size: 42,
+                  color: theme.colorScheme.error,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  l10n?.failed_to_load_queue(error.toString()) ??
+                      'Failed to load queue: $error',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: FilledButton.tonalIcon(
+                    onPressed: () => notifier.loadQueue(),
+                    icon: const Icon(Icons.refresh),
+                    label: Text(l10n?.retry ?? 'Retry'),
+                  ),
+                ),
+              ],
             ),
           );
         },
@@ -104,10 +156,12 @@ class _QueueScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
+        const SizedBox(height: 4),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+          padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
           child: Row(
             children: [
               Text(
@@ -118,12 +172,12 @@ class _QueueScaffold extends StatelessWidget {
               ),
               const Spacer(),
               IconButton(
-                tooltip: 'Refresh',
+                tooltip: l10n?.refresh ?? 'Refresh',
                 onPressed: onRefresh,
                 icon: const Icon(Icons.refresh),
               ),
               IconButton(
-                tooltip: 'Close',
+                tooltip: l10n?.close ?? 'Close',
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.close),
               ),
@@ -131,7 +185,12 @@ class _QueueScaffold extends StatelessWidget {
           ),
         ),
         const Divider(height: 1),
-        Expanded(child: child),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: onRefresh,
+            child: child,
+          ),
+        ),
       ],
     );
   }
@@ -149,8 +208,9 @@ class _QueueList extends ConsumerWidget {
     final currentEpisodeId = queue.currentEpisodeId;
 
     return ReorderableListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
       buildDefaultDragHandles: false,
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: queue.items.length,
       onReorder: (oldIndex, newIndex) async {
         var targetIndex = newIndex;
@@ -182,17 +242,11 @@ class _QueueList extends ConsumerWidget {
         final item = queue.items[index];
         final isCurrent = item.episodeId == currentEpisodeId;
         final theme = Theme.of(context);
-        return Container(
+        return Material(
           key: ValueKey(item.episodeId),
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: isCurrent
-                ? theme.colorScheme.primaryContainer.withValues(alpha: 0.24)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-          ),
+          color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
             onTap: () async {
               try {
                 await notifier.playFromQueue(item.episodeId);
@@ -209,84 +263,96 @@ class _QueueList extends ConsumerWidget {
                 }
               }
             },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: ReorderableDragStartListener(
-                      key: Key('queue_item_drag_${item.episodeId}'),
-                      index: index,
-                      child: Icon(
-                        Icons.drag_indicator,
-                        color: theme.colorScheme.onSurfaceVariant,
+            child: Ink(
+              decoration: BoxDecoration(
+                color: isCurrent
+                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.28)
+                    : theme.colorScheme.surfaceContainerHighest
+                        .withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 34,
+                      height: 44,
+                      child: ReorderableDragStartListener(
+                        key: Key('queue_item_drag_${item.episodeId}'),
+                        index: index,
+                        child: Icon(
+                          Icons.drag_indicator,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  _QueueItemCover(item: item, isCurrent: isCurrent, size: 44),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          item.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: isCurrent
-                                ? FontWeight.w700
-                                : FontWeight.w500,
+                    _QueueItemCover(item: item, isCurrent: isCurrent, size: 44),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            item.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: isCurrent
+                                  ? FontWeight.w700
+                                  : FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _formatSubtitle(
-                            item,
-                            isCurrent: isCurrent,
-                            currentPositionMs: audioPlayerState.position,
+                          const SizedBox(height: 4),
+                          Text(
+                            _formatSubtitle(
+                              item,
+                              isCurrent: isCurrent,
+                              currentPositionMs: audioPlayerState.position,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    key: Key('queue_item_remove_${item.episodeId}'),
-                    tooltip: AppLocalizations.of(context)?.delete ?? 'Delete',
-                    constraints: const BoxConstraints.tightFor(
-                      width: 40,
-                      height: 40,
-                    ),
-                    padding: EdgeInsets.zero,
-                    onPressed: () async {
-                      try {
-                        await notifier.removeFromQueue(item.episodeId);
-                      } catch (error) {
-                        if (context.mounted) {
-                          final l10n = AppLocalizations.of(context);
-                          showTopFloatingNotice(
-                            context,
-                            message:
-                                l10n?.failed_to_remove_item(error.toString()) ??
-                                'Failed to remove item: $error',
-                            isError: true,
-                          );
+                    const SizedBox(width: 8),
+                    IconButton(
+                      key: Key('queue_item_remove_${item.episodeId}'),
+                      tooltip: AppLocalizations.of(context)?.delete ?? 'Delete',
+                      constraints: const BoxConstraints.tightFor(
+                        width: 40,
+                        height: 40,
+                      ),
+                      padding: EdgeInsets.zero,
+                      onPressed: () async {
+                        try {
+                          await notifier.removeFromQueue(item.episodeId);
+                        } catch (error) {
+                          if (context.mounted) {
+                            final l10n = AppLocalizations.of(context);
+                            showTopFloatingNotice(
+                              context,
+                              message:
+                                  l10n
+                                      ?.failed_to_remove_item(error.toString()) ??
+                                  'Failed to remove item: $error',
+                              isError: true,
+                            );
+                          }
                         }
-                      }
-                    },
-                    icon: const Icon(Icons.delete_outline),
-                  ),
-                ],
+                      },
+                      icon: const Icon(Icons.delete_outline),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

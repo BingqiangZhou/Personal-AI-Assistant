@@ -1576,7 +1576,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_player_collapse => '收起';
 
   @override
-  String get podcast_player_list => '列表';
+  String get podcast_player_list => '播放列表';
 
   @override
   String get podcast_player_sleep_mode => '睡眠模式';
@@ -1832,7 +1832,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_bulk_import_select_file => '选择文件';
 
   @override
-  String get podcast_rss_list => 'RSS 列表';
+  String get podcast_rss_list => 'RSS列表';
 
   @override
   String get podcast_import_all => '全部导入';
