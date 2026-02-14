@@ -19,7 +19,10 @@ class _TestPodcastFeedNotifier extends PodcastFeedNotifier {
   PodcastFeedState build() => _initialState;
 
   @override
-  Future<void> loadInitialFeed() async {}
+  Future<void> loadInitialFeed({
+    bool forceRefresh = false,
+    bool background = false,
+  }) async {}
 
   @override
   Future<void> loadMoreFeed() async {}
@@ -39,7 +42,9 @@ void main() {
       return ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
-          podcastFeedProvider.overrideWith(() => _TestPodcastFeedNotifier(feedState)),
+          podcastFeedProvider.overrideWith(
+            () => _TestPodcastFeedNotifier(feedState),
+          ),
         ],
         child: MaterialApp(
           locale: const Locale('en'),
@@ -87,18 +92,25 @@ void main() {
       );
     }
 
-    testWidgets('renders with Feed title and page structure', (WidgetTester tester) async {
+    testWidgets('renders with localized page title and page structure', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(const PodcastFeedPage(), feedState: _feedState()),
       );
 
-      expect(find.text('Feed'), findsOneWidget);
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(PodcastFeedPage)),
+      )!;
+      expect(find.text(l10n.podcast_feed_page_title), findsOneWidget);
 
       expect(find.byType(PodcastFeedPage), findsOneWidget);
       expect(find.byType(ResponsiveContainer), findsOneWidget);
     });
 
-    testWidgets('displays mock data on mobile screen', (WidgetTester tester) async {
+    testWidgets('displays mock data on mobile screen', (
+      WidgetTester tester,
+    ) async {
       tester.view.physicalSize = const Size(360, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -110,14 +122,19 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('The Future of AI in Software Development'), findsOneWidget);
+      expect(
+        find.text('The Future of AI in Software Development'),
+        findsOneWidget,
+      );
       expect(find.text('Building Scalable Microservices'), findsOneWidget);
       expect(find.text('The Psychology of Product Design'), findsOneWidget);
 
       expect(find.byType(Card), findsWidgets);
     });
 
-    testWidgets('displays mock data on desktop screen', (WidgetTester tester) async {
+    testWidgets('displays mock data on desktop screen', (
+      WidgetTester tester,
+    ) async {
       tester.view.physicalSize = const Size(1200, 800);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -129,13 +146,18 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      expect(find.text('The Future of AI in Software Development'), findsOneWidget);
+      expect(
+        find.text('The Future of AI in Software Development'),
+        findsOneWidget,
+      );
       expect(find.text('Building Scalable Microservices'), findsOneWidget);
 
       expect(find.byType(Card), findsWidgets);
     });
 
-    testWidgets('has no overflow errors on small screens', (WidgetTester tester) async {
+    testWidgets('has no overflow errors on small screens', (
+      WidgetTester tester,
+    ) async {
       tester.view.physicalSize = const Size(320, 480);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);

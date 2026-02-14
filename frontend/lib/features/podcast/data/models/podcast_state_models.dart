@@ -11,6 +11,9 @@ class PodcastFeedState extends Equatable {
   final bool isLoadingMore;
   final String? error;
 
+  /// Last refresh timestamp for cache validation
+  final DateTime? lastRefreshTime;
+
   const PodcastFeedState({
     this.episodes = const [],
     this.hasMore = true,
@@ -19,6 +22,7 @@ class PodcastFeedState extends Equatable {
     this.isLoading = false,
     this.isLoadingMore = false,
     this.error,
+    this.lastRefreshTime,
   });
 
   PodcastFeedState copyWith({
@@ -29,6 +33,8 @@ class PodcastFeedState extends Equatable {
     bool? isLoading,
     bool? isLoadingMore,
     String? error,
+    bool clearError = false,
+    DateTime? lastRefreshTime,
   }) {
     return PodcastFeedState(
       episodes: episodes ?? this.episodes,
@@ -37,20 +43,28 @@ class PodcastFeedState extends Equatable {
       total: total ?? this.total,
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      error: error ?? this.error,
+      error: clearError ? null : (error ?? this.error),
+      lastRefreshTime: lastRefreshTime ?? this.lastRefreshTime,
     );
+  }
+
+  /// Check if data is fresh (within cache duration)
+  bool isDataFresh({Duration cacheDuration = const Duration(minutes: 5)}) {
+    if (lastRefreshTime == null) return false;
+    return DateTime.now().difference(lastRefreshTime!) < cacheDuration;
   }
 
   @override
   List<Object?> get props => [
-        episodes,
-        hasMore,
-        nextPage,
-        total,
-        isLoading,
-        isLoadingMore,
-        error,
-      ];
+    episodes,
+    hasMore,
+    nextPage,
+    total,
+    isLoading,
+    isLoadingMore,
+    error,
+    lastRefreshTime,
+  ];
 }
 
 class PodcastEpisodesState extends Equatable {
@@ -62,6 +76,7 @@ class PodcastEpisodesState extends Equatable {
   final bool isLoading;
   final bool isLoadingMore;
   final String? error;
+
   /// Last refresh timestamp for cache validation
   final DateTime? lastRefreshTime;
 
@@ -109,16 +124,16 @@ class PodcastEpisodesState extends Equatable {
 
   @override
   List<Object?> get props => [
-        episodes,
-        hasMore,
-        nextPage,
-        currentPage,
-        total,
-        isLoading,
-        isLoadingMore,
-        error,
-        lastRefreshTime,
-      ];
+    episodes,
+    hasMore,
+    nextPage,
+    currentPage,
+    total,
+    isLoading,
+    isLoadingMore,
+    error,
+    lastRefreshTime,
+  ];
 }
 
 class PodcastSubscriptionState extends Equatable {
@@ -130,8 +145,10 @@ class PodcastSubscriptionState extends Equatable {
   final bool isLoading;
   final bool isLoadingMore;
   final String? error;
+
   /// 正在订阅的 Feed URLs 集合 / Set of Feed URLs currently being subscribed
   final Set<String> subscribingFeedUrls;
+
   /// Last refresh timestamp for cache validation
   final DateTime? lastRefreshTime;
 
@@ -182,15 +199,15 @@ class PodcastSubscriptionState extends Equatable {
 
   @override
   List<Object?> get props => [
-        subscriptions,
-        hasMore,
-        nextPage,
-        currentPage,
-        total,
-        isLoading,
-        isLoadingMore,
-        error,
-        subscribingFeedUrls,
-        lastRefreshTime,
-      ];
+    subscriptions,
+    hasMore,
+    nextPage,
+    currentPage,
+    total,
+    isLoading,
+    isLoadingMore,
+    error,
+    subscribingFeedUrls,
+    lastRefreshTime,
+  ];
 }

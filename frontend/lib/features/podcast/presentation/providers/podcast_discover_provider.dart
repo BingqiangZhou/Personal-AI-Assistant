@@ -20,6 +20,7 @@ class PodcastDiscoverState {
   final bool episodesExpanded;
   final List<PodcastDiscoverItem> topShows;
   final List<PodcastDiscoverItem> topEpisodes;
+  final DateTime? lastRefreshTime;
 
   const PodcastDiscoverState({
     required this.country,
@@ -32,6 +33,7 @@ class PodcastDiscoverState {
     this.episodesExpanded = false,
     this.topShows = const [],
     this.topEpisodes = const [],
+    this.lastRefreshTime,
   });
 
   static const String allCategoryValue = '__all__';
@@ -48,6 +50,7 @@ class PodcastDiscoverState {
     bool? episodesExpanded,
     List<PodcastDiscoverItem>? topShows,
     List<PodcastDiscoverItem>? topEpisodes,
+    DateTime? lastRefreshTime,
   }) {
     return PodcastDiscoverState(
       country: country ?? this.country,
@@ -60,7 +63,13 @@ class PodcastDiscoverState {
       episodesExpanded: episodesExpanded ?? this.episodesExpanded,
       topShows: topShows ?? this.topShows,
       topEpisodes: topEpisodes ?? this.topEpisodes,
+      lastRefreshTime: lastRefreshTime ?? this.lastRefreshTime,
     );
+  }
+
+  bool isDataFresh({Duration cacheDuration = const Duration(minutes: 5)}) {
+    if (lastRefreshTime == null) return false;
+    return DateTime.now().difference(lastRefreshTime!) < cacheDuration;
   }
 
   List<PodcastDiscoverItem> get activeItems =>
@@ -118,6 +127,8 @@ final podcastDiscoverProvider =
 
 class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
   late final ApplePodcastRssService _rssService;
+  Future<void>? _inFlightLoad;
+  int _activeRequestId = 0;
 
   @override
   PodcastDiscoverState build() {
@@ -135,16 +146,22 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
   }
 
   Future<void> loadInitialData() async {
+    if (_hasAnyData && state.isDataFresh()) {
+      return;
+    }
     await _loadCharts(country: state.country, isRefresh: false);
   }
 
   Future<void> refresh() async {
-    await _loadCharts(country: state.country, isRefresh: true);
+    await _loadCharts(
+      country: state.country,
+      isRefresh: true,
+      forceRefresh: true,
+    );
   }
 
   Future<void> onCountryChanged(PodcastCountry country) async {
-    if (country == state.country &&
-        (state.topShows.isNotEmpty || state.topEpisodes.isNotEmpty)) {
+    if (country == state.country && _hasAnyData && state.isDataFresh()) {
       return;
     }
     state = state.copyWith(
@@ -154,7 +171,7 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
       episodesExpanded: false,
       clearError: true,
     );
-    await _loadCharts(country: country, isRefresh: false);
+    await _loadCharts(country: country, isRefresh: false, forceRefresh: true);
   }
 
   void setTab(PodcastDiscoverTab tab) {
@@ -184,61 +201,147 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
   Future<void> _loadCharts({
     required PodcastCountry country,
     required bool isRefresh,
+    bool forceRefresh = false,
   }) async {
+    if (!forceRefresh &&
+        country == state.country &&
+        _hasAnyData &&
+        state.isDataFresh()) {
+      return;
+    }
+
+    final existingLoad = _inFlightLoad;
+    if (existingLoad != null) {
+      return existingLoad;
+    }
+
+    final requestId = ++_activeRequestId;
+    final selectedTab = state.selectedTab;
+
     state = state.copyWith(
+      country: country,
       isLoading: !isRefresh,
       isRefreshing: isRefresh,
       clearError: true,
     );
 
+    final loadFuture = () async {
+      try {
+        final showsFuture = _rssService.fetchTopShows(
+          country: country,
+          limit: 25,
+          format: ApplePodcastRssFormat.json,
+        );
+        final episodesFuture = _rssService.fetchTopEpisodes(
+          country: country,
+          limit: 25,
+          format: ApplePodcastRssFormat.json,
+        );
+
+        List<PodcastDiscoverItem>? shows;
+        List<PodcastDiscoverItem>? episodes;
+
+        if (selectedTab == PodcastDiscoverTab.podcasts) {
+          final showsResponse = await showsFuture;
+          shows = _mapChartItems(
+            showsResponse,
+            defaultKind: PodcastDiscoverKind.podcasts,
+          );
+          if (_isRequestActive(requestId)) {
+            state = state.copyWith(
+              isLoading: false,
+              isRefreshing: false,
+              topShows: shows,
+              selectedCategory: PodcastDiscoverState.allCategoryValue,
+              showsExpanded: false,
+              episodesExpanded: false,
+              clearError: true,
+            );
+          }
+          final episodesResponse = await episodesFuture;
+          episodes = _mapChartItems(
+            episodesResponse,
+            defaultKind: PodcastDiscoverKind.podcastEpisodes,
+          );
+        } else {
+          final episodesResponse = await episodesFuture;
+          episodes = _mapChartItems(
+            episodesResponse,
+            defaultKind: PodcastDiscoverKind.podcastEpisodes,
+          );
+          if (_isRequestActive(requestId)) {
+            state = state.copyWith(
+              isLoading: false,
+              isRefreshing: false,
+              topEpisodes: episodes,
+              selectedCategory: PodcastDiscoverState.allCategoryValue,
+              showsExpanded: false,
+              episodesExpanded: false,
+              clearError: true,
+            );
+          }
+          final showsResponse = await showsFuture;
+          shows = _mapChartItems(
+            showsResponse,
+            defaultKind: PodcastDiscoverKind.podcasts,
+          );
+        }
+
+        if (!_isRequestActive(requestId)) {
+          return;
+        }
+
+        state = state.copyWith(
+          country: country,
+          isLoading: false,
+          isRefreshing: false,
+          topShows: shows ?? state.topShows,
+          topEpisodes: episodes ?? state.topEpisodes,
+          selectedCategory: PodcastDiscoverState.allCategoryValue,
+          showsExpanded: false,
+          episodesExpanded: false,
+          clearError: true,
+          lastRefreshTime: DateTime.now(),
+        );
+      } catch (error) {
+        if (!_isRequestActive(requestId)) {
+          return;
+        }
+        state = state.copyWith(
+          isLoading: false,
+          isRefreshing: false,
+          error: error.toString(),
+        );
+      }
+    }();
+
+    _inFlightLoad = loadFuture;
     try {
-      final responses = await Future.wait([
-        _rssService.fetchTopShows(
-          country: country,
-          limit: 25,
-          format: ApplePodcastRssFormat.json,
-        ),
-        _rssService.fetchTopEpisodes(
-          country: country,
-          limit: 25,
-          format: ApplePodcastRssFormat.json,
-        ),
-      ]);
-
-      final shows = responses[0].feed.results
-          .map(
-            (entry) => PodcastDiscoverItem.fromChartEntry(
-              entry,
-              defaultKind: PodcastDiscoverKind.podcasts,
-            ),
-          )
-          .toList();
-      final episodes = responses[1].feed.results
-          .map(
-            (entry) => PodcastDiscoverItem.fromChartEntry(
-              entry,
-              defaultKind: PodcastDiscoverKind.podcastEpisodes,
-            ),
-          )
-          .toList();
-
-      state = state.copyWith(
-        country: country,
-        isLoading: false,
-        isRefreshing: false,
-        topShows: shows,
-        topEpisodes: episodes,
-        selectedCategory: PodcastDiscoverState.allCategoryValue,
-        showsExpanded: false,
-        episodesExpanded: false,
-        clearError: true,
-      );
-    } catch (error) {
-      state = state.copyWith(
-        isLoading: false,
-        isRefreshing: false,
-        error: error.toString(),
-      );
+      await loadFuture;
+    } finally {
+      if (identical(_inFlightLoad, loadFuture)) {
+        _inFlightLoad = null;
+      }
     }
+  }
+
+  bool get _hasAnyData =>
+      state.topShows.isNotEmpty || state.topEpisodes.isNotEmpty;
+
+  bool _isRequestActive(int requestId) =>
+      ref.mounted && requestId == _activeRequestId;
+
+  List<PodcastDiscoverItem> _mapChartItems(
+    ApplePodcastChartResponse response, {
+    required PodcastDiscoverKind defaultKind,
+  }) {
+    return response.feed.results
+        .map(
+          (entry) => PodcastDiscoverItem.fromChartEntry(
+            entry,
+            defaultKind: defaultKind,
+          ),
+        )
+        .toList();
   }
 }

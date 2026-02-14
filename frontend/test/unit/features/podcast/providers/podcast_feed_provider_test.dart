@@ -1,0 +1,147 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
+import 'package:personal_ai_assistant/features/podcast/data/services/podcast_api_service.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
+
+void main() {
+  group('PodcastFeedNotifier', () {
+    test('uses fresh cache and skips repeated initial request', () async {
+      final fakeRepository = _FakePodcastRepository(
+        responses: <PodcastFeedResponse>[
+          _responseWithEpisodeIds(<int>[1]),
+        ],
+      );
+      final container = ProviderContainer(
+        overrides: [
+          podcastRepositoryProvider.overrideWithValue(fakeRepository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(podcastFeedProvider.notifier);
+      await notifier.loadInitialFeed();
+      await notifier.loadInitialFeed();
+
+      expect(fakeRepository.getPodcastFeedCalls, 1);
+    });
+
+    test(
+      'keeps existing episodes while background refresh is in flight',
+      () async {
+        final fakeRepository = _FakePodcastRepository(
+          responses: <PodcastFeedResponse>[
+            _responseWithEpisodeIds(<int>[1]),
+            _responseWithEpisodeIds(<int>[2]),
+          ],
+          delays: const <Duration>[Duration.zero, Duration(milliseconds: 120)],
+        );
+        final container = ProviderContainer(
+          overrides: [
+            podcastRepositoryProvider.overrideWithValue(fakeRepository),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(podcastFeedProvider.notifier);
+        await notifier.loadInitialFeed();
+
+        final refreshFuture = notifier.loadInitialFeed(
+          forceRefresh: true,
+          background: true,
+        );
+
+        await Future<void>.delayed(const Duration(milliseconds: 40));
+        final inFlightState = container.read(podcastFeedProvider);
+        expect(inFlightState.episodes.first.id, 1);
+        expect(inFlightState.isLoading, isFalse);
+
+        await refreshFuture;
+        final finalState = container.read(podcastFeedProvider);
+        expect(finalState.episodes.first.id, 2);
+      },
+    );
+
+    test('deduplicates concurrent initial loads', () async {
+      final fakeRepository = _FakePodcastRepository(
+        responses: <PodcastFeedResponse>[
+          _responseWithEpisodeIds(<int>[1]),
+        ],
+        delays: const <Duration>[Duration(milliseconds: 100)],
+      );
+      final container = ProviderContainer(
+        overrides: [
+          podcastRepositoryProvider.overrideWithValue(fakeRepository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(podcastFeedProvider.notifier);
+      await Future.wait<void>([
+        notifier.loadInitialFeed(),
+        notifier.loadInitialFeed(),
+      ]);
+
+      expect(fakeRepository.getPodcastFeedCalls, 1);
+    });
+  });
+}
+
+PodcastFeedResponse _responseWithEpisodeIds(List<int> episodeIds) {
+  return PodcastFeedResponse(
+    items: episodeIds.map(_episode).toList(),
+    hasMore: false,
+    total: episodeIds.length,
+  );
+}
+
+PodcastEpisodeModel _episode(int id) {
+  final now = DateTime(2026, 2, 14, 10, 0, 0);
+  return PodcastEpisodeModel(
+    id: id,
+    subscriptionId: 100 + id,
+    title: 'Episode $id',
+    audioUrl: 'https://example.com/$id.mp3',
+    publishedAt: now,
+    createdAt: now,
+  );
+}
+
+class _FakePodcastRepository extends PodcastRepository {
+  _FakePodcastRepository({
+    required List<PodcastFeedResponse> responses,
+    List<Duration> delays = const <Duration>[],
+  }) : _responses = responses,
+       _delays = delays,
+       super(PodcastApiService(Dio()));
+
+  final List<PodcastFeedResponse> _responses;
+  final List<Duration> _delays;
+  int getPodcastFeedCalls = 0;
+
+  @override
+  Future<PodcastFeedResponse> getPodcastFeed({
+    required int page,
+    required int pageSize,
+  }) async {
+    final callIndex = getPodcastFeedCalls++;
+    if (callIndex < _delays.length) {
+      await Future<void>.delayed(_delays[callIndex]);
+    }
+
+    if (_responses.isEmpty) {
+      return const PodcastFeedResponse(
+        items: <PodcastEpisodeModel>[],
+        hasMore: false,
+        total: 0,
+      );
+    }
+
+    final responseIndex = callIndex < _responses.length
+        ? callIndex
+        : _responses.length - 1;
+    return _responses[responseIndex];
+  }
+}

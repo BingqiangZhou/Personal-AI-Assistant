@@ -1491,6 +1491,7 @@ final podcastFeedProvider =
 
 class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
   late PodcastRepository _repository;
+  Future<void>? _inFlightInitialLoad;
 
   @override
   PodcastFeedState build() {
@@ -1508,35 +1509,69 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
     return message.isNotEmpty ? message : 'Network error occurred';
   }
 
-  Future<void> loadInitialFeed() async {
-    state = state.copyWith(isLoading: true, error: null);
+  Future<void> loadInitialFeed({
+    bool forceRefresh = false,
+    bool background = false,
+  }) async {
+    final currentState = state;
+    final hasData = currentState.episodes.isNotEmpty;
 
-    try {
-      final response = await _repository.getPodcastFeed(page: 1, pageSize: 20);
+    if (!forceRefresh && hasData && currentState.isDataFresh()) {
+      return;
+    }
 
-      state = state.copyWith(
-        episodes: response.items,
-        hasMore: response.hasMore,
-        nextPage: response.nextPage,
-        total: response.total,
-        isLoading: false,
-      );
-    } catch (error) {
-      logger.AppLogger.debug('[Error] Failed to load feed: $error');
+    final existingLoad = _inFlightInitialLoad;
+    if (existingLoad != null) {
+      return existingLoad;
+    }
 
-      // Check if this is an authentication error
-      if (error is AuthenticationException) {
-        logger.AppLogger.debug(
-          'Authentication failed while loading feed, checking auth status.',
+    final shouldShowInitialLoader = !background && !hasData;
+    if (shouldShowInitialLoader) {
+      state = currentState.copyWith(isLoading: true, clearError: true);
+    }
+
+    final loadFuture = () async {
+      try {
+        final response = await _repository.getPodcastFeed(
+          page: 1,
+          pageSize: 20,
         );
-        // Trigger auth status check to update state and redirect to login
-        ref.read(authProvider.notifier).checkAuthStatus();
-      }
 
-      state = state.copyWith(
-        isLoading: false,
-        error: _extractReadableErrorMessage(error),
-      );
+        state = state.copyWith(
+          episodes: response.items,
+          hasMore: response.hasMore,
+          nextPage: response.nextPage,
+          total: response.total,
+          isLoading: false,
+          clearError: true,
+          lastRefreshTime: DateTime.now(),
+        );
+      } catch (error) {
+        logger.AppLogger.debug('[Error] Failed to load feed: $error');
+
+        // Check if this is an authentication error
+        if (error is AuthenticationException) {
+          logger.AppLogger.debug(
+            'Authentication failed while loading feed, checking auth status.',
+          );
+          // Trigger auth status check to update state and redirect to login
+          ref.read(authProvider.notifier).checkAuthStatus();
+        }
+
+        state = state.copyWith(
+          isLoading: false,
+          error: _extractReadableErrorMessage(error),
+        );
+      }
+    }();
+
+    _inFlightInitialLoad = loadFuture;
+    try {
+      await loadFuture;
+    } finally {
+      if (identical(_inFlightInitialLoad, loadFuture)) {
+        _inFlightInitialLoad = null;
+      }
     }
   }
 
@@ -1558,6 +1593,7 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
         nextPage: response.nextPage,
         total: response.total,
         isLoadingMore: false,
+        lastRefreshTime: DateTime.now(),
       );
     } catch (error) {
       logger.AppLogger.debug('[Error] Failed to load more feed: $error');
@@ -1579,17 +1615,14 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
   }
 
   Future<void> refreshFeed() async {
-    state = state.copyWith(
-      episodes: [],
-      hasMore: true,
-      nextPage: null,
-      total: 0,
+    await loadInitialFeed(
+      forceRefresh: true,
+      background: state.episodes.isNotEmpty,
     );
-    await loadInitialFeed();
   }
 
   void clearError() {
-    state = state.copyWith(error: null);
+    state = state.copyWith(clearError: true);
   }
 }
 

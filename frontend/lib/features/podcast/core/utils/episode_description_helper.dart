@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:html/parser.dart' as parser;
 
 /// Helper utility for extracting and formatting episode descriptions
@@ -7,6 +9,10 @@ import 'package:html/parser.dart' as parser;
 /// 2. Strip HTML tags from shownotes content
 /// 3. Determine the best description to display based on available data
 class EpisodeDescriptionHelper {
+  static const int _stripHtmlCacheLimit = 300;
+  static final Map<String, String> _stripHtmlCache = <String, String>{};
+  static final Queue<String> _stripHtmlCacheOrder = Queue<String>();
+
   /// Extracts the "主要话题" (Main Topics) section from AI summary
   ///
   /// The AI summary format is:
@@ -39,7 +45,9 @@ class EpisodeDescriptionHelper {
     if (match != null && match.groupCount >= 1) {
       var topics = match.group(1)?.trim() ?? '';
       // Clean up bullet points and extra whitespace
-      topics = topics.replaceAll(RegExp(r'^[\s-•*]+\s*', multiLine: true), '').trim();
+      topics = topics
+          .replaceAll(RegExp(r'^[\s-•*]+\s*', multiLine: true), '')
+          .trim();
       // Replace multiple newlines with single space
       topics = topics.replaceAll(RegExp(r'\s+'), ' ');
       return topics.isNotEmpty ? topics : null;
@@ -60,7 +68,9 @@ class EpisodeDescriptionHelper {
       if (nextHeader > 0) {
         topics = topics.substring(0, nextHeader);
       }
-      topics = topics.replaceAll(RegExp(r'^[\s-•*]+\s*', multiLine: true), '').trim();
+      topics = topics
+          .replaceAll(RegExp(r'^[\s-•*]+\s*', multiLine: true), '')
+          .trim();
       topics = topics.replaceAll(RegExp(r'\s+'), ' ');
       return topics.isNotEmpty ? topics : null;
     }
@@ -76,6 +86,11 @@ class EpisodeDescriptionHelper {
   static String stripHtmlTags(String? htmlContent) {
     if (htmlContent == null || htmlContent.isEmpty) {
       return '';
+    }
+
+    final cached = _stripHtmlCache[htmlContent];
+    if (cached != null) {
+      return cached;
     }
 
     String text = '';
@@ -117,11 +132,14 @@ class EpisodeDescriptionHelper {
       // Also handle numeric entities like &#123; and &#x1F600;
       text = text.replaceAllMapped(
         RegExp(r'&#(\d+);'),
-        (match) => String.fromCharCode(int.tryParse(match.group(1) ?? '0') ?? 0),
+        (match) =>
+            String.fromCharCode(int.tryParse(match.group(1) ?? '0') ?? 0),
       );
       text = text.replaceAllMapped(
         RegExp(r'&#x([0-9a-fA-F]+);'),
-        (match) => String.fromCharCode(int.tryParse(match.group(1) ?? '0', radix: 16) ?? 0),
+        (match) => String.fromCharCode(
+          int.tryParse(match.group(1) ?? '0', radix: 16) ?? 0,
+        ),
       );
     } catch (e) {
       // If parsing fails, continue with original content
@@ -142,12 +160,19 @@ class EpisodeDescriptionHelper {
 
     // Clean up extra whitespace and newlines
     text = text.replaceAll(RegExp(r'\r\n'), '\n'); // Normalize line endings
-    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n'); // Max 2 consecutive newlines
-    text = text.replaceAll(RegExp(r'[ \t]{2,}'), ' '); // Multiple spaces/tabs to single space
+    text = text.replaceAll(
+      RegExp(r'\n{3,}'),
+      '\n\n',
+    ); // Max 2 consecutive newlines
+    text = text.replaceAll(
+      RegExp(r'[ \t]{2,}'),
+      ' ',
+    ); // Multiple spaces/tabs to single space
     text = text.replaceAll(RegExp(r'\n[ \t]+'), '\n'); // Spaces after newline
     text = text.replaceAll(RegExp(r'[ \t]+\n'), '\n'); // Spaces before newline
     text = text.trim();
 
+    _cacheStripHtmlResult(htmlContent, text);
     return text;
   }
 
@@ -178,5 +203,24 @@ class EpisodeDescriptionHelper {
       return description;
     }
     return '${description.substring(0, maxLength)}...';
+  }
+
+  static void clearStripHtmlCacheForTest() {
+    _stripHtmlCache.clear();
+    _stripHtmlCacheOrder.clear();
+  }
+
+  static void _cacheStripHtmlResult(String source, String parsed) {
+    if (_stripHtmlCache.containsKey(source)) {
+      return;
+    }
+
+    _stripHtmlCache[source] = parsed;
+    _stripHtmlCacheOrder.addLast(source);
+
+    while (_stripHtmlCacheOrder.length > _stripHtmlCacheLimit) {
+      final oldestKey = _stripHtmlCacheOrder.removeFirst();
+      _stripHtmlCache.remove(oldestKey);
+    }
   }
 }

@@ -89,6 +89,60 @@ void main() {
       expect(state.country, PodcastCountry.japan);
       expect(fakeService.showsCalls, greaterThan(initialCalls));
     });
+
+    test('skips repeated load when discover data is fresh', () async {
+      final fakeService = _FakeApplePodcastRssService();
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            _MockLocalStorageService(),
+          ),
+          applePodcastRssServiceProvider.overrideWithValue(fakeService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(podcastDiscoverProvider.notifier).loadInitialData();
+      final showsCallsAfterFirstLoad = fakeService.showsCalls;
+      final episodesCallsAfterFirstLoad = fakeService.episodeCalls;
+
+      await container.read(podcastDiscoverProvider.notifier).loadInitialData();
+
+      expect(fakeService.showsCalls, showsCallsAfterFirstLoad);
+      expect(fakeService.episodeCalls, episodesCallsAfterFirstLoad);
+    });
+
+    test('loads selected tab results first before the other tab', () async {
+      final fakeService = _DelayedApplePodcastRssService();
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            _MockLocalStorageService(),
+          ),
+          applePodcastRssServiceProvider.overrideWithValue(fakeService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container
+          .read(podcastDiscoverProvider.notifier)
+          .setTab(PodcastDiscoverTab.episodes);
+
+      final future = container
+          .read(podcastDiscoverProvider.notifier)
+          .loadInitialData();
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      final midState = container.read(podcastDiscoverProvider);
+      expect(midState.topEpisodes, isNotEmpty);
+      expect(midState.topShows, isEmpty);
+
+      await future;
+
+      final finalState = container.read(podcastDiscoverProvider);
+      expect(finalState.topEpisodes, isNotEmpty);
+      expect(finalState.topShows, isNotEmpty);
+    });
   });
 }
 
@@ -145,6 +199,30 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
         results: items,
       ),
     );
+  }
+}
+
+class _DelayedApplePodcastRssService extends _FakeApplePodcastRssService {
+  @override
+  Future<ApplePodcastChartResponse> fetchTopShows({
+    required PodcastCountry country,
+    int limit = 25,
+    ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
+  }) async {
+    showsCalls += 1;
+    await Future<void>.delayed(const Duration(milliseconds: 120));
+    return _responseFor(kind: 'podcasts', country: country.code);
+  }
+
+  @override
+  Future<ApplePodcastChartResponse> fetchTopEpisodes({
+    required PodcastCountry country,
+    int limit = 25,
+    ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
+  }) async {
+    episodeCalls += 1;
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    return _responseFor(kind: 'podcast-episodes', country: country.code);
   }
 }
 

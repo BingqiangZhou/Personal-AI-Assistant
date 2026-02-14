@@ -15,6 +15,8 @@ import 'playback_speed_selector_sheet.dart';
 import 'podcast_queue_sheet.dart';
 import 'sleep_timer_selector_sheet.dart';
 
+const _kMiniPlayerTransition = Duration(milliseconds: 120);
+
 class PodcastBottomPlayerWidget extends ConsumerWidget {
   const PodcastBottomPlayerWidget({super.key, this.applySafeArea = true});
 
@@ -29,7 +31,9 @@ class PodcastBottomPlayerWidget extends ConsumerWidget {
     }
 
     Widget content = AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
+      duration: _kMiniPlayerTransition,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
       child: state.isExpanded
           ? _ExpandedBottomPlayer(key: const ValueKey('expanded'), state: state)
           : _MiniBottomPlayer(key: const ValueKey('mini'), state: state),
@@ -40,8 +44,8 @@ class PodcastBottomPlayerWidget extends ConsumerWidget {
     }
 
     return AnimatedSize(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
+      duration: _kMiniPlayerTransition,
+      curve: Curves.easeOutCubic,
       alignment: Alignment.bottomCenter,
       child: content,
     );

@@ -7,9 +7,13 @@ import 'package:personal_ai_assistant/features/auth/domain/models/user.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/features/home/presentation/pages/home_page.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/profile_stats_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/services/apple_podcast_rss_service.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_discover_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/profile/presentation/pages/profile_page.dart';
 
@@ -17,10 +21,52 @@ void main() {
   group('HomePage player navigation behavior', () {
     testWidgets('enters home and triggers restore once', (tester) async {
       final audioNotifier = TestAudioPlayerNotifier(const AudioPlayerState());
+      final feedNotifier = TestPodcastFeedNotifier();
 
-      await _pumpHomePage(tester, audioNotifier: audioNotifier, initialTab: 0);
+      await _pumpHomePage(
+        tester,
+        audioNotifier: audioNotifier,
+        feedNotifier: feedNotifier,
+        initialTab: 0,
+      );
 
       expect(audioNotifier.restoreCallCount, 1);
+    });
+
+    testWidgets('enters home and prefetches library feed once', (tester) async {
+      final audioNotifier = TestAudioPlayerNotifier(const AudioPlayerState());
+      final feedNotifier = TestPodcastFeedNotifier();
+
+      await _pumpHomePage(
+        tester,
+        audioNotifier: audioNotifier,
+        feedNotifier: feedNotifier,
+        initialTab: 0,
+      );
+
+      expect(feedNotifier.backgroundLoadCallCount, 1);
+    });
+
+    testWidgets('does not prefetch library repeatedly in same home lifecycle', (
+      tester,
+    ) async {
+      final audioNotifier = TestAudioPlayerNotifier(const AudioPlayerState());
+      final feedNotifier = TestPodcastFeedNotifier();
+
+      await _pumpHomePage(
+        tester,
+        audioNotifier: audioNotifier,
+        feedNotifier: feedNotifier,
+        initialTab: 0,
+      );
+
+      await tester.tap(find.byIcon(Icons.library_books_outlined));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.travel_explore_outlined));
+      await tester.pumpAndSettle();
+
+      expect(feedNotifier.backgroundLoadCallCount, 1);
     });
 
     testWidgets('initial profile tab auto-collapses expanded player', (
@@ -125,18 +171,51 @@ void main() {
         );
       },
     );
+
+    testWidgets(
+      'position updates do not break mini player interaction on home',
+      (tester) async {
+        final audioNotifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _testEpisode(),
+            isExpanded: false,
+            duration: 180000,
+          ),
+        );
+
+        await _pumpHomePage(
+          tester,
+          audioNotifier: audioNotifier,
+          initialTab: 0,
+        );
+
+        for (var i = 1; i <= 5; i++) {
+          audioNotifier.updatePositionForTest(i * 1000);
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+
+        expect(
+          find.byKey(const Key('podcast_bottom_player_mini')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 }
 
 Future<void> _pumpHomePage(
   WidgetTester tester, {
   required TestAudioPlayerNotifier audioNotifier,
+  TestPodcastFeedNotifier? feedNotifier,
   required int initialTab,
 }) async {
   tester.view.physicalSize = const Size(390, 640);
   tester.view.devicePixelRatio = 1.0;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
+
+  final effectiveFeedNotifier = feedNotifier ?? TestPodcastFeedNotifier();
 
   await tester.pumpWidget(
     ProviderScope(
@@ -146,7 +225,13 @@ Future<void> _pumpHomePage(
         ),
         authProvider.overrideWith(TestAuthNotifier.new),
         audioPlayerProvider.overrideWith(() => audioNotifier),
-        podcastFeedProvider.overrideWith(TestPodcastFeedNotifier.new),
+        podcastFeedProvider.overrideWith(() => effectiveFeedNotifier),
+        podcastSubscriptionProvider.overrideWith(
+          TestPodcastSubscriptionNotifier.new,
+        ),
+        applePodcastRssServiceProvider.overrideWithValue(
+          _FakeApplePodcastRssService(),
+        ),
         profileStatsProvider.overrideWith((ref) async {
           return const ProfileStatsModel(
             totalSubscriptions: 2,
@@ -207,22 +292,98 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
   Future<void> restoreLastPlayedEpisodeIfNeeded() async {
     restoreCallCount += 1;
   }
+
+  void updatePositionForTest(int position) {
+    state = state.copyWith(position: position);
+  }
 }
 
 class TestPodcastFeedNotifier extends PodcastFeedNotifier {
+  int loadInitialFeedCallCount = 0;
+  int backgroundLoadCallCount = 0;
+  int foregroundLoadCallCount = 0;
+
   @override
   PodcastFeedState build() {
     return const PodcastFeedState();
   }
 
   @override
-  Future<void> loadInitialFeed() async {}
+  Future<void> loadInitialFeed({
+    bool forceRefresh = false,
+    bool background = false,
+  }) async {
+    loadInitialFeedCallCount += 1;
+    if (background) {
+      backgroundLoadCallCount += 1;
+      return;
+    }
+    foregroundLoadCallCount += 1;
+  }
 
   @override
   Future<void> refreshFeed() async {}
 
   @override
   Future<void> loadMoreFeed() async {}
+}
+
+class TestPodcastSubscriptionNotifier extends PodcastSubscriptionNotifier {
+  @override
+  PodcastSubscriptionState build() => const PodcastSubscriptionState();
+
+  @override
+  Future<void> loadSubscriptions({
+    int page = 1,
+    int size = 10,
+    int? categoryId,
+    String? status,
+    bool forceRefresh = false,
+  }) async {}
+}
+
+class _FakeApplePodcastRssService extends ApplePodcastRssService {
+  _FakeApplePodcastRssService() : super();
+
+  @override
+  Future<ApplePodcastChartResponse> fetchTopShows({
+    required PodcastCountry country,
+    int limit = 25,
+    ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
+  }) async {
+    return _buildResponse('podcasts', country.code);
+  }
+
+  @override
+  Future<ApplePodcastChartResponse> fetchTopEpisodes({
+    required PodcastCountry country,
+    int limit = 25,
+    ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
+  }) async {
+    return _buildResponse('podcast-episodes', country.code);
+  }
+
+  ApplePodcastChartResponse _buildResponse(String kind, String country) {
+    final item = ApplePodcastChartEntry.fromJson({
+      'artistName': 'Artist',
+      'id': '1001',
+      'name': 'Chart Item',
+      'kind': kind,
+      'artworkUrl100': 'https://example.com/cover.png',
+      'genres': [
+        {'name': 'Technology'},
+      ],
+      'url': 'https://podcasts.apple.com/$country/podcast/id1001',
+    });
+    return ApplePodcastChartResponse(
+      feed: ApplePodcastChartFeed(
+        title: kind,
+        country: country,
+        updated: '2026-02-14T00:00:00Z',
+        results: <ApplePodcastChartEntry>[item],
+      ),
+    );
+  }
 }
 
 PodcastEpisodeModel _testEpisode() {

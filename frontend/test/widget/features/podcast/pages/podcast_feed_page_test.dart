@@ -360,7 +360,10 @@ class MockPodcastFeedNotifier extends PodcastFeedNotifier {
 
   // Mock the methods that the page might call
   @override
-  Future<void> loadInitialFeed() async {
+  Future<void> loadInitialFeed({
+    bool forceRefresh = false,
+    bool background = false,
+  }) async {
     // Do nothing for testing
   }
 
@@ -387,7 +390,10 @@ class LoadTrackingPodcastFeedNotifier extends PodcastFeedNotifier {
   }
 
   @override
-  Future<void> loadInitialFeed() async {
+  Future<void> loadInitialFeed({
+    bool forceRefresh = false,
+    bool background = false,
+  }) async {
     loadInitialFeedCallCount += 1;
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
 import '../../../podcast/presentation/providers/podcast_providers.dart';
@@ -22,17 +23,23 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  static const int _tabCount = 3;
+
   late int _currentIndex;
   bool _hasAttemptedPlaybackRestore = false;
+  bool _hasPrefetchedLibraryFeed = false;
+  final Set<int> _visitedTabs = <int>{};
 
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialTab ?? 0;
+    _currentIndex = (widget.initialTab ?? 0).clamp(0, _tabCount - 1) as int;
+    _visitedTabs.add(_currentIndex);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
       _restoreMiniPlayerOnHomeEnter();
+      _prefetchLibraryFeedOnHomeEnter();
 
       final audioState = ref.read(audioPlayerProvider);
       if (!_isPodcastTab(_currentIndex) && audioState.isExpanded) {
@@ -49,6 +56,27 @@ class _HomePageState extends ConsumerState<HomePage> {
     _hasAttemptedPlaybackRestore = true;
     unawaited(
       ref.read(audioPlayerProvider.notifier).restoreLastPlayedEpisodeIfNeeded(),
+    );
+  }
+
+  void _prefetchLibraryFeedOnHomeEnter() {
+    if (_hasPrefetchedLibraryFeed) {
+      return;
+    }
+    _hasPrefetchedLibraryFeed = true;
+
+    final authState = ref.read(authProvider);
+    if (!authState.isAuthenticated) {
+      return;
+    }
+
+    final feedState = ref.read(podcastFeedProvider);
+    if (feedState.episodes.isNotEmpty && feedState.isDataFresh()) {
+      return;
+    }
+
+    unawaited(
+      ref.read(podcastFeedProvider.notifier).loadInitialFeed(background: true),
     );
   }
 
@@ -81,6 +109,13 @@ class _HomePageState extends ConsumerState<HomePage> {
       return Scaffold(body: widget.child!);
     }
 
+    final hasCurrentEpisode = ref.watch(
+      audioPlayerProvider.select((s) => s.currentEpisode != null),
+    );
+    final isExpanded = ref.watch(
+      audioPlayerProvider.select((s) => s.isExpanded),
+    );
+
     return CustomAdaptiveNavigation(
       key: const ValueKey('home_custom_adaptive_navigation'),
       destinations: _buildDestinations(context),
@@ -88,9 +123,12 @@ class _HomePageState extends ConsumerState<HomePage> {
       onDestinationSelected: _handleNavigation,
       appBar: null,
       floatingActionButton: _buildFloatingActionButton(),
-      bottomAccessory: _buildBottomAccessory(),
-      bottomAccessoryBodyPadding: _bottomAccessoryBodyPadding(),
-      body: _buildTabContent(_currentIndex),
+      bottomAccessory: _buildBottomAccessory(hasCurrentEpisode),
+      bottomAccessoryBodyPadding: _bottomAccessoryBodyPadding(
+        hasCurrentEpisode: hasCurrentEpisode,
+        isExpanded: isExpanded,
+      ),
+      body: _buildTabContent(isExpanded),
     );
   }
 
@@ -98,40 +136,44 @@ class _HomePageState extends ConsumerState<HomePage> {
     return null;
   }
 
-  Widget? _buildBottomAccessory() {
+  Widget? _buildBottomAccessory(bool hasCurrentEpisode) {
     final isPodcastTab = _isPodcastTab(_currentIndex);
     if (!isPodcastTab) {
       return null;
     }
 
-    // Only show player if we have a current episode
-    final audioState = ref.watch(audioPlayerProvider);
-    if (audioState.currentEpisode == null) {
+    if (!hasCurrentEpisode) {
       return null;
     }
 
     return const PodcastBottomPlayerWidget(applySafeArea: false);
   }
 
-  double _bottomAccessoryBodyPadding() {
+  double _bottomAccessoryBodyPadding({
+    required bool hasCurrentEpisode,
+    required bool isExpanded,
+  }) {
     final isPodcastTab = _isPodcastTab(_currentIndex);
     if (!isPodcastTab) {
       return 0;
     }
 
-    final audioState = ref.watch(audioPlayerProvider);
-    if (audioState.currentEpisode == null) {
+    if (!hasCurrentEpisode) {
       return 0;
     }
 
     // Collapsed mini player should float over content with transparent backdrop.
-    if (!audioState.isExpanded) {
+    if (!isExpanded) {
       return 0;
     }
     return 60;
   }
 
   void _handleNavigation(int index) {
+    if (_currentIndex != index) {
+      _visitedTabs.add(index);
+    }
+
     if (!_isPodcastTab(index) && ref.read(audioPlayerProvider).isExpanded) {
       ref.read(audioPlayerProvider.notifier).setExpanded(false);
     }
@@ -143,13 +185,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
-  Widget _buildTabContent(int index) {
-    final content = _buildPageContent(index);
-
-    // Watch global audio player state for expansion only
-    final isExpanded = ref.watch(
-      audioPlayerProvider.select((s) => s.isExpanded),
-    );
+  Widget _buildTabContent(bool isExpanded) {
+    final content = _buildIndexedTabContent();
 
     // If expanded, wrap content with a barrier to detect outside taps
     if (isExpanded && _isPodcastTab(_currentIndex)) {
@@ -175,6 +212,18 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     return content;
+  }
+
+  Widget _buildIndexedTabContent() {
+    return IndexedStack(
+      index: _currentIndex,
+      children: List<Widget>.generate(_tabCount, (index) {
+        if (!_visitedTabs.contains(index)) {
+          return const SizedBox.shrink();
+        }
+        return _buildPageContent(index);
+      }),
+    );
   }
 
   Widget _buildPageContent(int index) {

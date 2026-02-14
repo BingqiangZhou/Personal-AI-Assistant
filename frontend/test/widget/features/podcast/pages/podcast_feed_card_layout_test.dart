@@ -287,7 +287,10 @@ class _MockPodcastFeedNotifier extends PodcastFeedNotifier {
   }
 
   @override
-  Future<void> loadInitialFeed() async {}
+  Future<void> loadInitialFeed({
+    bool forceRefresh = false,
+    bool background = false,
+  }) async {}
 
   @override
   Future<void> loadMoreFeed() async {}

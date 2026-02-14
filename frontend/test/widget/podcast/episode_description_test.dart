@@ -69,9 +69,20 @@ Deep insights...
         );
         expect(result, isNull);
       });
+
+      test('reuses cached result for repeated HTML input', () {
+        const html =
+            '<p>This is <strong>cached</strong> content &amp; should be stable.</p>';
+
+        final first = EpisodeDescriptionHelper.stripHtmlTags(html);
+        final second = EpisodeDescriptionHelper.stripHtmlTags(html);
+
+        expect(second, equals(first));
+      });
     });
 
     group('stripHtmlTags', () {
+      setUp(EpisodeDescriptionHelper.clearStripHtmlCacheForTest);
       test('removes HTML tags from content', () {
         const html =
             '<p>This is <strong>bold</strong> text with <a href="#">link</a>.</p>';
