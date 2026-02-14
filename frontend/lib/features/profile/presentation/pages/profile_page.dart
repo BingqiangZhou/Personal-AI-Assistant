@@ -553,8 +553,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             _buildSettingsItem(
               context,
               icon: Icons.cleaning_services,
-              title: l10n.profile_clear_cache,
-              subtitle: l10n.profile_clear_cache_subtitle,
+              title: l10n.profile_cache_management,
+              subtitle: l10n.profile_cache_management_subtitle,
               tileKey: const Key('profile_clear_cache_item'),
               onTap: () => context.push('/profile/cache'),
             ),
@@ -695,8 +695,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             _buildSettingsItem(
               context,
               icon: Icons.cleaning_services,
-              title: l10n.profile_clear_cache,
-              subtitle: l10n.profile_clear_cache_subtitle,
+              title: l10n.profile_cache_management,
+              subtitle: l10n.profile_cache_management_subtitle,
               tileKey: const Key('profile_clear_cache_item'),
               onTap: () => context.push('/profile/cache'),
             ),

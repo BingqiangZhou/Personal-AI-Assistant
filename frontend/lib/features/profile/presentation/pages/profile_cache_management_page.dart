@@ -529,6 +529,14 @@ class _ProfileCacheManagementPageState
                             ),
                           ],
                         ),
+                        const SizedBox(height: 2),
+                        Text(
+                          l10n.profile_cache_manage_item_count(stats.totalCount),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(height: 12),
                         _buildSegmentBar(
                           imagesBytes: stats.images.bytes,

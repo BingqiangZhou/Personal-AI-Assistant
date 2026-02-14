@@ -1350,6 +1350,16 @@
     "description": "清理缓存标题"
   },
 
+  "profile_cache_management": "缓存管理",
+  "@profile_cache_management": {
+    "description": "缓存管理标题"
+  },
+
+  "profile_cache_management_subtitle": "查看并清理图片、音频等缓存数据",
+  "@profile_cache_management_subtitle": {
+    "description": "缓存管理副标题"
+  },
+
   "profile_clear_cache_subtitle": "清理图片、音频等缓存数据",
   "@profile_clear_cache_subtitle": {
     "description": "清理缓存副标题"
@@ -1380,7 +1390,7 @@
     }
   },
 
-  "profile_cache_manage_title": "缓存管理",
+  "profile_cache_manage_title": "存储与缓存",
   "@profile_cache_manage_title": {
     "description": "缓存管理页面标题"
   },

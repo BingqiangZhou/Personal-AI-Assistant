@@ -813,6 +813,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profile_clear_cache => '清理缓存';
 
   @override
+  String get profile_cache_management => '缓存管理';
+
+  @override
+  String get profile_cache_management_subtitle => '查看并清理图片、音频等缓存数据';
+
+  @override
   String get profile_clear_cache_subtitle => '清理图片、音频等缓存数据';
 
   @override
@@ -830,7 +836,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get profile_cache_manage_title => '缓存管理';
+  String get profile_cache_manage_title => '存储与缓存';
 
   @override
   String get profile_cache_manage_total => '总计';

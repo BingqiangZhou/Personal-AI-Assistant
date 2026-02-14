@@ -69,16 +69,16 @@ class AppColors {
   // ============================================================
 
   /// Dark theme background / 暗色主题背景
-  static const Color darkBackground = Color(0xFF0B1020);
+  static const Color darkBackground = Color(0xFF000000);
 
   /// Dark theme surface / 暗色主题表面
-  static const Color darkSurface = Color(0xFF111A2E);
+  static const Color darkSurface = Color(0xFF0B0B0B);
 
   /// Dark theme surface variant / 暗色主题表面变体
-  static const Color darkSurfaceVariant = Color(0xFF17233B);
+  static const Color darkSurfaceVariant = Color(0xFF141414);
 
   /// Dark theme outline / 暗色主题边框
-  static const Color darkOutline = Color(0xFF24314D);
+  static const Color darkOutline = Color(0xFF2A2A2A);
 
   /// Dark theme primary text / 暗色主题主要文字
   static const Color darkTextPrimary = Color(0xFFEAF2FF);
@@ -157,7 +157,7 @@ class AppColors {
 
   /// Dark theme brand gradient / 暗色主题品牌渐变
   static const LinearGradient darkBrandGradient = LinearGradient(
-    colors: [Color(0xFF1E3A5F), Color(0xFF0B2040)],
+    colors: [Color(0xFF1A1A1A), Color(0xFF000000)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

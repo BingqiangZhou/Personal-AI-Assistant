@@ -1349,6 +1349,16 @@
     "description": "Clear cache title"
   },
 
+  "profile_cache_management": "Storage & Cache",
+  "@profile_cache_management": {
+    "description": "Cache management title"
+  },
+
+  "profile_cache_management_subtitle": "View and clear images, audio, and other cached data",
+  "@profile_cache_management_subtitle": {
+    "description": "Cache management subtitle"
+  },
+
   "profile_clear_cache_subtitle": "Clear images, audio, and other cached data",
   "@profile_clear_cache_subtitle": {
     "description": "Clear cache subtitle"
@@ -1379,7 +1389,7 @@
     }
   },
 
-  "profile_cache_manage_title": "Cache Management",
+  "profile_cache_manage_title": "Storage & Cache",
   "@profile_cache_manage_title": {
     "description": "Cache management page title"
   },

@@ -289,17 +289,15 @@ class MindriverTheme {
 
       // Color Scheme - Manual mapping with proper contrast
       colorScheme: ColorScheme.dark(
-        // Primary - Use brighter riverAccent for dark theme with dark text for contrast
-        primary: AppColors.riverAccent,
-        onPrimary: AppColors.darkBackground, // Dark text on bright primary for readability
-        primaryContainer: AppColors.riverAccent.withValues(alpha: 0.2),
-        onPrimaryContainer: AppColors.riverAccent,
+        primary: Color(0xFF2D2D2D),
+        onPrimary: AppColors.darkTextPrimary,
+        primaryContainer: Color(0xFF3A3A3A),
+        onPrimaryContainer: AppColors.darkTextPrimary,
 
-        // Secondary - Lighter indigo
-        secondary: const Color(0xFF6B8BD9),
-        onSecondary: AppColors.darkBackground,
-        secondaryContainer: AppColors.indigo.withValues(alpha: 0.2),
-        onSecondaryContainer: const Color(0xFF6B8BD9),
+        secondary: Color(0xFF4A4A4A),
+        onSecondary: AppColors.darkTextPrimary,
+        secondaryContainer: Color(0xFF262626),
+        onSecondaryContainer: AppColors.darkTextPrimary,
 
         // Tertiary - Lighter green
         tertiary: const Color(0xFF85D45B),
@@ -364,9 +362,9 @@ class MindriverTheme {
       listTileTheme: ListTileThemeData(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         tileColor: Colors.transparent,
-        selectedTileColor: AppColors.riverAccent.withValues(alpha: 0.15),
+        selectedTileColor: Colors.white.withValues(alpha: 0.06),
         iconColor: AppColors.darkTextSecondary,
-        selectedColor: AppColors.riverAccent,
+        selectedColor: AppColors.darkTextPrimary,
         textColor: AppColors.darkTextPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -376,8 +374,8 @@ class MindriverTheme {
       // Elevated Button Theme / 凸起按钮主题
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.riverAccent,
-          foregroundColor: AppColors.darkBackground, // Dark text for contrast
+          backgroundColor: const Color(0xFF2D2D2D),
+          foregroundColor: AppColors.darkTextPrimary,
           elevation: 0,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
@@ -395,7 +393,7 @@ class MindriverTheme {
       // Text Button Theme / 文本按钮主题
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.riverAccent,
+          foregroundColor: AppColors.darkTextPrimary,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
@@ -411,8 +409,8 @@ class MindriverTheme {
       // Outlined Button Theme / 轮廓按钮主题
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.riverAccent,
-          side: const BorderSide(color: AppColors.riverAccent, width: 1.5),
+          foregroundColor: AppColors.darkTextPrimary,
+          side: BorderSide(color: AppColors.darkOutline, width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -439,7 +437,7 @@ class MindriverTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.riverAccent, width: 2),
+          borderSide: BorderSide(color: AppColors.darkTextPrimary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -463,14 +461,14 @@ class MindriverTheme {
       // Chip Theme / 标签主题
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.darkSurfaceVariant,
-        selectedColor: AppColors.riverAccent.withValues(alpha: 0.2),
+        selectedColor: Colors.white.withValues(alpha: 0.08),
         disabledColor: AppColors.darkSurfaceVariant.withValues(alpha: 0.3),
         labelStyle: const TextStyle(
           color: AppColors.darkTextPrimary,
           fontSize: 12,
         ),
         secondaryLabelStyle: const TextStyle(
-          color: AppColors.riverAccent,
+          color: AppColors.darkTextPrimary,
           fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
@@ -492,7 +490,7 @@ class MindriverTheme {
       // Bottom Navigation Bar Theme / 底部导航栏主题
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.darkSurface,
-        selectedItemColor: AppColors.riverAccent,
+        selectedItemColor: AppColors.darkTextPrimary,
         unselectedItemColor: AppColors.darkTextTertiary,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
@@ -522,8 +520,8 @@ class MindriverTheme {
 
       // Floating Action Button Theme / 悬浮按钮主题
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: AppColors.riverAccent,
-        foregroundColor: AppColors.darkBackground,
+        backgroundColor: const Color(0xFF2D2D2D),
+        foregroundColor: AppColors.darkTextPrimary,
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),

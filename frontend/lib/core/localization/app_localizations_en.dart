@@ -853,7 +853,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get profile_cache_manage_title => 'Cache Management';
+  String get profile_cache_manage_title => 'Storage & Cache';
 
   @override
   String get profile_cache_manage_total => 'Total';

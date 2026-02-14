@@ -1727,7 +1727,7 @@ abstract class AppLocalizations {
   /// Cache management page title
   ///
   /// In en, this message translates to:
-  /// **'Cache Management'**
+  /// **'Storage & Cache'**
   String get profile_cache_manage_title;
 
   /// Cache management total label
