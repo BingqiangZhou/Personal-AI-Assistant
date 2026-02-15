@@ -525,6 +525,27 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       final restoredFromLocal = await _restoreLastPlaybackSnapshotIfPossible();
       final expectedEpisodeId = state.currentEpisode?.id;
       if (restoredFromLocal) {
+        // Preload the audio source so tapping play can use the fast-resume path.
+        // Without this, _player.resume() is called on an empty player and does nothing.
+        final ep = state.currentEpisode;
+        if (ep != null) {
+          try {
+            await _audioHandler.setEpisode(
+              id: ep.id.toString(),
+              url: ep.audioUrl,
+              title: ep.title,
+              artist: ep.subscriptionTitle ?? 'Unknown Podcast',
+              artUri: ep.imageUrl ?? ep.subscriptionImageUrl,
+              autoPlay: false,
+            );
+            if (state.position > 0) {
+              await _audioHandler.seek(Duration(milliseconds: state.position));
+            }
+            await _audioHandler.setSpeed(state.playbackRate);
+          } catch (e) {
+            debugPrint('[PlaybackRestore] Failed to preload audio source: $e');
+          }
+        }
         unawaited(_restoreLastPlayedEpisodeFromServer(expectedEpisodeId));
         return;
       }

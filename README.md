@@ -1,6 +1,6 @@
 # Personal AI Assistant
 
-[![Version](https://img.shields.io/badge/version-0.10.0-blue)](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.0)
+[![Version](https://img.shields.io/badge/version-0.10.2-blue)](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.2)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10+-blue)](https://www.python.org/)
 [![Flutter](https://img.shields.io/badge/flutter-3.0+-cyan)](https://flutter.dev/)
@@ -10,7 +10,7 @@
 
 An extensible personal AI assistant that integrates podcast subscription, audio playback, and AI features. Designed to create a personalized information processing center through local deployment and AI capabilities.
 
-**📦 当前版本 / Current Version: [v0.10.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.0)** (2026-02-14)
+**📦 当前版本 / Current Version: [v0.10.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.2)** (2026-02-15)
 
 ## 📋 [更新日志 / Changelog](CHANGELOG.md)
 
@@ -122,25 +122,27 @@ The project includes comprehensive technical documentation and guides. The follo
 - **个性化播放速度 (Playback Rate)**: 每用户和每订阅独立的播放速度偏好
 - **统计信息 (Statistics)**: 收听时长、播放次数等个人统计
 
-#### 播客发现 / Podcast Discover (v0.10.0)
+#### 播客发现 / Podcast Discover (v0.10.0-v0.10.2)
 - **Apple Podcast 集成**: Apple Podcast RSS 榜单和推荐
 - **iTunes 查询**: iTunes 单集查询和应用内预览
 - **自动展开**: 滚动时自动展开更多榜单
 - **分类筛选**: 按流派浏览热门播客
+- **单集搜索**: 搜索iTunes上的播客单集
 
-#### 缓存管理 / Cache Management (v0.9.0-v0.10.0)
+#### 缓存管理 / Cache Management (v0.9.0-v0.10.2)
 - **清除缓存**: 一键清除应用缓存
 - **分类选择**: 按类别选择性清除缓存
 - **缓存统计**: 显示各类型缓存占用空间
 - **性能优化**: 缓存层优化数据加载策略
 - **统计缓存**: 个人统计和播放历史的缓存层
 
-#### UI 增强 / UI Enhancements (v0.7.0-v0.10.0)
+#### UI 增强 / UI Enhancements (v0.7.0-v0.10.2)
 - **浮动通知**: 顶部浮动通知组件，全局状态提示
 - **移动端播放器**: 底部播放器重新设计，优化的移动端体验
 - **Feed 风格卡片**: 统一的卡片布局设计
 - **自动收起播放器**: 导航离开播客标签时自动收起播放器
 - **最近播放恢复**: 登录后自动恢复最近播放的单集
+- **密集布局模式**: 高密度列表模式，适合高级用户
 
 #### AI 转录与对话 / AI Transcription & Conversations
 - **音频转录**: 支持 OpenAI Whisper 等转录服务
@@ -571,7 +573,8 @@ personal-ai-assistant/
 - [x] 自动收起播放器
 - [x] 播放列表项显示进度
 
-#### 性能优化 / Performance
+#### 性能优化 / Performance (v0.10.1-v0.10.2)
+- [x] 应用启动优化和本地缓存
 - [x] 缓存管理（清除缓存、分类选择）
 - [x] 统计和历史的缓存层
 - [x] 队列操作优化
