@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.10.4](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.10.3...v0.10.4) - 2026-02-15 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.4))
+
+### 🚜 Refactor
+
+- *(ui)* Add collapsible desktop sidebar and adaptive sheet helper ([c6777e5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c6777e5737239f61939a39be6df4daf5b1839623))
+
+
+
 ## [0.10.3](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.10.2...v0.10.3) - 2026-02-15 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.3))
 
 ### 🚜 Refactor
