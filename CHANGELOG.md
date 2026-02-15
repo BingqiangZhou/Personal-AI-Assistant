@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.10.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.10.1...v0.10.2) - 2026-02-15 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.2))
+
+### 🚀 Features
+
+- *(podcast)* Add episode search to podcast discovery ([10eb705](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/10eb70540a70d67d5948b28779803c234453f555))
+
+### 🚜 Refactor
+
+- *(core,ui)* Move audio service init and improve UI components ([465f292](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/465f292acd6de3c25fd52c29c9ce82baec07259b))
+
+
+
 ## [0.10.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.10.0...v0.10.1) - 2026-02-14 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.1))
 
 ### ⚡ Performance
