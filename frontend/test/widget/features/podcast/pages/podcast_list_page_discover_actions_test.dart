@@ -43,8 +43,8 @@ void main() {
             podcastSubscriptionProvider.overrideWith(
               () => fakeSubscriptionNotifier,
             ),
-            search.podcastSearchProvider.overrideWithValue(
-              const search.PodcastSearchState(),
+            search.podcastSearchProvider.overrideWith(
+              () => _TestPodcastSearchNotifier(const search.PodcastSearchState()),
             ),
           ],
           child: MaterialApp(
@@ -54,6 +54,9 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('podcast_discover_tab_podcasts')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('podcast_discover_subscribe_111')));
@@ -87,8 +90,8 @@ void main() {
               podcastSubscriptionProvider.overrideWith(
                 () => _FakePodcastSubscriptionNotifier(),
               ),
-              search.podcastSearchProvider.overrideWithValue(
-                const search.PodcastSearchState(),
+              search.podcastSearchProvider.overrideWith(
+                () => _TestPodcastSearchNotifier(const search.PodcastSearchState()),
               ),
             ],
             child: MaterialApp(
@@ -98,6 +101,9 @@ void main() {
             ),
           ),
         );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('podcast_discover_tab_podcasts')));
         await tester.pumpAndSettle();
 
         expect(
@@ -139,8 +145,8 @@ void main() {
               () => _FakePodcastSubscriptionNotifier(),
             ),
             audioPlayerProvider.overrideWith(() => audioNotifier),
-            search.podcastSearchProvider.overrideWithValue(
-              const search.PodcastSearchState(),
+            search.podcastSearchProvider.overrideWith(
+              () => _TestPodcastSearchNotifier(const search.PodcastSearchState()),
             ),
           ],
           child: MaterialApp(
@@ -150,9 +156,6 @@ void main() {
           ),
         ),
       );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const Key('podcast_discover_tab_episodes')));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('podcast_discover_open_222')), findsNothing);
@@ -180,6 +183,15 @@ void main() {
       expect(played.metadata?['discover_preview'], isTrue);
     });
   });
+}
+
+class _TestPodcastSearchNotifier extends search.PodcastSearchNotifier {
+  _TestPodcastSearchNotifier(this._initial);
+
+  final search.PodcastSearchState _initial;
+
+  @override
+  search.PodcastSearchState build() => _initial;
 }
 
 class _FakeApplePodcastRssService extends ApplePodcastRssService {

@@ -17,6 +17,7 @@ class ITunesSearchService {
   static const Duration _cacheExpiration = Duration(hours: 1);
 
   final Map<String, _CachedResponse> _cache = {};
+  final Map<String, _CachedEpisodeSearchResponse> _episodeSearchCache = {};
   final Map<String, _CachedEpisodeLookupResponse> _episodeLookupCache = {};
 
   ITunesSearchService({Dio? dio}) : _dio = dio ?? Dio() {
@@ -100,6 +101,82 @@ class ITunesSearchService {
       throw Exception(errorMsg);
     } catch (error) {
       logger.AppLogger.debug('iTunes search failed: $error');
+      rethrow;
+    }
+  }
+
+  Future<List<ITunesPodcastEpisodeResult>> searchPodcastEpisodes({
+    required String term,
+    PodcastCountry country = PodcastCountry.china,
+    int limit = 25,
+  }) async {
+    if (term.trim().isEmpty) {
+      return const [];
+    }
+
+    final safeLimit = _normalizeSearchLimit(limit);
+    final cacheKey =
+        'search_episodes_${country.code}_$term${'_limit$safeLimit'}';
+    final cached = _getCachedEpisodeSearchResponse(cacheKey);
+    if (cached != null) {
+      logger.AppLogger.debug('Cache hit for iTunes episode search: $term');
+      return cached;
+    }
+
+    try {
+      const url = 'https://itunes.apple.com/search';
+      final response = await _dio.get(
+        url,
+        queryParameters: {
+          'term': term,
+          'media': 'podcast',
+          'entity': 'podcastEpisode',
+          'country': country.code,
+          'limit': safeLimit,
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('iTunes API returned status ${response.statusCode}');
+      }
+
+      final data = _parseJsonMap(response.data);
+      final results = (data['results'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(ITunesPodcastEpisodeResult.fromJson)
+          .where((episode) => episode.trackId > 0 && episode.trackName.isNotEmpty)
+          .toList();
+      _setCachedEpisodeSearchResponse(cacheKey, results);
+      return results;
+    } on DioException catch (dioError) {
+      String errorMsg;
+      switch (dioError.type) {
+        case DioExceptionType.connectionTimeout:
+          errorMsg =
+              'Connection timeout. Please check your network or try using a VPN.';
+          break;
+        case DioExceptionType.sendTimeout:
+          errorMsg = 'Send timeout. Please try again.';
+          break;
+        case DioExceptionType.receiveTimeout:
+          errorMsg = 'Receive timeout. Server response too slow.';
+          break;
+        case DioExceptionType.badResponse:
+          errorMsg = 'Server error: ${dioError.response?.statusCode}';
+          break;
+        case DioExceptionType.cancel:
+          errorMsg = 'Request was cancelled.';
+          break;
+        case DioExceptionType.connectionError:
+          errorMsg =
+              'Connection failed. iTunes API may be blocked in your region. Try using a VPN.';
+          break;
+        default:
+          errorMsg = 'Network error: ${dioError.message}';
+      }
+      throw Exception(errorMsg);
+    } catch (error) {
+      logger.AppLogger.debug('iTunes episode search failed: $error');
       rethrow;
     }
   }
@@ -241,6 +318,25 @@ class ITunesSearchService {
     );
   }
 
+  List<ITunesPodcastEpisodeResult>? _getCachedEpisodeSearchResponse(String key) {
+    final cached = _episodeSearchCache[key];
+    if (cached != null && !cached.isExpired) {
+      return cached.results;
+    }
+    _episodeSearchCache.remove(key);
+    return null;
+  }
+
+  void _setCachedEpisodeSearchResponse(
+    String key,
+    List<ITunesPodcastEpisodeResult> results,
+  ) {
+    _episodeSearchCache[key] = _CachedEpisodeSearchResponse(
+      results: results,
+      timestamp: DateTime.now(),
+    );
+  }
+
   ITunesPodcastLookupResult? _getCachedEpisodeLookupResponse(String key) {
     final cached = _episodeLookupCache[key];
     if (cached != null && !cached.isExpired) {
@@ -292,6 +388,7 @@ class ITunesSearchService {
 
   void clearCache() {
     _cache.clear();
+    _episodeSearchCache.clear();
     _episodeLookupCache.clear();
     logger.AppLogger.debug('iTunes search cache cleared');
   }
@@ -299,6 +396,9 @@ class ITunesSearchService {
   void clearExpiredCache() {
     final now = DateTime.now();
     _cache.removeWhere(
+      (_, cached) => now.difference(cached.timestamp) > _cacheExpiration,
+    );
+    _episodeSearchCache.removeWhere(
       (_, cached) => now.difference(cached.timestamp) > _cacheExpiration,
     );
     _episodeLookupCache.removeWhere(
@@ -326,6 +426,18 @@ class _CachedEpisodeLookupResponse {
   });
 
   final ITunesPodcastLookupResult response;
+  final DateTime timestamp;
+
+  bool get isExpired {
+    return DateTime.now().difference(timestamp) >
+        ITunesSearchService._cacheExpiration;
+  }
+}
+
+class _CachedEpisodeSearchResponse {
+  _CachedEpisodeSearchResponse({required this.results, required this.timestamp});
+
+  final List<ITunesPodcastEpisodeResult> results;
   final DateTime timestamp;
 
   bool get isExpired {

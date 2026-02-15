@@ -2566,7 +2566,7 @@
     }
   },
 
-  "podcast_search_hint": "Search podcasts...",
+  "podcast_search_hint": "Search podcasts or episodes...",
   "@podcast_search_hint": {
     "description": "Search input placeholder for podcasts"
   },
@@ -2626,7 +2626,7 @@
     "description": "Country selector label"
   },
 
-  "podcast_search_empty_hint": "Enter a podcast name to search",
+  "podcast_search_empty_hint": "Enter a podcast or episode name to search",
   "@podcast_search_empty_hint": {
     "description": "Empty search state hint message"
   },
@@ -2641,9 +2641,19 @@
     "description": "Search error title"
   },
 
-  "podcast_search_no_results": "No podcasts found",
+  "podcast_search_no_results": "No results found",
   "@podcast_search_no_results": {
     "description": "No search results message"
+  },
+
+  "podcast_search_section_podcasts": "Podcasts",
+  "@podcast_search_section_podcasts": {
+    "description": "Podcasts section title in search results"
+  },
+
+  "podcast_search_section_episodes": "Episodes",
+  "@podcast_search_section_episodes": {
+    "description": "Episodes section title in search results"
   },
 
   "podcast_subscribe": "Subscribe",

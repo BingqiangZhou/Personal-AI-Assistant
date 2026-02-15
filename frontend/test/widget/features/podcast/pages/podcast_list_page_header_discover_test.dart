@@ -63,6 +63,13 @@ void main() {
         findsOneWidget,
       );
       expect(
+        find.descendant(
+          of: find.byKey(const Key('podcast_discover_country_button')),
+          matching: find.text('CN'),
+        ),
+        findsOneWidget,
+      );
+      expect(
         find.byKey(const Key('podcast_discover_search_bar')),
         findsOneWidget,
       );

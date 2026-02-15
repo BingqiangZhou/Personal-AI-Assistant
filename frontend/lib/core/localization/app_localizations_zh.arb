@@ -2567,7 +2567,7 @@
     }
   },
 
-  "podcast_search_hint": "搜索播客...",
+  "podcast_search_hint": "搜索播客或分集...",
   "@podcast_search_hint": {
     "description": "播客搜索输入占位符"
   },
@@ -2627,7 +2627,7 @@
     "description": "国家选择器标签"
   },
 
-  "podcast_search_empty_hint": "输入播客名称进行搜索",
+  "podcast_search_empty_hint": "输入播客或分集名称进行搜索",
   "@podcast_search_empty_hint": {
     "description": "空搜索状态提示消息"
   },
@@ -2642,9 +2642,19 @@
     "description": "搜索错误标题"
   },
 
-  "podcast_search_no_results": "未找到播客",
+  "podcast_search_no_results": "未找到结果",
   "@podcast_search_no_results": {
     "description": "无搜索结果消息"
+  },
+
+  "podcast_search_section_podcasts": "播客",
+  "@podcast_search_section_podcasts": {
+    "description": "搜索结果播客分区标题"
+  },
+
+  "podcast_search_section_episodes": "分集",
+  "@podcast_search_section_episodes": {
+    "description": "搜索结果分集分区标题"
   },
 
   "podcast_subscribe": "订阅",

@@ -25,7 +25,7 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
     return SafeArea(
       child: SingleChildScrollView(
         key: const Key('discover_episode_detail_sheet'),
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -33,16 +33,16 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                   child: PodcastImageWidget(
                     imageUrl: episode.artworkUrl600 ?? episode.artworkUrl100,
-                    width: 72,
-                    height: 72,
-                    iconSize: 28,
+                    width: 64,
+                    height: 64,
+                    iconSize: 26,
                     iconColor: theme.colorScheme.primary,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,25 +51,60 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
                         episode.trackName,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
+                          height: 1.15,
                         ),
-                        maxLines: 3,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        episode.collectionName,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        _buildMetaText(episode),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                      const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  episode.collectionName,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    height: 1.15,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _buildMetaText(episode),
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                    height: 1.15,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Align(
+                            alignment: Alignment.center,
+                            child: SizedBox.square(
+                              dimension: 36,
+                              child: IconButton.filled(
+                                key: const Key('discover_episode_detail_play_button'),
+                                onPressed: onPlay,
+                                icon: const Icon(Icons.play_arrow),
+                                iconSize: 18,
+                                style: IconButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                tooltip: l10n.podcast_play,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -77,19 +112,9 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
               ],
             ),
             if (description.isNotEmpty) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Text(description, style: theme.textTheme.bodyMedium),
             ],
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                key: const Key('discover_episode_detail_play_button'),
-                onPressed: onPlay,
-                icon: const Icon(Icons.play_arrow),
-                label: Text(l10n.podcast_play),
-              ),
-            ),
           ],
         ),
       ),

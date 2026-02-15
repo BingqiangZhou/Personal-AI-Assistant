@@ -32,7 +32,7 @@ class PodcastDiscoverState {
     this.isLoading = false,
     this.isRefreshing = false,
     this.error,
-    this.selectedTab = PodcastDiscoverTab.podcasts,
+    this.selectedTab = PodcastDiscoverTab.episodes,
     this.selectedCategory = allCategoryValue,
     this.showsExpanded = false,
     this.episodesExpanded = false,

@@ -1598,7 +1598,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get podcast_search_hint => 'Search podcasts...';
+  String get podcast_search_hint => 'Search podcasts or episodes...';
 
   @override
   String get podcast_discover_title => 'Discover';
@@ -1633,7 +1633,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_country_label => 'Country/Region';
 
   @override
-  String get podcast_search_empty_hint => 'Enter a podcast name to search';
+  String get podcast_search_empty_hint =>
+      'Enter a podcast or episode name to search';
 
   @override
   String get podcast_search_loading => 'Searching...';
@@ -1642,7 +1643,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_search_error => 'Search failed';
 
   @override
-  String get podcast_search_no_results => 'No podcasts found';
+  String get podcast_search_no_results => 'No results found';
+
+  @override
+  String get podcast_search_section_podcasts => 'Podcasts';
+
+  @override
+  String get podcast_search_section_episodes => 'Episodes';
 
   @override
   String get podcast_subscribe => 'Subscribe';

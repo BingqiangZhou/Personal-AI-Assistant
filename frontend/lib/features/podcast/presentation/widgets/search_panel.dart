@@ -10,6 +10,7 @@ import '../providers/country_selector_provider.dart';
 import '../providers/podcast_providers.dart' as providers;
 import '../providers/podcast_search_provider.dart';
 import 'country_selector_dropdown.dart';
+import 'podcast_episode_search_result_card.dart';
 import 'podcast_search_result_card.dart';
 
 class SearchPanel extends ConsumerStatefulWidget {
@@ -130,7 +131,13 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
   }
 
   void _handleSearch(String query) {
-    ref.read(podcastSearchProvider.notifier).searchPodcasts(query);
+    final notifier = ref.read(podcastSearchProvider.notifier);
+    final mode = ref.read(podcastSearchProvider).searchMode;
+    if (mode == PodcastSearchMode.episodes) {
+      notifier.searchEpisodes(query);
+      return;
+    }
+    notifier.searchPodcasts(query);
   }
 
   void _handleClearSearch() {
@@ -237,6 +244,8 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
       return Expanded(
         child: Column(
           children: [
+            _buildSearchTypeSelector(context, searchState, l10n),
+            const SizedBox(height: 8),
             buildSearchBar(),
             const SizedBox(height: 8),
             Expanded(
@@ -253,6 +262,44 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
     }
 
     return buildSearchBar();
+  }
+
+  Widget _buildSearchTypeSelector(
+    BuildContext context,
+    PodcastSearchState state,
+    AppLocalizations l10n,
+  ) {
+    final theme = Theme.of(context);
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: SegmentedButton<PodcastSearchMode>(
+        key: const Key('podcast_search_type_selector'),
+        segments: [
+          ButtonSegment(
+            value: PodcastSearchMode.podcasts,
+            label: Text(l10n.podcast_search_section_podcasts),
+            icon: const Icon(Icons.podcasts_outlined, size: 18),
+          ),
+          ButtonSegment(
+            value: PodcastSearchMode.episodes,
+            label: Text(l10n.podcast_search_section_episodes),
+            icon: const Icon(Icons.headphones_outlined, size: 18),
+          ),
+        ],
+        selected: {state.searchMode},
+        style: SegmentedButton.styleFrom(
+          backgroundColor: theme.colorScheme.surface,
+          foregroundColor: theme.colorScheme.onSurfaceVariant,
+          selectedForegroundColor: theme.colorScheme.onPrimary,
+          selectedBackgroundColor: theme.colorScheme.primary,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        ),
+        onSelectionChanged: (selection) {
+          final mode = selection.first;
+          ref.read(podcastSearchProvider.notifier).setSearchMode(mode);
+        },
+      ),
+    );
   }
 
   Widget _buildSearchResults(
@@ -315,7 +362,10 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
       );
     }
 
-    if (searchState.results.isEmpty) {
+    final resultsEmpty = searchState.searchMode == PodcastSearchMode.episodes
+        ? searchState.episodeResults.isEmpty
+        : searchState.podcastResults.isEmpty;
+    if (resultsEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -337,13 +387,23 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
       );
     }
 
+    if (searchState.searchMode == PodcastSearchMode.episodes) {
+      return ListView(
+        children: searchState.episodeResults.map((episode) {
+          return PodcastEpisodeSearchResultCard(
+            episode: episode,
+            key: ValueKey('episode_search_${episode.trackId}'),
+          );
+        }).toList(),
+      );
+    }
+
     return ListView.builder(
-      itemCount: searchState.results.length,
+      itemCount: searchState.podcastResults.length,
       itemBuilder: (context, index) {
-        final result = searchState.results[index];
+        final result = searchState.podcastResults[index];
         final isSubscribed = subscriptionState.subscriptions.any(
-          (sub) =>
-              PodcastUrlUtils.feedUrlMatches(sub.sourceUrl, result.feedUrl),
+          (sub) => PodcastUrlUtils.feedUrlMatches(sub.sourceUrl, result.feedUrl),
         );
         final isSubscribing =
             result.feedUrl != null &&

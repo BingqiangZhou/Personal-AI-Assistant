@@ -3071,7 +3071,7 @@ abstract class AppLocalizations {
   /// Search input placeholder for podcasts
   ///
   /// In en, this message translates to:
-  /// **'Search podcasts...'**
+  /// **'Search podcasts or episodes...'**
   String get podcast_search_hint;
 
   /// Podcast discover page title
@@ -3137,7 +3137,7 @@ abstract class AppLocalizations {
   /// Empty search state hint message
   ///
   /// In en, this message translates to:
-  /// **'Enter a podcast name to search'**
+  /// **'Enter a podcast or episode name to search'**
   String get podcast_search_empty_hint;
 
   /// Search loading message
@@ -3155,8 +3155,20 @@ abstract class AppLocalizations {
   /// No search results message
   ///
   /// In en, this message translates to:
-  /// **'No podcasts found'**
+  /// **'No results found'**
   String get podcast_search_no_results;
+
+  /// Podcasts section title in search results
+  ///
+  /// In en, this message translates to:
+  /// **'Podcasts'**
+  String get podcast_search_section_podcasts;
+
+  /// Episodes section title in search results
+  ///
+  /// In en, this message translates to:
+  /// **'Episodes'**
+  String get podcast_search_section_episodes;
 
   /// Subscribe button label
   ///

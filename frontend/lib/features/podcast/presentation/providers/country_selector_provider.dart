@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../core/storage/local_storage_service.dart';
@@ -44,17 +42,9 @@ class CountrySelectorNotifier extends _$CountrySelectorNotifier {
     );
   }
 
-  /// 获取默认国家（基于系统语言）
+  /// 获取默认国家
   PodcastCountry _getDefaultCountry() {
-    final locale = PlatformDispatcher.instance.locale;
-
-    // 中文用户默认中国
-    if (locale.languageCode == 'zh') {
-      return PodcastCountry.china;
-    }
-
-    // 其他默认美国
-    return PodcastCountry.usa;
+    return PodcastCountry.china;
   }
 
   /// 从本地存储加载保存的国家偏好

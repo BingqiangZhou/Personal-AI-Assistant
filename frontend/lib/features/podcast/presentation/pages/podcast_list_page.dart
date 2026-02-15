@@ -18,6 +18,7 @@ import '../widgets/country_selector_dropdown.dart';
 import '../widgets/discover_episode_detail_sheet.dart';
 import '../widgets/discover_show_episodes_sheet.dart';
 import '../widgets/podcast_image_widget.dart';
+import '../widgets/podcast_episode_search_result_card.dart';
 import '../widgets/podcast_search_result_card.dart';
 
 class PodcastListPage extends ConsumerStatefulWidget {
@@ -84,7 +85,13 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       ref.read(search.podcastSearchProvider.notifier).clearSearch();
       return;
     }
-    ref.read(search.podcastSearchProvider.notifier).searchPodcasts(query);
+    final notifier = ref.read(search.podcastSearchProvider.notifier);
+    final mode = ref.read(search.podcastSearchProvider).searchMode;
+    if (mode == search.PodcastSearchMode.episodes) {
+      notifier.searchEpisodes(query);
+      return;
+    }
+    notifier.searchPodcasts(query);
   }
 
   void _clearSearch() {
@@ -363,6 +370,60 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     }
   }
 
+  Future<ITunesPodcastEpisodeResult?> _resolveEpisodeForSearchResult(
+    ITunesPodcastEpisodeResult episode,
+  ) async {
+    final audioUrl = episode.resolvedAudioUrl;
+    if (audioUrl != null && audioUrl.isNotEmpty) {
+      return episode;
+    }
+    final country = ref.read(countrySelectorProvider).selectedCountry;
+    final searchService = ref.read(search.iTunesSearchServiceProvider);
+    try {
+      return await searchService.findEpisodeInLookup(
+        showId: episode.collectionId,
+        episodeTrackId: episode.trackId,
+        country: country,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _showEpisodeDetailSheetFromSearch(
+    ITunesPodcastEpisodeResult episode,
+  ) async {
+    final resolved = await _resolveEpisodeForSearchResult(episode);
+    if (!mounted) return;
+    if (resolved == null) {
+      final l10n = AppLocalizations.of(context)!;
+      _showErrorNotice(l10n.podcast_failed_load_episodes);
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(sheetContext).size.height * 0.9,
+          ),
+          child: DiscoverEpisodeDetailSheet(
+            episode: resolved,
+            onPlay: () async {
+              Navigator.of(sheetContext).pop();
+              await _playDiscoverEpisode(
+                episode: resolved,
+                showId: resolved.collectionId,
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -415,7 +476,14 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               ),
             ),
             SizedBox(height: isDense ? 6 : 8),
-            _buildDiscoverSearchInput(context, l10n, isDense: isDense),
+            _buildSearchModeSelector(context, searchState, isDense: isDense),
+            SizedBox(height: isDense ? 6 : 8),
+            _buildDiscoverSearchInput(
+              context,
+              l10n,
+              searchMode: searchState.searchMode,
+              isDense: isDense,
+            ),
             SizedBox(height: isDense ? 8 : 12),
             Expanded(
               child: searchState.hasSearched
@@ -492,8 +560,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         child: ListView(
           key: const Key('podcast_discover_list'),
           children: [
-            _buildTabSelector(context, discoverState, isDense: isDense),
-            SizedBox(height: isDense ? 8 : 12),
             _buildTopChartsSection(context, discoverState, isDense: isDense),
             SizedBox(height: isDense ? 12 : 16),
           ],
@@ -502,9 +568,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     );
   }
 
-  Widget _buildTabSelector(
+  Widget _buildSearchModeSelector(
     BuildContext context,
-    PodcastDiscoverState state, {
+    search.PodcastSearchState state, {
     required bool isDense,
   }) {
     final l10n = AppLocalizations.of(context)!;
@@ -523,28 +589,38 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           Expanded(
             child: _buildTabItem(
               context: context,
-              key: const Key('podcast_discover_tab_podcasts'),
-              label: l10n.podcast_title,
-              icon: Icons.podcasts,
-              selected: state.selectedTab == PodcastDiscoverTab.podcasts,
+              key: const Key('podcast_discover_tab_episodes'),
+              label: l10n.podcast_episodes,
+              icon: Icons.headphones_outlined,
+              selected: state.searchMode == search.PodcastSearchMode.episodes,
               isDense: isDense,
-              onTap: () => ref
-                  .read(podcastDiscoverProvider.notifier)
-                  .setTab(PodcastDiscoverTab.podcasts),
+              onTap: () {
+                ref
+                    .read(search.podcastSearchProvider.notifier)
+                    .setSearchMode(search.PodcastSearchMode.episodes);
+                ref
+                    .read(podcastDiscoverProvider.notifier)
+                    .setTab(PodcastDiscoverTab.episodes);
+              },
             ),
           ),
           const SizedBox(width: 6),
           Expanded(
             child: _buildTabItem(
               context: context,
-              key: const Key('podcast_discover_tab_episodes'),
-              label: l10n.podcast_episodes,
-              icon: Icons.headphones_outlined,
-              selected: state.selectedTab == PodcastDiscoverTab.episodes,
+              key: const Key('podcast_discover_tab_podcasts'),
+              label: l10n.podcast_title,
+              icon: Icons.podcasts,
+              selected: state.searchMode == search.PodcastSearchMode.podcasts,
               isDense: isDense,
-              onTap: () => ref
-                  .read(podcastDiscoverProvider.notifier)
-                  .setTab(PodcastDiscoverTab.episodes),
+              onTap: () {
+                ref
+                    .read(search.podcastSearchProvider.notifier)
+                    .setSearchMode(search.PodcastSearchMode.podcasts);
+                ref
+                    .read(podcastDiscoverProvider.notifier)
+                    .setTab(PodcastDiscoverTab.podcasts);
+              },
             ),
           ),
         ],
@@ -555,9 +631,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   Widget _buildDiscoverSearchInput(
     BuildContext context,
     AppLocalizations l10n,
-    {required bool isDense}
+    {required search.PodcastSearchMode searchMode, required bool isDense}
   ) {
     final theme = Theme.of(context);
+    final hintLabel = searchMode == search.PodcastSearchMode.episodes
+        ? l10n.podcast_search_section_episodes
+        : l10n.podcast_search_section_podcasts;
+    final isZh = Localizations.localeOf(context).languageCode.startsWith('zh');
+    final hintText = isZh
+        ? '${l10n.search}$hintLabel...'
+        : '${l10n.search} $hintLabel...';
 
     return Material(
       key: const Key('podcast_discover_search_bar'),
@@ -594,7 +677,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   focusedErrorBorder: InputBorder.none,
                   filled: false,
                   fillColor: Colors.transparent,
-                  hintText: l10n.podcast_discover_search_hint,
+                  hintText: hintText,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
@@ -1009,7 +1092,11 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       );
     }
 
-    if (searchState.results.isEmpty) {
+    final resultsEmpty =
+        searchState.searchMode == search.PodcastSearchMode.episodes
+            ? searchState.episodeResults.isEmpty
+            : searchState.podcastResults.isEmpty;
+    if (resultsEmpty) {
       return Center(
         child: Text(
           l10n.podcast_search_no_results,
@@ -1018,14 +1105,39 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       );
     }
 
+    if (searchState.searchMode == search.PodcastSearchMode.episodes) {
+      return ListView(
+        key: const Key('podcast_discover_search_results'),
+        children: searchState.episodeResults.map((episode) {
+          return PodcastEpisodeSearchResultCard(
+            episode: episode,
+            dense: isDense,
+            onTap: () => _showEpisodeDetailSheetFromSearch(episode),
+            onPlay: () async {
+              final resolved = await _resolveEpisodeForSearchResult(episode);
+              if (!mounted) return;
+              if (resolved == null) {
+                _showErrorNotice(l10n.podcast_player_no_audio);
+                return;
+              }
+              await _playDiscoverEpisode(
+                episode: resolved,
+                showId: resolved.collectionId,
+              );
+            },
+            key: ValueKey('episode_search_${episode.trackId}'),
+          );
+        }).toList(),
+      );
+    }
+
     return ListView.builder(
       key: const Key('podcast_discover_search_results'),
-      itemCount: searchState.results.length,
+      itemCount: searchState.podcastResults.length,
       itemBuilder: (context, index) {
-        final result = searchState.results[index];
+        final result = searchState.podcastResults[index];
         final isSubscribed = subscriptionState.subscriptions.any(
-          (sub) =>
-              PodcastUrlUtils.feedUrlMatches(sub.sourceUrl, result.feedUrl),
+          (sub) => PodcastUrlUtils.feedUrlMatches(sub.sourceUrl, result.feedUrl),
         );
         final isSubscribing =
             result.feedUrl != null &&

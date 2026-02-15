@@ -1551,7 +1551,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get podcast_search_hint => '搜索播客...';
+  String get podcast_search_hint => '搜索播客或分集...';
 
   @override
   String get podcast_discover_title => '发现';
@@ -1586,7 +1586,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_country_label => '国家或地区';
 
   @override
-  String get podcast_search_empty_hint => '输入播客名称进行搜索';
+  String get podcast_search_empty_hint => '输入播客或分集名称进行搜索';
 
   @override
   String get podcast_search_loading => '搜索中...';
@@ -1595,7 +1595,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_search_error => '搜索失败';
 
   @override
-  String get podcast_search_no_results => '未找到播客';
+  String get podcast_search_no_results => '未找到结果';
+
+  @override
+  String get podcast_search_section_podcasts => '播客';
+
+  @override
+  String get podcast_search_section_episodes => '分集';
 
   @override
   String get podcast_subscribe => '订阅';

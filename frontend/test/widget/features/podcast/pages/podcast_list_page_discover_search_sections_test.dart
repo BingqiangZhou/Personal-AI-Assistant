@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/itunes_episode_lookup_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
@@ -14,13 +15,9 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
     as search;
 
 void main() {
-  group('PodcastListPage desktop discover layout', () {
-    testWidgets('renders and allows switching to episodes tab', (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
+  group('PodcastListPage discover search mode selector', () {
+    testWidgets('shows selector and renders podcast results in podcast mode',
+        (tester) async {
       final container = ProviderContainer(
         overrides: [
           localStorageServiceProvider.overrideWithValue(
@@ -32,8 +29,23 @@ void main() {
           podcastSubscriptionProvider.overrideWith(
             () => _TestPodcastSubscriptionNotifier(),
           ),
-          search.podcastSearchProvider.overrideWith(
-            () => _TestPodcastSearchNotifier(const search.PodcastSearchState()),
+          search.podcastSearchProvider.overrideWithValue(
+            search.PodcastSearchState(
+              hasSearched: true,
+              isLoading: false,
+              searchMode: search.PodcastSearchMode.podcasts,
+              podcastResults: [
+                const PodcastSearchResult(
+                  collectionId: 100,
+                  collectionName: 'Test Podcast',
+                  artistName: 'Tester',
+                  feedUrl: 'https://example.com/feed.xml',
+                  artworkUrl100: 'https://example.com/podcast.png',
+                  trackCount: 10,
+                  primaryGenreName: 'Tech',
+                ),
+              ],
+            ),
           ),
         ],
       );
@@ -51,50 +63,79 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('podcast_discover_list')), findsOneWidget);
+      expect(find.byKey(const Key('podcast_discover_search_results')), findsOneWidget);
       expect(
-        find.byKey(const Key('podcast_discover_category_chips')),
+        find.byKey(const Key('podcast_discover_tab_selector')),
         findsOneWidget,
       );
       expect(
-        find.byKey(const Key('podcast_discover_category_chip_all')),
+        find.byKey(const ValueKey('search_https://example.com/feed.xml')),
         findsOneWidget,
       );
-      expect(
-        find.byKey(const Key('podcast_discover_category_chip_technology')),
-        findsOneWidget,
+      expect(find.byKey(const ValueKey('episode_search_200')), findsNothing);
+    });
+
+    testWidgets('shows selector and renders episode results in episode mode',
+        (tester) async {
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            _MockLocalStorageService(),
+          ),
+          applePodcastRssServiceProvider.overrideWithValue(
+            _FakeApplePodcastRssService(),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            () => _TestPodcastSubscriptionNotifier(),
+          ),
+          search.podcastSearchProvider.overrideWithValue(
+            search.PodcastSearchState(
+              hasSearched: true,
+              isLoading: false,
+              searchMode: search.PodcastSearchMode.episodes,
+              episodeResults: [
+                ITunesPodcastEpisodeResult(
+                  trackId: 200,
+                  collectionId: 100,
+                  trackName: 'Episode 1',
+                  collectionName: 'Test Podcast',
+                  feedUrl: 'https://example.com/feed.xml',
+                  previewUrl: 'https://example.com/ep.mp3',
+                  releaseDate: DateTime(2026, 2, 14),
+                  trackTimeMillis: 1200000,
+                  artworkUrl100: 'https://example.com/ep.png',
+                ),
+              ],
+            ),
+          ),
+        ],
       );
-      expect(
-        find.byKey(const Key('podcast_discover_chart_row_2000')),
-        findsOneWidget,
-      );
-      await tester.tap(
-        find.byKey(const Key('podcast_discover_category_chip_technology')),
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastListPage(),
+          ),
+        ),
       );
       await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('podcast_discover_search_results')), findsOneWidget);
       expect(
-        find.byKey(const Key('podcast_discover_chart_row_2000')),
+        find.byKey(const Key('podcast_discover_tab_selector')),
         findsOneWidget,
       );
-
-      await tester.tap(find.byKey(const Key('podcast_discover_tab_podcasts')));
-      await tester.pumpAndSettle();
-
+      expect(find.byKey(const ValueKey('episode_search_200')), findsOneWidget);
       expect(
-        find.byKey(const Key('podcast_discover_chart_row_1000')),
-        findsOneWidget,
+        find.byKey(const ValueKey('search_https://example.com/feed.xml')),
+        findsNothing,
       );
     });
   });
-}
-
-class _TestPodcastSearchNotifier extends search.PodcastSearchNotifier {
-  _TestPodcastSearchNotifier(this._initial);
-
-  final search.PodcastSearchState _initial;
-
-  @override
-  search.PodcastSearchState build() => _initial;
 }
 
 class _FakeApplePodcastRssService extends ApplePodcastRssService {
@@ -106,7 +147,7 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
     int limit = 25,
     ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
   }) async {
-    return _buildResponse('podcasts', country.code, 1000);
+    return _buildResponse('podcasts', country.code);
   }
 
   @override
@@ -115,26 +156,22 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
     int limit = 25,
     ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
   }) async {
-    return _buildResponse('podcast-episodes', country.code, 2000);
+    return _buildResponse('podcast-episodes', country.code);
   }
 
-  ApplePodcastChartResponse _buildResponse(
-    String kind,
-    String country,
-    int base,
-  ) {
+  ApplePodcastChartResponse _buildResponse(String kind, String country) {
     final items = List.generate(
-      8,
+      2,
       (index) => ApplePodcastChartEntry.fromJson({
         'artistName': 'Artist $index',
-        'id': '${base + index}',
+        'id': '${1000 + index}',
         'name': 'Chart Item $index',
         'kind': kind,
         'artworkUrl100': 'https://example.com/$index.png',
         'genres': [
           {'name': 'Technology'},
         ],
-        'url': 'https://podcasts.apple.com/$country/podcast/id${base + index}',
+        'url': 'https://podcasts.apple.com/$country/podcast/id${1000 + index}',
       }),
     );
     return ApplePodcastChartResponse(
@@ -152,8 +189,7 @@ class _MockLocalStorageService implements LocalStorageService {
   final Map<String, dynamic> _storage = {};
 
   @override
-  Future<void> saveString(String key, String value) async =>
-      _storage[key] = value;
+  Future<void> saveString(String key, String value) async => _storage[key] = value;
 
   @override
   Future<String?> getString(String key) async => _storage[key] as String?;
@@ -171,8 +207,7 @@ class _MockLocalStorageService implements LocalStorageService {
   Future<int?> getInt(String key) async => _storage[key] as int?;
 
   @override
-  Future<void> saveDouble(String key, double value) async =>
-      _storage[key] = value;
+  Future<void> saveDouble(String key, double value) async => _storage[key] = value;
 
   @override
   Future<double?> getDouble(String key) async => _storage[key] as double?;
@@ -216,8 +251,7 @@ class _MockLocalStorageService implements LocalStorageService {
   Future<void> clearExpiredCache() async {}
 
   @override
-  Future<void> saveApiBaseUrl(String url) async =>
-      _storage['api_base_url'] = url;
+  Future<void> saveApiBaseUrl(String url) async => _storage['api_base_url'] = url;
 
   @override
   Future<String?> getApiBaseUrl() async => _storage['api_base_url'] as String?;
