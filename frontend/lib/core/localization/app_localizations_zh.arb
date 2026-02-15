@@ -4326,5 +4326,20 @@
   "ai_enter_model_name_error": "请输入模型名称",
   "@ai_enter_model_name_error": {
     "description": "模型名称为空时的验证错误"
+  },
+
+  "sidebarCollapseMenu": "收起菜单",
+  "@sidebarCollapseMenu": {
+    "description": "桌面端侧边栏收起按钮提示"
+  },
+
+  "sidebarExpandMenu": "展开菜单",
+  "@sidebarExpandMenu": {
+    "description": "桌面端侧边栏展开按钮提示"
+  },
+
+  "sidebarAppTitle": "AI 助手",
+  "@sidebarAppTitle": {
+    "description": "桌面端侧边栏标题"
   }
 }

@@ -2559,4 +2559,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ai_enter_model_name_error => '请输入模型名称';
+
+  @override
+  String get sidebarCollapseMenu => '收起菜单';
+
+  @override
+  String get sidebarExpandMenu => '展开菜单';
+
+  @override
+  String get sidebarAppTitle => 'AI 助手';
 }

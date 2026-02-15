@@ -4325,5 +4325,20 @@
   "ai_enter_model_name_error": "Please enter Model Name",
   "@ai_enter_model_name_error": {
     "description": "Validation error for empty model name"
+  },
+
+  "sidebarCollapseMenu": "Collapse Menu",
+  "@sidebarCollapseMenu": {
+    "description": "Tooltip for collapsing the desktop sidebar"
+  },
+
+  "sidebarExpandMenu": "Expand Menu",
+  "@sidebarExpandMenu": {
+    "description": "Tooltip for expanding the desktop sidebar"
+  },
+
+  "sidebarAppTitle": "AI Assistant",
+  "@sidebarAppTitle": {
+    "description": "App title shown in the desktop sidebar header"
   }
 }

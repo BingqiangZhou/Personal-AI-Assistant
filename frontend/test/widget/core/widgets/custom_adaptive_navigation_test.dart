@@ -61,6 +61,40 @@ void main() {
       expect(accessoryRect.bottom, lessThanOrEqualTo(navRect.top + 1));
     });
   });
+
+  group('CustomAdaptiveNavigation desktop sidebar toggle', () {
+    testWidgets('expanded: shows wide sidebar with title', (tester) async {
+      await _pumpWithSize(
+        tester: tester,
+        size: const Size(1200, 900),
+        child: _buildNavigation(desktopNavExpanded: true),
+      );
+
+      expect(find.text('AI Assistant'), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_left), findsOneWidget);
+
+      final sidebarSize = tester.getSize(
+        find.byKey(const ValueKey('desktop_navigation_sidebar')),
+      );
+      expect(sidebarSize.width, closeTo(280, 0.1));
+    });
+
+    testWidgets('collapsed: shows narrow sidebar without title', (tester) async {
+      await _pumpWithSize(
+        tester: tester,
+        size: const Size(1200, 900),
+        child: _buildNavigation(desktopNavExpanded: false),
+      );
+
+      expect(find.text('AI Assistant'), findsNothing);
+      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+
+      final sidebarSize = tester.getSize(
+        find.byKey(const ValueKey('desktop_navigation_sidebar')),
+      );
+      expect(sidebarSize.width, closeTo(80, 0.1));
+    });
+  });
 }
 
 Future<void> _pumpWithSize({
@@ -77,7 +111,7 @@ Future<void> _pumpWithSize({
   await tester.pumpAndSettle();
 }
 
-Widget _buildNavigation() {
+Widget _buildNavigation({bool desktopNavExpanded = true}) {
   return MaterialApp(
     home: MediaQuery(
       data: const MediaQueryData(
@@ -103,6 +137,8 @@ Widget _buildNavigation() {
           ),
         ],
         selectedIndex: 0,
+        desktopNavExpanded: desktopNavExpanded,
+        onDesktopNavToggle: () {},
         body: const SizedBox.expand(child: ColoredBox(color: Colors.white)),
         bottomAccessory: Container(
           key: const Key('test_bottom_accessory'),

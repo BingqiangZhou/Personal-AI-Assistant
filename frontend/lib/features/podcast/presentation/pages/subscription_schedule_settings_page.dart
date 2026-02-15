@@ -70,7 +70,9 @@ class _SubscriptionScheduleSettingsPageState
     AppLocalizations l10n,
   ) {
     if (configState.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: CircularProgressIndicator(color: theme.colorScheme.tertiary),
+      );
     }
 
     if (configState.error != null) {
@@ -78,7 +80,11 @@ class _SubscriptionScheduleSettingsPageState
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.red),
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: theme.colorScheme.error,
+            ),
             const SizedBox(height: 16),
             Text(l10n.schedule_load_failed, style: theme.textTheme.titleLarge),
             const SizedBox(height: 8),
@@ -179,6 +185,9 @@ class _SubscriptionScheduleSettingsPageState
     ThemeData theme,
     AppLocalizations l10n,
   ) {
+    final accentColor = theme.brightness == Brightness.dark
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.primary;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -187,7 +196,7 @@ class _SubscriptionScheduleSettingsPageState
           children: [
             Row(
               children: [
-                Icon(Icons.schedule, color: theme.colorScheme.primary),
+                Icon(Icons.schedule, color: accentColor),
                 const SizedBox(width: 8),
                 Text(
                   l10n.schedule_current_config,

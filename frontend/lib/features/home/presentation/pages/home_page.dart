@@ -28,6 +28,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   late int _currentIndex;
   bool _hasAttemptedPlaybackRestore = false;
+  bool _desktopNavExpanded = true;
   bool _hasPrefetchedLibraryFeed = false;
   final Set<int> _visitedTabs = <int>{};
 
@@ -128,6 +129,12 @@ class _HomePageState extends ConsumerState<HomePage> {
       bottomAccessoryBodyPadding: _bottomAccessoryBodyPadding(
         hasCurrentEpisode: hasCurrentEpisode,
       ),
+      desktopNavExpanded: _desktopNavExpanded,
+      onDesktopNavToggle: () {
+        setState(() {
+          _desktopNavExpanded = !_desktopNavExpanded;
+        });
+      },
       body: _buildTabContent(isExpanded),
     );
   }
@@ -228,20 +235,27 @@ class _HomePageState extends ConsumerState<HomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.grey),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               SizedBox(height: 16),
               Text(
                 AppLocalizations.of(context)!.page_not_found,
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  color: Colors.grey,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               SizedBox(height: 8),
               Text(
                 AppLocalizations.of(context)!.page_not_found_subtitle,
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],

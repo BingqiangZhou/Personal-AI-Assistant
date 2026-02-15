@@ -4915,6 +4915,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please enter Model Name'**
   String get ai_enter_model_name_error;
+
+  /// Tooltip for collapsing the desktop sidebar
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse Menu'**
+  String get sidebarCollapseMenu;
+
+  /// Tooltip for expanding the desktop sidebar
+  ///
+  /// In en, this message translates to:
+  /// **'Expand Menu'**
+  String get sidebarExpandMenu;
+
+  /// App title shown in the desktop sidebar header
+  ///
+  /// In en, this message translates to:
+  /// **'AI Assistant'**
+  String get sidebarAppTitle;
 }
 
 class _AppLocalizationsDelegate

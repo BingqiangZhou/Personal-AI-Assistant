@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/adaptive_sheet_helper.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_discover_chart_model.dart';
@@ -52,14 +53,13 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   }
 
   Future<void> _openCountrySelector(BuildContext context) async {
-    await showModalBottomSheet<void>(
+    await showAdaptiveSheet<void>(
       context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
+      desktopMaxWidth: 480,
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             child: CountrySelectorDropdown(
               onCountryChanged: (country) {
                 ref
@@ -266,10 +266,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         return;
       }
 
-      await showModalBottomSheet<void>(
+      await showAdaptiveSheet<void>(
         context: context,
-        showDragHandle: true,
-        isScrollControlled: true,
         builder: (sheetContext) {
           return ConstrainedBox(
             constraints: BoxConstraints(
@@ -294,10 +292,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     }
 
     final episode = selection.episode;
-    await showModalBottomSheet<void>(
+    await showAdaptiveSheet<void>(
       context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
       builder: (sheetContext) {
         return ConstrainedBox(
           constraints: BoxConstraints(
@@ -400,10 +396,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       _showErrorNotice(l10n.podcast_failed_load_episodes);
       return;
     }
-    await showModalBottomSheet<void>(
+    await showAdaptiveSheet<void>(
       context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
       builder: (sheetContext) {
         return ConstrainedBox(
           constraints: BoxConstraints(
@@ -877,7 +871,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   width: imageSize,
                   height: imageSize,
                   iconSize: 24,
-                  iconColor: theme.colorScheme.primary,
                 ),
               ),
               SizedBox(width: isDense ? 10 : 12),

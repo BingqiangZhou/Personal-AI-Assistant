@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/adaptive_sheet_helper.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_queue_model.dart';
 import '../providers/podcast_providers.dart';
@@ -28,15 +29,8 @@ class PodcastQueueSheet extends ConsumerWidget {
           return;
         }
       }
-      await showModalBottomSheet<void>(
+      await showAdaptiveSheet<void>(
         context: context,
-        isScrollControlled: true,
-        showDragHandle: true,
-        useSafeArea: true,
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
         builder: (context) => const PodcastQueueSheet(),
       );
     });
@@ -444,7 +438,6 @@ class _QueueItemCover extends StatelessWidget {
                       width: size,
                       height: size,
                       iconSize: size * 0.52,
-                      iconColor: theme.colorScheme.primary,
                     )
                   : _fallback(theme),
             ),
@@ -458,7 +451,7 @@ class _QueueItemCover extends StatelessWidget {
                 width: 18,
                 height: 18,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary,
+                  color: theme.colorScheme.secondary,
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: theme.colorScheme.surface,
@@ -468,7 +461,7 @@ class _QueueItemCover extends StatelessWidget {
                 child: Icon(
                   Icons.equalizer,
                   size: 12,
-                  color: theme.colorScheme.onPrimary,
+                  color: theme.colorScheme.onSecondary,
                 ),
               ),
             ),
@@ -480,11 +473,11 @@ class _QueueItemCover extends StatelessWidget {
   Widget _fallback(ThemeData theme) {
     return Container(
       key: Key('queue_item_cover_fallback_${item.episodeId}'),
-      color: theme.colorScheme.primary.withValues(alpha: 0.14),
+      color: theme.colorScheme.surfaceContainerHighest,
       alignment: Alignment.center,
       child: Icon(
         Icons.podcasts,
-        color: theme.colorScheme.primary,
+        color: theme.colorScheme.onSurfaceVariant,
         size: size * 0.52,
       ),
     );

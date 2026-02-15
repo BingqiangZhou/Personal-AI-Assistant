@@ -39,13 +39,17 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   }
 
   Widget _buildNotStartedState(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final accentColor =
+        theme.brightness == Brightness.dark ? scheme.tertiary : scheme.primary;
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+      color: scheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
+          color: scheme.outline.withValues(alpha: 0.2),
         ),
       ),
       child: Padding(
@@ -58,15 +62,13 @@ class TranscriptionStatusWidget extends ConsumerWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.1),
+                color: accentColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(40),
               ),
               child: Icon(
                 Icons.transcribe,
                 size: 40,
-                color: Theme.of(context).colorScheme.primary,
+                color: accentColor,
               ),
             ),
 
@@ -121,9 +123,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color: scheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -132,7 +132,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                   Icon(
                     Icons.info_outline,
                     size: 14,
-                    color: Theme.of(context).colorScheme.primary,
+                    color: scheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 6),
                   Flexible(
@@ -140,7 +140,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                       AppLocalizations.of(context)!.transcription_auto_hint,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: scheme.onSurfaceVariant,
                       ),
                     ),
                   ),

@@ -115,7 +115,11 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     final feedState = ref.watch(podcastFeedProvider);
 
     if (feedState.isLoading && feedState.episodes.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: CircularProgressIndicator(
+          color: Theme.of(context).colorScheme.tertiary,
+        ),
+      );
     }
 
     if (feedState.error != null && feedState.episodes.isEmpty) {
@@ -123,7 +127,11 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline, size: 48, color: Colors.orange),
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(height: 16),
             Text('${l10n.podcast_failed_to_load_feed}: ${feedState.error}'),
             const SizedBox(height: 16),
@@ -143,7 +151,11 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.rss_feed, size: 64, color: Colors.grey),
+            Icon(
+              Icons.rss_feed,
+              size: 64,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(height: 16),
             Text(
               l10n.podcast_no_episodes_found,
@@ -175,10 +187,12 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                   Future.microtask(
                     () => ref.read(podcastFeedProvider.notifier).loadMoreFeed(),
                   );
-                  return const Center(
+                  return Center(
                     child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(),
+                      padding: const EdgeInsets.all(8.0),
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
                     ),
                   );
                 }

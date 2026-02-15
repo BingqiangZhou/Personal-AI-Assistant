@@ -289,9 +289,9 @@ class MindriverTheme {
 
       // Color Scheme - Manual mapping with proper contrast
       colorScheme: ColorScheme.dark(
-        primary: Color(0xFF2D2D2D),
-        onPrimary: AppColors.darkTextPrimary,
-        primaryContainer: Color(0xFF3A3A3A),
+        primary: const Color(0xFFE0E0E0),
+        onPrimary: AppColors.darkBackground,
+        primaryContainer: const Color(0xFF2D2D2D),
         onPrimaryContainer: AppColors.darkTextPrimary,
 
         secondary: Color(0xFF4A4A4A),
@@ -374,7 +374,7 @@ class MindriverTheme {
       // Elevated Button Theme / 凸起按钮主题
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2D2D2D),
+          backgroundColor: const Color(0xFF2A2A2A),
           foregroundColor: AppColors.darkTextPrimary,
           elevation: 0,
           shadowColor: Colors.transparent,
@@ -520,7 +520,7 @@ class MindriverTheme {
 
       // Floating Action Button Theme / 悬浮按钮主题
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: const Color(0xFF2D2D2D),
+        backgroundColor: const Color(0xFF2A2A2A),
         foregroundColor: AppColors.darkTextPrimary,
         elevation: 4,
         shape: RoundedRectangleBorder(

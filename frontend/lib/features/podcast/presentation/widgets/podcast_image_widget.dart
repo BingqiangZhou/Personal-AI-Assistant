@@ -132,7 +132,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final iconColor = widget.iconColor ?? theme.colorScheme.primary;
+    final iconColor = widget.iconColor ?? theme.colorScheme.onSurfaceVariant;
     final iconSize = widget.iconSize ?? (widget.width * 0.6);
 
     // 没有图片URL，显示图标

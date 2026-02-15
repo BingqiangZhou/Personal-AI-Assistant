@@ -295,9 +295,13 @@ class _ProfileSubscriptionsPageState
     AppLocalizations l10n,
   ) {
     if (isLoadingMore) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Center(child: CircularProgressIndicator()),
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: CircularProgressIndicator(
+            color: Theme.of(context).colorScheme.tertiary,
+          ),
+        ),
       );
     }
 
@@ -307,7 +311,10 @@ class _ProfileSubscriptionsPageState
         child: Center(
           child: Text(
             '${l10n.profile_subscriptions}: $total',
-            style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              fontSize: 14,
+            ),
           ),
         ),
       );

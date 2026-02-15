@@ -41,28 +41,37 @@ class LoadingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Stack(
       children: [
         child,
         if (isLoading)
           Container(
-            color: Colors.black.withValues(alpha: 0.5),
+            color: scheme.scrim.withValues(alpha: 0.5),
             child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const LoadingWidget(size: 48),
-                  if (loadingText != null) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      loadingText!,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: scheme.outlineVariant),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const LoadingWidget(size: 48),
+                    if (loadingText != null) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        loadingText!,
+                        style: TextStyle(
+                          color: scheme.onSurface,
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),

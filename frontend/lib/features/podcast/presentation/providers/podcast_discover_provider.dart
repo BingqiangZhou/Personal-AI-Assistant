@@ -136,6 +136,7 @@ final podcastDiscoverProvider =
 class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
   late final ApplePodcastRssService _rssService;
   Future<void>? _inFlightLoad;
+  PodcastCountry? _inFlightLoadCountry;
   Future<void>? _inFlightShowsHydration;
   Future<void>? _inFlightEpisodesHydration;
   int _activeRequestId = 0;
@@ -236,6 +237,7 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
     rssService.clearCache();
     _activeRequestId += 1;
     _inFlightLoad = null;
+    _inFlightLoadCountry = null;
     _inFlightShowsHydration = null;
     _inFlightEpisodesHydration = null;
     state = PodcastDiscoverState(country: selectedCountry);
@@ -254,7 +256,9 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
     }
 
     final existingLoad = _inFlightLoad;
-    if (existingLoad != null) {
+    if (existingLoad != null &&
+        !forceRefresh &&
+        _inFlightLoadCountry == country) {
       return existingLoad;
     }
 
@@ -262,6 +266,7 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
     final selectedTab = state.selectedTab;
     _inFlightShowsHydration = null;
     _inFlightEpisodesHydration = null;
+    _inFlightLoadCountry = country;
 
     state = state.copyWith(
       country: country,
@@ -367,6 +372,7 @@ class PodcastDiscoverNotifier extends Notifier<PodcastDiscoverState> {
     } finally {
       if (identical(_inFlightLoad, loadFuture)) {
         _inFlightLoad = null;
+        _inFlightLoadCountry = null;
       }
     }
   }

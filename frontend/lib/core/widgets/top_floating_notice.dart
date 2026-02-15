@@ -22,19 +22,18 @@ void showTopFloatingNotice(
   }
 
   final theme = Theme.of(context);
-  final isLight = theme.brightness == Brightness.light;
   final topInset = MediaQuery.maybeOf(context)?.viewPadding.top ?? 0;
   final scaffold = Scaffold.maybeOf(context);
   final appBarHeight = scaffold?.widget.appBar?.preferredSize.height;
   final effectiveTopBarHeight =
       appBarHeight ?? (scaffold == null ? kToolbarHeight : 0);
-  final backgroundColor =
-      isLight ? theme.colorScheme.surface : theme.colorScheme.primary;
+  final backgroundColor = isError
+      ? theme.colorScheme.errorContainer
+      : theme.colorScheme.surfaceContainerHighest;
   final foregroundColor = isError
-      ? theme.colorScheme.error
-      : (isLight ? Colors.black : Colors.white);
-  final borderColor =
-      isLight ? theme.colorScheme.outline : theme.colorScheme.onPrimary;
+      ? theme.colorScheme.onErrorContainer
+      : theme.colorScheme.onSurface;
+  final borderColor = theme.colorScheme.outlineVariant;
   final icon = isError ? Icons.error_outline : Icons.check_circle_outline;
 
   final entry = OverlayEntry(

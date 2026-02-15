@@ -293,15 +293,19 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
   }
 
   Color _getStatusColor() {
+    final theme = Theme.of(context);
+    final accent = theme.brightness == Brightness.dark
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.primary;
     switch (_connectionStatus) {
       case ConnectionStatus.unverified:
-        return Colors.grey;
+        return theme.colorScheme.onSurfaceVariant;
       case ConnectionStatus.verifying:
-        return Colors.blue;
+        return accent;
       case ConnectionStatus.success:
-        return Colors.green;
+        return theme.colorScheme.tertiary;
       case ConnectionStatus.failed:
-        return Colors.red;
+        return theme.colorScheme.error;
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:personal_ai_assistant/core/theme/app_colors.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -7,6 +8,16 @@ import 'package:personal_ai_assistant/core/services/app_update_service.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/providers/app_update_provider.dart';
+
+Color _updateAccentColor(ThemeData theme) {
+  return theme.colorScheme.primary;
+}
+
+Color _updateAccentOnColor(ThemeData theme) {
+  return theme.brightness == Brightness.dark
+      ? Colors.white
+      : theme.colorScheme.onPrimary;
+}
 
 /// App Update Dialog / 应用更新对话框
 ///
@@ -47,6 +58,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final accentColor = _updateAccentColor(theme);
     final isMobile = MediaQuery.of(context).size.width < 600;
     final screenWidth = MediaQuery.of(context).size.width;
     final dialogWidth = screenWidth < 600 ? screenWidth - 32 : 500.0;
@@ -57,7 +69,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
         children: [
           Icon(
             Icons.system_update_alt,
-            color: theme.colorScheme.primary,
+            color: accentColor,
             size: 28,
           ),
           const SizedBox(width: 12),
@@ -70,7 +82,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                 Text(
                   '${widget.currentVersion} → ${widget.release.version}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
+                    color: accentColor,
                   ),
                 ),
               ],
@@ -104,6 +116,8 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   /// Desktop actions layout
   List<Widget> _buildDesktopActions(BuildContext context, ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
+    final accentColor = _updateAccentColor(theme);
+    final accentOnColor = _updateAccentOnColor(theme);
     return [
       // Use Row to control alignment
       Row(
@@ -113,9 +127,6 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
             onPressed: () => _handleSkip(context),
             icon: const Icon(Icons.skip_next, size: 18),
             label: Text(l10n.update_skip_this_version),
-            style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.onSurfaceVariant,
-            ),
           ),
 
           const Spacer(),
@@ -140,8 +151,8 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                 : const Icon(Icons.download, size: 18),
             label: Text(l10n.update_download),
             style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
+              backgroundColor: accentColor,
+              foregroundColor: accentOnColor,
             ),
           ),
         ],
@@ -152,6 +163,8 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   /// Mobile actions layout
   List<Widget> _buildMobileActions(BuildContext context, ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
+    final accentColor = _updateAccentColor(theme);
+    final accentOnColor = _updateAccentOnColor(theme);
     return [
       // Skip this version (top row, right aligned)
       Align(
@@ -161,7 +174,6 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           icon: const Icon(Icons.skip_next, size: 18),
           label: Text(l10n.update_skip_this_version),
           style: TextButton.styleFrom(
-            foregroundColor: theme.colorScheme.onSurfaceVariant,
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           ),
         ),
@@ -187,8 +199,8 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                 : const Icon(Icons.download, size: 18),
             label: Text(l10n.update_download),
             style: FilledButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: theme.colorScheme.onPrimary,
+              backgroundColor: accentColor,
+              foregroundColor: accentOnColor,
             ),
           ),
         ],
@@ -199,6 +211,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   Widget _buildReleaseInfo(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final accentColor = _updateAccentColor(theme);
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Container(
@@ -216,7 +229,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
               Icon(
                 Icons.info_outline,
                 size: 18,
-                color: theme.colorScheme.primary,
+                color: accentColor,
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -230,7 +243,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
               Text(
                 'v${widget.release.version}',
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.primary,
+                  color: accentColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -326,6 +339,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   Widget _buildReleaseNotes(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final accentColor = _updateAccentColor(theme);
     final releaseNotes = widget.release.body.trim();
 
     return Column(
@@ -333,7 +347,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
       children: [
         Row(
           children: [
-            Icon(Icons.description, size: 18, color: theme.colorScheme.primary),
+            Icon(Icons.description, size: 18, color: accentColor),
             const SizedBox(width: 8),
             Text(l10n.update_release_notes, style: theme.textTheme.labelMedium),
           ],
@@ -377,8 +391,34 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                         color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                       ),
+                      code: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        backgroundColor:
+                            theme.colorScheme.surfaceContainerHighest,
+                      ),
+                      codeblockPadding: const EdgeInsets.all(12),
+                      codeblockDecoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: theme.colorScheme.outlineVariant,
+                        ),
+                      ),
+                      blockquotePadding: const EdgeInsets.all(12),
+                      blockquoteDecoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border(
+                          left: BorderSide(color: accentColor, width: 3),
+                        ),
+                      ),
+                      horizontalRuleDecoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: theme.colorScheme.outlineVariant),
+                        ),
+                      ),
                       a: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
+                        color: accentColor,
                         decoration: TextDecoration.underline,
                       ),
                     ),
@@ -604,12 +644,13 @@ class _ManualUpdateCheckDialogState
   Widget _buildContent(BuildContext context, AppUpdateState state) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final accentColor = _updateAccentColor(theme);
 
     if (state.isLoading) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(),
+          CircularProgressIndicator(color: accentColor),
           const SizedBox(height: 16),
           Text(l10n.update_checking),
         ],
@@ -646,13 +687,13 @@ class _ManualUpdateCheckDialogState
         Icon(
           Icons.check_circle_outline,
           size: 48,
-          color: theme.colorScheme.primary,
+          color: accentColor,
         ),
         const SizedBox(height: 16),
         Text(
           l10n.update_up_to_date,
           style: theme.textTheme.titleMedium?.copyWith(
-            color: theme.colorScheme.primary,
+            color: accentColor,
           ),
         ),
         const SizedBox(height: 8),

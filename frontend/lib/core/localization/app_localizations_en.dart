@@ -2642,4 +2642,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ai_enter_model_name_error => 'Please enter Model Name';
+
+  @override
+  String get sidebarCollapseMenu => 'Collapse Menu';
+
+  @override
+  String get sidebarExpandMenu => 'Expand Menu';
+
+  @override
+  String get sidebarAppTitle => 'AI Assistant';
 }

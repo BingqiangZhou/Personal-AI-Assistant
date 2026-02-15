@@ -164,6 +164,7 @@ class _MiniBottomPlayer extends ConsumerWidget {
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
                 IconButton(
                   key: const Key('podcast_bottom_player_mini_play_pause'),
                   tooltip: state.isPlaying
@@ -587,7 +588,6 @@ class _CoverImage extends StatelessWidget {
           width: size,
           height: size,
           iconSize: size * 0.52,
-          iconColor: theme.colorScheme.primary,
         ),
       ),
     );

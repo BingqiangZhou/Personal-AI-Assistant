@@ -39,7 +39,6 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
                     width: 64,
                     height: 64,
                     iconSize: 26,
-                    iconColor: theme.colorScheme.primary,
                   ),
                 ),
                 const SizedBox(width: 10),

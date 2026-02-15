@@ -158,7 +158,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                             Icon(
                               Icons.email_outlined,
                               size: 20,
-                              color: Theme.of(context).colorScheme.primary,
+                              color:
+                                  Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -762,7 +763,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
         ),

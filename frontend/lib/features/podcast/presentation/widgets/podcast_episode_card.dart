@@ -231,7 +231,7 @@ class PodcastEpisodeCard extends ConsumerWidget {
                         context,
                         Icons.summarize,
                         AppLocalizations.of(context)!.podcast_filter_with_summary,
-                        color: Colors.green,
+                        color: theme.colorScheme.secondary,
                       ),
                     ],
                     if (episode.transcriptContent != null) ...[

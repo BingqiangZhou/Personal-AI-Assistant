@@ -1047,6 +1047,19 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
             );
           }),
         );
+
+        // Ensure the currently playing episode is at the top of the queue
+        final currentEpisode = state.currentEpisode;
+        if (currentEpisode != null &&
+            !isDiscoverPreviewEpisode(currentEpisode)) {
+          unawaited(
+            _prepareManualPlayQueue(currentEpisode.id).catchError((error) {
+              logger.AppLogger.debug(
+                '[Error] Queue reorder failed after resume: $error',
+              );
+            }),
+          );
+        }
       }
     } catch (error) {
       logger.AppLogger.debug('[Error] resume() error: $error');

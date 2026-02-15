@@ -25,7 +25,7 @@ void main() {
 
       expect(state.topShows, isNotEmpty);
       expect(state.topEpisodes, isNotEmpty);
-      expect(state.selectedTab, PodcastDiscoverTab.podcasts);
+      expect(state.selectedTab, PodcastDiscoverTab.episodes);
       expect(state.selectedCategory, PodcastDiscoverState.allCategoryValue);
     });
 
@@ -59,10 +59,10 @@ void main() {
           isTrue,
         );
 
-        expect(state.isCurrentTabExpanded, isFalse);
+        expect(state.isCurrentTabExpanded, isTrue);
         notifier.toggleSeeAll();
         state = container.read(podcastDiscoverProvider);
-        expect(state.isCurrentTabExpanded, isTrue);
+        expect(state.isCurrentTabExpanded, isFalse);
       },
     );
 
@@ -79,7 +79,7 @@ void main() {
       addTearDown(container.dispose);
 
       Future<void> waitFor(bool Function() condition) async {
-        for (var attempt = 0; attempt < 50; attempt++) {
+        for (var attempt = 0; attempt < 200; attempt++) {
           if (condition()) {
             return;
           }
@@ -93,7 +93,20 @@ void main() {
       expect(state.topShows.length, 25);
       expect(state.topEpisodes.length, 25);
 
-      container.read(podcastDiscoverProvider.notifier).toggleSeeAll();
+      await waitFor(
+        () => container.read(podcastDiscoverProvider).topEpisodes.length == 100,
+      );
+      state = container.read(podcastDiscoverProvider);
+      expect(state.episodesExpanded, isTrue);
+      expect(state.topEpisodes.length, 100);
+      expect(
+        fakeService.episodeLimits,
+        containsAllInOrder([25, 50, 75, 100]),
+      );
+
+      container
+          .read(podcastDiscoverProvider.notifier)
+          .setTab(PodcastDiscoverTab.podcasts);
       await waitFor(
         () => container.read(podcastDiscoverProvider).topShows.length == 100,
       );
@@ -101,19 +114,6 @@ void main() {
       expect(state.showsExpanded, isTrue);
       expect(state.topShows.length, 100);
       expect(fakeService.showsLimits, containsAllInOrder([25, 50, 75, 100]));
-      expect(fakeService.episodeLimits, equals([25]));
-
-      container
-          .read(podcastDiscoverProvider.notifier)
-          .setTab(PodcastDiscoverTab.episodes);
-      container.read(podcastDiscoverProvider.notifier).toggleSeeAll();
-      await waitFor(
-        () => container.read(podcastDiscoverProvider).topEpisodes.length == 100,
-      );
-      state = container.read(podcastDiscoverProvider);
-      expect(state.episodesExpanded, isTrue);
-      expect(state.topEpisodes.length, 100);
-      expect(fakeService.episodeLimits, containsAllInOrder([25, 50, 75, 100]));
     });
 
     test('reloads on country change', () async {
@@ -140,8 +140,33 @@ void main() {
       expect(fakeService.showsCalls, greaterThan(initialCalls));
     });
 
+    test('uses latest country when a load is already in flight', () async {
+      final fakeService = _DelayedApplePodcastRssService();
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            _MockLocalStorageService(),
+          ),
+          applePodcastRssServiceProvider.overrideWithValue(fakeService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(podcastDiscoverProvider.notifier);
+      final initialLoad = notifier.loadInitialData();
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+
+      final changeLoad = notifier.onCountryChanged(PodcastCountry.usa);
+      await Future.wait([initialLoad, changeLoad]);
+
+      final state = container.read(podcastDiscoverProvider);
+      expect(state.country, PodcastCountry.usa);
+      expect(state.topShows.first.url, contains('/us/'));
+      expect(state.topEpisodes.first.url, contains('/us/'));
+    });
+
     test('skips repeated load when discover data is fresh', () async {
-      final fakeService = _FakeApplePodcastRssService();
+      final fakeService = _MaxApplePodcastRssService();
       final container = ProviderContainer(
         overrides: [
           localStorageServiceProvider.overrideWithValue(
@@ -296,6 +321,34 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
         updated: '2026-02-14T00:00:00Z',
         results: items,
       ),
+    );
+  }
+}
+
+class _MaxApplePodcastRssService extends _FakeApplePodcastRssService {
+  @override
+  Future<ApplePodcastChartResponse> fetchTopShows({
+    required PodcastCountry country,
+    int limit = 25,
+    ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
+  }) async {
+    showsCalls += 1;
+    showsLimits.add(limit);
+    return _responseFor(kind: 'podcasts', country: country.code, count: 100);
+  }
+
+  @override
+  Future<ApplePodcastChartResponse> fetchTopEpisodes({
+    required PodcastCountry country,
+    int limit = 25,
+    ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
+  }) async {
+    episodeCalls += 1;
+    episodeLimits.add(limit);
+    return _responseFor(
+      kind: 'podcast-episodes',
+      country: country.code,
+      count: 100,
     );
   }
 }

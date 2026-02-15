@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/localization/app_localizations.dart';
+
 const Duration _kBottomAccessoryPaddingTransition = Duration(milliseconds: 180);
 
 /// Material Design 3自定义自适应导航组件
@@ -17,6 +19,8 @@ class CustomAdaptiveNavigation extends StatelessWidget {
     this.appBar,
     this.bottomAccessory,
     this.bottomAccessoryBodyPadding = 60.0,
+    this.desktopNavExpanded = true,
+    this.onDesktopNavToggle,
   });
 
   final List<NavigationDestination> destinations;
@@ -27,6 +31,8 @@ class CustomAdaptiveNavigation extends StatelessWidget {
   final PreferredSizeWidget? appBar;
   final Widget? bottomAccessory;
   final double bottomAccessoryBodyPadding;
+  final bool desktopNavExpanded;
+  final VoidCallback? onDesktopNavToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +48,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           return _buildTabletLayout(context);
         } else {
           // 桌面端 - 使用永久的侧边栏导航
-          return _buildDesktopLayout(context);
+          return _buildDesktopLayout(context, expanded: desktopNavExpanded);
         }
       },
     );
@@ -178,32 +184,42 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           ),
           const VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            child: Stack(
-              children: [
-                AnimatedPadding(
-                  duration: _kBottomAccessoryPaddingTransition,
-                  curve: Curves.easeOutCubic,
-                  padding: EdgeInsets.only(
-                    bottom: bottomAccessory != null
-                        ? bottomAccessoryBodyPadding
-                        : 0,
+            child: ClipRect(
+              child: Navigator(
+                pages: [
+                  MaterialPage(
+                    key: const ValueKey('right_pane_root_tablet'),
+                    child: Stack(
+                      children: [
+                        AnimatedPadding(
+                          duration: _kBottomAccessoryPaddingTransition,
+                          curve: Curves.easeOutCubic,
+                          padding: EdgeInsets.only(
+                            bottom: bottomAccessory != null
+                                ? bottomAccessoryBodyPadding
+                                : 0,
+                          ),
+                          child: body ?? const SizedBox.shrink(),
+                        ),
+                        if (floatingActionButton != null)
+                          Positioned(
+                            right: 24,
+                            bottom: (bottomAccessory != null ? 84.0 : 24.0),
+                            child: floatingActionButton!,
+                          ),
+                        if (bottomAccessory != null)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: bottomAccessory!,
+                          ),
+                      ],
+                    ),
                   ),
-                  child: body ?? const SizedBox.shrink(),
-                ),
-                if (floatingActionButton != null)
-                  Positioned(
-                    right: 24,
-                    bottom: (bottomAccessory != null ? 84.0 : 24.0),
-                    child: floatingActionButton!,
-                  ),
-                if (bottomAccessory != null)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: bottomAccessory!,
-                  ),
-              ],
+                ],
+                onPopPage: (route, result) => route.didPop(result),
+              ),
             ),
           ),
         ],
@@ -212,146 +228,254 @@ class CustomAdaptiveNavigation extends StatelessWidget {
   }
 
   /// 桌面端布局 - 使用永久的侧边栏
-  Widget _buildDesktopLayout(BuildContext context) {
+  Widget _buildDesktopLayout(BuildContext context, {required bool expanded}) {
     return Scaffold(
       appBar: appBar,
       body: Row(
         children: [
           // 永久的侧边栏导航
-          SizedBox(
-            width: 280,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                border: Border(
-                  right: BorderSide(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 应用标题区域 - 与页面标题保持相同高度和对齐
-                  Container(
-                    height: 56,
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.secondary.withValues(alpha: 0.3),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              'assets/icons/Logo3.png',
-                              width: 32,
-                              height: 32,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'AI Assistant',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  // 导航项目（除了最后一个Profile）
-                  ...destinations
-                      .take(destinations.length - 1)
-                      .toList()
-                      .asMap()
-                      .entries
-                      .map((entry) {
-                        final index = entry.key;
-                        final destination = entry.value;
-                        return _buildExpandedNavItem(
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(end: expanded ? 280 : 80),
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            builder: (context, width, child) {
+              final showCompact = width < 200;
+              return SizedBox(
+                key: const ValueKey('desktop_navigation_sidebar'),
+                width: width,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest
+                        .withValues(alpha: 0.3),
+                    border: Border(
+                      right: BorderSide(
+                        color: Theme.of(
                           context,
-                          destination,
-                          index == selectedIndex,
-                          () => onDestinationSelected?.call(index),
-                        );
-                      }),
-                  const Spacer(),
-                  // Profile按钮单独在底部
-                  if (destinations.isNotEmpty)
-                    _buildExpandedNavItem(
-                      context,
-                      destinations.last,
-                      destinations.length - 1 == selectedIndex,
-                      () =>
-                          onDestinationSelected?.call(destinations.length - 1),
+                        ).colorScheme.outline.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
                     ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
+                  ),
+                  child: showCompact
+                      ? _buildDesktopCollapsedSidebar(context)
+                      : _buildDesktopExpandedSidebar(context),
+                ),
+              );
+            },
           ),
           const VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            child: Stack(
-              children: [
-                AnimatedPadding(
-                  duration: _kBottomAccessoryPaddingTransition,
-                  curve: Curves.easeOutCubic,
-                  padding: EdgeInsets.only(
-                    bottom: bottomAccessory != null
-                        ? bottomAccessoryBodyPadding
-                        : 0,
+            child: ClipRect(
+              child: Navigator(
+                pages: [
+                  MaterialPage(
+                    key: const ValueKey('right_pane_root_desktop'),
+                    child: Stack(
+                      children: [
+                        AnimatedPadding(
+                          duration: _kBottomAccessoryPaddingTransition,
+                          curve: Curves.easeOutCubic,
+                          padding: EdgeInsets.only(
+                            bottom: bottomAccessory != null
+                                ? bottomAccessoryBodyPadding
+                                : 0,
+                          ),
+                          child: body ?? const SizedBox.shrink(),
+                        ),
+                        if (floatingActionButton != null)
+                          Positioned(
+                            right: 24,
+                            bottom: (bottomAccessory != null ? 84.0 : 24.0),
+                            child: floatingActionButton!,
+                          ),
+                        if (bottomAccessory != null)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            child: bottomAccessory!,
+                          ),
+                      ],
+                    ),
                   ),
-                  child: body ?? const SizedBox.shrink(),
-                ),
-                if (floatingActionButton != null)
-                  Positioned(
-                    right: 24,
-                    bottom: (bottomAccessory != null ? 84.0 : 24.0),
-                    child: floatingActionButton!,
-                  ),
-                if (bottomAccessory != null)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: bottomAccessory!,
-                  ),
-              ],
+                ],
+                onPopPage: (route, result) => route.didPop(result),
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDesktopExpandedSidebar(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.secondary.withValues(alpha: 0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/icons/Logo3.png',
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.sidebarAppTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: onDesktopNavToggle,
+                tooltip: AppLocalizations.of(context)!.sidebarCollapseMenu,
+                style: IconButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: const Size(32, 32),
+                  padding: EdgeInsets.zero,
+                ),
+                icon: const Icon(Icons.chevron_left),
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        const SizedBox(height: 8),
+        ...destinations
+            .take(destinations.length - 1)
+            .toList()
+            .asMap()
+            .entries
+            .map((entry) {
+              final index = entry.key;
+              final destination = entry.value;
+              return _buildExpandedNavItem(
+                context,
+                destination,
+                index == selectedIndex,
+                () => onDestinationSelected?.call(index),
+              );
+            }),
+        const Spacer(),
+        if (destinations.isNotEmpty)
+          _buildExpandedNavItem(
+            context,
+            destinations.last,
+            destinations.length - 1 == selectedIndex,
+            () => onDestinationSelected?.call(destinations.length - 1),
+          ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildDesktopCollapsedSidebar(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.secondary.withValues(alpha: 0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/icons/Logo3.png',
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: onDesktopNavToggle,
+                tooltip: AppLocalizations.of(context)!.sidebarExpandMenu,
+                style: IconButton.styleFrom(
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  minimumSize: const Size(28, 28),
+                  padding: EdgeInsets.zero,
+                ),
+                iconSize: 20,
+                icon: const Icon(Icons.chevron_right),
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        const SizedBox(height: 8),
+        ...destinations
+            .take(destinations.length - 1)
+            .toList()
+            .asMap()
+            .entries
+            .map((entry) {
+              final index = entry.key;
+              final destination = entry.value;
+              return _buildCompactNavItem(
+                context,
+                destination,
+                index == selectedIndex,
+                () => onDestinationSelected?.call(index),
+              );
+            }),
+        const Spacer(),
+        if (destinations.isNotEmpty)
+          _buildCompactNavItem(
+            context,
+            destinations.last,
+            destinations.length - 1 == selectedIndex,
+            () => onDestinationSelected?.call(destinations.length - 1),
+          ),
+        const SizedBox(height: 8),
+      ],
     );
   }
 
