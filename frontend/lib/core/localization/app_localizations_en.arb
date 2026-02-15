@@ -206,7 +206,7 @@
     "description": "Password field validation message"
   },
 
-  "auth_password_too_short": "Password must be at least 6 characters",
+  "auth_password_too_short": "Password must be at least 8 characters",
   "@auth_password_too_short": {
     "description": "Password length validation"
   },
@@ -2621,7 +2621,7 @@
     "description": "Error message shown when opening Apple Podcasts link fails"
   },
 
-  "podcast_country_label": "Country",
+  "podcast_country_label": "Country/Region",
   "@podcast_country_label": {
     "description": "Country selector label"
   },

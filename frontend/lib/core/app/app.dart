@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:go_router/go_router.dart';
+import 'package:audio_service/audio_service.dart';
 
 import '../localization/locale_provider.dart';
 import '../providers/route_provider.dart';
@@ -15,6 +17,7 @@ import '../theme/theme_provider.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/settings/presentation/providers/app_update_provider.dart';
 import '../../features/settings/presentation/widgets/update_dialog.dart';
+import '../../features/podcast/presentation/providers/audio_handler.dart';
 
 import '../../main.dart' as main_app;
 
@@ -150,6 +153,8 @@ class _PersonalAIAssistantAppState
     final startedAt = DateTime.now();
     // Wrap auth check in timeout to prevent infinite loading
     try {
+      await _initializeAudioService();
+
       // Load saved locale from storage
       await ref.read(localeProvider.notifier).loadSavedLocale();
 
@@ -202,6 +207,38 @@ class _PersonalAIAssistantAppState
     // Auto-check for updates after app is fully initialized
     if (mounted) {
       _autoCheckForUpdates();
+    }
+  }
+
+  Future<void> _initializeAudioService() async {
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      return;
+    }
+
+    final existingHandler = main_app.audioHandler;
+
+    try {
+      final PodcastAudioHandler handler = await AudioService.init(
+        builder: () => PodcastAudioHandler(),
+        config: const AudioServiceConfig(
+          androidNotificationChannelId: 'com.personal_ai_assistant.audio',
+          androidNotificationChannelName: 'Podcast Playback',
+          androidNotificationChannelDescription:
+              'Podcast audio playback controls',
+          androidNotificationIcon: 'mipmap/ic_launcher',
+          androidShowNotificationBadge: true,
+          androidStopForegroundOnPause: false,
+          androidResumeOnClick: true,
+        ),
+      ).timeout(const Duration(seconds: 3));
+
+      if (!identical(existingHandler, handler)) {
+        await existingHandler.stopService();
+      }
+
+      main_app.audioHandler = handler;
+    } catch (e) {
+      debugPrint('⚠️ [AppInit] AudioService init failed: $e');
     }
   }
 

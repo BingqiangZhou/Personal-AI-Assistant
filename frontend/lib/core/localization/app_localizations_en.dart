@@ -133,7 +133,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get auth_password_too_short =>
-      'Password must be at least 6 characters';
+      'Password must be at least 8 characters';
 
   @override
   String get auth_email => 'Email';
@@ -1630,7 +1630,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_discover_open_link_failed => 'Failed to open link';
 
   @override
-  String get podcast_country_label => 'Country';
+  String get podcast_country_label => 'Country/Region';
 
   @override
   String get podcast_search_empty_hint => 'Enter a podcast name to search';

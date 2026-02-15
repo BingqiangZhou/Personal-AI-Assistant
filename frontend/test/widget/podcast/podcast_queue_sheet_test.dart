@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
@@ -60,11 +61,16 @@ void main() {
 
       final image = tester.widget<Image>(imageFinder);
       final provider = image.image;
-      expect(provider, isA<NetworkImage>());
-      expect(
-        (provider as NetworkImage).url,
-        'https://example.com/subscription-1.jpg',
-      );
+      final innerProvider = provider is ResizeImage
+          ? provider.imageProvider
+          : provider;
+      if (innerProvider is NetworkImage) {
+        expect(innerProvider.url, 'https://example.com/subscription-1.jpg');
+      } else if (innerProvider is CachedNetworkImageProvider) {
+        expect(innerProvider.url, 'https://example.com/subscription-1.jpg');
+      } else {
+        fail('Unexpected ImageProvider type: ${innerProvider.runtimeType}');
+      }
     });
 
     testWidgets('shows equalizer badge only on current queue item', (

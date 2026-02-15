@@ -63,6 +63,8 @@ class _CountrySelectorDropdownState
     CountrySelectorNotifier countryNotifier,
     AppLocalizations l10n,
   ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -74,9 +76,11 @@ class _CountrySelectorDropdownState
             child: Text(
               l10n.podcast_country_label,
               style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+                color: theme.brightness == Brightness.dark
+                    ? Colors.white
+                    : colorScheme.onSurface,
               ),
             ),
           ),
@@ -85,12 +89,8 @@ class _CountrySelectorDropdownState
             height: MediaQuery.of(context).size.height * 0.5,
             child: ListView.separated(
               itemCount: PodcastCountry.values.length,
-              padding: EdgeInsets.zero,
-              separatorBuilder: (_, _) => Divider(
-                height: 1,
-                color: Theme.of(context).colorScheme.outlineVariant,
-                indent: 52,
-              ),
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final country = PodcastCountry.values[index];
                 final isSelected = country == selectedCountry;
@@ -116,51 +116,67 @@ class _CountrySelectorDropdownState
     bool isSelected,
     VoidCallback onTap,
   ) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        color: isSelected
-            ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
-            : null,
-        child: Row(
-          children: [
-            // 国家代码
-            SizedBox(
-              width: 40,
-              child: Text(
-                country.code.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final foregroundColor =
+        isSelected ? colorScheme.onPrimaryContainer : colorScheme.onSurface;
+    final backgroundColor = isSelected
+        ? colorScheme.primaryContainer.withValues(alpha: 0.45)
+        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.35);
+    final borderColor = isSelected
+        ? colorScheme.primary.withValues(alpha: 0.65)
+        : colorScheme.outlineVariant.withValues(alpha: 0.4);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: borderColor,
+              width: isSelected ? 1.2 : 1,
             ),
-            const SizedBox(width: 16),
-            // 国家名称
-            Expanded(
-              child: Text(
-                _getCountryName(country, AppLocalizations.of(context)!),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context).colorScheme.onSurface,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 40,
+                  child: Text(
+                    country.code.toUpperCase(),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                      color: foregroundColor,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _getCountryName(country, AppLocalizations.of(context)!),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                      color: foregroundColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle,
+                    size: 22,
+                    color: foregroundColor,
+                  ),
+              ],
             ),
-            // 选中标记
-            if (isSelected)
-              Icon(
-                Icons.check_circle,
-                size: 20,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-          ],
+          ),
         ),
       ),
     );

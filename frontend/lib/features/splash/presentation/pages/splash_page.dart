@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
 /// Minimal splash page that immediately redirects
@@ -29,9 +32,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     if (!mounted) return;
 
     // Request notification permission for media controls (Android 13+ / iOS)
-    await _requestNotificationPermission();
-
-    if (!mounted) return;
+    unawaited(_requestNotificationPermission());
 
     final authState = ref.read(authProvider);
     if (authState.isAuthenticated) {
@@ -58,9 +59,28 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Return minimal placeholder while navigation happens
-    return const Scaffold(
-      body: SizedBox.shrink(),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? AppColors.darkSubtleGradient
+              : AppColors.softBackgroundGradient,
+        ),
+        child: Center(
+          child: SizedBox(
+            width: 32,
+            height: 32,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                isDark ? AppColors.riverAccent : AppColors.primary,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

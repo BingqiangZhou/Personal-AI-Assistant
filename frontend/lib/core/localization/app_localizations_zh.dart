@@ -132,7 +132,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get auth_enter_password => '请输入您的密码';
 
   @override
-  String get auth_password_too_short => '密码至少需要6个字符';
+  String get auth_password_too_short => '密码至少需要8个字符';
 
   @override
   String get auth_email => '邮箱';
@@ -1583,7 +1583,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_discover_open_link_failed => '打开链接失败';
 
   @override
-  String get podcast_country_label => '国家';
+  String get podcast_country_label => '国家或地区';
 
   @override
   String get podcast_search_empty_hint => '输入播客名称进行搜索';

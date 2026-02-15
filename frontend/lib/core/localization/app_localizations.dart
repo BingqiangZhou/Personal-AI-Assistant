@@ -347,7 +347,7 @@ abstract class AppLocalizations {
   /// Password length validation
   ///
   /// In en, this message translates to:
-  /// **'Password must be at least 6 characters'**
+  /// **'Password must be at least 8 characters'**
   String get auth_password_too_short;
 
   /// Email field label
@@ -3131,7 +3131,7 @@ abstract class AppLocalizations {
   /// Country selector label
   ///
   /// In en, this message translates to:
-  /// **'Country'**
+  /// **'Country/Region'**
   String get podcast_country_label;
 
   /// Empty search state hint message

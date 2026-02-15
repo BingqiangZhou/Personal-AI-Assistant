@@ -206,7 +206,7 @@
     "description": "密码字段验证消息"
   },
 
-  "auth_password_too_short": "密码至少需要6个字符",
+  "auth_password_too_short": "密码至少需要8个字符",
   "@auth_password_too_short": {
     "description": "密码长度验证"
   },
@@ -2622,7 +2622,7 @@
     "description": "打开 Apple Podcasts 链接失败时的提示"
   },
 
-  "podcast_country_label": "国家",
+  "podcast_country_label": "国家或地区",
   "@podcast_country_label": {
     "description": "国家选择器标签"
   },

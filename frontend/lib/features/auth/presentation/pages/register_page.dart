@@ -239,13 +239,13 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                             return l10n.auth_password_too_short;
                           }
                           if (!value.contains(RegExp(r'[A-Z]'))) {
-                            return l10n.validation_too_short;
+                            return l10n.auth_password_requirement_uppercase;
                           }
                           if (!value.contains(RegExp(r'[a-z]'))) {
-                            return l10n.validation_too_short;
+                            return l10n.auth_password_requirement_lowercase;
                           }
                           if (!value.contains(RegExp(r'[0-9]'))) {
-                            return l10n.validation_too_short;
+                            return l10n.auth_password_requirement_number;
                           }
                           return null;
                         },

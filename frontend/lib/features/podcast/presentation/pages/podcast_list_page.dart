@@ -36,8 +36,11 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   @override
   void initState() {
     super.initState();
-    ref.read(podcastSubscriptionProvider.notifier).loadSubscriptions();
-    ref.read(podcastDiscoverProvider.notifier).loadInitialData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(podcastSubscriptionProvider.notifier).loadSubscriptions();
+      ref.read(podcastDiscoverProvider.notifier).loadInitialData();
+    });
   }
 
   @override
@@ -392,7 +395,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   FilledButton.tonalIcon(
                     key: const Key('podcast_discover_country_button'),
                     onPressed: () => _openCountrySelector(context),
-                    icon: const Icon(Icons.flag_outlined, size: 16),
+                    icon: const Icon(Icons.flag_outlined, size: 18),
                     label: Text(
                       countryState.selectedCountry.code.toUpperCase(),
                     ),
@@ -401,6 +404,10 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 8,
+                      ),
+                      textStyle: theme.textTheme.labelLarge?.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
