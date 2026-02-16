@@ -156,6 +156,33 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         child: Row(
                           children: [
                             Icon(
+                              Icons.person_outline,
+                              size: 20,
+                              color:
+                                  Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                user?.displayName ?? l10n.profile_guest_user,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        enabled: false,
+                        child: Row(
+                          children: [
+                            Icon(
                               Icons.email_outlined,
                               size: 20,
                               color:
@@ -169,7 +196,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                     ?.copyWith(
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.onSurface,
+                                      ).colorScheme.onSurfaceVariant,
                                       fontWeight: FontWeight.w500,
                                     ),
                                 overflow: TextOverflow.ellipsis,
@@ -211,51 +238,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         ),
                       ),
                     ],
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(20),
-                        onTap: null, // Let PopupMenuButton handle tap
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.outlineVariant,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            color: _isMenuOpen
-                                ? Theme.of(
-                                    context,
-                                  ).colorScheme.surfaceContainerHighest
-                                : null,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                user?.displayName ?? l10n.profile_guest_user,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(width: 8),
-                              AnimatedRotation(
-                                turns: _isMenuOpen ? 0.5 : 0,
-                                duration: const Duration(milliseconds: 200),
-                                child: Icon(
-                                  Icons.expand_more,
-                                  size: 20,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.primary,
+                      child: Text(
+                        (user?.displayName ?? l10n.profile_guest_user)
+                            .characters
+                            .first
+                            .toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.black
+                                  : Colors.white,
                         ),
                       ),
                     ),
