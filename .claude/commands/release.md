@@ -12,6 +12,12 @@ example: /release 1.0.0
 ## 步骤1: 生成 CHANGELOG
 使用 `git-cliff --tag v<版本号> -o CHANGELOG.md`生成 CHANGELOG.md
 
+## 步骤1.5: 更新 README.md
+使用 Edit 工具直接更新 README.md 中的版本信息和日期：
+1. 更新版本号徽章
+2. 更新当前版本声明和日期
+3. 根据需要更新功能版本注释
+
 ## 步骤2: 更新版本号
 1. 读取 frontend/pubspec.yaml 当前版本
 2. 更新版本号为用户提供的新版本号
