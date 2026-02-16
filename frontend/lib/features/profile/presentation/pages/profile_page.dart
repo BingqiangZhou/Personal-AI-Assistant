@@ -335,7 +335,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             l10n.profile_ai_summary,
             summaryCount,
             Theme.of(context).colorScheme.primary,
-            showChevron: true,
           ),
           const SizedBox(height: 12),
           _buildActivityCard(
@@ -381,7 +380,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             l10n.profile_ai_summary,
             summaryCount,
             Theme.of(context).colorScheme.primary,
-            showChevron: true,
           ),
           _buildActivityCard(
             context,

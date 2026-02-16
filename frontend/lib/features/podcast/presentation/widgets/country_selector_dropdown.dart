@@ -36,10 +36,6 @@ class _CountrySelectorDropdownState
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant,
-          width: 1,
-        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -136,10 +132,6 @@ class _CountrySelectorDropdownState
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: borderColor,
-              width: isSelected ? 1.2 : 1,
-            ),
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),

@@ -87,7 +87,6 @@ class MindriverTheme {
         shadowColor: Colors.black.withValues(alpha: 0.05),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.lightOutline, width: 1),
         ),
         margin: const EdgeInsets.all(8),
       ),
@@ -353,7 +352,6 @@ class MindriverTheme {
         shadowColor: Colors.black.withValues(alpha: 0.3),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: AppColors.darkOutline.withValues(alpha: 0.3), width: 1),
         ),
         margin: const EdgeInsets.all(8),
       ),

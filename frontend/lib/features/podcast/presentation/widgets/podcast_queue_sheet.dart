@@ -268,9 +268,6 @@ class _QueueList extends ConsumerWidget {
                     : theme.colorScheme.surfaceContainerHighest
                         .withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
-                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
