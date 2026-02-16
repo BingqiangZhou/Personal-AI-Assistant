@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.10.5](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.10.4...v0.10.5) - 2026-02-16 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.5))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Update release workflow and remove standalone scripts ([3c253cf](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3c253cf432ac23cf82b42f70bdd19d82970cbe48))
+- Remove unused CI workflow, task board docs, and desktop pubspec ([eef03bd](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/eef03bd8363f84b93a2b754d6f816cfbccc33e80))
+
+### 🚜 Refactor
+
+- *(ui)* Replace profile user selector pill button with circular avatar ([de34f70](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/de34f700f8b7a681ae394859f27a6c75fa8ba928))
+
+
+
 ## [0.10.4](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.10.3...v0.10.4) - 2026-02-15 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.4))
 
 ### 🚜 Refactor
