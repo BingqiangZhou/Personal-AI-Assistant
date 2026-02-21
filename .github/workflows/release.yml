@@ -42,7 +42,7 @@ jobs:
           VERSION=${TAG#v}
 
           # Extract build number from pubspec.yaml (format: version: x.y.z+build_number)
-          BUILD_NUMBER=$(grep -oP '^version: \K[0-9]+\+[0-9]+' frontend/pubspec.yaml | grep -oP '[0-9]+$' || echo "1")
+          BUILD_NUMBER=$(grep '^version:' frontend/pubspec.yaml | sed 's/^version: [0-9]\+\.[0-9]\+\.[0-9]\+//' | sed 's/^+//')
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
