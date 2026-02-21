@@ -11,6 +11,7 @@ def test_celery_task_routes_snapshot() -> None:
     assert "app.domains.podcast.tasks.transcription.process_audio_transcription" in task_routes
     assert "app.domains.podcast.tasks.maintenance.cleanup_old_playback_states" in task_routes
     assert "app.domains.podcast.tasks.recommendation.generate_podcast_recommendations" in task_routes
+    assert "app.domains.podcast.tasks.daily_report.generate_daily_podcast_reports" in task_routes
 
     assert task_routes[
         "app.domains.podcast.tasks.subscription_sync.refresh_all_podcast_feeds"
@@ -27,4 +28,4 @@ def test_celery_beat_schedule_snapshot() -> None:
     assert "generate-pending-summaries" in beat_schedule
     assert "log-task-statistics" in beat_schedule
     assert "auto-cleanup-cache" in beat_schedule
-
+    assert "generate-daily-podcast-reports" in beat_schedule

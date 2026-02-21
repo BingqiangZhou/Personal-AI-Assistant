@@ -48,6 +48,9 @@ celery_app.conf.update(
         "app.domains.podcast.tasks.recommendation.generate_podcast_recommendations": {
             "queue": "ai_generation"
         },
+        "app.domains.podcast.tasks.daily_report.generate_daily_podcast_reports": {
+            "queue": "ai_generation"
+        },
     },
     beat_schedule={
         "log-task-statistics": {
@@ -69,6 +72,11 @@ celery_app.conf.update(
             "task": "app.domains.podcast.tasks.maintenance.auto_cleanup_cache_files",
             "schedule": crontab(hour=4, minute=0),
             "options": {"queue": "maintenance"},
+        },
+        "generate-daily-podcast-reports": {
+            "task": "app.domains.podcast.tasks.daily_report.generate_daily_podcast_reports",
+            "schedule": crontab(hour=19, minute=30),
+            "options": {"queue": "ai_generation"},
         },
     },
 )

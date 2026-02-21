@@ -375,6 +375,38 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_no_episodes_found => '未找到剧集';
 
   @override
+  String get podcast_daily_report_title => '日报';
+
+  @override
+  String get podcast_daily_report_generate_previous_day => '生成前一天日报';
+
+  @override
+  String get podcast_daily_report_generate_success => '前一天日报已生成';
+
+  @override
+  String get podcast_daily_report_generate_failed => '生成前一天日报失败';
+
+  @override
+  String get podcast_daily_report_empty => '暂无可用日报';
+
+  @override
+  String get podcast_daily_report_loading => '正在加载日报...';
+
+  @override
+  String get podcast_daily_report_dates => '历史日期';
+
+  @override
+  String get podcast_daily_report_generated_prefix => '生成于';
+
+  @override
+  String get podcast_daily_report_carryover => '补入';
+
+  @override
+  String podcast_daily_report_items(int count) {
+    return '$count条';
+  }
+
+  @override
   String get podcast_bookmark => '收藏';
 
   @override

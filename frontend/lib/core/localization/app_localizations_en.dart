@@ -378,6 +378,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_no_episodes_found => 'No episodes found';
 
   @override
+  String get podcast_daily_report_title => 'Daily Report';
+
+  @override
+  String get podcast_daily_report_generate_previous_day =>
+      'Generate previous-day report';
+
+  @override
+  String get podcast_daily_report_generate_success =>
+      'Previous-day report generated';
+
+  @override
+  String get podcast_daily_report_generate_failed =>
+      'Failed to generate previous-day report';
+
+  @override
+  String get podcast_daily_report_empty => 'No daily report available yet';
+
+  @override
+  String get podcast_daily_report_loading => 'Loading daily report...';
+
+  @override
+  String get podcast_daily_report_dates => 'History';
+
+  @override
+  String get podcast_daily_report_generated_prefix => 'Generated';
+
+  @override
+  String get podcast_daily_report_carryover => 'Carryover';
+
+  @override
+  String podcast_daily_report_items(int count) {
+    return '$count items';
+  }
+
+  @override
   String get podcast_bookmark => 'Bookmark';
 
   @override

@@ -9,6 +9,7 @@ Or use specialized services directly for better separation of concerns.
 # ruff: noqa: I001
 
 from .episode_service import PodcastEpisodeService
+from .daily_report_service import DailyReportService
 from .playback_service import PodcastPlaybackService
 from .queue_service import PodcastQueueService
 from .schedule_service import PodcastScheduleService
@@ -25,6 +26,7 @@ __all__ = [
     "PodcastService",
     "PodcastSubscriptionService",
     "PodcastEpisodeService",
+    "DailyReportService",
     "PodcastPlaybackService",
     "PodcastQueueService",
     "PodcastSummaryService",

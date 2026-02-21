@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+
 import '../../../../core/services/app_cache_service.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
-/// 播客图片加载组件，专门处理CloudFront 403等CDN访问问题
+/// Podcast image widget with retry/fallback handling.
 class PodcastImageWidget extends StatefulWidget {
   final String? imageUrl;
   final String? fallbackImageUrl;
@@ -40,27 +41,27 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
   @override
   void initState() {
     super.initState();
-    // 如果 imageUrl 为 null 或空，自动使用 fallbackImageUrl
-    if (widget.imageUrl == null || widget.imageUrl!.isEmpty) {
-      _currentImageUrl = widget.fallbackImageUrl;
-      _useFallback = widget.fallbackImageUrl != null;
-    } else {
-      _currentImageUrl = widget.imageUrl;
-    }
+    _syncCurrentImage(resetRetry: true);
   }
 
   @override
   void didUpdateWidget(covariant PodcastImageWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.imageUrl != widget.imageUrl || oldWidget.fallbackImageUrl != widget.fallbackImageUrl) {
-      // 如果 imageUrl 为 null 或空，自动使用 fallbackImageUrl
-      if (widget.imageUrl == null || widget.imageUrl!.isEmpty) {
-        _currentImageUrl = widget.fallbackImageUrl;
-        _useFallback = widget.fallbackImageUrl != null;
-      } else {
-        _currentImageUrl = widget.imageUrl;
-        _useFallback = false;
-      }
+    if (oldWidget.imageUrl != widget.imageUrl ||
+        oldWidget.fallbackImageUrl != widget.fallbackImageUrl) {
+      _syncCurrentImage(resetRetry: true);
+    }
+  }
+
+  void _syncCurrentImage({required bool resetRetry}) {
+    if (widget.imageUrl == null || widget.imageUrl!.isEmpty) {
+      _currentImageUrl = widget.fallbackImageUrl;
+      _useFallback = widget.fallbackImageUrl != null;
+    } else {
+      _currentImageUrl = widget.imageUrl;
+      _useFallback = false;
+    }
+    if (resetRetry) {
       _retryCount = 0;
     }
   }
@@ -72,6 +73,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
         _precacheHeight == height) {
       return;
     }
+
     _precacheUrl = url;
     _precacheKey = cacheKey;
     _precacheWidth = width;
@@ -79,54 +81,95 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+
       final baseProvider = CachedNetworkImageProvider(
         url,
         cacheKey: cacheKey,
         cacheManager: AppMediaCacheManager.instance,
       );
+
       final ImageProvider provider;
       if (width != null && height != null && width > 0 && height > 0) {
         provider = ResizeImage(baseProvider, width: width, height: height);
       } else {
         provider = baseProvider;
       }
-      precacheImage(provider, context);
+
+      precacheImage(
+        provider,
+        context,
+        onError: (Object error, StackTrace? stackTrace) {
+          // Prevent async precache failures from surfacing as FlutterError.
+          logger.AppLogger.debug('Failed to precache image: $error');
+        },
+      );
     });
   }
 
-  void _handleImageError() {
-    logger.AppLogger.debug('❌ Failed to load image: ${widget.imageUrl} (attempt ${_retryCount + 1})');
+  bool _isForbiddenError(Object? error) {
+    if (error == null) {
+      return false;
+    }
+    final message = error.toString();
+    return message.contains('statusCode: 403') ||
+        message.contains('status code of 403') ||
+        message.contains('Invalid statusCode: 403');
+  }
 
-    // 如果当前使用的是 fallbackImageUrl 且已经出错，直接显示图标
-    if (_useFallback && widget.fallbackImageUrl != null && _currentImageUrl == widget.fallbackImageUrl) {
+  void _handleImageError([Object? error]) {
+    final forbidden = _isForbiddenError(error);
+    logger.AppLogger.debug(
+      'Failed to load image: ${widget.imageUrl} (attempt ${_retryCount + 1}, forbidden=$forbidden)',
+    );
+
+    if (_useFallback &&
+        widget.fallbackImageUrl != null &&
+        _currentImageUrl == widget.fallbackImageUrl) {
       setState(() {
         _currentImageUrl = null;
       });
       return;
     }
 
+    if (forbidden) {
+      if (widget.fallbackImageUrl != null && !_useFallback) {
+        setState(() {
+          _useFallback = true;
+          _currentImageUrl = widget.fallbackImageUrl;
+          _retryCount = 0;
+        });
+      } else {
+        setState(() {
+          _useFallback = true;
+          _currentImageUrl = null;
+        });
+      }
+      return;
+    }
+
     if (_retryCount < 2 && !_useFallback && widget.imageUrl != null) {
-      // 尝试重试，添加时间戳避免缓存
       setState(() {
         _retryCount++;
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final separator = widget.imageUrl!.contains('?') ? '&' : '?';
         _currentImageUrl = '${widget.imageUrl}$separator$timestamp';
       });
-    } else if (widget.fallbackImageUrl != null && !_useFallback) {
-      // 切换到回退图片
+      return;
+    }
+
+    if (widget.fallbackImageUrl != null && !_useFallback) {
       setState(() {
         _useFallback = true;
         _currentImageUrl = widget.fallbackImageUrl;
         _retryCount = 0;
       });
-    } else {
-      // 最终回退到图标
-      setState(() {
-        _useFallback = true;
-        _currentImageUrl = null;
-      });
+      return;
     }
+
+    setState(() {
+      _useFallback = true;
+      _currentImageUrl = null;
+    });
   }
 
   @override
@@ -135,7 +178,6 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
     final iconColor = widget.iconColor ?? theme.colorScheme.onSurfaceVariant;
     final iconSize = widget.iconSize ?? (widget.width * 0.6);
 
-    // 没有图片URL，显示图标
     if (_currentImageUrl == null || _currentImageUrl!.isEmpty) {
       return _buildIconPlaceholder(iconColor, iconSize);
     }
@@ -158,7 +200,11 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
 
     final ImageProvider provider;
     if (cacheWidth > 0 && cacheHeight > 0) {
-      provider = ResizeImage(baseProvider, width: cacheWidth, height: cacheHeight);
+      provider = ResizeImage(
+        baseProvider,
+        width: cacheWidth,
+        height: cacheHeight,
+      );
     } else {
       provider = baseProvider;
     }
@@ -192,7 +238,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
       errorBuilder: (context, error, stackTrace) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            _handleImageError();
+            _handleImageError(error);
           }
         });
 
@@ -214,10 +260,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
           );
         }
 
-        return SizedBox(
-          width: widget.width,
-          height: widget.height,
-        );
+        return SizedBox(width: widget.width, height: widget.height);
       },
     );
   }
@@ -229,10 +272,7 @@ class _PodcastImageWidgetState extends State<PodcastImageWidget> {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Icon(
         Icons.podcasts,

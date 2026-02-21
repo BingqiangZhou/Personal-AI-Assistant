@@ -2,7 +2,7 @@
 播客相关的Pydantic schemas - API请求和响应模型
 """
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -106,24 +106,23 @@ class PodcastSubscriptionResponse(PodcastTimestampedSchema):
         """对所有字段进行预验证"""
         if isinstance(data, dict):
             # 特别处理categories字段
-            if "categories" in data:
-                categories = data["categories"]
-                if categories:
-                    # 确保categories是字典列表格式
-                    processed_categories = []
-                    if isinstance(categories, list):
-                        for cat in categories:
-                            if isinstance(cat, str):
-                                processed_categories.append({"name": cat})
-                            elif isinstance(cat, dict):
-                                processed_categories.append(cat)
-                            else:
-                                processed_categories.append({"name": str(cat)})
-                        data["categories"] = processed_categories
-                    elif isinstance(categories, str):
-                        data["categories"] = [{"name": categories}]
-                    else:
-                        data["categories"] = [{"name": str(categories)}]
+            categories = data.get("categories")
+            if categories:
+                # 确保categories是字典列表格式
+                processed_categories = []
+                if isinstance(categories, list):
+                    for cat in categories:
+                        if isinstance(cat, str):
+                            processed_categories.append({"name": cat})
+                        elif isinstance(cat, dict):
+                            processed_categories.append(cat)
+                        else:
+                            processed_categories.append({"name": str(cat)})
+                    data["categories"] = processed_categories
+                elif isinstance(categories, str):
+                    data["categories"] = [{"name": categories}]
+                else:
+                    data["categories"] = [{"name": str(categories)}]
         return data
 
 
@@ -225,6 +224,52 @@ class PodcastFeedResponse(PodcastBaseSchema):
     has_more: bool
     next_page: int | None = None
     total: int
+
+
+# === Daily Report相关 ===
+
+
+class DailyReportItem(PodcastBaseSchema):
+    """Daily report item snapshot."""
+
+    episode_id: int
+    subscription_id: int
+    episode_title: str
+    subscription_title: str | None = None
+    one_line_summary: str
+    is_carryover: bool = False
+    episode_created_at: datetime
+    episode_published_at: datetime | None = None
+
+
+class PodcastDailyReportResponse(PodcastBaseSchema):
+    """Daily report response."""
+
+    available: bool
+    report_date: date | None = None
+    timezone: str
+    schedule_time_local: str
+    generated_at: datetime | None = None
+    total_items: int = 0
+    items: list[DailyReportItem] = Field(default_factory=list)
+
+
+class DailyReportDateItem(PodcastBaseSchema):
+    """Available report date item."""
+
+    report_date: date
+    total_items: int = 0
+    generated_at: datetime | None = None
+
+
+class PodcastDailyReportDatesResponse(PodcastBaseSchema):
+    """Paginated report date list response."""
+
+    dates: list[DailyReportDateItem] = Field(default_factory=list)
+    total: int
+    page: int
+    size: int
+    pages: int
 
 
 # === Playback相关 ===
@@ -742,8 +787,10 @@ class ScheduleConfigUpdate(BaseModel):
                 hour, minute = map(int, v.split(":"))
                 if not (0 <= hour <= 23 and 0 <= minute <= 59):
                     raise ValueError("Invalid time")
-            except (ValueError, AttributeError):
-                raise ValueError("update_time must be in HH:MM format (24-hour)")
+            except (ValueError, AttributeError) as err:
+                raise ValueError(
+                    "update_time must be in HH:MM format (24-hour)"
+                ) from err
         return v
 
     @model_validator(mode="after")

@@ -13,6 +13,7 @@ import '../../../../core/providers/core_providers.dart';
 import '../../../../core/storage/local_storage_service.dart';
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/models/podcast_daily_report_model.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_playback_model.dart';
 import '../../data/models/podcast_queue_model.dart';
@@ -276,12 +277,16 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         Map<String, dynamic>.from(episodeJson as Map),
       );
       final positionMs = (decoded['position_ms'] as num?)?.toInt() ?? 0;
-      final durationMs = (decoded['duration_ms'] as num?)?.toInt() ??
+      final durationMs =
+          (decoded['duration_ms'] as num?)?.toInt() ??
           (episode.audioDuration ?? 0) * 1000;
       final playbackRate =
-          (decoded['playback_rate'] as num?)?.toDouble() ?? episode.playbackRate;
+          (decoded['playback_rate'] as num?)?.toDouble() ??
+          episode.playbackRate;
       final savedAtRaw = decoded['saved_at'];
-      final savedAt = savedAtRaw is String ? DateTime.tryParse(savedAtRaw) : null;
+      final savedAt = savedAtRaw is String
+          ? DateTime.tryParse(savedAtRaw)
+          : null;
       return _LastPlaybackSnapshot(
         episode: episode,
         positionMs: positionMs,
@@ -647,7 +652,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     }
   }
 
-  Future<void> _restoreLastPlayedEpisodeFromServer(int? expectedEpisodeId) async {
+  Future<void> _restoreLastPlayedEpisodeFromServer(
+    int? expectedEpisodeId,
+  ) async {
     if (_isDisposed || !ref.mounted) return;
     if (_isPlayingEpisode) return;
     if (!ref.read(authProvider).isAuthenticated) return;
@@ -656,26 +663,32 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       final response = await _repository.getPlaybackHistory(page: 1, size: 20);
       if (_isDisposed || !ref.mounted) return;
       if (_isPlayingEpisode) return;
-      if (expectedEpisodeId != null && state.currentEpisode?.id != expectedEpisodeId) {
+      if (expectedEpisodeId != null &&
+          state.currentEpisode?.id != expectedEpisodeId) {
         return;
       }
       if (response.episodes.isEmpty) return;
 
       final episodes = [...response.episodes]
         ..sort((a, b) {
-          final aTime = a.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-          final bTime = b.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final aTime =
+              a.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bTime =
+              b.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
           return bTime.compareTo(aTime);
         });
       final latest = episodes.first;
-      final resolvedPlaybackRate = latest.playbackRate > 0 ? latest.playbackRate : 1.0;
+      final resolvedPlaybackRate = latest.playbackRate > 0
+          ? latest.playbackRate
+          : 1.0;
       final resumePositionMs = normalizeResumePositionMs(
         latest.playbackPosition,
         latest.audioDuration,
       );
       final durationMs = (latest.audioDuration ?? 0) * 1000;
 
-      if (expectedEpisodeId != null && state.currentEpisode?.id != expectedEpisodeId) {
+      if (expectedEpisodeId != null &&
+          state.currentEpisode?.id != expectedEpisodeId) {
         return;
       }
 
@@ -1888,14 +1901,245 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
   }
 
   Future<void> refreshFeed() async {
-    await loadInitialFeed(
-      forceRefresh: true,
-      background: state.episodes.isNotEmpty,
-    );
+    final selectedDate = ref.read(selectedDailyReportDateProvider);
+    final isAuthenticated = ref.read(authProvider).isAuthenticated;
+    if (!isAuthenticated) {
+      await loadInitialFeed(
+        forceRefresh: true,
+        background: state.episodes.isNotEmpty,
+      );
+      return;
+    }
+
+    await Future.wait<void>([
+      loadInitialFeed(
+        forceRefresh: true,
+        background: state.episodes.isNotEmpty,
+      ),
+      ref
+          .read(dailyReportProvider.notifier)
+          .load(date: selectedDate, forceRefresh: true),
+      ref.read(dailyReportDatesProvider.notifier).load(forceRefresh: true),
+    ]);
   }
 
   void clearError() {
     state = state.copyWith(clearError: true);
+  }
+}
+
+final selectedDailyReportDateProvider =
+    NotifierProvider<SelectedDailyReportDateNotifier, DateTime?>(
+      SelectedDailyReportDateNotifier.new,
+    );
+final dailyReportCacheDurationProvider = Provider<Duration>(
+  (ref) => const Duration(minutes: 5),
+);
+final dailyReportDatesCacheDurationProvider = Provider<Duration>(
+  (ref) => const Duration(minutes: 5),
+);
+
+final dailyReportProvider =
+    AsyncNotifierProvider<DailyReportNotifier, PodcastDailyReportResponse?>(
+      DailyReportNotifier.new,
+    );
+
+final dailyReportDatesProvider =
+    AsyncNotifierProvider<
+      DailyReportDatesNotifier,
+      PodcastDailyReportDatesResponse?
+    >(DailyReportDatesNotifier.new);
+
+class SelectedDailyReportDateNotifier extends Notifier<DateTime?> {
+  @override
+  DateTime? build() => null;
+
+  void setDate(DateTime? value) {
+    state = value;
+  }
+}
+
+class DailyReportNotifier extends AsyncNotifier<PodcastDailyReportResponse?> {
+  late PodcastRepository _repository;
+  DateTime? _lastLoadedAt;
+  DateTime? _lastDate;
+  Future<PodcastDailyReportResponse?>? _inFlightRequest;
+  Future<PodcastDailyReportResponse?>? _inFlightGenerateRequest;
+
+  @override
+  FutureOr<PodcastDailyReportResponse?> build() {
+    _repository = ref.read(podcastRepositoryProvider);
+    return null;
+  }
+
+  bool _sameDate(DateTime? left, DateTime? right) {
+    if (left == null && right == null) {
+      return true;
+    }
+    if (left == null || right == null) {
+      return false;
+    }
+    return left.year == right.year &&
+        left.month == right.month &&
+        left.day == right.day;
+  }
+
+  bool _isFresh() {
+    if (_lastLoadedAt == null) {
+      return false;
+    }
+    final cacheDuration = ref.read(dailyReportCacheDurationProvider);
+    return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
+  }
+
+  Future<PodcastDailyReportResponse?> load({
+    DateTime? date,
+    bool forceRefresh = false,
+  }) async {
+    final previousData = state.value;
+    if (!forceRefresh &&
+        previousData != null &&
+        _sameDate(_lastDate, date) &&
+        _isFresh()) {
+      return previousData;
+    }
+
+    final inFlight = _inFlightRequest;
+    if (inFlight != null && _sameDate(_lastDate, date)) {
+      return inFlight;
+    }
+
+    if (previousData == null) {
+      state = const AsyncValue.loading();
+    }
+
+    final request = () async {
+      try {
+        final data = await _repository.getDailyReport(date: date);
+        _lastLoadedAt = DateTime.now();
+        _lastDate = date;
+        state = AsyncValue.data(data);
+        return data;
+      } catch (error, stackTrace) {
+        logger.AppLogger.debug('Failed to load daily report: $error');
+        if (previousData == null) {
+          state = AsyncValue.error(error, stackTrace);
+        } else {
+          state = AsyncValue.data(previousData);
+        }
+        return previousData;
+      } finally {
+        _inFlightRequest = null;
+      }
+    }();
+
+    _inFlightRequest = request;
+    return request;
+  }
+
+  Future<PodcastDailyReportResponse?> generate({DateTime? date}) async {
+    final previousData = state.value;
+    final inFlight = _inFlightGenerateRequest;
+    if (inFlight != null && _sameDate(_lastDate, date)) {
+      return inFlight;
+    }
+
+    final request = () async {
+      try {
+        final data = await _repository.generateDailyReport(date: date);
+        _lastLoadedAt = DateTime.now();
+        _lastDate = date;
+        state = AsyncValue.data(data);
+        await ref
+            .read(dailyReportDatesProvider.notifier)
+            .load(forceRefresh: true);
+        return data;
+      } catch (error, stackTrace) {
+        logger.AppLogger.debug('Failed to generate daily report: $error');
+        if (previousData == null) {
+          state = AsyncValue.error(error, stackTrace);
+        } else {
+          state = AsyncValue.data(previousData);
+        }
+        return previousData;
+      } finally {
+        _inFlightGenerateRequest = null;
+      }
+    }();
+
+    _inFlightGenerateRequest = request;
+    return request;
+  }
+}
+
+class DailyReportDatesNotifier
+    extends AsyncNotifier<PodcastDailyReportDatesResponse?> {
+  late PodcastRepository _repository;
+  DateTime? _lastLoadedAt;
+  int _lastPage = 1;
+  int _lastSize = 30;
+  Future<PodcastDailyReportDatesResponse?>? _inFlightRequest;
+
+  @override
+  FutureOr<PodcastDailyReportDatesResponse?> build() {
+    _repository = ref.read(podcastRepositoryProvider);
+    return null;
+  }
+
+  bool _isFresh() {
+    if (_lastLoadedAt == null) {
+      return false;
+    }
+    final cacheDuration = ref.read(dailyReportDatesCacheDurationProvider);
+    return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
+  }
+
+  Future<PodcastDailyReportDatesResponse?> load({
+    int page = 1,
+    int size = 30,
+    bool forceRefresh = false,
+  }) async {
+    final previousData = state.value;
+    final sameQuery = page == _lastPage && size == _lastSize;
+    if (!forceRefresh && previousData != null && sameQuery && _isFresh()) {
+      return previousData;
+    }
+
+    final inFlight = _inFlightRequest;
+    if (inFlight != null && sameQuery) {
+      return inFlight;
+    }
+
+    if (previousData == null) {
+      state = const AsyncValue.loading();
+    }
+
+    final request = () async {
+      try {
+        final data = await _repository.getDailyReportDates(
+          page: page,
+          size: size,
+        );
+        _lastLoadedAt = DateTime.now();
+        _lastPage = page;
+        _lastSize = size;
+        state = AsyncValue.data(data);
+        return data;
+      } catch (error, stackTrace) {
+        logger.AppLogger.debug('Failed to load daily report dates: $error');
+        if (previousData == null) {
+          state = AsyncValue.error(error, stackTrace);
+        } else {
+          state = AsyncValue.data(previousData);
+        }
+        return previousData;
+      } finally {
+        _inFlightRequest = null;
+      }
+    }();
+
+    _inFlightRequest = request;
+    return request;
   }
 }
 

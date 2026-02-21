@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.podcast.models import PodcastEpisode
+from app.domains.podcast.services.daily_report_service import DailyReportService
 from app.domains.podcast.services.episode_service import PodcastEpisodeService
 from app.domains.podcast.services.playback_service import PodcastPlaybackService
 from app.domains.podcast.services.queue_service import PodcastQueueService
@@ -31,6 +32,7 @@ class PodcastService:
 
         self.subscription_service = PodcastSubscriptionService(db, user_id)
         self.episode_service = PodcastEpisodeService(db, user_id)
+        self.daily_report_service = DailyReportService(db, user_id)
         self.playback_service = PodcastPlaybackService(db, user_id)
         self.queue_service = PodcastQueueService(db, user_id)
         self.summary_service = PodcastSummaryService(db, user_id)
@@ -136,6 +138,16 @@ class PodcastService:
 
     async def get_subscription_by_id(self, subscription_id: int) -> Subscription | None:
         return await self.repo.get_subscription_by_id(self.user_id, subscription_id)
+
+    # Daily report
+    async def generate_daily_report(self, target_date=None) -> dict[str, Any]:
+        return await self.daily_report_service.generate_daily_report(target_date)
+
+    async def get_daily_report(self, target_date=None) -> dict[str, Any]:
+        return await self.daily_report_service.get_daily_report(target_date)
+
+    async def list_daily_report_dates(self, page: int = 1, size: int = 30) -> dict[str, Any]:
+        return await self.daily_report_service.list_report_dates(page=page, size=size)
 
     # Schedule management
     async def get_subscription_schedule(

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
 import '../models/podcast_episode_model.dart';
+import '../models/podcast_daily_report_model.dart';
 import '../models/podcast_playback_model.dart';
 import '../models/podcast_queue_model.dart';
 import '../models/podcast_subscription_model.dart';
@@ -76,6 +77,22 @@ abstract class PodcastApiService {
   Future<PodcastFeedResponse> getPodcastFeed(
     @Query('page') int page,
     @Query('page_size') int pageSize,
+  );
+
+  @GET('podcasts/reports/daily')
+  Future<PodcastDailyReportResponse> getDailyReport(
+    @Query('date') String? date,
+  );
+
+  @POST('podcasts/reports/daily/generate')
+  Future<PodcastDailyReportResponse> generateDailyReport(
+    @Query('date') String? date,
+  );
+
+  @GET('podcasts/reports/daily/dates')
+  Future<PodcastDailyReportDatesResponse> getDailyReportDates(
+    @Query('page') int page,
+    @Query('size') int size,
   );
 
   @GET('/podcasts/episodes')

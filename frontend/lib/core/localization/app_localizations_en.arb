@@ -614,6 +614,61 @@
     "description": "No episodes state"
   },
 
+  "podcast_daily_report_title": "Daily Report",
+  "@podcast_daily_report_title": {
+    "description": "Podcast daily report card title"
+  },
+
+  "podcast_daily_report_generate_previous_day": "Generate previous-day report",
+  "@podcast_daily_report_generate_previous_day": {
+    "description": "Button label for generating the previous-day daily report"
+  },
+
+  "podcast_daily_report_generate_success": "Previous-day report generated",
+  "@podcast_daily_report_generate_success": {
+    "description": "Success message after generating previous-day report"
+  },
+
+  "podcast_daily_report_generate_failed": "Failed to generate previous-day report",
+  "@podcast_daily_report_generate_failed": {
+    "description": "Error message when generating previous-day report fails"
+  },
+
+  "podcast_daily_report_empty": "No daily report available yet",
+  "@podcast_daily_report_empty": {
+    "description": "Empty state text for daily report card"
+  },
+
+  "podcast_daily_report_loading": "Loading daily report...",
+  "@podcast_daily_report_loading": {
+    "description": "Loading text for daily report card"
+  },
+
+  "podcast_daily_report_dates": "History",
+  "@podcast_daily_report_dates": {
+    "description": "Button label for opening daily report date selector"
+  },
+
+  "podcast_daily_report_generated_prefix": "Generated",
+  "@podcast_daily_report_generated_prefix": {
+    "description": "Prefix text for report generation time"
+  },
+
+  "podcast_daily_report_carryover": "Carryover",
+  "@podcast_daily_report_carryover": {
+    "description": "Tag for carryover items in daily report"
+  },
+
+  "podcast_daily_report_items": "{count} items",
+  "@podcast_daily_report_items": {
+    "description": "Daily report total item count label",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
   "podcast_play": "Play",
   "@podcast_play": {
     "description": "Play button"

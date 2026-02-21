@@ -620,6 +620,61 @@
     "description": "无剧集状态"
   },
 
+  "podcast_daily_report_title": "日报",
+  "@podcast_daily_report_title": {
+    "description": "播客日报卡片标题"
+  },
+
+  "podcast_daily_report_generate_previous_day": "生成前一天日报",
+  "@podcast_daily_report_generate_previous_day": {
+    "description": "用于生成前一天日报的按钮文案"
+  },
+
+  "podcast_daily_report_generate_success": "前一天日报已生成",
+  "@podcast_daily_report_generate_success": {
+    "description": "生成前一天日报成功提示"
+  },
+
+  "podcast_daily_report_generate_failed": "生成前一天日报失败",
+  "@podcast_daily_report_generate_failed": {
+    "description": "生成前一天日报失败提示"
+  },
+
+  "podcast_daily_report_empty": "暂无可用日报",
+  "@podcast_daily_report_empty": {
+    "description": "日报卡片空状态文案"
+  },
+
+  "podcast_daily_report_loading": "正在加载日报...",
+  "@podcast_daily_report_loading": {
+    "description": "日报卡片加载中提示"
+  },
+
+  "podcast_daily_report_dates": "历史日期",
+  "@podcast_daily_report_dates": {
+    "description": "打开日报历史日期选择器按钮文案"
+  },
+
+  "podcast_daily_report_generated_prefix": "生成于",
+  "@podcast_daily_report_generated_prefix": {
+    "description": "日报生成时间前缀"
+  },
+
+  "podcast_daily_report_carryover": "补入",
+  "@podcast_daily_report_carryover": {
+    "description": "日报中补入条目标记文案"
+  },
+
+  "podcast_daily_report_items": "{count}条",
+  "@podcast_daily_report_items": {
+    "description": "日报条目数量文案",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
   "podcast_play": "播放",
   "@podcast_play": {
     "description": "播放按钮"

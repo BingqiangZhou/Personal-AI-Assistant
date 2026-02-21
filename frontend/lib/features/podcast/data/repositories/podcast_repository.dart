@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../models/podcast_episode_model.dart';
+import '../models/podcast_daily_report_model.dart';
 import '../models/podcast_playback_model.dart';
 import '../models/podcast_queue_model.dart';
 import '../models/podcast_subscription_model.dart';
@@ -16,6 +17,16 @@ class PodcastRepository {
   final PodcastApiService _apiService;
 
   PodcastRepository(this._apiService);
+
+  static const String _dailyReportTimezone = 'Asia/Shanghai';
+  static const String _dailyReportScheduleTime = '03:30';
+
+  String? _formatDateParam(DateTime? date) {
+    if (date == null) {
+      return null;
+    }
+    return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
 
   // === Subscription Management ===
 
@@ -128,6 +139,59 @@ class PodcastRepository {
     try {
       return await _apiService.getPodcastFeed(page, pageSize);
     } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastDailyReportResponse> getDailyReport({DateTime? date}) async {
+    try {
+      final dateParam = _formatDateParam(date);
+      return await _apiService.getDailyReport(dateParam);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        // Backward compatibility: old backend may not provide daily report API yet.
+        return const PodcastDailyReportResponse(
+          available: false,
+          reportDate: null,
+          timezone: _dailyReportTimezone,
+          scheduleTimeLocal: _dailyReportScheduleTime,
+          generatedAt: null,
+          totalItems: 0,
+          items: [],
+        );
+      }
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastDailyReportResponse> generateDailyReport({
+    DateTime? date,
+  }) async {
+    try {
+      final dateParam = _formatDateParam(date);
+      return await _apiService.generateDailyReport(dateParam);
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
+  Future<PodcastDailyReportDatesResponse> getDailyReportDates({
+    int page = 1,
+    int size = 30,
+  }) async {
+    try {
+      return await _apiService.getDailyReportDates(page, size);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        // Backward compatibility: old backend may not provide daily report API yet.
+        return PodcastDailyReportDatesResponse(
+          dates: const [],
+          total: 0,
+          page: page,
+          size: size,
+          pages: 0,
+        );
+      }
       throw NetworkException.fromDioError(e);
     }
   }

@@ -1,6 +1,7 @@
 """Podcast Celery task package."""
 
 from app.core.celery_app import celery_app
+from app.domains.podcast.tasks.daily_report import generate_daily_podcast_reports
 from app.domains.podcast.tasks.maintenance import (
     auto_cleanup_cache_files,
     cleanup_old_playback_states,
@@ -33,4 +34,5 @@ __all__ = [
     "cleanup_old_transcription_temp_files",
     "log_periodic_task_statistics",
     "auto_cleanup_cache_files",
+    "generate_daily_podcast_reports",
 ]

@@ -830,6 +830,66 @@ abstract class AppLocalizations {
   /// **'No episodes found'**
   String get podcast_no_episodes_found;
 
+  /// Podcast daily report card title
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Report'**
+  String get podcast_daily_report_title;
+
+  /// Button label for generating the previous-day daily report
+  ///
+  /// In en, this message translates to:
+  /// **'Generate previous-day report'**
+  String get podcast_daily_report_generate_previous_day;
+
+  /// Success message after generating previous-day report
+  ///
+  /// In en, this message translates to:
+  /// **'Previous-day report generated'**
+  String get podcast_daily_report_generate_success;
+
+  /// Error message when generating previous-day report fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to generate previous-day report'**
+  String get podcast_daily_report_generate_failed;
+
+  /// Empty state text for daily report card
+  ///
+  /// In en, this message translates to:
+  /// **'No daily report available yet'**
+  String get podcast_daily_report_empty;
+
+  /// Loading text for daily report card
+  ///
+  /// In en, this message translates to:
+  /// **'Loading daily report...'**
+  String get podcast_daily_report_loading;
+
+  /// Button label for opening daily report date selector
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get podcast_daily_report_dates;
+
+  /// Prefix text for report generation time
+  ///
+  /// In en, this message translates to:
+  /// **'Generated'**
+  String get podcast_daily_report_generated_prefix;
+
+  /// Tag for carryover items in daily report
+  ///
+  /// In en, this message translates to:
+  /// **'Carryover'**
+  String get podcast_daily_report_carryover;
+
+  /// Daily report total item count label
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String podcast_daily_report_items(int count);
+
   /// Bookmark button
   ///
   /// In en, this message translates to:
