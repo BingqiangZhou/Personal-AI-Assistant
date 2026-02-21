@@ -87,6 +87,7 @@ abstract class PodcastApiService {
   @POST('/podcasts/reports/daily/generate')
   Future<PodcastDailyReportResponse> generateDailyReport(
     @Query('date') String? date,
+    @Query('rebuild') bool rebuild,
   );
 
   @GET('/podcasts/reports/daily/dates')

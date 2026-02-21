@@ -35,9 +35,16 @@ async def get_daily_report(
 )
 async def generate_daily_report(
     report_date: date | None = Query(None, alias="date", description="YYYY-MM-DD"),
+    rebuild: bool = Query(
+        False,
+        description="Rebuild report items for this date before regenerating",
+    ),
     service: PodcastService = Depends(get_podcast_service),
 ):
-    payload = await service.generate_daily_report(target_date=report_date)
+    payload = await service.generate_daily_report(
+        target_date=report_date,
+        rebuild=rebuild,
+    )
     return PodcastDailyReportResponse(**payload)
 
 

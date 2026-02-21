@@ -89,7 +89,22 @@ void main() {
       expect(container.read(dailyReportProvider).value?.reportDate, targetDate);
       expect(repository.generateDailyReportCalls, 1);
       expect(repository.lastGeneratedReportDate, targetDate);
+      expect(repository.lastGeneratedReportRebuild, false);
       expect(repository.dailyReportDatesCalls, 1);
+    });
+
+    test('generate daily report passes rebuild flag', () async {
+      final repository = _FakePodcastRepository();
+      final container = ProviderContainer(
+        overrides: [podcastRepositoryProvider.overrideWithValue(repository)],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(dailyReportProvider.notifier);
+      await notifier.generate(date: DateTime(2026, 2, 20), rebuild: true);
+
+      expect(repository.generateDailyReportCalls, 1);
+      expect(repository.lastGeneratedReportRebuild, true);
     });
 
     test('generate daily report rethrows on failure', () async {
@@ -117,6 +132,7 @@ class _FakePodcastRepository extends PodcastRepository {
   int generateDailyReportCalls = 0;
   DateTime? lastDailyReportDate;
   DateTime? lastGeneratedReportDate;
+  bool? lastGeneratedReportRebuild;
 
   @override
   Future<PodcastDailyReportResponse> getDailyReport({DateTime? date}) async {
@@ -174,9 +190,11 @@ class _FakePodcastRepository extends PodcastRepository {
   @override
   Future<PodcastDailyReportResponse> generateDailyReport({
     DateTime? date,
+    bool rebuild = false,
   }) async {
     generateDailyReportCalls += 1;
     lastGeneratedReportDate = date;
+    lastGeneratedReportRebuild = rebuild;
     final reportDate = date == null
         ? DateTime(2026, 2, 20)
         : DateTime(date.year, date.month, date.day);
@@ -206,6 +224,7 @@ class _FailingGeneratePodcastRepository extends _FakePodcastRepository {
   @override
   Future<PodcastDailyReportResponse> generateDailyReport({
     DateTime? date,
+    bool rebuild = false,
   }) async {
     throw const NetworkException('Server error');
   }

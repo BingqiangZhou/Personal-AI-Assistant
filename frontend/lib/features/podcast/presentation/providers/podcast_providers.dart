@@ -2030,7 +2030,10 @@ class DailyReportNotifier extends AsyncNotifier<PodcastDailyReportResponse?> {
     return request;
   }
 
-  Future<PodcastDailyReportResponse?> generate({DateTime? date}) async {
+  Future<PodcastDailyReportResponse?> generate({
+    DateTime? date,
+    bool rebuild = false,
+  }) async {
     final previousData = state.value;
     final inFlight = _inFlightGenerateRequest;
     if (inFlight != null && _sameDate(_lastDate, date)) {
@@ -2039,7 +2042,10 @@ class DailyReportNotifier extends AsyncNotifier<PodcastDailyReportResponse?> {
 
     final request = () async {
       try {
-        final data = await _repository.generateDailyReport(date: date);
+        final data = await _repository.generateDailyReport(
+          date: date,
+          rebuild: rebuild,
+        );
         _lastLoadedAt = DateTime.now();
         _lastDate = date;
         state = AsyncValue.data(data);

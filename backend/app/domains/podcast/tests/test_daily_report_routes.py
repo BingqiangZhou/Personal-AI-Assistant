@@ -110,7 +110,10 @@ def test_generate_daily_report_without_date(
     assert data["available"] is True
     assert data["report_date"] == "2026-02-20"
     assert data["items"][0]["is_carryover"] is False
-    mock_service.generate_daily_report.assert_awaited_once_with(target_date=None)
+    mock_service.generate_daily_report.assert_awaited_once_with(
+        target_date=None,
+        rebuild=False,
+    )
 
 
 def test_generate_daily_report_by_date_success(
@@ -147,7 +150,48 @@ def test_generate_daily_report_by_date_success(
     assert data["report_date"] == "2026-02-20"
     assert data["items"][0]["is_carryover"] is False
     mock_service.generate_daily_report.assert_awaited_once_with(
-        target_date=date(2026, 2, 20)
+        target_date=date(2026, 2, 20),
+        rebuild=False,
+    )
+
+
+def test_generate_daily_report_with_rebuild_flag(
+    client: TestClient,
+    mock_service: AsyncMock,
+):
+    now = datetime.now(timezone.utc)
+    mock_service.generate_daily_report.return_value = {
+        "available": True,
+        "report_date": date(2026, 2, 20),
+        "timezone": "Asia/Shanghai",
+        "schedule_time_local": "03:30",
+        "generated_at": now,
+        "total_items": 1,
+        "items": [
+            {
+                "episode_id": 11,
+                "subscription_id": 5,
+                "episode_title": "Episode 11",
+                "subscription_title": "Podcast A",
+                "one_line_summary": "One line summary.",
+                "is_carryover": False,
+                "episode_created_at": now,
+                "episode_published_at": now,
+            }
+        ],
+    }
+
+    response = client.post(
+        "/api/v1/podcasts/reports/daily/generate?date=2026-02-20&rebuild=true"
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["available"] is True
+    assert data["report_date"] == "2026-02-20"
+    mock_service.generate_daily_report.assert_awaited_once_with(
+        target_date=date(2026, 2, 20),
+        rebuild=True,
     )
 
 

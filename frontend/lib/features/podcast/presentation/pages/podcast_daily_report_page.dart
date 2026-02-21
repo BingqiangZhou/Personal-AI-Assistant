@@ -22,6 +22,7 @@ class PodcastDailyReportPage extends ConsumerStatefulWidget {
 class _PodcastDailyReportPageState
     extends ConsumerState<PodcastDailyReportPage> {
   bool _isGeneratingDailyReport = false;
+  final Set<int> _expandedReportItems = <int>{};
 
   @override
   void initState() {
@@ -195,7 +196,7 @@ class _PodcastDailyReportPageState
     final currentReport = report;
     if (currentReport == null || !currentReport.available) {
       final targetDate = selectedDate ?? currentReport?.reportDate;
-      final shouldShowGenerateButton = targetDate != null;
+      final shouldShowRefreshButton = targetDate != null;
       return buildSurface(
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -208,17 +209,21 @@ class _PodcastDailyReportPageState
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            if (shouldShowGenerateButton) ...[
+            if (shouldShowRefreshButton) ...[
               const SizedBox(height: 8),
-              FilledButton.tonal(
-                key: const Key('daily_report_generate_previous_day_button'),
+              FilledButton.tonalIcon(
+                key: const Key('daily_report_regenerate_button'),
                 onPressed: _isGeneratingDailyReport
                     ? null
-                    : () => _generateDailyReportForSelectedDate(targetDate),
-                child: Text(
+                    : () => _generateDailyReportForSelectedDate(
+                        targetDate,
+                        rebuild: true,
+                      ),
+                icon: const Icon(Icons.refresh, size: 18),
+                label: Text(
                   _isGeneratingDailyReport
                       ? l10n.podcast_daily_report_loading
-                      : l10n.podcast_daily_report_generate_previous_day,
+                      : l10n.refresh,
                 ),
               ),
             ],
@@ -237,6 +242,25 @@ class _PodcastDailyReportPageState
             generatedAt: currentReport.generatedAt,
             showMeta: true,
           ),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FilledButton.tonalIcon(
+              key: const Key('daily_report_regenerate_button'),
+              onPressed: _isGeneratingDailyReport
+                  ? null
+                  : () => _generateDailyReportForSelectedDate(
+                      currentReport.reportDate ?? selectedDate,
+                      rebuild: true,
+                    ),
+              icon: const Icon(Icons.refresh, size: 18),
+              label: Text(
+                _isGeneratingDailyReport
+                    ? l10n.podcast_daily_report_loading
+                    : l10n.refresh,
+              ),
+            ),
+          ),
           const SizedBox(height: 10),
           if (currentReport.items.isEmpty)
             Column(
@@ -248,22 +272,6 @@ class _PodcastDailyReportPageState
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                if ((currentReport.reportDate ?? selectedDate) != null) ...[
-                  const SizedBox(height: 8),
-                  FilledButton.tonal(
-                    key: const Key('daily_report_generate_previous_day_button'),
-                    onPressed: _isGeneratingDailyReport
-                        ? null
-                        : () => _generateDailyReportForSelectedDate(
-                            currentReport.reportDate ?? selectedDate,
-                          ),
-                    child: Text(
-                      _isGeneratingDailyReport
-                          ? l10n.podcast_daily_report_loading
-                          : l10n.podcast_daily_report_generate_previous_day,
-                    ),
-                  ),
-                ],
               ],
             )
           else
@@ -279,6 +287,9 @@ class _PodcastDailyReportPageState
                   separatorBuilder: (_, _index) => const SizedBox(height: 8),
                   itemBuilder: (itemContext, index) {
                     final item = currentReport.items[index];
+                    final isExpanded = _expandedReportItems.contains(
+                      item.episodeId,
+                    );
                     final metaLine =
                         '${item.episodeTitle} · ${item.subscriptionTitle ?? l10n.podcast_default_podcast}';
                     return InkWell(
@@ -296,10 +307,34 @@ class _PodcastDailyReportPageState
                           children: [
                             Text(
                               item.oneLineSummary,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                              maxLines: isExpanded ? null : 2,
+                              overflow: isExpanded
+                                  ? TextOverflow.visible
+                                  : TextOverflow.ellipsis,
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton(
+                                key: Key(
+                                  'daily_report_item_toggle_${item.episodeId}',
+                                ),
+                                onPressed: () =>
+                                    _toggleItemExpanded(item.episodeId),
+                                style: TextButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: const Size(0, 0),
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: Text(
+                                  isExpanded
+                                      ? l10n.podcast_player_collapse
+                                      : l10n.podcast_player_expand,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -322,6 +357,16 @@ class _PodcastDailyReportPageState
         ],
       ),
     );
+  }
+
+  void _toggleItemExpanded(int episodeId) {
+    setState(() {
+      if (_expandedReportItems.contains(episodeId)) {
+        _expandedReportItems.remove(episodeId);
+      } else {
+        _expandedReportItems.add(episodeId);
+      }
+    });
   }
 
   Future<void> _showDailyReportDateSelector(
@@ -356,8 +401,9 @@ class _PodcastDailyReportPageState
   }
 
   Future<void> _generateDailyReportForSelectedDate(
-    DateTime? selectedDate,
-  ) async {
+    DateTime? selectedDate, {
+    bool rebuild = false,
+  }) async {
     if (selectedDate == null) {
       return;
     }
@@ -368,7 +414,7 @@ class _PodcastDailyReportPageState
     try {
       final generated = await ref
           .read(dailyReportProvider.notifier)
-          .generate(date: selectedDate);
+          .generate(date: selectedDate, rebuild: rebuild);
       if (!mounted) {
         return;
       }

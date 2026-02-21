@@ -140,8 +140,16 @@ class PodcastService:
         return await self.repo.get_subscription_by_id(self.user_id, subscription_id)
 
     # Daily report
-    async def generate_daily_report(self, target_date=None) -> dict[str, Any]:
-        return await self.daily_report_service.generate_daily_report(target_date)
+    async def generate_daily_report(
+        self,
+        target_date=None,
+        *,
+        rebuild: bool = False,
+    ) -> dict[str, Any]:
+        return await self.daily_report_service.generate_daily_report(
+            target_date=target_date,
+            rebuild=rebuild,
+        )
 
     async def get_daily_report(self, target_date=None) -> dict[str, Any]:
         return await self.daily_report_service.get_daily_report(target_date)

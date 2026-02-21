@@ -5,11 +5,19 @@ from __future__ import annotations
 import re
 
 
-_SECTION_HEADING_RE = re.compile(
-    r"^\s*##\s*(?:1[\.\)]\s*)?(?:一句话摘要|Executive Summary)(?:\s*/\s*(?:一句话摘要|Executive Summary))?\s*$",
-    re.IGNORECASE | re.MULTILINE,
+_HEADING_PREFIX_RE = re.compile(
+    r"^\s*(?:#{1,6}\s*|(?:\d+(?:\.\d+)*|[一二三四五六七八九十]+)\s*[\.\)\]、:：]\s*)",
+    re.IGNORECASE,
 )
-_NEXT_HEADING_RE = re.compile(r"^\s*##\s+", re.MULTILINE)
+_EXEC_SUMMARY_KEYWORD_RE = re.compile(
+    r"(?:一句话摘要|Executive Summary)",
+    re.IGNORECASE,
+)
+_MARKDOWN_HEADING_RE = re.compile(r"^\s*#{1,6}\s+\S", re.IGNORECASE)
+_NUMBERED_HEADING_RE = re.compile(
+    r"^\s*(?:\d+(?:\.\d+)*|[一二三四五六七八九十]+)\s*[\.\)\]、:：]\s+\S",
+    re.IGNORECASE,
+)
 _LEADING_BULLET_RE = re.compile(r"^\s*(?:[-*]\s+|\d+[\.\)]\s+)")
 _WHITESPACE_RE = re.compile(r"\s+")
 _SENTENCE_RE = re.compile(r"[^。！？!?\.]+[。！？!?\.]?")
@@ -22,28 +30,62 @@ def extract_one_line_summary(ai_summary: str | None) -> str | None:
 
     section_text = _extract_executive_summary_section(ai_summary)
     if section_text:
-        sentence = _extract_first_sentence(section_text)
-        if sentence:
-            return sentence
+        return section_text
 
     return _extract_first_sentence(ai_summary)
 
 
 def _extract_executive_summary_section(summary_text: str) -> str | None:
-    heading_match = _SECTION_HEADING_RE.search(summary_text)
-    if not heading_match:
+    section_start = _find_executive_summary_section_start(summary_text)
+    if section_start is None:
         return None
 
-    section_start = heading_match.end()
-    remaining = summary_text[section_start:]
-    next_heading_match = _NEXT_HEADING_RE.search(remaining)
-    if next_heading_match:
-        section_body = remaining[: next_heading_match.start()]
-    else:
-        section_body = remaining
+    section_end = _find_next_section_heading_start(summary_text, section_start)
+    section_body = summary_text[section_start:section_end]
 
     normalized = _WHITESPACE_RE.sub(" ", section_body).strip()
     return normalized or None
+
+
+def _find_executive_summary_section_start(summary_text: str) -> int | None:
+    line_start = 0
+    for line in summary_text.splitlines(keepends=True):
+        line_end = line_start + len(line)
+        if _is_executive_summary_heading(line):
+            return line_end
+        line_start = line_end
+    return None
+
+
+def _find_next_section_heading_start(summary_text: str, section_start: int) -> int:
+    line_start = section_start
+    for line in summary_text[section_start:].splitlines(keepends=True):
+        line_end = line_start + len(line)
+        if _is_next_section_heading(line):
+            return line_start
+        line_start = line_end
+    return len(summary_text)
+
+
+def _is_executive_summary_heading(line: str) -> bool:
+    text = line.strip()
+    if not text:
+        return False
+    if not _HEADING_PREFIX_RE.match(text):
+        return False
+    return bool(_EXEC_SUMMARY_KEYWORD_RE.search(text))
+
+
+def _is_next_section_heading(line: str) -> bool:
+    text = line.strip()
+    if not text:
+        return False
+    if _is_executive_summary_heading(line):
+        return False
+    return bool(
+        _MARKDOWN_HEADING_RE.match(text)
+        or _NUMBERED_HEADING_RE.match(text)
+    )
 
 
 def _extract_first_sentence(text: str) -> str | None:

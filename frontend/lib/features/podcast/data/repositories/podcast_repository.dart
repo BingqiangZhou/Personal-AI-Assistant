@@ -166,10 +166,11 @@ class PodcastRepository {
 
   Future<PodcastDailyReportResponse> generateDailyReport({
     DateTime? date,
+    bool rebuild = false,
   }) async {
     try {
       final dateParam = _formatDateParam(date);
-      return await _apiService.generateDailyReport(dateParam);
+      return await _apiService.generateDailyReport(dateParam, rebuild);
     } on DioException catch (e) {
       final statusCode = e.response?.statusCode;
       if (statusCode == 404 || statusCode == 405) {

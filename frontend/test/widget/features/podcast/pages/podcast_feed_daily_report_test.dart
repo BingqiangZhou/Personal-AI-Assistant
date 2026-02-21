@@ -83,6 +83,39 @@ void main() {
       expect(find.text('Report summary ${previousDay.day}'), findsOneWidget);
     });
 
+    testWidgets('toggles summary expansion per item', (tester) async {
+      final previousDay = _dateOnlyNowMinus(1);
+      await tester.pumpWidget(
+        _buildReportApp(
+          dailyReportNotifier: _StaticDailyReportNotifier(
+            _reportForDate(
+              previousDay,
+              summary:
+                  'This is a long report summary line one. This is line two. This is line three.',
+            ),
+          ),
+          datesNotifier: _StaticDailyReportDatesNotifier(
+            _dates([previousDay, _dateOnlyNowMinus(2)]),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final toggleKey = Key('daily_report_item_toggle_${previousDay.day}');
+      expect(find.byKey(toggleKey), findsOneWidget);
+      expect(find.text('Expand'), findsOneWidget);
+
+      await tester.tap(find.byKey(toggleKey));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Collapse'), findsOneWidget);
+
+      await tester.tap(find.byKey(toggleKey));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Expand'), findsOneWidget);
+    });
+
     testWidgets('tapping report item navigates to episode detail', (
       tester,
     ) async {
@@ -162,7 +195,7 @@ void main() {
       expect(find.text('No daily report available yet'), findsOneWidget);
     });
 
-    testWidgets('shows generate button and generates report', (tester) async {
+    testWidgets('shows refresh button and generates report', (tester) async {
       final twoDaysAgo = _dateOnlyNowMinus(2);
       final notifier = _GeneratingDailyReportNotifier(
         initialReport: _unavailableReportForDate(twoDaysAgo),
@@ -180,7 +213,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final buttonFinder = find.byKey(
-        const Key('daily_report_generate_previous_day_button'),
+        const Key('daily_report_regenerate_button'),
       );
       expect(buttonFinder, findsOneWidget);
 
@@ -188,7 +221,41 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(notifier.generateCalls, 1);
+      expect(notifier.lastRebuild, true);
       expect(find.text('Report summary ${twoDaysAgo.day}'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('shows regenerate button and triggers rebuild', (tester) async {
+      final previousDay = _dateOnlyNowMinus(1);
+      final notifier = _GeneratingDailyReportNotifier(
+        initialReport: _reportForDate(previousDay),
+        generatedReport: _reportForDate(previousDay),
+      );
+
+      await tester.pumpWidget(
+        _buildReportApp(
+          dailyReportNotifier: notifier,
+          datesNotifier: _StaticDailyReportDatesNotifier(_dates([previousDay])),
+          selectedDateNotifier: _FixedSelectedDailyReportDateNotifier(
+            previousDay,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final buttonFinder = find.byKey(
+        const Key('daily_report_regenerate_button'),
+      );
+      expect(buttonFinder, findsOneWidget);
+
+      await tester.tap(buttonFinder);
+      await tester.pumpAndSettle();
+
+      expect(notifier.generateCalls, 1);
+      expect(notifier.lastRebuild, true);
+      expect(_dateKey(notifier.lastGenerateDate), _dateKey(previousDay));
       await tester.pump(const Duration(seconds: 4));
       await tester.pumpAndSettle();
     });
@@ -382,6 +449,8 @@ class _GeneratingDailyReportNotifier extends DailyReportNotifier {
   final PodcastDailyReportResponse initialReport;
   final PodcastDailyReportResponse generatedReport;
   int generateCalls = 0;
+  bool? lastRebuild;
+  DateTime? lastGenerateDate;
 
   @override
   FutureOr<PodcastDailyReportResponse?> build() => initialReport;
@@ -395,8 +464,13 @@ class _GeneratingDailyReportNotifier extends DailyReportNotifier {
   }
 
   @override
-  Future<PodcastDailyReportResponse?> generate({DateTime? date}) async {
+  Future<PodcastDailyReportResponse?> generate({
+    DateTime? date,
+    bool rebuild = false,
+  }) async {
     generateCalls += 1;
+    lastRebuild = rebuild;
+    lastGenerateDate = date;
     state = AsyncValue.data(generatedReport);
     return generatedReport;
   }
@@ -420,7 +494,7 @@ PodcastFeedState _feedState() {
   );
 }
 
-PodcastDailyReportResponse _reportForDate(DateTime date) {
+PodcastDailyReportResponse _reportForDate(DateTime date, {String? summary}) {
   return PodcastDailyReportResponse(
     available: true,
     reportDate: date,
@@ -434,7 +508,7 @@ PodcastDailyReportResponse _reportForDate(DateTime date) {
         subscriptionId: 1,
         episodeTitle: 'Episode ${date.day}',
         subscriptionTitle: 'Podcast A',
-        oneLineSummary: 'Report summary ${date.day}',
+        oneLineSummary: summary ?? 'Report summary ${date.day}',
         isCarryover: false,
         episodeCreatedAt: DateTime(date.year, date.month, date.day, 10),
       ),

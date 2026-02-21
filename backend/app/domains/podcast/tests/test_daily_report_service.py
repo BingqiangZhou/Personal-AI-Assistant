@@ -61,6 +61,45 @@ def test_extract_one_line_summary_falls_back_to_first_sentence():
     assert result.startswith("First sentence should be used")
 
 
+def test_extract_one_line_summary_returns_full_executive_section():
+    summary = """
+## 1. 一句话摘要 (Executive Summary)
+这是第一句。这是第二句。
+这是第三句。
+
+## 2. 核心观点与洞察
+- 后续内容
+"""
+    result = extract_one_line_summary(summary)
+
+    assert result == "这是第一句。这是第二句。 这是第三句。"
+
+
+def test_extract_one_line_summary_supports_numbered_heading_without_hash():
+    summary = """
+1. 一句话摘要
+这是一整段摘要。包含第二句。
+2. 核心观点与洞察
+后续内容
+"""
+    result = extract_one_line_summary(summary)
+
+    assert result == "这是一整段摘要。包含第二句。"
+
+
+def test_extract_one_line_summary_supports_english_executive_summary():
+    summary = """
+### Executive Summary
+This is the first sentence. This is the second sentence.
+
+### Key Insights
+Follow-up section.
+"""
+    result = extract_one_line_summary(summary)
+
+    assert result == "This is the first sentence. This is the second sentence."
+
+
 @pytest.mark.asyncio
 async def test_generate_daily_report_triggers_async_processing_for_unsummarized():
     db = AsyncMock()
