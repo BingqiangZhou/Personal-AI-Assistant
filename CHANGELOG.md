@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.11.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.11.0...v0.11.1) - 2026-02-21 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.11.1))
+
+### 🎨 Styling
+
+- *(ui)* Replace hardcoded white with theme onPrimary for loading indicators ([e79c3a8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e79c3a8a7ddc491fef420e421a5b72f9256315f5))
+
+### 🐛 Bug Fixes
+
+- *(ci)* Fix Android version code extraction from pubspec.yaml instead of tag ([02d6e1e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/02d6e1e997756d761bce402928fc0322cdc2936e))
+
+
+
 ## [0.11.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.10.5...v0.11.0) - 2026-02-21 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.11.0))
 
 ### 🎨 Styling
