@@ -105,16 +105,18 @@ void main() {
       expect(find.byKey(_calendarMarkerKey(previousDay)), findsOneWidget);
     });
 
-    testWidgets('toggles summary expansion per item', (tester) async {
+    testWidgets('summary is always expanded without toggle button', (
+      tester,
+    ) async {
       final previousDay = _dateOnlyNowMinus(1);
+      const rawSummary =
+          'This is a long report summary line one. This is line two. This is line three. ---';
+      const expectedSummary =
+          'This is a long report summary line one. This is line two. This is line three.';
       await tester.pumpWidget(
         _buildReportApp(
           dailyReportNotifier: _StaticDailyReportNotifier(
-            _reportForDate(
-              previousDay,
-              summary:
-                  'This is a long report summary line one. This is line two. This is line three.',
-            ),
+            _reportForDate(previousDay, summary: rawSummary),
           ),
           datesNotifier: _StaticDailyReportDatesNotifier(
             _dates([previousDay, _dateOnlyNowMinus(2)]),
@@ -123,19 +125,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final toggleKey = Key('daily_report_item_toggle_${previousDay.day}');
-      expect(find.byKey(toggleKey), findsOneWidget);
-      expect(find.text('Expand'), findsOneWidget);
-
-      await tester.tap(find.byKey(toggleKey));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Collapse'), findsOneWidget);
-
-      await tester.tap(find.byKey(toggleKey));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Expand'), findsOneWidget);
+      expect(
+        find.byKey(Key('daily_report_item_toggle_${previousDay.day}')),
+        findsNothing,
+      );
+      expect(find.text('Expand'), findsNothing);
+      expect(find.text('Collapse'), findsNothing);
+      expect(find.text(rawSummary), findsNothing);
+      expect(find.text(expectedSummary), findsOneWidget);
     });
 
     testWidgets('tapping report item navigates to episode detail', (

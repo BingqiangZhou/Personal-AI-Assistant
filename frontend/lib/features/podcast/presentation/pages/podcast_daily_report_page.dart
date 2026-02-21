@@ -25,7 +25,9 @@ class PodcastDailyReportPage extends ConsumerStatefulWidget {
 class _PodcastDailyReportPageState
     extends ConsumerState<PodcastDailyReportPage> {
   bool _isGeneratingDailyReport = false;
-  final Set<int> _expandedReportItems = <int>{};
+  static final RegExp _summaryTrailingDividerRegExp = RegExp(
+    r'(?:\s*---\s*)+$',
+  );
   late DateTime _focusedCalendarDay;
 
   @override
@@ -111,6 +113,7 @@ class _PodcastDailyReportPageState
       int totalItems = 0,
       DateTime? generatedAt,
       bool showMeta = false,
+      Widget? action,
     }) {
       final headerDate = reportDate ?? selectedDate;
       return Column(
@@ -118,14 +121,18 @@ class _PodcastDailyReportPageState
         children: [
           Row(
             children: [
-              Expanded(
+              Flexible(
                 child: Text(
                   l10n.podcast_daily_report_title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
+              if (action != null) ...[const SizedBox(width: 8), action],
+              const Spacer(),
               const Icon(Icons.event_outlined, size: 18),
               const SizedBox(width: 6),
               Text(
@@ -147,6 +154,24 @@ class _PodcastDailyReportPageState
               ),
             ),
         ],
+      );
+    }
+
+    Widget buildRegenerateButton(DateTime? targetDate) {
+      return FilledButton.tonalIcon(
+        key: const Key('daily_report_regenerate_button'),
+        onPressed: _isGeneratingDailyReport || targetDate == null
+            ? null
+            : () => _generateDailyReportForSelectedDate(
+                targetDate,
+                rebuild: true,
+              ),
+        icon: const Icon(Icons.refresh, size: 18),
+        label: Text(
+          _isGeneratingDailyReport
+              ? l10n.podcast_daily_report_loading
+              : l10n.refresh,
+        ),
       );
     }
 
@@ -348,12 +373,14 @@ class _PodcastDailyReportPageState
       final currentReport = report;
       if (currentReport == null || !currentReport.available) {
         final targetDate = selectedDate ?? currentReport?.reportDate;
-        final shouldShowRefreshButton = targetDate != null;
         reportCard = buildSurface(
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              buildHeader(reportDate: selectedDate),
+              buildHeader(
+                reportDate: selectedDate,
+                action: buildRegenerateButton(targetDate),
+              ),
               const SizedBox(height: 8),
               Text(
                 l10n.podcast_daily_report_empty,
@@ -361,24 +388,6 @@ class _PodcastDailyReportPageState
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              if (shouldShowRefreshButton) ...[
-                const SizedBox(height: 8),
-                FilledButton.tonalIcon(
-                  key: const Key('daily_report_regenerate_button'),
-                  onPressed: _isGeneratingDailyReport
-                      ? null
-                      : () => _generateDailyReportForSelectedDate(
-                          targetDate,
-                          rebuild: true,
-                        ),
-                  icon: const Icon(Icons.refresh, size: 18),
-                  label: Text(
-                    _isGeneratingDailyReport
-                        ? l10n.podcast_daily_report_loading
-                        : l10n.refresh,
-                  ),
-                ),
-              ],
             ],
           ),
         );
@@ -392,24 +401,8 @@ class _PodcastDailyReportPageState
                 totalItems: currentReport.totalItems,
                 generatedAt: currentReport.generatedAt,
                 showMeta: true,
-              ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: FilledButton.tonalIcon(
-                  key: const Key('daily_report_regenerate_button'),
-                  onPressed: _isGeneratingDailyReport
-                      ? null
-                      : () => _generateDailyReportForSelectedDate(
-                          currentReport.reportDate ?? selectedDate,
-                          rebuild: true,
-                        ),
-                  icon: const Icon(Icons.refresh, size: 18),
-                  label: Text(
-                    _isGeneratingDailyReport
-                        ? l10n.podcast_daily_report_loading
-                        : l10n.refresh,
-                  ),
+                action: buildRegenerateButton(
+                  currentReport.reportDate ?? selectedDate,
                 ),
               ),
               const SizedBox(height: 10),
@@ -434,9 +427,6 @@ class _PodcastDailyReportPageState
                           const SizedBox(height: 8),
                       itemBuilder: (itemContext, index) {
                         final item = currentReport.items[index];
-                        final isExpanded = _expandedReportItems.contains(
-                          item.episodeId,
-                        );
                         final metaLine =
                             '${item.episodeTitle} | ${item.subscriptionTitle ?? l10n.podcast_default_podcast}';
                         return InkWell(
@@ -453,35 +443,9 @@ class _PodcastDailyReportPageState
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  item.oneLineSummary,
-                                  maxLines: isExpanded ? null : 2,
-                                  overflow: isExpanded
-                                      ? TextOverflow.visible
-                                      : TextOverflow.ellipsis,
+                                  _sanitizeOneLineSummary(item.oneLineSummary),
                                   style: theme.textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: TextButton(
-                                    key: Key(
-                                      'daily_report_item_toggle_${item.episodeId}',
-                                    ),
-                                    onPressed: () =>
-                                        _toggleItemExpanded(item.episodeId),
-                                    style: TextButton.styleFrom(
-                                      visualDensity: VisualDensity.compact,
-                                      padding: EdgeInsets.zero,
-                                      minimumSize: const Size(0, 0),
-                                      tapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                    ),
-                                    child: Text(
-                                      isExpanded
-                                          ? l10n.podcast_player_collapse
-                                          : l10n.podcast_player_expand,
-                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 6),
@@ -587,7 +551,6 @@ class _PodcastDailyReportPageState
     if (mounted) {
       setState(() {
         _focusedCalendarDay = normalizedFocused;
-        _expandedReportItems.clear();
       });
     }
     ref
@@ -596,16 +559,6 @@ class _PodcastDailyReportPageState
     await ref
         .read(dailyReportProvider.notifier)
         .load(date: normalizedSelected, forceRefresh: true);
-  }
-
-  void _toggleItemExpanded(int episodeId) {
-    setState(() {
-      if (_expandedReportItems.contains(episodeId)) {
-        _expandedReportItems.remove(episodeId);
-      } else {
-        _expandedReportItems.add(episodeId);
-      }
-    });
   }
 
   Future<void> _generateDailyReportForSelectedDate(
@@ -695,6 +648,14 @@ class _PodcastDailyReportPageState
   DateTime _toDateOnly(DateTime value) {
     final local = value.isUtc ? value.toLocal() : value;
     return DateTime(local.year, local.month, local.day);
+  }
+
+  String _sanitizeOneLineSummary(String rawSummary) {
+    final normalized = rawSummary.trim();
+    if (normalized.isEmpty) {
+      return normalized;
+    }
+    return normalized.replaceAll(_summaryTrailingDividerRegExp, '').trim();
   }
 }
 
