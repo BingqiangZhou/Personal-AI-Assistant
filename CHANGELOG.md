@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.11.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.10.5...v0.11.0) - 2026-02-21 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.11.0))
+
+### 🎨 Styling
+
+- *(ui)* Remove borders from cards, dropdowns, and activity indicators ([3dea840](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3dea840695624e75f9ecdee533d53557d0d859de))
+
+### 🐛 Bug Fixes
+
+- *(podcast)* Improve daily report error handling and add scrollable items view ([5488bfa](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5488bfaff9ebee33d3f0fe09ba52bf266e993bf0))
+
+### 🚀 Features
+
+- *(podcast)* Add daily report feature with automatic generation and history ([2a82477](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2a82477f00d0db29da4d55e3f4796787df6eab8a))
+- *(podcast)* Add rebuild flag for daily reports and improve UX ([5ab07ea](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5ab07ea6dcdbf88ee6f3a2cc65ecc9c099ea5359))
+- *(podcast)* Add inline calendar UI and progressive date loading for daily reports ([7ac29d8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7ac29d89ee9aa44352effeb5d5b2fd925d54614c))
+
+### 🚜 Refactor
+
+- *(podcast)* Move daily report to dedicated page accessible from profile ([442627d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/442627dd48a1a5cef25b774ebd4f4a8854b53a42))
+
+
+
 ## [0.10.5](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.10.4...v0.10.5) - 2026-02-16 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.10.5))
 
 ### ⚙️ Miscellaneous Tasks
