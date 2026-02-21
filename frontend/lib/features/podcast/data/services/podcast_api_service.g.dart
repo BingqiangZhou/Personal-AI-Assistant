@@ -336,7 +336,7 @@ class _PodcastApiService implements PodcastApiService {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'podcasts/reports/daily',
+            '/podcasts/reports/daily',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -364,7 +364,7 @@ class _PodcastApiService implements PodcastApiService {
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'podcasts/reports/daily/generate',
+            '/podcasts/reports/daily/generate',
             queryParameters: queryParameters,
             data: _data,
           )
@@ -394,7 +394,7 @@ class _PodcastApiService implements PodcastApiService {
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            'podcasts/reports/daily/dates',
+            '/podcasts/reports/daily/dates',
             queryParameters: queryParameters,
             data: _data,
           )

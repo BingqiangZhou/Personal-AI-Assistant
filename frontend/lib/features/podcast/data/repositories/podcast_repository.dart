@@ -171,6 +171,20 @@ class PodcastRepository {
       final dateParam = _formatDateParam(date);
       return await _apiService.generateDailyReport(dateParam);
     } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      if (statusCode == 404 || statusCode == 405) {
+        final fallback = await getDailyReport(date: date);
+        if (fallback.available) {
+          return fallback;
+        }
+        throw const NetworkException(
+          'Daily report generation is unavailable on the current server',
+        );
+      }
+      final wrappedError = e.error;
+      if (wrappedError is AppException) {
+        throw wrappedError;
+      }
       throw NetworkException.fromDioError(e);
     }
   }

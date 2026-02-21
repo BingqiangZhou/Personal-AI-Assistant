@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:personal_ai_assistant/core/network/exceptions/network_exceptions.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_daily_report_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/podcast_api_service.dart';
@@ -89,6 +90,21 @@ void main() {
       expect(repository.generateDailyReportCalls, 1);
       expect(repository.lastGeneratedReportDate, targetDate);
       expect(repository.dailyReportDatesCalls, 1);
+    });
+
+    test('generate daily report rethrows on failure', () async {
+      final repository = _FailingGeneratePodcastRepository();
+      final container = ProviderContainer(
+        overrides: [podcastRepositoryProvider.overrideWithValue(repository)],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(dailyReportProvider.notifier);
+
+      await expectLater(
+        () => notifier.generate(date: DateTime(2026, 2, 20)),
+        throwsA(isA<NetworkException>()),
+      );
     });
   });
 }
@@ -183,5 +199,14 @@ class _FakePodcastRepository extends PodcastRepository {
         ),
       ],
     );
+  }
+}
+
+class _FailingGeneratePodcastRepository extends _FakePodcastRepository {
+  @override
+  Future<PodcastDailyReportResponse> generateDailyReport({
+    DateTime? date,
+  }) async {
+    throw const NetworkException('Server error');
   }
 }

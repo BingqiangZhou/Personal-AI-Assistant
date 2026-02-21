@@ -2056,12 +2056,15 @@ class DailyReportNotifier extends AsyncNotifier<PodcastDailyReportResponse?> {
         return data;
       } catch (error, stackTrace) {
         logger.AppLogger.debug('Failed to generate daily report: $error');
+        if (error is AuthenticationException) {
+          ref.read(authProvider.notifier).checkAuthStatus();
+        }
         if (previousData == null) {
           state = AsyncValue.error(error, stackTrace);
         } else {
           state = AsyncValue.data(previousData);
         }
-        return previousData;
+        rethrow;
       } finally {
         _inFlightGenerateRequest = null;
       }

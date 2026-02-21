@@ -79,17 +79,17 @@ abstract class PodcastApiService {
     @Query('page_size') int pageSize,
   );
 
-  @GET('podcasts/reports/daily')
+  @GET('/podcasts/reports/daily')
   Future<PodcastDailyReportResponse> getDailyReport(
     @Query('date') String? date,
   );
 
-  @POST('podcasts/reports/daily/generate')
+  @POST('/podcasts/reports/daily/generate')
   Future<PodcastDailyReportResponse> generateDailyReport(
     @Query('date') String? date,
   );
 
-  @GET('podcasts/reports/daily/dates')
+  @GET('/podcasts/reports/daily/dates')
   Future<PodcastDailyReportDatesResponse> getDailyReportDates(
     @Query('page') int page,
     @Query('size') int size,

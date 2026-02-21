@@ -130,6 +130,8 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     final report = reportAsync.value;
     final availableDates =
         datesAsync.value?.dates ?? const <PodcastDailyReportDateItem>[];
+    final maxReportItemsViewportHeight =
+        (MediaQuery.sizeOf(context).height * 0.38).clamp(140.0, 340.0);
 
     Widget buildCardSurface(Widget child) {
       return Material(
@@ -323,74 +325,93 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                 ),
               )
             else
-              ...currentReport.items.map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: InkWell(
-                    key: Key('daily_report_item_${item.episodeId}'),
-                    onTap: () {
-                      context.push('/podcast/episode/detail/${item.episodeId}');
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: maxReportItemsViewportHeight,
+                ),
+                child: Scrollbar(
+                  thumbVisibility: currentReport.items.length > 4,
+                  child: ListView.separated(
+                    key: const Key('daily_report_items_scroll'),
+                    shrinkWrap: true,
+                    primary: false,
+                    itemCount: currentReport.items.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (itemContext, index) {
+                      final item = currentReport.items[index];
+                      return InkWell(
+                        key: Key('daily_report_item_${item.episodeId}'),
+                        onTap: () {
+                          context.push(
+                            '/podcast/episode/detail/${item.episodeId}',
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  item.episodeTitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              if (item.isCarryover)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.secondaryContainer,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    l10n.podcast_daily_report_carryover,
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme
-                                          .colorScheme
-                                          .onSecondaryContainer,
-                                      fontWeight: FontWeight.w600,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      item.episodeTitle,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.bodyLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
                                   ),
+                                  if (item.isCarryover)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: theme
+                                            .colorScheme
+                                            .secondaryContainer,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Text(
+                                        l10n.podcast_daily_report_carryover,
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSecondaryContainer,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                item.oneLineSummary,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                item.subscriptionTitle ??
+                                    l10n.podcast_default_podcast,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.labelMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
                                 ),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            item.oneLineSummary,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            item.subscriptionTitle ??
-                                l10n.podcast_default_podcast,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -474,12 +495,15 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           extraTopOffset: 64,
         );
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
+        final errorMessage = error.toString().trim();
         showTopFloatingNotice(
           context,
-          message: l10n.podcast_daily_report_generate_failed,
+          message: errorMessage.isEmpty
+              ? l10n.podcast_daily_report_generate_failed
+              : '${l10n.podcast_daily_report_generate_failed}: $errorMessage',
           isError: true,
           extraTopOffset: 64,
         );
