@@ -26,6 +26,9 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
       ref.read(podcastFeedProvider.notifier).loadInitialFeed();
     });
   }
@@ -228,7 +231,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     if (feedState.isLoading && feedState.episodes.isEmpty) {
       return Center(
         child: CircularProgressIndicator(
-          color: Theme.of(context).colorScheme.tertiary,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       );
     }
@@ -292,7 +295,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.tertiary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   );

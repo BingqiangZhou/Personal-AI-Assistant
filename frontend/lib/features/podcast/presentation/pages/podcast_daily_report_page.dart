@@ -25,6 +25,7 @@ class PodcastDailyReportPage extends ConsumerStatefulWidget {
 class _PodcastDailyReportPageState
     extends ConsumerState<PodcastDailyReportPage> {
   bool _isGeneratingDailyReport = false;
+  final ScrollController _reportItemsScrollController = ScrollController();
   static final RegExp _summaryTrailingDividerRegExp = RegExp(
     r'(?:\s*---\s*)+$',
   );
@@ -37,6 +38,9 @@ class _PodcastDailyReportPageState
     _focusedCalendarDay = targetDate;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
       ref.read(selectedDailyReportDateProvider.notifier).setDate(targetDate);
 
       final isAuthenticated = ref.read(authProvider).isAuthenticated;
@@ -55,9 +59,18 @@ class _PodcastDailyReportPageState
           .load(date: targetDate, forceRefresh: true),
       ref.read(dailyReportDatesProvider.notifier).load(forceRefresh: true),
     ]);
+    if (!mounted) {
+      return;
+    }
     await ref
         .read(dailyReportDatesProvider.notifier)
         .ensureMonthCoverage(targetDate);
+  }
+
+  @override
+  void dispose() {
+    _reportItemsScrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -310,70 +323,73 @@ class _PodcastDailyReportPageState
       ),
     );
 
-    Widget reportCard;
-    if (reportAsync.isLoading && report == null) {
-      reportCard = buildSurface(
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            buildHeader(reportDate: selectedDate),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: theme.colorScheme.primary,
+    Widget buildReportCard({required bool fillViewportHeight}) {
+      if (reportAsync.isLoading && report == null) {
+        return buildSurface(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildHeader(reportDate: selectedDate),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.podcast_daily_report_loading,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.podcast_daily_report_loading,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    } else if (reportAsync.hasError && report == null) {
-      reportCard = buildSurface(
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            buildHeader(reportDate: selectedDate),
-            const SizedBox(height: 8),
-            Text(
-              l10n.podcast_failed_to_load_feed,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.error,
+                ],
               ),
-            ),
-            const SizedBox(height: 8),
-            FilledButton.tonal(
-              onPressed: () {
-                ref
-                    .read(dailyReportProvider.notifier)
-                    .load(date: selectedDate, forceRefresh: true);
-                ref
-                    .read(dailyReportDatesProvider.notifier)
-                    .load(forceRefresh: true);
-              },
-              child: Text(l10n.podcast_retry),
-            ),
-          ],
-        ),
-      );
-    } else {
+            ],
+          ),
+        );
+      }
+
+      if (reportAsync.hasError && report == null) {
+        return buildSurface(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildHeader(reportDate: selectedDate),
+              const SizedBox(height: 8),
+              Text(
+                l10n.podcast_failed_to_load_feed,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+              const SizedBox(height: 8),
+              FilledButton.tonal(
+                onPressed: () {
+                  ref
+                      .read(dailyReportProvider.notifier)
+                      .load(date: selectedDate, forceRefresh: true);
+                  ref
+                      .read(dailyReportDatesProvider.notifier)
+                      .load(forceRefresh: true);
+                },
+                child: Text(l10n.podcast_retry),
+              ),
+            ],
+          ),
+        );
+      }
+
       final currentReport = report;
       if (currentReport == null || !currentReport.available) {
         final targetDate = selectedDate ?? currentReport?.reportDate;
-        reportCard = buildSurface(
+        return buildSurface(
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -391,89 +407,117 @@ class _PodcastDailyReportPageState
             ],
           ),
         );
-      } else {
-        reportCard = buildSurface(
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildHeader(
-                reportDate: currentReport.reportDate,
-                totalItems: currentReport.totalItems,
-                generatedAt: currentReport.generatedAt,
-                showMeta: true,
-                action: buildRegenerateButton(
-                  currentReport.reportDate ?? selectedDate,
+      }
+
+      final reportItemsList = Scrollbar(
+        controller: _reportItemsScrollController,
+        thumbVisibility: currentReport.items.length > 4,
+        child: ListView.separated(
+          controller: _reportItemsScrollController,
+          key: const Key('daily_report_items_scroll'),
+          primary: false,
+          padding: EdgeInsets.zero,
+          itemCount: currentReport.items.length,
+          separatorBuilder: (_, _index) => const SizedBox(height: 8),
+          itemBuilder: (itemContext, index) {
+            final item = currentReport.items[index];
+            final metaLine =
+                '${item.episodeTitle} | ${item.subscriptionTitle ?? l10n.podcast_default_podcast}';
+            return InkWell(
+              key: Key('daily_report_item_${item.episodeId}'),
+              onTap: () {
+                context.push('/podcast/episode/detail/${item.episodeId}');
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _sanitizeOneLineSummary(item.oneLineSummary),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      metaLine,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
-              if (currentReport.items.isEmpty)
-                Text(
-                  l10n.podcast_daily_report_empty,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                )
-              else
-                SizedBox(
-                  height: maxReportItemsViewportHeight,
-                  child: Scrollbar(
-                    thumbVisibility: currentReport.items.length > 4,
-                    child: ListView.separated(
-                      key: const Key('daily_report_items_scroll'),
-                      primary: false,
-                      padding: EdgeInsets.zero,
-                      itemCount: currentReport.items.length,
-                      separatorBuilder: (_, _index) =>
-                          const SizedBox(height: 8),
-                      itemBuilder: (itemContext, index) {
-                        final item = currentReport.items[index];
-                        final metaLine =
-                            '${item.episodeTitle} | ${item.subscriptionTitle ?? l10n.podcast_default_podcast}';
-                        return InkWell(
-                          key: Key('daily_report_item_${item.episodeId}'),
-                          onTap: () {
-                            context.push(
-                              '/podcast/episode/detail/${item.episodeId}',
-                            );
-                          },
-                          borderRadius: BorderRadius.circular(10),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _sanitizeOneLineSummary(item.oneLineSummary),
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  metaLine,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+            );
+          },
+        ),
+      );
+
+      return buildSurface(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            buildHeader(
+              reportDate: currentReport.reportDate,
+              totalItems: currentReport.totalItems,
+              generatedAt: currentReport.generatedAt,
+              showMeta: true,
+              action: buildRegenerateButton(
+                currentReport.reportDate ?? selectedDate,
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (currentReport.items.isEmpty)
+              Text(
+                l10n.podcast_daily_report_empty,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-            ],
-          ),
-        );
-      }
+              )
+            else if (fillViewportHeight)
+              Expanded(child: reportItemsList)
+            else
+              SizedBox(
+                height: maxReportItemsViewportHeight,
+                child: reportItemsList,
+              ),
+          ],
+        ),
+      );
     }
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final hasBoundedHeight = constraints.hasBoundedHeight;
         final isWideLayout = constraints.maxWidth >= 1180;
+        final reportCard = buildReportCard(
+          fillViewportHeight: isWideLayout && hasBoundedHeight,
+        );
+
+        if (isWideLayout && hasBoundedHeight) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 5,
+                child: SingleChildScrollView(child: calendarCard),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                flex: 7,
+                child: SizedBox(
+                  height: constraints.maxHeight,
+                  child: reportCard,
+                ),
+              ),
+            ],
+          );
+        }
+
         if (isWideLayout) {
           return SingleChildScrollView(
             child: Row(

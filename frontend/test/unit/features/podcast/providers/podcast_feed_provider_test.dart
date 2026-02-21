@@ -68,6 +68,37 @@ void main() {
       },
     );
 
+    test(
+      'shows loading when background prefetch starts with empty cache',
+      () async {
+        final fakeRepository = _FakePodcastRepository(
+          responses: <PodcastFeedResponse>[
+            _responseWithEpisodeIds(<int>[1]),
+          ],
+          delays: const <Duration>[Duration(milliseconds: 120)],
+        );
+        final container = ProviderContainer(
+          overrides: [
+            podcastRepositoryProvider.overrideWithValue(fakeRepository),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(podcastFeedProvider.notifier);
+        final inFlight = notifier.loadInitialFeed(background: true);
+
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        final loadingState = container.read(podcastFeedProvider);
+        expect(loadingState.episodes, isEmpty);
+        expect(loadingState.isLoading, isTrue);
+
+        await inFlight;
+        final loadedState = container.read(podcastFeedProvider);
+        expect(loadedState.episodes.first.id, 1);
+        expect(loadedState.isLoading, isFalse);
+      },
+    );
+
     test('forceRefresh requests again and replaces old feed data', () async {
       final fakeRepository = _FakePodcastRepository(
         responses: <PodcastFeedResponse>[
