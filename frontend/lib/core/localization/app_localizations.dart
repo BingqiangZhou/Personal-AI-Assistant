@@ -836,22 +836,40 @@ abstract class AppLocalizations {
   /// **'Daily Report'**
   String get podcast_daily_report_title;
 
-  /// Button label for generating the previous-day daily report
+  /// Accessible label and tooltip for opening daily report page
   ///
   /// In en, this message translates to:
-  /// **'Generate previous-day report'**
+  /// **'Open daily report'**
+  String get podcast_daily_report_open;
+
+  /// Short action text for opening daily report
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get podcast_daily_report_open_short;
+
+  /// Subtitle text for the daily report entry in library feed
+  ///
+  /// In en, this message translates to:
+  /// **'Review history and generate reports by date'**
+  String get podcast_daily_report_entry_subtitle;
+
+  /// Button label for generating a daily report for selected date
+  ///
+  /// In en, this message translates to:
+  /// **'Generate report'**
   String get podcast_daily_report_generate_previous_day;
 
-  /// Success message after generating previous-day report
+  /// Success message after generating daily report
   ///
   /// In en, this message translates to:
-  /// **'Previous-day report generated'**
+  /// **'Daily report generated'**
   String get podcast_daily_report_generate_success;
 
-  /// Error message when generating previous-day report fails
+  /// Error message when generating daily report fails
   ///
   /// In en, this message translates to:
-  /// **'Failed to generate previous-day report'**
+  /// **'Failed to generate daily report'**
   String get podcast_daily_report_generate_failed;
 
   /// Empty state text for daily report card

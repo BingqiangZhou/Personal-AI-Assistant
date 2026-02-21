@@ -16,7 +16,9 @@ class PodcastEpisodesPageArgs {
   });
 
   /// Creates args from a subscription object
-  factory PodcastEpisodesPageArgs.fromSubscription(PodcastSubscriptionModel subscription) {
+  factory PodcastEpisodesPageArgs.fromSubscription(
+    PodcastSubscriptionModel subscription,
+  ) {
     return PodcastEpisodesPageArgs(
       subscriptionId: subscription.id,
       podcastTitle: subscription.title,
@@ -103,7 +105,9 @@ class PodcastPlayerPageArgs {
     if (episodeId == null || subscriptionId == null) return null;
 
     final startPositionStr = state.uri.queryParameters['position'];
-    final startPosition = startPositionStr != null ? int.tryParse(startPositionStr) : null;
+    final startPosition = startPositionStr != null
+        ? int.tryParse(startPositionStr)
+        : null;
 
     return PodcastPlayerPageArgs(
       episodeId: episodeId,
@@ -125,7 +129,9 @@ class PodcastNavigation {
     required int subscriptionId,
     String? podcastTitle,
   }) {
-    final query = podcastTitle != null ? {'title': podcastTitle} : <String, dynamic>{};
+    final query = podcastTitle != null
+        ? {'title': podcastTitle}
+        : <String, dynamic>{};
     context.pushNamed(
       'podcastEpisodes',
       pathParameters: {'subscriptionId': subscriptionId.toString()},
@@ -152,7 +158,9 @@ class PodcastNavigation {
     required int subscriptionId,
     String? episodeTitle,
   }) {
-    final query = episodeTitle != null ? {'title': episodeTitle} : <String, dynamic>{};
+    final query = episodeTitle != null
+        ? {'title': episodeTitle}
+        : <String, dynamic>{};
     context.pushNamed(
       'episodeDetail',
       pathParameters: {
@@ -174,9 +182,7 @@ class PodcastNavigation {
   }) {
     context.pushNamed(
       'episodePlayer',
-      pathParameters: {
-        'episodeId': episodeId.toString(),
-      },
+      pathParameters: {'episodeId': episodeId.toString()},
       queryParameters: {
         'subscriptionId': subscriptionId.toString(),
         if (episodeTitle != null) 'title': episodeTitle,
@@ -186,8 +192,28 @@ class PodcastNavigation {
     );
   }
 
+  /// Navigate to daily report page
+  static void goToDailyReport(
+    BuildContext context, {
+    DateTime? date,
+    String? source,
+  }) {
+    context.pushNamed(
+      'dailyReport',
+      queryParameters: {
+        if (date != null) 'date': _formatDateOnly(date),
+        if (source != null && source.isNotEmpty) 'source': source,
+      },
+    );
+  }
+
   /// Pop to podcast list
   static void popToList(BuildContext context) {
     Navigator.of(context).popUntil((route) => route.settings.name == 'podcast');
   }
+}
+
+String _formatDateOnly(DateTime value) {
+  final local = value.isUtc ? value.toLocal() : value;
+  return '${local.year.toString().padLeft(4, '0')}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
 }

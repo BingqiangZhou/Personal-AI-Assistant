@@ -625,19 +625,34 @@
     "description": "播客日报卡片标题"
   },
 
-  "podcast_daily_report_generate_previous_day": "生成前一天日报",
+  "podcast_daily_report_open": "打开日报",
+  "@podcast_daily_report_open": {
+    "description": "用于打开日报页的可访问性标签和提示"
+  },
+
+  "podcast_daily_report_open_short": "进入",
+  "@podcast_daily_report_open_short": {
+    "description": "打开日报的简短操作文案"
+  },
+
+  "podcast_daily_report_entry_subtitle": "查看历史并按日期生成日报",
+  "@podcast_daily_report_entry_subtitle": {
+    "description": "资料库中日报入口的副标题"
+  },
+
+  "podcast_daily_report_generate_previous_day": "生成日报",
   "@podcast_daily_report_generate_previous_day": {
-    "description": "用于生成前一天日报的按钮文案"
+    "description": "用于生成所选日期日报的按钮文案"
   },
 
-  "podcast_daily_report_generate_success": "前一天日报已生成",
+  "podcast_daily_report_generate_success": "日报已生成",
   "@podcast_daily_report_generate_success": {
-    "description": "生成前一天日报成功提示"
+    "description": "生成日报成功提示"
   },
 
-  "podcast_daily_report_generate_failed": "生成前一天日报失败",
+  "podcast_daily_report_generate_failed": "生成日报失败",
   "@podcast_daily_report_generate_failed": {
-    "description": "生成前一天日报失败提示"
+    "description": "生成日报失败提示"
   },
 
   "podcast_daily_report_empty": "暂无可用日报",

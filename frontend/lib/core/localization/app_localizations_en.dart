@@ -381,16 +381,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_daily_report_title => 'Daily Report';
 
   @override
-  String get podcast_daily_report_generate_previous_day =>
-      'Generate previous-day report';
+  String get podcast_daily_report_open => 'Open daily report';
 
   @override
-  String get podcast_daily_report_generate_success =>
-      'Previous-day report generated';
+  String get podcast_daily_report_open_short => 'Open';
+
+  @override
+  String get podcast_daily_report_entry_subtitle =>
+      'Review history and generate reports by date';
+
+  @override
+  String get podcast_daily_report_generate_previous_day => 'Generate report';
+
+  @override
+  String get podcast_daily_report_generate_success => 'Daily report generated';
 
   @override
   String get podcast_daily_report_generate_failed =>
-      'Failed to generate previous-day report';
+      'Failed to generate daily report';
 
   @override
   String get podcast_daily_report_empty => 'No daily report available yet';

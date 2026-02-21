@@ -5,15 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../data/models/podcast_daily_report_model.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../../core/utils/episode_description_helper.dart';
 import '../widgets/podcast_image_widget.dart';
 
-/// Material Design 3自适应Feed页面
+/// Material Design 3鑷€傚簲Feed椤甸潰
 class PodcastFeedPage extends ConsumerStatefulWidget {
   const PodcastFeedPage({super.key});
 
@@ -23,19 +21,12 @@ class PodcastFeedPage extends ConsumerStatefulWidget {
 
 class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   final Set<int> _addingEpisodeIds = <int>{};
-  bool _isGeneratingPreviousDayReport = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(podcastFeedProvider.notifier).loadInitialFeed();
-      final isAuthenticated = ref.read(authProvider).isAuthenticated;
-      if (isAuthenticated) {
-        final selectedDate = ref.read(selectedDailyReportDateProvider);
-        ref.read(dailyReportProvider.notifier).load(date: selectedDate);
-        ref.read(dailyReportDatesProvider.notifier).load();
-      }
     });
   }
 
@@ -46,7 +37,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 页面标题
+          // 椤甸潰鏍囬
           SizedBox(
             height: 56,
             child: Row(
@@ -71,17 +62,15 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           ),
 
           const SizedBox(height: 4),
-          _buildDailyReportCard(context),
-          const SizedBox(height: 8),
 
-          // Feed内容 - 直接使用Expanded填充剩余空间
+          // Feed鍐呭 - 鐩存帴浣跨敤Expanded濉厖鍓╀綑绌洪棿
           Expanded(child: _buildFeedContent(context)),
         ],
       ),
     );
   }
 
-  /// 构建Feed内容
+  /// 鏋勫缓Feed鍐呭
   Future<void> _addToQueue(PodcastEpisodeModel episode) async {
     if (_addingEpisodeIds.contains(episode.id)) {
       return;
@@ -121,426 +110,115 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     }
   }
 
-  Widget _buildDailyReportCard(BuildContext context) {
+  Widget _buildDailyReportEntryTile(
+    BuildContext context, {
+    required bool compact,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final reportAsync = ref.watch(dailyReportProvider);
-    final datesAsync = ref.watch(dailyReportDatesProvider);
-    final selectedDate = ref.watch(selectedDailyReportDateProvider);
-    final report = reportAsync.value;
-    final availableDates =
-        datesAsync.value?.dates ?? const <PodcastDailyReportDateItem>[];
-    final maxReportItemsViewportHeight =
-        (MediaQuery.sizeOf(context).height * 0.38).clamp(140.0, 340.0);
 
-    Widget buildCardSurface(Widget child) {
-      return Material(
-        key: const Key('daily_report_card'),
-        color: theme.colorScheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: BorderSide(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
-          ),
-        ),
-        child: child,
-      );
-    }
-
-    Widget buildHeader({
-      DateTime? reportDate,
-      int totalItems = 0,
-      DateTime? generatedAt,
-      bool showMeta = false,
-    }) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.podcast_daily_report_title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Flexible(
-                child: TextButton.icon(
-                  key: const Key('daily_report_date_selector_button'),
-                  onPressed: () => _showDailyReportDateSelector(
-                    context,
-                    availableDates: availableDates,
-                    fallbackDate: reportDate ?? selectedDate,
-                  ),
-                  icon: const Icon(Icons.event_outlined, size: 18),
-                  label: Text(
-                    reportDate == null
-                        ? l10n.podcast_daily_report_dates
-                        : _formatDate(reportDate),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (showMeta)
-            Text(
-              '${l10n.podcast_daily_report_items(totalItems)} · ${l10n.podcast_daily_report_generated_prefix} ${_formatTime(generatedAt)}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+    return Semantics(
+      button: true,
+      label: l10n.podcast_daily_report_open,
+      child: Tooltip(
+        message: l10n.podcast_daily_report_open,
+        child: Material(
+          key: const Key('library_daily_report_entry_tile'),
+          color: theme.colorScheme.surfaceContainerLow,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
             ),
-        ],
-      );
-    }
-
-    if (reportAsync.isLoading && report == null) {
-      return buildCardSurface(
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildHeader(reportDate: selectedDate),
-              const SizedBox(height: 8),
-              Row(
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () =>
+                PodcastNavigation.goToDailyReport(context, source: 'library'),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: compact ? 12 : 16,
+                vertical: compact ? 10 : 12,
+              ),
+              child: Row(
                 children: [
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: theme.colorScheme.primary,
+                  Icon(
+                    Icons.summarize_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.podcast_daily_report_title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          l10n.podcast_daily_report_entry_subtitle,
+                          maxLines: compact ? 1 : 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      l10n.podcast_daily_report_loading,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (reportAsync.hasError && report == null) {
-      return buildCardSurface(
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildHeader(reportDate: selectedDate),
-              const SizedBox(height: 8),
-              Text(
-                l10n.podcast_failed_to_load_feed,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.error,
-                ),
-              ),
-              const SizedBox(height: 8),
-              FilledButton.tonal(
-                onPressed: () {
-                  ref
-                      .read(dailyReportProvider.notifier)
-                      .load(date: selectedDate, forceRefresh: true);
-                  ref
-                      .read(dailyReportDatesProvider.notifier)
-                      .load(forceRefresh: true);
-                },
-                child: Text(l10n.podcast_retry),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    final currentReport = report;
-    if (currentReport == null || !currentReport.available) {
-      final shouldShowGenerateButton = _isPreviousDayLocal(selectedDate);
-      return buildCardSurface(
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildHeader(reportDate: selectedDate),
-              const SizedBox(height: 8),
-              Text(
-                l10n.podcast_daily_report_empty,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              if (shouldShowGenerateButton) ...[
-                const SizedBox(height: 8),
-                FilledButton.tonal(
-                  key: const Key('daily_report_generate_previous_day_button'),
-                  onPressed: _isGeneratingPreviousDayReport
-                      ? null
-                      : () => _generatePreviousDayReport(selectedDate),
-                  child: Text(
-                    _isGeneratingPreviousDayReport
-                        ? l10n.podcast_daily_report_loading
-                        : l10n.podcast_daily_report_generate_previous_day,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      );
-    }
-
-    return buildCardSurface(
-      Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            buildHeader(
-              reportDate: currentReport.reportDate,
-              totalItems: currentReport.totalItems,
-              generatedAt: currentReport.generatedAt,
-              showMeta: true,
             ),
-            const SizedBox(height: 10),
-            if (currentReport.items.isEmpty)
-              Text(
-                l10n.podcast_daily_report_empty,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              )
-            else
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: maxReportItemsViewportHeight,
-                ),
-                child: Scrollbar(
-                  thumbVisibility: currentReport.items.length > 4,
-                  child: ListView.separated(
-                    key: const Key('daily_report_items_scroll'),
-                    shrinkWrap: true,
-                    primary: false,
-                    itemCount: currentReport.items.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
-                    itemBuilder: (itemContext, index) {
-                      final item = currentReport.items[index];
-                      return InkWell(
-                        key: Key('daily_report_item_${item.episodeId}'),
-                        onTap: () {
-                          context.push(
-                            '/podcast/episode/detail/${item.episodeId}',
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(10),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      item.episodeTitle,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.bodyLarge
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                  ),
-                                  if (item.isCarryover)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: theme
-                                            .colorScheme
-                                            .secondaryContainer,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: Text(
-                                        l10n.podcast_daily_report_carryover,
-                                        style: theme.textTheme.labelSmall
-                                            ?.copyWith(
-                                              color: theme
-                                                  .colorScheme
-                                                  .onSecondaryContainer,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                item.oneLineSummary,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodyMedium,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                item.subscriptionTitle ??
-                                    l10n.podcast_default_podcast,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Future<void> _showDailyReportDateSelector(
+  Widget _buildEmptyFeedWithEntry(
     BuildContext context, {
-    required List<PodcastDailyReportDateItem> availableDates,
-    required DateTime? fallbackDate,
-  }) async {
-    final now = _toDateOnly(DateTime.now());
-    final previousDay = now.subtract(const Duration(days: 1));
-    final selectedDate = ref.read(selectedDailyReportDateProvider);
-    DateTime initialDate = _toDateOnly(
-      selectedDate ?? fallbackDate ?? previousDay,
+    required bool mobile,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    return RefreshIndicator(
+      onRefresh: () async {
+        await ref.read(podcastFeedProvider.notifier).refreshFeed();
+      },
+      child: ListView(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        children: [
+          _buildDailyReportEntryTile(context, compact: mobile),
+          const SizedBox(height: 28),
+          Center(
+            child: Column(
+              children: [
+                Icon(
+                  Icons.rss_feed,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.podcast_no_episodes_found,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
-    if (initialDate.isAfter(now)) {
-      initialDate = now;
-    }
-
-    final candidateDates = <DateTime>[
-      DateTime(now.year - 1, now.month, now.day),
-      previousDay,
-      initialDate,
-      ...availableDates.map((item) => _toDateOnly(item.reportDate)),
-    ];
-    final firstDate = candidateDates.reduce(
-      (current, next) => next.isBefore(current) ? next : current,
-    );
-
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: initialDate,
-      firstDate: firstDate,
-      lastDate: now,
-    );
-    if (pickedDate == null) {
-      return;
-    }
-
-    final normalized = _toDateOnly(pickedDate);
-    ref.read(selectedDailyReportDateProvider.notifier).setDate(normalized);
-    await ref
-        .read(dailyReportProvider.notifier)
-        .load(date: normalized, forceRefresh: true);
-  }
-
-  Future<void> _generatePreviousDayReport(DateTime? selectedDate) async {
-    if (selectedDate == null || !_isPreviousDayLocal(selectedDate)) {
-      return;
-    }
-    setState(() {
-      _isGeneratingPreviousDayReport = true;
-    });
-
-    try {
-      final generated = await ref
-          .read(dailyReportProvider.notifier)
-          .generate(date: selectedDate);
-      if (!mounted) {
-        return;
-      }
-
-      if (generated != null && generated.available) {
-        final l10n = AppLocalizations.of(context)!;
-        showTopFloatingNotice(
-          context,
-          message: l10n.podcast_daily_report_generate_success,
-          extraTopOffset: 64,
-        );
-      } else {
-        final l10n = AppLocalizations.of(context)!;
-        showTopFloatingNotice(
-          context,
-          message: l10n.podcast_daily_report_generate_failed,
-          isError: true,
-          extraTopOffset: 64,
-        );
-      }
-    } catch (error) {
-      if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        final errorMessage = error.toString().trim();
-        showTopFloatingNotice(
-          context,
-          message: errorMessage.isEmpty
-              ? l10n.podcast_daily_report_generate_failed
-              : '${l10n.podcast_daily_report_generate_failed}: $errorMessage',
-          isError: true,
-          extraTopOffset: 64,
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGeneratingPreviousDayReport = false;
-        });
-      }
-    }
-  }
-
-  bool _isPreviousDayLocal(DateTime? value) {
-    if (value == null) {
-      return false;
-    }
-    final today = _toDateOnly(DateTime.now());
-    final previousDay = today.subtract(const Duration(days: 1));
-    return _isSameDate(_toDateOnly(value), previousDay);
-  }
-
-  DateTime _toDateOnly(DateTime value) {
-    final local = value.isUtc ? value.toLocal() : value;
-    return DateTime(local.year, local.month, local.day);
-  }
-
-  bool _isSameDate(DateTime? left, DateTime? right) {
-    if (left == null && right == null) {
-      return true;
-    }
-    if (left == null || right == null) {
-      return false;
-    }
-    return left.year == right.year &&
-        left.month == right.month &&
-        left.day == right.day;
   }
 
   Widget _buildFeedContent(BuildContext context) {
@@ -579,33 +257,18 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       );
     }
 
-    if (feedState.episodes.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.rss_feed,
-              size: 64,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.podcast_no_episodes_found,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-          ],
-        ),
-      );
-    }
-
-    // 使用LayoutBuilder来动态调整布局
+    // 浣跨敤LayoutBuilder鏉ュ姩鎬佽皟鏁村竷灞€
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
+        final isMobile = screenWidth < 600;
 
-        // 移动端：使用ListView
-        if (screenWidth < 600) {
+        if (feedState.episodes.isEmpty) {
+          return _buildEmptyFeedWithEntry(context, mobile: isMobile);
+        }
+
+        // 绉诲姩绔細浣跨敤ListView
+        if (isMobile) {
           return RefreshIndicator(
             onRefresh: () async {
               await ref.read(podcastFeedProvider.notifier).refreshFeed();
@@ -613,9 +276,14 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 4),
               itemCount:
-                  feedState.episodes.length + (feedState.hasMore ? 1 : 0),
+                  feedState.episodes.length + (feedState.hasMore ? 1 : 0) + 1,
               itemBuilder: (context, index) {
-                if (index >= feedState.episodes.length) {
+                if (index == 0) {
+                  return _buildDailyReportEntryTile(context, compact: true);
+                }
+
+                final episodeIndex = index - 1;
+                if (episodeIndex >= feedState.episodes.length) {
                   // Loading more indicator
                   Future.microtask(
                     () => ref.read(podcastFeedProvider.notifier).loadMoreFeed(),
@@ -629,13 +297,16 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                     ),
                   );
                 }
-                return _buildMobileCard(context, feedState.episodes[index]);
+                return _buildMobileCard(
+                  context,
+                  feedState.episodes[episodeIndex],
+                );
               },
             ),
           );
         }
 
-        // 桌面端：使用GridView，优化卡片高度
+        // 妗岄潰绔細浣跨敤GridView锛屼紭鍖栧崱鐗囬珮搴?
         final crossAxisCount = screenWidth < 900
             ? 2
             : (screenWidth < 1200 ? 3 : 4);
@@ -648,7 +319,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
             screenWidth - horizontalPadding - (crossAxisCount - 1) * spacing;
         final cardWidth = availableWidth / crossAxisCount;
 
-        // 优化宽高比：卡片内容高度约180-200，确保不溢出
+        // 浼樺寲瀹介珮姣旓細鍗＄墖鍐呭楂樺害绾?80-200锛岀‘淇濅笉婧㈠嚭
         const desktopCardHeight = 172.0;
         final childAspectRatio = cardWidth / desktopCardHeight;
 
@@ -664,16 +335,23 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
               mainAxisSpacing: spacing,
               childAspectRatio: childAspectRatio,
             ),
-            itemCount: feedState
-                .episodes
-                .length, // Grid infinite scroll is harder, skipping for MVP-ish
+            itemCount: feedState.episodes.length + 1,
             itemBuilder: (context, index) {
-              if (index == feedState.episodes.length - 1 && feedState.hasMore) {
+              if (index == 0) {
+                return _buildDailyReportEntryTile(context, compact: false);
+              }
+
+              final episodeIndex = index - 1;
+              if (episodeIndex == feedState.episodes.length - 1 &&
+                  feedState.hasMore) {
                 Future.microtask(
                   () => ref.read(podcastFeedProvider.notifier).loadMoreFeed(),
                 );
               }
-              return _buildDesktopCard(context, feedState.episodes[index]);
+              return _buildDesktopCard(
+                context,
+                feedState.episodes[episodeIndex],
+              );
             },
           ),
         );
@@ -681,7 +359,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     );
   }
 
-  /// 构建移动端卡片
+  /// 鏋勫缓绉诲姩绔崱鐗?
   Widget _buildMobileCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
@@ -923,7 +601,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     );
   }
 
-  /// 构建桌面端卡片（使用小图标布局）
+  /// 鏋勫缓妗岄潰绔崱鐗囷紙浣跨敤灏忓浘鏍囧竷灞€锛?
   Widget _buildDesktopCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
@@ -1164,12 +842,4 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 String _formatDate(DateTime date) {
   final localDate = date.isUtc ? date.toLocal() : date;
   return '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
-}
-
-String _formatTime(DateTime? dateTime) {
-  if (dateTime == null) {
-    return '--:--';
-  }
-  final local = dateTime.isUtc ? dateTime.toLocal() : dateTime;
-  return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
 }

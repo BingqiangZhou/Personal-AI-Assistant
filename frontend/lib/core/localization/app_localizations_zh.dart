@@ -378,13 +378,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_daily_report_title => '日报';
 
   @override
-  String get podcast_daily_report_generate_previous_day => '生成前一天日报';
+  String get podcast_daily_report_open => '打开日报';
 
   @override
-  String get podcast_daily_report_generate_success => '前一天日报已生成';
+  String get podcast_daily_report_open_short => '进入';
 
   @override
-  String get podcast_daily_report_generate_failed => '生成前一天日报失败';
+  String get podcast_daily_report_entry_subtitle => '查看历史并按日期生成日报';
+
+  @override
+  String get podcast_daily_report_generate_previous_day => '生成日报';
+
+  @override
+  String get podcast_daily_report_generate_success => '日报已生成';
+
+  @override
+  String get podcast_daily_report_generate_failed => '生成日报失败';
 
   @override
   String get podcast_daily_report_empty => '暂无可用日报';

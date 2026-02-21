@@ -15,6 +15,7 @@ import 'package:personal_ai_assistant/core/services/app_cache_service.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
 import 'package:personal_ai_assistant/features/auth/domain/models/user.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_daily_report_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/profile_stats_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/apple_podcast_rss_service.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/itunes_search_service.dart';
@@ -80,6 +81,25 @@ class _PendingProfileStatsNotifier extends ProfileStatsNotifier {
   @override
   Future<ProfileStatsModel?> load({bool forceRefresh = false}) =>
       _pending.future;
+}
+
+class _FixedDailyReportDatesNotifier extends DailyReportDatesNotifier {
+  _FixedDailyReportDatesNotifier(this._value);
+
+  final PodcastDailyReportDatesResponse? _value;
+
+  @override
+  FutureOr<PodcastDailyReportDatesResponse?> build() => _value;
+
+  @override
+  Future<PodcastDailyReportDatesResponse?> load({
+    int page = 1,
+    int size = 30,
+    bool forceRefresh = false,
+  }) async {
+    state = AsyncValue.data(_value);
+    return _value;
+  }
 }
 
 class _ThrowingPodcastApiService extends Mock implements PodcastApiService {}
@@ -176,6 +196,22 @@ class _TrackingApplePodcastRssService extends ApplePodcastRssService {
   }
 }
 
+PodcastDailyReportDatesResponse _buildDailyReportDatesResponse(
+  List<DateTime> dates,
+) {
+  return PodcastDailyReportDatesResponse(
+    dates: dates
+        .map(
+          (item) => PodcastDailyReportDateItem(reportDate: item, totalItems: 1),
+        )
+        .toList(),
+    total: dates.length,
+    page: 1,
+    size: 30,
+    pages: dates.isEmpty ? 0 : 1,
+  );
+}
+
 const MethodChannel _packageInfoChannel = MethodChannel(
   'dev.fluttercommunity.plus/package_info',
 );
@@ -242,6 +278,11 @@ void main() {
             podcastSubscriptionProvider.overrideWith(
               _TestPodcastSubscriptionNotifier.new,
             ),
+            dailyReportDatesProvider.overrideWith(
+              () => _FixedDailyReportDatesNotifier(
+                _buildDailyReportDatesResponse(const []),
+              ),
+            ),
           ],
           child: MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -264,6 +305,148 @@ void main() {
     },
   );
 
+  testWidgets('daily report activity card navigates to daily report route', (
+    WidgetTester tester,
+  ) async {
+    final router = GoRouter(
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const Scaffold(body: ProfilePage()),
+        ),
+        GoRoute(
+          path: '/reports/daily',
+          name: 'dailyReport',
+          builder: (context, state) =>
+              const Scaffold(body: Text('daily-report')),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse([DateTime(2026, 2, 20)]),
+            ),
+          ),
+        ],
+        child: MaterialApp.router(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final dailyReportCard = find.byKey(const Key('profile_daily_report_card'));
+    expect(dailyReportCard, findsOneWidget);
+
+    await tester.tap(dailyReportCard);
+    await tester.pumpAndSettle();
+
+    expect(find.text('daily-report'), findsOneWidget);
+  });
+
+  testWidgets(
+    'daily report card shows latest report date and icon color matches other cards',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(_TestAuthNotifier.new),
+            profileStatsProvider.overrideWith(
+              () => _FixedProfileStatsNotifier(_defaultProfileStats),
+            ),
+            podcastSubscriptionProvider.overrideWith(
+              _TestPodcastSubscriptionNotifier.new,
+            ),
+            dailyReportDatesProvider.overrideWith(
+              () => _FixedDailyReportDatesNotifier(
+                _buildDailyReportDatesResponse([DateTime(2026, 2, 20)]),
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: ProfilePage()),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final dailyReportCard = find.byKey(
+        const Key('profile_daily_report_card'),
+      );
+      expect(dailyReportCard, findsOneWidget);
+      expect(
+        find.descendant(of: dailyReportCard, matching: find.text('2026-02-20')),
+        findsOneWidget,
+      );
+
+      final dailyReportIcon = tester.widget<Icon>(
+        find.descendant(
+          of: dailyReportCard,
+          matching: find.byIcon(Icons.summarize_outlined),
+        ),
+      );
+      final subscriptionsIcon = tester.widget<Icon>(
+        find.byIcon(Icons.subscriptions_outlined).first,
+      );
+      expect(dailyReportIcon.color, equals(subscriptionsIcon.color));
+    },
+  );
+
+  testWidgets('daily report card shows -- when no report date exists', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: ProfilePage()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final dailyReportCard = find.byKey(const Key('profile_daily_report_card'));
+    expect(dailyReportCard, findsOneWidget);
+    expect(
+      find.descendant(of: dailyReportCard, matching: find.text('--')),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('shows loading placeholders when profile stats is loading', (
     WidgetTester tester,
   ) async {
@@ -278,6 +461,11 @@ void main() {
           ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
+          ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
           ),
         ],
         child: MaterialApp(
@@ -307,6 +495,11 @@ void main() {
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -334,6 +527,11 @@ void main() {
           ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
+          ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
           ),
         ],
         child: MaterialApp(
@@ -381,6 +579,11 @@ void main() {
           ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
+          ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
           ),
           dioClientProvider.overrideWithValue(dioClient),
           appCacheServiceProvider.overrideWithValue(cacheService),
@@ -462,6 +665,11 @@ void main() {
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -494,6 +702,11 @@ void main() {
           ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
+          ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
           ),
         ],
         child: MaterialApp(
@@ -541,6 +754,11 @@ void main() {
           ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
+          ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
           ),
         ],
         child: MaterialApp(
@@ -642,6 +860,11 @@ void main() {
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -687,6 +910,11 @@ void main() {
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -730,6 +958,11 @@ void main() {
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
           ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
+          ),
         ],
         child: MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -772,6 +1005,11 @@ void main() {
           ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
+          ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
           ),
         ],
         child: MaterialApp(

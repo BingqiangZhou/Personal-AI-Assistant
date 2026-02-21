@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_daily_report_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/repositories/podcast_repository.dart';
 import 'package:personal_ai_assistant/features/podcast/data/services/podcast_api_service.dart';
@@ -110,6 +114,32 @@ void main() {
 
       expect(fakeRepository.getPodcastFeedCalls, 1);
     });
+
+    test('refreshFeed does not trigger daily report providers', () async {
+      final fakeRepository = _FakePodcastRepository(
+        responses: <PodcastFeedResponse>[
+          _responseWithEpisodeIds(<int>[1]),
+        ],
+      );
+      final dailyReportNotifier = _TrackingDailyReportNotifier();
+      final dailyReportDatesNotifier = _TrackingDailyReportDatesNotifier();
+      final container = ProviderContainer(
+        overrides: [
+          authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+          podcastRepositoryProvider.overrideWithValue(fakeRepository),
+          dailyReportProvider.overrideWith(() => dailyReportNotifier),
+          dailyReportDatesProvider.overrideWith(() => dailyReportDatesNotifier),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(podcastFeedProvider.notifier);
+      await notifier.refreshFeed();
+
+      expect(fakeRepository.getPodcastFeedCalls, 1);
+      expect(dailyReportNotifier.loadCalls, 0);
+      expect(dailyReportDatesNotifier.loadCalls, 0);
+    });
   });
 }
 
@@ -167,5 +197,43 @@ class _FakePodcastRepository extends PodcastRepository {
         ? callIndex
         : _responses.length - 1;
     return _responses[responseIndex];
+  }
+}
+
+class _AuthenticatedAuthNotifier extends AuthNotifier {
+  @override
+  AuthState build() => const AuthState(isAuthenticated: true);
+}
+
+class _TrackingDailyReportNotifier extends DailyReportNotifier {
+  int loadCalls = 0;
+
+  @override
+  FutureOr<PodcastDailyReportResponse?> build() => null;
+
+  @override
+  Future<PodcastDailyReportResponse?> load({
+    DateTime? date,
+    bool forceRefresh = false,
+  }) async {
+    loadCalls += 1;
+    return null;
+  }
+}
+
+class _TrackingDailyReportDatesNotifier extends DailyReportDatesNotifier {
+  int loadCalls = 0;
+
+  @override
+  FutureOr<PodcastDailyReportDatesResponse?> build() => null;
+
+  @override
+  Future<PodcastDailyReportDatesResponse?> load({
+    int page = 1,
+    int size = 30,
+    bool forceRefresh = false,
+  }) async {
+    loadCalls += 1;
+    return null;
   }
 }

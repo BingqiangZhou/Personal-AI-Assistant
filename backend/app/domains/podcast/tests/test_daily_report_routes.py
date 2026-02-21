@@ -109,6 +109,7 @@ def test_generate_daily_report_without_date(
     data = response.json()
     assert data["available"] is True
     assert data["report_date"] == "2026-02-20"
+    assert data["items"][0]["is_carryover"] is False
     mock_service.generate_daily_report.assert_awaited_once_with(target_date=None)
 
 
@@ -144,6 +145,7 @@ def test_generate_daily_report_by_date_success(
     data = response.json()
     assert data["available"] is True
     assert data["report_date"] == "2026-02-20"
+    assert data["items"][0]["is_carryover"] is False
     mock_service.generate_daily_report.assert_awaited_once_with(
         target_date=date(2026, 2, 20)
     )

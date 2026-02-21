@@ -78,7 +78,7 @@ void main() {
         expect(metaActionRowFinder, findsOneWidget);
         expect(coverFinder, findsOneWidget);
         expect(titleFinder, findsOneWidget);
-        expect(find.byIcon(Icons.play_arrow), findsOneWidget);
+        expect(find.byIcon(Icons.play_circle_outline), findsOneWidget);
 
         final descriptionText = tester.widget<Text>(descriptionFinder);
         expect(descriptionText.maxLines, 2);

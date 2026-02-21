@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
-import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
@@ -14,6 +13,7 @@ import 'package:personal_ai_assistant/features/settings/presentation/widgets/upd
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../shared/widgets/server_config_dialog.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../podcast/presentation/navigation/podcast_navigation.dart';
 import '../../../podcast/presentation/providers/podcast_providers.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
@@ -46,6 +46,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           .loadSubscriptions()
           .catchError((_) {});
       ref.read(profileStatsProvider.notifier).load(forceRefresh: false);
+      unawaited(
+        ref
+            .read(dailyReportDatesProvider.notifier)
+            .load(forceRefresh: false)
+            .catchError((_) {}),
+      );
     });
   }
 
@@ -158,8 +164,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                             Icon(
                               Icons.person_outline,
                               size: 20,
-                              color:
-                                  Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -185,8 +192,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                             Icon(
                               Icons.email_outlined,
                               size: 20,
-                              color:
-                                  Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -240,8 +248,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ],
                     child: CircleAvatar(
                       radius: 20,
-                      backgroundColor:
-                          Theme.of(context).colorScheme.primary,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       child: Text(
                         (user?.displayName ?? l10n.profile_guest_user)
                             .characters
@@ -250,10 +257,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color:
-                              Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.black
-                                  : Colors.white,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.black
+                              : Colors.white,
                         ),
                       ),
                     ),
@@ -285,6 +291,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final isMobile = _isMobile(context);
     final statsAsync = ref.watch(profileStatsProvider);
     final subscriptionState = ref.watch(podcastSubscriptionProvider);
+    final dailyReportDatesAsync = ref.watch(dailyReportDatesProvider);
 
     final episodeCount = statsAsync.when(
       data: (stats) => stats?.totalEpisodes.toString() ?? '0',
@@ -306,6 +313,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         : (subscriptionState.error != null
               ? '0'
               : subscriptionState.total.toString());
+    final latestDailyReportDateText = dailyReportDatesAsync.when(
+      data: (payload) {
+        final dates = payload?.dates;
+        if (dates == null || dates.isEmpty) {
+          return '--';
+        }
+        return _formatDateOnly(dates.first.reportDate);
+      },
+      loading: () => '--',
+      error: (error, stackTrace) => '--',
+    );
 
     // On narrow screens, stack cards vertically to prevent squishing
     if (isMobile) {
@@ -346,6 +364,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             onTap: () => context.push('/profile/history'),
             showChevron: true,
             chevronKey: const Key('profile_viewed_card_chevron'),
+          ),
+          const SizedBox(height: 12),
+          _buildActivityCard(
+            context,
+            Icons.summarize_outlined,
+            l10n.podcast_daily_report_title,
+            latestDailyReportDateText,
+            Theme.of(context).colorScheme.primary,
+            onTap: () =>
+                PodcastNavigation.goToDailyReport(context, source: 'profile'),
+            showChevron: true,
+            cardKey: const Key('profile_daily_report_card'),
           ),
         ],
       );
@@ -391,6 +421,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             showChevron: true,
             chevronKey: const Key('profile_viewed_card_chevron'),
           ),
+          _buildActivityCard(
+            context,
+            Icons.summarize_outlined,
+            l10n.podcast_daily_report_title,
+            latestDailyReportDateText,
+            Theme.of(context).colorScheme.primary,
+            onTap: () =>
+                PodcastNavigation.goToDailyReport(context, source: 'profile'),
+            showChevron: true,
+            cardKey: const Key('profile_daily_report_card'),
+          ),
         ];
 
         return Wrap(
@@ -413,9 +454,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     VoidCallback? onTap,
     bool showChevron = false,
     Key? chevronKey,
+    Key? cardKey,
   }) {
     final effectiveIconColor = _ensureIconContrast(context, color);
     return Card(
+      key: cardKey,
       margin: _profileCardMargin(context),
       shape: _profileCardShape(context),
       child: InkWell(
@@ -469,6 +512,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       return scheme.onSurfaceVariant;
     }
     return proposed;
+  }
+
+  String _formatDateOnly(DateTime value) {
+    final local = value.isUtc ? value.toLocal() : value;
+    return '${local.year.toString().padLeft(4, '0')}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
   }
 
   /// 构建设置内容
@@ -984,7 +1032,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       builder: (dialogContext) => LayoutBuilder(
         builder: (dialogContext, constraints) {
           return ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: _dialogMaxWidth(dialogContext)),
+            constraints: BoxConstraints(
+              maxWidth: _dialogMaxWidth(dialogContext),
+            ),
             child: Consumer(
               builder: (dialogContext, ref, _) {
                 final themeNotifier = ref.watch(themeModeProvider.notifier);
@@ -1032,7 +1082,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           if (!dialogContext.mounted) {
                             return;
                           }
-                          final noticeMessage = l10n.theme_mode_changed(modeName);
+                          final noticeMessage = l10n.theme_mode_changed(
+                            modeName,
+                          );
                           Navigator.of(dialogContext).pop();
                           WidgetsBinding.instance.addPostFrameCallback((_) {
                             Future<void>.delayed(kThemeAnimationDuration, () {
@@ -1050,9 +1102,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       const SizedBox(height: 16),
                       Text(
                         l10n.theme_mode_subtitle,
-                        style: Theme.of(dialogContext).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(dialogContext).colorScheme.onSurfaceVariant,
-                        ),
+                        style: Theme.of(dialogContext).textTheme.bodySmall
+                            ?.copyWith(
+                              color: Theme.of(
+                                dialogContext,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                       ),
                     ],
                   ),

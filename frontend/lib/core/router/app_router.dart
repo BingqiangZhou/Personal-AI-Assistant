@@ -14,6 +14,7 @@ import '../../features/podcast/presentation/pages/podcast_list_page.dart';
 import '../../features/podcast/presentation/pages/podcast_player_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episodes_page.dart';
 import '../../features/podcast/presentation/pages/podcast_episode_detail_page.dart';
+import '../../features/podcast/presentation/pages/podcast_daily_report_page.dart';
 import '../../features/podcast/presentation/navigation/podcast_navigation.dart';
 import '../../features/profile/presentation/pages/profile_history_page.dart';
 import '../../features/profile/presentation/pages/profile_cache_management_page.dart';
@@ -76,6 +77,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/home',
         name: 'home',
         builder: (context, state) => const HomePage(),
+      ),
+
+      // Daily report route (no bottom nav)
+      GoRoute(
+        path: '/reports/daily',
+        name: 'dailyReport',
+        builder: (context, state) {
+          final dateParam = state.uri.queryParameters['date'];
+          final parsedDate = _parseDateOnlyQuery(dateParam);
+          return PodcastDailyReportPage(
+            initialDate: parsedDate,
+            source: state.uri.queryParameters['source'],
+          );
+        },
       ),
 
       // Podcast routes (no bottom nav)
@@ -279,4 +294,16 @@ class ErrorPage extends StatelessWidget {
       ),
     );
   }
+}
+
+DateTime? _parseDateOnlyQuery(String? value) {
+  if (value == null || value.isEmpty) {
+    return null;
+  }
+  final parsed = DateTime.tryParse(value);
+  if (parsed == null) {
+    return null;
+  }
+  final local = parsed.isUtc ? parsed.toLocal() : parsed;
+  return DateTime(local.year, local.month, local.day);
 }

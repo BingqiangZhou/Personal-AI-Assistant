@@ -619,19 +619,34 @@
     "description": "Podcast daily report card title"
   },
 
-  "podcast_daily_report_generate_previous_day": "Generate previous-day report",
+  "podcast_daily_report_open": "Open daily report",
+  "@podcast_daily_report_open": {
+    "description": "Accessible label and tooltip for opening daily report page"
+  },
+
+  "podcast_daily_report_open_short": "Open",
+  "@podcast_daily_report_open_short": {
+    "description": "Short action text for opening daily report"
+  },
+
+  "podcast_daily_report_entry_subtitle": "Review history and generate reports by date",
+  "@podcast_daily_report_entry_subtitle": {
+    "description": "Subtitle text for the daily report entry in library feed"
+  },
+
+  "podcast_daily_report_generate_previous_day": "Generate report",
   "@podcast_daily_report_generate_previous_day": {
-    "description": "Button label for generating the previous-day daily report"
+    "description": "Button label for generating a daily report for selected date"
   },
 
-  "podcast_daily_report_generate_success": "Previous-day report generated",
+  "podcast_daily_report_generate_success": "Daily report generated",
   "@podcast_daily_report_generate_success": {
-    "description": "Success message after generating previous-day report"
+    "description": "Success message after generating daily report"
   },
 
-  "podcast_daily_report_generate_failed": "Failed to generate previous-day report",
+  "podcast_daily_report_generate_failed": "Failed to generate daily report",
   "@podcast_daily_report_generate_failed": {
-    "description": "Error message when generating previous-day report fails"
+    "description": "Error message when generating daily report fails"
   },
 
   "podcast_daily_report_empty": "No daily report available yet",

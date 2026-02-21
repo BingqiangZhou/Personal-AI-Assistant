@@ -1901,7 +1901,6 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
   }
 
   Future<void> refreshFeed() async {
-    final selectedDate = ref.read(selectedDailyReportDateProvider);
     final isAuthenticated = ref.read(authProvider).isAuthenticated;
     if (!isAuthenticated) {
       await loadInitialFeed(
@@ -1911,16 +1910,10 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
       return;
     }
 
-    await Future.wait<void>([
-      loadInitialFeed(
-        forceRefresh: true,
-        background: state.episodes.isNotEmpty,
-      ),
-      ref
-          .read(dailyReportProvider.notifier)
-          .load(date: selectedDate, forceRefresh: true),
-      ref.read(dailyReportDatesProvider.notifier).load(forceRefresh: true),
-    ]);
+    await loadInitialFeed(
+      forceRefresh: true,
+      background: state.episodes.isNotEmpty,
+    );
   }
 
   void clearError() {

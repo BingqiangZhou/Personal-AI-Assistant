@@ -6,7 +6,7 @@ import logging
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -34,19 +34,22 @@ class DailyReportService:
         self.db = db
         self.user_id = user_id
 
-    async def generate_daily_report(self, target_date: date | None = None) -> dict:
+    async def generate_daily_report(
+        self,
+        target_date: date | None = None,
+        *,
+        rebuild: bool = False,
+    ) -> dict:
         """Generate (or update) report snapshot for a report date."""
         report_date = self._resolve_report_date(target_date)
         window_start_utc, window_end_utc = self._compute_window_utc(report_date)
         now_utc = datetime.now(timezone.utc)
 
         report = await self._get_or_create_report(report_date, now_utc)
+        if rebuild:
+            await self._clear_report_items(report.id)
 
         window_summarized = await self._list_window_summarized_episodes(
-            window_start_utc,
-            window_end_utc,
-        )
-        carryover_summarized = await self._list_carryover_summarized_episodes(
             window_start_utc,
             window_end_utc,
         )
@@ -64,12 +67,6 @@ class DailyReportService:
                 report,
                 episode,
                 is_carryover=False,
-            )
-        for episode in carryover_summarized:
-            added_count += await self._append_item_if_needed(
-                report,
-                episode,
-                is_carryover=True,
             )
 
         report.generated_at = now_utc
@@ -246,13 +243,13 @@ class DailyReportService:
             self._base_user_episode_stmt()
             .where(
                 and_(
-                    PodcastEpisode.created_at >= window_start_utc,
-                    PodcastEpisode.created_at < window_end_utc,
+                    PodcastEpisode.published_at >= window_start_utc,
+                    PodcastEpisode.published_at < window_end_utc,
                     self._has_summary_expr(),
                     ~reported_exists,
                 )
             )
-            .order_by(PodcastEpisode.created_at.asc())
+            .order_by(PodcastEpisode.published_at.asc())
         )
         return list((await self.db.execute(stmt)).scalars().all())
 
@@ -265,44 +262,15 @@ class DailyReportService:
             self._base_user_episode_stmt()
             .where(
                 and_(
-                    PodcastEpisode.created_at >= window_start_utc,
-                    PodcastEpisode.created_at < window_end_utc,
+                    PodcastEpisode.published_at >= window_start_utc,
+                    PodcastEpisode.published_at < window_end_utc,
                     or_(
                         PodcastEpisode.ai_summary.is_(None),
                         self._missing_summary_expr(),
                     ),
                 )
             )
-            .order_by(PodcastEpisode.created_at.asc())
-        )
-        return list((await self.db.execute(stmt)).scalars().all())
-
-    async def _list_carryover_summarized_episodes(
-        self,
-        window_start_utc: datetime,
-        window_end_utc: datetime,
-    ) -> list[PodcastEpisode]:
-        reported_exists = (
-            select(PodcastDailyReportItem.id)
-            .where(
-                and_(
-                    PodcastDailyReportItem.user_id == self.user_id,
-                    PodcastDailyReportItem.episode_id == PodcastEpisode.id,
-                )
-            )
-            .exists()
-        )
-        stmt = (
-            self._base_user_episode_stmt()
-            .where(
-                and_(
-                    PodcastEpisode.created_at < window_start_utc,
-                    self._has_summary_expr(),
-                    ~reported_exists,
-                )
-            )
-            .order_by(PodcastEpisode.created_at.asc())
-            .limit(200)
+            .order_by(PodcastEpisode.published_at.asc())
         )
         return list((await self.db.execute(stmt)).scalars().all())
 
@@ -343,6 +311,13 @@ class DailyReportService:
         self.db.add(item)
         await self.db.flush()
         return 1
+
+    async def _clear_report_items(self, report_id: int) -> None:
+        stmt = delete(PodcastDailyReportItem).where(
+            PodcastDailyReportItem.report_id == report_id
+        )
+        await self.db.execute(stmt)
+        await self.db.flush()
 
     async def _count_report_items(self, report_id: int) -> int:
         stmt = select(func.count(PodcastDailyReportItem.id)).where(
