@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.11.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.11.1...v0.11.2) - 2026-02-21 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.11.2))
+
+### 🐛 Bug Fixes
+
+- *(ci)* Replace grep -P with sed for portable build number extraction ([4936d1c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4936d1c7e9f1ad5773f8537335db3c945ef1255a))
+
+
+
 ## [0.11.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.11.0...v0.11.1) - 2026-02-21 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.11.1))
 
 ### 🎨 Styling
