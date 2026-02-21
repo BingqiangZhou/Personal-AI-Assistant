@@ -35,12 +35,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract version from tag
+      - name: Extract version from tag and pubspec.yaml
         id: version
         run: |
           TAG=${{ github.ref_name }}
           VERSION=${TAG#v}
-          BUILD_NUMBER=$(echo $VERSION | grep -oE '[0-9]+$' || echo "1")
+
+          # Extract build number from pubspec.yaml (format: version: x.y.z+build_number)
+          BUILD_NUMBER=$(grep -oP '^version: \K[0-9]+\+[0-9]+' frontend/pubspec.yaml | grep -oP '[0-9]+$' || echo "1")
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "build_number=$BUILD_NUMBER" >> $GITHUB_OUTPUT
