@@ -432,12 +432,12 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                       key: const Key('register_button'),
                       onPressed: isLoading ? null : _register,
                       child: isLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onPrimary,
                               ),
                             )
                           : Text(l10n.auth_create_account),

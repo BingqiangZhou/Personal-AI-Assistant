@@ -343,12 +343,12 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                       key: const Key('reset_password_button'),
                       onPressed: isLoading ? null : _submitResetPassword,
                       child: isLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onPrimary,
                               ),
                             )
                           : Text(l10n.auth_reset_password),

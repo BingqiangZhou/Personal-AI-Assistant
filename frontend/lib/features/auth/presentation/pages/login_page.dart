@@ -271,12 +271,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       key: const Key('login_button'),
                       onPressed: isLoading ? null : _login,
                       child: isLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onPrimary,
                               ),
                             )
                           : Text(l10n.auth_login),

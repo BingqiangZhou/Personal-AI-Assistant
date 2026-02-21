@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
 
@@ -111,12 +112,43 @@ This is an **important** update.
         findsOneWidget,
       );
     });
+
+    testWidgets(
+      'uses onPrimary over primary for download button in dark mode',
+      (tester) async {
+        final release = _buildRelease('## Notes');
+        await tester.pumpWidget(
+          _buildTestApp(release, themeMode: ThemeMode.dark),
+        );
+        await tester.pumpAndSettle();
+
+        final filledButton = tester.widget<FilledButton>(
+          find.bySubtype<FilledButton>().first,
+        );
+        final resolvedBackgroundColor = filledButton.style?.backgroundColor
+            ?.resolve(<WidgetState>{});
+        final resolvedForegroundColor = filledButton.style?.foregroundColor
+            ?.resolve(<WidgetState>{});
+
+        expect(resolvedBackgroundColor, AppTheme.darkTheme.colorScheme.primary);
+        expect(
+          resolvedForegroundColor,
+          AppTheme.darkTheme.colorScheme.onPrimary,
+        );
+      },
+    );
   });
 }
 
-Widget _buildTestApp(GitHubRelease release) {
+Widget _buildTestApp(
+  GitHubRelease release, {
+  ThemeMode themeMode = ThemeMode.light,
+}) {
   return ProviderScope(
     child: MaterialApp(
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(

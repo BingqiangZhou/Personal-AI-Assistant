@@ -14,9 +14,7 @@ Color _updateAccentColor(ThemeData theme) {
 }
 
 Color _updateAccentOnColor(ThemeData theme) {
-  return theme.brightness == Brightness.dark
-      ? Colors.white
-      : theme.colorScheme.onPrimary;
+  return theme.colorScheme.onPrimary;
 }
 
 /// App Update Dialog / 应用更新对话框
@@ -67,11 +65,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
       insetPadding: isMobile ? const EdgeInsets.all(16) : null,
       title: Row(
         children: [
-          Icon(
-            Icons.system_update_alt,
-            color: accentColor,
-            size: 28,
-          ),
+          Icon(Icons.system_update_alt, color: accentColor, size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -143,10 +137,13 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           FilledButton.icon(
             onPressed: _isDownloading ? null : () => _handleDownload(context),
             icon: _isDownloading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: accentOnColor,
+                    ),
                   )
                 : const Icon(Icons.download, size: 18),
             label: Text(l10n.update_download),
@@ -191,10 +188,13 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           FilledButton.icon(
             onPressed: _isDownloading ? null : () => _handleDownload(context),
             icon: _isDownloading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: accentOnColor,
+                    ),
                   )
                 : const Icon(Icons.download, size: 18),
             label: Text(l10n.update_download),
@@ -226,11 +226,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           // Version row
           Row(
             children: [
-              Icon(
-                Icons.info_outline,
-                size: 18,
-                color: accentColor,
-              ),
+              Icon(Icons.info_outline, size: 18, color: accentColor),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -414,7 +410,9 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                       ),
                       horizontalRuleDecoration: BoxDecoration(
                         border: Border(
-                          top: BorderSide(color: theme.colorScheme.outlineVariant),
+                          top: BorderSide(
+                            color: theme.colorScheme.outlineVariant,
+                          ),
                         ),
                       ),
                       a: theme.textTheme.bodySmall?.copyWith(
@@ -684,17 +682,11 @@ class _ManualUpdateCheckDialogState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(
-          Icons.check_circle_outline,
-          size: 48,
-          color: accentColor,
-        ),
+        Icon(Icons.check_circle_outline, size: 48, color: accentColor),
         const SizedBox(height: 16),
         Text(
           l10n.update_up_to_date,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: accentColor,
-          ),
+          style: theme.textTheme.titleMedium?.copyWith(color: accentColor),
         ),
         const SizedBox(height: 8),
         Text(

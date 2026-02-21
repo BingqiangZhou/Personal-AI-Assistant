@@ -148,12 +148,14 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                         key: const Key('forgot_password_submit_button'),
                         onPressed: isLoading ? null : _submitForgotPassword,
                         child: isLoading
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
                                 ),
                               )
                             : Text(l10n.auth_send_reset_link),

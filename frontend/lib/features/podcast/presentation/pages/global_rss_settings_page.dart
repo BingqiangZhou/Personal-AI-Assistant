@@ -276,12 +276,12 @@ class _GlobalRSSSettingsPageState extends ConsumerState<GlobalRSSSettingsPage> {
               child: FilledButton.icon(
                 onPressed: _isSaving ? null : _applyToAll,
                 icon: _isSaving
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: theme.colorScheme.onPrimary,
                         ),
                       )
                     : const Icon(Icons.check_circle),
