@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
@@ -23,12 +26,15 @@ class _PodcastDailyReportPageState
     extends ConsumerState<PodcastDailyReportPage> {
   bool _isGeneratingDailyReport = false;
   final Set<int> _expandedReportItems = <int>{};
+  late DateTime _focusedCalendarDay;
 
   @override
   void initState() {
     super.initState();
+    final targetDate = _resolveInitialDate(widget.initialDate);
+    _focusedCalendarDay = targetDate;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final targetDate = _resolveInitialDate(widget.initialDate);
       ref.read(selectedDailyReportDateProvider.notifier).setDate(targetDate);
 
       final isAuthenticated = ref.read(authProvider).isAuthenticated;
@@ -36,11 +42,20 @@ class _PodcastDailyReportPageState
         return;
       }
 
+      unawaited(_loadInitialDailyReportData(targetDate));
+    });
+  }
+
+  Future<void> _loadInitialDailyReportData(DateTime targetDate) async {
+    await Future.wait([
       ref
           .read(dailyReportProvider.notifier)
-          .load(date: targetDate, forceRefresh: true);
-      ref.read(dailyReportDatesProvider.notifier).load(forceRefresh: true);
-    });
+          .load(date: targetDate, forceRefresh: true),
+      ref.read(dailyReportDatesProvider.notifier).load(forceRefresh: true),
+    ]);
+    await ref
+        .read(dailyReportDatesProvider.notifier)
+        .ensureMonthCoverage(targetDate);
   }
 
   @override
@@ -48,8 +63,13 @@ class _PodcastDailyReportPageState
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       key: const Key('daily_report_page'),
-      appBar: AppBar(title: Text(l10n.podcast_daily_report_title)),
+      appBar: AppBar(
+        centerTitle: false,
+        title: Text(l10n.podcast_daily_report_title),
+      ),
       body: ResponsiveContainer(
+        maxWidth: 1480,
+        alignment: Alignment.topCenter,
         child: Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: _buildDailyReportPanel(context),
@@ -62,61 +82,16 @@ class _PodcastDailyReportPageState
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final reportAsync = ref.watch(dailyReportProvider);
+    final reportDatesAsync = ref.watch(dailyReportDatesProvider);
     final selectedDate = ref.watch(selectedDailyReportDateProvider);
     final report = reportAsync.value;
+    final reportDateKeys = <String>{
+      for (final item in reportDatesAsync.value?.dates ?? const [])
+        _formatDate(item.reportDate),
+    };
+    final now = _toDateOnly(DateTime.now());
     final maxReportItemsViewportHeight =
-        (MediaQuery.sizeOf(context).height * 0.62).clamp(220.0, 560.0);
-
-    Widget buildHeader({
-      DateTime? reportDate,
-      int totalItems = 0,
-      DateTime? generatedAt,
-      bool showMeta = false,
-    }) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.podcast_daily_report_title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Flexible(
-                child: TextButton.icon(
-                  key: const Key('daily_report_date_selector_button'),
-                  onPressed: () => _showDailyReportDateSelector(
-                    context,
-                    fallbackDate: reportDate ?? selectedDate,
-                  ),
-                  icon: const Icon(Icons.event_outlined, size: 18),
-                  label: Text(
-                    reportDate == null
-                        ? l10n.podcast_daily_report_dates
-                        : _formatDate(reportDate),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (showMeta)
-            Text(
-              '${l10n.podcast_daily_report_items(totalItems)} · ${l10n.podcast_daily_report_generated_prefix} ${_formatTime(generatedAt)}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-        ],
-      );
-    }
+        (MediaQuery.sizeOf(context).height * 0.46).clamp(180.0, 420.0);
 
     Widget buildSurface(Widget child) {
       return Material(
@@ -131,8 +106,188 @@ class _PodcastDailyReportPageState
       );
     }
 
+    Widget buildHeader({
+      DateTime? reportDate,
+      int totalItems = 0,
+      DateTime? generatedAt,
+      bool showMeta = false,
+    }) {
+      final headerDate = reportDate ?? selectedDate;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.podcast_daily_report_title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const Icon(Icons.event_outlined, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                headerDate == null ? '--' : _formatDate(headerDate),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          if (showMeta)
+            Text(
+              '${l10n.podcast_daily_report_items(totalItems)} | ${l10n.podcast_daily_report_generated_prefix} ${_formatTime(generatedAt)}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+        ],
+      );
+    }
+
+    final displayFocusedDay = _focusedCalendarDay.isAfter(now)
+        ? now
+        : _focusedCalendarDay;
+
+    final calendarCard = buildSurface(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.podcast_daily_report_dates,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            key: const Key('daily_report_calendar'),
+            child: TableCalendar<bool>(
+              firstDay: DateTime(2000, 1, 1),
+              lastDay: now,
+              focusedDay: displayFocusedDay,
+              calendarFormat: CalendarFormat.month,
+              availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+              selectedDayPredicate: (day) => _isSameDate(day, selectedDate),
+              enabledDayPredicate: (day) {
+                final normalizedDay = _toDateOnly(day);
+                return !normalizedDay.isAfter(now);
+              },
+              eventLoader: (day) {
+                final hasReport = reportDateKeys.contains(_formatDate(day));
+                return hasReport ? const [true] : const [];
+              },
+              onDaySelected: (pickedDay, focusedDay) {
+                unawaited(
+                  _handleCalendarDaySelected(
+                    pickedDay: pickedDay,
+                    focusedDay: focusedDay,
+                  ),
+                );
+              },
+              onPageChanged: (focusedDay) {
+                final normalizedFocused = _toDateOnly(focusedDay);
+                setState(() {
+                  _focusedCalendarDay = normalizedFocused;
+                });
+                unawaited(
+                  ref
+                      .read(dailyReportDatesProvider.notifier)
+                      .ensureMonthCoverage(normalizedFocused),
+                );
+              },
+              calendarBuilders: CalendarBuilders<bool>(
+                defaultBuilder: (context, day, _) => _buildCalendarDayCell(
+                  context,
+                  day,
+                  selectedDate: selectedDate,
+                ),
+                outsideBuilder: (context, day, _) => _buildCalendarDayCell(
+                  context,
+                  day,
+                  selectedDate: selectedDate,
+                  isOutside: true,
+                ),
+                disabledBuilder: (context, day, _) => _buildCalendarDayCell(
+                  context,
+                  day,
+                  selectedDate: selectedDate,
+                  isDisabled: true,
+                ),
+                todayBuilder: (context, day, _) => _buildCalendarDayCell(
+                  context,
+                  day,
+                  selectedDate: selectedDate,
+                  isToday: true,
+                ),
+                selectedBuilder: (context, day, _) => _buildCalendarDayCell(
+                  context,
+                  day,
+                  selectedDate: selectedDate,
+                  isSelected: true,
+                ),
+                markerBuilder: (context, day, events) {
+                  if (events.isEmpty) {
+                    return null;
+                  }
+                  final isSelected = _isSameDate(day, selectedDate);
+                  final markerColor = isSelected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.primary;
+                  return Positioned(
+                    key: Key(
+                      'daily_report_calendar_marker_${_formatDate(day)}',
+                    ),
+                    bottom: 4,
+                    child: Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: markerColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          if (reportDatesAsync.isLoading && reportDatesAsync.value == null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.podcast_daily_report_loading,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+
+    Widget reportCard;
     if (reportAsync.isLoading && report == null) {
-      return buildSurface(
+      reportCard = buildSurface(
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -161,10 +316,8 @@ class _PodcastDailyReportPageState
           ],
         ),
       );
-    }
-
-    if (reportAsync.hasError && report == null) {
-      return buildSurface(
+    } else if (reportAsync.hasError && report == null) {
+      reportCard = buildSurface(
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -191,172 +344,258 @@ class _PodcastDailyReportPageState
           ],
         ),
       );
-    }
-
-    final currentReport = report;
-    if (currentReport == null || !currentReport.available) {
-      final targetDate = selectedDate ?? currentReport?.reportDate;
-      final shouldShowRefreshButton = targetDate != null;
-      return buildSurface(
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            buildHeader(reportDate: selectedDate),
-            const SizedBox(height: 8),
-            Text(
-              l10n.podcast_daily_report_empty,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            if (shouldShowRefreshButton) ...[
+    } else {
+      final currentReport = report;
+      if (currentReport == null || !currentReport.available) {
+        final targetDate = selectedDate ?? currentReport?.reportDate;
+        final shouldShowRefreshButton = targetDate != null;
+        reportCard = buildSurface(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildHeader(reportDate: selectedDate),
               const SizedBox(height: 8),
-              FilledButton.tonalIcon(
-                key: const Key('daily_report_regenerate_button'),
-                onPressed: _isGeneratingDailyReport
-                    ? null
-                    : () => _generateDailyReportForSelectedDate(
-                        targetDate,
-                        rebuild: true,
-                      ),
-                icon: const Icon(Icons.refresh, size: 18),
-                label: Text(
-                  _isGeneratingDailyReport
-                      ? l10n.podcast_daily_report_loading
-                      : l10n.refresh,
+              Text(
+                l10n.podcast_daily_report_empty,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              if (shouldShowRefreshButton) ...[
+                const SizedBox(height: 8),
+                FilledButton.tonalIcon(
+                  key: const Key('daily_report_regenerate_button'),
+                  onPressed: _isGeneratingDailyReport
+                      ? null
+                      : () => _generateDailyReportForSelectedDate(
+                          targetDate,
+                          rebuild: true,
+                        ),
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: Text(
+                    _isGeneratingDailyReport
+                        ? l10n.podcast_daily_report_loading
+                        : l10n.refresh,
+                  ),
+                ),
+              ],
             ],
-          ],
-        ),
-      );
-    }
-
-    return buildSurface(
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          buildHeader(
-            reportDate: currentReport.reportDate,
-            totalItems: currentReport.totalItems,
-            generatedAt: currentReport.generatedAt,
-            showMeta: true,
           ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: FilledButton.tonalIcon(
-              key: const Key('daily_report_regenerate_button'),
-              onPressed: _isGeneratingDailyReport
-                  ? null
-                  : () => _generateDailyReportForSelectedDate(
-                      currentReport.reportDate ?? selectedDate,
-                      rebuild: true,
-                    ),
-              icon: const Icon(Icons.refresh, size: 18),
-              label: Text(
-                _isGeneratingDailyReport
-                    ? l10n.podcast_daily_report_loading
-                    : l10n.refresh,
+        );
+      } else {
+        reportCard = buildSurface(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              buildHeader(
+                reportDate: currentReport.reportDate,
+                totalItems: currentReport.totalItems,
+                generatedAt: currentReport.generatedAt,
+                showMeta: true,
               ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          if (currentReport.items.isEmpty)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: FilledButton.tonalIcon(
+                  key: const Key('daily_report_regenerate_button'),
+                  onPressed: _isGeneratingDailyReport
+                      ? null
+                      : () => _generateDailyReportForSelectedDate(
+                          currentReport.reportDate ?? selectedDate,
+                          rebuild: true,
+                        ),
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: Text(
+                    _isGeneratingDailyReport
+                        ? l10n.podcast_daily_report_loading
+                        : l10n.refresh,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (currentReport.items.isEmpty)
                 Text(
                   l10n.podcast_daily_report_empty,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
-                ),
-              ],
-            )
-          else
-            SizedBox(
-              height: maxReportItemsViewportHeight,
-              child: Scrollbar(
-                thumbVisibility: currentReport.items.length > 4,
-                child: ListView.separated(
-                  key: const Key('daily_report_items_scroll'),
-                  primary: false,
-                  padding: EdgeInsets.zero,
-                  itemCount: currentReport.items.length,
-                  separatorBuilder: (_, _index) => const SizedBox(height: 8),
-                  itemBuilder: (itemContext, index) {
-                    final item = currentReport.items[index];
-                    final isExpanded = _expandedReportItems.contains(
-                      item.episodeId,
-                    );
-                    final metaLine =
-                        '${item.episodeTitle} · ${item.subscriptionTitle ?? l10n.podcast_default_podcast}';
-                    return InkWell(
-                      key: Key('daily_report_item_${item.episodeId}'),
-                      onTap: () {
-                        context.push(
-                          '/podcast/episode/detail/${item.episodeId}',
+                )
+              else
+                SizedBox(
+                  height: maxReportItemsViewportHeight,
+                  child: Scrollbar(
+                    thumbVisibility: currentReport.items.length > 4,
+                    child: ListView.separated(
+                      key: const Key('daily_report_items_scroll'),
+                      primary: false,
+                      padding: EdgeInsets.zero,
+                      itemCount: currentReport.items.length,
+                      separatorBuilder: (_, _index) =>
+                          const SizedBox(height: 8),
+                      itemBuilder: (itemContext, index) {
+                        final item = currentReport.items[index];
+                        final isExpanded = _expandedReportItems.contains(
+                          item.episodeId,
+                        );
+                        final metaLine =
+                            '${item.episodeTitle} | ${item.subscriptionTitle ?? l10n.podcast_default_podcast}';
+                        return InkWell(
+                          key: Key('daily_report_item_${item.episodeId}'),
+                          onTap: () {
+                            context.push(
+                              '/podcast/episode/detail/${item.episodeId}',
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(10),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.oneLineSummary,
+                                  maxLines: isExpanded ? null : 2,
+                                  overflow: isExpanded
+                                      ? TextOverflow.visible
+                                      : TextOverflow.ellipsis,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: TextButton(
+                                    key: Key(
+                                      'daily_report_item_toggle_${item.episodeId}',
+                                    ),
+                                    onPressed: () =>
+                                        _toggleItemExpanded(item.episodeId),
+                                    style: TextButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: EdgeInsets.zero,
+                                      minimumSize: const Size(0, 0),
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    child: Text(
+                                      isExpanded
+                                          ? l10n.podcast_player_collapse
+                                          : l10n.podcast_player_expand,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  metaLine,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         );
                       },
-                      borderRadius: BorderRadius.circular(10),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.oneLineSummary,
-                              maxLines: isExpanded ? null : 2,
-                              overflow: isExpanded
-                                  ? TextOverflow.visible
-                                  : TextOverflow.ellipsis,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton(
-                                key: Key(
-                                  'daily_report_item_toggle_${item.episodeId}',
-                                ),
-                                onPressed: () =>
-                                    _toggleItemExpanded(item.episodeId),
-                                style: TextButton.styleFrom(
-                                  visualDensity: VisualDensity.compact,
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: const Size(0, 0),
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: Text(
-                                  isExpanded
-                                      ? l10n.podcast_player_collapse
-                                      : l10n.podcast_player_expand,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              metaLine,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
-              ),
+            ],
+          ),
+        );
+      }
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWideLayout = constraints.maxWidth >= 1180;
+        if (isWideLayout) {
+          return SingleChildScrollView(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 5, child: calendarCard),
+                const SizedBox(width: 14),
+                Expanded(flex: 7, child: reportCard),
+              ],
             ),
-        ],
+          );
+        }
+
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [calendarCard, const SizedBox(height: 12), reportCard],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCalendarDayCell(
+    BuildContext context,
+    DateTime day, {
+    required DateTime? selectedDate,
+    bool isSelected = false,
+    bool isToday = false,
+    bool isOutside = false,
+    bool isDisabled = false,
+  }) {
+    final theme = Theme.of(context);
+    final normalizedDay = _toDateOnly(day);
+    final selected = isSelected || _isSameDate(normalizedDay, selectedDate);
+    Color textColor = theme.colorScheme.onSurface;
+    if (selected) {
+      textColor = theme.colorScheme.onPrimary;
+    } else if (isOutside || isDisabled) {
+      textColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6);
+    } else if (isToday) {
+      textColor = theme.colorScheme.primary;
+    }
+
+    return Center(
+      child: Container(
+        key: Key('daily_report_calendar_day_${_formatDate(normalizedDay)}'),
+        width: 36,
+        height: 36,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? theme.colorScheme.primary : Colors.transparent,
+          shape: BoxShape.circle,
+          border: isToday && !selected
+              ? Border.all(color: theme.colorScheme.primary)
+              : null,
+        ),
+        child: Text(
+          '${normalizedDay.day}',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: textColor,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
       ),
     );
+  }
+
+  Future<void> _handleCalendarDaySelected({
+    required DateTime pickedDay,
+    required DateTime focusedDay,
+  }) async {
+    final normalizedSelected = _toDateOnly(pickedDay);
+    final normalizedFocused = _toDateOnly(focusedDay);
+    if (mounted) {
+      setState(() {
+        _focusedCalendarDay = normalizedFocused;
+        _expandedReportItems.clear();
+      });
+    }
+    ref
+        .read(selectedDailyReportDateProvider.notifier)
+        .setDate(normalizedSelected);
+    await ref
+        .read(dailyReportProvider.notifier)
+        .load(date: normalizedSelected, forceRefresh: true);
   }
 
   void _toggleItemExpanded(int episodeId) {
@@ -367,37 +606,6 @@ class _PodcastDailyReportPageState
         _expandedReportItems.add(episodeId);
       }
     });
-  }
-
-  Future<void> _showDailyReportDateSelector(
-    BuildContext context, {
-    required DateTime? fallbackDate,
-  }) async {
-    final now = _toDateOnly(DateTime.now());
-    final previousDay = now.subtract(const Duration(days: 1));
-    final selectedDate = ref.read(selectedDailyReportDateProvider);
-    DateTime initialDate = _toDateOnly(
-      selectedDate ?? fallbackDate ?? previousDay,
-    );
-    if (initialDate.isAfter(now)) {
-      initialDate = now;
-    }
-
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: initialDate,
-      firstDate: DateTime(2000, 1, 1),
-      lastDate: now,
-    );
-    if (pickedDate == null) {
-      return;
-    }
-
-    final normalized = _toDateOnly(pickedDate);
-    ref.read(selectedDailyReportDateProvider.notifier).setDate(normalized);
-    await ref
-        .read(dailyReportProvider.notifier)
-        .load(date: normalized, forceRefresh: true);
   }
 
   Future<void> _generateDailyReportForSelectedDate(
@@ -455,6 +663,15 @@ class _PodcastDailyReportPageState
         });
       }
     }
+  }
+
+  bool _isSameDate(DateTime? left, DateTime? right) {
+    if (left == null || right == null) {
+      return false;
+    }
+    final l = _toDateOnly(left);
+    final r = _toDateOnly(right);
+    return l.year == r.year && l.month == r.month && l.day == r.day;
   }
 
   DateTime _resolveInitialDate(DateTime? rawValue) {

@@ -64,7 +64,9 @@ void main() {
   });
 
   group('PodcastDailyReportPage', () {
-    testWidgets('renders daily report page with items', (tester) async {
+    testWidgets('renders daily report page with top calendar and items', (
+      tester,
+    ) async {
       final previousDay = _dateOnlyNowMinus(1);
       await tester.pumpWidget(
         _buildReportApp(
@@ -79,8 +81,28 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('daily_report_page')), findsOneWidget);
+      expect(find.byKey(const Key('daily_report_calendar')), findsOneWidget);
       expect(find.text('Daily Report'), findsWidgets);
       expect(find.text('Report summary ${previousDay.day}'), findsOneWidget);
+    });
+
+    testWidgets('shows marker dot for date with available report', (
+      tester,
+    ) async {
+      final previousDay = _dateOnlyNowMinus(1);
+      await tester.pumpWidget(
+        _buildReportApp(
+          dailyReportNotifier: _StaticDailyReportNotifier(
+            _reportForDate(previousDay),
+          ),
+          datesNotifier: _StaticDailyReportDatesNotifier(
+            _dates([previousDay, _dateOnlyNowMinus(2)]),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(_calendarMarkerKey(previousDay)), findsOneWidget);
     });
 
     testWidgets('toggles summary expansion per item', (tester) async {
@@ -138,7 +160,36 @@ void main() {
       expect(find.text('detail:${previousDay.day}'), findsOneWidget);
     });
 
-    testWidgets('switching historical date updates report content', (
+    testWidgets(
+      'switching historical date from calendar updates report content',
+      (tester) async {
+        final previousDay = _dateOnlyNowMinus(1);
+        final twoDaysAgo = _dateOnlyNowMinus(2);
+        await tester.pumpWidget(
+          _buildReportApp(
+            dailyReportNotifier: _SwitchingDailyReportNotifier({
+              _dateKey(previousDay): _reportForDate(previousDay),
+              _dateKey(twoDaysAgo): _reportForDate(twoDaysAgo),
+            }),
+            datesNotifier: _StaticDailyReportDatesNotifier(
+              _dates([previousDay, twoDaysAgo]),
+            ),
+            selectedDateNotifier: _FixedSelectedDailyReportDateNotifier(
+              previousDay,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Report summary ${previousDay.day}'), findsOneWidget);
+        await tester.tap(find.byKey(_calendarDayKey(twoDaysAgo)));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Report summary ${twoDaysAgo.day}'), findsOneWidget);
+      },
+    );
+
+    testWidgets('clicking date without report shows empty state and refresh', (
       tester,
     ) async {
       final previousDay = _dateOnlyNowMinus(1);
@@ -147,11 +198,8 @@ void main() {
         _buildReportApp(
           dailyReportNotifier: _SwitchingDailyReportNotifier({
             _dateKey(previousDay): _reportForDate(previousDay),
-            _dateKey(twoDaysAgo): _reportForDate(twoDaysAgo),
           }),
-          datesNotifier: _StaticDailyReportDatesNotifier(
-            _dates([previousDay, twoDaysAgo]),
-          ),
+          datesNotifier: _StaticDailyReportDatesNotifier(_dates([previousDay])),
           selectedDateNotifier: _FixedSelectedDailyReportDateNotifier(
             previousDay,
           ),
@@ -159,17 +207,47 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Report summary ${previousDay.day}'), findsOneWidget);
-      await tester.tap(
-        find.byKey(const Key('daily_report_date_selector_button')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('${twoDaysAgo.day}').last);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('OK'));
+      await tester.tap(find.byKey(_calendarDayKey(twoDaysAgo)));
       await tester.pumpAndSettle();
 
-      expect(find.text('Report summary ${twoDaysAgo.day}'), findsOneWidget);
+      expect(find.text('No daily report available yet'), findsOneWidget);
+      expect(
+        find.byKey(const Key('daily_report_regenerate_button')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('swiping month triggers progressive date coverage loading', (
+      tester,
+    ) async {
+      final previousDay = _dateOnlyNowMinus(1);
+      final datesNotifier = _TrackingDailyReportDatesNotifier(
+        _dates([previousDay, _dateOnlyNowMinus(2)]),
+      );
+      await tester.pumpWidget(
+        _buildReportApp(
+          dailyReportNotifier: _StaticDailyReportNotifier(
+            _reportForDate(previousDay),
+          ),
+          datesNotifier: datesNotifier,
+          selectedDateNotifier: _FixedSelectedDailyReportDateNotifier(
+            previousDay,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final baselineCalls = datesNotifier.ensureCoverageCalls.length;
+      await tester.drag(
+        find.byKey(const Key('daily_report_calendar')),
+        const Offset(420, 0),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        datesNotifier.ensureCoverageCalls.length,
+        greaterThan(baselineCalls),
+      );
     });
 
     testWidgets('shows empty state when report is unavailable', (tester) async {
@@ -380,8 +458,10 @@ class _SwitchingDailyReportNotifier extends DailyReportNotifier {
     DateTime? date,
     bool forceRefresh = false,
   }) async {
+    final requestedDate = date ?? DateTime.now();
     final selected =
-        _reportsByDate[_dateKey(date)] ?? _reportsByDate.values.first;
+        _reportsByDate[_dateKey(date)] ??
+        _unavailableReportForDate(requestedDate);
     state = AsyncValue.data(selected);
     return selected;
   }
@@ -422,11 +502,33 @@ class _StaticDailyReportDatesNotifier extends DailyReportDatesNotifier {
   @override
   Future<PodcastDailyReportDatesResponse?> load({
     int page = 1,
-    int size = 30,
+    int size = 100,
     bool forceRefresh = false,
   }) async {
     state = AsyncValue.data(_response);
     return _response;
+  }
+
+  @override
+  Future<PodcastDailyReportDatesResponse?> ensureMonthCoverage(
+    DateTime focusedMonth,
+  ) async {
+    return state.value;
+  }
+}
+
+class _TrackingDailyReportDatesNotifier
+    extends _StaticDailyReportDatesNotifier {
+  _TrackingDailyReportDatesNotifier(super.response);
+
+  final List<DateTime> ensureCoverageCalls = <DateTime>[];
+
+  @override
+  Future<PodcastDailyReportDatesResponse?> ensureMonthCoverage(
+    DateTime focusedMonth,
+  ) async {
+    ensureCoverageCalls.add(focusedMonth);
+    return state.value;
   }
 }
 
@@ -525,7 +627,7 @@ PodcastDailyReportDatesResponse _dates(List<DateTime> dates) {
         .toList(),
     total: dates.length,
     page: 1,
-    size: 30,
+    size: 100,
     pages: 1,
   );
 }
@@ -552,4 +654,12 @@ String _dateKey(DateTime? value) {
     return '';
   }
   return '${value.year.toString().padLeft(4, '0')}-${value.month.toString().padLeft(2, '0')}-${value.day.toString().padLeft(2, '0')}';
+}
+
+Key _calendarDayKey(DateTime date) {
+  return Key('daily_report_calendar_day_${_dateKey(date)}');
+}
+
+Key _calendarMarkerKey(DateTime date) {
+  return Key('daily_report_calendar_marker_${_dateKey(date)}');
 }

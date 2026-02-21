@@ -58,8 +58,82 @@ void main() {
       expect(repository.dailyReportCalls, 2);
     });
 
-    test('daily report dates provider loads and caches', () async {
-      final repository = _FakePodcastRepository();
+    test(
+      'daily report dates provider loads and caches with size 100',
+      () async {
+        final repository = _FakePodcastRepository();
+        final container = ProviderContainer(
+          overrides: [podcastRepositoryProvider.overrideWithValue(repository)],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(dailyReportDatesProvider.notifier);
+        await notifier.load(forceRefresh: false);
+        await notifier.load(forceRefresh: false);
+
+        expect(repository.dailyReportDatesCalls, 1);
+        expect(repository.requestedDatePages, [1]);
+        expect(repository.requestedDateSizes, [100]);
+        expect(container.read(dailyReportDatesProvider).value?.dates.length, 2);
+      },
+    );
+
+    test(
+      'ensureMonthCoverage loads more pages until month is covered',
+      () async {
+        final repository = _FakePodcastRepository(
+          datesByPage: {
+            1: _datesPage(
+              dates: [DateTime(2026, 2, 20), DateTime(2026, 2, 19)],
+              total: 4,
+              page: 1,
+              pages: 2,
+            ),
+            2: _datesPage(
+              dates: [DateTime(2026, 1, 10), DateTime(2026, 1, 1)],
+              total: 4,
+              page: 2,
+              pages: 2,
+            ),
+          },
+        );
+        final container = ProviderContainer(
+          overrides: [podcastRepositoryProvider.overrideWithValue(repository)],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(dailyReportDatesProvider.notifier);
+        await notifier.load(forceRefresh: false);
+        await notifier.ensureMonthCoverage(DateTime(2026, 1, 15));
+
+        final merged = container.read(dailyReportDatesProvider).value!;
+        expect(repository.requestedDatePages, [1, 2]);
+        expect(merged.dates.map((item) => _dateKey(item.reportDate)), [
+          '2026-02-20',
+          '2026-02-19',
+          '2026-01-10',
+          '2026-01-01',
+        ]);
+      },
+    );
+
+    test('ensureMonthCoverage deduplicates dates across pages', () async {
+      final repository = _FakePodcastRepository(
+        datesByPage: {
+          1: _datesPage(
+            dates: [DateTime(2026, 2, 20), DateTime(2026, 2, 19)],
+            total: 4,
+            page: 1,
+            pages: 2,
+          ),
+          2: _datesPage(
+            dates: [DateTime(2026, 2, 19), DateTime(2026, 2, 18)],
+            total: 4,
+            page: 2,
+            pages: 2,
+          ),
+        },
+      );
       final container = ProviderContainer(
         overrides: [podcastRepositoryProvider.overrideWithValue(repository)],
       );
@@ -67,11 +141,68 @@ void main() {
 
       final notifier = container.read(dailyReportDatesProvider.notifier);
       await notifier.load(forceRefresh: false);
-      await notifier.load(forceRefresh: false);
+      await notifier.ensureMonthCoverage(DateTime(2026, 1, 15));
 
-      expect(repository.dailyReportDatesCalls, 1);
-      expect(container.read(dailyReportDatesProvider).value?.dates.length, 2);
+      final merged = container.read(dailyReportDatesProvider).value!;
+      expect(repository.requestedDatePages, [1, 2]);
+      expect(merged.dates.map((item) => _dateKey(item.reportDate)), [
+        '2026-02-20',
+        '2026-02-19',
+        '2026-02-18',
+      ]);
     });
+
+    test(
+      'ensureMonthCoverage stops requesting when reaching last page',
+      () async {
+        final repository = _FakePodcastRepository(
+          datesByPage: {
+            1: _datesPage(
+              dates: [DateTime(2026, 2, 20), DateTime(2026, 2, 19)],
+              total: 3,
+              page: 1,
+              pages: 2,
+            ),
+            2: _datesPage(
+              dates: [DateTime(2026, 1, 15)],
+              total: 3,
+              page: 2,
+              pages: 2,
+            ),
+          },
+        );
+        final container = ProviderContainer(
+          overrides: [podcastRepositoryProvider.overrideWithValue(repository)],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(dailyReportDatesProvider.notifier);
+        await notifier.load(forceRefresh: false);
+        await notifier.ensureMonthCoverage(DateTime(2025, 11, 15));
+
+        expect(repository.requestedDatePages, [1, 2]);
+        expect(repository.dailyReportDatesCalls, 2);
+      },
+    );
+
+    test(
+      'ensureMonthCoverage uses cache when month is already covered',
+      () async {
+        final repository = _FakePodcastRepository();
+        final container = ProviderContainer(
+          overrides: [podcastRepositoryProvider.overrideWithValue(repository)],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(dailyReportDatesProvider.notifier);
+        await notifier.load(forceRefresh: false);
+        await notifier.ensureMonthCoverage(DateTime(2026, 2, 1));
+        await notifier.load(forceRefresh: false);
+
+        expect(repository.dailyReportDatesCalls, 1);
+        expect(repository.requestedDatePages, [1]);
+      },
+    );
 
     test('generate daily report updates state and refreshes dates', () async {
       final repository = _FakePodcastRepository();
@@ -125,7 +256,12 @@ void main() {
 }
 
 class _FakePodcastRepository extends PodcastRepository {
-  _FakePodcastRepository() : super(PodcastApiService(Dio()));
+  _FakePodcastRepository({
+    Map<int, PodcastDailyReportDatesResponse>? datesByPage,
+  }) : _datesByPage = datesByPage ?? _defaultDatesByPage(),
+       super(PodcastApiService(Dio()));
+
+  final Map<int, PodcastDailyReportDatesResponse> _datesByPage;
 
   int dailyReportCalls = 0;
   int dailyReportDatesCalls = 0;
@@ -133,6 +269,8 @@ class _FakePodcastRepository extends PodcastRepository {
   DateTime? lastDailyReportDate;
   DateTime? lastGeneratedReportDate;
   bool? lastGeneratedReportRebuild;
+  final List<int> requestedDatePages = <int>[];
+  final List<int> requestedDateSizes = <int>[];
 
   @override
   Future<PodcastDailyReportResponse> getDailyReport({DateTime? date}) async {
@@ -166,24 +304,29 @@ class _FakePodcastRepository extends PodcastRepository {
   @override
   Future<PodcastDailyReportDatesResponse> getDailyReportDates({
     int page = 1,
-    int size = 30,
+    int size = 100,
   }) async {
     dailyReportDatesCalls += 1;
+    requestedDatePages.add(page);
+    requestedDateSizes.add(size);
+
+    final payload = _datesByPage[page];
+    if (payload == null) {
+      return PodcastDailyReportDatesResponse(
+        dates: const [],
+        total: _datesByPage[1]?.total ?? 0,
+        page: page,
+        size: size,
+        pages: _datesByPage[1]?.pages ?? 0,
+      );
+    }
+
     return PodcastDailyReportDatesResponse(
-      dates: [
-        PodcastDailyReportDateItem(
-          reportDate: DateTime(2026, 2, 20),
-          totalItems: 2,
-        ),
-        PodcastDailyReportDateItem(
-          reportDate: DateTime(2026, 2, 19),
-          totalItems: 1,
-        ),
-      ],
-      total: 2,
+      dates: payload.dates,
+      total: payload.total,
       page: page,
       size: size,
-      pages: 1,
+      pages: payload.pages,
     );
   }
 
@@ -218,6 +361,17 @@ class _FakePodcastRepository extends PodcastRepository {
       ],
     );
   }
+
+  static Map<int, PodcastDailyReportDatesResponse> _defaultDatesByPage() {
+    return {
+      1: _datesPage(
+        dates: [DateTime(2026, 2, 20), DateTime(2026, 2, 19)],
+        total: 2,
+        page: 1,
+        pages: 1,
+      ),
+    };
+  }
 }
 
 class _FailingGeneratePodcastRepository extends _FakePodcastRepository {
@@ -228,4 +382,28 @@ class _FailingGeneratePodcastRepository extends _FakePodcastRepository {
   }) async {
     throw const NetworkException('Server error');
   }
+}
+
+PodcastDailyReportDatesResponse _datesPage({
+  required List<DateTime> dates,
+  required int total,
+  required int page,
+  required int pages,
+}) {
+  return PodcastDailyReportDatesResponse(
+    dates: dates
+        .map(
+          (item) => PodcastDailyReportDateItem(reportDate: item, totalItems: 1),
+        )
+        .toList(),
+    total: total,
+    page: page,
+    size: 100,
+    pages: pages,
+  );
+}
+
+String _dateKey(DateTime value) {
+  final local = value.isUtc ? value.toLocal() : value;
+  return '${local.year.toString().padLeft(4, '0')}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
 }

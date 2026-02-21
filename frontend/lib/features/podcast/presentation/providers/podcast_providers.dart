@@ -2078,9 +2078,16 @@ class DailyReportDatesNotifier
     extends AsyncNotifier<PodcastDailyReportDatesResponse?> {
   late PodcastRepository _repository;
   DateTime? _lastLoadedAt;
-  int _lastPage = 1;
-  int _lastSize = 30;
+  int _lastSize = _defaultPageSize;
+  int _nextPage = 1;
+  int _totalPages = 0;
+  int _total = 0;
+  final Map<String, PodcastDailyReportDateItem> _datesByKey =
+      <String, PodcastDailyReportDateItem>{};
   Future<PodcastDailyReportDatesResponse?>? _inFlightRequest;
+  Future<PodcastDailyReportDatesResponse?>? _inFlightCoverageRequest;
+
+  static const int _defaultPageSize = 100;
 
   @override
   FutureOr<PodcastDailyReportDatesResponse?> build() {
@@ -2096,19 +2103,106 @@ class DailyReportDatesNotifier
     return DateTime.now().difference(_lastLoadedAt!) < cacheDuration;
   }
 
+  DateTime _toDateOnly(DateTime value) {
+    final local = value.isUtc ? value.toLocal() : value;
+    return DateTime(local.year, local.month, local.day);
+  }
+
+  String _dateKey(DateTime value) {
+    final normalized = _toDateOnly(value);
+    return '${normalized.year.toString().padLeft(4, '0')}-${normalized.month.toString().padLeft(2, '0')}-${normalized.day.toString().padLeft(2, '0')}';
+  }
+
+  DateTime? _earliestLoadedDate() {
+    DateTime? earliest;
+    for (final item in _datesByKey.values) {
+      final date = _toDateOnly(item.reportDate);
+      if (earliest == null || date.isBefore(earliest)) {
+        earliest = date;
+      }
+    }
+    return earliest;
+  }
+
+  bool _canLoadNextPage() {
+    if (_totalPages <= 0) {
+      return false;
+    }
+    return _nextPage <= _totalPages;
+  }
+
+  bool _isMonthCovered(DateTime focusedMonth) {
+    final monthStart = DateTime(focusedMonth.year, focusedMonth.month, 1);
+    final earliest = _earliestLoadedDate();
+    if (earliest == null) {
+      return false;
+    }
+    return !earliest.isAfter(monthStart);
+  }
+
+  void _resetAggregation() {
+    _datesByKey.clear();
+    _nextPage = 1;
+    _totalPages = 0;
+    _total = 0;
+  }
+
+  PodcastDailyReportDatesResponse _buildAggregatedResponse() {
+    final merged = _datesByKey.values.toList()
+      ..sort((left, right) => right.reportDate.compareTo(left.reportDate));
+    return PodcastDailyReportDatesResponse(
+      dates: merged,
+      total: _total,
+      page: 1,
+      size: _lastSize,
+      pages: _totalPages,
+    );
+  }
+
+  Future<PodcastDailyReportDatesResponse?> _fetchAndMerge({
+    required int page,
+    required int size,
+  }) async {
+    final payload = await _repository.getDailyReportDates(
+      page: page,
+      size: size,
+    );
+    for (final item in payload.dates) {
+      final normalizedDate = _toDateOnly(item.reportDate);
+      _datesByKey[_dateKey(normalizedDate)] = PodcastDailyReportDateItem(
+        reportDate: normalizedDate,
+        totalItems: item.totalItems,
+        generatedAt: item.generatedAt,
+      );
+    }
+
+    _total = payload.total;
+    _totalPages = payload.pages;
+    _nextPage = page + 1;
+    _lastSize = size;
+    _lastLoadedAt = DateTime.now();
+
+    final merged = _buildAggregatedResponse();
+    state = AsyncValue.data(merged);
+    return merged;
+  }
+
   Future<PodcastDailyReportDatesResponse?> load({
     int page = 1,
-    int size = 30,
+    int size = _defaultPageSize,
     bool forceRefresh = false,
   }) async {
     final previousData = state.value;
-    final sameQuery = page == _lastPage && size == _lastSize;
-    if (!forceRefresh && previousData != null && sameQuery && _isFresh()) {
+    final isFirstPageQuery = page == 1;
+    if (!forceRefresh &&
+        previousData != null &&
+        isFirstPageQuery &&
+        _isFresh()) {
       return previousData;
     }
 
     final inFlight = _inFlightRequest;
-    if (inFlight != null && sameQuery) {
+    if (inFlight != null && isFirstPageQuery) {
       return inFlight;
     }
 
@@ -2118,15 +2212,10 @@ class DailyReportDatesNotifier
 
     final request = () async {
       try {
-        final data = await _repository.getDailyReportDates(
-          page: page,
-          size: size,
-        );
-        _lastLoadedAt = DateTime.now();
-        _lastPage = page;
-        _lastSize = size;
-        state = AsyncValue.data(data);
-        return data;
+        if (forceRefresh || isFirstPageQuery) {
+          _resetAggregation();
+        }
+        return await _fetchAndMerge(page: page, size: size);
       } catch (error, stackTrace) {
         logger.AppLogger.debug('Failed to load daily report dates: $error');
         if (previousData == null) {
@@ -2141,6 +2230,41 @@ class DailyReportDatesNotifier
     }();
 
     _inFlightRequest = request;
+    return request;
+  }
+
+  Future<PodcastDailyReportDatesResponse?> ensureMonthCoverage(
+    DateTime focusedMonth,
+  ) async {
+    final normalizedMonth = DateTime(focusedMonth.year, focusedMonth.month, 1);
+    if (_datesByKey.isEmpty) {
+      await load(forceRefresh: false);
+    }
+    if (_isMonthCovered(normalizedMonth) || !_canLoadNextPage()) {
+      return state.value;
+    }
+
+    final inFlightCoverage = _inFlightCoverageRequest;
+    if (inFlightCoverage != null) {
+      return inFlightCoverage;
+    }
+
+    final request = () async {
+      try {
+        while (!_isMonthCovered(normalizedMonth) && _canLoadNextPage()) {
+          await _fetchAndMerge(page: _nextPage, size: _lastSize);
+        }
+      } catch (error) {
+        logger.AppLogger.debug(
+          'Failed to ensure daily report date coverage for month=$normalizedMonth error=$error',
+        );
+      } finally {
+        _inFlightCoverageRequest = null;
+      }
+      return state.value;
+    }();
+
+    _inFlightCoverageRequest = request;
     return request;
   }
 }
