@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.12.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.11.3...v0.12.0) - 2026-02-22 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.0))
+
+### ⚡ Performance
+
+- *(podcast)* Optimize ETag caching, add query indexes and improve middleware performance ([5c0eec6](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5c0eec6919843e4202ccb3c8ad6530b5ae6354b7))
+- *(core)* Add runtime metrics tracking for DB, Redis and middleware ([a9d0abf](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a9d0abf76437d7442e8707f25fea229e674185b3))
+- *(podcast)* Add filter-aware subscription list caching with v2 keys ([9649b7f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9649b7f11e0670ea27904446966f078126f52fc6))
+- *(subscription)* Optimize repository queries and add selector-based rebuild reduction ([2e91ecb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2e91ecb75dffe7f5f044c40e215dd52352140081))
+- *(podcast)* Add selector-based state watching to reduce widget rebuilds ([429ed8b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/429ed8b013ba2e2bbf2e80a6b6fa0c2771faec49))
+
+### 🚀 Features
+
+- *(monitoring)* Add observability infrastructure with admin dashboard and alert thresholds ([2552512](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/25525122440ba330a6d05989ed3974e831b2f53c))
+
+### 🚜 Refactor
+
+- *(podcast)* Extract core providers and add null-safe localization fallback ([920f200](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/920f200f055d0feb2553160f40903fac357f8209))
+- *(podcast)* Extract modular providers and add API compatibility improvements ([ffe5378](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ffe53782ac573e79f752e138adea344734f1fec8))
+- *(podcast)* Swap header layout to show date on left and action on right ([c8dc49c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c8dc49c19adc95086492207e280e6513f4b188e4))
+
+### 🧪 Testing
+
+- *(etag_cache_service)* Add unit tests for ETagCacheService functionality ([e357df7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e357df78844bcbd83e7e208aedd313116c752905))
+
+
+
 ## [0.11.3](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.11.2...v0.11.3) - 2026-02-22 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.11.3))
 
 ### 🐛 Bug Fixes
