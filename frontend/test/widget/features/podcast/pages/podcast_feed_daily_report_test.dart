@@ -86,7 +86,8 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('daily_report_calendar')), findsNothing);
-      expect(find.text('Daily Report'), findsWidgets);
+      expect(find.text('Daily Report'), findsOneWidget);
+      expect(find.text(_dateKey(previousDay)), findsOneWidget);
       expect(find.text('Report summary ${previousDay.day}'), findsOneWidget);
     });
 
@@ -215,6 +216,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('No daily report available yet'), findsOneWidget);
+      expect(find.text(_dateKey(twoDaysAgo)), findsOneWidget);
       expect(
         find.byKey(const Key('daily_report_regenerate_button')),
         findsOneWidget,

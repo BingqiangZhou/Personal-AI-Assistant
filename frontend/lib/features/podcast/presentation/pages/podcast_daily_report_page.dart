@@ -138,27 +138,21 @@ class _PodcastDailyReportPageState
         children: [
           Row(
             children: [
+              const Icon(Icons.event_outlined, size: 18),
+              const SizedBox(width: 6),
               Flexible(
                 child: Text(
-                  l10n.podcast_daily_report_title,
+                  headerDate == null ? '--' : _formatDate(headerDate),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              if (action != null) ...[const SizedBox(width: 8), action],
               const Spacer(),
-              const Icon(Icons.event_outlined, size: 18),
-              const SizedBox(width: 6),
-              Text(
-                headerDate == null ? '--' : _formatDate(headerDate),
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              if (action != null) action,
             ],
           ),
           if (showMeta)
