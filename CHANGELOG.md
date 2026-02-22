@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.12.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.0...v0.12.1) - 2026-02-22 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.1))
+
+### 🎨 Styling
+
+- Improve exception chaining and update deprecated APIs ([f13c8cf](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f13c8cfa1f15e0429d6ff402cecb2802ecfa3969))
+- *(backend)* Migrate from deprecated Pydantic v1 to v2 APIs ([0158657](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0158657f0ccc06bb79d7a0663cc089dcd00a7b71))
+
+### 🚜 Refactor
+
+- *(podcast)* Replace monolithic PodcastService with specific service dependencies and cleanup unused code ([76c01fd](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/76c01fdf4d9ba3c31af684857a65394a938b64ca))
+- Remove unused code across backend and frontend ([eb8a41e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/eb8a41e31e866bf7b7d39fa0a2e36b7e39b28381))
+- Remove unused code across backend and frontend ([fdce996](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/fdce99608c2c4c1559f72520e85fdaf7936a74b3))
+
+
+
 ## [0.12.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.11.3...v0.12.0) - 2026-02-22 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.0))
 
 ### ⚡ Performance
