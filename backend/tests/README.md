@@ -37,6 +37,12 @@ cd ../backend
 $env:RUN_PERFORMANCE_TESTS='1'; uv run pytest tests/performance/test_api_performance.py -q
 ```
 
+Performance test notes:
+
+- HTTP clients use `trust_env=False` to avoid local/system proxy side effects.
+- Cached-path assertions use ETag conditional requests (`If-None-Match` -> `304`).
+- Latency assertions prefer server `X-Process-Time` when present.
+
 Optional Locust load test:
 
 ```bash

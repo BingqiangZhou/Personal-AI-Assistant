@@ -164,6 +164,23 @@ class PodcastRedis:
     def _subscription_index_key(user_id: int) -> str:
         return f"podcast:subscriptions:index:{user_id}"
 
+    def _subscription_list_key(
+        self,
+        user_id: int,
+        page: int,
+        size: int,
+        filters: dict[str, Any] | None = None,
+    ) -> str:
+        payload = {
+            "user_id": user_id,
+            "page": page,
+            "size": size,
+            "filters": filters or {},
+        }
+        payload_str = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        token = self._stable_hash(payload_str)
+        return f"podcast:subscriptions:v2:{user_id}:{token}"
+
     @staticmethod
     def _episode_index_key(subscription_id: int) -> str:
         return f"podcast:episodes:index:{subscription_id}"
@@ -328,18 +345,27 @@ class PodcastRedis:
     # === Subscription List Cache ===
 
     async def get_subscription_list(
-        self, user_id: int, page: int, size: int
+        self,
+        user_id: int,
+        page: int,
+        size: int,
+        filters: dict[str, Any] | None = None,
     ) -> dict | None:
         """Get cached subscription list (15 minutes TTL)"""
-        key = f"podcast:subscriptions:{user_id}:{page}:{size}"
+        key = self._subscription_list_key(user_id, page, size, filters=filters)
         return await self.cache_get_json(key)
 
     async def set_subscription_list(
-        self, user_id: int, page: int, size: int, data: dict
+        self,
+        user_id: int,
+        page: int,
+        size: int,
+        data: dict,
+        filters: dict[str, Any] | None = None,
     ) -> bool:
         """Cache subscription list (15 minutes TTL)"""
         client = await self._get_client()
-        key = f"podcast:subscriptions:{user_id}:{page}:{size}"
+        key = self._subscription_list_key(user_id, page, size, filters=filters)
         cached = await self.cache_set_json(key, data, ttl=900)
         if cached:
             index_key = self._subscription_index_key(user_id)
@@ -362,8 +388,11 @@ class PodcastRedis:
         keys = list(await client.smembers(index_key))
         self._record_command_timing("SMEMBERS", (perf_counter() - started) * 1000)
         if not keys:
-            pattern = f"podcast:subscriptions:{user_id}:*"
+            pattern = f"podcast:subscriptions:v2:{user_id}:*"
             keys = await self._scan_keys(pattern)
+        if not keys:
+            legacy_pattern = f"podcast:subscriptions:{user_id}:*"
+            keys = await self._scan_keys(legacy_pattern)
         if keys:
             delete_started = perf_counter()
             await client.delete(*keys, index_key)

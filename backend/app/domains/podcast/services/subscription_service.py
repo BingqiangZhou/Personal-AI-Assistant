@@ -49,8 +49,7 @@ class PodcastSubscriptionService:
         self.parser = SecureRSSParser(user_id)
 
     async def add_subscription(
-        self,
-        feed_url: str
+        self, feed_url: str
     ) -> tuple[Subscription, list[PodcastEpisode]]:
         """
         Add a new podcast subscription.
@@ -72,7 +71,9 @@ class PodcastSubscriptionService:
         # 2. Check subscription limit
         existing_subs = await self.repo.get_user_subscriptions(self.user_id)
         if len(existing_subs) >= settings.MAX_PODCAST_SUBSCRIPTIONS:
-            raise ValueError(f"Maximum subscription limit reached: {settings.MAX_PODCAST_SUBSCRIPTIONS}")
+            raise ValueError(
+                f"Maximum subscription limit reached: {settings.MAX_PODCAST_SUBSCRIPTIONS}"
+            )
 
         # 3. Create or update subscription
         metadata = {
@@ -84,7 +85,7 @@ class PodcastSubscriptionService:
             "podcast_type": feed.podcast_type,
             "link": feed.link,
             "total_episodes": len(feed.episodes),
-            "platform": feed.platform
+            "platform": feed.platform,
         }
 
         subscription = await self.repo.create_or_update_subscription(
@@ -93,7 +94,7 @@ class PodcastSubscriptionService:
             feed.title,
             feed.description,
             None,  # custom_name
-            metadata=metadata
+            metadata=metadata,
         )
 
         # 4. Save episodes in one transaction.
@@ -110,12 +111,21 @@ class PodcastSubscriptionService:
             episodes_data=episodes_payload,
         )
 
-        logger.info(f"User {self.user_id} added podcast: {feed.title}, {len(new_episodes)} new episodes")
+        try:
+            await self.redis.invalidate_subscription_list(self.user_id)
+        except Exception:
+            logger.warning(
+                "Failed to invalidate subscription list cache after add: user_id=%s",
+                self.user_id,
+            )
+
+        logger.info(
+            f"User {self.user_id} added podcast: {feed.title}, {len(new_episodes)} new episodes"
+        )
         return subscription, new_episodes
 
     async def add_subscriptions_batch(
-        self,
-        subscriptions_data: list[PodcastSubscriptionCreate]
+        self, subscriptions_data: list[PodcastSubscriptionCreate]
     ) -> list[dict[str, Any]]:
         """
         Batch add podcast subscriptions.
@@ -126,19 +136,25 @@ class PodcastSubscriptionService:
         Returns:
             List of result dictionaries
         """
-        logger.info(f"Starting batch subscription addition: {len(subscriptions_data)} items")
+        logger.info(
+            f"Starting batch subscription addition: {len(subscriptions_data)} items"
+        )
         results = []
 
         for sub_data in subscriptions_data:
             try:
                 # Check if already exists
-                existing = await self.repo.get_subscription_by_url(self.user_id, sub_data.feed_url)
+                existing = await self.repo.get_subscription_by_url(
+                    self.user_id, sub_data.feed_url
+                )
                 if existing:
-                    results.append({
-                        "source_url": sub_data.feed_url,
-                        "status": "skipped",
-                        "message": "Subscription already exists"
-                    })
+                    results.append(
+                        {
+                            "source_url": sub_data.feed_url,
+                            "status": "skipped",
+                            "message": "Subscription already exists",
+                        }
+                    )
                     continue
 
                 # Add subscription
@@ -146,13 +162,15 @@ class PodcastSubscriptionService:
                     sub_data.feed_url
                 )
 
-                results.append({
-                    "source_url": sub_data.feed_url,
-                    "status": "success",
-                    "id": subscription.id,
-                    "title": subscription.title,
-                    "new_episodes": len(new_episodes)
-                })
+                results.append(
+                    {
+                        "source_url": sub_data.feed_url,
+                        "status": "success",
+                        "id": subscription.id,
+                        "title": subscription.title,
+                        "new_episodes": len(new_episodes),
+                    }
+                )
 
             except Exception as e:
                 logger.error(f"Batch add subscription failed {sub_data.feed_url}: {e}")
@@ -161,19 +179,18 @@ class PodcastSubscriptionService:
                 except Exception as rollback_error:
                     logger.warning(f"Session rollback failed: {rollback_error}")
 
-                results.append({
-                    "source_url": sub_data.feed_url,
-                    "status": "error",
-                    "message": str(e)
-                })
+                results.append(
+                    {
+                        "source_url": sub_data.feed_url,
+                        "status": "error",
+                        "message": str(e),
+                    }
+                )
 
         return results
 
     async def list_subscriptions(
-        self,
-        filters: dict | None = None,
-        page: int = 1,
-        size: int = 20
+        self, filters: dict | None = None, page: int = 1, size: int = 20
     ) -> tuple[list[dict], int]:
         """
         List user subscriptions with pagination.
@@ -186,11 +203,27 @@ class PodcastSubscriptionService:
         Returns:
             Tuple of (subscriptions list, total count)
         """
+        cache_filters = self._build_subscription_cache_filters(filters)
+        try:
+            cached = await self.redis.get_subscription_list(
+                self.user_id,
+                page,
+                size,
+                filters=cache_filters,
+            )
+            if (
+                isinstance(cached, dict)
+                and isinstance(cached.get("subscriptions"), list)
+                and isinstance(cached.get("total"), int)
+            ):
+                return cached["subscriptions"], cached["total"]
+        except Exception:
+            logger.warning(
+                "Redis cache read failed for subscription list, falling back to DB"
+            )
+
         subscriptions, total = await self.repo.get_user_subscriptions_paginated(
-            self.user_id,
-            page=page,
-            size=size,
-            filters=filters
+            self.user_id, page=page, size=size, filters=filters
         )
 
         # Batch fetch episode counts and recent episodes
@@ -198,14 +231,16 @@ class PodcastSubscriptionService:
         episode_counts = await self.repo.get_episodes_counts_batch(subscription_ids)
         episodes_batch = await self.repo.get_subscription_episodes_batch(
             subscription_ids,
-            limit_per_subscription=settings.PODCAST_RECENT_EPISODES_LIMIT
+            limit_per_subscription=settings.PODCAST_RECENT_EPISODES_LIMIT,
         )
 
         # Batch fetch playback states
         all_episode_ids = []
         for ep_list in episodes_batch.values():
             all_episode_ids.extend([ep.id for ep in ep_list])
-        playback_states = await self.repo.get_playback_states_batch(self.user_id, all_episode_ids)
+        playback_states = await self.repo.get_playback_states_batch(
+            self.user_id, all_episode_ids
+        )
 
         # Build response
         results = []
@@ -216,8 +251,14 @@ class PodcastSubscriptionService:
             unplayed_count = 0
             for ep in episodes:
                 playback = playback_states.get(ep.id)
-                if not playback or not playback.current_position or \
-                   (ep.audio_duration and playback.current_position < ep.audio_duration * 0.9):
+                if (
+                    not playback
+                    or not playback.current_position
+                    or (
+                        ep.audio_duration
+                        and playback.current_position < ep.audio_duration * 0.9
+                    )
+                ):
                     unplayed_count += 1
 
             episode_count = episode_counts.get(sub.id, 0)
@@ -233,7 +274,9 @@ class PodcastSubscriptionService:
 
             # Debug logging for missing image_url
             if not image_url:
-                logger.warning(f"[DEBUG] Subscription {sub.id} ({sub.title}) has no image_url. config keys: {list(config.keys()) if config else 'config is None'}")
+                logger.warning(
+                    f"[DEBUG] Subscription {sub.id} ({sub.title}) has no image_url. config keys: {list(config.keys()) if config else 'config is None'}"
+                )
             categories = self._normalize_categories(config.get("categories") or [])
             podcast_type = config.get("podcast_type")
             language = config.get("language")
@@ -252,34 +295,47 @@ class PodcastSubscriptionService:
                     "duration": latest.audio_duration,
                     "published_at": latest.published_at,
                     "ai_summary": latest.ai_summary,
-                    "status": latest.status
+                    "status": latest.status,
                 }
 
-            results.append({
-                "id": sub.id,
-                "user_id": self.user_id,
-                "title": sub.title,
-                "description": sub.description,
-                "source_url": sub.source_url,
-                "status": sub.status,
-                "last_fetched_at": sub.last_fetched_at,
-                "error_message": sub.error_message,
-                "fetch_interval": sub.fetch_interval,
-                "episode_count": episode_count,
-                "unplayed_count": unplayed_count,
-                "latest_episode": latest_episode_dict,
-                "categories": categories,
-                "image_url": image_url,
-                "author": author,
-                "platform": platform,
-                "podcast_type": podcast_type,
-                "language": language,
-                "explicit": explicit,
-                "link": link,
-                "total_episodes_from_config": total_episodes_from_config,
-                "created_at": sub.created_at,
-                "updated_at": sub.updated_at
-            })
+            results.append(
+                {
+                    "id": sub.id,
+                    "user_id": self.user_id,
+                    "title": sub.title,
+                    "description": sub.description,
+                    "source_url": sub.source_url,
+                    "status": sub.status,
+                    "last_fetched_at": sub.last_fetched_at,
+                    "error_message": sub.error_message,
+                    "fetch_interval": sub.fetch_interval,
+                    "episode_count": episode_count,
+                    "unplayed_count": unplayed_count,
+                    "latest_episode": latest_episode_dict,
+                    "categories": categories,
+                    "image_url": image_url,
+                    "author": author,
+                    "platform": platform,
+                    "podcast_type": podcast_type,
+                    "language": language,
+                    "explicit": explicit,
+                    "link": link,
+                    "total_episodes_from_config": total_episodes_from_config,
+                    "created_at": sub.created_at,
+                    "updated_at": sub.updated_at,
+                }
+            )
+
+        try:
+            await self.redis.set_subscription_list(
+                self.user_id,
+                page,
+                size,
+                {"subscriptions": results, "total": total},
+                filters=cache_filters,
+            )
+        except Exception:
+            logger.warning("Redis cache write failed for subscription list, skipping")
 
         return results, total
 
@@ -298,8 +354,7 @@ class PodcastSubscriptionService:
             return None
 
         episodes = await self.repo.get_subscription_episodes(
-            subscription_id,
-            limit=settings.PODCAST_EPISODE_BATCH_SIZE
+            subscription_id, limit=settings.PODCAST_EPISODE_BATCH_SIZE
         )
         pending_count = len([e for e in episodes if not e.ai_summary])
 
@@ -330,18 +385,25 @@ class PodcastSubscriptionService:
             "link": link,
             "episode_count": len(episodes),
             "pending_summaries": pending_count,
-            "episodes": [{
-                "id": ep.id,
-                "title": ep.title,
-                "description": ep.description[:100] + "..." if len(ep.description) > 100 else ep.description,
-                "audio_url": ep.audio_url,
-                "duration": ep.audio_duration,
-                "published_at": ep.published_at,
-                "has_summary": ep.ai_summary is not None,
-                "summary": ep.ai_summary[:200] + "..." if ep.ai_summary and len(ep.ai_summary) > 200 else ep.ai_summary,
-                "ai_confidence": ep.ai_confidence_score,
-                "play_count": ep.play_count
-            } for ep in episodes]
+            "episodes": [
+                {
+                    "id": ep.id,
+                    "title": ep.title,
+                    "description": ep.description[:100] + "..."
+                    if len(ep.description) > 100
+                    else ep.description,
+                    "audio_url": ep.audio_url,
+                    "duration": ep.audio_duration,
+                    "published_at": ep.published_at,
+                    "has_summary": ep.ai_summary is not None,
+                    "summary": ep.ai_summary[:200] + "..."
+                    if ep.ai_summary and len(ep.ai_summary) > 200
+                    else ep.ai_summary,
+                    "ai_confidence": ep.ai_confidence_score,
+                    "play_count": ep.play_count,
+                }
+                for ep in episodes
+            ],
         }
 
     async def refresh_subscription(self, subscription_id: int) -> list[PodcastEpisode]:
@@ -405,23 +467,28 @@ class PodcastSubscriptionService:
         # Only update metadata if the feed provided valid data
         if feed.image_url or feed.author or feed.categories:
             await self.repo.update_subscription_metadata(subscription_id, metadata)
-            logger.debug(f"Updated subscription {subscription_id} metadata: image_url={feed.image_url}")
+            logger.debug(
+                f"Updated subscription {subscription_id} metadata: image_url={feed.image_url}"
+            )
 
         # Update last fetch time
-        await self.repo.update_subscription_fetch_time(subscription_id, feed.last_fetched)
+        await self.repo.update_subscription_fetch_time(
+            subscription_id, feed.last_fetched
+        )
 
         # Invalidate episode list cache since we've added new episodes
         await self.redis.invalidate_episode_list(subscription_id)
+        await self.redis.invalidate_subscription_list(self.user_id)
 
         if len(new_episodes) > 0:
-            logger.info(f"User {self.user_id} refreshed subscription: {sub.title}, found {len(new_episodes)} new episodes")
+            logger.info(
+                f"User {self.user_id} refreshed subscription: {sub.title}, found {len(new_episodes)} new episodes"
+            )
 
         return new_episodes
 
     async def reparse_subscription(
-        self,
-        subscription_id: int,
-        force_all: bool = False
+        self, subscription_id: int, force_all: bool = False
     ) -> dict:
         """
         Re-parse all episodes for a subscription.
@@ -437,7 +504,9 @@ class PodcastSubscriptionService:
         if not sub:
             raise ValueError("Subscription not found")
 
-        logger.info(f"User {self.user_id} starting re-parse of subscription: {sub.title}")
+        logger.info(
+            f"User {self.user_id} starting re-parse of subscription: {sub.title}"
+        )
 
         # Parse RSS feed
         success, feed, error = await self.parser.fetch_and_parse_feed(sub.source_url)
@@ -447,8 +516,12 @@ class PodcastSubscriptionService:
         # Get existing episode links
         existing_item_links = set()
         if not force_all:
-            existing_episodes = await self.repo.get_subscription_episodes(subscription_id, limit=None)
-            existing_item_links = {ep.item_link for ep in existing_episodes if ep.item_link}
+            existing_episodes = await self.repo.get_subscription_episodes(
+                subscription_id, limit=None
+            )
+            existing_item_links = {
+                ep.item_link for ep in existing_episodes if ep.item_link
+            }
 
         reparsed_at = datetime.now(timezone.utc).isoformat()
         episodes_to_process = [
@@ -467,7 +540,10 @@ class PodcastSubscriptionService:
             )
             for episode in episodes_to_process
         ]
-        processed_episodes, new_episode_rows = await self.repo.create_or_update_episodes_batch(
+        (
+            processed_episodes,
+            new_episode_rows,
+        ) = await self.repo.create_or_update_episodes_batch(
             subscription_id=subscription_id,
             episodes_data=episodes_payload,
         )
@@ -491,10 +567,13 @@ class PodcastSubscriptionService:
         }
 
         await self.repo.update_subscription_metadata(subscription_id, metadata)
-        await self.repo.update_subscription_fetch_time(subscription_id, feed.last_fetched)
+        await self.repo.update_subscription_fetch_time(
+            subscription_id, feed.last_fetched
+        )
 
         # Invalidate episode list cache since we've updated episodes
         await self.redis.invalidate_episode_list(subscription_id)
+        await self.redis.invalidate_subscription_list(self.user_id)
 
         result = {
             "subscription_id": subscription_id,
@@ -504,7 +583,7 @@ class PodcastSubscriptionService:
             "new_episodes": new_episodes,
             "updated_episodes": updated_episodes,
             "failed": failed,
-            "message": f"Re-parse completed: {processed} processed, {new_episodes} new, {updated_episodes} updated, {failed} failed"
+            "message": f"Re-parse completed: {processed} processed, {new_episodes} new, {updated_episodes} updated, {failed} failed",
         }
 
         logger.info(f"User {self.user_id} re-parse completed: {result}")
@@ -536,6 +615,7 @@ class PodcastSubscriptionService:
                 return False
 
             await self.redis.invalidate_episode_list(subscription_id)
+            await self.redis.invalidate_subscription_list(self.user_id)
             logger.info(
                 f"User {self.user_id} unsubscribed from subscription {subscription_id}"
             )
@@ -546,8 +626,7 @@ class PodcastSubscriptionService:
             raise
 
     async def remove_subscriptions_bulk(
-        self,
-        subscription_ids: list[int]
+        self, subscription_ids: list[int]
     ) -> dict[str, Any]:
         """
         Bulk remove subscriptions.
@@ -584,17 +663,14 @@ class PodcastSubscriptionService:
 
             except Exception as e:
                 logger.error(f"Bulk remove subscription {subscription_id} failed: {e}")
-                errors.append({
-                    "subscription_id": subscription_id,
-                    "error": str(e)
-                })
+                errors.append({"subscription_id": subscription_id, "error": str(e)})
                 failed_count += 1
 
         return {
             "success_count": success_count,
             "failed_count": failed_count,
             "errors": errors,
-            "deleted_subscription_ids": deleted_subscription_ids
+            "deleted_subscription_ids": deleted_subscription_ids,
         }
 
     # === Private helper methods ===
@@ -610,6 +686,16 @@ class PodcastSubscriptionService:
             else:
                 categories.append({"name": str(cat)})
         return categories
+
+    @staticmethod
+    def _build_subscription_cache_filters(filters: Any) -> dict[str, Any]:
+        """Build a compact, deterministic filter payload for cache keys."""
+        if not filters:
+            return {}
+        return {
+            "category_id": getattr(filters, "category_id", None),
+            "status": getattr(filters, "status", None),
+        }
 
     @staticmethod
     def _build_episode_payload(
@@ -633,9 +719,7 @@ class PodcastSubscriptionService:
         }
 
     async def _validate_and_get_subscription(
-        self,
-        subscription_id: int,
-        check_source_type: bool = False
+        self, subscription_id: int, check_source_type: bool = False
     ) -> Subscription | None:
         """Validate subscription exists and belongs to user."""
         from sqlalchemy import and_, select
@@ -649,7 +733,7 @@ class PodcastSubscriptionService:
                 and_(
                     Subscription.id == subscription_id,
                     UserSubscription.user_id == self.user_id,
-                    UserSubscription.is_archived == False
+                    UserSubscription.is_archived.is_(False),
                 )
             )
         )

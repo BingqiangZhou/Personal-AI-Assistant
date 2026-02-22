@@ -25,7 +25,9 @@ async def async_client(performance_base_url: str) -> AsyncClient:
     if not run_performance_tests:
         from app.main import app
 
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(
+            app=app, base_url="http://test", trust_env=False
+        ) as client:
             yield client
         return
 
@@ -33,7 +35,11 @@ async def async_client(performance_base_url: str) -> AsyncClient:
     health_retries = int(os.getenv("PERFORMANCE_HEALTH_RETRIES", "20"))
     health_interval = float(os.getenv("PERFORMANCE_HEALTH_RETRY_INTERVAL", "1"))
 
-    async with AsyncClient(base_url=performance_base_url, timeout=timeout) as client:
+    async with AsyncClient(
+        base_url=performance_base_url,
+        timeout=timeout,
+        trust_env=False,
+    ) as client:
         # Ensure target service is reachable before test execution.
         for attempt in range(health_retries):
             try:
@@ -89,4 +95,3 @@ async def auth_headers(async_client: AsyncClient) -> dict[str, str]:
     if not access_token:
         pytest.skip("Performance auth token is missing in auth response payload")
     return {"Authorization": f"Bearer {access_token}"}
-
