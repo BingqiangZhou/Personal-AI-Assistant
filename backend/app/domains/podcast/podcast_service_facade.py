@@ -5,6 +5,7 @@ Backward-compatible facade that delegates to specialized services.
 
 # ruff: noqa: UP007
 import warnings
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -117,6 +118,30 @@ class PodcastService:
     ) -> tuple[list[dict], int]:
         return await self.episode_service.list_playback_history(page=page, size=size)
 
+    async def get_feed_by_cursor(
+        self,
+        size: int = 20,
+        cursor_published_at: datetime | None = None,
+        cursor_episode_id: int | None = None,
+    ) -> tuple[list[dict], int, bool, tuple[datetime, int] | None]:
+        return await self.episode_service.list_feed_by_cursor(
+            size=size,
+            cursor_published_at=cursor_published_at,
+            cursor_episode_id=cursor_episode_id,
+        )
+
+    async def get_playback_history_by_cursor(
+        self,
+        size: int = 20,
+        cursor_last_updated_at: datetime | None = None,
+        cursor_episode_id: int | None = None,
+    ) -> tuple[list[dict], int, bool, tuple[datetime, int] | None]:
+        return await self.episode_service.list_playback_history_by_cursor(
+            size=size,
+            cursor_last_updated_at=cursor_last_updated_at,
+            cursor_episode_id=cursor_episode_id,
+        )
+
     async def get_playback_history_lite(
         self,
         page: int = 1,
@@ -154,7 +179,9 @@ class PodcastService:
     async def get_daily_report(self, target_date=None) -> dict[str, Any]:
         return await self.daily_report_service.get_daily_report(target_date)
 
-    async def list_daily_report_dates(self, page: int = 1, size: int = 30) -> dict[str, Any]:
+    async def list_daily_report_dates(
+        self, page: int = 1, size: int = 30
+    ) -> dict[str, Any]:
         return await self.daily_report_service.list_report_dates(page=page, size=size)
 
     # Schedule management

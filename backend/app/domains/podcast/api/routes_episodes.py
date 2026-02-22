@@ -1,13 +1,16 @@
 """Podcast episode, summary, search, and recommendation routes."""
 # ruff: noqa
 
+import base64
+import binascii
+import json
 import logging
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
-from app.core.etag import ETagResponse, check_etag_precondition
+from app.core.etag import build_conditional_etag_response
 from app.domains.podcast.api.dependencies import (
     get_podcast_service,
     get_summary_service,
@@ -49,6 +52,83 @@ def _bilingual_error(
     )
 
 
+def _encode_page_cursor(page: int) -> str:
+    raw = str(page).encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("utf-8").rstrip("=")
+
+
+def _encode_keyset_cursor(
+    cursor_type: str, timestamp: datetime, episode_id: int
+) -> str:
+    # Normalize to naive UTC to avoid tz-aware/naive comparison issues in SQL filters.
+    normalized = timestamp
+    if normalized.tzinfo is not None:
+        normalized = normalized.astimezone(timezone.utc).replace(tzinfo=None)
+
+    payload = {
+        "v": 2,
+        "type": cursor_type,
+        "ts": normalized.isoformat(),
+        "id": episode_id,
+    }
+    raw = json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    return base64.urlsafe_b64encode(raw).decode("utf-8").rstrip("=")
+
+
+def _decode_cursor(cursor: str) -> dict[str, Any]:
+    """Decode cursor token with backward compatibility for legacy page cursor."""
+    padding = "=" * (-len(cursor) % 4)
+    try:
+        decoded = base64.urlsafe_b64decode(f"{cursor}{padding}").decode("utf-8")
+    except (ValueError, binascii.Error) as exc:
+        raise _bilingual_error(
+            "Invalid cursor",
+            "娓告爣鍙傛暟鏃犳晥",
+            status.HTTP_400_BAD_REQUEST,
+        ) from exc
+
+    # Legacy page cursor.
+    try:
+        page = int(decoded)
+        if page < 1:
+            raise ValueError("page must be >= 1")
+        return {"mode": "page", "page": page}
+    except ValueError:
+        pass
+
+    try:
+        payload = json.loads(decoded)
+        if not isinstance(payload, dict):
+            raise ValueError("payload must be object")
+
+        cursor_type = payload.get("type")
+        timestamp_raw = payload.get("ts")
+        episode_id = payload.get("id")
+        if cursor_type not in {"feed", "history"}:
+            raise ValueError("unsupported cursor type")
+        if not isinstance(timestamp_raw, str):
+            raise ValueError("timestamp missing")
+        if not isinstance(episode_id, int) or episode_id <= 0:
+            raise ValueError("episode id missing")
+
+        timestamp = datetime.fromisoformat(timestamp_raw)
+        if timestamp.tzinfo is not None:
+            timestamp = timestamp.astimezone(timezone.utc).replace(tzinfo=None)
+
+        return {
+            "mode": "keyset",
+            "type": cursor_type,
+            "ts": timestamp,
+            "id": episode_id,
+        }
+    except (ValueError, TypeError, json.JSONDecodeError) as exc:
+        raise _bilingual_error(
+            "Invalid cursor",
+            "娓告爣鍙傛暟鏃犳晥",
+            status.HTTP_400_BAD_REQUEST,
+        ) from exc
+
+
 @router.get(
     "/episodes/feed",
     response_model=PodcastFeedResponse,
@@ -57,36 +137,62 @@ def _bilingual_error(
 async def get_podcast_feed(
     request: Request,
     page: int = Query(1, ge=1, description="Page number"),
+    cursor: str | None = Query(None, description="Cursor token for pagination"),
     page_size: int = Query(10, ge=1, le=50, description="Page size"),
     service: PodcastService = Depends(get_podcast_service),
 ):
     """Return all subscribed episodes ordered by publish date desc."""
-    episodes, total = await service.list_episodes(
-        filters=None, page=page, size=page_size
-    )
-    episode_responses = [PodcastEpisodeResponse(**ep) for ep in episodes]
+    decoded_cursor = _decode_cursor(cursor) if cursor else None
 
-    has_more = (page * page_size) < total
-    next_page = page + 1 if has_more else None
+    if decoded_cursor and decoded_cursor["mode"] == "keyset":
+        if decoded_cursor["type"] != "feed":
+            raise _bilingual_error(
+                "Cursor is not valid for this endpoint",
+                "娓告爣涓嶉€傜敤浜庡綋鍓嶆帴鍙?",
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        (
+            episodes,
+            total,
+            has_more,
+            next_cursor_values,
+        ) = await service.get_feed_by_cursor(
+            size=page_size,
+            cursor_published_at=decoded_cursor["ts"],
+            cursor_episode_id=decoded_cursor["id"],
+        )
+        next_page = None
+        next_cursor = (
+            _encode_keyset_cursor("feed", next_cursor_values[0], next_cursor_values[1])
+            if next_cursor_values
+            else None
+        )
+    else:
+        resolved_page = (
+            decoded_cursor["page"]
+            if decoded_cursor and decoded_cursor["mode"] == "page"
+            else page
+        )
+        episodes, total = await service.list_episodes(
+            filters=None, page=resolved_page, size=page_size
+        )
+        has_more = (resolved_page * page_size) < total
+        next_page = resolved_page + 1 if has_more else None
+        next_cursor = _encode_page_cursor(next_page) if next_page else None
+
+    episode_responses = [PodcastEpisodeResponse(**ep) for ep in episodes]
 
     response_data = PodcastFeedResponse(
         items=episode_responses,
         has_more=has_more,
         next_page=next_page,
+        next_cursor=next_cursor,
         total=total,
     )
-
-    etag_response = await check_etag_precondition(
-        request,
-        response_data.dict(),
-        max_age=600,
-        cache_control="private, max-age=600",
-    )
-    if etag_response:
-        return etag_response
-
-    return ETagResponse(
-        content=response_data.dict(),
+    return build_conditional_etag_response(
+        request=request,
+        content=response_data,
         max_age=600,
         cache_control="private, max-age=600",
     )
@@ -131,21 +237,70 @@ async def list_episodes(
     summary="List playback history",
 )
 async def list_playback_history(
+    request: Request,
     page: int = Query(1, ge=1, description="Page number"),
+    cursor: str | None = Query(None, description="Cursor token for pagination"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
     service: PodcastService = Depends(get_podcast_service),
 ):
-    episodes, total = await service.get_playback_history(page=page, size=size)
+    decoded_cursor = _decode_cursor(cursor) if cursor else None
+
+    if decoded_cursor and decoded_cursor["mode"] == "keyset":
+        if decoded_cursor["type"] != "history":
+            raise _bilingual_error(
+                "Cursor is not valid for this endpoint",
+                "娓告爣涓嶉€傜敤浜庡綋鍓嶆帴鍙?",
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        (
+            episodes,
+            total,
+            _,
+            next_cursor_values,
+        ) = await service.get_playback_history_by_cursor(
+            size=size,
+            cursor_last_updated_at=decoded_cursor["ts"],
+            cursor_episode_id=decoded_cursor["id"],
+        )
+        resolved_page = page
+        next_cursor = (
+            _encode_keyset_cursor(
+                "history", next_cursor_values[0], next_cursor_values[1]
+            )
+            if next_cursor_values
+            else None
+        )
+    else:
+        resolved_page = (
+            decoded_cursor["page"]
+            if decoded_cursor and decoded_cursor["mode"] == "page"
+            else page
+        )
+        episodes, total = await service.get_playback_history(
+            page=resolved_page, size=size
+        )
+        pages = (total + size - 1) // size
+        next_page = resolved_page + 1 if resolved_page < pages else None
+        next_cursor = _encode_page_cursor(next_page) if next_page else None
+
     episode_responses = [PodcastEpisodeResponse(**ep) for ep in episodes]
     pages = (total + size - 1) // size
 
-    return PodcastEpisodeListResponse(
+    response_data = PodcastEpisodeListResponse(
         episodes=episode_responses,
         total=total,
-        page=page,
+        page=resolved_page,
         size=size,
         pages=pages,
         subscription_id=0,
+        next_cursor=next_cursor,
+    )
+    return build_conditional_etag_response(
+        request=request,
+        content=response_data,
+        max_age=300,
+        cache_control="private, max-age=300",
     )
 
 
@@ -189,18 +344,9 @@ async def get_episode(
         )
 
     response_data = PodcastEpisodeDetailResponse(**episode)
-
-    etag_response = await check_etag_precondition(
-        request,
-        response_data.dict(),
-        max_age=1800,
-        cache_control="private, max-age=1800",
-    )
-    if etag_response:
-        return etag_response
-
-    return ETagResponse(
-        content=response_data.dict(),
+    return build_conditional_etag_response(
+        request=request,
+        content=response_data,
         max_age=1800,
         cache_control="private, max-age=1800",
     )
@@ -290,18 +436,18 @@ async def update_playback_progress(
         if str(exc) == "Episode not found":
             raise _bilingual_error(
                 "Episode not found",
-                "未找到该单集",
+                "鏈壘鍒拌鍗曢泦",
                 status.HTTP_404_NOT_FOUND,
             ) from exc
         raise _bilingual_error(
             "Failed to update playback progress",
-            "更新播放进度失败",
+            "鏇存柊鎾斁杩涘害澶辫触",
             status.HTTP_400_BAD_REQUEST,
         ) from exc
     except Exception as exc:
         raise _bilingual_error(
             "Failed to update playback progress",
-            "更新播放进度失败",
+            "鏇存柊鎾斁杩涘害澶辫触",
             status.HTTP_500_INTERNAL_SERVER_ERROR,
         ) from exc
 
@@ -363,31 +509,31 @@ async def apply_playback_rate_preference(
         if code == "SUBSCRIPTION_ID_REQUIRED":
             raise _bilingual_error(
                 "subscription_id is required when apply_to_subscription is true",
-                "当仅应用于当前订阅时，subscription_id 为必填",
+                "subscription_id is required",
                 status.HTTP_400_BAD_REQUEST,
             ) from exc
         if code == "SUBSCRIPTION_NOT_FOUND":
             raise _bilingual_error(
                 "Subscription not found",
-                "未找到该订阅",
+                "鏈壘鍒拌璁㈤槄",
                 status.HTTP_404_NOT_FOUND,
             ) from exc
         if code == "USER_NOT_FOUND":
             raise _bilingual_error(
                 "User not found",
-                "未找到用户",
+                "User not found",
                 status.HTTP_404_NOT_FOUND,
             ) from exc
         raise _bilingual_error(
             "Failed to apply playback preference",
-            "应用播放偏好失败",
+            "搴旂敤鎾斁鍋忓ソ澶辫触",
             status.HTTP_400_BAD_REQUEST,
         ) from exc
     except Exception as exc:
         logger.error("Failed to apply playback rate preference: %s", exc)
         raise _bilingual_error(
             "Failed to apply playback preference",
-            "应用播放偏好失败",
+            "搴旂敤鎾斁鍋忓ソ澶辫触",
             status.HTTP_500_INTERNAL_SERVER_ERROR,
         ) from exc
 
@@ -439,7 +585,13 @@ async def get_summary_models(
     summary="Search podcast content",
 )
 async def search_podcasts(
-    q: str = Query(..., min_length=1, description="Search keyword"),
+    q: Optional[str] = Query(None, min_length=1, description="Search keyword"),
+    query: Optional[str] = Query(
+        None,
+        alias="query",
+        min_length=1,
+        description="Backward-compatible alias for q",
+    ),
     search_in: Optional[str] = Query(
         "all", description="Search scope: title, description, summary, all"
     ),
@@ -447,8 +599,16 @@ async def search_podcasts(
     size: int = Query(20, ge=1, le=100, description="Page size"),
     service: PodcastService = Depends(get_podcast_service),
 ):
+    keyword = (q or query or "").strip()
+    if not keyword:
+        raise _bilingual_error(
+            "Either q or query must be provided",
+            "蹇呴』鎻愪緵 q 鎴?query 鍙傛暟",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+
     episodes, total = await service.search_podcasts(
-        query=q,
+        query=keyword,
         search_in=search_in,
         page=page,
         size=size,

@@ -55,13 +55,21 @@ class DioClient {
 
     // Initialize with default/empty baseUrl first
     // The actual baseUrl will be applied by _applySavedBaseUrl()
-    _dio = Dio(BaseOptions(
-      baseUrl: '',  // Will be set by _applySavedBaseUrl
-      headers: constants.ApiConstants.headers,
-      connectTimeout: Duration(milliseconds: constants.ApiConstants.connectTimeout.inMilliseconds),
-      receiveTimeout: Duration(milliseconds: constants.ApiConstants.receiveTimeout.inMilliseconds),
-      sendTimeout: Duration(milliseconds: constants.ApiConstants.sendTimeout.inMilliseconds),
-    ));
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: '', // Will be set by _applySavedBaseUrl
+        headers: constants.ApiConstants.headers,
+        connectTimeout: Duration(
+          milliseconds: constants.ApiConstants.connectTimeout.inMilliseconds,
+        ),
+        receiveTimeout: Duration(
+          milliseconds: constants.ApiConstants.receiveTimeout.inMilliseconds,
+        ),
+        sendTimeout: Duration(
+          milliseconds: constants.ApiConstants.sendTimeout.inMilliseconds,
+        ),
+      ),
+    );
 
     // Add cache interceptor FIRST (before auth interceptor)
     _dio.interceptors.add(_cacheInterceptor);
@@ -106,7 +114,9 @@ class DioClient {
         : '${config.AppConfig.serverBaseUrl}/api/v1';
 
     _dio.options.baseUrl = apiBaseUrl;
-    logger.AppLogger.debug(' [DioClient] Initialized with baseUrl: $apiBaseUrl');
+    logger.AppLogger.debug(
+      ' [DioClient] Initialized with baseUrl: $apiBaseUrl',
+    );
 
     // Apply any saved URL from storage asynchronously to ensure it's up to date
     _applySavedBaseUrl();
@@ -144,7 +154,9 @@ class DioClient {
 
         // Apply with /api/v1 suffix
         updateBaseUrl('$normalizedUrl/api/v1');
-        logger.AppLogger.debug(' [DioClient] Applied saved backend API baseUrl: $savedUrl');
+        logger.AppLogger.debug(
+          ' [DioClient] Applied saved backend API baseUrl: $savedUrl',
+        );
       }
     } catch (e) {
       logger.AppLogger.debug(' [DioClient] Failed to apply saved baseUrl: $e');
@@ -167,22 +179,25 @@ class DioClient {
 
     // Only add token if not already set (e.g., by retry logic)
     if (!options.headers.containsKey('Authorization')) {
-      final token = await _secureStorage.read(key: config.AppConstants.accessTokenKey);
+      final token = await _secureStorage.read(
+        key: config.AppConstants.accessTokenKey,
+      );
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
-        logger.AppLogger.debug('[AUTH]    ?Token added: ${token.substring(0, 20)}...');
+        logger.AppLogger.debug(
+          '[AUTH]    ?Token added: ${token.substring(0, 20)}...',
+        );
       } else {
-        logger.AppLogger.debug('[AUTH]     No token found - skipping auth, will return 401 if protected route');
+        logger.AppLogger.debug(
+          '[AUTH]     No token found - skipping auth, will return 401 if protected route',
+        );
       }
     }
 
     handler.next(options);
   }
 
-  void _onResponse(
-    Response response,
-    ResponseInterceptorHandler handler,
-  ) {
+  void _onResponse(Response response, ResponseInterceptorHandler handler) {
     // Debug subscriptions list response shape
     if (response.requestOptions.path == '/subscriptions/podcasts') {
       final data = response.data;
@@ -194,26 +209,30 @@ class DioClient {
           'total=${data['total']}',
         );
       } else {
-        logger.AppLogger.debug('?? [Subscriptions Response] type=${data.runtimeType}');
+        logger.AppLogger.debug(
+          '?? [Subscriptions Response] type=${data.runtimeType}',
+        );
       }
     }
     // 🔍 Debug: 打印AI Summary相关响应
     if (response.requestOptions.path.contains('/episodes/')) {
       final data = response.data;
       if (data is Map && data.containsKey('ai_summary')) {
-        logger.AppLogger.debug(' [API RESPONSE] Episode ${data['id']} has ai_summary: ${data['ai_summary'] != null ? "YES (${data['ai_summary'].length} chars)" : "NO"}');
+        logger.AppLogger.debug(
+          ' [API RESPONSE] Episode ${data['id']} has ai_summary: ${data['ai_summary'] != null ? "YES (${data['ai_summary'].length} chars)" : "NO"}',
+        );
       }
     }
     handler.next(response);
   }
 
-  void _onError(
-    DioException error,
-    ErrorInterceptorHandler handler,
-  ) async {
+  void _onError(DioException error, ErrorInterceptorHandler handler) async {
     // 🔍 DEBUG: 输出错误请求的完整URL
-    final errorUrl = '${error.requestOptions.baseUrl}/${error.requestOptions.path}';
-    logger.AppLogger.debug('?[API ERROR] ${error.requestOptions.method} $errorUrl');
+    final errorUrl =
+        '${error.requestOptions.baseUrl}/${error.requestOptions.path}';
+    logger.AppLogger.debug(
+      '?[API ERROR] ${error.requestOptions.method} $errorUrl',
+    );
     logger.AppLogger.debug('   Type: ${error.type}');
     logger.AppLogger.debug('   Message: ${error.message}');
 
@@ -235,11 +254,15 @@ class DioClient {
         if (statusCode != null) {
           if (statusCode == 401) {
             // Log 401 error details
-            logger.AppLogger.debug('[AUTH] ?401 Error: ${error.requestOptions.method} ${error.requestOptions.path}');
+            logger.AppLogger.debug(
+              '[AUTH] ?401 Error: ${error.requestOptions.method} ${error.requestOptions.path}',
+            );
             logger.AppLogger.debug('   Response: ${error.response?.data}');
 
             // Check if this is a refresh token request to avoid infinite loop
-            final isRefreshRequest = error.requestOptions.path.contains('/auth/refresh');
+            final isRefreshRequest = error.requestOptions.path.contains(
+              '/auth/refresh',
+            );
 
             if (!isRefreshRequest) {
               // Try to refresh the token
@@ -248,22 +271,31 @@ class DioClient {
               if (newToken != null) {
                 // Retry the original request with new token
                 try {
-                  final response = await _retryRequest(error.requestOptions, newToken);
+                  final response = await _retryRequest(
+                    error.requestOptions,
+                    newToken,
+                  );
                   handler.resolve(response);
                   return;
                 } on DioException catch (retryError) {
                   // Check if retry still fails with 401
                   if (retryError.response?.statusCode == 401) {
-                    logger.AppLogger.debug('[AUTH] ?Retry still returns 401, clearing tokens');
+                    logger.AppLogger.debug(
+                      '[AUTH] ?Retry still returns 401, clearing tokens',
+                    );
                     await _clearTokens();
                     // Token was refreshed but request still fails - likely permission/resource issue
                     // Don't confuse user with authentication error when it's actually authorization
-                    logger.AppLogger.debug('[AUTH]  Token refreshed but resource access denied - may not exist or no permission');
+                    logger.AppLogger.debug(
+                      '[AUTH]  Token refreshed but resource access denied - may not exist or no permission',
+                    );
                     handler.reject(retryError);
                     return;
                   }
                   // Pass the retry error to handler (could be 404, 403, etc.)
-                  logger.AppLogger.debug('[AUTH]  Retry failed with status: ${retryError.response?.statusCode}');
+                  logger.AppLogger.debug(
+                    '[AUTH]  Retry failed with status: ${retryError.response?.statusCode}',
+                  );
                   handler.reject(retryError);
                   return;
                 } catch (e) {
@@ -275,7 +307,9 @@ class DioClient {
                 }
               } else {
                 // Refresh failed, clear tokens and reject
-                logger.AppLogger.debug('[AUTH] ?Token refresh failed, clearing tokens');
+                logger.AppLogger.debug(
+                  '[AUTH] ?Token refresh failed, clearing tokens',
+                );
                 await _clearTokens();
               }
             }
@@ -311,7 +345,9 @@ class DioClient {
             logger.AppLogger.debug('=== Dio Client 409 Error ===');
             logger.AppLogger.debug('Response data: ${error.response?.data}');
             final conflictError = ConflictException.fromDioError(error);
-            logger.AppLogger.debug('ConflictException message: ${conflictError.message}');
+            logger.AppLogger.debug(
+              'ConflictException message: ${conflictError.message}',
+            );
             logger.AppLogger.debug('============================');
 
             handler.reject(
@@ -327,8 +363,12 @@ class DioClient {
             logger.AppLogger.debug('=== Dio Client 422 Error ===');
             logger.AppLogger.debug('Response data: ${error.response?.data}');
             final validationError = ValidationException.fromDioError(error);
-            logger.AppLogger.debug('ValidationException message: ${validationError.message}');
-            logger.AppLogger.debug('ValidationException fieldErrors: ${validationError.fieldErrors}');
+            logger.AppLogger.debug(
+              'ValidationException message: ${validationError.message}',
+            );
+            logger.AppLogger.debug(
+              'ValidationException fieldErrors: ${validationError.fieldErrors}',
+            );
             logger.AppLogger.debug('============================');
 
             handler.reject(
@@ -375,11 +415,15 @@ class DioClient {
     // Store completer in local variable to avoid race condition
     final completer = _refreshCompleter;
     if (completer != null && !completer.isCompleted) {
-      logger.AppLogger.debug('[AUTH]  Token refresh already in progress, waiting...');
+      logger.AppLogger.debug(
+        '[AUTH]  Token refresh already in progress, waiting...',
+      );
       final success = await completer.future;
       if (success) {
         // Return the token from storage for waiting requests
-        return await _secureStorage.read(key: config.AppConstants.accessTokenKey);
+        return await _secureStorage.read(
+          key: config.AppConstants.accessTokenKey,
+        );
       }
       return null;
     }
@@ -390,7 +434,9 @@ class DioClient {
     final currentCompleter = _refreshCompleter!;
 
     try {
-      final refreshToken = await _secureStorage.read(key: config.AppConstants.refreshTokenKey);
+      final refreshToken = await _secureStorage.read(
+        key: config.AppConstants.refreshTokenKey,
+      );
       if (refreshToken == null) {
         logger.AppLogger.debug('[AUTH] ?No refresh token found in storage');
         currentCompleter.complete(false);
@@ -403,9 +449,7 @@ class DioClient {
       final response = await _dio.post(
         '/auth/refresh',
         data: {'refresh_token': refreshToken},
-        options: Options(
-          headers: {'Content-Type': 'application/json'},
-        ),
+        options: Options(headers: {'Content-Type': 'application/json'}),
       );
 
       if (response.statusCode == 200 && response.data != null) {
@@ -413,18 +457,28 @@ class DioClient {
         final newRefreshToken = response.data['refresh_token'];
 
         if (newAccessToken != null) {
-          await _secureStorage.write(key: config.AppConstants.accessTokenKey, value: newAccessToken);
+          await _secureStorage.write(
+            key: config.AppConstants.accessTokenKey,
+            value: newAccessToken,
+          );
           if (newRefreshToken != null) {
-            await _secureStorage.write(key: config.AppConstants.refreshTokenKey, value: newRefreshToken);
+            await _secureStorage.write(
+              key: config.AppConstants.refreshTokenKey,
+              value: newRefreshToken,
+            );
           }
 
-          logger.AppLogger.debug('[AUTH] ?Token refresh successful - New token: ${newAccessToken.substring(0, 20)}...');
+          logger.AppLogger.debug(
+            '[AUTH] ?Token refresh successful - New token: ${newAccessToken.substring(0, 20)}...',
+          );
           currentCompleter.complete(true);
           return newAccessToken;
         }
       }
 
-      logger.AppLogger.debug('[AUTH] ?Token refresh failed: invalid response format');
+      logger.AppLogger.debug(
+        '[AUTH] ?Token refresh failed: invalid response format',
+      );
       currentCompleter.complete(false);
       await _clearTokens();
       return null;
@@ -440,13 +494,22 @@ class DioClient {
         logger.AppLogger.debug('   Response: $responseData');
 
         // If refresh token is invalid (404, 401, or specific error), clear tokens
-        if (statusCode == 404 || statusCode == 401 ||
-            (responseData is Map && responseData['detail']?.toString().toLowerCase().contains('invalid') == true)) {
-          logger.AppLogger.debug('[AUTH]  Refresh token invalid, clearing all tokens');
+        if (statusCode == 404 ||
+            statusCode == 401 ||
+            (responseData is Map &&
+                responseData['detail']?.toString().toLowerCase().contains(
+                      'invalid',
+                    ) ==
+                    true)) {
+          logger.AppLogger.debug(
+            '[AUTH]  Refresh token invalid, clearing all tokens',
+          );
           await _clearTokens();
         }
       } else {
-        logger.AppLogger.debug('[AUTH] ?Token refresh failed with unexpected error: $e');
+        logger.AppLogger.debug(
+          '[AUTH] ?Token refresh failed with unexpected error: $e',
+        );
         // Clear tokens on any unexpected error
         await _clearTokens();
       }
@@ -463,19 +526,25 @@ class DioClient {
     // Create a new headers map, removing any existing Authorization header (case-insensitive)
     // and adding the new one with the correct token
     final newHeaders = Map<String, dynamic>.from(options.headers);
-    newHeaders.removeWhere((key, value) => key.toLowerCase() == 'authorization');
+    newHeaders.removeWhere(
+      (key, value) => key.toLowerCase() == 'authorization',
+    );
     newHeaders['Authorization'] = 'Bearer $token';
 
     // Use copyWith to create a new RequestOptions with updated headers
     final newOptions = options.copyWith(headers: newHeaders);
 
-    logger.AppLogger.debug('[AUTH]  Retrying ${options.method} ${options.path} with new token: ${token.substring(0, 20)}...');
+    logger.AppLogger.debug(
+      '[AUTH]  Retrying ${options.method} ${options.path} with new token: ${token.substring(0, 20)}...',
+    );
     logger.AppLogger.debug('   Query: ${newOptions.queryParameters}');
     logger.AppLogger.debug('   Data: ${newOptions.data}');
 
     try {
       final response = await _dio.fetch(newOptions);
-      logger.AppLogger.debug('[AUTH] ?Retry successful: ${response.statusCode}');
+      logger.AppLogger.debug(
+        '[AUTH] ?Retry successful: ${response.statusCode}',
+      );
       return response;
     } catch (e) {
       logger.AppLogger.debug('[AUTH] ?Retry failed: $e');
@@ -487,13 +556,17 @@ class DioClient {
     await _secureStorage.delete(key: config.AppConstants.accessTokenKey);
     await _secureStorage.delete(key: config.AppConstants.refreshTokenKey);
     await _secureStorage.delete(key: config.AppConstants.userProfileKey);
-    logger.AppLogger.debug('[AUTH]  [DioClient] Tokens cleared, user will need to re-login');
+    logger.AppLogger.debug(
+      '[AUTH]  [DioClient] Tokens cleared, user will need to re-login',
+    );
 
     // Notify auth state listeners that tokens were cleared
-    AuthEventNotifier.instance.notify(AuthEvent(
-      type: AuthEventType.tokenCleared,
-      message: 'Tokens cleared due to authentication failure',
-    ));
+    AuthEventNotifier.instance.notify(
+      AuthEvent(
+        type: AuthEventType.tokenCleared,
+        message: 'Tokens cleared due to authentication failure',
+      ),
+    );
   }
 
   // HTTP methods
@@ -503,21 +576,33 @@ class DioClient {
     Duration? maxStale,
     CachePolicy? cachePolicy,
   }) async {
-    final options = Options();
-
-    // Apply cache control for specific endpoints
-    if (maxStale != null || cachePolicy != null) {
-      options.extra = {
-        'cache_key': path,
-        if (maxStale != null) 'cache_max_stale': maxStale,
-        if (cachePolicy != null) 'cache_policy': cachePolicy,
-      };
-    }
-
+    final useDioCache = maxStale != null || cachePolicy != null;
+    final cacheOptions = CacheOptions(
+      store: _cacheStore,
+      policy: useDioCache
+          ? (cachePolicy ?? CachePolicy.request)
+          : CachePolicy.noCache,
+      hitCacheOnErrorExcept: [401, 403],
+      maxStale: maxStale ?? const Duration(days: 7),
+      priority: CachePriority.high,
+      cipher: null,
+      keyBuilder: CacheOptions.defaultCacheKeyBuilder,
+      allowPostMethod: false,
+    );
+    final options = cacheOptions.toOptions();
+    final extra = <String, dynamic>{
+      ...(options.extra ?? const <String, dynamic>{}),
+      if (useDioCache) 'etag_skip': true,
+    };
+    options.extra = extra;
     return _dio.get(path, queryParameters: queryParameters, options: options);
   }
 
-  Future<Response> post(String path, {dynamic data, bool invalidateCache = false}) async {
+  Future<Response> post(
+    String path, {
+    dynamic data,
+    bool invalidateCache = false,
+  }) async {
     final options = Options();
 
     // Invalidate cache for POST mutations (e.g., creating/updating resources)
@@ -528,7 +613,11 @@ class DioClient {
     return _dio.post(path, data: data, options: options);
   }
 
-  Future<Response> put(String path, {dynamic data, bool invalidateCache = true}) async {
+  Future<Response> put(
+    String path, {
+    dynamic data,
+    bool invalidateCache = true,
+  }) async {
     final options = Options();
 
     // Always invalidate cache for PUT updates

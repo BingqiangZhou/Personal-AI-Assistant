@@ -77,6 +77,7 @@ abstract class PodcastApiService {
   Future<PodcastFeedResponse> getPodcastFeed(
     @Query('page') int page,
     @Query('page_size') int pageSize,
+    @Query('cursor') String? cursor,
   );
 
   @GET('/podcasts/reports/daily')
@@ -109,6 +110,7 @@ abstract class PodcastApiService {
   Future<PodcastEpisodeListResponse> getPlaybackHistory(
     @Query('page') int page,
     @Query('size') int size,
+    @Query('cursor') String? cursor,
   );
 
   @GET('/podcasts/episodes/history-lite')

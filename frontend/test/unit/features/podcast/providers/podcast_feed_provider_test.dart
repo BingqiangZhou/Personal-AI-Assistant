@@ -238,6 +238,7 @@ class _FakePodcastRepository extends PodcastRepository {
   Future<PodcastFeedResponse> getPodcastFeed({
     required int page,
     required int pageSize,
+    String? cursor,
   }) async {
     final callIndex = getPodcastFeedCalls++;
     if (callIndex < _delays.length) {

@@ -501,9 +501,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
   Widget _buildDiscoverContent(
     BuildContext context,
-    PodcastDiscoverState discoverState,
-    {required bool isDense}
-  ) {
+    PodcastDiscoverState discoverState, {
+    required bool isDense,
+  }) {
     final l10n = AppLocalizations.of(context)!;
 
     if (discoverState.isLoading &&
@@ -624,9 +624,10 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
   Widget _buildDiscoverSearchInput(
     BuildContext context,
-    AppLocalizations l10n,
-    {required search.PodcastSearchMode searchMode, required bool isDense}
-  ) {
+    AppLocalizations l10n, {
+    required search.PodcastSearchMode searchMode,
+    required bool isDense,
+  }) {
     final theme = Theme.of(context);
     final hintLabel = searchMode == search.PodcastSearchMode.episodes
         ? l10n.podcast_search_section_episodes
@@ -717,9 +718,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final labelStyle =
         (isDense ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)
             ?.copyWith(
-      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-      color: foregroundColor,
-    );
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+              color: foregroundColor,
+            );
 
     return AnimatedContainer(
       key: key,
@@ -751,9 +752,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
   Widget _buildTopChartsSection(
     BuildContext context,
-    PodcastDiscoverState state,
-    {required bool isDense}
-  ) {
+    PodcastDiscoverState state, {
+    required bool isDense,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final titleStyle = Theme.of(
       context,
@@ -808,9 +809,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   Widget _buildChartRow(
     BuildContext context,
     int rank,
-    PodcastDiscoverItem item,
-    {required bool isDense}
-  ) {
+    PodcastDiscoverItem item, {
+    required bool isDense,
+  }) {
     final theme = Theme.of(context);
     final showSubscribe = item.isPodcastShow;
     final itunesId = item.itunesId;
@@ -824,14 +825,12 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final rowOuterPadding = isDense ? 3.0 : 6.0;
     final rowInnerPadding = isDense ? 4.0 : 6.0;
     final imageSize = isDense ? 56.0 : 62.0;
-    final titleStyle = (isDense
-            ? theme.textTheme.titleSmall
-            : theme.textTheme.titleMedium)
-        ?.copyWith(fontWeight: FontWeight.w700);
-    final subtitleStyle = (isDense
-            ? theme.textTheme.bodySmall
-            : theme.textTheme.bodyMedium)
-        ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
+    final titleStyle =
+        (isDense ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)
+            ?.copyWith(fontWeight: FontWeight.w700);
+    final subtitleStyle =
+        (isDense ? theme.textTheme.bodySmall : theme.textTheme.bodyMedium)
+            ?.copyWith(color: theme.colorScheme.onSurfaceVariant);
 
     return Padding(
       key: Key('podcast_discover_chart_row_${item.itemId}'),
@@ -1055,10 +1054,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   Widget _buildSearchResults(
     BuildContext context,
     search.PodcastSearchState searchState,
-    AppLocalizations l10n,
-    {required bool isDense}
-  ) {
+    AppLocalizations l10n, {
+    required bool isDense,
+  }) {
     final subscriptionState = ref.watch(podcastSubscriptionProvider);
+    final normalizedSubscribedFeedUrls = subscriptionState.subscriptions
+        .map((sub) => PodcastUrlUtils.normalizeFeedUrl(sub.sourceUrl))
+        .toSet();
+    final normalizedSubscribingFeedUrls = subscriptionState.subscribingFeedUrls
+        .map(PodcastUrlUtils.normalizeFeedUrl)
+        .toSet();
 
     if (searchState.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -1087,8 +1092,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
     final resultsEmpty =
         searchState.searchMode == search.PodcastSearchMode.episodes
-            ? searchState.episodeResults.isEmpty
-            : searchState.podcastResults.isEmpty;
+        ? searchState.episodeResults.isEmpty
+        : searchState.podcastResults.isEmpty;
     if (resultsEmpty) {
       return Center(
         child: Text(
@@ -1099,9 +1104,11 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     }
 
     if (searchState.searchMode == search.PodcastSearchMode.episodes) {
-      return ListView(
+      return ListView.builder(
         key: const Key('podcast_discover_search_results'),
-        children: searchState.episodeResults.map((episode) {
+        itemCount: searchState.episodeResults.length,
+        itemBuilder: (context, index) {
+          final episode = searchState.episodeResults[index];
           return PodcastEpisodeSearchResultCard(
             episode: episode,
             dense: isDense,
@@ -1120,7 +1127,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             },
             key: ValueKey('episode_search_${episode.trackId}'),
           );
-        }).toList(),
+        },
       );
     }
 
@@ -1129,14 +1136,15 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       itemCount: searchState.podcastResults.length,
       itemBuilder: (context, index) {
         final result = searchState.podcastResults[index];
-        final isSubscribed = subscriptionState.subscriptions.any(
-          (sub) => PodcastUrlUtils.feedUrlMatches(sub.sourceUrl, result.feedUrl),
-        );
+        final normalizedResultFeedUrl = result.feedUrl == null
+            ? null
+            : PodcastUrlUtils.normalizeFeedUrl(result.feedUrl!);
+        final isSubscribed =
+            normalizedResultFeedUrl != null &&
+            normalizedSubscribedFeedUrls.contains(normalizedResultFeedUrl);
         final isSubscribing =
-            result.feedUrl != null &&
-            subscriptionState.subscribingFeedUrls.any(
-              (url) => PodcastUrlUtils.feedUrlMatches(url, result.feedUrl),
-            );
+            normalizedResultFeedUrl != null &&
+            normalizedSubscribingFeedUrls.contains(normalizedResultFeedUrl);
 
         return PodcastSearchResultCard(
           result: result,

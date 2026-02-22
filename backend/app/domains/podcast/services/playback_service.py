@@ -10,6 +10,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.redis import PodcastRedis
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 from app.domains.podcast.repositories import PodcastRepository
 
@@ -39,6 +40,7 @@ class PodcastPlaybackService:
         self.db = db
         self.user_id = user_id
         self.repo = PodcastRepository(db)
+        self.redis = PodcastRedis()
 
     async def update_playback_progress(
         self,
@@ -74,6 +76,7 @@ class PodcastPlaybackService:
             is_playing,
             playback_rate
         )
+        await self._invalidate_stats_cache()
 
         progress_percentage = 0
         remaining_time = 0
@@ -91,6 +94,18 @@ class PodcastPlaybackService:
             "progress_percentage": round(progress_percentage, 2),
             "remaining_time": remaining_time,
         }
+
+    async def _invalidate_stats_cache(self) -> None:
+        """Invalidate derived stats caches after playback mutation."""
+        try:
+            await self.redis.invalidate_user_stats(self.user_id)
+            await self.redis.invalidate_profile_stats(self.user_id)
+        except Exception as exc:
+            logger.warning(
+                "Failed to invalidate playback-related stats cache for user %s: %s",
+                self.user_id,
+                exc,
+            )
 
     async def get_effective_playback_rate(
         self,

@@ -55,7 +55,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   final Set<int> _addingEpisodeIds = <int>{};
   String _selectedFilter = 'all';
   bool _showOnlyWithSummary = false;
-  bool _isReparsing = false; // 閲嶆柊瑙ｆ瀽鐘舵€?
+  bool _isReparsing = false; // 闁插秵鏌婄憴锝嗙€介悩鑸碘偓?
   static const double _mobileMenuBarHeight = 65.0;
   static const double _desktopEpisodeCardHeight = 160.0;
 
@@ -101,15 +101,15 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     // Check if subscriptionId has changed
     if (oldWidget.subscriptionId != widget.subscriptionId) {
       logger.AppLogger.debug(
-        '馃攧 ===== didUpdateWidget: Subscription ID changed =====',
+        '棣冩敡 ===== didUpdateWidget: Subscription ID changed =====',
       );
       logger.AppLogger.debug(
-        '馃攧 Old Subscription ID: ${oldWidget.subscriptionId}',
+        '棣冩敡 Old Subscription ID: ${oldWidget.subscriptionId}',
       );
       logger.AppLogger.debug(
-        '馃攧 New Subscription ID: ${widget.subscriptionId}',
+        '棣冩敡 New Subscription ID: ${widget.subscriptionId}',
       );
-      logger.AppLogger.debug('馃攧 Reloading episodes for new subscription');
+      logger.AppLogger.debug('棣冩敡 Reloading episodes for new subscription');
 
       // Reset filters
       _selectedFilter = 'all';
@@ -118,24 +118,22 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
       // Reload episodes for the new subscription
       _loadEpisodesForSubscription(forceRefresh: true);
 
-      logger.AppLogger.debug('馃攧 ===== didUpdateWidget complete =====');
+      logger.AppLogger.debug('棣冩敡 ===== didUpdateWidget complete =====');
     }
   }
 
-  Future<void> _loadEpisodesForSubscription({bool forceRefresh = false}) {
-    return Future.microtask(() {
-      logger.AppLogger.debug(
-        '馃搵 Loading episodes for subscription: ${widget.subscriptionId}',
-      );
-      ref
-          .read(podcastEpisodesProvider.notifier)
-          .loadEpisodesForSubscription(
-            subscriptionId: widget.subscriptionId,
-            status: _statusFilter,
-            hasSummary: _hasSummaryFilter,
-            forceRefresh: forceRefresh,
-          );
-    });
+  Future<void> _loadEpisodesForSubscription({bool forceRefresh = false}) async {
+    logger.AppLogger.debug(
+      '棣冩惖 Loading episodes for subscription: ${widget.subscriptionId}',
+    );
+    await ref
+        .read(podcastEpisodesProvider.notifier)
+        .loadEpisodesForSubscription(
+          subscriptionId: widget.subscriptionId,
+          status: _statusFilter,
+          hasSummary: _hasSummaryFilter,
+          forceRefresh: forceRefresh,
+        );
   }
 
   @override
@@ -154,7 +152,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         );
   }
 
-  // 閲嶆柊瑙ｆ瀽璁㈤槄
+  // 闁插秵鏌婄憴锝嗙€界拋銏ゆ
   Future<void> _handleAddToQueue(PodcastEpisodeModel episode) async {
     if (_addingEpisodeIds.contains(episode.id)) {
       return;
@@ -195,7 +193,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   }
 
   Future<void> _reparseSubscription() async {
-    if (_isReparsing) return; // 闃叉閲嶅鐐瑰嚮
+    if (_isReparsing) return; // 闂冨弶顒涢柌宥咁槻閻愮懓鍤?
 
     setState(() {
       _isReparsing = true;
@@ -204,7 +202,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     final l10n = AppLocalizations.of(context)!;
 
     try {
-      // 鏄剧ず loading 鎻愮ず
+      // 閺勫墽銇?loading 閹绘劗銇?
       if (mounted) {
         showTopFloatingNotice(
           context,
@@ -213,18 +211,18 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         );
       }
 
-      // 璋冪敤閲嶆柊瑙ｆ瀽
+      // 鐠嬪啰鏁ら柌宥嗘煀鐟欙絾鐎?
       await ref
           .read(podcastSubscriptionProvider.notifier)
           .reparseSubscription(
             widget.subscriptionId,
-            true, // forceAll: 閲嶆柊瑙ｆ瀽鎵€鏈夊垎闆?
+            true, // forceAll: 闁插秵鏌婄憴锝嗙€介幍鈧張澶婂瀻闂?
           );
 
-      // 閲嶆柊鍔犺浇鍒嗛泦鍒楄〃
+      // 闁插秵鏌婇崝鐘烘祰閸掑棝娉﹂崚妤勩€?
       await _refreshEpisodes();
 
-      // 鏄剧ず鎴愬姛鎻愮ず
+      // 閺勫墽銇氶幋鎰閹绘劗銇?
       if (mounted) {
         showTopFloatingNotice(
           context,
@@ -233,7 +231,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         );
       }
     } catch (error) {
-      // 鏄剧ず閿欒鎻愮ず
+      // 閺勫墽銇氶柨娆掝嚖閹绘劗銇?
       if (mounted) {
         showTopFloatingNotice(
           context,
@@ -262,10 +260,10 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         null;
     final isMobileLayout = MediaQuery.of(context).size.width < 600;
 
-    // Debug: 杈撳嚭鍒嗛泦鍥惧儚閾炬帴淇℃伅锛堝凡娉ㄩ噴锛?
+    // Debug: 鏉堟挸鍤崚鍡涙肠閸ユ儳鍎氶柧鐐复娣団剝浼呴敍鍫濆嚒濞夈劑鍣撮敍?
     // if (episodesState.episodes.isNotEmpty) {
     //   final firstEpisode = episodesState.episodes.first;
-    //   logger.AppLogger.debug('馃摵 PodcastEpisodesPage - First episode image debug:');
+    //   logger.AppLogger.debug('棣冩懙 PodcastEpisodesPage - First episode image debug:');
     //   logger.AppLogger.debug('  Episode ID: ${firstEpisode.id}');
     //   logger.AppLogger.debug('  Episode Title: ${firstEpisode.title}');
     //   logger.AppLogger.debug('  Image URL: ${firstEpisode.imageUrl}');
@@ -359,7 +357,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  // 閲嶆柊瑙ｆ瀽鎸夐挳
+                  // 闁插秵鏌婄憴锝嗙€介幐澶愭尦
                   IconButton(
                     icon: _isReparsing
                         ? SizedBox(
@@ -374,7 +372,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                     onPressed: _isReparsing ? null : _reparseSubscription,
                     tooltip: l10n.podcast_reparse_tooltip,
                   ),
-                  // 绛涢€夋寜閽Щ鍒版爣棰樿
+                  // 缁涙盯鈧瀵滈柦顔拘╅崚鐗堢垼妫版顢?
                   if (MediaQuery.of(context).size.width < 700) ...[
                     IconButton(
                       icon: const Icon(Icons.filter_list),
@@ -442,11 +440,11 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                         );
                                       },
                                       onPlay: () async {
-                                        // 鎾斁鍒嗛泦
+                                        // 閹绢厽鏂侀崚鍡涙肠
                                         await ref
                                             .read(audioPlayerProvider.notifier)
                                             .playEpisode(episode);
-                                        // 璺宠浆鍒拌鎯呴〉
+                                        // 鐠哄疇娴嗛崚鎷岊嚊閹懘銆?
                                         if (context.mounted) {
                                           context.push(
                                             '/podcast/episode/detail/${episode.id}',
@@ -495,11 +493,11 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                       );
                                     },
                                     onPlay: () async {
-                                      // 鎾斁鍒嗛泦
+                                      // 閹绢厽鏂侀崚鍡涙肠
                                       await ref
                                           .read(audioPlayerProvider.notifier)
                                           .playEpisode(episode);
-                                      // 璺宠浆鍒拌鎯呴〉
+                                      // 鐠哄疇娴嗛崚鎷岊嚊閹懘銆?
                                       if (context.mounted) {
                                         context.push(
                                           '/podcast/episode/detail/${episode.id}',

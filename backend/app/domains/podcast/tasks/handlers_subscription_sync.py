@@ -88,33 +88,42 @@ async def refresh_all_podcast_feeds_handler(session) -> dict:
                 continue
 
             sync_service = PodcastSyncService(session, user_id)
-            new_episodes = 0
-
-            for episode in feed.episodes:
-                saved_episode, is_new = await repo.create_or_update_episode(
-                    subscription_id=subscription.id,
-                    title=episode.title,
-                    description=episode.description,
-                    audio_url=episode.audio_url,
-                    published_at=episode.published_at,
-                    audio_duration=episode.duration,
-                    transcript_url=episode.transcript_url,
-                    item_link=episode.link,
-                    metadata={
+            refreshed_at = datetime.now(timezone.utc).isoformat()
+            episodes_payload = [
+                {
+                    "title": episode.title,
+                    "description": episode.description,
+                    "audio_url": episode.audio_url,
+                    "published_at": episode.published_at,
+                    "audio_duration": episode.duration,
+                    "transcript_url": episode.transcript_url,
+                    "item_link": episode.link,
+                    "metadata": {
                         "feed_title": feed.title,
-                        "refreshed_at": datetime.now(timezone.utc).isoformat(),
+                        "refreshed_at": refreshed_at,
                     },
-                )
-                if is_new:
-                    new_episodes += 1
-                    # Only auto-process if episode is truly new (published after last fetch)
-                    if subscription.last_fetched_at and saved_episode.published_at > subscription.last_fetched_at:
-                        await sync_service.trigger_transcription(saved_episode.id)
-                    else:
-                        logger.info(
-                            f"Episode {saved_episode.id} (published: {saved_episode.published_at}) "
-                            f"is old (last fetch: {subscription.last_fetched_at}), skipping auto-processing"
-                        )
+                }
+                for episode in feed.episodes
+            ]
+            _, new_episode_rows = await repo.create_or_update_episodes_batch(
+                subscription_id=subscription.id,
+                episodes_data=episodes_payload,
+            )
+            new_episodes = len(new_episode_rows)
+            for saved_episode in new_episode_rows:
+                # Only auto-process if episode is truly new (published after last fetch)
+                if (
+                    subscription.last_fetched_at
+                    and saved_episode.published_at > subscription.last_fetched_at
+                ):
+                    await sync_service.trigger_transcription(saved_episode.id)
+                else:
+                    logger.info(
+                        "Episode %s (published: %s) is old (last fetch: %s), skipping auto-processing",
+                        saved_episode.id,
+                        saved_episode.published_at,
+                        subscription.last_fetched_at,
+                    )
 
             await repo.update_subscription_fetch_time(subscription.id, feed.last_fetched)
 

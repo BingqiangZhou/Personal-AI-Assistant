@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -632,25 +632,17 @@ class SubscriptionRepository:
 
     async def get_unread_count(self, user_id: int) -> int:
         """Get total unread items count for user."""
-        # Get user's subscription IDs via user_subscriptions
-        sub_query = (
-            select(Subscription.id)
+        count_query = (
+            select(func.count(SubscriptionItem.id))
+            .select_from(SubscriptionItem)
+            .join(Subscription, SubscriptionItem.subscription_id == Subscription.id)
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
-            .where(UserSubscription.user_id == user_id, UserSubscription.is_archived == False)
-        )
-        sub_result = await self.db.execute(sub_query)
-        sub_ids = [row[0] for row in sub_result.fetchall()]
-
-        if not sub_ids:
-            return 0
-
-        # Count unread items
-        count_query = select(func.count()).select_from(
-            select(SubscriptionItem)
             .where(
-                SubscriptionItem.subscription_id.in_(sub_ids),
-                SubscriptionItem.read_at.is_(None),
+                and_(
+                    UserSubscription.user_id == user_id,
+                    UserSubscription.is_archived == False,  # noqa: E712
+                    SubscriptionItem.read_at.is_(None),
+                )
             )
-            .subquery()
         )
         return await self.db.scalar(count_query) or 0

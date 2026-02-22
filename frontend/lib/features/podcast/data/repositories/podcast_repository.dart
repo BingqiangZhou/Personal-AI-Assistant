@@ -135,9 +135,10 @@ class PodcastRepository {
   Future<PodcastFeedResponse> getPodcastFeed({
     required int page,
     required int pageSize,
+    String? cursor,
   }) async {
     try {
-      return await _apiService.getPodcastFeed(page, pageSize);
+      return await _apiService.getPodcastFeed(page, pageSize, cursor);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }
@@ -242,9 +243,10 @@ class PodcastRepository {
   Future<PodcastEpisodeListResponse> getPlaybackHistory({
     int page = 1,
     int size = 50,
+    String? cursor,
   }) async {
     try {
-      return await _apiService.getPlaybackHistory(page, size);
+      return await _apiService.getPlaybackHistory(page, size, cursor);
     } on DioException catch (e) {
       throw NetworkException.fromDioError(e);
     }

@@ -2,22 +2,20 @@
 import logging
 import os
 from contextlib import asynccontextmanager
-from typing import Any
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
 
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.exceptions import setup_exception_handlers
-from app.core.json_encoder import CustomJSONEncoder, CustomJSONResponse
+from app.core.json_encoder import CustomJSONResponse
 from app.core.logging_config import setup_logging_from_env
 from app.core.logging_middleware import setup_logging_middleware
 from app.core.middleware import (
     PerformanceMonitoringMiddleware,
     get_performance_middleware,
-    set_performance_middleware,
 )
 
 
@@ -66,9 +64,8 @@ def create_application() -> FastAPI:
         default_response_class=CustomJSONResponse  # 使用自定义 JSON 响应类
     )
 
-    # Set up performance monitoring middleware
-    perf_middleware = PerformanceMonitoringMiddleware(app)
-    set_performance_middleware(perf_middleware)
+    # Set up a single app-scoped metrics store.
+    app.state.performance_metrics_store = get_performance_middleware(app)
     app.add_middleware(PerformanceMonitoringMiddleware)
     logger.info("Performance monitoring middleware enabled")
 
@@ -198,7 +195,7 @@ def create_application() -> FastAPI:
     @app.get("/metrics", include_in_schema=False)
     async def get_metrics():
         """Get performance metrics (internal use only)"""
-        middleware = get_performance_middleware()
+        middleware = get_performance_middleware(app)
         if middleware:
             return middleware.get_metrics()
         return {"error": "Performance monitoring not enabled"}

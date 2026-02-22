@@ -850,11 +850,12 @@ class PodcastRepository:
             item.id != added_item.id for item in ordered_items
         ):
             ordered_items.append(added_item)
-            ordered_items = sorted(ordered_items, key=lambda item: (item.position, item.id))
+            ordered_items = sorted(
+                ordered_items, key=lambda item: (item.position, item.id)
+            )
         if (
             ordered_items
-            and ordered_items[-1].position
-            >= self._queue_position_compaction_threshold
+            and ordered_items[-1].position >= self._queue_position_compaction_threshold
         ):
             await self._rewrite_queue_positions(ordered_items)
             logger.debug(
@@ -1069,13 +1070,69 @@ class PodcastRepository:
         total = total_result.scalar()
 
         # 应用排序和分页
-        query = query.order_by(PodcastEpisode.published_at.desc())
+        query = query.order_by(
+            PodcastEpisode.published_at.desc(),
+            PodcastEpisode.id.desc(),
+        )
         query = query.offset((page - 1) * size).limit(size)
 
         result = await self.db.execute(query)
         episodes = list(result.scalars().all())
 
         return episodes, total
+
+    async def get_feed_cursor_paginated(
+        self,
+        user_id: int,
+        size: int = 20,
+        cursor_published_at: datetime | None = None,
+        cursor_episode_id: int | None = None,
+    ) -> tuple[list[PodcastEpisode], int, bool, tuple[datetime, int] | None]:
+        """Keyset-pagination feed query for better deep-page performance."""
+        query = (
+            select(PodcastEpisode)
+            .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .options(joinedload(PodcastEpisode.subscription))
+            .where(
+                and_(
+                    UserSubscription.user_id == user_id,
+                    UserSubscription.is_archived == False,
+                )
+            )
+        )
+
+        count_query = select(func.count()).select_from(query.subquery())
+        total_result = await self.db.execute(count_query)
+        total = total_result.scalar() or 0
+
+        if cursor_published_at is not None and cursor_episode_id is not None:
+            query = query.where(
+                or_(
+                    PodcastEpisode.published_at < cursor_published_at,
+                    and_(
+                        PodcastEpisode.published_at == cursor_published_at,
+                        PodcastEpisode.id < cursor_episode_id,
+                    ),
+                )
+            )
+
+        query = query.order_by(
+            desc(PodcastEpisode.published_at),
+            desc(PodcastEpisode.id),
+        ).limit(size + 1)
+
+        result = await self.db.execute(query)
+        rows = list(result.scalars().all())
+
+        has_more = len(rows) > size
+        episodes = rows[:size]
+        next_cursor_values: tuple[datetime, int] | None = None
+        if has_more and episodes:
+            tail = episodes[-1]
+            next_cursor_values = (tail.published_at, tail.id)
+
+        return episodes, total, has_more, next_cursor_values
 
     async def get_playback_history_paginated(
         self,
@@ -1108,12 +1165,80 @@ class PodcastRepository:
         total_result = await self.db.execute(count_query)
         total = total_result.scalar() or 0
 
-        query = query.order_by(PodcastPlaybackState.last_updated_at.desc())
+        query = query.order_by(
+            PodcastPlaybackState.last_updated_at.desc(),
+            PodcastEpisode.id.desc(),
+        )
         query = query.offset((page - 1) * size).limit(size)
 
         result = await self.db.execute(query)
         episodes = list(result.unique().scalars().all())
         return episodes, total
+
+    async def get_playback_history_cursor_paginated(
+        self,
+        user_id: int,
+        size: int = 20,
+        cursor_last_updated_at: datetime | None = None,
+        cursor_episode_id: int | None = None,
+    ) -> tuple[list[PodcastEpisode], int, bool, tuple[datetime, int] | None]:
+        """Keyset-pagination playback history query ordered by latest activity."""
+        query = (
+            select(
+                PodcastEpisode,
+                PodcastPlaybackState.last_updated_at.label("last_updated_at"),
+            )
+            .join(
+                PodcastPlaybackState,
+                and_(
+                    PodcastPlaybackState.episode_id == PodcastEpisode.id,
+                    PodcastPlaybackState.user_id == user_id,
+                ),
+            )
+            .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .options(joinedload(PodcastEpisode.subscription))
+            .where(
+                and_(
+                    UserSubscription.user_id == user_id,
+                    UserSubscription.is_archived == False,
+                )
+            )
+        )
+
+        count_query = select(func.count()).select_from(query.subquery())
+        total_result = await self.db.execute(count_query)
+        total = total_result.scalar() or 0
+
+        if cursor_last_updated_at is not None and cursor_episode_id is not None:
+            query = query.where(
+                or_(
+                    PodcastPlaybackState.last_updated_at < cursor_last_updated_at,
+                    and_(
+                        PodcastPlaybackState.last_updated_at == cursor_last_updated_at,
+                        PodcastEpisode.id < cursor_episode_id,
+                    ),
+                )
+            )
+
+        query = query.order_by(
+            desc(PodcastPlaybackState.last_updated_at),
+            desc(PodcastEpisode.id),
+        ).limit(size + 1)
+
+        result = await self.db.execute(query)
+        rows = list(result.all())
+
+        has_more = len(rows) > size
+        trimmed_rows = rows[:size]
+        episodes = [row[0] for row in trimmed_rows]
+
+        next_cursor_values: tuple[datetime, int] | None = None
+        if has_more and trimmed_rows:
+            tail_episode, tail_last_updated_at = trimmed_rows[-1]
+            next_cursor_values = (tail_last_updated_at, tail_episode.id)
+
+        return episodes, total, has_more, next_cursor_values
 
     async def get_playback_history_lite_paginated(
         self,
@@ -1197,19 +1322,46 @@ class PodcastRepository:
         page: int = 1,
         size: int = 20,
     ) -> tuple[list[PodcastEpisode], int]:
-        """搜索播客单集"""
-        # 构建搜索条件
-        search_conditions = []
+        """Search episodes with trgm-friendly ranking and deterministic ordering."""
+        keyword = query.strip()
+        if not keyword:
+            return [], 0
 
-        if search_in in ["title", "all"]:
-            search_conditions.append(PodcastEpisode.title.ilike(f"%{query}%"))
-        if search_in in ["description", "all"]:
-            search_conditions.append(PodcastEpisode.description.ilike(f"%{query}%"))
-        if search_in in ["summary", "all"]:
-            search_conditions.append(PodcastEpisode.ai_summary.ilike(f"%{query}%"))
+        like_pattern = f"%{keyword}%"
+        search_conditions: list[Any] = []
+        relevance_terms: list[Any] = []
+
+        if search_in in {"title", "all"}:
+            search_conditions.append(PodcastEpisode.title.ilike(like_pattern))
+            relevance_terms.append(
+                func.similarity(func.coalesce(PodcastEpisode.title, ""), keyword) * 1.0
+            )
+        if search_in in {"description", "all"}:
+            search_conditions.append(PodcastEpisode.description.ilike(like_pattern))
+            relevance_terms.append(
+                func.similarity(func.coalesce(PodcastEpisode.description, ""), keyword)
+                * 0.7
+            )
+        if search_in in {"summary", "all"}:
+            search_conditions.append(PodcastEpisode.ai_summary.ilike(like_pattern))
+            relevance_terms.append(
+                func.similarity(func.coalesce(PodcastEpisode.ai_summary, ""), keyword)
+                * 0.9
+            )
+
+        if not search_conditions:
+            search_conditions.append(PodcastEpisode.title.ilike(like_pattern))
+            relevance_terms.append(
+                func.similarity(func.coalesce(PodcastEpisode.title, ""), keyword)
+            )
+
+        relevance_score = relevance_terms[0]
+        for term in relevance_terms[1:]:
+            relevance_score = relevance_score + term
+        relevance_score = relevance_score.label("relevance_score")
 
         base_query = (
-            select(PodcastEpisode)
+            select(PodcastEpisode, relevance_score)
             .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .options(joinedload(PodcastEpisode.subscription))
@@ -1222,21 +1374,22 @@ class PodcastRepository:
             )
         )
 
-        # 使用全文搜索（如果PostgreSQL支持）
-        # 这里简化为使用ILIKE，实际可以优化为使用PostgreSQL的全文搜索
-
-        # 计算总数
         count_query = select(func.count()).select_from(base_query.subquery())
         total_result = await self.db.execute(count_query)
-        total = total_result.scalar()
+        total = total_result.scalar() or 0
 
-        # 应用排序（按相关度和发布时间）
-        # 简化实现：只按发布时间排序
-        query = base_query.order_by(PodcastEpisode.published_at.desc())
-        query = query.offset((page - 1) * size).limit(size)
+        paged_query = (
+            base_query.order_by(
+                desc(relevance_score),
+                desc(PodcastEpisode.published_at),
+                desc(PodcastEpisode.id),
+            )
+            .offset((page - 1) * size)
+            .limit(size)
+        )
 
-        result = await self.db.execute(query)
-        episodes = list(result.scalars().all())
+        result = await self.db.execute(paged_query)
+        episodes = [row[0] for row in result.unique().all()]
 
         return episodes, total
 

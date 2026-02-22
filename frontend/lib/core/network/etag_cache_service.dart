@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 
@@ -17,13 +18,58 @@ class _ETagEntry {
 /// Manages ETag storage and response caching for conditional requests.
 /// Stores ETags and associated responses in memory.
 class ETagCacheService {
-  final Map<String, _ETagEntry> _cache = {};
+  final LinkedHashMap<String, _ETagEntry> _cache = LinkedHashMap();
+  final int _maxEntries;
+  final Duration _defaultTtl;
+
+  ETagCacheService({
+    int maxEntries = 256,
+    Duration defaultTtl = const Duration(hours: 1),
+  }) : _maxEntries = maxEntries,
+       _defaultTtl = defaultTtl;
+
+  Duration _entryTtl(_ETagEntry entry) => entry.maxAge ?? _defaultTtl;
+
+  bool _isExpired(_ETagEntry entry) {
+    final age = DateTime.now().difference(entry.timestamp);
+    return age > _entryTtl(entry);
+  }
+
+  void _evictExpired() {
+    final expiredKeys = <String>[];
+    _cache.forEach((key, entry) {
+      if (_isExpired(entry)) {
+        expiredKeys.add(key);
+      }
+    });
+    for (final key in expiredKeys) {
+      _cache.remove(key);
+    }
+  }
+
+  void _touch(String key, _ETagEntry entry) {
+    _cache.remove(key);
+    _cache[key] = entry;
+  }
+
+  _ETagEntry? _getValidEntry(String key) {
+    final entry = _cache[key];
+    if (entry == null) {
+      return null;
+    }
+    if (_isExpired(entry)) {
+      _cache.remove(key);
+      return null;
+    }
+    _touch(key, entry);
+    return entry;
+  }
 
   /// Get ETag for a given cache key
-  String? getETag(String key) => _cache[key]?.etag;
+  String? getETag(String key) => _getValidEntry(key)?.etag;
 
   /// Get cached response for a given cache key
-  Response? getCachedResponse(String key) => _cache[key]?.response;
+  Response? getCachedResponse(String key) => _getValidEntry(key)?.response;
 
   /// Get cached response only when entry is still fresh by max-age.
   ///
@@ -32,7 +78,7 @@ class ETagCacheService {
   /// - max-age is unavailable
   /// - max-age has expired
   Response? getFreshCachedResponse(String key) {
-    final entry = _cache[key];
+    final entry = _getValidEntry(key);
     if (entry == null) {
       return null;
     }
@@ -53,7 +99,7 @@ class ETagCacheService {
 
   /// Check if cache entry exists and is recent (within TTL)
   bool hasValidEntry(String key, {Duration? maxAge}) {
-    final entry = _cache[key];
+    final entry = _getValidEntry(key);
     if (entry == null) return false;
 
     if (maxAge != null) {
@@ -66,7 +112,12 @@ class ETagCacheService {
 
   /// Set ETag and response for a given cache key
   void setETag(String key, String etag, Response response, {Duration? maxAge}) {
+    _evictExpired();
+    _cache.remove(key);
     _cache[key] = _ETagEntry(etag, response, maxAge: maxAge);
+    while (_cache.length > _maxEntries) {
+      _cache.remove(_cache.keys.first);
+    }
   }
 
   /// Clear ETag cache for a specific key
@@ -81,15 +132,22 @@ class ETagCacheService {
 
   /// Clear cache entries matching a pattern
   void clearPattern(String pattern) {
+    _evictExpired();
     final regex = RegExp(pattern);
     _cache.removeWhere((key, _) => regex.hasMatch(key));
   }
 
   /// Get number of cached entries
-  int get cacheSize => _cache.length;
+  int get cacheSize {
+    _evictExpired();
+    return _cache.length;
+  }
 
   /// Get all cache keys
-  List<String> get cacheKeys => _cache.keys.toList();
+  List<String> get cacheKeys {
+    _evictExpired();
+    return _cache.keys.toList();
+  }
 
   /// Generate cache key from RequestOptions
   String generateKey(RequestOptions options) {

@@ -2,10 +2,13 @@ import 'package:equatable/equatable.dart';
 import 'podcast_episode_model.dart';
 import 'podcast_subscription_model.dart';
 
+const Object _stateNoChange = Object();
+
 class PodcastFeedState extends Equatable {
   final List<PodcastEpisodeModel> episodes;
   final bool hasMore;
   final int? nextPage;
+  final String? nextCursor;
   final int total;
   final bool isLoading;
   final bool isLoadingMore;
@@ -18,6 +21,7 @@ class PodcastFeedState extends Equatable {
     this.episodes = const [],
     this.hasMore = true,
     this.nextPage,
+    this.nextCursor,
     this.total = 0,
     this.isLoading = false,
     this.isLoadingMore = false,
@@ -28,7 +32,8 @@ class PodcastFeedState extends Equatable {
   PodcastFeedState copyWith({
     List<PodcastEpisodeModel>? episodes,
     bool? hasMore,
-    int? nextPage,
+    Object? nextPage = _stateNoChange,
+    Object? nextCursor = _stateNoChange,
     int? total,
     bool? isLoading,
     bool? isLoadingMore,
@@ -39,7 +44,12 @@ class PodcastFeedState extends Equatable {
     return PodcastFeedState(
       episodes: episodes ?? this.episodes,
       hasMore: hasMore ?? this.hasMore,
-      nextPage: nextPage ?? this.nextPage,
+      nextPage: identical(nextPage, _stateNoChange)
+          ? this.nextPage
+          : nextPage as int?,
+      nextCursor: identical(nextCursor, _stateNoChange)
+          ? this.nextCursor
+          : nextCursor as String?,
       total: total ?? this.total,
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
@@ -59,6 +69,7 @@ class PodcastFeedState extends Equatable {
     episodes,
     hasMore,
     nextPage,
+    nextCursor,
     total,
     isLoading,
     isLoadingMore,

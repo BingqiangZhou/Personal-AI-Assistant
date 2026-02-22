@@ -7,7 +7,7 @@ All endpoints here are mounted under:
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 
-from app.core.etag import ETagResponse, check_etag_precondition
+from app.core.etag import build_conditional_etag_response
 from app.domains.podcast.api.dependencies import get_podcast_service
 from app.domains.podcast.schemas import (
     PodcastSearchFilter,
@@ -128,18 +128,9 @@ async def list_subscriptions(
         size=size,
         pages=pages,
     )
-
-    etag_response = await check_etag_precondition(
-        request,
-        response_data.dict(),
-        max_age=900,
-        cache_control="private, max-age=900",
-    )
-    if etag_response:
-        return etag_response
-
-    return ETagResponse(
-        content=response_data.dict(),
+    return build_conditional_etag_response(
+        request=request,
+        content=response_data,
         max_age=900,
         cache_control="private, max-age=900",
     )
@@ -178,17 +169,9 @@ async def get_subscription(
         raise HTTPException(status_code=404, detail="Subscription not found or no permission")
 
     response_data = PodcastSubscriptionResponse(**details)
-    etag_response = await check_etag_precondition(
-        request,
-        response_data.dict(),
-        max_age=1800,
-        cache_control="private, max-age=1800",
-    )
-    if etag_response:
-        return etag_response
-
-    return ETagResponse(
-        content=response_data.dict(),
+    return build_conditional_etag_response(
+        request=request,
+        content=response_data,
         max_age=1800,
         cache_control="private, max-age=1800",
     )
@@ -314,4 +297,3 @@ async def batch_update_subscription_schedules(
         fetch_interval=schedule_data.fetch_interval,
     )
     return [ScheduleConfigResponse(**row) for row in rows]
-

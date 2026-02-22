@@ -96,23 +96,19 @@ class PodcastSubscriptionService:
             metadata=metadata
         )
 
-        # 4. Save new episodes
-        new_episodes = []
-        for episode in feed.episodes:
-            saved_episode, is_new = await self.repo.create_or_update_episode(
-                subscription_id=subscription.id,
-                title=episode.title,
-                description=episode.description,
-                audio_url=episode.audio_url,
-                published_at=episode.published_at,
-                audio_duration=episode.duration,
-                transcript_url=episode.transcript_url,
-                item_link=episode.link,
-                metadata={"feed_title": feed.title}
+        # 4. Save episodes in one transaction.
+        episodes_payload = [
+            self._build_episode_payload(
+                episode=episode,
+                feed_title=feed.title,
+                extra_metadata=None,
             )
-
-            if is_new:
-                new_episodes.append(saved_episode)
+            for episode in feed.episodes
+        ]
+        _, new_episodes = await self.repo.create_or_update_episodes_batch(
+            subscription_id=subscription.id,
+            episodes_data=episodes_payload,
+        )
 
         logger.info(f"User {self.user_id} added podcast: {feed.title}, {len(new_episodes)} new episodes")
         return subscription, new_episodes
@@ -372,26 +368,25 @@ class PodcastSubscriptionService:
         if not success:
             raise ValueError(f"Refresh failed: {error}")
 
-        # Save new episodes
-        new_episodes = []
-
-        for episode in feed.episodes:
-            saved_episode, is_new = await self.repo.create_or_update_episode(
-                subscription_id=subscription_id,
-                title=episode.title,
-                description=episode.description,
-                audio_url=episode.audio_url,
-                published_at=episode.published_at,
-                audio_duration=episode.duration,
-                transcript_url=episode.transcript_url,
-                item_link=episode.link,
-                metadata={"feed_title": feed.title, "refreshed_at": datetime.now(timezone.utc).isoformat()}
+        refreshed_at = datetime.now(timezone.utc).isoformat()
+        episodes_payload = [
+            self._build_episode_payload(
+                episode=episode,
+                feed_title=feed.title,
+                extra_metadata={"refreshed_at": refreshed_at},
             )
-
-            if is_new:
-                new_episodes.append(saved_episode)
-                # Manual refresh: NO auto-processing, user requests via frontend
-                logger.info(f"Episode {saved_episode.id} discovered via manual refresh, awaiting user request")
+            for episode in feed.episodes
+        ]
+        _, new_episodes = await self.repo.create_or_update_episodes_batch(
+            subscription_id=subscription_id,
+            episodes_data=episodes_payload,
+        )
+        for saved_episode in new_episodes:
+            # Manual refresh: NO auto-processing, user requests via frontend
+            logger.info(
+                "Episode %s discovered via manual refresh, awaiting user request",
+                saved_episode.id,
+            )
 
         # Update subscription metadata (including image_url) from feed
         # This ensures the subscription has correct metadata even on first refresh
@@ -455,44 +450,31 @@ class PodcastSubscriptionService:
             existing_episodes = await self.repo.get_subscription_episodes(subscription_id, limit=None)
             existing_item_links = {ep.item_link for ep in existing_episodes if ep.item_link}
 
-        # Process episodes
-        processed = 0
-        new_episodes = 0
-        updated_episodes = 0
+        reparsed_at = datetime.now(timezone.utc).isoformat()
+        episodes_to_process = [
+            episode
+            for episode in feed.episodes
+            if force_all or episode.link not in existing_item_links
+        ]
+        episodes_payload = [
+            self._build_episode_payload(
+                episode=episode,
+                feed_title=feed.title,
+                extra_metadata={
+                    "reparsed_at": reparsed_at,
+                    "item_link": episode.link,
+                },
+            )
+            for episode in episodes_to_process
+        ]
+        processed_episodes, new_episode_rows = await self.repo.create_or_update_episodes_batch(
+            subscription_id=subscription_id,
+            episodes_data=episodes_payload,
+        )
+        processed = len(processed_episodes)
+        new_episodes = len(new_episode_rows)
+        updated_episodes = processed - new_episodes
         failed = 0
-
-        for episode in feed.episodes:
-            if not force_all and episode.link in existing_item_links:
-                continue
-
-            try:
-                logger.debug(f"Re-parsing episode: {episode.title[:50]}... (link: {episode.link})")
-
-                saved_episode, is_new = await self.repo.create_or_update_episode(
-                    subscription_id=subscription_id,
-                    title=episode.title,
-                    description=episode.description,
-                    audio_url=episode.audio_url,
-                    published_at=episode.published_at,
-                    audio_duration=episode.duration,
-                    transcript_url=episode.transcript_url,
-                    item_link=episode.link,
-                    metadata={
-                        "feed_title": feed.title,
-                        "reparsed_at": datetime.now(timezone.utc).isoformat(),
-                        "item_link": episode.link
-                    }
-                )
-
-                processed += 1
-                if is_new:
-                    new_episodes += 1
-                else:
-                    updated_episodes += 1
-
-            except Exception as e:
-                logging.getLogger(__name__).error(f"Re-parse episode failed: {episode.title}, error: {e}")
-                failed += 1
 
         # Update subscription metadata
         metadata = {
@@ -505,7 +487,7 @@ class PodcastSubscriptionService:
             "link": feed.link,
             "total_episodes": len(feed.episodes),
             "platform": feed.platform,
-            "reparsed_at": datetime.now(timezone.utc).isoformat()
+            "reparsed_at": reparsed_at,
         }
 
         await self.repo.update_subscription_metadata(subscription_id, metadata)
@@ -628,6 +610,27 @@ class PodcastSubscriptionService:
             else:
                 categories.append({"name": str(cat)})
         return categories
+
+    @staticmethod
+    def _build_episode_payload(
+        *,
+        episode: Any,
+        feed_title: str,
+        extra_metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        metadata = {"feed_title": feed_title}
+        if extra_metadata:
+            metadata.update(extra_metadata)
+        return {
+            "title": episode.title,
+            "description": episode.description,
+            "audio_url": episode.audio_url,
+            "published_at": episode.published_at,
+            "audio_duration": episode.duration,
+            "transcript_url": episode.transcript_url,
+            "item_link": episode.link,
+            "metadata": metadata,
+        }
 
     async def _validate_and_get_subscription(
         self,

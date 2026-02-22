@@ -85,3 +85,11 @@ class PodcastStatsService:
             logger.warning("Redis cache write failed for profile stats, skipping cache")
 
         return result
+
+    async def invalidate_cached_stats(self) -> None:
+        """Invalidate user stats/profile stats caches."""
+        try:
+            await self.redis.invalidate_user_stats(self.user_id)
+            await self.redis.invalidate_profile_stats(self.user_id)
+        except Exception:
+            logger.warning("Redis cache invalidation failed for user_id=%s", self.user_id)

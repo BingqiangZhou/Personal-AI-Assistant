@@ -80,6 +80,15 @@ def generate_etag(content: Any, weak: bool = False) -> str:
     return f"W/{strong_etag}" if weak else strong_etag
 
 
+def serialize_etag_content(content: Any) -> Any:
+    """Serialize content once for both ETag generation and JSON rendering."""
+    if hasattr(content, "model_dump"):
+        return content.model_dump(mode="json")
+    if hasattr(content, "dict"):
+        return content.dict()
+    return content
+
+
 def parse_if_none_match(header: str | None) -> set[str]:
     """Parse If-None-Match header into set of ETags.
 
@@ -176,6 +185,8 @@ class ETagResponse(JSONResponse):
         max_age: int = 300,
         weak: bool = False,
         cache_control: str | None = None,
+        precomputed_etag: str | None = None,
+        content_is_serialized: bool = False,
         **kwargs
     ):
         """Initialize ETagResponse.
@@ -186,22 +197,17 @@ class ETagResponse(JSONResponse):
             weak: If True, use weak ETag validation (prefixed with W/)
             **kwargs: Additional arguments passed to JSONResponse
         """
-        # Convert Pydantic models to dict for ETag generation and serialization
-        if hasattr(content, 'model_dump'):
-            # Pydantic v2 - use mode='json' to serialize datetime/datetime objects
-            self._etag_content = content.model_dump(mode='json')
-            # Update content to JSON-serializable dict for JSONResponse
-            json_content = content.model_dump(mode='json')
-        elif hasattr(content, 'dict'):
-            # Pydantic v1 fallback
-            self._etag_content = content.dict()
-            json_content = content.dict()
-        else:
+        # Convert content at most once.
+        if content_is_serialized:
             self._etag_content = content
             json_content = content
+        else:
+            serialized = serialize_etag_content(content)
+            self._etag_content = serialized
+            json_content = serialized
 
         # Generate ETag
-        self._etag = generate_etag(self._etag_content, weak=weak)
+        self._etag = precomputed_etag or generate_etag(self._etag_content, weak=weak)
 
         # Prepare headers
         headers = kwargs.pop('headers', {})
@@ -229,7 +235,8 @@ async def check_etag_precondition(
     content: Any,
     weak: bool = False,
     max_age: int = 300,
-    cache_control: str | None = None
+    cache_control: str | None = None,
+    content_is_serialized: bool = False,
 ) -> Response | None:
     """Check If-None-Match header and return 304 if match.
 
@@ -270,13 +277,7 @@ async def check_etag_precondition(
     if not if_none_match:
         return None
 
-    # Convert Pydantic model to dict for ETag generation
-    if hasattr(content, 'model_dump'):
-        etag_content = content.model_dump(mode='json')
-    elif hasattr(content, 'dict'):
-        etag_content = content.dict()
-    else:
-        etag_content = content
+    etag_content = content if content_is_serialized else serialize_etag_content(content)
 
     # Generate ETag for current content
     current_etag = generate_etag(etag_content, weak=weak)
@@ -294,6 +295,40 @@ async def check_etag_precondition(
         )
 
     return None
+
+
+def build_conditional_etag_response(
+    request: Request,
+    content: Any,
+    *,
+    max_age: int = 300,
+    weak: bool = False,
+    cache_control: str | None = None,
+) -> Response:
+    """Build 304/200 ETag response while serializing and hashing content once."""
+    serialized = serialize_etag_content(content)
+    current_etag = generate_etag(serialized, weak=weak)
+    if_none_match = request.headers.get("if-none-match")
+
+    if if_none_match and matches_any_etag(current_etag, if_none_match):
+        if cache_control is None:
+            cache_control = f"public, max-age={max_age}"
+        return Response(
+            status_code=304,
+            headers={
+                "ETag": current_etag,
+                "Cache-Control": cache_control,
+            },
+        )
+
+    return ETagResponse(
+        content=serialized,
+        max_age=max_age,
+        weak=weak,
+        cache_control=cache_control,
+        precomputed_etag=current_etag,
+        content_is_serialized=True,
+    )
 
 
 def etag_response_wrapper(

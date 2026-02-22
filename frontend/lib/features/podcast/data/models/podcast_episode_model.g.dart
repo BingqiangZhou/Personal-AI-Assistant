@@ -90,6 +90,7 @@ PodcastEpisodeListResponse _$PodcastEpisodeListResponseFromJson(
   size: (json['size'] as num).toInt(),
   pages: (json['pages'] as num).toInt(),
   subscriptionId: (json['subscription_id'] as num).toInt(),
+  nextCursor: json['next_cursor'] as String?,
 );
 
 Map<String, dynamic> _$PodcastEpisodeListResponseToJson(
@@ -101,6 +102,7 @@ Map<String, dynamic> _$PodcastEpisodeListResponseToJson(
   'size': instance.size,
   'pages': instance.pages,
   'subscription_id': instance.subscriptionId,
+  'next_cursor': instance.nextCursor,
 };
 
 PodcastEpisodeDetailResponse _$PodcastEpisodeDetailResponseFromJson(
@@ -186,6 +188,7 @@ PodcastFeedResponse _$PodcastFeedResponseFromJson(Map<String, dynamic> json) =>
           .toList(),
       hasMore: json['has_more'] as bool? ?? false,
       nextPage: (json['next_page'] as num?)?.toInt(),
+      nextCursor: json['next_cursor'] as String?,
       total: (json['total'] as num).toInt(),
     );
 
@@ -195,5 +198,6 @@ Map<String, dynamic> _$PodcastFeedResponseToJson(
   'items': instance.items,
   'has_more': instance.hasMore,
   'next_page': instance.nextPage,
+  'next_cursor': instance.nextCursor,
   'total': instance.total,
 };

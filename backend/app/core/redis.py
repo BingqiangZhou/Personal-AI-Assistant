@@ -32,6 +32,7 @@ from app.core.config import settings
 
 class RedisJSONEncoder(json.JSONEncoder):
     """Custom JSON encoder for Redis that handles datetime objects"""
+
     def default(self, obj):
         if isinstance(obj, datetime):
             return obj.isoformat()
@@ -46,6 +47,26 @@ class PodcastRedis:
     def __init__(self):
         self._client = None
 
+    @staticmethod
+    def _stable_hash(value: str) -> str:
+        normalized = value.strip().lower()
+        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _subscription_index_key(user_id: int) -> str:
+        return f"podcast:subscriptions:index:{user_id}"
+
+    @staticmethod
+    def _episode_index_key(subscription_id: int) -> str:
+        return f"podcast:episodes:index:{subscription_id}"
+
+    async def _scan_keys(self, pattern: str) -> list[str]:
+        client = await self._get_client()
+        keys: list[str] = []
+        async for key in client.scan_iter(match=pattern):
+            keys.append(key)
+        return keys
+
     async def _get_client(self) -> aioredis.Redis:
         """Get Redis client instance"""
         if self._client is None:
@@ -55,7 +76,7 @@ class PodcastRedis:
                 socket_timeout=5,
                 socket_connect_timeout=5,
                 retry_on_timeout=True,
-                max_connections=20
+                max_connections=20,
             )
         # Ping to verify connection (async)
         try:
@@ -68,7 +89,7 @@ class PodcastRedis:
                 socket_timeout=5,
                 socket_connect_timeout=5,
                 retry_on_timeout=True,
-                max_connections=20
+                max_connections=20,
             )
         return self._client
 
@@ -117,12 +138,12 @@ class PodcastRedis:
 
     async def get_cached_feed(self, feed_url: str) -> str | None:
         """Get cached RSS feed"""
-        key = f"podcast:cache:{hash(feed_url)}"
+        key = f"podcast:cache:v2:{self._stable_hash(feed_url)}"
         return await self.cache_get(key)
 
     async def set_cached_feed(self, feed_url: str, xml_content: str) -> None:
         """Cache RSS feed (15 minutes)"""
-        key = f"podcast:cache:{hash(feed_url)}"
+        key = f"podcast:cache:v2:{self._stable_hash(feed_url)}"
         await self.cache_set(key, xml_content, ttl=900)
 
     async def get_ai_summary(self, episode_id: int, version: str = "v1") -> str | None:
@@ -130,7 +151,9 @@ class PodcastRedis:
         key = f"podcast:summary:{episode_id}:{version}"
         return await self.cache_get(key)
 
-    async def set_ai_summary(self, episode_id: int, summary: str, version: str = "v1") -> None:
+    async def set_ai_summary(
+        self, episode_id: int, summary: str, version: str = "v1"
+    ) -> None:
         """Cache AI summary (7 days)"""
         key = f"podcast:summary:{episode_id}:{version}"
         await self.cache_set(key, summary, ttl=604800)
@@ -141,7 +164,9 @@ class PodcastRedis:
         progress = await self.cache_get(key)
         return float(progress) if progress else None
 
-    async def set_user_progress(self, user_id: int, episode_id: int, progress: float) -> None:
+    async def set_user_progress(
+        self, user_id: int, episode_id: int, progress: float
+    ) -> None:
         """Set user progress (30 days)"""
         key = f"podcast:progress:{user_id}:{episode_id}"
         await self.cache_set(key, str(progress), ttl=2592000)
@@ -168,23 +193,36 @@ class PodcastRedis:
 
     # === Subscription List Cache ===
 
-    async def get_subscription_list(self, user_id: int, page: int, size: int) -> dict | None:
+    async def get_subscription_list(
+        self, user_id: int, page: int, size: int
+    ) -> dict | None:
         """Get cached subscription list (15 minutes TTL)"""
         key = f"podcast:subscriptions:{user_id}:{page}:{size}"
         return await self.cache_get_json(key)
 
-    async def set_subscription_list(self, user_id: int, page: int, size: int, data: dict) -> bool:
+    async def set_subscription_list(
+        self, user_id: int, page: int, size: int, data: dict
+    ) -> bool:
         """Cache subscription list (15 minutes TTL)"""
+        client = await self._get_client()
         key = f"podcast:subscriptions:{user_id}:{page}:{size}"
-        return await self.cache_set_json(key, data, ttl=900)
+        cached = await self.cache_set_json(key, data, ttl=900)
+        if cached:
+            index_key = self._subscription_index_key(user_id)
+            await client.sadd(index_key, key)
+            await client.expire(index_key, 1800)
+        return cached
 
     async def invalidate_subscription_list(self, user_id: int) -> None:
         """Invalidate all subscription list caches for a user"""
         client = await self._get_client()
-        pattern = f"podcast:subscriptions:{user_id}:*"
-        keys = await client.keys(pattern)
+        index_key = self._subscription_index_key(user_id)
+        keys = list(await client.smembers(index_key))
+        if not keys:
+            pattern = f"podcast:subscriptions:{user_id}:*"
+            keys = await self._scan_keys(pattern)
         if keys:
-            await client.delete(*keys)
+            await client.delete(*keys, index_key)
 
     # === User Stats Cache ===
 
@@ -220,41 +258,60 @@ class PodcastRedis:
 
     # === Episode List Cache ===
 
-    async def get_episode_list(self, subscription_id: int, page: int, size: int) -> dict | None:
+    async def get_episode_list(
+        self, subscription_id: int, page: int, size: int
+    ) -> dict | None:
         """Get cached episode list (10 minutes TTL)"""
         key = f"podcast:episodes:{subscription_id}:{page}:{size}"
         return await self.cache_get_json(key)
 
-    async def set_episode_list(self, subscription_id: int, page: int, size: int, data: dict) -> bool:
+    async def set_episode_list(
+        self, subscription_id: int, page: int, size: int, data: dict
+    ) -> bool:
         """Cache episode list (10 minutes TTL)"""
+        client = await self._get_client()
         key = f"podcast:episodes:{subscription_id}:{page}:{size}"
-        return await self.cache_set_json(key, data, ttl=600)
+        cached = await self.cache_set_json(key, data, ttl=600)
+        if cached:
+            index_key = self._episode_index_key(subscription_id)
+            await client.sadd(index_key, key)
+            await client.expire(index_key, 1800)
+        return cached
 
     async def invalidate_episode_list(self, subscription_id: int) -> None:
         """Invalidate all episode list caches for a subscription"""
         client = await self._get_client()
-        pattern = f"podcast:episodes:{subscription_id}:*"
-        keys = await client.keys(pattern)
+        index_key = self._episode_index_key(subscription_id)
+        keys = list(await client.smembers(index_key))
+        if not keys:
+            pattern = f"podcast:episodes:{subscription_id}:*"
+            keys = await self._scan_keys(pattern)
         if keys:
-            await client.delete(*keys)
+            await client.delete(*keys, index_key)
 
     # === Search Results Cache ===
 
-    def _hash_search_query(self, query: str, search_in: str, page: int, size: int) -> str:
+    def _hash_search_query(
+        self, query: str, search_in: str, page: int, size: int
+    ) -> str:
         """Generate hash key for search query"""
         query_str = f"{query}:{search_in}:{page}:{size}".lower()
-        return hashlib.md5(query_str.encode()).hexdigest()
+        return hashlib.sha256(query_str.encode("utf-8")).hexdigest()
 
-    async def get_search_results(self, query: str, search_in: str, page: int, size: int) -> dict | None:
+    async def get_search_results(
+        self, query: str, search_in: str, page: int, size: int
+    ) -> dict | None:
         """Get cached search results (5 minutes TTL)"""
         hash_key = self._hash_search_query(query, search_in, page, size)
-        key = f"podcast:search:{hash_key}"
+        key = f"podcast:search:v2:{hash_key}"
         return await self.cache_get_json(key)
 
-    async def set_search_results(self, query: str, search_in: str, page: int, size: int, data: dict) -> bool:
+    async def set_search_results(
+        self, query: str, search_in: str, page: int, size: int, data: dict
+    ) -> bool:
         """Cache search results (5 minutes TTL)"""
         hash_key = self._hash_search_query(query, search_in, page, size)
-        key = f"podcast:search:{hash_key}"
+        key = f"podcast:search:v2:{hash_key}"
         return await self.cache_set_json(key, data, ttl=300)
 
     # === Batch Invalidation ===
@@ -282,7 +339,9 @@ class PodcastRedis:
 
     # === Rate Limiting ===
 
-    async def check_rate_limit(self, user_id: int, action: str, limit: int, window: int) -> bool:
+    async def check_rate_limit(
+        self, user_id: int, action: str, limit: int, window: int
+    ) -> bool:
         """
         Simple rate limiting using Redis
         Returns True if allowed
@@ -310,6 +369,7 @@ class PodcastRedis:
 
 # Global singleton instance
 _redis_instance = PodcastRedis()
+
 
 async def get_redis() -> PodcastRedis:
     """Get global Redis instance"""

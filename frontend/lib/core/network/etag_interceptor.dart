@@ -29,6 +29,11 @@ class ETagInterceptor extends Interceptor {
       return;
     }
 
+    if (options.extra['etag_skip'] == true) {
+      handler.next(options);
+      return;
+    }
+
     if (options.method.toUpperCase() != 'GET') {
       handler.next(options);
       return;
@@ -60,6 +65,11 @@ class ETagInterceptor extends Interceptor {
       return;
     }
 
+    if (response.requestOptions.extra['etag_skip'] == true) {
+      handler.next(response);
+      return;
+    }
+
     if (response.requestOptions.method.toUpperCase() != 'GET') {
       handler.next(response);
       return;
@@ -79,6 +89,11 @@ class ETagInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (!_enabled) {
+      handler.next(err);
+      return;
+    }
+
+    if (err.requestOptions.extra['etag_skip'] == true) {
       handler.next(err);
       return;
     }

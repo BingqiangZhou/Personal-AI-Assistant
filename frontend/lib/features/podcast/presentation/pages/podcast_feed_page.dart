@@ -21,16 +21,47 @@ class PodcastFeedPage extends ConsumerStatefulWidget {
 
 class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   final Set<int> _addingEpisodeIds = <int>{};
+  final ScrollController _scrollController = ScrollController();
+  static const double _loadMoreThresholdPx = 320;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
       }
       ref.read(podcastFeedProvider.notifier).loadInitialFeed();
     });
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    final position = _scrollController.position;
+    if (!position.hasPixels || !position.hasContentDimensions) {
+      return;
+    }
+    final remaining = position.maxScrollExtent - position.pixels;
+    if (remaining > _loadMoreThresholdPx) {
+      return;
+    }
+
+    final feedState = ref.read(podcastFeedProvider);
+    if (feedState.isLoadingMore || !feedState.hasMore) {
+      return;
+    }
+    ref.read(podcastFeedProvider.notifier).loadMoreFeed();
+  }
+
+  @override
+  void dispose() {
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
   }
 
   @override
@@ -277,6 +308,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
               await ref.read(podcastFeedProvider.notifier).refreshFeed();
             },
             child: ListView.builder(
+              controller: _scrollController,
               padding: const EdgeInsets.symmetric(vertical: 4),
               itemCount:
                   feedState.episodes.length + (feedState.hasMore ? 1 : 0) + 1,
@@ -287,16 +319,16 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 
                 final episodeIndex = index - 1;
                 if (episodeIndex >= feedState.episodes.length) {
-                  // Loading more indicator
-                  Future.microtask(
-                    () => ref.read(podcastFeedProvider.notifier).loadMoreFeed(),
-                  );
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: CircularProgressIndicator(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                      child: feedState.isLoadingMore
+                          ? CircularProgressIndicator(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            )
+                          : const SizedBox.shrink(),
                     ),
                   );
                 }
@@ -331,6 +363,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
             await ref.read(podcastFeedProvider.notifier).refreshFeed();
           },
           child: GridView.builder(
+            controller: _scrollController,
             padding: const EdgeInsets.symmetric(vertical: 4),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
@@ -338,17 +371,21 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
               mainAxisSpacing: spacing,
               childAspectRatio: childAspectRatio,
             ),
-            itemCount: feedState.episodes.length + 1,
+            itemCount:
+                feedState.episodes.length + (feedState.hasMore ? 1 : 0) + 1,
             itemBuilder: (context, index) {
               if (index == 0) {
                 return _buildDailyReportEntryTile(context, compact: false);
               }
 
               final episodeIndex = index - 1;
-              if (episodeIndex == feedState.episodes.length - 1 &&
-                  feedState.hasMore) {
-                Future.microtask(
-                  () => ref.read(podcastFeedProvider.notifier).loadMoreFeed(),
+              if (episodeIndex >= feedState.episodes.length) {
+                return Center(
+                  child: feedState.isLoadingMore
+                      ? CircularProgressIndicator(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        )
+                      : const SizedBox.shrink(),
                 );
               }
               return _buildDesktopCard(

@@ -296,12 +296,18 @@ class _PodcastApiService implements PodcastApiService {
   }
 
   @override
-  Future<PodcastFeedResponse> getPodcastFeed(int page, int pageSize) async {
+  Future<PodcastFeedResponse> getPodcastFeed(
+    int page,
+    int pageSize,
+    String? cursor,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
       r'page': page,
       r'page_size': pageSize,
+      r'cursor': cursor,
     };
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<PodcastFeedResponse>(
@@ -455,9 +461,15 @@ class _PodcastApiService implements PodcastApiService {
   Future<PodcastEpisodeListResponse> getPlaybackHistory(
     int page,
     int size,
+    String? cursor,
   ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'page': page, r'size': size};
+    final queryParameters = <String, dynamic>{
+      r'page': page,
+      r'size': size,
+      r'cursor': cursor,
+    };
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<PodcastEpisodeListResponse>(

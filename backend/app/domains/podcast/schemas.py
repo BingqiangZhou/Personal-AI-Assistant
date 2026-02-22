@@ -183,6 +183,7 @@ class PodcastEpisodeListResponse(PodcastBaseSchema):
     size: int
     pages: int
     subscription_id: int
+    next_cursor: str | None = None
 
 
 class PodcastPlaybackHistoryItemResponse(PodcastBaseSchema):
@@ -208,6 +209,7 @@ class PodcastPlaybackHistoryListResponse(PodcastBaseSchema):
     page: int
     size: int
     pages: int
+    next_cursor: str | None = None
 
 
 class PodcastEpisodeDetailResponse(PodcastEpisodeResponse):
@@ -223,6 +225,7 @@ class PodcastFeedResponse(PodcastBaseSchema):
     items: list[PodcastEpisodeResponse]
     has_more: bool
     next_page: int | None = None
+    next_cursor: str | None = None
     total: int
 
 

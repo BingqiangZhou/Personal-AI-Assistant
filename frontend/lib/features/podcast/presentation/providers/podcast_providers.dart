@@ -1827,6 +1827,7 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
           episodes: response.items,
           hasMore: response.hasMore,
           nextPage: response.nextPage,
+          nextCursor: response.nextCursor,
           total: response.total,
           isLoading: false,
           clearError: true,
@@ -1871,12 +1872,14 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
       final response = await _repository.getPodcastFeed(
         page: currentState.nextPage ?? 1,
         pageSize: 20,
+        cursor: currentState.nextCursor,
       );
 
       state = state.copyWith(
         episodes: [...state.episodes, ...response.items],
         hasMore: response.hasMore,
         nextPage: response.nextPage,
+        nextCursor: response.nextCursor,
         total: response.total,
         isLoadingMore: false,
         lastRefreshTime: DateTime.now(),

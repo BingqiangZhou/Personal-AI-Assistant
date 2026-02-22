@@ -5,6 +5,7 @@ Podcast Episode Service - Manages podcast episodes.
 """
 
 import logging
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -117,6 +118,59 @@ class PodcastEpisodeService:
         )
         results = self._build_episode_response(episodes, playback_states)
         return results, total
+
+    async def list_feed_by_cursor(
+        self,
+        size: int = 20,
+        cursor_published_at: datetime | None = None,
+        cursor_episode_id: int | None = None,
+    ) -> tuple[list[dict], int, bool, tuple[datetime, int] | None]:
+        """List feed via keyset cursor pagination."""
+        (
+            episodes,
+            total,
+            has_more,
+            next_cursor_values,
+        ) = await self.repo.get_feed_cursor_paginated(
+            self.user_id,
+            size=size,
+            cursor_published_at=cursor_published_at,
+            cursor_episode_id=cursor_episode_id,
+        )
+
+        episode_ids = [ep.id for ep in episodes]
+        playback_states = await self.repo.get_playback_states_batch(
+            self.user_id, episode_ids
+        )
+        results = self._build_episode_response(episodes, playback_states)
+        return results, total, has_more, next_cursor_values
+
+    async def list_playback_history_by_cursor(
+        self,
+        size: int = 20,
+        cursor_last_updated_at: datetime | None = None,
+        cursor_episode_id: int | None = None,
+    ) -> tuple[list[dict], int, bool, tuple[datetime, int] | None]:
+        """List playback history via keyset cursor pagination."""
+        (
+            episodes,
+            total,
+            has_more,
+            next_cursor_values,
+        ) = await self.repo.get_playback_history_cursor_paginated(
+            self.user_id,
+            size=size,
+            cursor_last_updated_at=cursor_last_updated_at,
+            cursor_episode_id=cursor_episode_id,
+        )
+
+        episode_ids = [ep.id for ep in episodes]
+        playback_states = await self.repo.get_playback_states_batch(
+            self.user_id,
+            episode_ids,
+        )
+        results = self._build_episode_response(episodes, playback_states)
+        return results, total, has_more, next_cursor_values
 
     async def list_playback_history_lite(
         self,

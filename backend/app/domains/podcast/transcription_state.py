@@ -148,7 +148,6 @@ class TranscriptionStateManager:
         Returns:
             True if lock acquired, False if already locked
         """
-        key = TranscriptionStateKeys.TASK_LOCK.format(episode_id=episode_id)
         lock_value = str(task_id)
 
         try:
@@ -478,9 +477,10 @@ class TranscriptionStateManager:
         """
         try:
             client = await self.redis._get_client()
-            # Count task progress keys (they exist only for active tasks)
-            keys = await client.keys("podcast:transcription:progress:*")
-            return len(keys)
+            count = 0
+            async for _ in client.scan_iter(match="podcast:transcription:progress:*"):
+                count += 1
+            return count
         except Exception as e:
             logger.error(f"Failed to get active tasks count: {e}")
             return 0
@@ -497,11 +497,14 @@ class TranscriptionStateManager:
         """
         try:
             client = await self.redis._get_client()
-            lock_keys = await client.keys("podcast:transcription:lock_value:*")
+            lock_keys = [
+                key
+                async for key in client.scan_iter(
+                    match="podcast:transcription:lock_value:*"
+                )
+            ]
 
             cleaned = 0
-            now = datetime.now(timezone.utc)
-
             for key in lock_keys:
                 ttl = await client.ttl(key)
                 if ttl == -1:  # No expiration set - stale lock

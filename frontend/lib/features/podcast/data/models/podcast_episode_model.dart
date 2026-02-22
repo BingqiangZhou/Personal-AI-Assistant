@@ -209,37 +209,37 @@ class PodcastEpisodeModel extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        subscriptionId,
-        subscriptionImageUrl,
-        title,
-        subscriptionTitle,
-        description,
-        audioUrl,
-        audioDuration,
-        audioFileSize,
-        publishedAt,
-        imageUrl,
-        itemLink,
-        transcriptUrl,
-        transcriptContent,
-        aiSummary,
-        summaryVersion,
-        aiConfidenceScore,
-        playCount,
-        lastPlayedAt,
-        season,
-        episodeNumber,
-        explicit,
-        status,
-        metadata,
-        playbackPosition,
-        isPlaying,
-        playbackRate,
-        isPlayed,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    subscriptionId,
+    subscriptionImageUrl,
+    title,
+    subscriptionTitle,
+    description,
+    audioUrl,
+    audioDuration,
+    audioFileSize,
+    publishedAt,
+    imageUrl,
+    itemLink,
+    transcriptUrl,
+    transcriptContent,
+    aiSummary,
+    summaryVersion,
+    aiConfidenceScore,
+    playCount,
+    lastPlayedAt,
+    season,
+    episodeNumber,
+    explicit,
+    status,
+    metadata,
+    playbackPosition,
+    isPlaying,
+    playbackRate,
+    isPlayed,
+    createdAt,
+    updatedAt,
+  ];
 }
 
 @JsonSerializable()
@@ -251,6 +251,8 @@ class PodcastEpisodeListResponse extends Equatable {
   final int pages;
   @JsonKey(name: 'subscription_id')
   final int subscriptionId;
+  @JsonKey(name: 'next_cursor')
+  final String? nextCursor;
 
   const PodcastEpisodeListResponse({
     required this.episodes,
@@ -259,6 +261,7 @@ class PodcastEpisodeListResponse extends Equatable {
     required this.size,
     required this.pages,
     required this.subscriptionId,
+    this.nextCursor,
   });
 
   factory PodcastEpisodeListResponse.fromJson(Map<String, dynamic> json) =>
@@ -267,7 +270,15 @@ class PodcastEpisodeListResponse extends Equatable {
   Map<String, dynamic> toJson() => _$PodcastEpisodeListResponseToJson(this);
 
   @override
-  List<Object?> get props => [episodes, total, page, size, pages, subscriptionId];
+  List<Object?> get props => [
+    episodes,
+    total,
+    page,
+    size,
+    pages,
+    subscriptionId,
+    nextCursor,
+  ];
 }
 
 @JsonSerializable()
@@ -384,7 +395,7 @@ class PodcastEpisodeDetailResponse extends Equatable {
       audioDuration: audioDuration,
       audioFileSize: audioFileSize,
       publishedAt: publishedAt,
-      imageUrl: imageUrl,  // ✅ 修复：添加缺失的 imageUrl 字段
+      imageUrl: imageUrl, // ✅ 修复：添加缺失的 imageUrl 字段
       itemLink: itemLink,
       transcriptUrl: transcriptUrl,
       transcriptContent: transcriptContent,
@@ -450,38 +461,38 @@ class PodcastEpisodeDetailResponse extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        subscriptionId,
-        subscriptionImageUrl,
-        title,
-        description,
-        audioUrl,
-        audioDuration,
-        audioFileSize,
-        publishedAt,
-        imageUrl,
-        itemLink,
-        transcriptUrl,
-        transcriptContent,
-        aiSummary,
-        summaryVersion,
-        aiConfidenceScore,
-        playCount,
-        lastPlayedAt,
-        season,
-        episodeNumber,
-        explicit,
-        status,
-        metadata,
-        playbackPosition,
-        isPlaying,
-        playbackRate,
-        isPlayed,
-        createdAt,
-        updatedAt,
-        subscription,
-        relatedEpisodes,
-      ];
+    id,
+    subscriptionId,
+    subscriptionImageUrl,
+    title,
+    description,
+    audioUrl,
+    audioDuration,
+    audioFileSize,
+    publishedAt,
+    imageUrl,
+    itemLink,
+    transcriptUrl,
+    transcriptContent,
+    aiSummary,
+    summaryVersion,
+    aiConfidenceScore,
+    playCount,
+    lastPlayedAt,
+    season,
+    episodeNumber,
+    explicit,
+    status,
+    metadata,
+    playbackPosition,
+    isPlaying,
+    playbackRate,
+    isPlayed,
+    createdAt,
+    updatedAt,
+    subscription,
+    relatedEpisodes,
+  ];
 }
 
 @JsonSerializable(fieldRename: FieldRename.snake)
@@ -490,12 +501,14 @@ class PodcastFeedResponse extends Equatable {
   @JsonKey(defaultValue: false)
   final bool hasMore;
   final int? nextPage;
+  final String? nextCursor;
   final int total;
 
   const PodcastFeedResponse({
     required this.items,
     required this.hasMore,
     this.nextPage,
+    this.nextCursor,
     required this.total,
   });
 
@@ -505,5 +518,5 @@ class PodcastFeedResponse extends Equatable {
   Map<String, dynamic> toJson() => _$PodcastFeedResponseToJson(this);
 
   @override
-  List<Object?> get props => [items, hasMore, nextPage, total];
+  List<Object?> get props => [items, hasMore, nextPage, nextCursor, total];
 }
