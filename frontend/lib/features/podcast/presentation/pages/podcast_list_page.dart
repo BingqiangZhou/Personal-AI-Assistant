@@ -423,17 +423,37 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final searchState = ref.watch(search.podcastSearchProvider);
+    final hasSearched = ref.watch(
+      search.podcastSearchProvider.select((state) => state.hasSearched),
+    );
+    final searchMode = ref.watch(
+      search.podcastSearchProvider.select((state) => state.searchMode),
+    );
     final selectedCountry = ref.watch(
       countrySelectorProvider.select((state) => state.selectedCountry),
     );
     const isDense = true;
-    final content = searchState.hasSearched
-        ? _buildSearchResults(context, searchState, l10n, isDense: isDense)
-        : _buildDiscoverContent(
-            context,
-            ref.watch(podcastDiscoverProvider),
-            isDense: isDense,
+    final content = hasSearched
+        ? Consumer(
+            builder: (context, localRef, _) {
+              final searchState = localRef.watch(search.podcastSearchProvider);
+              return _buildSearchResults(
+                context,
+                searchState,
+                l10n,
+                isDense: isDense,
+              );
+            },
+          )
+        : Consumer(
+            builder: (context, localRef, _) {
+              final discoverState = localRef.watch(podcastDiscoverProvider);
+              return _buildDiscoverContent(
+                context,
+                discoverState,
+                isDense: isDense,
+              );
+            },
           );
 
     return ResponsiveContainer(
@@ -475,16 +495,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 ],
               ),
             ),
-            SizedBox(height: isDense ? 6 : 8),
-            _buildSearchModeSelector(context, searchState, isDense: isDense),
-            SizedBox(height: isDense ? 6 : 8),
+            const SizedBox(height: 6),
+            _buildSearchModeSelector(context, searchMode, isDense: isDense),
+            const SizedBox(height: 6),
             _buildDiscoverSearchInput(
               context,
               l10n,
-              searchMode: searchState.searchMode,
+              searchMode: searchMode,
               isDense: isDense,
             ),
-            SizedBox(height: isDense ? 8 : 12),
+            const SizedBox(height: 8),
             Expanded(child: content),
           ],
         ),
@@ -557,7 +577,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
   Widget _buildSearchModeSelector(
     BuildContext context,
-    search.PodcastSearchState state, {
+    search.PodcastSearchMode searchMode, {
     required bool isDense,
   }) {
     final l10n = AppLocalizations.of(context)!;
@@ -579,7 +599,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               key: const Key('podcast_discover_tab_episodes'),
               label: l10n.podcast_episodes,
               icon: Icons.headphones_outlined,
-              selected: state.searchMode == search.PodcastSearchMode.episodes,
+              selected: searchMode == search.PodcastSearchMode.episodes,
               isDense: isDense,
               onTap: () {
                 ref
@@ -598,7 +618,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               key: const Key('podcast_discover_tab_podcasts'),
               label: l10n.podcast_title,
               icon: Icons.podcasts,
-              selected: state.searchMode == search.PodcastSearchMode.podcasts,
+              selected: searchMode == search.PodcastSearchMode.podcasts,
               isDense: isDense,
               onTap: () {
                 ref

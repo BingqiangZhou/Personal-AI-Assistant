@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/core/utils/episode_description_helper.dart';
-import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
@@ -43,17 +42,34 @@ class _ProfileSubscriptionsPageState
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
+    if (_scrollController.position.pixels <
         _scrollController.position.maxScrollExtent - 200) {
-      ref.read(podcastSubscriptionProvider.notifier).loadMoreSubscriptions();
+      return;
     }
+
+    final state = ref.read(podcastSubscriptionProvider);
+    if (!state.hasMore || state.isLoadingMore) {
+      return;
+    }
+
+    ref.read(podcastSubscriptionProvider.notifier).loadMoreSubscriptions();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final state = ref.watch(podcastSubscriptionProvider);
-    final subscriptions = state.subscriptions;
+    final state = ref.watch(
+      podcastSubscriptionProvider.select(
+        (value) => (
+          subscriptions: value.subscriptions,
+          hasMore: value.hasMore,
+          isLoading: value.isLoading,
+          isLoadingMore: value.isLoadingMore,
+          total: value.total,
+          error: value.error,
+        ),
+      ),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -90,20 +106,34 @@ class _ProfileSubscriptionsPageState
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () =>
-            ref.read(podcastSubscriptionProvider.notifier).refreshSubscriptions(),
-        child: _buildBody(context, l10n, state, subscriptions),
+        onRefresh: () => ref
+            .read(podcastSubscriptionProvider.notifier)
+            .refreshSubscriptions(),
+        child: _buildBody(
+          context,
+          l10n,
+          subscriptions: state.subscriptions,
+          hasMore: state.hasMore,
+          isLoading: state.isLoading,
+          isLoadingMore: state.isLoadingMore,
+          total: state.total,
+          error: state.error,
+        ),
       ),
     );
   }
 
   Widget _buildBody(
     BuildContext context,
-    AppLocalizations l10n,
-    PodcastSubscriptionState state,
-    List<PodcastSubscriptionModel> subscriptions,
-  ) {
-    if (state.isLoading && subscriptions.isEmpty) {
+    AppLocalizations l10n, {
+    required List<PodcastSubscriptionModel> subscriptions,
+    required bool hasMore,
+    required bool isLoading,
+    required bool isLoadingMore,
+    required int total,
+    required String? error,
+  }) {
+    if (isLoading && subscriptions.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: const [
@@ -113,7 +143,7 @@ class _ProfileSubscriptionsPageState
       );
     }
 
-    if (state.error != null && subscriptions.isEmpty) {
+    if (error != null && subscriptions.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
@@ -126,7 +156,7 @@ class _ProfileSubscriptionsPageState
           const SizedBox(height: 16),
           Center(
             child: Text(
-              state.error.toString(),
+              error,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
@@ -179,25 +209,14 @@ class _ProfileSubscriptionsPageState
         if (index == subscriptions.length) {
           return _buildLoadingIndicator(
             context,
-            state.hasMore,
-            state.isLoadingMore,
-            state.total,
+            hasMore,
+            isLoadingMore,
+            total,
             l10n,
           );
         }
 
         final subscription = subscriptions[index];
-        if (index == subscriptions.length - 1 &&
-            state.hasMore &&
-            !state.isLoadingMore) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              ref
-                  .read(podcastSubscriptionProvider.notifier)
-                  .loadMoreSubscriptions();
-            }
-          });
-        }
         return Card(
           margin: const EdgeInsets.symmetric(
             horizontal: kPodcastRowCardHorizontalMargin,
@@ -262,9 +281,9 @@ class _ProfileSubscriptionsPageState
                                 : l10n.podcast_description,
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

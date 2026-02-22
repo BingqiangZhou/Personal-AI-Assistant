@@ -165,24 +165,22 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
       await ref
           .read(podcastQueueControllerProvider.notifier)
           .addToQueue(episode.id);
-      if (context.mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        showTopFloatingNotice(
-          context,
-          message: l10n.added_to_queue,
-          extraTopOffset: 72,
-        );
-      }
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      showTopFloatingNotice(
+        context,
+        message: l10n.added_to_queue,
+        extraTopOffset: 72,
+      );
     } catch (error) {
-      if (context.mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        showTopFloatingNotice(
-          context,
-          message: l10n.failed_to_add_to_queue(error.toString()),
-          isError: true,
-          extraTopOffset: 72,
-        );
-      }
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      showTopFloatingNotice(
+        context,
+        message: l10n.failed_to_add_to_queue(error.toString()),
+        isError: true,
+        extraTopOffset: 72,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -252,7 +250,6 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final episodesState = ref.watch(podcastEpisodesProvider);
     final hasPlayer =
         ref.watch(
           audioPlayerProvider.select((state) => state.currentEpisode),
@@ -305,9 +302,17 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Builder(
-                        builder: (context) {
+                      child: Consumer(
+                        builder: (context, localRef, child) {
                           final sub = widget.subscription;
+                          final fallbackSubscriptionImageUrl = localRef.watch(
+                            podcastEpisodesProvider.select(
+                              (state) => state.episodes.isNotEmpty
+                                  ? state.episodes.first.subscriptionImageUrl
+                                  : null,
+                            ),
+                          );
+
                           if (sub?.imageUrl != null) {
                             return PodcastImageWidget(
                               imageUrl: sub!.imageUrl,
@@ -320,19 +325,16 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                             );
                           }
 
-                          if (episodesState.episodes.isNotEmpty) {
-                            final firstEp = episodesState.episodes.first;
-                            if (firstEp.subscriptionImageUrl != null) {
-                              return PodcastImageWidget(
-                                imageUrl: firstEp.subscriptionImageUrl,
-                                width: 40,
-                                height: 40,
-                                iconSize: 24,
-                                iconColor: Theme.of(
-                                  context,
-                                ).colorScheme.onPrimaryContainer,
-                              );
-                            }
+                          if (fallbackSubscriptionImageUrl != null) {
+                            return PodcastImageWidget(
+                              imageUrl: fallbackSubscriptionImageUrl,
+                              width: 40,
+                              height: 40,
+                              iconSize: 24,
+                              iconColor: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
+                            );
                           }
 
                           return Icon(
@@ -391,130 +393,142 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
           ),
 
           Expanded(
-            child: episodesState.isLoading && episodesState.episodes.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : episodesState.error != null
-                ? _buildErrorState(episodesState.error!)
-                : episodesState.episodes.isEmpty
-                ? _buildEmptyState()
-                : RefreshIndicator(
-                    onRefresh: _refreshEpisodes,
-                    child: Column(
-                      children: [
-                        // Episodes list - Grid Layout
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              final screenWidth = constraints.maxWidth;
+            child: Consumer(
+              builder: (context, localRef, child) {
+                final episodesState = localRef.watch(podcastEpisodesProvider);
+                return episodesState.isLoading && episodesState.episodes.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : episodesState.error != null
+                    ? _buildErrorState(episodesState.error!)
+                    : episodesState.episodes.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                        onRefresh: _refreshEpisodes,
+                        child: Column(
+                          children: [
+                            // Episodes list - Grid Layout
+                            Expanded(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final screenWidth = constraints.maxWidth;
 
-                              // Mobile: single column
-                              if (screenWidth < 600) {
-                                return ListView.builder(
-                                  controller: _scrollController,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 8,
-                                    horizontal: 12,
-                                  ),
-                                  itemCount:
-                                      episodesState.episodes.length +
-                                      (episodesState.isLoadingMore ? 1 : 0),
-                                  itemBuilder: (context, index) {
-                                    if (index ==
-                                        episodesState.episodes.length) {
-                                      return const Center(
-                                        child: Padding(
-                                          padding: EdgeInsets.all(16),
-                                          child: CircularProgressIndicator(),
-                                        ),
-                                      );
-                                    }
-                                    final episode =
-                                        episodesState.episodes[index];
-                                    return SimplifiedEpisodeCard(
-                                      episode: episode,
-                                      isAddingToQueue: _addingEpisodeIds
-                                          .contains(episode.id),
-                                      onTap: () {
-                                        context.push(
-                                          '/podcast/episode/detail/${episode.id}',
+                                  // Mobile: single column
+                                  if (screenWidth < 600) {
+                                    return ListView.builder(
+                                      controller: _scrollController,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                        horizontal: 12,
+                                      ),
+                                      itemCount:
+                                          episodesState.episodes.length +
+                                          (episodesState.isLoadingMore ? 1 : 0),
+                                      itemBuilder: (context, index) {
+                                        if (index ==
+                                            episodesState.episodes.length) {
+                                          return const Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.all(16),
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            ),
+                                          );
+                                        }
+                                        final episode =
+                                            episodesState.episodes[index];
+                                        return SimplifiedEpisodeCard(
+                                          episode: episode,
+                                          isAddingToQueue: _addingEpisodeIds
+                                              .contains(episode.id),
+                                          onTap: () {
+                                            context.push(
+                                              '/podcast/episode/detail/${episode.id}',
+                                            );
+                                          },
+                                          onPlay: () async {
+                                            // 閹绢厽鏂侀崚鍡涙肠
+                                            await ref
+                                                .read(
+                                                  audioPlayerProvider.notifier,
+                                                )
+                                                .playEpisode(episode);
+                                            // 鐠哄疇娴嗛崚鎷岊嚊閹懘銆?
+                                            if (context.mounted) {
+                                              context.push(
+                                                '/podcast/episode/detail/${episode.id}',
+                                              );
+                                            }
+                                          },
+                                          onAddToQueue: () =>
+                                              _handleAddToQueue(episode),
                                         );
                                       },
-                                      onPlay: () async {
-                                        // 閹绢厽鏂侀崚鍡涙肠
-                                        await ref
-                                            .read(audioPlayerProvider.notifier)
-                                            .playEpisode(episode);
-                                        // 鐠哄疇娴嗛崚鎷岊嚊閹懘銆?
-                                        if (context.mounted) {
+                                    );
+                                  }
+
+                                  // Desktop: grid layout
+                                  final crossAxisCount = screenWidth < 900
+                                      ? 2
+                                      : (screenWidth < 1200 ? 3 : 4);
+                                  return GridView.builder(
+                                    controller: _scrollController,
+                                    padding: const EdgeInsets.all(12),
+                                    gridDelegate:
+                                        SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: crossAxisCount,
+                                          crossAxisSpacing: 12,
+                                          mainAxisSpacing: 12,
+                                          mainAxisExtent:
+                                              _desktopEpisodeCardHeight,
+                                        ),
+                                    itemCount:
+                                        episodesState.episodes.length +
+                                        (episodesState.isLoadingMore ? 1 : 0),
+                                    itemBuilder: (context, index) {
+                                      if (index ==
+                                          episodesState.episodes.length) {
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      }
+                                      final episode =
+                                          episodesState.episodes[index];
+                                      return SimplifiedEpisodeCard(
+                                        episode: episode,
+                                        isAddingToQueue: _addingEpisodeIds
+                                            .contains(episode.id),
+                                        onTap: () {
                                           context.push(
                                             '/podcast/episode/detail/${episode.id}',
                                           );
-                                        }
-                                      },
-                                      onAddToQueue: () =>
-                                          _handleAddToQueue(episode),
-                                    );
-                                  },
-                                );
-                              }
-
-                              // Desktop: grid layout
-                              final crossAxisCount = screenWidth < 900
-                                  ? 2
-                                  : (screenWidth < 1200 ? 3 : 4);
-                              return GridView.builder(
-                                controller: _scrollController,
-                                padding: const EdgeInsets.all(12),
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: crossAxisCount,
-                                      crossAxisSpacing: 12,
-                                      mainAxisSpacing: 12,
-                                      mainAxisExtent: _desktopEpisodeCardHeight,
-                                    ),
-                                itemCount:
-                                    episodesState.episodes.length +
-                                    (episodesState.isLoadingMore ? 1 : 0),
-                                itemBuilder: (context, index) {
-                                  if (index == episodesState.episodes.length) {
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  }
-                                  final episode = episodesState.episodes[index];
-                                  return SimplifiedEpisodeCard(
-                                    episode: episode,
-                                    isAddingToQueue: _addingEpisodeIds.contains(
-                                      episode.id,
-                                    ),
-                                    onTap: () {
-                                      context.push(
-                                        '/podcast/episode/detail/${episode.id}',
+                                        },
+                                        onPlay: () async {
+                                          // 閹绢厽鏂侀崚鍡涙肠
+                                          await ref
+                                              .read(
+                                                audioPlayerProvider.notifier,
+                                              )
+                                              .playEpisode(episode);
+                                          // 鐠哄疇娴嗛崚鎷岊嚊閹懘銆?
+                                          if (context.mounted) {
+                                            context.push(
+                                              '/podcast/episode/detail/${episode.id}',
+                                            );
+                                          }
+                                        },
+                                        onAddToQueue: () =>
+                                            _handleAddToQueue(episode),
                                       );
                                     },
-                                    onPlay: () async {
-                                      // 閹绢厽鏂侀崚鍡涙肠
-                                      await ref
-                                          .read(audioPlayerProvider.notifier)
-                                          .playEpisode(episode);
-                                      // 鐠哄疇娴嗛崚鎷岊嚊閹懘銆?
-                                      if (context.mounted) {
-                                        context.push(
-                                          '/podcast/episode/detail/${episode.id}',
-                                        );
-                                      }
-                                    },
-                                    onAddToQueue: () =>
-                                        _handleAddToQueue(episode),
                                   );
                                 },
-                              );
-                            },
-                          ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                      );
+              },
+            ),
           ),
         ],
       ),
