@@ -64,7 +64,7 @@ void main() {
   });
 
   group('PodcastDailyReportPage', () {
-    testWidgets('renders daily report page with top calendar and items', (
+    testWidgets('renders daily report page with calendar action and items', (
       tester,
     ) async {
       final previousDay = _dateOnlyNowMinus(1);
@@ -81,7 +81,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('daily_report_page')), findsOneWidget);
-      expect(find.byKey(const Key('daily_report_calendar')), findsOneWidget);
+      expect(
+        find.byKey(const Key('daily_report_calendar_menu_button')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('daily_report_calendar')), findsNothing);
       expect(find.text('Daily Report'), findsWidgets);
       expect(find.text('Report summary ${previousDay.day}'), findsOneWidget);
     });
@@ -102,6 +106,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await _openCalendarPanel(tester);
       expect(find.byKey(_calendarMarkerKey(previousDay)), findsOneWidget);
     });
 
@@ -179,6 +184,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Report summary ${previousDay.day}'), findsOneWidget);
+        await _openCalendarPanel(tester);
         await tester.tap(find.byKey(_calendarDayKey(twoDaysAgo)));
         await tester.pumpAndSettle();
 
@@ -204,6 +210,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await _openCalendarPanel(tester);
       await tester.tap(find.byKey(_calendarDayKey(twoDaysAgo)));
       await tester.pumpAndSettle();
 
@@ -234,6 +241,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      await _openCalendarPanel(tester);
       final baselineCalls = datesNotifier.ensureCoverageCalls.length;
       await tester.drag(
         find.byKey(const Key('daily_report_calendar')),
@@ -246,6 +254,48 @@ void main() {
         greaterThan(baselineCalls),
       );
     });
+
+    testWidgets(
+      'selecting date closes calendar panel and updates report content',
+      (tester) async {
+        final previousDay = _dateOnlyNowMinus(1);
+        final twoDaysAgo = _dateOnlyNowMinus(2);
+        await tester.pumpWidget(
+          _buildReportApp(
+            dailyReportNotifier: _SwitchingDailyReportNotifier({
+              _dateKey(previousDay): _reportForDate(previousDay),
+              _dateKey(twoDaysAgo): _reportForDate(twoDaysAgo),
+            }),
+            datesNotifier: _StaticDailyReportDatesNotifier(
+              _dates([previousDay, twoDaysAgo]),
+            ),
+            selectedDateNotifier: _FixedSelectedDailyReportDateNotifier(
+              previousDay,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('daily_report_calendar_panel')),
+          findsNothing,
+        );
+        await _openCalendarPanel(tester);
+        expect(
+          find.byKey(const Key('daily_report_calendar_panel')),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(_calendarDayKey(twoDaysAgo)));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('daily_report_calendar_panel')),
+          findsNothing,
+        );
+        expect(find.text('Report summary ${twoDaysAgo.day}'), findsOneWidget);
+      },
+    );
 
     testWidgets('shows empty state when report is unavailable', (tester) async {
       final previousDay = _dateOnlyNowMinus(1);
@@ -659,4 +709,9 @@ Key _calendarDayKey(DateTime date) {
 
 Key _calendarMarkerKey(DateTime date) {
   return Key('daily_report_calendar_marker_${_dateKey(date)}');
+}
+
+Future<void> _openCalendarPanel(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('daily_report_calendar_menu_button')));
+  await tester.pumpAndSettle();
 }

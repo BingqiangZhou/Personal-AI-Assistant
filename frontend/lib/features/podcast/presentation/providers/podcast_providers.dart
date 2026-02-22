@@ -1801,7 +1801,7 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
   }) async {
     final currentState = state;
     final hasData = currentState.episodes.isNotEmpty;
-    final shouldShowInitialLoader = !hasData;
+    final shouldShowInitialLoader = !background && !hasData;
 
     if (!forceRefresh && hasData && currentState.isDataFresh()) {
       return;
@@ -1809,9 +1809,6 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
 
     final existingLoad = _inFlightInitialLoad;
     if (existingLoad != null) {
-      if (shouldShowInitialLoader && !currentState.isLoading) {
-        state = currentState.copyWith(isLoading: true, clearError: true);
-      }
       return existingLoad;
     }
 

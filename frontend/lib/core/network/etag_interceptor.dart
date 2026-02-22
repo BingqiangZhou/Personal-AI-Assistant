@@ -1,26 +1,26 @@
 import 'package:dio/dio.dart';
-import 'etag_cache_service.dart';
+
 import '../utils/app_logger.dart' as logger;
+import 'etag_cache_service.dart';
 
 /// ETag Interceptor for Dio
 ///
 /// Handles HTTP ETag caching by:
-/// 1. Adding If-None-Match header to requests with cached ETags
-/// 2. Storing ETags from successful responses
-/// 3. Handling 304 Not Modified responses by returning cached data
+/// 1. Adding If-None-Match header to requests with cached ETags.
+/// 2. Storing ETags from successful responses.
+/// 3. Returning cached data on 304 Not Modified.
+/// 4. Fast-serving fresh cached responses during max-age window.
 class ETagInterceptor extends Interceptor {
   final ETagCacheService _cacheService;
   final bool _enabled;
 
-  /// Create ETag interceptor
+  /// Create ETag interceptor.
   ///
-  /// [cacheService] - Optional custom cache service (defaults to global singleton)
-  /// [enabled] - Enable/disable ETag functionality
-  ETagInterceptor({
-    ETagCacheService? cacheService,
-    bool enabled = true,
-  })  : _cacheService = cacheService ?? etagCacheService,
-        _enabled = enabled;
+  /// [cacheService] optional custom cache service.
+  /// [enabled] enable or disable ETag behavior.
+  ETagInterceptor({ETagCacheService? cacheService, bool enabled = true})
+    : _cacheService = cacheService ?? etagCacheService,
+      _enabled = enabled;
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
@@ -29,15 +29,25 @@ class ETagInterceptor extends Interceptor {
       return;
     }
 
-    // Only add ETag header for GET requests
-    if (options.method.toUpperCase() == 'GET') {
-      final key = _cacheService.generateKey(options);
-      final etag = _cacheService.getETag(key);
+    if (options.method.toUpperCase() != 'GET') {
+      handler.next(options);
+      return;
+    }
 
-      if (etag != null && etag.isNotEmpty) {
-        options.headers['If-None-Match'] = etag;
-        logger.AppLogger.debug('🏷️ [ETag] Adding If-None-Match: $etag for $key');
-      }
+    final key = _cacheService.generateKey(options);
+    final freshCachedResponse = _cacheService.getFreshCachedResponse(key);
+
+    // Fast path: serve local cache directly when still inside max-age window.
+    if (!_shouldForceRevalidate(options) && freshCachedResponse != null) {
+      logger.AppLogger.debug('[ETag] Using fresh local cache for $key');
+      handler.resolve(freshCachedResponse);
+      return;
+    }
+
+    final etag = _cacheService.getETag(key);
+    if (etag != null && etag.isNotEmpty) {
+      options.headers['If-None-Match'] = etag;
+      logger.AppLogger.debug('[ETag] Adding If-None-Match: $etag for $key');
     }
 
     handler.next(options);
@@ -50,20 +60,17 @@ class ETagInterceptor extends Interceptor {
       return;
     }
 
-    // Only process GET requests
     if (response.requestOptions.method.toUpperCase() != 'GET') {
       handler.next(response);
       return;
     }
 
-    // Check for ETag header in response
     final etag = response.headers.value('etag');
     if (etag != null && etag.isNotEmpty) {
       final key = _cacheService.generateKey(response.requestOptions);
-
-      // Store ETag and response
-      _cacheService.setETag(key, etag, response);
-      logger.AppLogger.debug('🏷️ [ETag] Cached: $etag for $key');
+      final maxAge = _extractMaxAge(response.headers.value('cache-control'));
+      _cacheService.setETag(key, etag, response, maxAge: maxAge);
+      logger.AppLogger.debug('[ETag] Cached: $etag for $key');
     }
 
     handler.next(response);
@@ -76,54 +83,101 @@ class ETagInterceptor extends Interceptor {
       return;
     }
 
-    // Check for 304 Not Modified response
     if (err.response?.statusCode == 304) {
       final key = _cacheService.generateKey(err.requestOptions);
       final cached = _cacheService.getCachedResponse(key);
 
       if (cached != null) {
-        // Update cached response with new headers from 304 response
         if (err.response?.headers != null) {
           err.response!.headers.forEach((name, values) {
             cached.headers.set(name, values);
           });
         }
-
-        logger.AppLogger.debug('🏷️ [ETag] Using cached response for $key (304)');
+        logger.AppLogger.debug('[ETag] Using cached response for $key (304)');
         handler.resolve(cached);
         return;
       }
 
-      logger.AppLogger.warning('🏷️ [ETag] 304 received but no cached response for $key');
+      logger.AppLogger.warning(
+        '[ETag] 304 received but no cached response for $key',
+      );
     }
 
     handler.next(err);
   }
 
-  /// Clear all cached ETags and responses
+  /// Clear all cached ETags and responses.
   void clearCache() {
     _cacheService.clearAll();
-    logger.AppLogger.debug('🏷️ [ETag] Cache cleared');
+    logger.AppLogger.debug('[ETag] Cache cleared');
   }
 
-  /// Clear cached ETag for specific key
+  /// Clear cached ETag for specific key.
   void clearKey(String key) {
     _cacheService.clearETag(key);
-    logger.AppLogger.debug('🏷️ [ETag] Cleared key: $key');
+    logger.AppLogger.debug('[ETag] Cleared key: $key');
   }
 
-  /// Clear cached ETags matching a pattern
+  /// Clear cached ETags matching a pattern.
   void clearPattern(String pattern) {
     _cacheService.clearPattern(pattern);
-    logger.AppLogger.debug('🏷️ [ETag] Cleared pattern: $pattern');
+    logger.AppLogger.debug('[ETag] Cleared pattern: $pattern');
   }
 
-  /// Get cache statistics
+  /// Get cache statistics.
   Map<String, dynamic> getStats() {
     return {
       'enabled': _enabled,
       'cacheSize': _cacheService.cacheSize,
       'keys': _cacheService.cacheKeys,
     };
+  }
+
+  bool _shouldForceRevalidate(RequestOptions options) {
+    if (options.extra['etag_force_revalidate'] == true) {
+      return true;
+    }
+
+    final cacheControl = options.headers['Cache-Control']?.toString();
+    if (cacheControl != null) {
+      final lower = cacheControl.toLowerCase();
+      if (lower.contains('no-cache') ||
+          lower.contains('no-store') ||
+          lower.contains('max-age=0')) {
+        return true;
+      }
+    }
+
+    final pragma = options.headers['Pragma']?.toString().toLowerCase();
+    return pragma == 'no-cache';
+  }
+
+  Duration? _extractMaxAge(String? cacheControl) {
+    if (cacheControl == null || cacheControl.isEmpty) {
+      return null;
+    }
+
+    final directives = cacheControl
+        .split(',')
+        .map((entry) => entry.trim().toLowerCase())
+        .where((entry) => entry.isNotEmpty)
+        .toList();
+
+    if (directives.contains('no-store')) {
+      return null;
+    }
+
+    for (final directive in directives) {
+      if (directive.startsWith('max-age=')) {
+        final raw = directive.substring('max-age='.length);
+        final seconds = int.tryParse(raw);
+        if (seconds == null) {
+          return null;
+        }
+        return Duration(seconds: seconds);
+      }
+    }
+
+    return null;
   }
 }

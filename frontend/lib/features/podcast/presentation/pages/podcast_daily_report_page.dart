@@ -81,6 +81,16 @@ class _PodcastDailyReportPageState
       appBar: AppBar(
         centerTitle: false,
         title: Text(l10n.podcast_daily_report_title),
+        actions: [
+          IconButton(
+            key: const Key('daily_report_calendar_menu_button'),
+            tooltip: l10n.podcast_daily_report_dates,
+            onPressed: () {
+              unawaited(_showCalendarPanel());
+            },
+            icon: const Icon(Icons.calendar_month_outlined),
+          ),
+        ],
       ),
       body: ResponsiveContainer(
         maxWidth: 1480,
@@ -97,14 +107,8 @@ class _PodcastDailyReportPageState
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final reportAsync = ref.watch(dailyReportProvider);
-    final reportDatesAsync = ref.watch(dailyReportDatesProvider);
     final selectedDate = ref.watch(selectedDailyReportDateProvider);
     final report = reportAsync.value;
-    final reportDateKeys = <String>{
-      for (final item in reportDatesAsync.value?.dates ?? const [])
-        _formatDate(item.reportDate),
-    };
-    final now = _toDateOnly(DateTime.now());
     final maxReportItemsViewportHeight =
         (MediaQuery.sizeOf(context).height * 0.46).clamp(180.0, 420.0);
 
@@ -187,141 +191,6 @@ class _PodcastDailyReportPageState
         ),
       );
     }
-
-    final displayFocusedDay = _focusedCalendarDay.isAfter(now)
-        ? now
-        : _focusedCalendarDay;
-
-    final calendarCard = buildSurface(
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.podcast_daily_report_dates,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            key: const Key('daily_report_calendar'),
-            child: TableCalendar<bool>(
-              firstDay: DateTime(2000, 1, 1),
-              lastDay: now,
-              focusedDay: displayFocusedDay,
-              calendarFormat: CalendarFormat.month,
-              availableCalendarFormats: const {CalendarFormat.month: 'Month'},
-              selectedDayPredicate: (day) => _isSameDate(day, selectedDate),
-              enabledDayPredicate: (day) {
-                final normalizedDay = _toDateOnly(day);
-                return !normalizedDay.isAfter(now);
-              },
-              eventLoader: (day) {
-                final hasReport = reportDateKeys.contains(_formatDate(day));
-                return hasReport ? const [true] : const [];
-              },
-              onDaySelected: (pickedDay, focusedDay) {
-                unawaited(
-                  _handleCalendarDaySelected(
-                    pickedDay: pickedDay,
-                    focusedDay: focusedDay,
-                  ),
-                );
-              },
-              onPageChanged: (focusedDay) {
-                final normalizedFocused = _toDateOnly(focusedDay);
-                setState(() {
-                  _focusedCalendarDay = normalizedFocused;
-                });
-                unawaited(
-                  ref
-                      .read(dailyReportDatesProvider.notifier)
-                      .ensureMonthCoverage(normalizedFocused),
-                );
-              },
-              calendarBuilders: CalendarBuilders<bool>(
-                defaultBuilder: (context, day, _) => _buildCalendarDayCell(
-                  context,
-                  day,
-                  selectedDate: selectedDate,
-                ),
-                outsideBuilder: (context, day, _) => _buildCalendarDayCell(
-                  context,
-                  day,
-                  selectedDate: selectedDate,
-                  isOutside: true,
-                ),
-                disabledBuilder: (context, day, _) => _buildCalendarDayCell(
-                  context,
-                  day,
-                  selectedDate: selectedDate,
-                  isDisabled: true,
-                ),
-                todayBuilder: (context, day, _) => _buildCalendarDayCell(
-                  context,
-                  day,
-                  selectedDate: selectedDate,
-                  isToday: true,
-                ),
-                selectedBuilder: (context, day, _) => _buildCalendarDayCell(
-                  context,
-                  day,
-                  selectedDate: selectedDate,
-                  isSelected: true,
-                ),
-                markerBuilder: (context, day, events) {
-                  if (events.isEmpty) {
-                    return null;
-                  }
-                  final isSelected = _isSameDate(day, selectedDate);
-                  final markerColor = isSelected
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.primary;
-                  return Positioned(
-                    key: Key(
-                      'daily_report_calendar_marker_${_formatDate(day)}',
-                    ),
-                    bottom: 4,
-                    child: Container(
-                      width: 5,
-                      height: 5,
-                      decoration: BoxDecoration(
-                        color: markerColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          if (reportDatesAsync.isLoading && reportDatesAsync.value == null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    l10n.podcast_daily_report_loading,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
 
     Widget buildReportCard({required bool fillViewportHeight}) {
       if (reportAsync.isLoading && report == null) {
@@ -493,52 +362,251 @@ class _PodcastDailyReportPageState
     return LayoutBuilder(
       builder: (context, constraints) {
         final hasBoundedHeight = constraints.hasBoundedHeight;
-        final isWideLayout = constraints.maxWidth >= 1180;
         final reportCard = buildReportCard(
-          fillViewportHeight: isWideLayout && hasBoundedHeight,
+          fillViewportHeight: hasBoundedHeight,
         );
 
-        if (isWideLayout && hasBoundedHeight) {
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 5,
-                child: SingleChildScrollView(child: calendarCard),
+        if (!hasBoundedHeight) {
+          return SingleChildScrollView(child: reportCard);
+        }
+
+        return SizedBox(height: constraints.maxHeight, child: reportCard);
+      },
+    );
+  }
+
+  Future<void> _showCalendarPanel() async {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final horizontalPadding = screenWidth < 600 ? 12.0 : 16.0;
+
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.transparent,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      transitionDuration: const Duration(milliseconds: 160),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
+        final theme = Theme.of(dialogContext);
+        final maxPanelWidth = (screenWidth - horizontalPadding * 2)
+            .clamp(0.0, 380.0)
+            .toDouble();
+        return SafeArea(
+          child: Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: kToolbarHeight + 8,
+                left: horizontalPadding,
+                right: horizontalPadding,
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                flex: 7,
-                child: SizedBox(
-                  height: constraints.maxHeight,
-                  child: reportCard,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxPanelWidth),
+                child: Material(
+                  key: const Key('daily_report_calendar_panel'),
+                  color: theme.colorScheme.surface,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.35,
+                      ),
+                    ),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Consumer(
+                    builder: (panelContext, panelRef, _) {
+                      return Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: _buildCalendarPanelContent(
+                          panelContext,
+                          panelRef,
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ),
-            ],
-          );
-        }
-
-        if (isWideLayout) {
-          return SingleChildScrollView(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 5, child: calendarCard),
-                const SizedBox(width: 14),
-                Expanded(flex: 7, child: reportCard),
-              ],
             ),
-          );
-        }
-
-        return SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [calendarCard, const SizedBox(height: 12), reportCard],
+          ),
+        );
+      },
+      transitionBuilder: (dialogContext, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: ScaleTransition(
+            alignment: Alignment.topRight,
+            scale: Tween<double>(begin: 0.96, end: 1).animate(curved),
+            child: child,
           ),
         );
       },
     );
+  }
+
+  Widget _buildCalendarPanelContent(BuildContext context, WidgetRef panelRef) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final reportDatesAsync = panelRef.watch(dailyReportDatesProvider);
+    final selectedDate = panelRef.watch(selectedDailyReportDateProvider);
+    final reportDateKeys = <String>{
+      for (final item in reportDatesAsync.value?.dates ?? const [])
+        _formatDate(item.reportDate),
+    };
+    final now = _toDateOnly(DateTime.now());
+    final displayFocusedDay = _focusedCalendarDay.isAfter(now)
+        ? now
+        : _focusedCalendarDay;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          l10n.podcast_daily_report_dates,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          key: const Key('daily_report_calendar'),
+          child: TableCalendar<bool>(
+            firstDay: DateTime(2000, 1, 1),
+            lastDay: now,
+            focusedDay: displayFocusedDay,
+            calendarFormat: CalendarFormat.month,
+            availableCalendarFormats: const {CalendarFormat.month: 'Month'},
+            selectedDayPredicate: (day) => _isSameDate(day, selectedDate),
+            enabledDayPredicate: (day) {
+              final normalizedDay = _toDateOnly(day);
+              return !normalizedDay.isAfter(now);
+            },
+            eventLoader: (day) {
+              final hasReport = reportDateKeys.contains(_formatDate(day));
+              return hasReport ? const [true] : const [];
+            },
+            onDaySelected: (pickedDay, focusedDay) {
+              unawaited(
+                _handleCalendarDaySelectedFromPanel(
+                  panelContext: context,
+                  pickedDay: pickedDay,
+                  focusedDay: focusedDay,
+                ),
+              );
+            },
+            onPageChanged: (focusedDay) {
+              final normalizedFocused = _toDateOnly(focusedDay);
+              setState(() {
+                _focusedCalendarDay = normalizedFocused;
+              });
+              unawaited(
+                panelRef
+                    .read(dailyReportDatesProvider.notifier)
+                    .ensureMonthCoverage(normalizedFocused),
+              );
+            },
+            calendarBuilders: CalendarBuilders<bool>(
+              defaultBuilder: (context, day, _) => _buildCalendarDayCell(
+                context,
+                day,
+                selectedDate: selectedDate,
+              ),
+              outsideBuilder: (context, day, _) => _buildCalendarDayCell(
+                context,
+                day,
+                selectedDate: selectedDate,
+                isOutside: true,
+              ),
+              disabledBuilder: (context, day, _) => _buildCalendarDayCell(
+                context,
+                day,
+                selectedDate: selectedDate,
+                isDisabled: true,
+              ),
+              todayBuilder: (context, day, _) => _buildCalendarDayCell(
+                context,
+                day,
+                selectedDate: selectedDate,
+                isToday: true,
+              ),
+              selectedBuilder: (context, day, _) => _buildCalendarDayCell(
+                context,
+                day,
+                selectedDate: selectedDate,
+                isSelected: true,
+              ),
+              markerBuilder: (context, day, events) {
+                if (events.isEmpty) {
+                  return null;
+                }
+                final isSelected = _isSameDate(day, selectedDate);
+                final markerColor = isSelected
+                    ? theme.colorScheme.onPrimary
+                    : theme.colorScheme.primary;
+                return Positioned(
+                  key: Key('daily_report_calendar_marker_${_formatDate(day)}'),
+                  bottom: 4,
+                  child: Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: markerColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        if (reportDatesAsync.isLoading && reportDatesAsync.value == null) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  l10n.podcast_daily_report_loading,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _handleCalendarDaySelectedFromPanel({
+    required BuildContext panelContext,
+    required DateTime pickedDay,
+    required DateTime focusedDay,
+  }) async {
+    await _handleCalendarDaySelected(
+      pickedDay: pickedDay,
+      focusedDay: focusedDay,
+    );
+    if (!panelContext.mounted) {
+      return;
+    }
+    final navigator = Navigator.of(panelContext);
+    if (navigator.canPop()) {
+      navigator.pop();
+    }
   }
 
   Widget _buildCalendarDayCell(

@@ -6,8 +6,10 @@ class _ETagEntry {
   final String etag;
   final Response response;
   final DateTime timestamp;
+  final Duration? maxAge;
 
-  _ETagEntry(this.etag, this.response) : timestamp = DateTime.now();
+  _ETagEntry(this.etag, this.response, {this.maxAge})
+    : timestamp = DateTime.now();
 }
 
 /// ETag Cache Service
@@ -23,6 +25,32 @@ class ETagCacheService {
   /// Get cached response for a given cache key
   Response? getCachedResponse(String key) => _cache[key]?.response;
 
+  /// Get cached response only when entry is still fresh by max-age.
+  ///
+  /// Returns `null` when:
+  /// - cache key does not exist
+  /// - max-age is unavailable
+  /// - max-age has expired
+  Response? getFreshCachedResponse(String key) {
+    final entry = _cache[key];
+    if (entry == null) {
+      return null;
+    }
+
+    final maxAge = entry.maxAge;
+    if (maxAge == null || maxAge <= Duration.zero) {
+      return null;
+    }
+
+    final age = DateTime.now().difference(entry.timestamp);
+    if (age > maxAge) {
+      _cache.remove(key);
+      return null;
+    }
+
+    return entry.response;
+  }
+
   /// Check if cache entry exists and is recent (within TTL)
   bool hasValidEntry(String key, {Duration? maxAge}) {
     final entry = _cache[key];
@@ -37,8 +65,8 @@ class ETagCacheService {
   }
 
   /// Set ETag and response for a given cache key
-  void setETag(String key, String etag, Response response) {
-    _cache[key] = _ETagEntry(etag, response);
+  void setETag(String key, String etag, Response response, {Duration? maxAge}) {
+    _cache[key] = _ETagEntry(etag, response, maxAge: maxAge);
   }
 
   /// Clear ETag cache for a specific key

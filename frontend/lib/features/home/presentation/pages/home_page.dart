@@ -78,9 +78,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     unawaited(
-      ref
-          .read(podcastFeedProvider.notifier)
-          .loadInitialFeed(background: feedState.episodes.isNotEmpty),
+      ref.read(podcastFeedProvider.notifier).loadInitialFeed(background: true),
     );
   }
 
