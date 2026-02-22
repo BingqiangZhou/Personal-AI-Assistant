@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 import pytest
 from fastapi.testclient import TestClient
 
-from app.domains.podcast.api.dependencies import get_podcast_service
+from app.domains.podcast.api.dependencies import get_playback_service
 from app.main import app
 
 
@@ -16,9 +16,9 @@ def client():
 @pytest.fixture
 def mock_service():
     service = AsyncMock()
-    app.dependency_overrides[get_podcast_service] = lambda: service
+    app.dependency_overrides[get_playback_service] = lambda: service
     yield service
-    app.dependency_overrides.pop(get_podcast_service, None)
+    app.dependency_overrides.pop(get_playback_service, None)
 
 
 def test_get_effective_playback_rate_success(client: TestClient, mock_service: AsyncMock):

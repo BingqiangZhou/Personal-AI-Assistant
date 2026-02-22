@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request, status
 
+
 if TYPE_CHECKING:
     from pydantic import BaseModel
 else:
@@ -665,7 +666,6 @@ async def import_apikeys_json(
         file_content = body.get("file")
         mode = body.get("mode", "skip")
         import_password = body.get("import_password")
-        test_before_import = body.get("test_before_import", False)
 
         logger.info(f"Import request: mode={mode}, has_file={bool(file_content)}, has_password={bool(import_password)}")
 

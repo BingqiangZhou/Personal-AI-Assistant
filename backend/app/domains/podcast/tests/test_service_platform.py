@@ -1,5 +1,5 @@
 """
-Integration tests for podcast service platform support
+Integration tests for podcast subscription service platform support
 """
 
 from datetime import datetime, timezone
@@ -8,11 +8,11 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from app.domains.podcast.integration.platform_detector import PodcastPlatform
-from app.domains.podcast.services import PodcastService
+from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
 
 
-class TestPodcastServicePlatform:
-    """Test podcast service stores and returns platform information"""
+class TestPodcastSubscriptionPlatform:
+    """Test subscription service stores and returns platform information"""
 
     @pytest.fixture
     def mock_db(self):
@@ -38,7 +38,7 @@ class TestPodcastServicePlatform:
     @pytest.fixture
     def service(self, mock_db, mock_repo, mock_parser):
         """Create service instance"""
-        service = PodcastService(mock_db, user_id=1)
+        service = PodcastSubscriptionService(mock_db, user_id=1)
         service.repo = mock_repo
         service.parser = mock_parser
         return service
@@ -69,6 +69,7 @@ class TestPodcastServicePlatform:
 
         mock_parser.fetch_and_parse_feed.return_value = (True, mock_feed, None)
         mock_repo.get_user_subscriptions.return_value = []
+        mock_repo.create_or_update_episodes_batch.return_value = ([], [])
 
         mock_subscription = Mock()
         mock_subscription.id = 1
@@ -92,6 +93,7 @@ class TestPodcastServicePlatform:
 
         mock_parser.fetch_and_parse_feed.return_value = (True, mock_feed, None)
         mock_repo.get_user_subscriptions.return_value = []
+        mock_repo.create_or_update_episodes_batch.return_value = ([], [])
 
         mock_subscription = Mock()
         mock_subscription.id = 1
@@ -115,6 +117,7 @@ class TestPodcastServicePlatform:
 
         mock_parser.fetch_and_parse_feed.return_value = (True, mock_feed, None)
         mock_repo.get_user_subscriptions.return_value = []
+        mock_repo.create_or_update_episodes_batch.return_value = ([], [])
 
         mock_subscription = Mock()
         mock_subscription.id = 1
@@ -138,6 +141,7 @@ class TestPodcastServicePlatform:
 
         mock_parser.fetch_and_parse_feed.return_value = (True, mock_feed, None)
         mock_repo.get_user_subscriptions.return_value = []
+        mock_repo.create_or_update_episodes_batch.return_value = ([], [])
 
         mock_subscription = Mock()
         mock_repo.create_or_update_subscription.return_value = mock_subscription
@@ -166,9 +170,18 @@ class TestPodcastServicePlatform:
         mock_subscription.config = {"platform": PodcastPlatform.XIMALAYA}
         mock_subscription.created_at = datetime.now(timezone.utc)
         mock_subscription.status = "active"
+        mock_subscription.description = "desc"
+        mock_subscription.source_url = "https://example.com/feed.xml"
+        mock_subscription.last_fetched_at = None
+        mock_subscription.error_message = None
+        mock_subscription.fetch_interval = 3600
+        mock_subscription.image_url = "https://example.com/image.jpg"
+        mock_subscription.updated_at = datetime.now(timezone.utc)
 
         mock_repo.get_user_subscriptions_paginated.return_value = ([mock_subscription], 1)
-        mock_repo.get_subscription_episodes.return_value = []
+        mock_repo.get_episodes_counts_batch.return_value = {1: 0}
+        mock_repo.get_subscription_episodes_batch.return_value = {1: []}
+        mock_repo.get_playback_states_batch.return_value = {}
 
         result, total = await service.list_subscriptions(page=1, size=20)
 
@@ -192,12 +205,14 @@ class TestPodcastServicePlatform:
         mock_repo.get_subscription_by_id.return_value = mock_subscription
 
         mock_feed = self.create_mock_feed(PodcastPlatform.XIMALAYA)
+        mock_feed.last_fetched = datetime.now(timezone.utc)
         mock_parser.fetch_and_parse_feed.return_value = (True, mock_feed, None)
 
-        mock_episode = Mock()
-        mock_repo.create_or_update_episode.return_value = (mock_episode, True)
+        mock_repo.create_or_update_episodes_batch.return_value = ([], [])
 
         await service.refresh_subscription(subscription_id)
 
         # Verify platform is preserved during refresh
-        mock_repo.update_subscription_fetch_time.assert_called_once_with(subscription_id)
+        mock_repo.update_subscription_fetch_time.assert_called_once_with(
+            subscription_id, mock_feed.last_fetched
+        )

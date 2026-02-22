@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy import select
 
-from app.domains.podcast.services import PodcastService
+from app.domains.podcast.services.search_service import PodcastSearchService
 from app.domains.user.models import User, UserStatus
 
 
@@ -18,7 +18,7 @@ async def generate_podcast_recommendations_handler(session) -> dict:
 
     recommendations_generated = 0
     for user in users:
-        service = PodcastService(session, user.id)
+        service = PodcastSearchService(session, user.id)
         recommendations = await service.get_recommendations(limit=20)
         recommendations_generated += len(recommendations)
 

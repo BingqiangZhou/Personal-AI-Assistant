@@ -53,7 +53,7 @@ class EmailService:
             # Create email content
             subject = "Reset your Personal AI Assistant password"
 
-            html_body = f"""
+            _ = f"""
             <!DOCTYPE html>
             <html>
             <head>
@@ -183,7 +183,7 @@ class EmailService:
 
             subject = "Verify your Personal AI Assistant email"
 
-            html_body = f"""
+            _ = f"""
             <!DOCTYPE html>
             <html>
             <head>

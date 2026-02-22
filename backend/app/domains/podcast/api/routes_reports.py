@@ -4,12 +4,12 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, Query
 
-from app.domains.podcast.api.dependencies import get_podcast_service
+from app.domains.podcast.api.dependencies import get_daily_report_service
 from app.domains.podcast.schemas import (
     PodcastDailyReportDatesResponse,
     PodcastDailyReportResponse,
 )
-from app.domains.podcast.services import PodcastService
+from app.domains.podcast.services.daily_report_service import DailyReportService
 
 
 router = APIRouter(prefix="")
@@ -22,7 +22,7 @@ router = APIRouter(prefix="")
 )
 async def get_daily_report(
     report_date: date | None = Query(None, alias="date", description="YYYY-MM-DD"),
-    service: PodcastService = Depends(get_podcast_service),
+    service: DailyReportService = Depends(get_daily_report_service),
 ):
     payload = await service.get_daily_report(target_date=report_date)
     return PodcastDailyReportResponse(**payload)
@@ -39,7 +39,7 @@ async def generate_daily_report(
         False,
         description="Rebuild report items for this date before regenerating",
     ),
-    service: PodcastService = Depends(get_podcast_service),
+    service: DailyReportService = Depends(get_daily_report_service),
 ):
     payload = await service.generate_daily_report(
         target_date=report_date,
@@ -56,7 +56,7 @@ async def generate_daily_report(
 async def list_daily_report_dates(
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(30, ge=1, le=100, description="Page size"),
-    service: PodcastService = Depends(get_podcast_service),
+    service: DailyReportService = Depends(get_daily_report_service),
 ):
-    payload = await service.list_daily_report_dates(page=page, size=size)
+    payload = await service.list_report_dates(page=page, size=size)
     return PodcastDailyReportDatesResponse(**payload)

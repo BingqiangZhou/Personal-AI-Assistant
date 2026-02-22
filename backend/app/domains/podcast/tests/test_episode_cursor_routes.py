@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 
 from fastapi.testclient import TestClient
 
-from app.domains.podcast.api.dependencies import get_podcast_service
+from app.domains.podcast.api.dependencies import get_episode_service, get_search_service
 from app.domains.podcast.api.routes_episodes import (
     _encode_keyset_cursor,
     _encode_page_cursor,
@@ -32,7 +32,7 @@ def _sample_episode(now: datetime) -> dict:
 
 def test_feed_legacy_page_cursor_compatible():
     service = AsyncMock()
-    app.dependency_overrides[get_podcast_service] = lambda: service
+    app.dependency_overrides[get_episode_service] = lambda: service
     client = TestClient(app)
 
     now = datetime.now(timezone.utc)
@@ -46,12 +46,12 @@ def test_feed_legacy_page_cursor_compatible():
     assert response.status_code == 200
     service.list_episodes.assert_awaited_once_with(filters=None, page=2, size=10)
 
-    app.dependency_overrides.pop(get_podcast_service, None)
+    app.dependency_overrides.pop(get_episode_service, None)
 
 
 def test_feed_accepts_size_alias():
     service = AsyncMock()
-    app.dependency_overrides[get_podcast_service] = lambda: service
+    app.dependency_overrides[get_episode_service] = lambda: service
     client = TestClient(app)
 
     now = datetime.now(timezone.utc)
@@ -62,16 +62,16 @@ def test_feed_accepts_size_alias():
     assert response.status_code == 200
     service.list_episodes.assert_awaited_once_with(filters=None, page=2, size=11)
 
-    app.dependency_overrides.pop(get_podcast_service, None)
+    app.dependency_overrides.pop(get_episode_service, None)
 
 
 def test_feed_keyset_cursor_path():
     service = AsyncMock()
-    app.dependency_overrides[get_podcast_service] = lambda: service
+    app.dependency_overrides[get_episode_service] = lambda: service
     client = TestClient(app)
 
     now = datetime.now(timezone.utc)
-    service.get_feed_by_cursor.return_value = (
+    service.list_feed_by_cursor.return_value = (
         [_sample_episode(now)],
         100,
         True,
@@ -87,18 +87,18 @@ def test_feed_keyset_cursor_path():
     payload = response.json()
     assert payload["has_more"] is True
     assert payload["next_cursor"]
-    service.get_feed_by_cursor.assert_awaited_once()
+    service.list_feed_by_cursor.assert_awaited_once()
 
-    app.dependency_overrides.pop(get_podcast_service, None)
+    app.dependency_overrides.pop(get_episode_service, None)
 
 
 def test_history_keyset_cursor_path():
     service = AsyncMock()
-    app.dependency_overrides[get_podcast_service] = lambda: service
+    app.dependency_overrides[get_episode_service] = lambda: service
     client = TestClient(app)
 
     now = datetime.now(timezone.utc)
-    service.get_playback_history_by_cursor.return_value = (
+    service.list_playback_history_by_cursor.return_value = (
         [_sample_episode(now)],
         20,
         True,
@@ -113,14 +113,14 @@ def test_history_keyset_cursor_path():
     assert response.status_code == 200
     payload = response.json()
     assert payload["next_cursor"]
-    service.get_playback_history_by_cursor.assert_awaited_once()
+    service.list_playback_history_by_cursor.assert_awaited_once()
 
-    app.dependency_overrides.pop(get_podcast_service, None)
+    app.dependency_overrides.pop(get_episode_service, None)
 
 
 def test_search_accepts_query_alias():
     service = AsyncMock()
-    app.dependency_overrides[get_podcast_service] = lambda: service
+    app.dependency_overrides[get_search_service] = lambda: service
     client = TestClient(app)
 
     now = datetime.now(timezone.utc)
@@ -136,12 +136,12 @@ def test_search_accepts_query_alias():
         size=20,
     )
 
-    app.dependency_overrides.pop(get_podcast_service, None)
+    app.dependency_overrides.pop(get_search_service, None)
 
 
 def test_search_prefers_q_when_both_q_and_query_present():
     service = AsyncMock()
-    app.dependency_overrides[get_podcast_service] = lambda: service
+    app.dependency_overrides[get_search_service] = lambda: service
     client = TestClient(app)
 
     now = datetime.now(timezone.utc)
@@ -157,12 +157,12 @@ def test_search_prefers_q_when_both_q_and_query_present():
         size=20,
     )
 
-    app.dependency_overrides.pop(get_podcast_service, None)
+    app.dependency_overrides.pop(get_search_service, None)
 
 
 def test_search_requires_q_or_query():
     service = AsyncMock()
-    app.dependency_overrides[get_podcast_service] = lambda: service
+    app.dependency_overrides[get_search_service] = lambda: service
     client = TestClient(app)
 
     response = client.get("/api/v1/podcasts/search")
@@ -170,4 +170,4 @@ def test_search_requires_q_or_query():
     assert response.status_code == 422
     service.search_podcasts.assert_not_awaited()
 
-    app.dependency_overrides.pop(get_podcast_service, None)
+    app.dependency_overrides.pop(get_search_service, None)

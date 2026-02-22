@@ -17,11 +17,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domains.podcast.models import (
     PodcastEpisode,
 )
-from app.domains.podcast.services import PodcastService
+from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
 from app.domains.subscription.models import Subscription
 
 
-# Import ALL models BEFORE importing PodcastService to ensure SQLAlchemy relationships are properly initialized
+# Import ALL models BEFORE importing services to ensure SQLAlchemy relationships are properly initialized
 # This is required to avoid mapper initialization errors during test execution
 # The issue is that SQLAlchemy needs all related models to be imported before any delete() operations
 
@@ -76,7 +76,7 @@ class TestPodcastBulkDelete:
              patch('app.domains.ai.llm_privacy.ContentSanitizer'), \
              patch('app.domains.podcast.integration.security.PodcastSecurityValidator'), \
              patch('app.domains.podcast.integration.secure_rss_parser.SecureRSSParser'):
-            service = PodcastService(mock_db, user_id=1)
+            service = PodcastSubscriptionService(mock_db, user_id=1)
             return service
 
     @pytest.fixture

@@ -26,17 +26,16 @@ from app.admin.dependencies import admin_required
 from app.admin.models import SystemSettings
 from app.admin.routes._shared import get_templates
 from app.core.database import get_db_session
+from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
 from app.domains.subscription.models import (
     Subscription,
     SubscriptionStatus,
     UpdateFrequency,
     UserSubscription,
 )
-from app.domains.subscription.parsers.feed_parser import FeedParser, FeedParserConfig
 from app.domains.subscription.services import SubscriptionService
 from app.domains.user.models import User
 from app.shared.schemas import SubscriptionCreate
-from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
 
 
 logger = logging.getLogger(__name__)
@@ -350,9 +349,6 @@ async def edit_subscription(
 
         if not subscription:
             raise HTTPException(status_code=404, detail="Subscription not found")
-
-        # Store original URL for comparison
-        original_source_url = subscription.source_url
 
         # Update fields
         if title is not None:

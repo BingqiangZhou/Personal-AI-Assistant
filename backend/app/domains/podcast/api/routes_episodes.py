@@ -12,7 +12,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from app.core.etag import build_conditional_etag_response
 from app.domains.podcast.api.dependencies import (
-    get_podcast_service,
+    get_episode_service,
+    get_playback_service,
+    get_search_service,
+    get_summary_domain_service,
     get_summary_service,
 )
 from app.domains.podcast.schemas import (
@@ -33,7 +36,10 @@ from app.domains.podcast.schemas import (
     SummaryModelInfo,
     SummaryModelsResponse,
 )
-from app.domains.podcast.services import PodcastService
+from app.domains.podcast.services.episode_service import PodcastEpisodeService
+from app.domains.podcast.services.playback_service import PodcastPlaybackService
+from app.domains.podcast.services.search_service import PodcastSearchService
+from app.domains.podcast.services.summary_service import PodcastSummaryService
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
 
@@ -145,7 +151,7 @@ async def get_podcast_feed(
         le=50,
         description="Optional alias for page_size",
     ),
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastEpisodeService = Depends(get_episode_service),
 ):
     """Return all subscribed episodes ordered by publish date desc."""
     resolved_size = size or page_size
@@ -164,7 +170,7 @@ async def get_podcast_feed(
             total,
             has_more,
             next_cursor_values,
-        ) = await service.get_feed_by_cursor(
+        ) = await service.list_feed_by_cursor(
             size=resolved_size,
             cursor_published_at=decoded_cursor["ts"],
             cursor_episode_id=decoded_cursor["id"],
@@ -216,7 +222,7 @@ async def list_episodes(
     size: int = Query(20, ge=1, le=100, description="Page size"),
     has_summary: Optional[bool] = Query(None, description="Has AI summary"),
     is_played: Optional[bool] = Query(None, description="Played status"),
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastEpisodeService = Depends(get_episode_service),
 ):
     filters = PodcastEpisodeFilter(
         subscription_id=subscription_id,
@@ -248,7 +254,7 @@ async def list_playback_history(
     page: int = Query(1, ge=1, description="Page number"),
     cursor: str | None = Query(None, description="Cursor token for pagination"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastEpisodeService = Depends(get_episode_service),
 ):
     decoded_cursor = _decode_cursor(cursor) if cursor else None
 
@@ -265,7 +271,7 @@ async def list_playback_history(
             total,
             _,
             next_cursor_values,
-        ) = await service.get_playback_history_by_cursor(
+        ) = await service.list_playback_history_by_cursor(
             size=size,
             cursor_last_updated_at=decoded_cursor["ts"],
             cursor_episode_id=decoded_cursor["id"],
@@ -284,7 +290,7 @@ async def list_playback_history(
             if decoded_cursor and decoded_cursor["mode"] == "page"
             else page
         )
-        episodes, total = await service.get_playback_history(
+        episodes, total = await service.list_playback_history(
             page=resolved_page, size=size
         )
         pages = (total + size - 1) // size
@@ -319,9 +325,9 @@ async def list_playback_history(
 async def list_playback_history_lite(
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastEpisodeService = Depends(get_episode_service),
 ):
-    episodes, total = await service.get_playback_history_lite(page=page, size=size)
+    episodes, total = await service.list_playback_history_lite(page=page, size=size)
     episode_responses = [PodcastPlaybackHistoryItemResponse(**ep) for ep in episodes]
     pages = (total + size - 1) // size
 
@@ -342,7 +348,7 @@ async def list_playback_history_lite(
 async def get_episode(
     request: Request,
     episode_id: int,
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastEpisodeService = Depends(get_episode_service),
 ):
     episode = await service.get_episode_with_summary(episode_id)
     if not episode:
@@ -367,7 +373,7 @@ async def get_episode(
 async def generate_summary(
     episode_id: int,
     request: PodcastSummaryRequest,
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastEpisodeService = Depends(get_episode_service),
     ai_summary_service: DatabaseBackedAISummaryService = Depends(get_summary_service),
 ):
     try:
@@ -419,7 +425,7 @@ async def generate_summary(
 async def update_playback_progress(
     episode_id: int,
     playback_data: PodcastPlaybackUpdate,
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastPlaybackService = Depends(get_playback_service),
 ):
     try:
         result = await service.update_playback_progress(
@@ -466,7 +472,7 @@ async def update_playback_progress(
 )
 async def get_playback_state(
     episode_id: int,
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastPlaybackService = Depends(get_playback_service),
 ):
     try:
         playback = await service.get_playback_state(episode_id)
@@ -489,7 +495,7 @@ async def get_effective_playback_rate(
         ge=1,
         description="Subscription ID (optional)",
     ),
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastPlaybackService = Depends(get_playback_service),
 ):
     result = await service.get_effective_playback_rate(subscription_id=subscription_id)
     return PlaybackRateEffectiveResponse(**result)
@@ -502,7 +508,7 @@ async def get_effective_playback_rate(
 )
 async def apply_playback_rate_preference(
     request: PlaybackRateApplyRequest,
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastPlaybackService = Depends(get_playback_service),
 ):
     try:
         result = await service.apply_playback_rate_preference(
@@ -551,7 +557,7 @@ async def apply_playback_rate_preference(
     summary="List pending summaries",
 )
 async def get_pending_summaries(
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastSummaryService = Depends(get_summary_domain_service),
 ):
     pending = await service.get_pending_summaries()
     return PodcastSummaryPendingResponse(count=len(pending), episodes=pending)
@@ -604,7 +610,7 @@ async def search_podcasts(
     ),
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastSearchService = Depends(get_search_service),
 ):
     keyword = (q or query or "").strip()
     if not keyword:
@@ -641,6 +647,6 @@ async def search_podcasts(
 )
 async def get_recommendations(
     limit: int = Query(10, ge=1, le=50, description="Recommendation count"),
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastSearchService = Depends(get_search_service),
 ):
     return await service.get_recommendations(limit=limit)

@@ -285,7 +285,7 @@ async def validate_file_upload(
     validate_file_size(file, max_size)
 
     # Validate extension
-    ext = validate_file_extension(sanitized_name)
+    validate_file_extension(sanitized_name)
 
     # Validate MIME type
     declared_mime = file.content_type or "application/octet-stream"

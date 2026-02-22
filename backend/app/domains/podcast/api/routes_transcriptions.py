@@ -10,8 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
 from app.domains.podcast.api.dependencies import (
-    get_podcast_service,
+    get_episode_service,
     get_scheduler,
+    get_subscription_service,
     get_transcription_service,
 )
 from app.domains.podcast.models import PodcastEpisode, TranscriptionStatus
@@ -21,7 +22,8 @@ from app.domains.podcast.schemas import (
     PodcastTranscriptionResponse,
     PodcastTranscriptionStatusResponse,
 )
-from app.domains.podcast.services import PodcastService
+from app.domains.podcast.services.episode_service import PodcastEpisodeService
+from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
 from app.domains.podcast.transcription_scheduler import (
     ScheduleFrequency,
@@ -42,11 +44,10 @@ def _status_value(status_obj) -> str:
 
 async def _validate_episode_and_permission(
     episode_id: int,
-    user_id: int,
-    service: PodcastService,
+    episode_service: PodcastEpisodeService,
 ) -> PodcastEpisode:
     """Validate episode existence and user ownership."""
-    episode = await service.get_episode_by_id(episode_id, user_id=user_id)
+    episode = await episode_service.get_episode_by_id(episode_id)
     if not episode:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -122,7 +123,7 @@ async def _check_existing_db_task(
 async def start_transcription(
     episode_id: int,
     transcription_request: PodcastTranscriptionRequest,
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
     transcription_service: DatabaseBackedTranscriptionService = Depends(
         get_transcription_service
     ),
@@ -133,8 +134,7 @@ async def start_transcription(
     try:
         episode = await _validate_episode_and_permission(
             episode_id,
-            service.user_id,
-            service,
+            episode_service,
         )
 
         cached_response = await _check_redis_cached_task(
@@ -326,14 +326,14 @@ def _build_transcription_response(task, episode) -> PodcastTranscriptionResponse
 async def get_transcription(
     episode_id: int,
     include_content: bool = Query(True, description="Whether to include full transcript"),
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
     transcription_service: DatabaseBackedTranscriptionService = Depends(
         get_transcription_service
     ),
 ):
     """Get detailed transcription info for one episode."""
     try:
-        episode = await service.get_episode_by_id(episode_id)
+        episode = await episode_service.get_episode_by_id(episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -423,7 +423,7 @@ async def get_transcription(
 )
 async def delete_transcription(
     episode_id: int,
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
     transcription_service: DatabaseBackedTranscriptionService = Depends(
         get_transcription_service
     ),
@@ -432,7 +432,7 @@ async def delete_transcription(
     state_manager = await get_transcription_state_manager()
 
     try:
-        episode = await service.get_episode_by_id(episode_id)
+        episode = await episode_service.get_episode_by_id(episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -487,7 +487,7 @@ async def delete_transcription(
 )
 async def get_transcription_status(
     task_id: int,
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
     transcription_service: DatabaseBackedTranscriptionService = Depends(
         get_transcription_service
     ),
@@ -501,7 +501,7 @@ async def get_transcription_status(
                 detail="Transcription task not found",
             )
 
-        episode = await service.get_episode_by_id(task.episode_id, user_id=service.user_id)
+        episode = await episode_service.get_episode_by_id(task.episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -568,13 +568,13 @@ async def schedule_episode_transcription_endpoint(
     episode_id: int,
     force: bool = Body(False, description="Force retranscription"),
     frequency: str = Body("manual", description="hourly, daily, weekly, manual"),
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
     scheduler: TranscriptionScheduler = Depends(get_scheduler),
     db: AsyncSession = Depends(get_db_session),
 ):
     """Schedule episode transcription with dedupe behavior."""
     try:
-        episode = await service.get_episode_by_id(episode_id)
+        episode = await episode_service.get_episode_by_id(episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -620,12 +620,12 @@ async def schedule_episode_transcription_endpoint(
 )
 async def get_episode_transcript_endpoint(
     episode_id: int,
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
     db: AsyncSession = Depends(get_db_session),
 ):
     """Fetch transcript content without scheduling new task."""
     try:
-        episode = await service.get_episode_by_id(episode_id)
+        episode = await episode_service.get_episode_by_id(episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -666,12 +666,12 @@ async def get_episode_transcript_endpoint(
 async def batch_transcribe_subscription_endpoint(
     subscription_id: int,
     skip_existing: bool = Body(True, description="Skip episodes already transcribed"),
-    service: PodcastService = Depends(get_podcast_service),
+    subscription_service: PodcastSubscriptionService = Depends(get_subscription_service),
     db: AsyncSession = Depends(get_db_session),
 ):
     """Batch schedule transcription for a subscription."""
     try:
-        subscription = await service.get_subscription_by_id(subscription_id)
+        subscription = await subscription_service.get_subscription_details(subscription_id)
         if not subscription:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -706,12 +706,12 @@ async def batch_transcribe_subscription_endpoint(
 )
 async def get_transcription_schedule_status(
     episode_id: int,
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
     scheduler: TranscriptionScheduler = Depends(get_scheduler),
 ):
     """Get detailed schedule status for an episode."""
     try:
-        episode = await service.get_episode_by_id(episode_id)
+        episode = await episode_service.get_episode_by_id(episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -737,12 +737,12 @@ async def get_transcription_schedule_status(
 )
 async def cancel_transcription_endpoint(
     episode_id: int,
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
     scheduler: TranscriptionScheduler = Depends(get_scheduler),
 ):
     """Cancel active transcription task."""
     try:
-        episode = await service.get_episode_by_id(episode_id)
+        episode = await episode_service.get_episode_by_id(episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -773,12 +773,12 @@ async def cancel_transcription_endpoint(
 async def check_and_transcribe_new_episodes(
     subscription_id: int,
     hours_since_published: int = Body(24, description="Hours window for new episodes"),
-    service: PodcastService = Depends(get_podcast_service),
+    subscription_service: PodcastSubscriptionService = Depends(get_subscription_service),
     scheduler: TranscriptionScheduler = Depends(get_scheduler),
 ):
     """Check recent episodes and schedule transcription."""
     try:
-        subscription = await service.get_subscription_by_id(subscription_id)
+        subscription = await subscription_service.get_subscription_details(subscription_id)
         if not subscription:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -810,7 +810,7 @@ async def check_and_transcribe_new_episodes(
     description="Get all pending tasks for current user",
 )
 async def get_pending_transcriptions(
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
     scheduler: TranscriptionScheduler = Depends(get_scheduler),
 ):
     """List pending tasks filtered to current user episodes."""
@@ -819,7 +819,7 @@ async def get_pending_transcriptions(
 
         user_tasks = []
         for task in tasks:
-            episode = await service.get_episode_by_id(task["episode_id"])
+            episode = await episode_service.get_episode_by_id(task["episode_id"])
             if episode:
                 user_tasks.append(task)
 

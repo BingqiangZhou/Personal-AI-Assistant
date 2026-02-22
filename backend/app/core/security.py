@@ -12,7 +12,7 @@ Security utilities for authentication and authorization.
 
 import secrets
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +32,6 @@ try:
     _HAS_BCRYPT = True
 except ImportError:
     _HAS_BCRYPT = False
-    from passlib.context import CryptContext
     pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Token operation cache (micro-optimization)
@@ -457,7 +456,7 @@ def decrypt_data(ciphertext: str) -> str:
     try:
         decrypted_bytes = fernet.decrypt(ciphertext.encode('utf-8'))
         return decrypted_bytes.decode('utf-8')
-    except InvalidToken as e:
+    except InvalidToken:
         # Fernet-specific error: typically means wrong key or corrupted data
         raise ValueError(
             f"Decryption failed (InvalidToken): The encrypted data was likely encrypted "
@@ -507,12 +506,13 @@ def encrypt_data_with_password(plaintext: str, password: str) -> dict:
         >>> encrypted = encrypt_data_with_password("my-secret-key", "export-password-123")
         >>> # Use encrypted dict in export JSON
     """
-    import os
     import base64
+    import os
+
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.backends import default_backend
 
     if not plaintext or not password:
         raise ValueError("Both plaintext and password are required")
@@ -565,10 +565,11 @@ def decrypt_data_with_password(encrypted_dict: dict, password: str) -> str:
         >>> print(decrypted)  # "my-secret-key"
     """
     import base64
+
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.backends import default_backend
 
     # Validate input
     required_fields = ["encrypted_data", "salt", "nonce", "algorithm"]

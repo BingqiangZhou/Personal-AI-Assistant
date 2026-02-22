@@ -1,23 +1,14 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 
 import '../app/config/app_config.dart';
 import '../network/dio_client.dart';
-import '../network/api_services.dart';
 import '../services/app_cache_service.dart';
 import '../storage/local_storage_service.dart';
-import '../../features/user/presentation/providers/user_provider.dart' show simpleAuthServiceProvider;
 
 // Dio Client Provider
 final dioClientProvider = Provider<DioClient>((ref) {
   return DioClient();
-});
-
-// API Services Provider
-final apiServiceProvider = Provider<ApiServices>((ref) {
-  final dioClient = ref.watch(dioClientProvider);
-  return ApiServices(dioClient.dio);
 });
 
 final appCacheServiceProvider = Provider<AppCacheService>((ref) {
@@ -145,18 +136,7 @@ class ServerConfigNotifier extends Notifier<ServerConfigState> {
       dioClient.updateBaseUrl('$normalizedUrl/api/v1');
       dioClient.clearETagCache();
 
-      // Invalidate apiServiceProvider to force recreation with new baseUrl
-      ref.invalidate(apiServiceProvider);
-
-      // Update SimpleAuthService baseUrl
-      try {
-        final simpleAuthService = ref.read(simpleAuthServiceProvider);
-        simpleAuthService.updateBaseUrl();
-        debugPrint('✅ Updated SimpleAuthService baseUrl to: $normalizedUrl');
-      } catch (e) {
-        debugPrint('⚠️ Failed to update SimpleAuthService: $e');
-      }
-
+      // No additional providers need explicit refresh here.
       state = state.copyWith(
         serverUrl: normalizedUrl,
         isLoading: false,
@@ -235,3 +215,6 @@ class ServerConfigNotifier extends Notifier<ServerConfigState> {
 }
 
 final serverConfigProvider = NotifierProvider<ServerConfigNotifier, ServerConfigState>(ServerConfigNotifier.new);
+
+
+

@@ -205,8 +205,6 @@ class StorageCleanupService:
             result = await self.db.execute(stmt)
             setting = result.scalar_one_or_none()
 
-            current_time = datetime.now(timezone.utc).isoformat()
-
             if setting:
                 # 更新现有配置
                 setting.value = {

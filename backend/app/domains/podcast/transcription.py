@@ -641,7 +641,6 @@ class SiliconFlowTranscriber:
 
             for attempt in range(max_retries):
                 chunk_start = time.time()
-                attempt_succeeded = False
                 try:
                     logger.info(f"🎤 [CHUNK {chunk.index:03d}] Starting transcription (Attempt {attempt+1}/{max_retries}), file={os.path.basename(chunk.file_path)}, size={chunk.file_size} bytes, model={model}")
 
@@ -1295,7 +1294,6 @@ class PodcastTranscriptionService:
                         f"Converting... {progress:.1f}%"
                     )
 
-                convert_start = time.time()
                 _, conversion_time = await AudioConverter.convert_to_mp3(
                     file_path,
                     converted_file,

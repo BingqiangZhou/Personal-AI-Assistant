@@ -55,10 +55,13 @@ r &= check("API端点定义", test_api)
 
 # 服务完整性
 def test_service():
-    from app.domains.podcast.services import PodcastService
-    methods = ['add_subscription', 'generate_summary_for_episode', 'update_playback_progress']
-    for m in methods:
-        assert hasattr(PodcastService, m)
+    from app.domains.podcast.services.episode_service import PodcastEpisodeService
+    from app.domains.podcast.services.playback_service import PodcastPlaybackService
+    from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
+
+    assert hasattr(PodcastSubscriptionService, "add_subscription")
+    assert hasattr(PodcastEpisodeService, "get_episode_with_summary")
+    assert hasattr(PodcastPlaybackService, "update_playback_progress")
 
 r &= check("服务层完整", test_service)
 

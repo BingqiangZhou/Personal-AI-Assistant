@@ -1,15 +1,7 @@
-"""
-Podcast domain services - Refactored into specialized services.
+"""Podcast domain services."""
 
-For backward compatibility, PodcastService facade is available from:
-    from app.domains.podcast.services import PodcastService
-
-Or use specialized services directly for better separation of concerns.
-"""
-# ruff: noqa: I001
-
-from .episode_service import PodcastEpisodeService
 from .daily_report_service import DailyReportService
+from .episode_service import PodcastEpisodeService
 from .playback_service import PodcastPlaybackService
 from .queue_service import PodcastQueueService
 from .schedule_service import PodcastScheduleService
@@ -19,19 +11,16 @@ from .subscription_service import PodcastSubscriptionService
 from .summary_service import PodcastSummaryService
 from .sync_service import PodcastSyncService
 
-from app.domains.podcast.podcast_service_facade import PodcastService
-
 
 __all__ = [
-    "PodcastService",
-    "PodcastSubscriptionService",
-    "PodcastEpisodeService",
     "DailyReportService",
+    "PodcastEpisodeService",
     "PodcastPlaybackService",
     "PodcastQueueService",
-    "PodcastSummaryService",
-    "PodcastSearchService",
-    "PodcastSyncService",
     "PodcastScheduleService",
+    "PodcastSearchService",
     "PodcastStatsService",
+    "PodcastSubscriptionService",
+    "PodcastSummaryService",
+    "PodcastSyncService",
 ]

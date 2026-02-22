@@ -197,9 +197,6 @@ class AuthenticationService:
         )
 
         # Calculate expiry times
-        access_expires_at = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
         refresh_expires_at = datetime.now(timezone.utc) + timedelta(
             days=refresh_expiry_days
         )
@@ -305,9 +302,6 @@ class AuthenticationService:
         )
 
         # Calculate new expiration times
-        access_expires_at = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
         refresh_expires_at = datetime.now(timezone.utc) + timedelta(
             days=refresh_expiry_days
         )

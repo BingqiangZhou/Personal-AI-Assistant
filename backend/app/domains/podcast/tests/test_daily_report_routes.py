@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 import pytest
 from fastapi.testclient import TestClient
 
-from app.domains.podcast.api.dependencies import get_podcast_service
+from app.domains.podcast.api.dependencies import get_daily_report_service
 from app.main import app
 
 
@@ -16,9 +16,9 @@ def client():
 @pytest.fixture
 def mock_service():
     service = AsyncMock()
-    app.dependency_overrides[get_podcast_service] = lambda: service
+    app.dependency_overrides[get_daily_report_service] = lambda: service
     yield service
-    app.dependency_overrides.pop(get_podcast_service, None)
+    app.dependency_overrides.pop(get_daily_report_service, None)
 
 
 def test_get_daily_report_not_available(client: TestClient, mock_service: AsyncMock):
@@ -200,7 +200,7 @@ def test_list_daily_report_dates_with_pagination(
     mock_service: AsyncMock,
 ):
     now = datetime.now(timezone.utc)
-    mock_service.list_daily_report_dates.return_value = {
+    mock_service.list_report_dates.return_value = {
         "dates": [
             {
                 "report_date": date(2026, 2, 20),
@@ -223,4 +223,4 @@ def test_list_daily_report_dates_with_pagination(
     assert data["size"] == 30
     assert data["pages"] == 2
     assert data["dates"][0]["report_date"] == "2026-02-20"
-    mock_service.list_daily_report_dates.assert_awaited_once_with(page=2, size=30)
+    mock_service.list_report_dates.assert_awaited_once_with(page=2, size=30)

@@ -7,7 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.domains.podcast.api.dependencies import (
     get_conversation_service,
-    get_podcast_service,
+    get_current_user_id,
+    get_episode_service,
 )
 from app.domains.podcast.conversation_service import ConversationService
 from app.domains.podcast.schemas import (
@@ -20,7 +21,7 @@ from app.domains.podcast.schemas import (
     PodcastConversationSendRequest,
     PodcastConversationSendResponse,
 )
-from app.domains.podcast.services import PodcastService
+from app.domains.podcast.services.episode_service import PodcastEpisodeService
 
 
 router = APIRouter(prefix="")
@@ -38,11 +39,12 @@ logger = logging.getLogger(__name__)
 )
 async def list_conversation_sessions(
     episode_id: int,
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
+    user_id: int = Depends(get_current_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
-        episode = await service.get_episode_by_id(episode_id)
+        episode = await episode_service.get_episode_by_id(episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -51,7 +53,7 @@ async def list_conversation_sessions(
 
         sessions = await conversation_service.get_sessions(
             episode_id=episode_id,
-            user_id=service.user_id,
+            user_id=user_id,
         )
 
         return ConversationSessionListResponse(
@@ -78,11 +80,12 @@ async def list_conversation_sessions(
 async def create_conversation_session(
     episode_id: int,
     request: ConversationSessionCreateRequest,
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
+    user_id: int = Depends(get_current_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
-        episode = await service.get_episode_by_id(episode_id)
+        episode = await episode_service.get_episode_by_id(episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -91,7 +94,7 @@ async def create_conversation_session(
 
         session = await conversation_service.create_session(
             episode_id=episode_id,
-            user_id=service.user_id,
+            user_id=user_id,
             title=request.title,
         )
 
@@ -115,13 +118,13 @@ async def create_conversation_session(
 async def delete_conversation_session(
     episode_id: int,
     session_id: int,
-    service: PodcastService = Depends(get_podcast_service),
+    user_id: int = Depends(get_current_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
         deleted_count = await conversation_service.delete_session(
             session_id=session_id,
-            user_id=service.user_id,
+            user_id=user_id,
         )
 
         return PodcastConversationClearResponse(
@@ -152,11 +155,12 @@ async def get_conversation_history(
     episode_id: int,
     session_id: int | None = Query(None, description="Session ID to filter by"),
     limit: int = Query(50, ge=1, le=200, description="Number of messages"),
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
+    user_id: int = Depends(get_current_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
-        episode = await service.get_episode_by_id(episode_id)
+        episode = await episode_service.get_episode_by_id(episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -165,7 +169,7 @@ async def get_conversation_history(
 
         messages = await conversation_service.get_conversation_history(
             episode_id=episode_id,
-            user_id=service.user_id,
+            user_id=user_id,
             session_id=session_id,
             limit=limit,
         )
@@ -201,11 +205,12 @@ async def get_conversation_history(
 async def send_conversation_message(
     episode_id: int,
     request: PodcastConversationSendRequest,
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
+    user_id: int = Depends(get_current_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
-        episode = await service.get_episode_by_id(episode_id)
+        episode = await episode_service.get_episode_by_id(episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -214,7 +219,7 @@ async def send_conversation_message(
 
         response = await conversation_service.send_message(
             episode_id=episode_id,
-            user_id=service.user_id,
+            user_id=user_id,
             user_message=request.message,
             model_name=request.model_name,
             session_id=request.session_id,
@@ -242,11 +247,12 @@ async def send_conversation_message(
 async def clear_conversation_history(
     episode_id: int,
     session_id: int | None = Query(None, description="Session ID to clear"),
-    service: PodcastService = Depends(get_podcast_service),
+    episode_service: PodcastEpisodeService = Depends(get_episode_service),
+    user_id: int = Depends(get_current_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
-        episode = await service.get_episode_by_id(episode_id)
+        episode = await episode_service.get_episode_by_id(episode_id)
         if not episode:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -255,7 +261,7 @@ async def clear_conversation_history(
 
         deleted_count = await conversation_service.clear_conversation_history(
             episode_id=episode_id,
-            user_id=service.user_id,
+            user_id=user_id,
             session_id=session_id,
         )
 

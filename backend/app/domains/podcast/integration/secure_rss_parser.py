@@ -320,10 +320,6 @@ class SecureRSSParser:
             if not audio_url:
                 return None
 
-            # Get audio file size from enclosure
-            audio_file_size = enclosure.get('length')
-            audio_size = int(audio_file_size) if audio_file_size and audio_file_size.isdigit() else None
-
             # Validate audio URL
             valid, error = self.security.validate_audio_url(audio_url)
             if not valid:
@@ -356,7 +352,6 @@ class SecureRSSParser:
                 import hashlib
                 audio_url_hash = hashlib.md5(audio_url.encode()).hexdigest()[:16]
                 guid = f"gen_{audio_url_hash}"
-            guid_is_permalink = guid_element.get('isPermaLink', 'true') if guid_element is not None else 'true'
 
             # Item link (episode detail page link)
             link_element = item.find('link')

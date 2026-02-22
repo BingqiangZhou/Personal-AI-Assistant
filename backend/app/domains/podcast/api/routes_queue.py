@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.domains.podcast.api.dependencies import get_podcast_service
+from app.domains.podcast.api.dependencies import get_queue_service
 from app.domains.podcast.schemas import (
     PodcastQueueCurrentCompleteRequest,
     PodcastQueueItemAddRequest,
@@ -10,7 +10,7 @@ from app.domains.podcast.schemas import (
     PodcastQueueResponse,
     PodcastQueueSetCurrentRequest,
 )
-from app.domains.podcast.services import PodcastService
+from app.domains.podcast.services.queue_service import PodcastQueueService
 
 
 router = APIRouter(prefix="")
@@ -29,7 +29,7 @@ def _bilingual_error(
 
 @router.get("/queue", response_model=PodcastQueueResponse, summary="Get playback queue")
 async def get_queue(
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastQueueService = Depends(get_queue_service),
 ):
     return await service.get_queue()
 
@@ -41,10 +41,10 @@ async def get_queue(
 )
 async def add_queue_item(
     request: PodcastQueueItemAddRequest,
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastQueueService = Depends(get_queue_service),
 ):
     try:
-        return await service.add_queue_item(request.episode_id)
+        return await service.add_to_queue(request.episode_id)
     except ValueError as exc:
         if str(exc) == "EPISODE_NOT_FOUND":
             raise _bilingual_error(
@@ -72,9 +72,9 @@ async def add_queue_item(
 )
 async def remove_queue_item(
     episode_id: int,
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastQueueService = Depends(get_queue_service),
 ):
-    return await service.remove_queue_item(episode_id)
+    return await service.remove_from_queue(episode_id)
 
 
 @router.put(
@@ -84,10 +84,10 @@ async def remove_queue_item(
 )
 async def reorder_queue_items(
     request: PodcastQueueReorderRequest,
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastQueueService = Depends(get_queue_service),
 ):
     try:
-        return await service.reorder_queue_items(request.episode_ids)
+        return await service.reorder_queue(request.episode_ids)
     except ValueError as exc:
         if str(exc) == "INVALID_REORDER_PAYLOAD":
             raise _bilingual_error(
@@ -109,10 +109,10 @@ async def reorder_queue_items(
 )
 async def set_queue_current(
     request: PodcastQueueSetCurrentRequest,
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastQueueService = Depends(get_queue_service),
 ):
     try:
-        return await service.set_queue_current(request.episode_id)
+        return await service.set_current(request.episode_id)
     except ValueError as exc:
         if str(exc) == "EPISODE_NOT_IN_QUEUE":
             raise _bilingual_error(
@@ -134,6 +134,6 @@ async def set_queue_current(
 )
 async def complete_queue_current(
     _request: PodcastQueueCurrentCompleteRequest,
-    service: PodcastService = Depends(get_podcast_service),
+    service: PodcastQueueService = Depends(get_queue_service),
 ):
-    return await service.complete_queue_current()
+    return await service.complete_current()

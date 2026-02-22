@@ -1,6 +1,6 @@
 """Task run logging utilities."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
@@ -63,4 +63,3 @@ async def _insert_run_async(
             await session.commit()
     finally:
         await engine.dispose()
-
