@@ -172,6 +172,15 @@ class Settings(BaseSettings):
     ETAG_CACHE_IN_REDIS: bool = True  # Cache ETags in Redis for cross-instance validation
     ETAG_REDIS_PREFIX: str = "etag:"  # Redis key prefix for ETag storage
 
+    # Observability alert thresholds
+    OBS_ALERT_API_P95_MS: float = 800.0
+    OBS_ALERT_API_ERROR_RATE: float = 0.05
+    OBS_ALERT_DB_POOL_OCCUPANCY_RATIO: float = 0.9
+    OBS_ALERT_REDIS_COMMAND_AVG_MS: float = 20.0
+    OBS_ALERT_REDIS_COMMAND_MAX_MS: float = 100.0
+    OBS_ALERT_REDIS_CACHE_HIT_RATE_MIN: float = 0.5
+    OBS_ALERT_REDIS_CACHE_LOOKUPS_MIN: int = 20
+
     @validator("ALLOWED_HOSTS", pre=True)
     def assemble_cors_origins(cls, v):
         if isinstance(v, str) and not v.startswith("["):

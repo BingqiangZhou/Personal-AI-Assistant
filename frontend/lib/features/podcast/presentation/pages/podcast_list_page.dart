@@ -1070,13 +1070,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     AppLocalizations l10n, {
     required bool isDense,
   }) {
-    final normalizedSubscribedFeedUrls = ref.watch(
-      subscribedNormalizedFeedUrlsProvider,
-    );
-    final normalizedSubscribingFeedUrls = ref.watch(
-      subscribingNormalizedFeedUrlsProvider,
-    );
-
     if (searchState.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -1142,6 +1135,13 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         },
       );
     }
+
+    final normalizedSubscribedFeedUrls = ref.watch(
+      subscribedNormalizedFeedUrlsProvider,
+    );
+    final normalizedSubscribingFeedUrls = ref.watch(
+      subscribingNormalizedFeedUrlsProvider,
+    );
 
     return ListView.builder(
       key: const Key('podcast_discover_search_results'),

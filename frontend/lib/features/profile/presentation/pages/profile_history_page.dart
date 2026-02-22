@@ -39,15 +39,7 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
         child: historyAsync.when(
           data: (response) {
             final episodes =
-                List<PlaybackHistoryLiteItem>.from(
-                  response?.episodes ?? const <PlaybackHistoryLiteItem>[],
-                )..sort((a, b) {
-                  final aTime =
-                      a.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-                  final bTime =
-                      b.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
-                  return bTime.compareTo(aTime);
-                });
+                response?.episodes ?? const <PlaybackHistoryLiteItem>[];
 
             if (episodes.isEmpty) {
               return ListView(

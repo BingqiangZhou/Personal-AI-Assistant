@@ -9,6 +9,7 @@ from time import perf_counter
 from typing import Any
 
 from sqlalchemy import and_, case, desc, func, or_, select
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes, joinedload
 
@@ -1329,8 +1330,6 @@ class PodcastRepository:
             return [], 0
 
         like_pattern = f"%{keyword}%"
-        search_conditions: list[Any] = []
-        relevance_terms: list[Any] = []
         bind: Any = None
         try:
             bind = self.db.get_bind()
@@ -1343,80 +1342,110 @@ class PodcastRepository:
         def _coalesced_text(column: Any) -> Any:
             return func.coalesce(column, "")
 
-        def _build_text_match_condition(column: Any) -> Any:
+        def _build_text_match_condition(column: Any, enable_pg_trgm: bool) -> Any:
             coalesced = _coalesced_text(column)
             ilike_condition = coalesced.ilike(like_pattern)
-            if not is_postgresql:
+            if not enable_pg_trgm:
                 return ilike_condition
             # Prefer pg_trgm operator for index-friendly matching on PostgreSQL.
             return or_(coalesced.op("%")(keyword), ilike_condition)
 
-        def _build_relevance_term(column: Any, weight: float) -> Any:
+        def _build_relevance_term(column: Any, weight: float, enable_pg_trgm: bool) -> Any:
             coalesced = _coalesced_text(column)
-            if is_postgresql:
+            if enable_pg_trgm:
                 return func.similarity(coalesced, keyword) * weight
             # SQLite/MySQL fallback without pg_trgm similarity().
             return case((coalesced.ilike(like_pattern), weight), else_=0.0)
 
-        if search_in in {"title", "all"}:
-            search_conditions.append(_build_text_match_condition(PodcastEpisode.title))
-            relevance_terms.append(_build_relevance_term(PodcastEpisode.title, 1.0))
-        if search_in in {"description", "all"}:
-            search_conditions.append(
-                _build_text_match_condition(PodcastEpisode.description)
-            )
-            relevance_terms.append(
-                _build_relevance_term(PodcastEpisode.description, 0.7)
-            )
-        if search_in in {"summary", "all"}:
-            search_conditions.append(
-                _build_text_match_condition(PodcastEpisode.ai_summary)
-            )
-            relevance_terms.append(
-                _build_relevance_term(PodcastEpisode.ai_summary, 0.9)
-            )
+        async def _execute_search(enable_pg_trgm: bool) -> tuple[list[PodcastEpisode], int]:
+            search_conditions: list[Any] = []
+            relevance_terms: list[Any] = []
 
-        if not search_conditions:
-            search_conditions.append(_build_text_match_condition(PodcastEpisode.title))
-            relevance_terms.append(_build_relevance_term(PodcastEpisode.title, 1.0))
+            if search_in in {"title", "all"}:
+                search_conditions.append(
+                    _build_text_match_condition(PodcastEpisode.title, enable_pg_trgm)
+                )
+                relevance_terms.append(
+                    _build_relevance_term(PodcastEpisode.title, 1.0, enable_pg_trgm)
+                )
+            if search_in in {"description", "all"}:
+                search_conditions.append(
+                    _build_text_match_condition(PodcastEpisode.description, enable_pg_trgm)
+                )
+                relevance_terms.append(
+                    _build_relevance_term(
+                        PodcastEpisode.description, 0.7, enable_pg_trgm
+                    )
+                )
+            if search_in in {"summary", "all"}:
+                search_conditions.append(
+                    _build_text_match_condition(PodcastEpisode.ai_summary, enable_pg_trgm)
+                )
+                relevance_terms.append(
+                    _build_relevance_term(PodcastEpisode.ai_summary, 0.9, enable_pg_trgm)
+                )
 
-        relevance_score = relevance_terms[0]
-        for term in relevance_terms[1:]:
-            relevance_score = relevance_score + term
-        relevance_score = relevance_score.label("relevance_score")
+            if not search_conditions:
+                search_conditions.append(
+                    _build_text_match_condition(PodcastEpisode.title, enable_pg_trgm)
+                )
+                relevance_terms.append(
+                    _build_relevance_term(PodcastEpisode.title, 1.0, enable_pg_trgm)
+                )
 
-        base_query = (
-            select(PodcastEpisode, relevance_score)
-            .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
-            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
-            .options(joinedload(PodcastEpisode.subscription))
-            .where(
-                and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
-                    or_(*search_conditions),
+            relevance_score = relevance_terms[0]
+            for term in relevance_terms[1:]:
+                relevance_score = relevance_score + term
+            relevance_score = relevance_score.label("relevance_score")
+
+            base_query = (
+                select(PodcastEpisode, relevance_score)
+                .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
+                .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+                .options(joinedload(PodcastEpisode.subscription))
+                .where(
+                    and_(
+                        UserSubscription.user_id == user_id,
+                        UserSubscription.is_archived == False,
+                        or_(*search_conditions),
+                    )
                 )
             )
-        )
 
-        count_query = select(func.count()).select_from(base_query.subquery())
-        total_result = await self.db.execute(count_query)
-        total = total_result.scalar() or 0
+            count_query = select(func.count()).select_from(base_query.subquery())
+            total_result = await self.db.execute(count_query)
+            total = total_result.scalar() or 0
 
-        paged_query = (
-            base_query.order_by(
-                desc(relevance_score),
-                desc(PodcastEpisode.published_at),
-                desc(PodcastEpisode.id),
+            paged_query = (
+                base_query.order_by(
+                    desc(relevance_score),
+                    desc(PodcastEpisode.published_at),
+                    desc(PodcastEpisode.id),
+                )
+                .offset((page - 1) * size)
+                .limit(size)
             )
-            .offset((page - 1) * size)
-            .limit(size)
-        )
+            result = await self.db.execute(paged_query)
+            episodes = [row[0] for row in result.unique().all()]
+            return episodes, total
 
-        result = await self.db.execute(paged_query)
-        episodes = [row[0] for row in result.unique().all()]
-
-        return episodes, total
+        try:
+            return await _execute_search(enable_pg_trgm=is_postgresql)
+        except DBAPIError as exc:
+            message = str(getattr(exc, "orig", exc)).lower()
+            pg_trgm_error = (
+                "similarity(" in message
+                or "operator does not exist" in message
+                or "pg_trgm" in message
+            )
+            if is_postgresql and pg_trgm_error:
+                logger.warning(
+                    "pg_trgm unavailable for search query; fallback to ILIKE path: %s",
+                    exc,
+                )
+                await self.db.rollback()
+                return await _execute_search(enable_pg_trgm=False)
+            raise
 
     async def update_subscription_fetch_time(
         self, subscription_id: int, fetch_time: datetime | None = None

@@ -1029,7 +1029,7 @@ tests/
 ├── podcast/                            # 播客测试
 │   ├── test_e2e_simulation.py
 │   ├── test_podcast_e2e_comprehensive.py
-│   ├── test_podcast_performance.py
+│   ├── ../performance/test_api_performance.py
 │   └── test_podcast_workflow.py
 ├── test_podcast_api.py                 # API 测试
 ├── test_stage1.py                      # 阶段1测试
