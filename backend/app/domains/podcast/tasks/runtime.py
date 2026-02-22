@@ -11,12 +11,10 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from app.core.config import settings
-from app.domains.podcast.tasks._runlog import _insert_run_async
-
 # Import ALL models to ensure SQLAlchemy properly initializes all relationships
 # This is critical for Celery workers which create isolated DB engines
 from app.admin.models import BackgroundTaskRun  # noqa: F401
+from app.core.config import settings
 from app.domains.ai.models import AIModelConfig  # noqa: F401
 from app.domains.podcast.models import (  # noqa: F401
     PodcastConversation,
@@ -24,6 +22,7 @@ from app.domains.podcast.models import (  # noqa: F401
     PodcastPlaybackState,
     TranscriptionTask,
 )
+from app.domains.podcast.tasks._runlog import _insert_run_async
 from app.domains.subscription.models import (  # noqa: F401
     Subscription,
     SubscriptionCategory,

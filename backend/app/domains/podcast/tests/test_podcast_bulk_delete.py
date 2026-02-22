@@ -646,9 +646,6 @@ class TestPodcastBulkDelete:
         # 5. subscription
 
         # Find delete statements
-        conversation_deletes = [s for s in delete_statements if "podcast_conversations" in s.lower()]
-        playback_deletes = [s for s in delete_statements if "podcast_playback_states" in s.lower()]
-        transcription_deletes = [s for s in delete_statements if "transcription_tasks" in s.lower()]
         episode_deletes = [s for s in delete_statements if "podcast_episodes" in s.lower()]
         subscription_deletes = [s for s in delete_statements if "subscriptions" in s.lower()]
 

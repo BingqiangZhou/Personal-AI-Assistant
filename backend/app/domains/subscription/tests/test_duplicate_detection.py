@@ -156,7 +156,7 @@ class TestDuplicateDetection:
         service = SubscriptionService(db_session, test_user.id)
 
         # Create initial subscriptions
-        active_sub = await service.create_subscription(
+        await service.create_subscription(
             SubscriptionCreate(
                 title="Active Feed",
                 description="Active subscription",

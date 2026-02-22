@@ -119,10 +119,6 @@ class _CountrySelectorDropdownState
     final backgroundColor = isSelected
         ? colorScheme.primaryContainer.withValues(alpha: 0.45)
         : colorScheme.surfaceContainerHighest.withValues(alpha: 0.35);
-    final borderColor = isSelected
-        ? colorScheme.primary.withValues(alpha: 0.65)
-        : colorScheme.outlineVariant.withValues(alpha: 0.4);
-
     return Material(
       color: Colors.transparent,
       child: InkWell(

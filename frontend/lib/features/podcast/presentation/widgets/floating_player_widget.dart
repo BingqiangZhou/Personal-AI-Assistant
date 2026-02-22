@@ -230,17 +230,4 @@ class _FloatingPlayerButton extends StatelessWidget {
     );
   }
 
-  /// Build loading placeholder while image loads
-  Widget _buildLoadingCover(BuildContext context) {
-    return Container(
-      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-      child: Center(
-        child: Icon(
-          Icons.podcasts,
-          size: 28,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
 }

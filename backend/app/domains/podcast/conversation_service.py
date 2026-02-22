@@ -14,7 +14,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import ValidationError
 from app.domains.ai.models import ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
-from app.domains.podcast.models import ConversationSession, PodcastConversation, PodcastEpisode
+from app.domains.podcast.models import (
+    ConversationSession,
+    PodcastConversation,
+    PodcastEpisode,
+)
 
 
 logger = logging.getLogger(__name__)

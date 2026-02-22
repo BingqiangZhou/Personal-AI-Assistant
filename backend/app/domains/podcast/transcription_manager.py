@@ -289,7 +289,7 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
                 has_temp_files = False
                 if os.path.exists(temp_episode_dir):
                     # 检查是否有 downloaded 或 converted 文件
-                    for root, dirs, files in os.walk(temp_episode_dir):
+                    for _, _, files in os.walk(temp_episode_dir):
                         if files:
                             has_temp_files = True
                             break

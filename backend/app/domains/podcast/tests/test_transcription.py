@@ -161,7 +161,7 @@ class TestAudioSplitter:
                         'streams': [{'duration': '200.0'}]
                     }
 
-                    with patch('ffmpeg.run') as mock_run:
+                    with patch('ffmpeg.run'):
                         chunks = await AudioSplitter.split_mp3(
                             input_path,
                             temp_dir,

@@ -402,7 +402,7 @@ async def test_password_resets_table_creation(async_session):
             WHERE table_name = 'password_resets'
         """)
     )
-    table_exists = result.scalar() is not None
+    assert result.scalar() is not None
 
     # In a real test, you would ensure the table is created
     # For now, just check if the model can be instantiated

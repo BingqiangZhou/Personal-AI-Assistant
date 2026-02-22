@@ -34,8 +34,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   static const Duration _versionTapWindow = Duration(milliseconds: 1200);
 
-  bool _isMenuOpen = false;
-
   @override
   void initState() {
     super.initState();
@@ -50,7 +48,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ref
             .read(dailyReportDatesProvider.notifier)
             .load(forceRefresh: false)
-            .catchError((_) {}),
+            .catchError((_) => null),
       );
     });
   }
@@ -132,20 +130,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   const SizedBox(width: 16),
                   PopupMenuButton<String>(
                     key: const Key('profile_user_menu_button'),
-                    onOpened: () {
-                      setState(() {
-                        _isMenuOpen = true;
-                      });
-                    },
-                    onCanceled: () {
-                      setState(() {
-                        _isMenuOpen = false;
-                      });
-                    },
                     onSelected: (value) {
-                      setState(() {
-                        _isMenuOpen = false;
-                      });
                       if (value == 'edit') {
                         _showEditProfileDialog(context);
                       } else if (value == 'logout') {

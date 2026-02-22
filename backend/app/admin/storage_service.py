@@ -261,7 +261,7 @@ class StorageCleanupService:
 
         try:
             # 遍历目录树
-            for root, dirs, files in os.walk(directory_path, topdown=False):
+            for root, _, files in os.walk(directory_path, topdown=False):
                 for filename in files:
                     file_path = os.path.join(root, filename)
 

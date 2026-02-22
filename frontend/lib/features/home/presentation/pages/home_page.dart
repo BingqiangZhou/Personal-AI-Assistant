@@ -35,7 +35,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    _currentIndex = (widget.initialTab ?? 0).clamp(0, _tabCount - 1) as int;
+    _currentIndex = (widget.initialTab ?? 0).clamp(0, _tabCount - 1);
     _visitedTabs.add(_currentIndex);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;

@@ -577,7 +577,6 @@ class _CoverImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
       child: SizedBox(

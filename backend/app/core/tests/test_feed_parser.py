@@ -286,7 +286,7 @@ class TestFeedParser:
         parser = FeedParser()
 
         # Create client
-        client = await parser._get_client()
+        await parser._get_client()
         assert parser._client is not None
 
         # Close parser
