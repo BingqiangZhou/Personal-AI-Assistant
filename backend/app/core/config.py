@@ -3,8 +3,8 @@ import secrets
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import validator
-from pydantic_settings import BaseSettings
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 # Secret Key Management (moved here to avoid circular imports)
@@ -181,7 +181,14 @@ class Settings(BaseSettings):
     OBS_ALERT_REDIS_CACHE_HIT_RATE_MIN: float = 0.5
     OBS_ALERT_REDIS_CACHE_LOOKUPS_MIN: int = 20
 
-    @validator("ALLOWED_HOSTS", pre=True)
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=True,
+        extra="ignore",  # Allow extra environment variables from Docker compose
+    )
+
+    @field_validator("ALLOWED_HOSTS", mode="before")
+    @classmethod
     def assemble_cors_origins(cls, v):
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
@@ -189,7 +196,8 @@ class Settings(BaseSettings):
             return v
         raise ValueError(v)
 
-    @validator("ADMIN_2FA_ENABLED", pre=True)
+    @field_validator("ADMIN_2FA_ENABLED", mode="before")
+    @classmethod
     def parse_admin_2fa_enabled(cls, v):
         """Parse ADMIN_2FA_ENABLED from string to bool."""
         if isinstance(v, bool):
@@ -197,11 +205,6 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ("true", "1", "yes", "on")
         return bool(v)
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
-        extra = "ignore"  # Allow extra environment variables from Docker compose
 
 
 @lru_cache

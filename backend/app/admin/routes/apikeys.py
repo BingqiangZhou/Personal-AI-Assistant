@@ -469,10 +469,6 @@ class ExportRequest(BaseModel):
     mode: str = "encrypted"  # "plaintext" or "encrypted"
     export_password: str | None = None  # Required for encrypted mode
 
-    class Config:
-        # For Pydantic v2 compatibility
-        arbitrary_types_allowed = True
-
 
 @router.post("/api/apikeys/export/json")
 async def export_apikeys_json(

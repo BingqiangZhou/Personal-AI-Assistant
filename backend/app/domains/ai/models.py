@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Integer, String, Text
 from sqlalchemy.sql import func
 
@@ -138,7 +138,8 @@ class AIModelConfigBase(BaseModel):
     is_default: bool = Field(default=False, description="是否为默认模型")
     priority: int = Field(default=1, ge=1, le=100, description="优先级（数字越小优先级越高）")
 
-    @validator('temperature')
+    @field_validator('temperature')
+    @classmethod
     def validate_temperature(cls, v):
         if v is not None:
             try:
@@ -149,7 +150,8 @@ class AIModelConfigBase(BaseModel):
                 raise ValueError('温度参数必须是数字') from err
         return v
 
-    @validator('cost_per_input_token', 'cost_per_output_token')
+    @field_validator('cost_per_input_token', 'cost_per_output_token')
+    @classmethod
     def validate_cost(cls, v):
         if v is not None:
             try:
@@ -186,7 +188,8 @@ class AIModelConfigUpdate(BaseModel):
     is_default: bool | None = None
     priority: int | None = Field(None, ge=1, le=100)
 
-    @validator('temperature')
+    @field_validator('temperature')
+    @classmethod
     def validate_temperature(cls, v):
         if v is not None:
             try:
@@ -197,7 +200,8 @@ class AIModelConfigUpdate(BaseModel):
                 raise ValueError('温度参数必须是数字') from err
         return v
 
-    @validator('cost_per_input_token', 'cost_per_output_token')
+    @field_validator('cost_per_input_token', 'cost_per_output_token')
+    @classmethod
     def validate_cost(cls, v):
         if v is not None:
             try:
@@ -224,8 +228,7 @@ class AIModelConfigResponse(AIModelConfigBase):
     is_system: bool
     priority: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
     # 隐藏真实API密钥，返回掩码后的值
     def dict(self, *args, **kwargs):

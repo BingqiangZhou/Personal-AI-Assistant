@@ -1,6 +1,6 @@
 """Pydantic schemas for admin forms and validation."""
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class AdminLoginForm(BaseModel):
@@ -24,7 +24,8 @@ class SubscriptionEditForm(BaseModel):
     feed_url: str | None = Field(None, max_length=500)
     update_frequency: int | None = Field(None, ge=1, le=1440, description="Update frequency in minutes")
 
-    @validator("feed_url")
+    @field_validator("feed_url")
+    @classmethod
     def validate_url(cls, v):
         """Validate URL format."""
         if v and not (v.startswith("http://") or v.startswith("https://")):

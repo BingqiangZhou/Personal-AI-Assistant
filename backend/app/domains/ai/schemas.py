@@ -5,7 +5,7 @@ AI模型配置的Pydantic模式定义
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.domains.ai.models import ModelType
 
@@ -33,7 +33,8 @@ class AIModelConfigBase(BaseModel):
     is_active: bool = Field(default=True, description="是否启用")
     is_default: bool = Field(default=False, description="是否为默认模型")
 
-    @validator('temperature')
+    @field_validator('temperature')
+    @classmethod
     def validate_temperature(cls, v):
         if v is not None:
             try:
@@ -44,7 +45,8 @@ class AIModelConfigBase(BaseModel):
                 raise ValueError('温度参数必须是数字') from err
         return v
 
-    @validator('cost_per_input_token', 'cost_per_output_token')
+    @field_validator('cost_per_input_token', 'cost_per_output_token')
+    @classmethod
     def validate_cost(cls, v):
         if v is not None:
             try:
@@ -81,7 +83,8 @@ class AIModelConfigUpdate(BaseModel):
     is_active: bool | None = None
     is_default: bool | None = None
 
-    @validator('temperature')
+    @field_validator('temperature')
+    @classmethod
     def validate_temperature(cls, v):
         if v is not None:
             try:
@@ -92,7 +95,8 @@ class AIModelConfigUpdate(BaseModel):
                 raise ValueError('温度参数必须是数字') from err
         return v
 
-    @validator('cost_per_input_token', 'cost_per_output_token')
+    @field_validator('cost_per_input_token', 'cost_per_output_token')
+    @classmethod
     def validate_cost(cls, v):
         if v is not None:
             try:
@@ -119,8 +123,7 @@ class AIModelConfigResponse(AIModelConfigBase):
     last_used_at: datetime | None = None
     is_system: bool = False
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class AIModelConfigList(BaseModel):
