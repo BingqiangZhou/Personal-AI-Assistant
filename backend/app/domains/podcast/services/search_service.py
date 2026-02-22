@@ -60,10 +60,20 @@ class PodcastSearchService:
             Tuple of (results list, total count)
         """
         # Try cache first
-        cached = await self.redis.get_search_results(query, search_in, page, size)
+        cached = None
+        try:
+            cached = await self.redis.get_search_results(query, search_in, page, size)
+        except Exception as exc:
+            logger.warning(
+                "Search cache read failed (continuing without cache) user=%s query=%s error=%s",
+                self.user_id,
+                query,
+                exc,
+            )
+
         if cached:
             logger.info(f"Cache HIT for search: {query}")
-            return cached['results'], cached['total']
+            return cached["results"], cached["total"]
 
         logger.info(f"Cache MISS for search: {query}, querying database")
 
@@ -87,10 +97,24 @@ class PodcastSearchService:
             results[i]["relevance_score"] = getattr(ep, 'relevance_score', 1.0)
 
         # Cache results
-        await self.redis.set_search_results(query, search_in, page, size, {
-            'results': results,
-            'total': total
-        })
+        try:
+            await self.redis.set_search_results(
+                query,
+                search_in,
+                page,
+                size,
+                {
+                    "results": results,
+                    "total": total,
+                },
+            )
+        except Exception as exc:
+            logger.warning(
+                "Search cache write failed (results already returned) user=%s query=%s error=%s",
+                self.user_id,
+                query,
+                exc,
+            )
 
         return results, total
 

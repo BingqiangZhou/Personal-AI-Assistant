@@ -139,9 +139,16 @@ async def get_podcast_feed(
     page: int = Query(1, ge=1, description="Page number"),
     cursor: str | None = Query(None, description="Cursor token for pagination"),
     page_size: int = Query(10, ge=1, le=50, description="Page size"),
+    size: int | None = Query(
+        None,
+        ge=1,
+        le=50,
+        description="Optional alias for page_size",
+    ),
     service: PodcastService = Depends(get_podcast_service),
 ):
     """Return all subscribed episodes ordered by publish date desc."""
+    resolved_size = size or page_size
     decoded_cursor = _decode_cursor(cursor) if cursor else None
 
     if decoded_cursor and decoded_cursor["mode"] == "keyset":
@@ -158,7 +165,7 @@ async def get_podcast_feed(
             has_more,
             next_cursor_values,
         ) = await service.get_feed_by_cursor(
-            size=page_size,
+            size=resolved_size,
             cursor_published_at=decoded_cursor["ts"],
             cursor_episode_id=decoded_cursor["id"],
         )
@@ -175,9 +182,9 @@ async def get_podcast_feed(
             else page
         )
         episodes, total = await service.list_episodes(
-            filters=None, page=resolved_page, size=page_size
+            filters=None, page=resolved_page, size=resolved_size
         )
-        has_more = (resolved_page * page_size) < total
+        has_more = (resolved_page * resolved_size) < total
         next_page = resolved_page + 1 if has_more else None
         next_cursor = _encode_page_cursor(next_page) if next_page else None
 

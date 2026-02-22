@@ -60,7 +60,7 @@ void main() {
       expect(firstTabLeft, lessThanOrEqualTo(14));
     });
 
-    testWidgets('tab bar top padding is reduced to 6px', (tester) async {
+    testWidgets('tab bar top padding is 0px', (tester) async {
       addTearDown(() async => tester.binding.setSurfaceSize(null));
       await tester.binding.setSurfaceSize(const Size(390, 844));
 
@@ -85,7 +85,7 @@ void main() {
       final padding = containerWidget.padding;
 
       expect(padding, isA<EdgeInsets>());
-      expect((padding as EdgeInsets).top, 6);
+      expect((padding as EdgeInsets).top, 0);
     });
 
     testWidgets('indicator line is aligned with tab bar bottom divider line', (

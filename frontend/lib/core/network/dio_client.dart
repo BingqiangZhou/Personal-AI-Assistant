@@ -18,6 +18,8 @@ import '../utils/app_logger.dart' as logger;
 class DioClient {
   late final Dio _dio;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  static const String _etagInvalidateAfterWriteKey =
+      'etag_invalidate_after_write';
 
   // Token refresh state - use Completer for proper synchronization
   Completer<bool>? _refreshCompleter;
@@ -198,6 +200,16 @@ class DioClient {
   }
 
   void _onResponse(Response response, ResponseInterceptorHandler handler) {
+    if (_shouldInvalidateETagAfterWrite(
+      response.requestOptions,
+      response.statusCode,
+    )) {
+      _etagInterceptor.clearCache();
+      logger.AppLogger.debug(
+        ' [DioClient] Cleared ETag cache after ${response.requestOptions.method} ${response.requestOptions.path}',
+      );
+    }
+
     // Debug subscriptions list response shape
     if (response.requestOptions.path == '/subscriptions/podcasts') {
       final data = response.data;
@@ -224,6 +236,35 @@ class DioClient {
       }
     }
     handler.next(response);
+  }
+
+  bool _shouldInvalidateETagAfterWrite(
+    RequestOptions options,
+    int? statusCode,
+  ) {
+    if (options.extra[_etagInvalidateAfterWriteKey] != true) {
+      return false;
+    }
+
+    if (statusCode == null) {
+      return false;
+    }
+
+    final method = options.method.toUpperCase();
+    final isMutation =
+        method == 'POST' ||
+        method == 'PUT' ||
+        method == 'PATCH' ||
+        method == 'DELETE';
+    final isSuccess = statusCode >= 200 && statusCode < 300;
+    return isMutation && isSuccess;
+  }
+
+  Map<String, dynamic> _mutationCacheInvalidateExtra() {
+    return {
+      'dio_cache_interceptor_invalidate': true,
+      _etagInvalidateAfterWriteKey: true,
+    };
   }
 
   void _onError(DioException error, ErrorInterceptorHandler handler) async {
@@ -607,7 +648,10 @@ class DioClient {
 
     // Invalidate cache for POST mutations (e.g., creating/updating resources)
     if (invalidateCache) {
-      options.extra = {'dio_cache_interceptor_invalidate': true};
+      options.extra = {
+        ...(options.extra ?? const <String, dynamic>{}),
+        ..._mutationCacheInvalidateExtra(),
+      };
     }
 
     return _dio.post(path, data: data, options: options);
@@ -622,7 +666,10 @@ class DioClient {
 
     // Always invalidate cache for PUT updates
     if (invalidateCache) {
-      options.extra = {'dio_cache_interceptor_invalidate': true};
+      options.extra = {
+        ...(options.extra ?? const <String, dynamic>{}),
+        ..._mutationCacheInvalidateExtra(),
+      };
     }
 
     return _dio.put(path, data: data, options: options);
@@ -633,7 +680,10 @@ class DioClient {
 
     // Always invalidate cache for DELETE
     if (invalidateCache) {
-      options.extra = {'dio_cache_interceptor_invalidate': true};
+      options.extra = {
+        ...(options.extra ?? const <String, dynamic>{}),
+        ..._mutationCacheInvalidateExtra(),
+      };
     }
 
     return _dio.delete(path, options: options);

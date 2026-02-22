@@ -4,6 +4,7 @@
 
 import logging
 from datetime import date, datetime, timedelta, timezone
+from inspect import isawaitable
 from time import perf_counter
 from typing import Any
 
@@ -1330,30 +1331,54 @@ class PodcastRepository:
         like_pattern = f"%{keyword}%"
         search_conditions: list[Any] = []
         relevance_terms: list[Any] = []
+        bind: Any = None
+        try:
+            bind = self.db.get_bind()
+            if isawaitable(bind):
+                bind = await bind
+        except Exception:
+            bind = getattr(self.db, "bind", None)
+        is_postgresql = bool(bind and bind.dialect.name == "postgresql")
+
+        def _coalesced_text(column: Any) -> Any:
+            return func.coalesce(column, "")
+
+        def _build_text_match_condition(column: Any) -> Any:
+            coalesced = _coalesced_text(column)
+            ilike_condition = coalesced.ilike(like_pattern)
+            if not is_postgresql:
+                return ilike_condition
+            # Prefer pg_trgm operator for index-friendly matching on PostgreSQL.
+            return or_(coalesced.op("%")(keyword), ilike_condition)
+
+        def _build_relevance_term(column: Any, weight: float) -> Any:
+            coalesced = _coalesced_text(column)
+            if is_postgresql:
+                return func.similarity(coalesced, keyword) * weight
+            # SQLite/MySQL fallback without pg_trgm similarity().
+            return case((coalesced.ilike(like_pattern), weight), else_=0.0)
 
         if search_in in {"title", "all"}:
-            search_conditions.append(PodcastEpisode.title.ilike(like_pattern))
-            relevance_terms.append(
-                func.similarity(func.coalesce(PodcastEpisode.title, ""), keyword) * 1.0
-            )
+            search_conditions.append(_build_text_match_condition(PodcastEpisode.title))
+            relevance_terms.append(_build_relevance_term(PodcastEpisode.title, 1.0))
         if search_in in {"description", "all"}:
-            search_conditions.append(PodcastEpisode.description.ilike(like_pattern))
+            search_conditions.append(
+                _build_text_match_condition(PodcastEpisode.description)
+            )
             relevance_terms.append(
-                func.similarity(func.coalesce(PodcastEpisode.description, ""), keyword)
-                * 0.7
+                _build_relevance_term(PodcastEpisode.description, 0.7)
             )
         if search_in in {"summary", "all"}:
-            search_conditions.append(PodcastEpisode.ai_summary.ilike(like_pattern))
+            search_conditions.append(
+                _build_text_match_condition(PodcastEpisode.ai_summary)
+            )
             relevance_terms.append(
-                func.similarity(func.coalesce(PodcastEpisode.ai_summary, ""), keyword)
-                * 0.9
+                _build_relevance_term(PodcastEpisode.ai_summary, 0.9)
             )
 
         if not search_conditions:
-            search_conditions.append(PodcastEpisode.title.ilike(like_pattern))
-            relevance_terms.append(
-                func.similarity(func.coalesce(PodcastEpisode.title, ""), keyword)
-            )
+            search_conditions.append(_build_text_match_condition(PodcastEpisode.title))
+            relevance_terms.append(_build_relevance_term(PodcastEpisode.title, 1.0))
 
         relevance_score = relevance_terms[0]
         for term in relevance_terms[1:]:

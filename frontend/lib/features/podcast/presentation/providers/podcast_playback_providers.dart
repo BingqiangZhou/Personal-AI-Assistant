@@ -1,0 +1,1554 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/riverpod.dart';
+
+import '../../../../main.dart' as main_app;
+import 'audio_handler.dart';
+
+import '../../../../core/storage/local_storage_service.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../data/models/podcast_episode_model.dart';
+import '../../data/models/podcast_queue_model.dart';
+import '../../data/models/audio_player_state_model.dart';
+import '../../data/repositories/podcast_repository.dart';
+import 'podcast_core_providers.dart';
+import 'playback_progress_policy.dart';
+import '../../../../core/utils/app_logger.dart' as logger;
+
+final audioPlayerProvider =
+    NotifierProvider<AudioPlayerNotifier, AudioPlayerState>(
+      AudioPlayerNotifier.new,
+    );
+
+String? _extractSubscriptionTitle(Map<String, dynamic>? subscription) {
+  if (subscription == null) {
+    return null;
+  }
+
+  final dynamic title = subscription['title'] ?? subscription['name'];
+  if (title is String && title.trim().isNotEmpty) {
+    return title;
+  }
+  return null;
+}
+
+@visibleForTesting
+bool isDiscoverPreviewEpisode(PodcastEpisodeModel episode) {
+  final metadata = episode.metadata;
+  if (metadata == null) {
+    return false;
+  }
+
+  final raw = metadata['discover_preview'];
+  if (raw is bool) {
+    return raw;
+  }
+  if (raw is String) {
+    return raw.toLowerCase() == 'true';
+  }
+  if (raw is num) {
+    return raw != 0;
+  }
+  return false;
+}
+
+@visibleForTesting
+bool shouldSyncPlaybackToServer(PodcastEpisodeModel episode) {
+  return !isDiscoverPreviewEpisode(episode);
+}
+
+@visibleForTesting
+PodcastEpisodeModel mergeEpisodeForPlayback(
+  PodcastEpisodeModel incoming,
+  PodcastEpisodeDetailResponse latest,
+) {
+  final latestEpisode = latest.toEpisodeModel();
+  final backendSubscriptionTitle = _extractSubscriptionTitle(
+    latest.subscription,
+  );
+  final resolvedPlaybackRate = latestEpisode.playbackRate > 0
+      ? latestEpisode.playbackRate
+      : incoming.playbackRate;
+
+  return latestEpisode.copyWith(
+    subscriptionTitle: backendSubscriptionTitle ?? incoming.subscriptionTitle,
+    subscriptionImageUrl:
+        latestEpisode.subscriptionImageUrl ?? incoming.subscriptionImageUrl,
+    description: latestEpisode.description ?? incoming.description,
+    imageUrl: latestEpisode.imageUrl ?? incoming.imageUrl,
+    itemLink: latestEpisode.itemLink ?? incoming.itemLink,
+    transcriptUrl: latestEpisode.transcriptUrl ?? incoming.transcriptUrl,
+    transcriptContent:
+        latestEpisode.transcriptContent ?? incoming.transcriptContent,
+    aiSummary: latestEpisode.aiSummary ?? incoming.aiSummary,
+    summaryVersion: latestEpisode.summaryVersion ?? incoming.summaryVersion,
+    aiConfidenceScore:
+        latestEpisode.aiConfidenceScore ?? incoming.aiConfidenceScore,
+    metadata: latestEpisode.metadata ?? incoming.metadata,
+    playCount: latestEpisode.playCount > 0
+        ? latestEpisode.playCount
+        : incoming.playCount,
+    lastPlayedAt: latestEpisode.lastPlayedAt ?? incoming.lastPlayedAt,
+    playbackPosition:
+        latestEpisode.playbackPosition ?? incoming.playbackPosition,
+    audioDuration: latestEpisode.audioDuration ?? incoming.audioDuration,
+    audioFileSize: latestEpisode.audioFileSize ?? incoming.audioFileSize,
+    audioUrl: latestEpisode.audioUrl.isNotEmpty
+        ? latestEpisode.audioUrl
+        : incoming.audioUrl,
+    playbackRate: resolvedPlaybackRate,
+    isPlayed: latestEpisode.isPlayed || incoming.isPlayed,
+  );
+}
+
+@visibleForTesting
+Future<PodcastEpisodeModel> resolveEpisodeForPlayback(
+  PodcastEpisodeModel incoming,
+  Future<PodcastEpisodeDetailResponse> Function() fetchLatest,
+) async {
+  try {
+    final latest = await fetchLatest();
+    return mergeEpisodeForPlayback(incoming, latest);
+  } catch (_) {
+    return incoming;
+  }
+}
+
+class _LastPlaybackSnapshot {
+  final PodcastEpisodeModel episode;
+  final int positionMs;
+  final int durationMs;
+  final double playbackRate;
+  final DateTime? savedAt;
+
+  const _LastPlaybackSnapshot({
+    required this.episode,
+    required this.positionMs,
+    required this.durationMs,
+    required this.playbackRate,
+    this.savedAt,
+  });
+}
+
+class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
+  late PodcastRepository _repository;
+  bool _isDisposed = false;
+  bool _isPlayingEpisode = false;
+  bool _isRestoringLastPlayed = false;
+  StreamSubscription? _playerStateSubscription;
+  StreamSubscription? _positionSubscription;
+  StreamSubscription? _durationSubscription;
+  bool? _lastPlayingState; // Track last playing state to reduce log spam
+  ProcessingState? _lastProcessingState;
+  bool _isHandlingQueueCompletion = false;
+  Timer? _syncThrottleTimer;
+  Timer? _sleepTimerTickTimer;
+  DateTime? _lastPlaybackSyncAt;
+  static const Duration _syncInterval = Duration(seconds: 2);
+  static const String _lastPlaybackSnapshotKey =
+      'podcast_last_playback_snapshot_v1';
+  static const Duration _lastPlaybackSnapshotDebounce = Duration(seconds: 2);
+  Timer? _snapshotPersistTimer;
+
+  PodcastAudioHandler get _audioHandler => main_app.audioHandler;
+
+  PodcastAudioHandler? _audioHandlerOrNull() {
+    try {
+      return main_app.audioHandler;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  AudioPlayerState build() {
+    _repository = ref.read(podcastRepositoryProvider);
+    _isDisposed = false;
+
+    final handler = _audioHandlerOrNull();
+    if (handler != null) {
+      _setupListeners(handler);
+    } else {
+      logger.AppLogger.warning(
+        '[Playback] Audio handler is not initialized; running in degraded mode.',
+      );
+    }
+
+    ref.onDispose(() {
+      _isDisposed = true;
+      _playerStateSubscription?.cancel();
+      _positionSubscription?.cancel();
+      _durationSubscription?.cancel();
+      _syncThrottleTimer?.cancel();
+      _sleepTimerTickTimer?.cancel();
+      _snapshotPersistTimer?.cancel();
+    });
+
+    return const AudioPlayerState();
+  }
+
+  void _schedulePersistLastPlaybackSnapshot({bool immediate = false}) {
+    if (_isDisposed || !ref.mounted) return;
+    if (state.currentEpisode == null) return;
+
+    if (immediate) {
+      _snapshotPersistTimer?.cancel();
+      _snapshotPersistTimer = null;
+      unawaited(_persistLastPlaybackSnapshot());
+      return;
+    }
+
+    if (_snapshotPersistTimer != null) return;
+    _snapshotPersistTimer = Timer(_lastPlaybackSnapshotDebounce, () {
+      _snapshotPersistTimer = null;
+      unawaited(_persistLastPlaybackSnapshot());
+    });
+  }
+
+  Future<void> _persistLastPlaybackSnapshot() async {
+    if (_isDisposed || !ref.mounted) return;
+    final episode = state.currentEpisode;
+    if (episode == null) return;
+
+    final payload = <String, dynamic>{
+      'episode': <String, dynamic>{
+        'id': episode.id,
+        'subscription_id': episode.subscriptionId,
+        'subscription_image_url': episode.subscriptionImageUrl,
+        'title': episode.title,
+        'subscription_title': episode.subscriptionTitle,
+        'description': null,
+        'audio_url': episode.audioUrl,
+        'audio_duration': episode.audioDuration,
+        'audio_file_size': episode.audioFileSize,
+        'published_at': episode.publishedAt.toIso8601String(),
+        'image_url': episode.imageUrl,
+        'item_link': episode.itemLink,
+        'transcript_url': null,
+        'transcript_content': null,
+        'ai_summary': null,
+        'summary_version': null,
+        'ai_confidence_score': null,
+        'play_count': episode.playCount,
+        'last_played_at': episode.lastPlayedAt?.toIso8601String(),
+        'season': episode.season,
+        'episode_number': episode.episodeNumber,
+        'explicit': episode.explicit,
+        'status': episode.status,
+        'metadata': episode.metadata,
+        'playback_position': (state.position / 1000).round(),
+        'is_playing': false,
+        'playback_rate': state.playbackRate,
+        'is_played': episode.isPlayed,
+        'created_at': episode.createdAt.toIso8601String(),
+        'updated_at': episode.updatedAt?.toIso8601String(),
+      },
+      'position_ms': state.position,
+      'duration_ms': state.duration,
+      'playback_rate': state.playbackRate,
+      'saved_at': DateTime.now().toIso8601String(),
+    };
+
+    try {
+      final storage = ref.read(localStorageServiceProvider);
+      await storage.saveString(_lastPlaybackSnapshotKey, jsonEncode(payload));
+    } catch (_) {}
+  }
+
+  Future<_LastPlaybackSnapshot?> _loadLastPlaybackSnapshot() async {
+    try {
+      final storage = ref.read(localStorageServiceProvider);
+      final raw = await storage.getString(_lastPlaybackSnapshotKey);
+      if (raw == null || raw.isEmpty) return null;
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      final episodeJson = decoded['episode'];
+      if (episodeJson is! Map) return null;
+      final episode = PodcastEpisodeModel.fromJson(
+        Map<String, dynamic>.from(episodeJson),
+      );
+      final positionMs = (decoded['position_ms'] as num?)?.toInt() ?? 0;
+      final durationMs =
+          (decoded['duration_ms'] as num?)?.toInt() ??
+          (episode.audioDuration ?? 0) * 1000;
+      final playbackRate =
+          (decoded['playback_rate'] as num?)?.toDouble() ??
+          episode.playbackRate;
+      final savedAtRaw = decoded['saved_at'];
+      final savedAt = savedAtRaw is String
+          ? DateTime.tryParse(savedAtRaw)
+          : null;
+      return _LastPlaybackSnapshot(
+        episode: episode,
+        positionMs: positionMs,
+        durationMs: durationMs,
+        playbackRate: playbackRate,
+        savedAt: savedAt,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> _restoreLastPlaybackSnapshotIfPossible() async {
+    if (_isDisposed || !ref.mounted) return false;
+    if (!ref.read(authProvider).isAuthenticated) return false;
+    if (_isPlayingEpisode || state.currentEpisode != null) return false;
+
+    final snapshot = await _loadLastPlaybackSnapshot();
+    if (_isDisposed || !ref.mounted) return false;
+    if (snapshot == null) return false;
+    if (_isPlayingEpisode || state.currentEpisode != null) return false;
+
+    state = state.copyWith(
+      currentEpisode: snapshot.episode.copyWith(
+        playbackRate: snapshot.playbackRate,
+        playbackPosition: (snapshot.positionMs / 1000).round(),
+      ),
+      isPlaying: false,
+      isLoading: false,
+      isExpanded: false,
+      position: snapshot.positionMs,
+      duration: snapshot.durationMs,
+      playbackRate: snapshot.playbackRate,
+      error: null,
+    );
+    return true;
+  }
+
+  void _setupListeners(PodcastAudioHandler audioHandler) {
+    if (_isDisposed) return;
+
+    _playerStateSubscription = audioHandler.playbackState.listen((
+      playbackState,
+    ) {
+      if (_isDisposed || !ref.mounted) return;
+
+      final processingState = _mapProcessingState(
+        playbackState.processingState,
+      );
+      final completedJustNow =
+          _lastProcessingState != ProcessingState.completed &&
+          processingState == ProcessingState.completed;
+      _lastProcessingState = processingState;
+
+      // Only log when state actually changes
+      if (kDebugMode && _lastPlayingState != playbackState.playing) {
+        logger.AppLogger.debug(
+          '[Playback] Playback state changed: ${_lastPlayingState == null
+              ? "initial"
+              : _lastPlayingState!
+              ? "playing"
+              : "paused"} -> ${playbackState.playing ? "playing" : "paused"}',
+        );
+        _lastPlayingState = playbackState.playing;
+      }
+
+      // Always update state regardless of _isPlayingEpisode
+      // This ensures UI stays in sync with actual playback state
+      state = state.copyWith(
+        isPlaying: playbackState.playing,
+        isLoading: false,
+        processingState: processingState,
+      );
+      _schedulePersistLastPlaybackSnapshot(immediate: !playbackState.playing);
+
+      if (completedJustNow) {
+        unawaited(_handleTrackCompleted());
+      }
+    });
+
+    // CRITICAL: Use _audioHandler.positionStream instead of AudioService.position
+    // AudioService is NOT available on desktop platforms (Windows, macOS, Linux)
+    // _audioHandler.positionStream works on both mobile and desktop
+    _positionSubscription = audioHandler.positionStream.listen((position) {
+      if (_isDisposed || !ref.mounted) return;
+
+      state = state.copyWith(position: position.inMilliseconds);
+      if (state.currentEpisode != null) {
+        _schedulePersistLastPlaybackSnapshot();
+      }
+      if (state.isPlaying) {
+        unawaited(_updatePlaybackStateOnServer());
+      }
+    });
+
+    _durationSubscription = audioHandler.mediaItem.listen((mediaItem) {
+      if (_isDisposed || !ref.mounted) return;
+
+      // Duration listener as supplementary update (backend duration is used first)
+      // Only update if audio stream provides a different or more accurate duration
+      if (mediaItem != null) {
+        final newDuration = mediaItem.duration?.inMilliseconds ?? 0;
+
+        // Only update if:
+        // 1. Current duration is 0 (no backend duration available)
+        // 2. New duration is significantly different (>5% difference) and non-zero
+        final currentDuration = state.duration;
+        final shouldUpdate =
+            currentDuration == 0 ||
+            (newDuration > 0 &&
+                (newDuration - currentDuration).abs() > currentDuration * 0.05);
+
+        if (shouldUpdate && newDuration != currentDuration) {
+          if (kDebugMode) {
+            logger.AppLogger.debug(
+              '[DURATION UPDATE] ${currentDuration}ms -> ${newDuration}ms (from audio stream)',
+            );
+          }
+          state = state.copyWith(duration: newDuration);
+        }
+      }
+    });
+
+    if (kDebugMode) {
+      logger.AppLogger.debug('[OK] Audio listeners set up successfully');
+    }
+  }
+
+  ProcessingState _mapProcessingState(AudioProcessingState state) {
+    switch (state) {
+      case AudioProcessingState.idle:
+        return ProcessingState.idle;
+      case AudioProcessingState.loading:
+        return ProcessingState.loading;
+      case AudioProcessingState.buffering:
+        return ProcessingState.buffering;
+      case AudioProcessingState.ready:
+        return ProcessingState.ready;
+      case AudioProcessingState.completed:
+        return ProcessingState.completed;
+      default:
+        return ProcessingState.idle;
+    }
+  }
+
+  Future<void> _handleTrackCompleted() async {
+    if (_isDisposed || !ref.mounted) {
+      return;
+    }
+
+    state = state.copyWith(isPlaying: false, position: 0);
+    await _updatePlaybackStateOnServer(immediate: true);
+
+    // If sleep timer is set to "after episode", stop here
+    if (state.sleepTimerAfterEpisode) {
+      logger.AppLogger.debug(
+        '[Sleep Timer] Sleep timer: stop after episode triggered',
+      );
+      cancelSleepTimer();
+      return;
+    }
+
+    if (state.playSource != PlaySource.queue || _isHandlingQueueCompletion) {
+      return;
+    }
+
+    _isHandlingQueueCompletion = true;
+    try {
+      final queue = await ref
+          .read(podcastQueueControllerProvider.notifier)
+          .onQueueTrackCompleted();
+
+      final next = queue.currentItem;
+      if (next == null) {
+        state = state.copyWith(
+          isPlaying: false,
+          position: 0,
+          playSource: PlaySource.direct,
+          clearCurrentQueueEpisodeId: true,
+        );
+        return;
+      }
+
+      await playEpisode(
+        next.toEpisodeModel(),
+        source: PlaySource.queue,
+        queueEpisodeId: next.episodeId,
+      );
+    } catch (error) {
+      logger.AppLogger.debug(
+        '[Error] Failed to advance queue on completion: $error',
+      );
+    } finally {
+      _isHandlingQueueCompletion = false;
+    }
+  }
+
+  void syncQueueState(PodcastQueueModel queue) {
+    if (_isDisposed || !ref.mounted) {
+      return;
+    }
+    state = state.copyWith(
+      queue: queue,
+      currentQueueEpisodeId:
+          queue.currentEpisodeId ?? state.currentQueueEpisodeId,
+    );
+  }
+
+  void setQueueSyncing(bool syncing) {
+    if (_isDisposed || !ref.mounted) {
+      return;
+    }
+    state = state.copyWith(queueSyncing: syncing);
+  }
+
+  Future<void> restoreLastPlayedEpisodeIfNeeded() async {
+    if (_isDisposed || !ref.mounted) {
+      return;
+    }
+    if (_isRestoringLastPlayed) {
+      logger.AppLogger.debug(
+        '[PlaybackRestore] Skip restore: restoration already in progress',
+      );
+      return;
+    }
+    if (_isPlayingEpisode || state.currentEpisode != null) {
+      logger.AppLogger.debug(
+        '[PlaybackRestore] Skip restore: player already has active state',
+      );
+      return;
+    }
+    if (!ref.read(authProvider).isAuthenticated) {
+      logger.AppLogger.debug(
+        '[PlaybackRestore] Skip restore: user is not authenticated',
+      );
+      return;
+    }
+
+    _isRestoringLastPlayed = true;
+    try {
+      final restoredFromLocal = await _restoreLastPlaybackSnapshotIfPossible();
+      final expectedEpisodeId = state.currentEpisode?.id;
+      if (restoredFromLocal) {
+        // Preload the audio source so tapping play can use the fast-resume path.
+        // Without this, _player.resume() is called on an empty player and does nothing.
+        final ep = state.currentEpisode;
+        if (ep != null) {
+          try {
+            await _audioHandler.setEpisode(
+              id: ep.id.toString(),
+              url: ep.audioUrl,
+              title: ep.title,
+              artist: ep.subscriptionTitle ?? 'Unknown Podcast',
+              artUri: ep.imageUrl ?? ep.subscriptionImageUrl,
+              autoPlay: false,
+            );
+            if (state.position > 0) {
+              await _audioHandler.seek(Duration(milliseconds: state.position));
+            }
+            await _audioHandler.setSpeed(state.playbackRate);
+          } catch (e) {
+            debugPrint('[PlaybackRestore] Failed to preload audio source: $e');
+          }
+        }
+        unawaited(_restoreLastPlayedEpisodeFromServer(expectedEpisodeId));
+        return;
+      }
+      logger.AppLogger.debug(
+        '[PlaybackRestore] Restoring last played episode for mini player',
+      );
+      final response = await _repository.getPlaybackHistory(page: 1, size: 20);
+      if (_isDisposed || !ref.mounted) {
+        return;
+      }
+      if (_isPlayingEpisode || state.currentEpisode != null) {
+        logger.AppLogger.debug(
+          '[PlaybackRestore] Skip apply: player state changed while restoring',
+        );
+        return;
+      }
+      if (response.episodes.isEmpty) {
+        logger.AppLogger.debug(
+          '[PlaybackRestore] Skip restore: no playback history found',
+        );
+        return;
+      }
+
+      final episodes = [...response.episodes]
+        ..sort((a, b) {
+          final aTime =
+              a.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bTime =
+              b.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return bTime.compareTo(aTime);
+        });
+      final latest = episodes.first;
+      final resolvedPlaybackRate = latest.playbackRate > 0
+          ? latest.playbackRate
+          : 1.0;
+      final resumePositionMs = normalizeResumePositionMs(
+        latest.playbackPosition,
+        latest.audioDuration,
+      );
+      final durationMs = (latest.audioDuration ?? 0) * 1000;
+
+      logger.AppLogger.debug(
+        '[PlaybackRestore] Candidate episode=${latest.id}, position=${resumePositionMs}ms',
+      );
+
+      try {
+        await _audioHandler.setEpisode(
+          id: latest.id.toString(),
+          url: latest.audioUrl,
+          title: latest.title,
+          artist: latest.subscriptionTitle ?? 'Unknown Podcast',
+          artUri: latest.imageUrl ?? latest.subscriptionImageUrl,
+          autoPlay: false,
+        );
+        if (resumePositionMs > 0) {
+          await _audioHandler.seek(Duration(milliseconds: resumePositionMs));
+        }
+        await _audioHandler.setSpeed(resolvedPlaybackRate);
+      } catch (error) {
+        logger.AppLogger.debug(
+          '[PlaybackRestore] Failed to preload restored episode: $error',
+        );
+      }
+
+      if (_isDisposed || !ref.mounted) {
+        return;
+      }
+      if (_isPlayingEpisode || state.currentEpisode != null) {
+        logger.AppLogger.debug(
+          '[PlaybackRestore] Skip apply: player state changed after preloading',
+        );
+        return;
+      }
+
+      state = state.copyWith(
+        currentEpisode: latest.copyWith(
+          playbackRate: resolvedPlaybackRate,
+          playbackPosition: (resumePositionMs / 1000).round(),
+        ),
+        isPlaying: false,
+        isLoading: false,
+        isExpanded: false,
+        position: resumePositionMs,
+        duration: durationMs,
+        playbackRate: resolvedPlaybackRate,
+        error: null,
+      );
+
+      logger.AppLogger.debug(
+        '[PlaybackRestore] Restored episode ${latest.id} to ${state.formattedPosition}',
+      );
+      _schedulePersistLastPlaybackSnapshot(immediate: true);
+    } catch (error) {
+      logger.AppLogger.debug(
+        '[PlaybackRestore] Failed to restore last played episode: $error',
+      );
+    } finally {
+      _isRestoringLastPlayed = false;
+    }
+  }
+
+  Future<void> _restoreLastPlayedEpisodeFromServer(
+    int? expectedEpisodeId,
+  ) async {
+    if (_isDisposed || !ref.mounted) return;
+    if (_isPlayingEpisode) return;
+    if (!ref.read(authProvider).isAuthenticated) return;
+
+    try {
+      final response = await _repository.getPlaybackHistory(page: 1, size: 20);
+      if (_isDisposed || !ref.mounted) return;
+      if (_isPlayingEpisode) return;
+      if (expectedEpisodeId != null &&
+          state.currentEpisode?.id != expectedEpisodeId) {
+        return;
+      }
+      if (response.episodes.isEmpty) return;
+
+      final episodes = [...response.episodes]
+        ..sort((a, b) {
+          final aTime =
+              a.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final bTime =
+              b.lastPlayedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return bTime.compareTo(aTime);
+        });
+      final latest = episodes.first;
+      final resolvedPlaybackRate = latest.playbackRate > 0
+          ? latest.playbackRate
+          : 1.0;
+      final resumePositionMs = normalizeResumePositionMs(
+        latest.playbackPosition,
+        latest.audioDuration,
+      );
+      final durationMs = (latest.audioDuration ?? 0) * 1000;
+
+      if (expectedEpisodeId != null &&
+          state.currentEpisode?.id != expectedEpisodeId) {
+        return;
+      }
+
+      state = state.copyWith(
+        currentEpisode: latest.copyWith(
+          playbackRate: resolvedPlaybackRate,
+          playbackPosition: (resumePositionMs / 1000).round(),
+        ),
+        isPlaying: false,
+        isLoading: false,
+        isExpanded: false,
+        position: resumePositionMs,
+        duration: durationMs,
+        playbackRate: resolvedPlaybackRate,
+        error: null,
+      );
+      _schedulePersistLastPlaybackSnapshot(immediate: true);
+    } catch (_) {}
+  }
+
+  Future<PodcastEpisodeModel> _resolveEpisodeForPlayback(
+    PodcastEpisodeModel episode,
+  ) async {
+    if (_isDisposed || !ref.mounted) {
+      return episode;
+    }
+
+    logger.AppLogger.debug(
+      '[PlaybackRestore] Fetch latest playback state before play: episode=${episode.id}',
+    );
+    final resolved = await resolveEpisodeForPlayback(episode, () async {
+      return _repository.getEpisode(episode.id);
+    });
+
+    if (identical(resolved, episode)) {
+      logger.AppLogger.debug(
+        '[PlaybackRestore] Fallback to local episode data: episode=${episode.id}',
+      );
+    } else {
+      logger.AppLogger.debug(
+        '[PlaybackRestore] Using server playback state: episode=${resolved.id}, position=${resolved.playbackPosition ?? 0}s',
+      );
+    }
+
+    return resolved;
+  }
+
+  Future<void> playEpisode(
+    PodcastEpisodeModel episode, {
+    PlaySource source = PlaySource.direct,
+    int? queueEpisodeId,
+  }) async {
+    if (_isPlayingEpisode) {
+      logger.AppLogger.debug(
+        '[Playback] playEpisode already in progress, ignoring duplicate call',
+      );
+      return;
+    }
+
+    final isSameEpisode = state.currentEpisode?.id == episode.id;
+    final isCompleted = state.processingState == ProcessingState.completed;
+    if (isSameEpisode && !isCompleted) {
+      if (state.isPlaying) {
+        logger.AppLogger.debug(
+          '[Warn] Same episode already playing, skip reloading source',
+        );
+        return;
+      }
+      logger.AppLogger.debug(
+        '[Playback] Same episode paused, fast resume without reloading source',
+      );
+      await resume();
+      return;
+    }
+
+    _isPlayingEpisode = true;
+    var episodeForPlayback = episode;
+    final skipServerSync = isDiscoverPreviewEpisode(episode);
+
+    try {
+      if (!skipServerSync) {
+        episodeForPlayback = await _resolveEpisodeForPlayback(episode);
+      }
+      if (!ref.mounted || _isDisposed) {
+        _isPlayingEpisode = false;
+        return;
+      }
+
+      var effectiveSource = source;
+      var effectiveQueueEpisodeId = queueEpisodeId;
+
+      if (!skipServerSync && source == PlaySource.direct) {
+        final preparedQueue = await _prepareManualPlayQueue(
+          episodeForPlayback.id,
+        );
+        if (preparedQueue != null) {
+          effectiveSource = PlaySource.queue;
+          effectiveQueueEpisodeId = episodeForPlayback.id;
+        }
+      }
+      logger.AppLogger.debug('[Playback] ===== playEpisode called =====');
+      logger.AppLogger.debug('[Playback] Episode ID: ${episodeForPlayback.id}');
+      logger.AppLogger.debug(
+        '[Playback] Episode Title: ${episodeForPlayback.title}',
+      );
+      logger.AppLogger.debug(
+        '[Playback] Audio URL: ${episodeForPlayback.audioUrl}',
+      );
+      logger.AppLogger.debug(
+        '[Playback] Subscription ID: ${episodeForPlayback.subscriptionId}',
+      );
+
+      if (!ref.mounted || _isDisposed) {
+        _isPlayingEpisode = false;
+        return;
+      }
+
+      final queueSnapshot = state.queue;
+      final queueSyncing = state.queueSyncing;
+      var targetPlaybackRate = state.playbackRate;
+
+      try {
+        final effectiveRate = await _repository.getEffectivePlaybackRate(
+          subscriptionId: episodeForPlayback.subscriptionId,
+        );
+        targetPlaybackRate = effectiveRate.effectivePlaybackRate;
+      } catch (error) {
+        logger.AppLogger.debug(
+          'Failed to resolve effective playback rate, using current state value: $error',
+        );
+      }
+
+      // ===== STEP 1: Pause current playback instead of stop =====
+      // Using pause() instead of stop() to avoid clearing the audio source
+      // This maintains the media session state better
+      logger.AppLogger.debug('[Playback] Step 1: Pausing current playback');
+      try {
+        await _audioHandler.pause();
+        logger.AppLogger.debug('[OK] Paused');
+      } catch (e) {
+        logger.AppLogger.debug('[Error] Pause error (ignorable): $e');
+      }
+
+      state = const AudioPlayerState().copyWith(
+        playbackRate: targetPlaybackRate,
+        queue: queueSnapshot,
+        queueSyncing: queueSyncing,
+        playSource: effectiveSource,
+        currentQueueEpisodeId: effectiveSource == PlaySource.queue
+            ? (effectiveQueueEpisodeId ?? episodeForPlayback.id)
+            : null,
+      );
+
+      if (!ref.mounted || _isDisposed) return;
+
+      // ===== STEP 2: Set new episode info with duration from backend =====
+      logger.AppLogger.debug('[Playback] Step 2: Setting new episode info');
+      // CRITICAL: Backend audioDuration is in SECONDS, convert to MILLISECONDS
+      final durationMs = (episodeForPlayback.audioDuration ?? 0) * 1000;
+      final resumePositionMs = normalizeResumePositionMs(
+        episodeForPlayback.playbackPosition,
+        episodeForPlayback.audioDuration,
+      );
+      logger.AppLogger.debug(
+        '[Playback] Using backend duration: ${episodeForPlayback.audioDuration}s = ${durationMs}ms',
+      );
+      state = state.copyWith(
+        currentEpisode: episodeForPlayback,
+        isLoading: true,
+        isPlaying: false, // Keep false until actually playing
+        duration: durationMs, // Convert seconds to milliseconds
+        error: null,
+      );
+      _schedulePersistLastPlaybackSnapshot(immediate: true);
+
+      // ===== STEP 3: Set new episode with metadata =====
+      // CRITICAL: Use setEpisode() to properly set MediaItem, validate artUri, and load audio
+      // artUri validation is built into setEpisode() - only http/https URLs are accepted
+      logger.AppLogger.debug(
+        '[Playback] Step 3: Setting new episode with metadata',
+      );
+      logger.AppLogger.debug(
+        '[Playback] Backend duration already set: ${state.duration}ms',
+      );
+      logger.AppLogger.debug(
+        '[Playback] Image URL: ${episodeForPlayback.imageUrl ?? "NULL"}',
+      );
+
+      try {
+        await _audioHandler.setEpisode(
+          id: episodeForPlayback.id.toString(),
+          url: episodeForPlayback.audioUrl,
+          title: episodeForPlayback.title,
+          artist: episodeForPlayback.subscriptionTitle ?? 'Unknown Podcast',
+          artUri:
+              episodeForPlayback.imageUrl ??
+              episodeForPlayback.subscriptionImageUrl,
+          autoPlay:
+              false, // We'll manually start playback after restoring position/speed
+        );
+        logger.AppLogger.debug('[OK] Episode loaded successfully');
+      } catch (loadError) {
+        logger.AppLogger.debug('[Error] Failed to load episode: $loadError');
+        throw Exception('Failed to load audio: $loadError');
+      }
+
+      if (!ref.mounted || _isDisposed) return;
+
+      // ===== STEP 4: Restore playback position =====
+      if (resumePositionMs > 0) {
+        logger.AppLogger.debug(
+          '[Playback] Step 4: Seeking to saved position: ${resumePositionMs}ms',
+        );
+        try {
+          await _audioHandler.seek(Duration(milliseconds: resumePositionMs));
+          logger.AppLogger.debug('[OK] Seek completed');
+        } catch (e) {
+          logger.AppLogger.debug('[Error] Seek error: $e');
+        }
+      }
+
+      if (!ref.mounted || _isDisposed) return;
+
+      // ===== STEP 5: Restore playback rate =====
+      logger.AppLogger.debug(
+        'Step 5: Applying effective playback rate ${targetPlaybackRate}x',
+      );
+      try {
+        await _audioHandler.setSpeed(targetPlaybackRate);
+      } catch (e) {
+        logger.AppLogger.debug('Failed to apply playback rate: $e');
+      }
+
+      // ===== STEP 6: Start playback =====
+      logger.AppLogger.debug('[Playback] Step 6: Starting playback');
+      try {
+        await _audioHandler.play();
+        logger.AppLogger.debug('[OK] Playback started');
+
+        if (ref.mounted && !_isDisposed) {
+          state = state.copyWith(
+            isPlaying: true,
+            isLoading: false,
+            position: resumePositionMs,
+            playbackRate: targetPlaybackRate,
+          );
+          _schedulePersistLastPlaybackSnapshot(immediate: true);
+        }
+      } catch (playError) {
+        logger.AppLogger.debug('[Error] Failed to start playback: $playError');
+        _isPlayingEpisode = false;
+        throw Exception('Failed to start playback: $playError');
+      }
+
+      logger.AppLogger.debug('[Playback] ===== playEpisode completed =====');
+
+      // Update playback state on server (non-blocking)
+      if (ref.mounted && !_isDisposed) {
+        _updatePlaybackStateOnServer().catchError((error) {
+          logger.AppLogger.debug('[Error] Server update failed: $error');
+        });
+      }
+
+      // Release the lock
+      _isPlayingEpisode = false;
+    } catch (error) {
+      logger.AppLogger.debug('[Error] ===== Failed to play episode =====');
+      logger.AppLogger.debug('[Playback] Episode ID: ${episodeForPlayback.id}');
+      logger.AppLogger.debug(
+        '[Playback] Audio URL: ${episodeForPlayback.audioUrl}',
+      );
+      logger.AppLogger.debug('[Error] Error: $error');
+
+      // Release the lock on error
+      _isPlayingEpisode = false;
+
+      // Update error state
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(
+          isLoading: false,
+          isPlaying: false, // Ensure playing is false on error
+          error: 'Failed to play audio: $error',
+        );
+      }
+    }
+  }
+
+  Future<PodcastQueueModel?> _prepareManualPlayQueue(int episodeId) async {
+    if (_isDisposed || !ref.mounted) {
+      return null;
+    }
+
+    try {
+      final queueController = ref.read(podcastQueueControllerProvider.notifier);
+      var queue = await queueController.addToQueue(episodeId);
+      final orderedEpisodeIds = <int>[
+        episodeId,
+        ...queue.items
+            .map((item) => item.episodeId)
+            .where((id) => id != episodeId),
+      ];
+      final currentOrder = queue.items.map((item) => item.episodeId).toList();
+
+      if (!listEquals(currentOrder, orderedEpisodeIds)) {
+        queue = await queueController.reorderQueue(orderedEpisodeIds);
+      }
+
+      if (queue.currentEpisodeId != episodeId) {
+        queue = await queueController.setCurrentEpisode(episodeId);
+      }
+
+      return queue;
+    } catch (error) {
+      logger.AppLogger.debug('Failed to prepare manual play queue: $error');
+      return null;
+    }
+  }
+
+  Future<void> pause() async {
+    if (_isDisposed) return;
+
+    try {
+      logger.AppLogger.debug(
+        '[Playback] pause() called, current isPlaying: ${state.isPlaying}',
+      );
+
+      // IMPORTANT: Don't manually update state here - let the playbackState listener handle it
+      // The listener will update the state when playbackState.playing changes
+      // This avoids race conditions where manual state gets overwritten
+
+      await _audioHandler.pause();
+      logger.AppLogger.debug(
+        '[Playback] AudioHandler.pause() completed, waiting for playbackState listener to update UI',
+      );
+
+      if (ref.mounted && !_isDisposed) {
+        await _updatePlaybackStateOnServer(immediate: true);
+      }
+    } catch (error) {
+      logger.AppLogger.debug('[Error] pause() error: $error');
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(error: error.toString());
+      }
+    }
+  }
+
+  Future<void> resume() async {
+    if (_isDisposed) return;
+
+    try {
+      logger.AppLogger.debug(
+        '[Playback] resume() called, current isPlaying: ${state.isPlaying}',
+      );
+
+      // IMPORTANT: Don't manually update state here - let the playbackState listener handle it
+      // The listener will update the state when playbackState.playing changes
+      // This avoids race conditions where manual state gets overwritten
+
+      await _audioHandler.play();
+      logger.AppLogger.debug(
+        '[Playback] AudioHandler.play() completed, waiting for playbackState listener to update UI',
+      );
+
+      if (ref.mounted && !_isDisposed) {
+        unawaited(
+          _updatePlaybackStateOnServer().catchError((error) {
+            logger.AppLogger.debug(
+              '[Error] Server update failed after resume: $error',
+            );
+          }),
+        );
+
+        // Ensure the currently playing episode is at the top of the queue
+        final currentEpisode = state.currentEpisode;
+        if (currentEpisode != null &&
+            !isDiscoverPreviewEpisode(currentEpisode)) {
+          unawaited(
+            _prepareManualPlayQueue(currentEpisode.id).catchError((error) {
+              logger.AppLogger.debug(
+                '[Error] Queue reorder failed after resume: $error',
+              );
+              return null;
+            }),
+          );
+        }
+      }
+    } catch (error) {
+      logger.AppLogger.debug('[Error] resume() error: $error');
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(isPlaying: false, error: error.toString());
+      }
+    }
+  }
+
+  Future<void> seekTo(int position) async {
+    if (_isDisposed) return;
+
+    try {
+      await _audioHandler.seek(Duration(milliseconds: position));
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(position: position);
+        await _updatePlaybackStateOnServer(immediate: true);
+      }
+    } catch (error) {
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(error: error.toString());
+      }
+    }
+  }
+
+  Future<void> setPlaybackRate(
+    double rate, {
+    bool applyToSubscription = false,
+  }) async {
+    if (_isDisposed) return;
+
+    try {
+      final currentEpisode = state.currentEpisode;
+      if (applyToSubscription && currentEpisode == null) {
+        throw StateError(
+          'A current episode is required when applying to subscription',
+        );
+      }
+
+      await _audioHandler.setSpeed(rate);
+      final applied = await _repository.applyPlaybackRatePreference(
+        playbackRate: rate,
+        applyToSubscription: applyToSubscription,
+        subscriptionId: currentEpisode?.subscriptionId,
+      );
+
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(playbackRate: applied.effectivePlaybackRate);
+        await _updatePlaybackStateOnServer(immediate: true);
+      }
+    } catch (error) {
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(error: error.toString());
+      }
+    }
+  }
+
+  Future<void> stop() async {
+    if (_isDisposed) return;
+
+    try {
+      if (ref.mounted && !_isDisposed) {
+        await _updatePlaybackStateOnServer(immediate: true);
+      }
+      await _audioHandler.stop();
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(
+          clearCurrentEpisode: true,
+          isPlaying: false,
+          position: 0,
+          playSource: PlaySource.direct,
+          clearCurrentQueueEpisodeId: true,
+        );
+      }
+    } catch (error) {
+      if (ref.mounted && !_isDisposed) {
+        state = state.copyWith(error: error.toString());
+      }
+    }
+  }
+
+  void setExpanded(bool expanded) {
+    if (ref.mounted && !_isDisposed) {
+      state = state.copyWith(isExpanded: expanded);
+    }
+  }
+
+  // ===== Sleep Timer =====
+
+  void setSleepTimer(Duration duration) {
+    if (_isDisposed || !ref.mounted) return;
+
+    _sleepTimerTickTimer?.cancel();
+
+    final endTime = DateTime.now().add(duration);
+    state = state.copyWith(
+      sleepTimerEndTime: endTime,
+      sleepTimerAfterEpisode: false,
+      sleepTimerRemainingLabel: _formatRemainingTime(duration),
+    );
+
+    logger.AppLogger.debug(
+      '[Sleep Timer] Sleep timer set: ${duration.inMinutes} minutes',
+    );
+
+    _sleepTimerTickTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _onSleepTimerTick(),
+    );
+  }
+
+  void setSleepTimerAfterEpisode() {
+    if (_isDisposed || !ref.mounted) return;
+
+    _sleepTimerTickTimer?.cancel();
+
+    state = state.copyWith(
+      sleepTimerAfterEpisode: true,
+      sleepTimerRemainingLabel: '本集',
+      clearSleepTimer: false,
+    );
+    // Explicitly clear the endTime by using copyWith then overriding
+    state = AudioPlayerState(
+      currentEpisode: state.currentEpisode,
+      queue: state.queue,
+      currentQueueEpisodeId: state.currentQueueEpisodeId,
+      playSource: state.playSource,
+      queueSyncing: state.queueSyncing,
+      isPlaying: state.isPlaying,
+      isLoading: state.isLoading,
+      isExpanded: state.isExpanded,
+      position: state.position,
+      duration: state.duration,
+      playbackRate: state.playbackRate,
+      processingState: state.processingState,
+      error: state.error,
+      sleepTimerEndTime: null,
+      sleepTimerAfterEpisode: true,
+      sleepTimerRemainingLabel: '本集',
+    );
+
+    logger.AppLogger.debug(
+      '[Sleep Timer] Sleep timer set: after current episode',
+    );
+  }
+
+  void cancelSleepTimer() {
+    if (_isDisposed || !ref.mounted) return;
+
+    _sleepTimerTickTimer?.cancel();
+    _sleepTimerTickTimer = null;
+
+    state = state.copyWith(clearSleepTimer: true);
+
+    logger.AppLogger.debug('[Sleep Timer] Sleep timer cancelled');
+  }
+
+  void _onSleepTimerTick() {
+    if (_isDisposed || !ref.mounted) return;
+
+    final endTime = state.sleepTimerEndTime;
+    if (endTime == null) {
+      _sleepTimerTickTimer?.cancel();
+      _sleepTimerTickTimer = null;
+      return;
+    }
+
+    final remaining = endTime.difference(DateTime.now());
+    if (remaining.isNegative || remaining.inSeconds <= 0) {
+      // Timer expired, pause playback
+      logger.AppLogger.debug(
+        '[Sleep Timer] Sleep timer expired, pausing playback',
+      );
+      _sleepTimerTickTimer?.cancel();
+      _sleepTimerTickTimer = null;
+      state = state.copyWith(clearSleepTimer: true);
+      pause();
+      return;
+    }
+
+    state = state.copyWith(
+      sleepTimerRemainingLabel: _formatRemainingTime(remaining),
+    );
+  }
+
+  String _formatRemainingTime(Duration d) {
+    final hours = d.inHours;
+    final minutes = d.inMinutes.remainder(60);
+    final seconds = d.inSeconds.remainder(60);
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _updatePlaybackStateOnServer({bool immediate = false}) async {
+    if (_isDisposed) return;
+
+    final episode = state.currentEpisode;
+    if (episode == null) return;
+    if (!shouldSyncPlaybackToServer(episode)) return;
+
+    // If immediate (pause/seek/stop/completed), send right away
+    if (immediate) {
+      _syncThrottleTimer?.cancel();
+      _syncThrottleTimer = null;
+      await _sendPlaybackUpdate(episode);
+      _lastPlaybackSyncAt = DateTime.now();
+      return;
+    }
+
+    await _scheduleThrottledSync(episode);
+  }
+
+  Future<void> _scheduleThrottledSync(PodcastEpisodeModel episode) async {
+    final now = DateTime.now();
+    final lastSync = _lastPlaybackSyncAt;
+
+    if (lastSync == null || now.difference(lastSync) >= _syncInterval) {
+      await _sendPlaybackUpdate(episode);
+      _lastPlaybackSyncAt = DateTime.now();
+      return;
+    }
+
+    if (_syncThrottleTimer?.isActive ?? false) {
+      return;
+    }
+
+    final remaining = _syncInterval - now.difference(lastSync);
+    _syncThrottleTimer = Timer(remaining, () {
+      if (_isDisposed) return;
+      final currentEpisode = state.currentEpisode;
+      if (currentEpisode == null) return;
+
+      _sendPlaybackUpdate(currentEpisode).then((_) {
+        _lastPlaybackSyncAt = DateTime.now();
+      });
+    });
+  }
+
+  Future<void> _sendPlaybackUpdate(PodcastEpisodeModel episode) async {
+    if (_isDisposed) return;
+    if (!shouldSyncPlaybackToServer(episode)) return;
+
+    final payload = buildPersistPayload(
+      state.position,
+      state.duration,
+      state.isPlaying,
+    );
+
+    try {
+      await _repository.updatePlaybackProgress(
+        episodeId: episode.id,
+        position: payload.positionSec,
+        isPlaying: payload.isPlaying,
+        playbackRate: state.playbackRate,
+      );
+    } catch (error) {
+      // Log more detailed error for debugging
+      logger.AppLogger.debug(
+        '[Error] Failed to update playback state on server: $error',
+      );
+      logger.AppLogger.debug('[Playback] Episode ID: ${episode.id}');
+      logger.AppLogger.debug(
+        '[Playback] Position: ${state.position}ms (${(state.position / 1000).round()}s)',
+      );
+      logger.AppLogger.debug('[Playback] Is Playing: ${state.isPlaying}');
+      logger.AppLogger.debug('[Playback] Playback Rate: ${state.playbackRate}');
+
+      // Check if it's an authentication error
+      if (error.toString().contains('401') ||
+          error.toString().contains('authentication')) {
+        logger.AppLogger.debug(
+          '[Error] Authentication error - user may need to log in again',
+        );
+      }
+
+      // Don't update the UI state for server errors - continue playback
+    }
+  }
+}
+
+final podcastQueueControllerProvider =
+    AsyncNotifierProvider<PodcastQueueController, PodcastQueueModel>(
+      PodcastQueueController.new,
+    );
+
+class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
+  late PodcastRepository _repository;
+  Future<PodcastQueueModel>? _inFlightQueueLoad;
+  final Map<int, Future<PodcastQueueModel>> _inFlightAddToQueueByEpisodeId =
+      <int, Future<PodcastQueueModel>>{};
+  DateTime? _lastQueueRefreshAt;
+  static const Duration _queueRefreshThrottle = Duration(seconds: 20);
+
+  @override
+  FutureOr<PodcastQueueModel> build() async {
+    _repository = ref.read(podcastRepositoryProvider);
+    try {
+      return await _loadQueueInternal(
+        forceRefresh: false,
+        trackSyncing: false,
+        setErrorStateOnFailure: false,
+      );
+    } catch (_) {
+      return PodcastQueueModel.empty();
+    }
+  }
+
+  bool _hasFreshQueueState() {
+    if (_lastQueueRefreshAt == null) {
+      return false;
+    }
+    return DateTime.now().difference(_lastQueueRefreshAt!) <
+        _queueRefreshThrottle;
+  }
+
+  void _applyQueue(PodcastQueueModel queue) {
+    state = AsyncValue.data(queue);
+    _lastQueueRefreshAt = DateTime.now();
+    ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+  }
+
+  Future<PodcastQueueModel> _loadQueueInternal({
+    required bool forceRefresh,
+    bool trackSyncing = true,
+    bool setErrorStateOnFailure = true,
+  }) {
+    final inFlight = _inFlightQueueLoad;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final cachedQueue = state.value;
+    if (!forceRefresh && cachedQueue != null && _hasFreshQueueState()) {
+      return Future.value(cachedQueue);
+    }
+
+    if (trackSyncing) {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    }
+
+    final loadFuture = () async {
+      try {
+        final queue = await _repository.getQueue();
+        _applyQueue(queue);
+        return queue;
+      } catch (error, stackTrace) {
+        if (setErrorStateOnFailure || state.value == null) {
+          state = AsyncValue.error(error, stackTrace);
+        }
+        rethrow;
+      } finally {
+        _inFlightQueueLoad = null;
+        if (trackSyncing) {
+          ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+        }
+      }
+    }();
+
+    _inFlightQueueLoad = loadFuture;
+    return loadFuture;
+  }
+
+  Future<PodcastQueueModel> loadQueue({bool forceRefresh = true}) async {
+    return _loadQueueInternal(
+      forceRefresh: forceRefresh,
+      trackSyncing: true,
+      setErrorStateOnFailure: true,
+    );
+  }
+
+  Future<void> refreshQueueInBackground() async {
+    try {
+      await _loadQueueInternal(
+        forceRefresh: false,
+        trackSyncing: false,
+        setErrorStateOnFailure: false,
+      );
+    } catch (_) {
+      // Keep existing queue UI state when background refresh fails.
+    }
+  }
+
+  Future<PodcastQueueModel> addToQueue(int episodeId) async {
+    final inFlight = _inFlightAddToQueueByEpisodeId[episodeId];
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    final addFuture = () async {
+      try {
+        final queue = await _repository.addQueueItem(episodeId);
+        _applyQueue(queue);
+        return queue;
+      } catch (error, stackTrace) {
+        state = AsyncValue.error(error, stackTrace);
+        rethrow;
+      } finally {
+        ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+      }
+    }();
+
+    _inFlightAddToQueueByEpisodeId[episodeId] = addFuture;
+    try {
+      return await addFuture;
+    } finally {
+      if (identical(_inFlightAddToQueueByEpisodeId[episodeId], addFuture)) {
+        _inFlightAddToQueueByEpisodeId.remove(episodeId);
+      }
+    }
+  }
+
+  Future<PodcastQueueModel> removeFromQueue(int episodeId) async {
+    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    try {
+      final queue = await _repository.removeQueueItem(episodeId);
+      _applyQueue(queue);
+      return queue;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    } finally {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+    }
+  }
+
+  Future<PodcastQueueModel> reorderQueue(List<int> episodeIds) async {
+    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    try {
+      final queue = await _repository.reorderQueueItems(episodeIds);
+      _applyQueue(queue);
+      return queue;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    } finally {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+    }
+  }
+
+  Future<PodcastQueueModel> setCurrentEpisode(int episodeId) async {
+    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    try {
+      final queue = await _repository.setQueueCurrent(episodeId);
+      _applyQueue(queue);
+      return queue;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    } finally {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+    }
+  }
+
+  Future<PodcastQueueModel> playFromQueue(int episodeId) async {
+    try {
+      final queue = await setCurrentEpisode(episodeId);
+
+      final current = queue.currentItem;
+      if (current != null) {
+        await ref
+            .read(audioPlayerProvider.notifier)
+            .playEpisode(
+              current.toEpisodeModel(),
+              source: PlaySource.queue,
+              queueEpisodeId: current.episodeId,
+            );
+      }
+      return queue;
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<PodcastQueueModel> onQueueTrackCompleted() async {
+    final queue = await _repository.completeQueueCurrent();
+    _applyQueue(queue);
+    return queue;
+  }
+}
