@@ -140,12 +140,6 @@ abstract class AppLocalizations {
   /// **'Chinese'**
   String get languageChinese;
 
-  /// App preferences section title
-  ///
-  /// In en, this message translates to:
-  /// **'App Preferences'**
-  String get appPreferences;
-
   /// About section title
   ///
   /// In en, this message translates to:
@@ -157,12 +151,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version'**
   String get version;
-
-  /// API documentation link label
-  ///
-  /// In en, this message translates to:
-  /// **'API Documentation'**
-  String get apiDocs;
 
   /// Profile page title
   ///
@@ -181,12 +169,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Logout'**
   String get logout;
-
-  /// Logout confirmation message
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to logout?'**
-  String get confirmLogout;
 
   /// Cancel button label
   ///
@@ -296,23 +278,11 @@ abstract class AppLocalizations {
   /// **'OK'**
   String get ok;
 
-  /// Yes button label
-  ///
-  /// In en, this message translates to:
-  /// **'Yes'**
-  String get yes;
-
   /// No button label
   ///
   /// In en, this message translates to:
   /// **'No'**
   String get no;
-
-  /// Welcome message
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome'**
-  String get welcome;
 
   /// Login page welcome title
   ///
@@ -476,173 +446,11 @@ abstract class AppLocalizations {
   /// **'Password reset email sent'**
   String get auth_reset_email_sent;
 
-  /// Login failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Login failed'**
-  String get login_failed;
-
-  /// Registration failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Registration failed'**
-  String get register_failed;
-
-  /// Logout failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Logout failed'**
-  String get logout_failed;
-
-  /// New chat button label
-  ///
-  /// In en, this message translates to:
-  /// **'New Chat'**
-  String get chat_new_chat;
-
-  /// Chat input placeholder
-  ///
-  /// In en, this message translates to:
-  /// **'Type your message...'**
-  String get chat_type_message_hint;
-
-  /// AI thinking indicator
-  ///
-  /// In en, this message translates to:
-  /// **'AI is thinking...'**
-  String get chat_ai_thinking;
-
-  /// Send message button
-  ///
-  /// In en, this message translates to:
-  /// **'Send'**
-  String get chat_send_message;
-
-  /// Clear chat history button
-  ///
-  /// In en, this message translates to:
-  /// **'Clear History'**
-  String get chat_clear_history;
-
-  /// Clear history confirmation
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to clear all chat history?'**
-  String get chat_confirm_clear;
-
-  /// Empty chat state
-  ///
-  /// In en, this message translates to:
-  /// **'No messages yet'**
-  String get chat_no_messages;
-
-  /// Conversation history section
-  ///
-  /// In en, this message translates to:
-  /// **'Conversation History'**
-  String get chat_conversation_history;
-
-  /// Today label for history
-  ///
-  /// In en, this message translates to:
-  /// **'Today'**
-  String get chat_today;
-
-  /// Yesterday label for history
-  ///
-  /// In en, this message translates to:
-  /// **'Yesterday'**
-  String get chat_yesterday;
-
-  /// This week label for history
-  ///
-  /// In en, this message translates to:
-  /// **'This Week'**
-  String get chat_this_week;
-
-  /// Older label for history
-  ///
-  /// In en, this message translates to:
-  /// **'Older'**
-  String get chat_older;
-
-  /// Assistant settings title
-  ///
-  /// In en, this message translates to:
-  /// **'Assistant Settings'**
-  String get assistant_settings;
-
-  /// AI model setting label
-  ///
-  /// In en, this message translates to:
-  /// **'AI Model'**
-  String get assistant_model;
-
-  /// Temperature setting label
-  ///
-  /// In en, this message translates to:
-  /// **'Temperature'**
-  String get assistant_temperature;
-
-  /// Max tokens setting label
-  ///
-  /// In en, this message translates to:
-  /// **'Max Tokens'**
-  String get assistant_max_tokens;
-
-  /// System prompt setting label
-  ///
-  /// In en, this message translates to:
-  /// **'System Prompt'**
-  String get assistant_system_prompt;
-
-  /// Temperature description
-  ///
-  /// In en, this message translates to:
-  /// **'Controls randomness in responses'**
-  String get assistant_temperature_desc;
-
-  /// Max tokens description
-  ///
-  /// In en, this message translates to:
-  /// **'Maximum length of response'**
-  String get assistant_max_tokens_desc;
-
-  /// Podcast subscriptions page title
-  ///
-  /// In en, this message translates to:
-  /// **'Podcast Subscriptions'**
-  String get podcast_subscriptions;
-
-  /// My subscriptions section
-  ///
-  /// In en, this message translates to:
-  /// **'My Subscriptions'**
-  String get podcast_my_subscriptions;
-
   /// Subscriptions label (without "My")
   ///
   /// In en, this message translates to:
   /// **'Subscriptions'**
   String get profile_subscriptions;
-
-  /// Feed URL field label
-  ///
-  /// In en, this message translates to:
-  /// **'Feed URL'**
-  String get podcast_feed_url;
-
-  /// Feed URL placeholder
-  ///
-  /// In en, this message translates to:
-  /// **'Enter podcast feed URL'**
-  String get podcast_enter_feed_url;
-
-  /// Invalid URL error
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter a valid URL'**
-  String get podcast_invalid_url;
 
   /// Episodes label
   ///
@@ -656,23 +464,11 @@ abstract class AppLocalizations {
   /// **'Unknown Author'**
   String get podcast_unknown_author;
 
-  /// Latest episodes section
-  ///
-  /// In en, this message translates to:
-  /// **'Latest Episodes'**
-  String get podcast_latest_episodes;
-
   /// No subscriptions state
   ///
   /// In en, this message translates to:
   /// **'No subscriptions yet'**
   String get podcast_no_subscriptions;
-
-  /// Add first podcast prompt
-  ///
-  /// In en, this message translates to:
-  /// **'Add your first podcast'**
-  String get podcast_add_first;
 
   /// Play button
   ///
@@ -680,89 +476,11 @@ abstract class AppLocalizations {
   /// **'Play'**
   String get podcast_play;
 
-  /// Pause button label
-  ///
-  /// In en, this message translates to:
-  /// **'Pause'**
-  String get podcast_pause;
-
-  /// Duration label
-  ///
-  /// In en, this message translates to:
-  /// **'Duration'**
-  String get podcast_duration;
-
-  /// Published date label
-  ///
-  /// In en, this message translates to:
-  /// **'Published'**
-  String get podcast_published;
-
-  /// AI Models page title
-  ///
-  /// In en, this message translates to:
-  /// **'AI Models'**
-  String get ai_models;
-
-  /// Available models section
-  ///
-  /// In en, this message translates to:
-  /// **'Available Models'**
-  String get ai_available_models;
-
-  /// Model name label
-  ///
-  /// In en, this message translates to:
-  /// **'Model Name'**
-  String get ai_model_name;
-
-  /// Provider label
-  ///
-  /// In en, this message translates to:
-  /// **'Provider'**
-  String get ai_provider;
-
-  /// Model type label
-  ///
-  /// In en, this message translates to:
-  /// **'Model Type'**
-  String get ai_model_type;
-
-  /// Model details section
-  ///
-  /// In en, this message translates to:
-  /// **'Model Details'**
-  String get ai_model_details;
-
-  /// Select model button
-  ///
-  /// In en, this message translates to:
-  /// **'Select Model'**
-  String get ai_select_model;
-
-  /// Model selected message
-  ///
-  /// In en, this message translates to:
-  /// **'Model selected'**
-  String get ai_model_selected;
-
-  /// No models state
-  ///
-  /// In en, this message translates to:
-  /// **'No models available'**
-  String get ai_no_models;
-
   /// Home page title
   ///
   /// In en, this message translates to:
   /// **'Home'**
   String get home;
-
-  /// Navigation item: Assistant
-  ///
-  /// In en, this message translates to:
-  /// **'Assistant'**
-  String get nav_assistant;
 
   /// Navigation item: Feed
   ///
@@ -776,12 +494,6 @@ abstract class AppLocalizations {
   /// **'Discover'**
   String get nav_podcast;
 
-  /// Navigation item: Chat
-  ///
-  /// In en, this message translates to:
-  /// **'Chat'**
-  String get nav_chat;
-
   /// Navigation item: Profile
   ///
   /// In en, this message translates to:
@@ -793,12 +505,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Library'**
   String get podcast_feed_page_title;
-
-  /// Refresh feed button tooltip
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh Feed'**
-  String get podcast_refresh_feed;
 
   /// Add podcast button
   ///
@@ -842,23 +548,11 @@ abstract class AppLocalizations {
   /// **'Open daily report'**
   String get podcast_daily_report_open;
 
-  /// Short action text for opening daily report
-  ///
-  /// In en, this message translates to:
-  /// **'Open'**
-  String get podcast_daily_report_open_short;
-
   /// Subtitle text for the daily report entry in library feed
   ///
   /// In en, this message translates to:
   /// **'Review history and generate reports by date'**
   String get podcast_daily_report_entry_subtitle;
-
-  /// Button label for generating a daily report for selected date
-  ///
-  /// In en, this message translates to:
-  /// **'Generate report'**
-  String get podcast_daily_report_generate_previous_day;
 
   /// Success message after generating daily report
   ///
@@ -896,41 +590,17 @@ abstract class AppLocalizations {
   /// **'Generated'**
   String get podcast_daily_report_generated_prefix;
 
-  /// Tag for carryover items in daily report
-  ///
-  /// In en, this message translates to:
-  /// **'Carryover'**
-  String get podcast_daily_report_carryover;
-
   /// Daily report total item count label
   ///
   /// In en, this message translates to:
   /// **'{count} items'**
   String podcast_daily_report_items(int count);
 
-  /// Bookmark button
-  ///
-  /// In en, this message translates to:
-  /// **'Bookmark'**
-  String get podcast_bookmark;
-
-  /// Share button
-  ///
-  /// In en, this message translates to:
-  /// **'Share'**
-  String get podcast_share;
-
   /// Share selected text as image action
   ///
   /// In en, this message translates to:
   /// **'Share as Image'**
   String get podcast_share_as_image;
-
-  /// Save generated share image
-  ///
-  /// In en, this message translates to:
-  /// **'Save as Image'**
-  String get podcast_save_as_image;
 
   /// Image save success message
   ///
@@ -998,30 +668,6 @@ abstract class AppLocalizations {
   /// **'Podcast'**
   String get podcast_default_podcast;
 
-  /// Navigation item: AI Models
-  ///
-  /// In en, this message translates to:
-  /// **'AI Models'**
-  String get nav_ai_models;
-
-  /// Navigation item: Settings
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get nav_settings;
-
-  /// Required field validation
-  ///
-  /// In en, this message translates to:
-  /// **'This field is required'**
-  String get validation_required;
-
-  /// Invalid email validation
-  ///
-  /// In en, this message translates to:
-  /// **'Invalid email format'**
-  String get validation_invalid_email;
-
   /// Invalid URL validation
   ///
   /// In en, this message translates to:
@@ -1034,41 +680,11 @@ abstract class AppLocalizations {
   /// **'Too short'**
   String get validation_too_short;
 
-  /// Too long validation
-  ///
-  /// In en, this message translates to:
-  /// **'Too long'**
-  String get validation_too_long;
-
-  /// Network error message
-  ///
-  /// In en, this message translates to:
-  /// **'Network error. Please check your connection.'**
-  String get network_error;
-
-  /// Server error message
-  ///
-  /// In en, this message translates to:
-  /// **'Server error. Please try again later.'**
-  String get server_error;
-
   /// Unknown error message
   ///
   /// In en, this message translates to:
   /// **'An unknown error occurred'**
   String get unknown_error;
-
-  /// Request timeout message
-  ///
-  /// In en, this message translates to:
-  /// **'Request timeout. Please try again.'**
-  String get request_timeout;
-
-  /// Unauthorized error message
-  ///
-  /// In en, this message translates to:
-  /// **'Unauthorized. Please login again.'**
-  String get unauthorized;
 
   /// Forbidden error message
   ///
@@ -1076,41 +692,17 @@ abstract class AppLocalizations {
   /// **'Access denied'**
   String get forbidden;
 
-  /// Not found error message
-  ///
-  /// In en, this message translates to:
-  /// **'Resource not found'**
-  String get not_found;
-
-  /// Session expired message
-  ///
-  /// In en, this message translates to:
-  /// **'Session expired. Please login again.'**
-  String get session_expired;
-
   /// Generic success message
   ///
   /// In en, this message translates to:
   /// **'Action completed successfully'**
   String get action_completed;
 
-  /// Generic failure message
-  ///
-  /// In en, this message translates to:
-  /// **'Action failed'**
-  String get action_failed;
-
   /// Delete confirmation title
   ///
   /// In en, this message translates to:
   /// **'Delete Item'**
   String get delete_confirm_title;
-
-  /// Delete confirmation message
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete this item? This action cannot be undone.'**
-  String get delete_confirm_message;
 
   /// No data state message
   ///
@@ -1124,35 +716,11 @@ abstract class AppLocalizations {
   /// **'Pull to refresh'**
   String get pull_to_refresh;
 
-  /// Release to refresh hint
-  ///
-  /// In en, this message translates to:
-  /// **'Release to refresh'**
-  String get release_to_refresh;
-
   /// Refreshing message
   ///
   /// In en, this message translates to:
   /// **'Refreshing...'**
   String get refreshing;
-
-  /// Empty list message
-  ///
-  /// In en, this message translates to:
-  /// **'No items to display'**
-  String get empty_list;
-
-  /// No search results message
-  ///
-  /// In en, this message translates to:
-  /// **'No results found'**
-  String get no_results;
-
-  /// Different search suggestion
-  ///
-  /// In en, this message translates to:
-  /// **'Try a different search term'**
-  String get try_different_search;
 
   /// Podcasts page title
   ///
@@ -1160,35 +728,11 @@ abstract class AppLocalizations {
   /// **'Podcasts'**
   String get podcast_title;
 
-  /// Discover new podcasts section title
-  ///
-  /// In en, this message translates to:
-  /// **'Discover New'**
-  String get podcast_discover_new;
-
-  /// No podcasts state
-  ///
-  /// In en, this message translates to:
-  /// **'No podcasts yet'**
-  String get podcast_no_podcasts;
-
   /// No description label
   ///
   /// In en, this message translates to:
   /// **'No description'**
   String get podcast_description;
-
-  /// Updated date prefix
-  ///
-  /// In en, this message translates to:
-  /// **'Updated:'**
-  String get podcast_updated;
-
-  /// Failed to load subscriptions error
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load subscriptions'**
-  String get podcast_failed_load_subscriptions;
 
   /// Unknown episode title
   ///
@@ -1376,59 +920,11 @@ abstract class AppLocalizations {
   /// **'Add Model'**
   String get ai_add_model;
 
-  /// Edit model button
-  ///
-  /// In en, this message translates to:
-  /// **'Edit Model'**
-  String get ai_edit_model;
-
-  /// Delete model button
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Model'**
-  String get ai_delete_model;
-
-  /// Test model button
-  ///
-  /// In en, this message translates to:
-  /// **'Test Model'**
-  String get ai_test_model;
-
-  /// Model name placeholder
-  ///
-  /// In en, this message translates to:
-  /// **'e.g., GPT-4'**
-  String get ai_model_name_placeholder;
-
-  /// Provider name field
-  ///
-  /// In en, this message translates to:
-  /// **'Provider Name'**
-  String get ai_provider_name;
-
   /// API Key field
   ///
   /// In en, this message translates to:
   /// **'API Key'**
   String get ai_api_key;
-
-  /// API Base URL field
-  ///
-  /// In en, this message translates to:
-  /// **'API Base URL'**
-  String get ai_api_base;
-
-  /// Enter model name validation
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter model name'**
-  String get ai_enter_model_name;
-
-  /// Enter provider validation
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter provider name'**
-  String get ai_enter_provider;
 
   /// Enter API key validation
   ///
@@ -1436,59 +932,11 @@ abstract class AppLocalizations {
   /// **'Please enter API key'**
   String get ai_enter_api_key;
 
-  /// No models state
-  ///
-  /// In en, this message translates to:
-  /// **'No AI models configured'**
-  String get ai_no_models_configured;
-
-  /// Add first model prompt
-  ///
-  /// In en, this message translates to:
-  /// **'Add your first AI model'**
-  String get ai_add_first_model;
-
-  /// Model added success
-  ///
-  /// In en, this message translates to:
-  /// **'Model added successfully'**
-  String get ai_model_added;
-
-  /// Model updated success
-  ///
-  /// In en, this message translates to:
-  /// **'Model updated successfully'**
-  String get ai_model_updated;
-
-  /// Model deleted success
-  ///
-  /// In en, this message translates to:
-  /// **'Model deleted successfully'**
-  String get ai_model_deleted;
-
   /// Confirm delete model
   ///
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this model?'**
   String get ai_confirm_delete_model;
-
-  /// Test prompt placeholder
-  ///
-  /// In en, this message translates to:
-  /// **'Test prompt'**
-  String get ai_test_prompt;
-
-  /// Send test button
-  ///
-  /// In en, this message translates to:
-  /// **'Send Test'**
-  String get ai_send_test;
-
-  /// Test response label
-  ///
-  /// In en, this message translates to:
-  /// **'Test Response'**
-  String get ai_test_response;
 
   /// Create model dialog title
   ///
@@ -1664,18 +1112,6 @@ abstract class AppLocalizations {
   /// **'Please log in'**
   String get profile_please_login;
 
-  /// Premium badge label
-  ///
-  /// In en, this message translates to:
-  /// **'Premium'**
-  String get profile_premium;
-
-  /// Verified badge label
-  ///
-  /// In en, this message translates to:
-  /// **'Verified'**
-  String get profile_verified;
-
   /// Account settings section
   ///
   /// In en, this message translates to:
@@ -1687,12 +1123,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit Profile'**
   String get profile_edit_profile;
-
-  /// Edit profile subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Update your personal information'**
-  String get profile_edit_profile_subtitle;
 
   /// Security settings
   ///
@@ -1718,29 +1148,11 @@ abstract class AppLocalizations {
   /// **'Push notifications and email alerts'**
   String get profile_notifications_subtitle;
 
-  /// Dark mode toggle
-  ///
-  /// In en, this message translates to:
-  /// **'Dark Mode'**
-  String get profile_dark_mode;
-
-  /// Dark mode subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Toggle dark theme'**
-  String get profile_dark_mode_subtitle;
-
   /// Auto sync toggle
   ///
   /// In en, this message translates to:
   /// **'Auto Sync'**
   String get profile_auto_sync;
-
-  /// Auto sync subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Automatically sync data across devices'**
-  String get profile_auto_sync_subtitle;
 
   /// Help center title
   ///
@@ -1772,12 +1184,6 @@ abstract class AppLocalizations {
   /// **'View and clear images, audio, and other cached data'**
   String get profile_cache_management_subtitle;
 
-  /// Clear cache subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Clear images, audio, and other cached data'**
-  String get profile_clear_cache_subtitle;
-
   /// Clear cache confirm message
   ///
   /// In en, this message translates to:
@@ -1808,12 +1214,6 @@ abstract class AppLocalizations {
   /// **'Storage & Cache'**
   String get profile_cache_manage_title;
 
-  /// Cache management total label
-  ///
-  /// In en, this message translates to:
-  /// **'Total'**
-  String get profile_cache_manage_total;
-
   /// Cache management total used title
   ///
   /// In en, this message translates to:
@@ -1838,35 +1238,11 @@ abstract class AppLocalizations {
   /// **'Other'**
   String get profile_cache_manage_other;
 
-  /// Cache management items and size summary
-  ///
-  /// In en, this message translates to:
-  /// **'{count} items · {size}'**
-  String profile_cache_manage_items_and_size(int count, String size);
-
   /// Cache management item count
   ///
   /// In en, this message translates to:
   /// **'{count} items'**
   String profile_cache_manage_item_count(int count);
-
-  /// Cache management delete selected button
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Selected'**
-  String get profile_cache_manage_delete_selected;
-
-  /// Cache management clear all button
-  ///
-  /// In en, this message translates to:
-  /// **'Clear All'**
-  String get profile_cache_manage_clear_all;
-
-  /// Cache management select category first message
-  ///
-  /// In en, this message translates to:
-  /// **'Select at least one category'**
-  String get profile_cache_manage_select_category_first;
 
   /// Cache management details header
   ///
@@ -2000,47 +1376,11 @@ abstract class AppLocalizations {
   /// **'Logged out successfully'**
   String get profile_logged_out;
 
-  /// Error loading profile message
-  ///
-  /// In en, this message translates to:
-  /// **'Error loading profile'**
-  String get profile_error_loading;
-
-  /// Settings saved success message
-  ///
-  /// In en, this message translates to:
-  /// **'Settings saved successfully!'**
-  String get settings_saved_successfully;
-
-  /// AI Text Generation Model section
-  ///
-  /// In en, this message translates to:
-  /// **'AI Text Generation Model'**
-  String get settings_ai_text_generation;
-
-  /// Config label
-  ///
-  /// In en, this message translates to:
-  /// **'Config'**
-  String get settings_config;
-
-  /// Add new config option
-  ///
-  /// In en, this message translates to:
-  /// **'Add New...'**
-  String get settings_add_new;
-
   /// Edit config tooltip
   ///
   /// In en, this message translates to:
   /// **'Edit Config'**
   String get settings_edit_config;
-
-  /// Delete config tooltip
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Config'**
-  String get settings_delete_config;
 
   /// Test connection button
   ///
@@ -2048,299 +1388,11 @@ abstract class AppLocalizations {
   /// **'Test Connection'**
   String get settings_test_connection;
 
-  /// API Base URL label
-  ///
-  /// In en, this message translates to:
-  /// **'API Base URL'**
-  String get settings_api_base_url;
-
-  /// AI model info message
-  ///
-  /// In en, this message translates to:
-  /// **'This model will be used for AI tasks. Select or create a configuration above.'**
-  String get settings_model_info_ai_tasks;
-
-  /// Audio Transcription Model section
-  ///
-  /// In en, this message translates to:
-  /// **'Audio Transcription Model'**
-  String get settings_audio_transcription;
-
-  /// API URL label
-  ///
-  /// In en, this message translates to:
-  /// **'API URL'**
-  String get settings_api_url;
-
-  /// Transcription API key hint
-  ///
-  /// In en, this message translates to:
-  /// **'Enter your transcription API key'**
-  String get settings_transcription_api_key_hint;
-
-  /// Transcription model info message
-  ///
-  /// In en, this message translates to:
-  /// **'This model will be used for transcribing podcast audio to text.'**
-  String get settings_model_info_transcription;
-
-  /// Processing Settings section
-  ///
-  /// In en, this message translates to:
-  /// **'Processing Settings'**
-  String get settings_processing;
-
-  /// Audio chunk size label
-  ///
-  /// In en, this message translates to:
-  /// **'Audio Chunk Size'**
-  String get settings_audio_chunk_size;
-
-  /// MB per chunk label
-  ///
-  /// In en, this message translates to:
-  /// **'{mb}MB per chunk'**
-  String settings_mb_per_chunk(Object mb);
-
-  /// Max concurrent threads label
-  ///
-  /// In en, this message translates to:
-  /// **'Max Concurrent Threads'**
-  String get settings_max_threads;
-
-  /// Threads label
-  ///
-  /// In en, this message translates to:
-  /// **'{threads} threads'**
-  String settings_threads(Object threads);
-
-  /// RSS Subscription Settings section
-  ///
-  /// In en, this message translates to:
-  /// **'RSS Subscription Settings'**
-  String get settings_rss_subscription;
-
-  /// RSS Schedule Configuration option
-  ///
-  /// In en, this message translates to:
-  /// **'RSS Schedule Configuration'**
-  String get settings_rss_schedule_config;
-
-  /// RSS schedule subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'Manage update frequency and schedule for all RSS subscriptions'**
-  String get settings_rss_schedule_subtitle;
-
-  /// App version label
-  ///
-  /// In en, this message translates to:
-  /// **'App Version'**
-  String get settings_app_version;
-
-  /// Backend API Documentation option
-  ///
-  /// In en, this message translates to:
-  /// **'Backend API Documentation'**
-  String get settings_backend_api_docs;
-
-  /// Backend API docs subtitle
-  ///
-  /// In en, this message translates to:
-  /// **'View API docs and endpoints'**
-  String get settings_backend_api_docs_subtitle;
-
-  /// API Documentation dialog title
-  ///
-  /// In en, this message translates to:
-  /// **'API Documentation'**
-  String get settings_api_documentation;
-
-  /// Text Generation endpoint name
-  ///
-  /// In en, this message translates to:
-  /// **'Text Generation'**
-  String get settings_text_generation;
-
-  /// Transcription endpoint name
-  ///
-  /// In en, this message translates to:
-  /// **'Transcription'**
-  String get settings_transcription_endpoint;
-
-  /// Settings endpoint name
-  ///
-  /// In en, this message translates to:
-  /// **'Settings'**
-  String get settings_user_settings_endpoint;
-
-  /// Config env vars label
-  ///
-  /// In en, this message translates to:
-  /// **'Configuration Environment Variables:'**
-  String get settings_config_env_vars;
-
-  /// OpenAI API key env var
-  ///
-  /// In en, this message translates to:
-  /// **'OpenAI API key'**
-  String get settings_openai_api_key;
-
-  /// API base URL env var
-  ///
-  /// In en, this message translates to:
-  /// **'API base URL'**
-  String get settings_openai_api_base_url;
-
-  /// Transcription API URL env var
-  ///
-  /// In en, this message translates to:
-  /// **'Transcription API URL'**
-  String get settings_transcription_api_url;
-
-  /// Transcription API key env var
-  ///
-  /// In en, this message translates to:
-  /// **'Transcription API key'**
-  String get settings_transcription_api_key_env;
-
-  /// Transcription model name env var
-  ///
-  /// In en, this message translates to:
-  /// **'Transcription model name'**
-  String get settings_transcription_model_name;
-
-  /// Summary model name env var
-  ///
-  /// In en, this message translates to:
-  /// **'AI summary model name'**
-  String get settings_summary_model;
-
-  /// Enter API URL validation
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter API URL'**
-  String get settings_enter_api_url;
-
-  /// Enter API Key validation
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter API Key'**
-  String get settings_enter_api_key;
-
-  /// Enter Model Name validation
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter Model Name'**
-  String get settings_enter_model_name_validation;
-
   /// Testing connection message
   ///
   /// In en, this message translates to:
   /// **'Testing connection...'**
   String get settings_testing_connection;
-
-  /// Connection successful title
-  ///
-  /// In en, this message translates to:
-  /// **'Connection Successful'**
-  String get settings_connection_successful;
-
-  /// Connection failed title
-  ///
-  /// In en, this message translates to:
-  /// **'Connection Failed'**
-  String get settings_connection_failed;
-
-  /// Response time label
-  ///
-  /// In en, this message translates to:
-  /// **'Response Time: {ms}ms'**
-  String settings_response_time(Object ms);
-
-  /// Test response label
-  ///
-  /// In en, this message translates to:
-  /// **'Test Response:'**
-  String get settings_test_response;
-
-  /// Error message label
-  ///
-  /// In en, this message translates to:
-  /// **'Error Message:'**
-  String get settings_error_message;
-
-  /// Unknown error message
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown error occurred'**
-  String get settings_unknown_error;
-
-  /// Connection error title
-  ///
-  /// In en, this message translates to:
-  /// **'Connection Error'**
-  String get settings_connection_error;
-
-  /// Unexpected error message
-  ///
-  /// In en, this message translates to:
-  /// **'An unexpected error occurred:'**
-  String get settings_unexpected_error;
-
-  /// Delete confirm title
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm Delete'**
-  String get settings_delete_confirm_title;
-
-  /// Delete confirm message
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete model \"{name}\"? This will affect all features using this model.'**
-  String settings_delete_confirm_message(Object name);
-
-  /// Model deleted message
-  ///
-  /// In en, this message translates to:
-  /// **'Model \"{name}\" deleted'**
-  String settings_model_deleted(Object name);
-
-  /// Delete failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Delete failed'**
-  String get settings_delete_failed_msg;
-
-  /// Model enabled/disabled message
-  ///
-  /// In en, this message translates to:
-  /// **'Model {status}'**
-  String settings_model_enabled_disabled(Object status);
-
-  /// Operation failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Operation failed'**
-  String get settings_operation_failed_msg;
-
-  /// Set default success message
-  ///
-  /// In en, this message translates to:
-  /// **'Set \"{name}\" as default model'**
-  String settings_set_default_success(Object name);
-
-  /// Set default failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to set as default model'**
-  String get settings_set_default_failed_msg;
-
-  /// Load models failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load models: {error}'**
-  String settings_load_models_failed(Object error);
 
   /// Invalid navigation arguments error
   ///
@@ -2432,29 +1484,11 @@ abstract class AppLocalizations {
   /// **'No history'**
   String get server_history_empty;
 
-  /// Connection success message
-  ///
-  /// In en, this message translates to:
-  /// **'Connected Successfully'**
-  String get connected_successfully;
-
   /// Save failed error message
   ///
   /// In en, this message translates to:
   /// **'Save failed: {error}'**
   String save_failed(Object error);
-
-  /// Restore defaults button label
-  ///
-  /// In en, this message translates to:
-  /// **'Restore Defaults'**
-  String get restore_defaults;
-
-  /// Restore defaults confirmation message
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to restore the default server address?'**
-  String get restore_defaults_confirmation;
 
   /// Restore defaults success message
   ///
@@ -2462,107 +1496,11 @@ abstract class AppLocalizations {
   /// **'Restored default server address'**
   String get restore_defaults_success;
 
-  /// Default server address label
-  ///
-  /// In en, this message translates to:
-  /// **'Default server address'**
-  String get default_server_address;
-
-  /// Message copied confirmation
-  ///
-  /// In en, this message translates to:
-  /// **'Message copied to clipboard'**
-  String get message_copied;
-
-  /// Regenerating response message
-  ///
-  /// In en, this message translates to:
-  /// **'Regenerating response...'**
-  String get regenerating_response;
-
-  /// Chat mode coming soon message
-  ///
-  /// In en, this message translates to:
-  /// **'Chat mode selector coming soon!'**
-  String get chat_mode_coming_soon;
-
-  /// Voice input coming soon message
-  ///
-  /// In en, this message translates to:
-  /// **'Voice input coming soon!'**
-  String get voice_input_coming_soon;
-
   /// Drop files hint
   ///
   /// In en, this message translates to:
   /// **'Drop files here!'**
   String get drop_files_here;
-
-  /// Set as default button label
-  ///
-  /// In en, this message translates to:
-  /// **'Set as default'**
-  String get set_as_default;
-
-  /// Test content label
-  ///
-  /// In en, this message translates to:
-  /// **'Test Content'**
-  String get test_content;
-
-  /// Enter test content hint
-  ///
-  /// In en, this message translates to:
-  /// **'Enter test content...'**
-  String get enter_test_content;
-
-  /// Server configuration dialog title
-  ///
-  /// In en, this message translates to:
-  /// **'Server Configuration'**
-  String get server_config_title;
-
-  /// Server config description
-  ///
-  /// In en, this message translates to:
-  /// **'Enter API Base URL:'**
-  String get server_config_description;
-
-  /// Server URL hint text
-  ///
-  /// In en, this message translates to:
-  /// **'http://localhost:8000'**
-  String get server_config_hint;
-
-  /// Server config saved message
-  ///
-  /// In en, this message translates to:
-  /// **'Server URL updated. Please restart app if issues persist.'**
-  String get server_config_saved;
-
-  /// Floating player accessibility label
-  ///
-  /// In en, this message translates to:
-  /// **'Podcast playback control'**
-  String get floating_player_label;
-
-  /// Floating player tooltip
-  ///
-  /// In en, this message translates to:
-  /// **'Play/Pause - Long-press to open player'**
-  String get floating_player_tooltip;
-
-  /// Floating player navigation hint
-  ///
-  /// In en, this message translates to:
-  /// **'Long-press to open player'**
-  String get floating_player_nav_hint;
-
-  /// Title for bulk selection mode
-  ///
-  /// In en, this message translates to:
-  /// **'Select Podcasts'**
-  String get podcast_bulk_select_mode;
 
   /// Tooltip to enter selection mode
   ///
@@ -2575,12 +1513,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Deselect All'**
   String get podcast_deselect_all;
-
-  /// Bulk delete action label
-  ///
-  /// In en, this message translates to:
-  /// **'Bulk Delete'**
-  String get podcast_bulk_delete;
 
   /// Selected count label
   ///
@@ -2611,42 +1543,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete'**
   String get podcast_bulk_delete_confirm;
-
-  /// Bulk delete success message
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1{1 podcast} other{{count} podcasts}} deleted successfully'**
-  String podcast_bulk_delete_success(int count);
-
-  /// Bulk delete partial success message
-  ///
-  /// In en, this message translates to:
-  /// **'{successCount} deleted, {failedCount} failed'**
-  String podcast_bulk_delete_partial_success(int successCount, int failedCount);
-
-  /// Bulk delete failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Delete failed: {error}'**
-  String podcast_bulk_delete_failed(String error);
-
-  /// View errors button label
-  ///
-  /// In en, this message translates to:
-  /// **'View Errors'**
-  String get podcast_view_errors;
-
-  /// Bulk delete errors dialog title
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Errors'**
-  String get podcast_bulk_delete_errors_title;
-
-  /// Dismiss button label
-  ///
-  /// In en, this message translates to:
-  /// **'Dismiss'**
-  String get dismiss;
 
   /// Check for updates button/label
   ///
@@ -2725,18 +1621,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Check Failed'**
   String get update_check_failed;
-
-  /// Current version label
-  ///
-  /// In en, this message translates to:
-  /// **'Current Version'**
-  String get update_current_version;
-
-  /// Update available description message
-  ///
-  /// In en, this message translates to:
-  /// **'A new version is available. Would you like to update now?'**
-  String get update_available_description;
 
   /// App is up to date message
   ///
@@ -3056,47 +1940,11 @@ abstract class AppLocalizations {
   /// **'Subscribe Podcast'**
   String get feed_subscribe_podcast;
 
-  /// Xiaoyuzhou platform name
-  ///
-  /// In en, this message translates to:
-  /// **'Xiaoyuzhou'**
-  String get podcast_platform_xiaoyuzhou;
-
-  /// Ximalaya platform name
-  ///
-  /// In en, this message translates to:
-  /// **'Ximalaya'**
-  String get podcast_platform_ximalaya;
-
   /// No show notes message
   ///
   /// In en, this message translates to:
   /// **'No show notes available'**
   String get podcast_no_shownotes;
-
-  /// Copy shownotes button label
-  ///
-  /// In en, this message translates to:
-  /// **'Copy'**
-  String get podcast_copy_shownotes;
-
-  /// Shownotes copied success message
-  ///
-  /// In en, this message translates to:
-  /// **'Shownotes copied to clipboard'**
-  String get podcast_shownotes_copied;
-
-  /// Unknown error message
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown error'**
-  String get podcast_unknown_error;
-
-  /// No search match message
-  ///
-  /// In en, this message translates to:
-  /// **'No matching content found'**
-  String get podcast_no_match_found;
 
   /// No transcript message
   ///
@@ -3110,35 +1958,11 @@ abstract class AppLocalizations {
   /// **'Click \"Start Transcription\" to generate transcript'**
   String get podcast_click_to_transcribe;
 
-  /// Conversation tab label
-  ///
-  /// In en, this message translates to:
-  /// **'Conversation'**
-  String get podcast_conversation;
-
-  /// Transcription waiting status
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting to start'**
-  String get podcast_transcription_waiting;
-
-  /// Transcription completed status
-  ///
-  /// In en, this message translates to:
-  /// **'Completed'**
-  String get podcast_transcription_completed;
-
   /// Transcription failed status
   ///
   /// In en, this message translates to:
   /// **'Failed'**
   String get podcast_transcription_failed;
-
-  /// Unknown transcription status
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown status'**
-  String get podcast_unknown_status;
 
   /// Date format pattern
   ///
@@ -3158,12 +1982,6 @@ abstract class AppLocalizations {
   /// **'Discover'**
   String get podcast_discover_title;
 
-  /// Search hint on podcast discover page
-  ///
-  /// In en, this message translates to:
-  /// **'Search podcasts & episodes...'**
-  String get podcast_discover_search_hint;
-
   /// Top charts section title on podcast discover page
   ///
   /// In en, this message translates to:
@@ -3182,12 +2000,6 @@ abstract class AppLocalizations {
   /// **'See All'**
   String get podcast_discover_see_all;
 
-  /// Collapse button text on podcast discover charts
-  ///
-  /// In en, this message translates to:
-  /// **'Collapse'**
-  String get podcast_discover_collapse;
-
   /// Empty state text when discover charts are unavailable
   ///
   /// In en, this message translates to:
@@ -3200,23 +2012,11 @@ abstract class AppLocalizations {
   /// **'Browse by Category'**
   String get podcast_discover_browse_by_category;
 
-  /// Error message shown when opening Apple Podcasts link fails
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to open link'**
-  String get podcast_discover_open_link_failed;
-
   /// Country selector label
   ///
   /// In en, this message translates to:
   /// **'Country/Region'**
   String get podcast_country_label;
-
-  /// Empty search state hint message
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a podcast or episode name to search'**
-  String get podcast_search_empty_hint;
 
   /// Search loading message
   ///
@@ -3271,18 +2071,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to subscribe: {error}'**
   String podcast_subscribe_failed(String error);
-
-  /// Hint about network restrictions and VPN
-  ///
-  /// In en, this message translates to:
-  /// **'Network access to iTunes API may be restricted in some regions. Try using a VPN if connection fails.'**
-  String get podcast_network_hint;
-
-  /// VPN required message for iTunes API access
-  ///
-  /// In en, this message translates to:
-  /// **'Connection failed. iTunes API may be blocked in your region. Please try using a VPN.'**
-  String get podcast_vpn_required;
 
   /// Country name: China
   ///
@@ -3428,18 +2216,6 @@ abstract class AppLocalizations {
   /// **'Sleep Mode'**
   String get podcast_player_sleep_mode;
 
-  /// Download button tooltip in floating player
-  ///
-  /// In en, this message translates to:
-  /// **'Download'**
-  String get podcast_player_download;
-
-  /// Expand button tooltip in collapsed floating player
-  ///
-  /// In en, this message translates to:
-  /// **'Expand'**
-  String get podcast_player_expand;
-
   /// Play button tooltip in floating player
   ///
   /// In en, this message translates to:
@@ -3463,12 +2239,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Forward 30s'**
   String get podcast_player_forward_30;
-
-  /// Playback speed selector tooltip
-  ///
-  /// In en, this message translates to:
-  /// **'Playback Speed'**
-  String get podcast_player_playback_speed;
 
   /// Play button label (short version for mobile)
   ///
@@ -3500,48 +2270,6 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get podcast_speed_done;
 
-  /// Current speed label
-  ///
-  /// In en, this message translates to:
-  /// **'Current Speed'**
-  String get podcast_speed_current_speed;
-
-  /// Speed selection label
-  ///
-  /// In en, this message translates to:
-  /// **'Select Speed'**
-  String get podcast_speed_select;
-
-  /// Speed feature 1: Quick Selection
-  ///
-  /// In en, this message translates to:
-  /// **'Quick Selection'**
-  String get podcast_speed_feature_1;
-
-  /// Speed feature 2: Precise Control
-  ///
-  /// In en, this message translates to:
-  /// **'Precise Control'**
-  String get podcast_speed_feature_2;
-
-  /// Speed feature 3: Ruler Scale
-  ///
-  /// In en, this message translates to:
-  /// **'Ruler Scale'**
-  String get podcast_speed_feature_3;
-
-  /// Speed feature 4: Instant Apply
-  ///
-  /// In en, this message translates to:
-  /// **'Instant Apply'**
-  String get podcast_speed_feature_4;
-
-  /// Speed feature 5: Smooth Experience
-  ///
-  /// In en, this message translates to:
-  /// **'Smooth Experience'**
-  String get podcast_speed_feature_5;
-
   /// Episode detail tab: Shownotes
   ///
   /// In en, this message translates to:
@@ -3572,30 +2300,6 @@ abstract class AppLocalizations {
   /// **'Auto-starting transcription...'**
   String get podcast_transcription_auto_starting;
 
-  /// Transcription starting message
-  ///
-  /// In en, this message translates to:
-  /// **'Starting transcription...'**
-  String get podcast_transcription_starting;
-
-  /// Transcription start button title
-  ///
-  /// In en, this message translates to:
-  /// **'Start Transcription'**
-  String get podcast_transcription_start_title;
-
-  /// Transcription start description
-  ///
-  /// In en, this message translates to:
-  /// **'Start transcribing this episode to generate text content and AI-powered summaries.'**
-  String get podcast_transcription_start_desc;
-
-  /// Transcription start button label
-  ///
-  /// In en, this message translates to:
-  /// **'Start Transcription'**
-  String get podcast_transcription_start_button;
-
   /// Conversation screen title
   ///
   /// In en, this message translates to:
@@ -3614,12 +2318,6 @@ abstract class AppLocalizations {
   /// **'Ask questions about this episode and get AI-powered answers based on the transcript.'**
   String get podcast_conversation_empty_hint;
 
-  /// Clear conversation history dialog title
-  ///
-  /// In en, this message translates to:
-  /// **'Clear Conversation History'**
-  String get podcast_conversation_clear_history;
-
   /// Chat history title
   ///
   /// In en, this message translates to:
@@ -3637,12 +2335,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to delete this chat? This action cannot be undone.'**
   String get podcast_conversation_delete_confirm;
-
-  /// Clear conversation confirmation message
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to clear all conversation history? This cannot be undone.'**
-  String get podcast_conversation_clear_confirm;
 
   /// Send message hint text
   ///
@@ -3740,12 +2432,6 @@ abstract class AppLocalizations {
   /// **'No summary available'**
   String get podcast_summary_empty_hint;
 
-  /// Filter refresh button label
-  ///
-  /// In en, this message translates to:
-  /// **'Refresh'**
-  String get podcast_filter_refresh;
-
   /// Please select time validation message
   ///
   /// In en, this message translates to:
@@ -3758,23 +2444,11 @@ abstract class AppLocalizations {
   /// **'Please select a time and day'**
   String get podcast_please_select_time_and_day;
 
-  /// Bulk import URLs extracted message with count
-  ///
-  /// In en, this message translates to:
-  /// **'Extracted {count} URLs from file'**
-  String podcast_bulk_import_urls_extracted(int count);
-
   /// Bulk import file error message
   ///
   /// In en, this message translates to:
   /// **'Failed to read file: {error}'**
   String podcast_bulk_import_file_error(String error);
-
-  /// Bulk import success message with count
-  ///
-  /// In en, this message translates to:
-  /// **'Successfully imported {count} podcasts'**
-  String podcast_bulk_import_success(int count);
 
   /// Bulk import input tab label for text input
   ///
@@ -3943,12 +2617,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied: {text}'**
   String podcast_copied(String text);
-
-  /// Generic label text
-  ///
-  /// In en, this message translates to:
-  /// **'Label'**
-  String get podcast_bulk_import_label;
 
   /// URL hint text in text field
   ///
@@ -4562,18 +3230,6 @@ abstract class AppLocalizations {
   /// **'Failed to update subscriptions'**
   String get global_rss_failed_update;
 
-  /// Title for playback speed selector sheet
-  ///
-  /// In en, this message translates to:
-  /// **'Playback Speed'**
-  String get playback_speed_title;
-
-  /// Android notification channel name for podcast playback
-  ///
-  /// In en, this message translates to:
-  /// **'Podcast Playback'**
-  String get podcast_notification_channel;
-
   /// Page not found error title
   ///
   /// In en, this message translates to:
@@ -4682,66 +3338,6 @@ abstract class AppLocalizations {
   /// **'Authentication Test'**
   String get auth_test_page_title;
 
-  /// Email label with value
-  ///
-  /// In en, this message translates to:
-  /// **'Email: {email}'**
-  String email_label(String email);
-
-  /// Username label with value
-  ///
-  /// In en, this message translates to:
-  /// **'Username: {username}'**
-  String username_label(String username);
-
-  /// Display name label with value
-  ///
-  /// In en, this message translates to:
-  /// **'Display Name: {displayName}'**
-  String display_name_label(String displayName);
-
-  /// Verified label with value
-  ///
-  /// In en, this message translates to:
-  /// **'Verified: {isVerified}'**
-  String verified_label(String isVerified);
-
-  /// Message shown when user is not logged in
-  ///
-  /// In en, this message translates to:
-  /// **'User: Not logged in'**
-  String get user_not_logged_in;
-
-  /// Current operation label with value
-  ///
-  /// In en, this message translates to:
-  /// **'Current Operation: {operation}'**
-  String current_operation_label(String operation);
-
-  /// Short login button label
-  ///
-  /// In en, this message translates to:
-  /// **'Login'**
-  String get login_button_short;
-
-  /// Short register button label
-  ///
-  /// In en, this message translates to:
-  /// **'Register'**
-  String get register_button_short;
-
-  /// Base URL label with value
-  ///
-  /// In en, this message translates to:
-  /// **'Base URL: {url}'**
-  String base_url_label(String url);
-
-  /// Endpoints label
-  ///
-  /// In en, this message translates to:
-  /// **'Endpoints:'**
-  String get endpoints_label;
-
   /// Authentication verification page title
   ///
   /// In en, this message translates to:
@@ -4838,23 +3434,11 @@ abstract class AppLocalizations {
   /// **'Add to queue'**
   String get podcast_add_to_queue;
 
-  /// Fallback podcast name when title is empty
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown Podcast'**
-  String get podcast_unknown_podcast;
-
   /// Fallback episode title when name is empty
   ///
   /// In en, this message translates to:
   /// **'Unknown Episode'**
   String get episode_unknown_title;
-
-  /// Episode details section header
-  ///
-  /// In en, this message translates to:
-  /// **'Episode Details'**
-  String get episode_details;
 
   /// Transcription status: waiting to start
   ///
@@ -4898,18 +3482,6 @@ abstract class AppLocalizations {
   /// **'Failed'**
   String get transcription_status_failed;
 
-  /// Player state when no media is loaded
-  ///
-  /// In en, this message translates to:
-  /// **'No media'**
-  String get player_no_media;
-
-  /// Audio playback channel name for notifications
-  ///
-  /// In en, this message translates to:
-  /// **'Audio Playback'**
-  String get player_audio_playback;
-
   /// AI model type: transcription
   ///
   /// In en, this message translates to:
@@ -4940,35 +3512,11 @@ abstract class AppLocalizations {
   /// **'Support'**
   String get profile_support_section;
 
-  /// Generic unknown Dio error message
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown Dio error'**
-  String get error_unknown_dio;
-
   /// Conjunction 'and' for linking terms
   ///
   /// In en, this message translates to:
   /// **' and '**
   String get auth_and;
-
-  /// Email input hint
-  ///
-  /// In en, this message translates to:
-  /// **'Enter email'**
-  String get auth_enter_email_hint;
-
-  /// Validation error for empty email
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter email'**
-  String get auth_enter_email_error;
-
-  /// Validation error for invalid email format
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter a valid email'**
-  String get auth_invalid_email;
 
   /// API key input hint when editing
   ///

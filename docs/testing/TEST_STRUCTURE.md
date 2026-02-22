@@ -11,20 +11,16 @@ backend/
 │   │
 │   ├── core/                    ← 核心基础设施测试
 │   │   ├── __init__.py
-│   │   ├── QUICK_CHECK.py       ← 快速验证 (已移动)
 │   │   └── test_final_deploy.py ← 最终部署检查 (已移动)
 │   │
 │   ├── podcast/                 ← 播客功能测试
 │   │   ├── __init__.py
-│   │   ├── test_podcast_workflow.py ← 工作流测试 (已移动)
 │   │   └── test_e2e_simulation.py   ← 端到端仿真 (已移动)
 │   │
 │   ├── integration/             ← 集成测试 (预留)
 │   │   └── __init__.py
 │   │
 │   ├── test_podcast_api.py      ← API端点测试
-│   ├── test_stage1.py           ← 阶段1测试
-│   ├── test_stage2.py           ← 阶段2测试
 │   └── test_fix.py              ← 修复验证
 │
 ├── [原根目录测试文件已全部移动至此]
@@ -41,17 +37,13 @@ backend/
 
 ### 2. **移动测试文件**
 **→ 移入 `tests/core/`：**
-- `QUICK_CHECK.py` → 验证基础设施完整
 - `test_final_deploy.py` → 最终部署检查
 
 **→ 移入 `tests/podcast/`：**
-- `test_podcast_workflow.py` → 播客完整工作流
 - `test_e2e_simulation.py` → 端到端仿真
 
 **→ 保留在 `tests/` 根目录 (便于快速访问)：**
 - `test_podcast_api.py` - API测试
-- `test_stage1.py` - 基础测试
-- `test_stage2.py` - 增强测试
 - `test_fix.py` - 修复验证
 
 ### 3. **创建运行器和文档**
@@ -113,7 +105,7 @@ uv run pytest tests/podcast/ -v
 uv run pytest tests/core/ -v
 
 # 运行特定测试文件
-uv run python tests/podcast/test_podcast_workflow.py
+uv run pytest tests/podcast/test_e2e_simulation.py -v
 ```
 
 ##  📊 测试覆盖状态

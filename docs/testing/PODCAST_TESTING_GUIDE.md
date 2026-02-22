@@ -12,7 +12,6 @@ backend/
 ├── tests/podcast/
 │   ├── test_podcast_e2e_comprehensive.py    # 端到端测试
 │   ├── ../performance/test_api_performance.py # 性能测试
-│   └── test_podcast_workflow.py              # 工作流测试
 ├── app/domains/podcast/tests/
 │   ├── test_api.py                           # API单元测试
 │   ├── test_services.py                      # 服务层测试
@@ -28,7 +27,6 @@ frontend/
 │   ├── podcast_list_page_test.dart           # 列表页面测试
 │   ├── podcast_episodes_page_test.dart       # 单集页面测试
 │   ├── podcast_player_page_test.dart         # 播放器页面测试
-│   └── podcast_subscription_card_test.dart   # 订阅卡片测试
 ```
 
 ## 快速开始

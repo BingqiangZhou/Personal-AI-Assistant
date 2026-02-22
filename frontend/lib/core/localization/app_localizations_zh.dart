@@ -30,16 +30,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageChinese => '简体中文';
 
   @override
-  String get appPreferences => '应用偏好';
-
-  @override
   String get about => '关于';
 
   @override
   String get version => '版本';
-
-  @override
-  String get apiDocs => 'API 文档';
 
   @override
   String get profile => '个人资料';
@@ -49,9 +43,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get logout => '退出登录';
-
-  @override
-  String get confirmLogout => '确定要退出登录吗？';
 
   @override
   String get cancel => '取消';
@@ -108,13 +99,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ok => '确定';
 
   @override
-  String get yes => '是';
-
-  @override
   String get no => '否';
-
-  @override
-  String get welcome => '欢迎';
 
   @override
   String get auth_welcome_back => '天快亮了，我们开始吧。';
@@ -198,88 +183,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get auth_reset_email_sent => '密码重置邮件已发送';
 
   @override
-  String get login_failed => '登录失败';
-
-  @override
-  String get register_failed => '注册失败';
-
-  @override
-  String get logout_failed => '退出登录失败';
-
-  @override
-  String get chat_new_chat => '新对话';
-
-  @override
-  String get chat_type_message_hint => '输入您的消息...';
-
-  @override
-  String get chat_ai_thinking => 'AI 正在思考...';
-
-  @override
-  String get chat_send_message => '发送';
-
-  @override
-  String get chat_clear_history => '清空历史';
-
-  @override
-  String get chat_confirm_clear => '确定要清空所有聊天历史吗？';
-
-  @override
-  String get chat_no_messages => '暂无消息';
-
-  @override
-  String get chat_conversation_history => '对话历史';
-
-  @override
-  String get chat_today => '今天';
-
-  @override
-  String get chat_yesterday => '昨天';
-
-  @override
-  String get chat_this_week => '本周';
-
-  @override
-  String get chat_older => '更早';
-
-  @override
-  String get assistant_settings => '助手设置';
-
-  @override
-  String get assistant_model => 'AI 模型';
-
-  @override
-  String get assistant_temperature => '温度';
-
-  @override
-  String get assistant_max_tokens => '最大令牌数';
-
-  @override
-  String get assistant_system_prompt => '系统提示词';
-
-  @override
-  String get assistant_temperature_desc => '控制响应的随机性';
-
-  @override
-  String get assistant_max_tokens_desc => '响应的最大长度';
-
-  @override
-  String get podcast_subscriptions => '播客订阅';
-
-  @override
-  String get podcast_my_subscriptions => '我的订阅';
-
-  @override
   String get profile_subscriptions => '订阅';
-
-  @override
-  String get podcast_feed_url => '订阅源 URL';
-
-  @override
-  String get podcast_enter_feed_url => '输入播客订阅源 URL';
-
-  @override
-  String get podcast_invalid_url => '请输入有效的 URL';
 
   @override
   String get podcast_episodes => '单集';
@@ -288,58 +192,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_unknown_author => '未知作者';
 
   @override
-  String get podcast_latest_episodes => '最新剧集';
-
-  @override
   String get podcast_no_subscriptions => '还没有订阅';
-
-  @override
-  String get podcast_add_first => '添加您的第一个播客';
 
   @override
   String get podcast_play => '播放';
 
   @override
-  String get podcast_pause => '暂停';
-
-  @override
-  String get podcast_duration => '时长';
-
-  @override
-  String get podcast_published => '发布时间';
-
-  @override
-  String get ai_models => 'AI 模型';
-
-  @override
-  String get ai_available_models => '可用模型';
-
-  @override
-  String get ai_model_name => '模型名称';
-
-  @override
-  String get ai_provider => '提供商';
-
-  @override
-  String get ai_model_type => '模型类型';
-
-  @override
-  String get ai_model_details => '模型详情';
-
-  @override
-  String get ai_select_model => '选择模型';
-
-  @override
-  String get ai_model_selected => '模型已选择';
-
-  @override
-  String get ai_no_models => '没有可用模型';
-
-  @override
   String get home => '首页';
-
-  @override
-  String get nav_assistant => '助手';
 
   @override
   String get nav_feed => '资料库';
@@ -348,16 +207,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get nav_podcast => '发现';
 
   @override
-  String get nav_chat => '对话';
-
-  @override
   String get nav_profile => '个人资料';
 
   @override
   String get podcast_feed_page_title => '资料库';
-
-  @override
-  String get podcast_refresh_feed => '刷新信息流';
 
   @override
   String get podcast_add_podcast => '添加播客';
@@ -381,13 +234,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_daily_report_open => '打开日报';
 
   @override
-  String get podcast_daily_report_open_short => '进入';
-
-  @override
   String get podcast_daily_report_entry_subtitle => '查看历史并按日期生成日报';
-
-  @override
-  String get podcast_daily_report_generate_previous_day => '生成日报';
 
   @override
   String get podcast_daily_report_generate_success => '日报已生成';
@@ -408,24 +255,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_daily_report_generated_prefix => '生成于';
 
   @override
-  String get podcast_daily_report_carryover => '补入';
-
-  @override
   String podcast_daily_report_items(int count) {
     return '$count条';
   }
 
   @override
-  String get podcast_bookmark => '收藏';
-
-  @override
-  String get podcast_share => '分享';
-
-  @override
   String get podcast_share_as_image => '分享为图片';
-
-  @override
-  String get podcast_save_as_image => '保存为图片';
 
   @override
   String get podcast_save_image_success => '图片已保存';
@@ -463,61 +298,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_default_podcast => '播客';
 
   @override
-  String get nav_ai_models => 'AI 模型';
-
-  @override
-  String get nav_settings => '设置';
-
-  @override
-  String get validation_required => '此字段为必填项';
-
-  @override
-  String get validation_invalid_email => '无效的邮箱格式';
-
-  @override
   String get validation_invalid_url => '无效的 URL 格式';
 
   @override
   String get validation_too_short => '太短';
 
   @override
-  String get validation_too_long => '太长';
-
-  @override
-  String get network_error => '网络错误。请检查您的连接。';
-
-  @override
-  String get server_error => '服务器错误。请稍后重试。';
-
-  @override
   String get unknown_error => '发生未知错误';
-
-  @override
-  String get request_timeout => '请求超时。请重试。';
-
-  @override
-  String get unauthorized => '未授权。请重新登录。';
 
   @override
   String get forbidden => '访问被拒绝';
 
   @override
-  String get not_found => '未找到资源';
-
-  @override
-  String get session_expired => '会话已过期。请重新登录。';
-
-  @override
   String get action_completed => '操作成功完成';
 
   @override
-  String get action_failed => '操作失败';
-
-  @override
   String get delete_confirm_title => '删除项目';
-
-  @override
-  String get delete_confirm_message => '确定要删除此项目吗？此操作无法撤销。';
 
   @override
   String get no_data => '没有可用数据';
@@ -526,37 +322,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pull_to_refresh => '下拉刷新';
 
   @override
-  String get release_to_refresh => '释放以刷新';
-
-  @override
   String get refreshing => '刷新中...';
-
-  @override
-  String get empty_list => '没有可显示的项目';
-
-  @override
-  String get no_results => '未找到结果';
-
-  @override
-  String get try_different_search => '尝试不同的搜索词';
 
   @override
   String get podcast_title => '播客';
 
   @override
-  String get podcast_discover_new => '发现新播客';
-
-  @override
-  String get podcast_no_podcasts => '还没有播客';
-
-  @override
   String get podcast_description => '无描述';
-
-  @override
-  String get podcast_updated => '更新：';
-
-  @override
-  String get podcast_failed_load_subscriptions => '加载订阅失败';
 
   @override
   String get podcast_player_unknown_episode => '未知剧集';
@@ -652,61 +424,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ai_add_model => '添加模型';
 
   @override
-  String get ai_edit_model => '编辑模型';
-
-  @override
-  String get ai_delete_model => '删除模型';
-
-  @override
-  String get ai_test_model => '测试模型';
-
-  @override
-  String get ai_model_name_placeholder => '例如：GPT-4';
-
-  @override
-  String get ai_provider_name => '提供商名称';
-
-  @override
   String get ai_api_key => 'API 密钥';
-
-  @override
-  String get ai_api_base => 'API 基础 URL';
-
-  @override
-  String get ai_enter_model_name => '请输入模型名称';
-
-  @override
-  String get ai_enter_provider => '请输入提供商名称';
 
   @override
   String get ai_enter_api_key => '请输入 API 密钥';
 
   @override
-  String get ai_no_models_configured => '未配置 AI 模型';
-
-  @override
-  String get ai_add_first_model => '添加您的第一个 AI 模型';
-
-  @override
-  String get ai_model_added => '模型添加成功';
-
-  @override
-  String get ai_model_updated => '模型更新成功';
-
-  @override
-  String get ai_model_deleted => '模型删除成功';
-
-  @override
   String get ai_confirm_delete_model => '确定要删除此模型吗？';
-
-  @override
-  String get ai_test_prompt => '测试提示词';
-
-  @override
-  String get ai_send_test => '发送测试';
-
-  @override
-  String get ai_test_response => '测试响应';
 
   @override
   String get ai_create_model_config => '创建 AI 模型配置';
@@ -806,19 +530,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profile_please_login => '请先登录';
 
   @override
-  String get profile_premium => '高级会员';
-
-  @override
-  String get profile_verified => '已认证';
-
-  @override
   String get profile_account_settings => '账号设置';
 
   @override
   String get profile_edit_profile => '编辑个人资料';
-
-  @override
-  String get profile_edit_profile_subtitle => '更新您的个人信息';
 
   @override
   String get profile_security => '安全设置';
@@ -833,16 +548,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profile_notifications_subtitle => '推送通知和邮件提醒';
 
   @override
-  String get profile_dark_mode => '深色模式';
-
-  @override
-  String get profile_dark_mode_subtitle => '切换深色主题';
-
-  @override
   String get profile_auto_sync => '自动同步';
-
-  @override
-  String get profile_auto_sync_subtitle => '跨设备自动同步数据';
 
   @override
   String get profile_help_center => '帮助中心';
@@ -858,9 +564,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get profile_cache_management_subtitle => '查看并清理图片、音频等缓存数据';
-
-  @override
-  String get profile_clear_cache_subtitle => '清理图片、音频等缓存数据';
 
   @override
   String get profile_clear_cache_confirm => '将清理图片、音频以及接口缓存，是否继续？';
@@ -880,9 +583,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profile_cache_manage_title => '存储与缓存';
 
   @override
-  String get profile_cache_manage_total => '总计';
-
-  @override
   String get profile_cache_manage_total_used => '已使用';
 
   @override
@@ -895,23 +595,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profile_cache_manage_other => '其他';
 
   @override
-  String profile_cache_manage_items_and_size(int count, String size) {
-    return '$count 项 · $size';
-  }
-
-  @override
   String profile_cache_manage_item_count(int count) {
     return '$count 项';
   }
-
-  @override
-  String get profile_cache_manage_delete_selected => '删除所选';
-
-  @override
-  String get profile_cache_manage_clear_all => '清空全部';
-
-  @override
-  String get profile_cache_manage_select_category_first => '请至少选择一个分类';
 
   @override
   String get profile_cache_manage_details => '详情';
@@ -984,191 +670,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profile_logged_out => '已成功退出登录';
 
   @override
-  String get profile_error_loading => '加载个人资料失败';
-
-  @override
-  String get settings_saved_successfully => '设置保存成功！';
-
-  @override
-  String get settings_ai_text_generation => 'AI 文本生成模型';
-
-  @override
-  String get settings_config => '配置';
-
-  @override
-  String get settings_add_new => '添加新配置...';
-
-  @override
   String get settings_edit_config => '编辑配置';
-
-  @override
-  String get settings_delete_config => '删除配置';
 
   @override
   String get settings_test_connection => '测试连接';
 
   @override
-  String get settings_api_base_url => 'API 基础 URL';
-
-  @override
-  String get settings_model_info_ai_tasks => '此模型将用于 AI 任务。请在上方选择或创建配置。';
-
-  @override
-  String get settings_audio_transcription => '音频转录模型';
-
-  @override
-  String get settings_api_url => 'API URL';
-
-  @override
-  String get settings_transcription_api_key_hint => '输入您的转录 API 密钥';
-
-  @override
-  String get settings_model_info_transcription => '此模型将用于将播客音频转录为文本。';
-
-  @override
-  String get settings_processing => '处理设置';
-
-  @override
-  String get settings_audio_chunk_size => '音频分块大小';
-
-  @override
-  String settings_mb_per_chunk(Object mb) {
-    return '每块 ${mb}MB';
-  }
-
-  @override
-  String get settings_max_threads => '最大并发线程数';
-
-  @override
-  String settings_threads(Object threads) {
-    return '$threads 个线程';
-  }
-
-  @override
-  String get settings_rss_subscription => 'RSS 订阅设置';
-
-  @override
-  String get settings_rss_schedule_config => 'RSS 计划配置';
-
-  @override
-  String get settings_rss_schedule_subtitle => '管理所有 RSS 订阅的更新频率和计划';
-
-  @override
-  String get settings_app_version => '应用版本';
-
-  @override
-  String get settings_backend_api_docs => '后端 API 文档';
-
-  @override
-  String get settings_backend_api_docs_subtitle => '查看 API 文档和端点';
-
-  @override
-  String get settings_api_documentation => 'API 文档';
-
-  @override
-  String get settings_text_generation => '文本生成';
-
-  @override
-  String get settings_transcription_endpoint => '转录';
-
-  @override
-  String get settings_user_settings_endpoint => '设置';
-
-  @override
-  String get settings_config_env_vars => '配置环境变量：';
-
-  @override
-  String get settings_openai_api_key => 'OpenAI API 密钥';
-
-  @override
-  String get settings_openai_api_base_url => 'API 基础 URL';
-
-  @override
-  String get settings_transcription_api_url => '转录 API URL';
-
-  @override
-  String get settings_transcription_api_key_env => '转录 API 密钥';
-
-  @override
-  String get settings_transcription_model_name => '转录模型名称';
-
-  @override
-  String get settings_summary_model => 'AI 摘要模型名称';
-
-  @override
-  String get settings_enter_api_url => '请输入 API URL';
-
-  @override
-  String get settings_enter_api_key => '请输入 API 密钥';
-
-  @override
-  String get settings_enter_model_name_validation => '请输入模型名称';
-
-  @override
   String get settings_testing_connection => '正在测试连接...';
-
-  @override
-  String get settings_connection_successful => '连接成功';
-
-  @override
-  String get settings_connection_failed => '连接失败';
-
-  @override
-  String settings_response_time(Object ms) {
-    return '响应时间：$ms毫秒';
-  }
-
-  @override
-  String get settings_test_response => '测试响应：';
-
-  @override
-  String get settings_error_message => '错误消息：';
-
-  @override
-  String get settings_unknown_error => '发生未知错误';
-
-  @override
-  String get settings_connection_error => '连接错误';
-
-  @override
-  String get settings_unexpected_error => '发生意外错误：';
-
-  @override
-  String get settings_delete_confirm_title => '确认删除';
-
-  @override
-  String settings_delete_confirm_message(Object name) {
-    return '确定要删除模型 \"$name\" 吗？这将影响所有使用该模型的功能。';
-  }
-
-  @override
-  String settings_model_deleted(Object name) {
-    return '模型 \"$name\" 已删除';
-  }
-
-  @override
-  String get settings_delete_failed_msg => '删除失败';
-
-  @override
-  String settings_model_enabled_disabled(Object status) {
-    return '模型已$status';
-  }
-
-  @override
-  String get settings_operation_failed_msg => '操作失败';
-
-  @override
-  String settings_set_default_success(Object name) {
-    return '已将 \"$name\" 设为默认模型';
-  }
-
-  @override
-  String get settings_set_default_failed_msg => '设置默认模型失败';
-
-  @override
-  String settings_load_models_failed(Object error) {
-    return '加载模型失败：$error';
-  }
 
   @override
   String get invalid_navigation_arguments => '导航参数无效';
@@ -1217,81 +725,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get server_history_empty => '暂无历史记录';
 
   @override
-  String get connected_successfully => '连接成功';
-
-  @override
   String save_failed(Object error) {
     return '保存失败: $error';
   }
 
   @override
-  String get restore_defaults => '恢复默认';
-
-  @override
-  String get restore_defaults_confirmation => '确定要恢复为默认服务器地址吗？';
-
-  @override
   String get restore_defaults_success => '已恢复默认服务器地址';
 
   @override
-  String get default_server_address => '默认服务器地址';
-
-  @override
-  String get message_copied => '消息已复制到剪贴板';
-
-  @override
-  String get regenerating_response => '正在重新生成响应...';
-
-  @override
-  String get chat_mode_coming_soon => '聊天模式选择器即将推出！';
-
-  @override
-  String get voice_input_coming_soon => '语音输入即将推出！';
-
-  @override
   String get drop_files_here => '拖放文件到这里！';
-
-  @override
-  String get set_as_default => '设为默认';
-
-  @override
-  String get test_content => '测试内容';
-
-  @override
-  String get enter_test_content => '输入测试内容...';
-
-  @override
-  String get server_config_title => '服务器配置';
-
-  @override
-  String get server_config_description => '输入 API 基础 URL：';
-
-  @override
-  String get server_config_hint => 'http://localhost:8000';
-
-  @override
-  String get server_config_saved => '服务器 URL 已更新。如果问题持续，请重启应用。';
-
-  @override
-  String get floating_player_label => '播客播放控制';
-
-  @override
-  String get floating_player_tooltip => '播放/暂停 - 长按打开播放器';
-
-  @override
-  String get floating_player_nav_hint => '长按打开播放器';
-
-  @override
-  String get podcast_bulk_select_mode => '选择播客';
 
   @override
   String get podcast_enter_select_mode => '选择模式';
 
   @override
   String get podcast_deselect_all => '取消全选';
-
-  @override
-  String get podcast_bulk_delete => '批量删除';
 
   @override
   String podcast_selected_count(int count) {
@@ -1311,33 +759,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get podcast_bulk_delete_confirm => '删除';
-
-  @override
-  String podcast_bulk_delete_success(int count) {
-    return '成功删除 $count 个播客';
-  }
-
-  @override
-  String podcast_bulk_delete_partial_success(
-    int successCount,
-    int failedCount,
-  ) {
-    return '成功删除 $successCount 个，失败 $failedCount 个';
-  }
-
-  @override
-  String podcast_bulk_delete_failed(String error) {
-    return '删除失败：$error';
-  }
-
-  @override
-  String get podcast_view_errors => '查看错误';
-
-  @override
-  String get podcast_bulk_delete_errors_title => '删除错误';
-
-  @override
-  String get dismiss => '关闭';
 
   @override
   String get update_check_updates => '检查更新';
@@ -1377,12 +798,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get update_check_failed => '检查失败';
-
-  @override
-  String get update_current_version => '当前版本';
-
-  @override
-  String get update_available_description => '发现新版本，是否立即更新？';
 
   @override
   String get update_up_to_date => '已是最新版本';
@@ -1545,25 +960,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get feed_subscribe_podcast => '订阅播客';
 
   @override
-  String get podcast_platform_xiaoyuzhou => '小宇宙';
-
-  @override
-  String get podcast_platform_ximalaya => '喜马拉雅';
-
-  @override
   String get podcast_no_shownotes => '暂无节目简介';
-
-  @override
-  String get podcast_copy_shownotes => '复制';
-
-  @override
-  String get podcast_shownotes_copied => '已复制到剪贴板';
-
-  @override
-  String get podcast_unknown_error => '未知错误';
-
-  @override
-  String get podcast_no_match_found => '未找到匹配内容';
 
   @override
   String get podcast_no_transcript => '暂无转录内容';
@@ -1572,19 +969,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_click_to_transcribe => '点击\\\"开始转录\\\"按钮生成转录文本';
 
   @override
-  String get podcast_conversation => '对话';
-
-  @override
-  String get podcast_transcription_waiting => '等待开始';
-
-  @override
-  String get podcast_transcription_completed => '转录完成';
-
-  @override
   String get podcast_transcription_failed => '转录失败';
-
-  @override
-  String get podcast_unknown_status => '未知状态';
 
   @override
   String date_format(int year, String month, String day) {
@@ -1598,9 +983,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_discover_title => '发现';
 
   @override
-  String get podcast_discover_search_hint => '搜索播客和单集...';
-
-  @override
   String get podcast_discover_top_charts => '热门榜单';
 
   @override
@@ -1612,22 +994,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_discover_see_all => '查看全部';
 
   @override
-  String get podcast_discover_collapse => '收起';
-
-  @override
   String get podcast_discover_no_chart_data => '暂无榜单数据';
 
   @override
   String get podcast_discover_browse_by_category => '按分类浏览';
 
   @override
-  String get podcast_discover_open_link_failed => '打开链接失败';
-
-  @override
   String get podcast_country_label => '国家或地区';
-
-  @override
-  String get podcast_search_empty_hint => '输入播客或分集名称进行搜索';
 
   @override
   String get podcast_search_loading => '搜索中...';
@@ -1659,13 +1032,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String podcast_subscribe_failed(String error) {
     return '订阅失败：$error';
   }
-
-  @override
-  String get podcast_network_hint =>
-      '某些地区可能无法直接访问 iTunes API。如果连接失败，请尝试使用 VPN。';
-
-  @override
-  String get podcast_vpn_required => '连接失败。iTunes API 在您所在的地区可能被屏蔽，请尝试使用 VPN。';
 
   @override
   String get podcast_country_china => '中国';
@@ -1740,12 +1106,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_player_sleep_mode => '睡眠模式';
 
   @override
-  String get podcast_player_download => '下载';
-
-  @override
-  String get podcast_player_expand => '展开';
-
-  @override
   String get podcast_player_play => '播放';
 
   @override
@@ -1756,9 +1116,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get podcast_player_forward_30 => '前进30秒';
-
-  @override
-  String get podcast_player_playback_speed => '播放速度';
 
   @override
   String get podcast_play_episode => '播放';
@@ -1776,27 +1133,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_speed_done => '完成';
 
   @override
-  String get podcast_speed_current_speed => '当前速度';
-
-  @override
-  String get podcast_speed_select => '选择速度';
-
-  @override
-  String get podcast_speed_feature_1 => '快速选择';
-
-  @override
-  String get podcast_speed_feature_2 => '精确控制';
-
-  @override
-  String get podcast_speed_feature_3 => '刻度尺样式';
-
-  @override
-  String get podcast_speed_feature_4 => '即时应用';
-
-  @override
-  String get podcast_speed_feature_5 => '流畅体验';
-
-  @override
   String get podcast_tab_shownotes => '节目详情';
 
   @override
@@ -1812,18 +1148,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_transcription_auto_starting => '自动开始转录...';
 
   @override
-  String get podcast_transcription_starting => '正在启动转录...';
-
-  @override
-  String get podcast_transcription_start_title => '开始转录';
-
-  @override
-  String get podcast_transcription_start_desc => '开始转录本集节目以生成文字内容和AI智能摘要。';
-
-  @override
-  String get podcast_transcription_start_button => '开始转录';
-
-  @override
   String get podcast_conversation_title => 'AI对话';
 
   @override
@@ -1833,9 +1157,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_conversation_empty_hint => '向AI提问本集节目的相关问题，基于文字稿获取智能回答。';
 
   @override
-  String get podcast_conversation_clear_history => '清空对话历史';
-
-  @override
   String get podcast_conversation_history => '对话历史';
 
   @override
@@ -1843,9 +1164,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get podcast_conversation_delete_confirm => '确定要删除这个对话吗？此操作无法撤销。';
-
-  @override
-  String get podcast_conversation_clear_confirm => '确定要清空所有对话历史吗？此操作无法撤销。';
 
   @override
   String get podcast_conversation_send_hint => '发送消息（Ctrl+Enter）';
@@ -1898,27 +1216,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_summary_empty_hint => '暂无摘要';
 
   @override
-  String get podcast_filter_refresh => '刷新';
-
-  @override
   String get podcast_please_select_time => '请选择时间';
 
   @override
   String get podcast_please_select_time_and_day => '请选择时间和星期';
 
   @override
-  String podcast_bulk_import_urls_extracted(int count) {
-    return '从文件中提取了$count个链接';
-  }
-
-  @override
   String podcast_bulk_import_file_error(String error) {
     return '读取文件失败：$error';
-  }
-
-  @override
-  String podcast_bulk_import_success(int count) {
-    return '成功导入$count个播客';
   }
 
   @override
@@ -2017,9 +1322,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String podcast_copied(String text) {
     return '已复制：$text';
   }
-
-  @override
-  String get podcast_bulk_import_label => '标签';
 
   @override
   String get podcast_bulk_import_hint_text => 'URL';
@@ -2356,12 +1658,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get global_rss_failed_update => '更新订阅失败';
 
   @override
-  String get playback_speed_title => '播放速度';
-
-  @override
-  String get podcast_notification_channel => '播客播放';
-
-  @override
   String get page_not_found => '页面未找到';
 
   @override
@@ -2434,48 +1730,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get auth_test_page_title => '身份验证测试';
 
   @override
-  String email_label(String email) {
-    return '邮箱：$email';
-  }
-
-  @override
-  String username_label(String username) {
-    return '用户名：$username';
-  }
-
-  @override
-  String display_name_label(String displayName) {
-    return '显示名称：$displayName';
-  }
-
-  @override
-  String verified_label(String isVerified) {
-    return '已验证：$isVerified';
-  }
-
-  @override
-  String get user_not_logged_in => '用户：未登录';
-
-  @override
-  String current_operation_label(String operation) {
-    return '当前操作：$operation';
-  }
-
-  @override
-  String get login_button_short => '登录';
-
-  @override
-  String get register_button_short => '注册';
-
-  @override
-  String base_url_label(String url) {
-    return '基础 URL：$url';
-  }
-
-  @override
-  String get endpoints_label => 'API 端点：';
-
-  @override
   String get auth_verification_title => '身份验证';
 
   @override
@@ -2524,13 +1778,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_add_to_queue => '添加到播放队列';
 
   @override
-  String get podcast_unknown_podcast => '未知播客';
-
-  @override
   String get episode_unknown_title => '未知集数';
-
-  @override
-  String get episode_details => '集数详情';
 
   @override
   String get transcription_status_pending => '等待开始';
@@ -2554,12 +1802,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get transcription_status_failed => '转录失败';
 
   @override
-  String get player_no_media => '无媒体';
-
-  @override
-  String get player_audio_playback => '音频播放';
-
-  @override
   String get ai_model_type_transcription => '转录模型';
 
   @override
@@ -2575,19 +1817,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profile_support_section => '支持';
 
   @override
-  String get error_unknown_dio => '未知的 Dio 错误';
-
-  @override
   String get auth_and => ' 和 ';
-
-  @override
-  String get auth_enter_email_hint => '输入邮箱';
-
-  @override
-  String get auth_enter_email_error => '请输入邮箱';
-
-  @override
-  String get auth_invalid_email => '请输入有效的邮箱地址';
 
   @override
   String get api_key_leave_empty_hint => '留空以保持不变';

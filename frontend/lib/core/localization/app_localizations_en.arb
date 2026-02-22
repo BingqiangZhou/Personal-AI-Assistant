@@ -1,679 +1,336 @@
 {
   "@@locale": "en",
-
   "appTitle": "Stella",
   "@appTitle": {
     "description": "The title of the application"
   },
-
   "appSlogan": "Your personal assistant for everything you follow.",
   "@appSlogan": {
     "description": "The slogan of the application"
   },
-
   "settings": "Settings",
   "@settings": {
     "description": "Settings page title"
   },
-
   "language": "Language",
   "@language": {
     "description": "Language setting label"
   },
-
   "languageFollowSystem": "Follow System",
   "@languageFollowSystem": {
     "description": "Option to follow system language"
   },
-
   "languageEnglish": "English",
   "@languageEnglish": {
     "description": "English language option"
   },
-
   "languageChinese": "Chinese",
   "@languageChinese": {
     "description": "Chinese language option"
   },
-
-  "appPreferences": "App Preferences",
-  "@appPreferences": {
-    "description": "App preferences section title"
-  },
-
   "about": "About",
   "@about": {
     "description": "About section title"
   },
-
   "version": "Version",
   "@version": {
     "description": "App version label"
   },
-
-  "apiDocs": "API Documentation",
-  "@apiDocs": {
-    "description": "API documentation link label"
-  },
-
   "profile": "Profile",
   "@profile": {
     "description": "Profile page title"
   },
-
   "preferences": "Preferences",
   "@preferences": {
     "description": "Preferences section title"
   },
-
   "logout": "Logout",
   "@logout": {
     "description": "Logout button label"
   },
-
-  "confirmLogout": "Are you sure you want to logout?",
-  "@confirmLogout": {
-    "description": "Logout confirmation message"
-  },
-
   "cancel": "Cancel",
   "@cancel": {
     "description": "Cancel button label"
   },
-
   "clear": "Clear",
   "@clear": {
     "description": "Clear button label"
   },
-
   "confirm": "Confirm",
   "@confirm": {
     "description": "Confirm button label"
   },
-
   "save": "Save",
   "@save": {
     "description": "Save button label"
   },
-
   "delete": "Delete",
   "@delete": {
     "description": "Delete button label"
   },
-
   "edit": "Edit",
   "@edit": {
     "description": "Edit button label"
   },
-
   "add": "Add",
   "@add": {
     "description": "Add button label"
   },
-
   "update": "Update",
   "@update": {
     "description": "Update button label"
   },
-
   "create": "Create",
   "@create": {
     "description": "Create button label"
   },
-
   "search": "Search",
   "@search": {
     "description": "Search button label"
   },
-
   "filter": "Filter",
   "@filter": {
     "description": "Filter button label"
   },
-
   "refresh": "Refresh",
   "@refresh": {
     "description": "Refresh button label"
   },
-
   "loading": "Loading...",
   "@loading": {
     "description": "Loading message"
   },
-
   "error": "Error",
   "@error": {
     "description": "Error label"
   },
-
   "success": "Success",
   "@success": {
     "description": "Success label"
   },
-
   "retry": "Retry",
   "@retry": {
     "description": "Retry button label"
   },
-
   "close": "Close",
   "@close": {
     "description": "Close button label"
   },
-
   "ok": "OK",
   "@ok": {
     "description": "OK button label"
   },
-
-  "yes": "Yes",
-  "@yes": {
-    "description": "Yes button label"
-  },
-
   "no": "No",
   "@no": {
     "description": "No button label"
   },
-
-  "welcome": "Welcome",
-  "@welcome": {
-    "description": "Welcome message"
-  },
-
   "auth_welcome_back": "Dawn's near. Let's begin.",
   "@auth_welcome_back": {
     "description": "Login page welcome title"
   },
-
   "auth_sign_in_subtitle": "Sign in to continue",
   "@auth_sign_in_subtitle": {
     "description": "Login page subtitle"
   },
-
   "auth_enter_email": "Please enter your email",
   "@auth_enter_email": {
     "description": "Email field validation message"
   },
-
   "auth_enter_valid_email": "Please enter a valid email",
   "@auth_enter_valid_email": {
     "description": "Email validation error"
   },
-
   "auth_enter_password": "Please enter your password",
   "@auth_enter_password": {
     "description": "Password field validation message"
   },
-
   "auth_password_too_short": "Password must be at least 8 characters",
   "@auth_password_too_short": {
     "description": "Password length validation"
   },
-
   "auth_email": "Email",
   "@auth_email": {
     "description": "Email field label"
   },
-
   "auth_password": "Password",
   "@auth_password": {
     "description": "Password field label"
   },
-
   "auth_remember_me": "Remember me",
   "@auth_remember_me": {
     "description": "Remember me checkbox label"
   },
-
   "auth_forgot_password": "Forgot Password?",
   "@auth_forgot_password": {
     "description": "Forgot password link"
   },
-
   "auth_login": "Sign In",
   "@auth_login": {
     "description": "Login button label"
   },
-
   "auth_no_account": "Don't have an account?",
   "@auth_no_account": {
     "description": "No account prompt"
   },
-
   "auth_sign_up": "Sign Up",
   "@auth_sign_up": {
     "description": "Sign up button label"
   },
-
   "auth_create_account": "Create Account",
   "@auth_create_account": {
     "description": "Create account page title"
   },
-
   "auth_sign_up_subtitle": "Join us to get started",
   "@auth_sign_up_subtitle": {
     "description": "Sign up page subtitle"
   },
-
   "auth_full_name": "Full Name",
   "@auth_full_name": {
     "description": "Full name field label"
   },
-
   "auth_enter_name": "Please enter your name",
   "@auth_enter_name": {
     "description": "Name field validation"
   },
-
   "auth_confirm_password": "Confirm Password",
   "@auth_confirm_password": {
     "description": "Confirm password field label"
   },
-
   "auth_passwords_not_match": "Passwords do not match",
   "@auth_passwords_not_match": {
     "description": "Password mismatch error"
   },
-
   "auth_agree_terms": "I agree to the Terms and Conditions",
   "@auth_agree_terms": {
     "description": "Terms agreement checkbox"
   },
-
   "auth_already_have_account": "Already have an account?",
   "@auth_already_have_account": {
     "description": "Already have account prompt"
   },
-
   "auth_sign_in_link": "Sign In",
   "@auth_sign_in_link": {
     "description": "Sign in link label"
   },
-
   "auth_reset_password": "Reset Password",
   "@auth_reset_password": {
     "description": "Reset password page title"
   },
-
   "auth_reset_password_subtitle": "Enter your email to receive reset instructions",
   "@auth_reset_password_subtitle": {
     "description": "Reset password subtitle"
   },
-
   "auth_send_reset_link": "Send Reset Link",
   "@auth_send_reset_link": {
     "description": "Send reset link button"
   },
-
   "auth_back_to_login": "Back to Login",
   "@auth_back_to_login": {
     "description": "Back to login link"
   },
-
   "auth_reset_email_sent": "Password reset email sent",
   "@auth_reset_email_sent": {
     "description": "Reset email sent message"
-  },
-
-  "login_failed": "Login failed",
-  "@login_failed": {
-    "description": "Login failed message"
-  },
-
-  "register_failed": "Registration failed",
-  "@register_failed": {
-    "description": "Registration failed message"
-  },
-
-  "logout_failed": "Logout failed",
-  "@logout_failed": {
-    "description": "Logout failed message"
-  },
-
-  "chat_new_chat": "New Chat",
-  "@chat_new_chat": {
-    "description": "New chat button label"
-  },
-
-  "chat_type_message_hint": "Type your message...",
-  "@chat_type_message_hint": {
-    "description": "Chat input placeholder"
-  },
-
-  "chat_ai_thinking": "AI is thinking...",
-  "@chat_ai_thinking": {
-    "description": "AI thinking indicator"
-  },
-
-  "chat_send_message": "Send",
-  "@chat_send_message": {
-    "description": "Send message button"
-  },
-
-  "chat_clear_history": "Clear History",
-  "@chat_clear_history": {
-    "description": "Clear chat history button"
-  },
-
-  "chat_confirm_clear": "Are you sure you want to clear all chat history?",
-  "@chat_confirm_clear": {
-    "description": "Clear history confirmation"
-  },
-
-  "chat_no_messages": "No messages yet",
-  "@chat_no_messages": {
-    "description": "Empty chat state"
-  },
-
-  "chat_conversation_history": "Conversation History",
-  "@chat_conversation_history": {
-    "description": "Conversation history section"
-  },
-
-  "chat_today": "Today",
-  "@chat_today": {
-    "description": "Today label for history"
-  },
-
-  "chat_yesterday": "Yesterday",
-  "@chat_yesterday": {
-    "description": "Yesterday label for history"
-  },
-
-  "chat_this_week": "This Week",
-  "@chat_this_week": {
-    "description": "This week label for history"
-  },
-
-  "chat_older": "Older",
-  "@chat_older": {
-    "description": "Older label for history"
-  },
-
-  "assistant_settings": "Assistant Settings",
-  "@assistant_settings": {
-    "description": "Assistant settings title"
-  },
-
-  "assistant_model": "AI Model",
-  "@assistant_model": {
-    "description": "AI model setting label"
-  },
-
-  "assistant_temperature": "Temperature",
-  "@assistant_temperature": {
-    "description": "Temperature setting label"
-  },
-
-  "assistant_max_tokens": "Max Tokens",
-  "@assistant_max_tokens": {
-    "description": "Max tokens setting label"
-  },
-
-  "assistant_system_prompt": "System Prompt",
-  "@assistant_system_prompt": {
-    "description": "System prompt setting label"
-  },
-
-  "assistant_temperature_desc": "Controls randomness in responses",
-  "@assistant_temperature_desc": {
-    "description": "Temperature description"
-  },
-
-  "assistant_max_tokens_desc": "Maximum length of response",
-  "@assistant_max_tokens_desc": {
-    "description": "Max tokens description"
-  },
-
-  "podcast_subscriptions": "Podcast Subscriptions",
-  "@podcast_subscriptions": {
-    "description": "Podcast subscriptions page title"
-  },
-
-  "podcast_my_subscriptions": "My Subscriptions",
-  "@podcast_my_subscriptions": {
-    "description": "My subscriptions section"
   },
   "profile_subscriptions": "Subscriptions",
   "@profile_subscriptions": {
     "description": "Subscriptions label (without \"My\")"
   },
-
   "@podcast_add_subscription": {
     "description": "Add subscription button"
   },
-
-  "podcast_feed_url": "Feed URL",
-  "@podcast_feed_url": {
-    "description": "Feed URL field label"
-  },
-
-  "podcast_enter_feed_url": "Enter podcast feed URL",
-  "@podcast_enter_feed_url": {
-    "description": "Feed URL placeholder"
-  },
-
-  "podcast_invalid_url": "Please enter a valid URL",
-  "@podcast_invalid_url": {
-    "description": "Invalid URL error"
-  },
-
   "podcast_episodes": "Episodes",
   "@podcast_episodes": {
     "description": "Episodes label"
   },
-
   "podcast_unknown_author": "Unknown Author",
   "@podcast_unknown_author": {
     "description": "Unknown author label for podcasts"
   },
-
-  "podcast_latest_episodes": "Latest Episodes",
-  "@podcast_latest_episodes": {
-    "description": "Latest episodes section"
-  },
-
   "podcast_no_subscriptions": "No subscriptions yet",
   "@podcast_no_subscriptions": {
     "description": "No subscriptions state"
   },
-
-  "podcast_add_first": "Add your first podcast subscription",
-  "@podcast_add_first": {
-    "description": "Add first subscription prompt"
-  },
-
   "podcast_play": "Play",
   "@podcast_play": {
-    "description": "Play button label"
+    "description": "Play button"
   },
-
-  "podcast_pause": "Pause",
-  "@podcast_pause": {
-    "description": "Pause button label"
-  },
-
-  "podcast_duration": "Duration",
-  "@podcast_duration": {
-    "description": "Duration label"
-  },
-
-  "podcast_published": "Published",
-  "@podcast_published": {
-    "description": "Published date label"
-  },
-
-  "ai_models": "AI Models",
-  "@ai_models": {
-    "description": "AI Models page title"
-  },
-
-  "ai_available_models": "Available Models",
-  "@ai_available_models": {
-    "description": "Available models section"
-  },
-
-  "ai_model_name": "Model Name",
-  "@ai_model_name": {
-    "description": "Model name label"
-  },
-
-  "ai_provider": "Provider",
-  "@ai_provider": {
-    "description": "Provider label"
-  },
-
-  "ai_model_type": "Model Type",
-  "@ai_model_type": {
-    "description": "Model type label"
-  },
-
-  "ai_model_details": "Model Details",
-  "@ai_model_details": {
-    "description": "Model details section"
-  },
-
-  "ai_select_model": "Select Model",
-  "@ai_select_model": {
-    "description": "Select model button"
-  },
-
-  "ai_model_selected": "Model selected",
-  "@ai_model_selected": {
-    "description": "Model selected message"
-  },
-
-  "ai_no_models": "No models available",
-  "@ai_no_models": {
-    "description": "No models state"
-  },
-
   "home": "Home",
   "@home": {
     "description": "Home page title"
   },
-
-  "nav_assistant": "Assistant",
-  "@nav_assistant": {
-    "description": "Navigation item: Assistant"
-  },
-
   "nav_feed": "Library",
   "@nav_feed": {
     "description": "Navigation item: Feed"
   },
-
   "nav_podcast": "Discover",
   "@nav_podcast": {
     "description": "Navigation item: Podcast"
   },
-
-  "nav_chat": "Chat",
-  "@nav_chat": {
-    "description": "Navigation item: Chat"
-  },
-
   "nav_profile": "Profile",
   "@nav_profile": {
     "description": "Navigation item: Profile"
   },
-
   "podcast_feed_page_title": "Library",
   "@podcast_feed_page_title": {
     "description": "Podcast feed page title"
   },
-
-  "podcast_refresh_feed": "Refresh Feed",
-  "@podcast_refresh_feed": {
-    "description": "Refresh feed button tooltip"
-  },
-
   "podcast_add_podcast": "Add Podcast",
   "@podcast_add_podcast": {
-    "description": "Add podcast button tooltip"
+    "description": "Add podcast button"
   },
-
   "podcast_bulk_import": "Bulk Import",
   "@podcast_bulk_import": {
-    "description": "Bulk import button tooltip"
+    "description": "Bulk import button"
   },
-
   "podcast_failed_to_load_feed": "Failed to load feed",
   "@podcast_failed_to_load_feed": {
     "description": "Failed to load feed error message"
   },
-
   "podcast_retry": "Retry",
   "@podcast_retry": {
     "description": "Retry button"
   },
-
   "podcast_no_episodes_found": "No episodes found",
   "@podcast_no_episodes_found": {
     "description": "No episodes state"
   },
-
   "podcast_daily_report_title": "Daily Report",
   "@podcast_daily_report_title": {
     "description": "Podcast daily report card title"
   },
-
   "podcast_daily_report_open": "Open daily report",
   "@podcast_daily_report_open": {
     "description": "Accessible label and tooltip for opening daily report page"
   },
-
-  "podcast_daily_report_open_short": "Open",
-  "@podcast_daily_report_open_short": {
-    "description": "Short action text for opening daily report"
-  },
-
   "podcast_daily_report_entry_subtitle": "Review history and generate reports by date",
   "@podcast_daily_report_entry_subtitle": {
     "description": "Subtitle text for the daily report entry in library feed"
   },
-
-  "podcast_daily_report_generate_previous_day": "Generate report",
-  "@podcast_daily_report_generate_previous_day": {
-    "description": "Button label for generating a daily report for selected date"
-  },
-
   "podcast_daily_report_generate_success": "Daily report generated",
   "@podcast_daily_report_generate_success": {
     "description": "Success message after generating daily report"
   },
-
   "podcast_daily_report_generate_failed": "Failed to generate daily report",
   "@podcast_daily_report_generate_failed": {
     "description": "Error message when generating daily report fails"
   },
-
   "podcast_daily_report_empty": "No daily report available yet",
   "@podcast_daily_report_empty": {
     "description": "Empty state text for daily report card"
   },
-
   "podcast_daily_report_loading": "Loading daily report...",
   "@podcast_daily_report_loading": {
     "description": "Loading text for daily report card"
   },
-
   "podcast_daily_report_dates": "History",
   "@podcast_daily_report_dates": {
     "description": "Button label for opening daily report date selector"
   },
-
   "podcast_daily_report_generated_prefix": "Generated",
   "@podcast_daily_report_generated_prefix": {
     "description": "Prefix text for report generation time"
   },
-
-  "podcast_daily_report_carryover": "Carryover",
-  "@podcast_daily_report_carryover": {
-    "description": "Tag for carryover items in daily report"
-  },
-
   "podcast_daily_report_items": "{count} items",
   "@podcast_daily_report_items": {
     "description": "Daily report total item count label",
@@ -683,77 +340,46 @@
       }
     }
   },
-
-  "podcast_play": "Play",
-  "@podcast_play": {
-    "description": "Play button"
-  },
-
-  "podcast_bookmark": "Bookmark",
-  "@podcast_bookmark": {
-    "description": "Bookmark button"
-  },
-
-  "podcast_share": "Share",
-  "@podcast_share": {
-    "description": "Share button"
-  },
-
   "podcast_share_as_image": "Share as Image",
   "@podcast_share_as_image": {
     "description": "Share selected text as image action"
   },
-
-  "podcast_save_as_image": "Save as Image",
-  "@podcast_save_as_image": {
-    "description": "Save generated share image"
-  },
-
   "podcast_save_image_success": "Image saved successfully",
   "@podcast_save_image_success": {
     "description": "Image save success message"
   },
-
   "podcast_save_image_failed": "Failed to save image",
   "@podcast_save_image_failed": {
     "description": "Image save failed message"
   },
-
   "podcast_save_image_permission": "Photo permission is required to save image",
   "@podcast_save_image_permission": {
     "description": "Permission message for saving image"
   },
-
   "podcast_share_all_content": "Share All",
   "@podcast_share_all_content": {
     "description": "Share all content as image action"
   },
-
   "podcast_share_selection_required": "Please select content before sharing",
   "@podcast_share_selection_required": {
     "description": "Selection required message before sharing as image"
   },
-
   "podcast_share_not_supported": "Image sharing is not supported on this platform",
   "@podcast_share_not_supported": {
     "description": "Platform not supported message for image sharing"
   },
-
   "podcast_share_failed": "Failed to share image",
   "@podcast_share_failed": {
     "description": "Share image failed message"
   },
-
   "podcast_share_preparing_image": "Preparing image...",
   "@podcast_share_preparing_image": {
     "description": "Progress message while generating share image"
   },
-
   "podcast_share_in_progress": "Image generation is in progress",
   "@podcast_share_in_progress": {
     "description": "Message shown when share image generation is already running"
   },
-
   "podcast_share_truncated": "Content truncated to first {max} characters",
   "@podcast_share_truncated": {
     "description": "Content truncation message for long share text",
@@ -763,692 +389,366 @@
       }
     }
   },
-
   "podcast_default_podcast": "Podcast",
   "@podcast_default_podcast": {
     "description": "Default podcast name"
   },
-
-  "nav_ai_models": "AI Models",
-  "@nav_ai_models": {
-    "description": "Navigation item: AI Models"
-  },
-
-  "nav_settings": "Settings",
-  "@nav_settings": {
-    "description": "Navigation item: Settings"
-  },
-
-  "validation_required": "This field is required",
-  "@validation_required": {
-    "description": "Required field validation"
-  },
-
-  "validation_invalid_email": "Invalid email format",
-  "@validation_invalid_email": {
-    "description": "Invalid email validation"
-  },
-
   "validation_invalid_url": "Invalid URL format",
   "@validation_invalid_url": {
     "description": "Invalid URL validation"
   },
-
   "validation_too_short": "Too short",
   "@validation_too_short": {
     "description": "Too short validation"
   },
-
-  "validation_too_long": "Too long",
-  "@validation_too_long": {
-    "description": "Too long validation"
-  },
-
-  "network_error": "Network error. Please check your connection.",
-  "@network_error": {
-    "description": "Network error message"
-  },
-
-  "server_error": "Server error. Please try again later.",
-  "@server_error": {
-    "description": "Server error message"
-  },
-
   "unknown_error": "An unknown error occurred",
   "@unknown_error": {
     "description": "Unknown error message"
   },
-
-  "request_timeout": "Request timeout. Please try again.",
-  "@request_timeout": {
-    "description": "Request timeout message"
-  },
-
-  "unauthorized": "Unauthorized. Please login again.",
-  "@unauthorized": {
-    "description": "Unauthorized error message"
-  },
-
   "forbidden": "Access denied",
   "@forbidden": {
     "description": "Forbidden error message"
   },
-
-  "not_found": "Resource not found",
-  "@not_found": {
-    "description": "Not found error message"
-  },
-
-  "session_expired": "Session expired. Please login again.",
-  "@session_expired": {
-    "description": "Session expired message"
-  },
-
   "action_completed": "Action completed successfully",
   "@action_completed": {
     "description": "Generic success message"
   },
-
-  "action_failed": "Action failed",
-  "@action_failed": {
-    "description": "Generic failure message"
-  },
-
   "delete_confirm_title": "Delete Item",
   "@delete_confirm_title": {
     "description": "Delete confirmation title"
   },
-
-  "delete_confirm_message": "Are you sure you want to delete this item? This action cannot be undone.",
-  "@delete_confirm_message": {
-    "description": "Delete confirmation message"
-  },
-
   "no_data": "No data available",
   "@no_data": {
     "description": "No data state message"
   },
-
   "pull_to_refresh": "Pull to refresh",
   "@pull_to_refresh": {
     "description": "Pull to refresh hint"
   },
-
-  "release_to_refresh": "Release to refresh",
-  "@release_to_refresh": {
-    "description": "Release to refresh hint"
-  },
-
   "refreshing": "Refreshing...",
   "@refreshing": {
     "description": "Refreshing message"
   },
-
-  "empty_list": "No items to display",
-  "@empty_list": {
-    "description": "Empty list message"
-  },
-
-  "no_results": "No results found",
-  "@no_results": {
-    "description": "No search results message"
-  },
-
-  "try_different_search": "Try a different search term",
-  "@try_different_search": {
-    "description": "Different search suggestion"
-  },
-
   "podcast_title": "Podcasts",
   "@podcast_title": {
     "description": "Podcasts page title"
   },
-
-  "podcast_discover_new": "Discover New",
-  "@podcast_discover_new": {
-    "description": "Discover new podcasts section title"
-  },
-
-  "podcast_add_podcast": "Add Podcast",
-  "@podcast_add_podcast": {
-    "description": "Add podcast button"
-  },
-
-  "podcast_bulk_import": "Bulk Import",
-  "@podcast_bulk_import": {
-    "description": "Bulk import button"
-  },
-
-  "podcast_no_podcasts": "No podcasts yet",
-  "@podcast_no_podcasts": {
-    "description": "No podcasts state"
-  },
-
-  "podcast_add_first": "Add your first podcast",
-  "@podcast_add_first": {
-    "description": "Add first podcast prompt"
-  },
-
   "podcast_description": "No description",
   "@podcast_description": {
     "description": "No description label"
   },
-
-  "podcast_updated": "Updated:",
-  "@podcast_updated": {
-    "description": "Updated date prefix"
-  },
-
-  "podcast_failed_load_subscriptions": "Failed to load subscriptions",
-  "@podcast_failed_load_subscriptions": {
-    "description": "Failed to load subscriptions error"
-  },
-
   "podcast_player_unknown_episode": "Unknown Episode",
   "@podcast_player_unknown_episode": {
     "description": "Unknown episode title"
   },
-
   "podcast_player_no_audio": "No audio link",
   "@podcast_player_no_audio": {
     "description": "No audio link message"
   },
-
   "podcast_coming_soon": "Coming Soon",
   "@podcast_coming_soon": {
     "description": "Coming soon label"
   },
-
   "podcast_filter_all": "All",
   "@podcast_filter_all": {
     "description": "Filter all episodes"
   },
-
   "podcast_filter_unplayed": "Unplayed",
   "@podcast_filter_unplayed": {
     "description": "Filter unplayed episodes"
   },
-
   "podcast_filter_played": "Played",
   "@podcast_filter_played": {
     "description": "Filter played episodes"
   },
-
   "podcast_filter_with_summary": "Summary",
   "@podcast_filter_with_summary": {
     "description": "Summary label"
   },
-
   "podcast_mark_all_played": "Mark All as Played",
   "@podcast_mark_all_played": {
     "description": "Mark all as played option"
   },
-
   "podcast_mark_all_unplayed": "Mark All as Unplayed",
   "@podcast_mark_all_unplayed": {
     "description": "Mark all as unplayed option"
   },
-
   "podcast_no_episodes": "No Episodes Found",
   "@podcast_no_episodes": {
     "description": "No episodes state"
   },
-
   "podcast_no_episodes_with_summary": "No Episodes with Summary",
   "@podcast_no_episodes_with_summary": {
     "description": "No episodes with summary state"
   },
-
   "podcast_try_adjusting_filters": "Try adjusting your filters",
   "@podcast_try_adjusting_filters": {
     "description": "Try adjusting filters hint"
   },
-
   "podcast_no_episodes_yet": "This podcast might not have any episodes yet",
   "@podcast_no_episodes_yet": {
     "description": "No episodes yet message"
   },
-
   "podcast_failed_load_episodes": "Failed to Load Episodes",
   "@podcast_failed_load_episodes": {
     "description": "Failed to load episodes error"
   },
-
   "podcast_filter_episodes": "Filter Episodes",
   "@podcast_filter_episodes": {
     "description": "Filter episodes dialog title"
   },
-
   "podcast_playback_status": "Playback Status:",
   "@podcast_playback_status": {
     "description": "Playback status label"
   },
-
   "podcast_all_episodes": "All Episodes",
   "@podcast_all_episodes": {
     "description": "All episodes filter option"
   },
-
   "podcast_unplayed_only": "Unplayed Only",
   "@podcast_unplayed_only": {
     "description": "Unplayed only filter option"
   },
-
   "podcast_played_only": "Played Only",
   "@podcast_played_only": {
     "description": "Played only filter option"
   },
-
   "podcast_only_with_summary": "Only episodes with Summary",
   "@podcast_only_with_summary": {
     "description": "Only with summary filter option"
   },
-
   "podcast_apply": "Apply",
   "@podcast_apply": {
     "description": "Apply button label"
   },
-
   "podcast_add_dialog_title": "Add Podcast",
   "@podcast_add_dialog_title": {
     "description": "Add podcast dialog title"
   },
-
   "podcast_rss_feed_url": "RSS Feed URL",
   "@podcast_rss_feed_url": {
     "description": "RSS Feed URL field label"
   },
-
   "podcast_feed_url_hint": "https://example.com/feed.xml",
   "@podcast_feed_url_hint": {
     "description": "Feed URL hint"
   },
-
   "podcast_enter_url": "Please enter a URL",
   "@podcast_enter_url": {
     "description": "Enter URL validation"
   },
-
   "podcast_added_successfully": "Podcast added successfully!",
   "@podcast_added_successfully": {
     "description": "Podcast added success message"
   },
-
   "podcast_failed_add": "Failed to add podcast:",
   "@podcast_failed_add": {
     "description": "Failed to add podcast error"
   },
-
   "podcast_need_many": "Need to add many?",
   "@podcast_need_many": {
     "description": "Need to add many prompt"
   },
-
   "podcast_adding": "Adding...",
   "@podcast_adding": {
     "description": "Adding podcast loading text"
   },
-
   "ai_model_management": "AI Model Management",
   "@ai_model_management": {
     "description": "AI Model Management page title"
   },
-
   "ai_add_model": "Add Model",
   "@ai_add_model": {
     "description": "Add model button"
   },
-
-  "ai_edit_model": "Edit Model",
-  "@ai_edit_model": {
-    "description": "Edit model button"
-  },
-
-  "ai_delete_model": "Delete Model",
-  "@ai_delete_model": {
-    "description": "Delete model button"
-  },
-
-  "ai_test_model": "Test Model",
-  "@ai_test_model": {
-    "description": "Test model button"
-  },
-
-  "ai_model_name_placeholder": "e.g., GPT-4",
-  "@ai_model_name_placeholder": {
-    "description": "Model name placeholder"
-  },
-
-  "ai_provider_name": "Provider Name",
-  "@ai_provider_name": {
-    "description": "Provider name field"
-  },
-
   "ai_api_key": "API Key",
   "@ai_api_key": {
     "description": "API Key field"
   },
-
-  "ai_api_base": "API Base URL",
-  "@ai_api_base": {
-    "description": "API Base URL field"
-  },
-
-  "ai_enter_model_name": "Please enter model name",
-  "@ai_enter_model_name": {
-    "description": "Enter model name validation"
-  },
-
-  "ai_enter_provider": "Please enter provider name",
-  "@ai_enter_provider": {
-    "description": "Enter provider validation"
-  },
-
   "ai_enter_api_key": "Please enter API key",
   "@ai_enter_api_key": {
     "description": "Enter API key validation"
   },
-
-  "ai_no_models_configured": "No AI models configured",
-  "@ai_no_models_configured": {
-    "description": "No models state"
-  },
-
-  "ai_add_first_model": "Add your first AI model",
-  "@ai_add_first_model": {
-    "description": "Add first model prompt"
-  },
-
-  "ai_model_added": "Model added successfully",
-  "@ai_model_added": {
-    "description": "Model added success"
-  },
-
-  "ai_model_updated": "Model updated successfully",
-  "@ai_model_updated": {
-    "description": "Model updated success"
-  },
-
-  "ai_model_deleted": "Model deleted successfully",
-  "@ai_model_deleted": {
-    "description": "Model deleted success"
-  },
-
   "ai_confirm_delete_model": "Are you sure you want to delete this model?",
   "@ai_confirm_delete_model": {
     "description": "Confirm delete model"
   },
-
-  "ai_test_prompt": "Test prompt",
-  "@ai_test_prompt": {
-    "description": "Test prompt placeholder"
-  },
-
-  "ai_send_test": "Send Test",
-  "@ai_send_test": {
-    "description": "Send test button"
-  },
-
-  "ai_test_response": "Test Response",
-  "@ai_test_response": {
-    "description": "Test response label"
-  },
-
   "ai_create_model_config": "Create AI Model Config",
   "@ai_create_model_config": {
     "description": "Create model dialog title"
   },
-
   "ai_config_name": "Config Name",
   "@ai_config_name": {
     "description": "Config name field"
   },
-
   "ai_base_url": "Base URL",
   "@ai_base_url": {
     "description": "Base URL field"
   },
-
   "ai_base_url_hint": "https://api.openai.com/v1",
   "@ai_base_url_hint": {
     "description": "Base URL hint"
   },
-
   "ai_model_name_field": "Model Name",
   "@ai_model_name_field": {
     "description": "Model name field"
   },
-
   "ai_model_id_hint": "e.g. gpt-4o",
   "@ai_model_id_hint": {
     "description": "Model ID hint"
   },
-
   "ai_config_name_hint": "e.g. My GPT-4o",
   "@ai_config_name_hint": {
     "description": "Config name hint"
   },
-
   "ai_enter_config_name": "Please enter a config name",
   "@ai_enter_config_name": {
     "description": "Enter config name validation"
   },
-
   "ai_enter_base_url": "Please enter Base URL",
   "@ai_enter_base_url": {
     "description": "Enter base URL validation"
   },
-
   "ai_enter_model_id": "Please enter Model Name",
   "@ai_enter_model_id": {
     "description": "Enter model ID validation"
   },
-
   "ai_transcription_model": "Transcription Model",
   "@ai_transcription_model": {
     "description": "Transcription model type"
   },
-
   "ai_text_generation_model": "Text Generation Model",
   "@ai_text_generation_model": {
     "description": "Text generation model type"
   },
-
   "ai_model_type_label": "Model Type:",
   "@ai_model_type_label": {
     "description": "Model type label"
   },
-
   "ai_only_show_active": "Only Show Active",
   "@ai_only_show_active": {
     "description": "Only show active toggle"
   },
-
   "ai_search_models": "Search model name, description...",
   "@ai_search_models": {
     "description": "Search models placeholder"
   },
-
   "ai_model_created": "Model '{name}' created successfully",
   "@ai_model_created": {
     "description": "Model created success"
   },
-
   "ai_model_updated_msg": "Model '{name}' updated successfully",
   "@ai_model_updated_msg": {
     "description": "Model updated success"
   },
-
   "ai_model_deleted_msg": "Model '{name}' deleted",
   "@ai_model_deleted_msg": {
     "description": "Model deleted success"
   },
-
   "ai_set_as_default_success": "Set '{name}' as default model",
   "@ai_set_as_default_success": {
     "description": "Set as default success message"
   },
-
   "ai_model_enabled": "Model enabled",
   "@ai_model_enabled": {
     "description": "Model enabled message"
   },
-
   "ai_model_disabled": "Model disabled",
   "@ai_model_disabled": {
     "description": "Model disabled message"
   },
-
   "ai_operation_failed": "Operation failed",
   "@ai_operation_failed": {
     "description": "Operation failed message"
   },
-
   "ai_set_default_failed": "Failed to set as default model",
   "@ai_set_default_failed": {
     "description": "Set default failed"
   },
-
   "ai_delete_failed": "Delete failed",
   "@ai_delete_failed": {
     "description": "Delete failed"
   },
-
   "ai_load_failed": "Load failed: {error}",
   "@ai_load_failed": {
     "description": "Load failed error"
   },
-
   "ai_no_models_configured_yet": "No model configurations yet",
   "@ai_no_models_configured_yet": {
     "description": "No models state"
   },
-
   "ai_add_first_model_btn": "Add first model",
   "@ai_add_first_model_btn": {
     "description": "Add first model button"
   },
-
   "profile_guest_user": "Guest User",
   "@profile_guest_user": {
     "description": "Guest user label when not logged in"
   },
-
   "profile_please_login": "Please log in",
   "@profile_please_login": {
     "description": "Please log in message"
   },
-
-  "profile_premium": "Premium",
-  "@profile_premium": {
-    "description": "Premium badge label"
-  },
-
-  "profile_verified": "Verified",
-  "@profile_verified": {
-    "description": "Verified badge label"
-  },
-
   "profile_account_settings": "Account Settings",
   "@profile_account_settings": {
     "description": "Account settings section"
   },
-
   "profile_edit_profile": "Edit Profile",
   "@profile_edit_profile": {
     "description": "Edit profile button/title"
   },
-
-  "profile_edit_profile_subtitle": "Update your personal information",
-  "@profile_edit_profile_subtitle": {
-    "description": "Edit profile subtitle"
-  },
-
   "profile_security": "Security",
   "@profile_security": {
     "description": "Security settings"
   },
-
   "profile_security_subtitle": "Password, authentication, and privacy",
   "@profile_security_subtitle": {
     "description": "Security settings subtitle"
   },
-
   "profile_notifications": "Notifications",
   "@profile_notifications": {
     "description": "Notifications settings"
   },
-
   "profile_notifications_subtitle": "Push notifications and email alerts",
   "@profile_notifications_subtitle": {
     "description": "Notifications subtitle"
   },
-
-  "profile_dark_mode": "Dark Mode",
-  "@profile_dark_mode": {
-    "description": "Dark mode toggle"
-  },
-
-  "profile_dark_mode_subtitle": "Toggle dark theme",
-  "@profile_dark_mode_subtitle": {
-    "description": "Dark mode subtitle"
-  },
-
   "profile_auto_sync": "Auto Sync",
   "@profile_auto_sync": {
     "description": "Auto sync toggle"
   },
-
-  "profile_auto_sync_subtitle": "Automatically sync data across devices",
-  "@profile_auto_sync_subtitle": {
-    "description": "Auto sync subtitle"
-  },
-
   "profile_help_center": "Help Center",
   "@profile_help_center": {
     "description": "Help center title"
   },
-
   "profile_help_center_subtitle": "Get help and support",
   "@profile_help_center_subtitle": {
     "description": "Help center subtitle"
   },
-
   "profile_clear_cache": "Clear Cache",
   "@profile_clear_cache": {
     "description": "Clear cache title"
   },
-
   "profile_cache_management": "Storage & Cache",
   "@profile_cache_management": {
     "description": "Cache management title"
   },
-
   "profile_cache_management_subtitle": "View and clear images, audio, and other cached data",
   "@profile_cache_management_subtitle": {
     "description": "Cache management subtitle"
   },
-
-  "profile_clear_cache_subtitle": "Clear images, audio, and other cached data",
-  "@profile_clear_cache_subtitle": {
-    "description": "Clear cache subtitle"
-  },
-
   "profile_clear_cache_confirm": "This will remove cached images, audio, and API caches. Continue?",
   "@profile_clear_cache_confirm": {
     "description": "Clear cache confirm message"
   },
-
   "profile_clearing_cache": "Clearing cache...",
   "@profile_clearing_cache": {
     "description": "Clearing cache in progress message"
   },
-
   "profile_cache_cleared": "Cache cleared",
   "@profile_cache_cleared": {
     "description": "Cache cleared success message"
   },
-
   "profile_cache_clear_failed": "Failed to clear cache: {error}",
   "@profile_cache_clear_failed": {
     "description": "Clear cache failed message",
@@ -1458,50 +758,26 @@
       }
     }
   },
-
   "profile_cache_manage_title": "Storage & Cache",
   "@profile_cache_manage_title": {
     "description": "Cache management page title"
   },
-
-  "profile_cache_manage_total": "Total",
-  "@profile_cache_manage_total": {
-    "description": "Cache management total label"
-  },
-
   "profile_cache_manage_total_used": "Total Used",
   "@profile_cache_manage_total_used": {
     "description": "Cache management total used title"
   },
-
   "profile_cache_manage_images": "Images",
   "@profile_cache_manage_images": {
     "description": "Cache management images label"
   },
-
   "profile_cache_manage_audio": "Audio",
   "@profile_cache_manage_audio": {
     "description": "Cache management audio label"
   },
-
   "profile_cache_manage_other": "Other",
   "@profile_cache_manage_other": {
     "description": "Cache management other label"
   },
-
-  "profile_cache_manage_items_and_size": "{count} items · {size}",
-  "@profile_cache_manage_items_and_size": {
-    "description": "Cache management items and size summary",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "size": {
-        "type": "String"
-      }
-    }
-  },
-
   "profile_cache_manage_item_count": "{count} items",
   "@profile_cache_manage_item_count": {
     "description": "Cache management item count",
@@ -1511,37 +787,18 @@
       }
     }
   },
-
-  "profile_cache_manage_delete_selected": "Delete Selected",
-  "@profile_cache_manage_delete_selected": {
-    "description": "Cache management delete selected button"
-  },
-
-  "profile_cache_manage_clear_all": "Clear All",
-  "@profile_cache_manage_clear_all": {
-    "description": "Cache management clear all button"
-  },
-
-  "profile_cache_manage_select_category_first": "Select at least one category",
-  "@profile_cache_manage_select_category_first": {
-    "description": "Cache management select category first message"
-  },
-
   "profile_cache_manage_details": "DETAILS",
   "@profile_cache_manage_details": {
     "description": "Cache management details header"
   },
-
   "profile_cache_manage_clean": "Clean",
   "@profile_cache_manage_clean": {
     "description": "Cache management clean button label"
   },
-
   "profile_cache_manage_notice": "Clearing cache will remove downloaded images and temporary files. Your subscriptions and preferences will be kept.",
   "@profile_cache_manage_notice": {
     "description": "Cache management notice text"
   },
-
   "profile_cache_manage_deep_clean_all": "Deep Clean All ({size})",
   "@profile_cache_manage_deep_clean_all": {
     "description": "Cache management deep clean all button",
@@ -1551,7 +808,6 @@
       }
     }
   },
-
   "profile_cache_manage_delete_selected_confirm": "Delete {count} cached items ({size}) from selected categories?",
   "@profile_cache_manage_delete_selected_confirm": {
     "description": "Cache management delete selected confirm message",
@@ -1564,375 +820,85 @@
       }
     }
   },
-
   "profile_about_subtitle": "App version and information",
   "@profile_about_subtitle": {
     "description": "About subtitle"
   },
-
   "profile_name": "Name",
   "@profile_name": {
     "description": "Name field label"
   },
-
   "profile_email_field": "Email",
   "@profile_email_field": {
     "description": "Email field label in profile"
   },
-
   "profile_bio": "Bio",
   "@profile_bio": {
     "description": "Bio field label"
   },
-
   "profile_updated_successfully": "Profile updated successfully",
   "@profile_updated_successfully": {
     "description": "Profile updated success message"
   },
-
   "profile_change_password": "Change Password",
   "@profile_change_password": {
     "description": "Change password option"
   },
-
   "profile_biometric_auth": "Biometric Authentication",
   "@profile_biometric_auth": {
     "description": "Biometric authentication option"
   },
-
   "profile_two_factor_auth": "Two-Factor Authentication",
   "@profile_two_factor_auth": {
     "description": "Two-factor authentication option"
   },
-
   "profile_user_guide": "User Guide",
   "@profile_user_guide": {
     "description": "User guide option"
   },
-
   "profile_user_guide_subtitle": "Learn how to use the app",
   "@profile_user_guide_subtitle": {
     "description": "User guide subtitle"
   },
-
   "profile_video_tutorials": "Video Tutorials",
   "@profile_video_tutorials": {
     "description": "Video tutorials option"
   },
-
   "profile_video_tutorials_subtitle": "Watch step-by-step guides",
   "@profile_video_tutorials_subtitle": {
     "description": "Video tutorials subtitle"
   },
-
   "profile_contact_support": "Contact Support",
   "@profile_contact_support": {
     "description": "Contact support option"
   },
-
   "profile_contact_support_subtitle": "Get help from our team",
   "@profile_contact_support_subtitle": {
     "description": "Contact support subtitle"
   },
-
   "profile_logout_title": "Logout",
   "@profile_logout_title": {
     "description": "Logout dialog title"
   },
-
   "profile_logout_message": "Are you sure you want to logout?",
   "@profile_logout_message": {
     "description": "Logout confirmation message"
   },
-
   "profile_logged_out": "Logged out successfully",
   "@profile_logged_out": {
     "description": "Logged out success message"
   },
-
-  "profile_error_loading": "Error loading profile",
-  "@profile_error_loading": {
-    "description": "Error loading profile message"
-  },
-
-  "settings_saved_successfully": "Settings saved successfully!",
-  "@settings_saved_successfully": {
-    "description": "Settings saved success message"
-  },
-
-  "settings_ai_text_generation": "AI Text Generation Model",
-  "@settings_ai_text_generation": {
-    "description": "AI Text Generation Model section"
-  },
-
-  "settings_config": "Config",
-  "@settings_config": {
-    "description": "Config label"
-  },
-
-  "settings_add_new": "Add New...",
-  "@settings_add_new": {
-    "description": "Add new config option"
-  },
-
   "settings_edit_config": "Edit Config",
   "@settings_edit_config": {
     "description": "Edit config tooltip"
   },
-
-  "settings_delete_config": "Delete Config",
-  "@settings_delete_config": {
-    "description": "Delete config tooltip"
-  },
-
   "settings_test_connection": "Test Connection",
   "@settings_test_connection": {
     "description": "Test connection button"
   },
-
-  "settings_api_base_url": "API Base URL",
-  "@settings_api_base_url": {
-    "description": "API Base URL label"
-  },
-
-  "settings_model_info_ai_tasks": "This model will be used for AI tasks. Select or create a configuration above.",
-  "@settings_model_info_ai_tasks": {
-    "description": "AI model info message"
-  },
-
-  "settings_audio_transcription": "Audio Transcription Model",
-  "@settings_audio_transcription": {
-    "description": "Audio Transcription Model section"
-  },
-
-  "settings_api_url": "API URL",
-  "@settings_api_url": {
-    "description": "API URL label"
-  },
-
-  "settings_transcription_api_key_hint": "Enter your transcription API key",
-  "@settings_transcription_api_key_hint": {
-    "description": "Transcription API key hint"
-  },
-
-  "settings_model_info_transcription": "This model will be used for transcribing podcast audio to text.",
-  "@settings_model_info_transcription": {
-    "description": "Transcription model info message"
-  },
-
-  "settings_processing": "Processing Settings",
-  "@settings_processing": {
-    "description": "Processing Settings section"
-  },
-
-  "settings_audio_chunk_size": "Audio Chunk Size",
-  "@settings_audio_chunk_size": {
-    "description": "Audio chunk size label"
-  },
-
-  "settings_mb_per_chunk": "{mb}MB per chunk",
-  "@settings_mb_per_chunk": {
-    "description": "MB per chunk label"
-  },
-
-  "settings_max_threads": "Max Concurrent Threads",
-  "@settings_max_threads": {
-    "description": "Max concurrent threads label"
-  },
-
-  "settings_threads": "{threads} threads",
-  "@settings_threads": {
-    "description": "Threads label"
-  },
-
-  "settings_rss_subscription": "RSS Subscription Settings",
-  "@settings_rss_subscription": {
-    "description": "RSS Subscription Settings section"
-  },
-
-  "settings_rss_schedule_config": "RSS Schedule Configuration",
-  "@settings_rss_schedule_config": {
-    "description": "RSS Schedule Configuration option"
-  },
-
-  "settings_rss_schedule_subtitle": "Manage update frequency and schedule for all RSS subscriptions",
-  "@settings_rss_schedule_subtitle": {
-    "description": "RSS schedule subtitle"
-  },
-
-  "settings_app_version": "App Version",
-  "@settings_app_version": {
-    "description": "App version label"
-  },
-
-  "settings_backend_api_docs": "Backend API Documentation",
-  "@settings_backend_api_docs": {
-    "description": "Backend API Documentation option"
-  },
-
-  "settings_backend_api_docs_subtitle": "View API docs and endpoints",
-  "@settings_backend_api_docs_subtitle": {
-    "description": "Backend API docs subtitle"
-  },
-
-  "settings_api_documentation": "API Documentation",
-  "@settings_api_documentation": {
-    "description": "API Documentation dialog title"
-  },
-
-  "settings_text_generation": "Text Generation",
-  "@settings_text_generation": {
-    "description": "Text Generation endpoint name"
-  },
-
-  "settings_transcription_endpoint": "Transcription",
-  "@settings_transcription_endpoint": {
-    "description": "Transcription endpoint name"
-  },
-
-  "settings_user_settings_endpoint": "Settings",
-  "@settings_user_settings_endpoint": {
-    "description": "Settings endpoint name"
-  },
-
-  "settings_config_env_vars": "Configuration Environment Variables:",
-  "@settings_config_env_vars": {
-    "description": "Config env vars label"
-  },
-
-  "settings_openai_api_key": "OpenAI API key",
-  "@settings_openai_api_key": {
-    "description": "OpenAI API key env var"
-  },
-
-  "settings_openai_api_base_url": "API base URL",
-  "@settings_openai_api_base_url": {
-    "description": "API base URL env var"
-  },
-
-  "settings_transcription_api_url": "Transcription API URL",
-  "@settings_transcription_api_url": {
-    "description": "Transcription API URL env var"
-  },
-
-  "settings_transcription_api_key_env": "Transcription API key",
-  "@settings_transcription_api_key_env": {
-    "description": "Transcription API key env var"
-  },
-
-  "settings_transcription_model_name": "Transcription model name",
-  "@settings_transcription_model_name": {
-    "description": "Transcription model name env var"
-  },
-
-  "settings_summary_model": "AI summary model name",
-  "@settings_summary_model": {
-    "description": "Summary model name env var"
-  },
-
-  "settings_enter_api_url": "Please enter API URL",
-  "@settings_enter_api_url": {
-    "description": "Enter API URL validation"
-  },
-
-  "settings_enter_api_key": "Please enter API Key",
-  "@settings_enter_api_key": {
-    "description": "Enter API Key validation"
-  },
-
-  "settings_enter_model_name_validation": "Please enter Model Name",
-  "@settings_enter_model_name_validation": {
-    "description": "Enter Model Name validation"
-  },
-
   "settings_testing_connection": "Testing connection...",
   "@settings_testing_connection": {
     "description": "Testing connection message"
-  },
-
-  "settings_connection_successful": "Connection Successful",
-  "@settings_connection_successful": {
-    "description": "Connection successful title"
-  },
-
-  "settings_connection_failed": "Connection Failed",
-  "@settings_connection_failed": {
-    "description": "Connection failed title"
-  },
-
-  "settings_response_time": "Response Time: {ms}ms",
-  "@settings_response_time": {
-    "description": "Response time label"
-  },
-
-  "settings_test_response": "Test Response:",
-  "@settings_test_response": {
-    "description": "Test response label"
-  },
-
-  "settings_error_message": "Error Message:",
-  "@settings_error_message": {
-    "description": "Error message label"
-  },
-
-  "settings_unknown_error": "Unknown error occurred",
-  "@settings_unknown_error": {
-    "description": "Unknown error message"
-  },
-
-  "settings_connection_error": "Connection Error",
-  "@settings_connection_error": {
-    "description": "Connection error title"
-  },
-
-  "settings_unexpected_error": "An unexpected error occurred:",
-  "@settings_unexpected_error": {
-    "description": "Unexpected error message"
-  },
-
-  "settings_delete_confirm_title": "Confirm Delete",
-  "@settings_delete_confirm_title": {
-    "description": "Delete confirm title"
-  },
-
-  "settings_delete_confirm_message": "Are you sure you want to delete model \"{name}\"? This will affect all features using this model.",
-  "@settings_delete_confirm_message": {
-    "description": "Delete confirm message"
-  },
-
-  "settings_model_deleted": "Model \"{name}\" deleted",
-  "@settings_model_deleted": {
-    "description": "Model deleted message"
-  },
-
-  "settings_delete_failed_msg": "Delete failed",
-  "@settings_delete_failed_msg": {
-    "description": "Delete failed message"
-  },
-
-  "settings_model_enabled_disabled": "Model {status}",
-  "@settings_model_enabled_disabled": {
-    "description": "Model enabled/disabled message"
-  },
-
-  "settings_operation_failed_msg": "Operation failed",
-  "@settings_operation_failed_msg": {
-    "description": "Operation failed message"
-  },
-
-  "settings_set_default_success": "Set \"{name}\" as default model",
-  "@settings_set_default_success": {
-    "description": "Set default success message"
-  },
-
-  "settings_set_default_failed_msg": "Failed to set as default model",
-  "@settings_set_default_failed_msg": {
-    "description": "Set default failed message"
-  },
-
-  "settings_load_models_failed": "Failed to load models: {error}",
-  "@settings_load_models_failed": {
-    "description": "Load models failed message"
   },
   "invalid_navigation_arguments": "Invalid navigation arguments",
   "@invalid_navigation_arguments": {
@@ -1942,197 +908,78 @@
   "@invalid_episode_id": {
     "description": "Invalid episode ID error"
   },
-
   "backend_api_server_config": "Backend API Server Configuration",
   "@backend_api_server_config": {
     "description": "Backend API server configuration dialog title"
   },
-
   "backend_api_url_label": "Backend API URL",
   "@backend_api_url_label": {
     "description": "Backend API URL label"
   },
-
   "backend_api_url_hint": "https://api.example.com\\nor http://192.168.1.10:8080",
   "@backend_api_url_hint": {
     "description": "Backend API URL hint text"
   },
-
   "backend_api_description": "Note: This is the backend API server, not related to AI model API",
   "@backend_api_description": {
     "description": "Backend API description"
   },
-
   "use_local_url": "Local Server",
   "@use_local_url": {
     "description": "Use local URL button label"
   },
-
   "connection_error_hint": "Connection error",
   "@connection_error_hint": {
     "description": "Connection error hint text"
   },
-
   "connection_status_unverified": "Unverified",
   "@connection_status_unverified": {
     "description": "Connection status - not verified yet"
   },
-
   "connection_status_verifying": "Verifying...",
   "@connection_status_verifying": {
     "description": "Connection status - currently verifying"
   },
-
   "connection_status_success": "Success",
   "@connection_status_success": {
     "description": "Connection status - successful connection"
   },
-
   "connection_status_failed": "Failed",
   "@connection_status_failed": {
     "description": "Connection status - connection failed"
   },
-
   "server_history_title": "History",
   "@server_history_title": {
     "description": "Server history title"
   },
-
   "profile_viewed_title": "Viewed",
   "@profile_viewed_title": {
     "description": "Profile viewed history title"
   },
-
   "server_history_empty": "No history",
   "@server_history_empty": {
     "description": "No server history message"
   },
-
-  "connected_successfully": "Connected Successfully",
-  "@connected_successfully": {
-    "description": "Connection success message"
-  },
-
   "save_failed": "Save failed: {error}",
   "@save_failed": {
     "description": "Save failed error message"
   },
-
-  "restore_defaults": "Restore Defaults",
-  "@restore_defaults": {
-    "description": "Restore defaults button label"
-  },
-
-  "restore_defaults_confirmation": "Are you sure you want to restore the default server address?",
-  "@restore_defaults_confirmation": {
-    "description": "Restore defaults confirmation message"
-  },
-
   "restore_defaults_success": "Restored default server address",
   "@restore_defaults_success": {
     "description": "Restore defaults success message"
   },
-
-  "default_server_address": "Default server address",
-  "@default_server_address": {
-    "description": "Default server address label"
-  },
-
-  "message_copied": "Message copied to clipboard",
-  "@message_copied": {
-    "description": "Message copied confirmation"
-  },
-
-  "regenerating_response": "Regenerating response...",
-  "@regenerating_response": {
-    "description": "Regenerating response message"
-  },
-
-  "chat_mode_coming_soon": "Chat mode selector coming soon!",
-  "@chat_mode_coming_soon": {
-    "description": "Chat mode coming soon message"
-  },
-
-  "voice_input_coming_soon": "Voice input coming soon!",
-  "@voice_input_coming_soon": {
-    "description": "Voice input coming soon message"
-  },
-
   "drop_files_here": "Drop files here!",
   "@drop_files_here": {
     "description": "Drop files hint"
   },
-
-  "set_as_default": "Set as default",
-  "@set_as_default": {
-    "description": "Set as default button label"
-  },
-
-  "test_content": "Test Content",
-  "@test_content": {
-    "description": "Test content label"
-  },
-
-  "enter_test_content": "Enter test content...",
-  "@enter_test_content": {
-    "description": "Enter test content hint"
-  },
-
-  "server_config_title": "Server Configuration",
-  "@server_config_title": {
-    "description": "Server configuration dialog title"
-  },
-
-  "server_config_description": "Enter API Base URL:",
-  "@server_config_description": {
-    "description": "Server config description"
-  },
-
-  "server_config_hint": "http://localhost:8000",
-  "@server_config_hint": {
-    "description": "Server URL hint text"
-  },
-
-  "server_config_saved": "Server URL updated. Please restart app if issues persist.",
-  "@server_config_saved": {
-    "description": "Server config saved message"
-  },
-
-  "floating_player_label": "Podcast playback control",
-  "@floating_player_label": {
-    "description": "Floating player accessibility label"
-  },
-
-  "floating_player_tooltip": "Play/Pause - Long-press to open player",
-  "@floating_player_tooltip": {
-    "description": "Floating player tooltip"
-  },
-
-  "floating_player_nav_hint": "Long-press to open player",
-  "@floating_player_nav_hint": {
-    "description": "Floating player navigation hint"
-  },
-
-  "podcast_bulk_select_mode": "Select Podcasts",
-  "@podcast_bulk_select_mode": {
-    "description": "Title for bulk selection mode"
-  },
-
   "podcast_enter_select_mode": "Select Mode",
   "@podcast_enter_select_mode": {
     "description": "Tooltip to enter selection mode"
   },
-
   "podcast_deselect_all": "Deselect All",
   "@podcast_deselect_all": {
     "description": "Deselect all tooltip"
   },
-
-  "podcast_bulk_delete": "Bulk Delete",
-  "@podcast_bulk_delete": {
-    "description": "Bulk delete action label"
-  },
-
   "podcast_selected_count": "{count} selected",
   "@podcast_selected_count": {
     "description": "Selected count label",
@@ -2142,12 +989,10 @@
       }
     }
   },
-
   "podcast_bulk_delete_title": "Delete Selected Podcasts",
   "@podcast_bulk_delete_title": {
     "description": "Bulk delete dialog title"
   },
-
   "podcast_bulk_delete_message": "Are you sure you want to delete {count} podcast{count, plural, =1{} other{s}}?",
   "@podcast_bulk_delete_message": {
     "description": "Bulk delete confirmation message",
@@ -2157,505 +1002,321 @@
       }
     }
   },
-
   "podcast_bulk_delete_warning": "This action will also delete all episodes associated with these podcasts. This cannot be undone.",
   "@podcast_bulk_delete_warning": {
     "description": "Bulk delete warning message"
   },
-
   "podcast_bulk_delete_confirm": "Delete",
   "@podcast_bulk_delete_confirm": {
     "description": "Bulk delete confirm button"
   },
-
-  "podcast_bulk_delete_success": "{count, plural, =1{1 podcast} other{{count} podcasts}} deleted successfully",
-  "@podcast_bulk_delete_success": {
-    "description": "Bulk delete success message",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-
-  "podcast_bulk_delete_partial_success": "{successCount} deleted, {failedCount} failed",
-  "@podcast_bulk_delete_partial_success": {
-    "description": "Bulk delete partial success message",
-    "placeholders": {
-      "successCount": {
-        "type": "int"
-      },
-      "failedCount": {
-        "type": "int"
-      }
-    }
-  },
-
-  "podcast_bulk_delete_failed": "Delete failed: {error}",
-  "@podcast_bulk_delete_failed": {
-    "description": "Bulk delete failed message",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-
-  "podcast_view_errors": "View Errors",
-  "@podcast_view_errors": {
-    "description": "View errors button label"
-  },
-
-  "podcast_bulk_delete_errors_title": "Delete Errors",
-  "@podcast_bulk_delete_errors_title": {
-    "description": "Bulk delete errors dialog title"
-  },
-
-  "dismiss": "Dismiss",
-  "@dismiss": {
-    "description": "Dismiss button label"
-  },
-
   "update_check_updates": "Check for Updates",
   "@update_check_updates": {
     "description": "Check for updates button/label"
   },
-
   "update_auto_check": "Automatically check for updates",
   "@update_auto_check": {
     "description": "Auto check for updates description"
   },
-
   "update_new_version_available": "New Version Available",
   "@update_new_version_available": {
     "description": "New version available title"
   },
-
   "update_skip_this_version": "Skip This Version",
   "@update_skip_this_version": {
     "description": "Skip this version button label"
   },
-
   "update_later": "Later",
   "@update_later": {
     "description": "Remind me later button label"
   },
-
   "update_download": "Download",
   "@update_download": {
     "description": "Download update button label"
   },
-
   "update_latest_version": "Latest Version",
   "@update_latest_version": {
     "description": "Latest version label"
   },
-
   "update_published_at": "Published",
   "@update_published_at": {
     "description": "Published date label"
   },
-
   "update_file_size": "Size",
   "@update_file_size": {
     "description": "File size label"
   },
-
   "update_release_notes": "Release Notes",
   "@update_release_notes": {
     "description": "Release notes section label"
   },
-
   "update_download_failed": "Download failed",
   "@update_download_failed": {
     "description": "Download failed error message"
   },
-
   "update_checking": "Checking for updates...",
   "@update_checking": {
     "description": "Checking for updates message"
   },
-
   "update_check_failed": "Check Failed",
   "@update_check_failed": {
     "description": "Update check failed title"
   },
-
-  "update_current_version": "Current Version",
-  "@update_current_version": {
-    "description": "Current version label"
-  },
-
-  "update_available_description": "A new version is available. Would you like to update now?",
-  "@update_available_description": {
-    "description": "Update available description message"
-  },
-
   "update_up_to_date": "You're up to date",
   "@update_up_to_date": {
     "description": "App is up to date message"
   },
-
   "update_try_again": "Try Again",
   "@update_try_again": {
     "description": "Try again button label"
   },
-
   "back_button": "Back",
   "@back_button": {
     "description": "Back button tooltip label"
   },
-
   "ai_model_default": "Default",
   "@ai_model_default": {
     "description": "Default model badge"
   },
-
   "ai_model_system": "System",
   "@ai_model_system": {
     "description": "System model badge"
   },
-
   "ai_model_enable": "Enable model",
   "@ai_model_enable": {
     "description": "Enable model tooltip"
   },
-
   "ai_model_disable": "Disable model",
   "@ai_model_disable": {
     "description": "Disable model tooltip"
   },
-
   "ai_edit_config": "Edit Config",
   "@ai_edit_config": {
     "description": "Edit config menu item"
   },
-
   "ai_test_connection": "Test Connection",
   "@ai_test_connection": {
     "description": "Test connection menu item"
   },
-
   "ai_set_as_default": "Set as Default",
   "@ai_set_as_default": {
     "description": "Set as default menu item"
   },
-
   "ai_test_prompt_transcription": "Test audio transcription",
   "@ai_test_prompt_transcription": {
     "description": "Default test prompt for transcription"
   },
-
   "ai_test_prompt_generation": "Please briefly introduce AI",
   "@ai_test_prompt_generation": {
     "description": "Default test prompt for text generation"
   },
-
   "ai_enter_test_content": "Please enter test content",
   "@ai_enter_test_content": {
     "description": "Test content validation"
   },
-
   "ai_test_success": "Test Successful",
   "@ai_test_success": {
     "description": "Test success message"
   },
-
   "ai_test_failed": "Test Failed",
   "@ai_test_failed": {
     "description": "Test failed message"
   },
-
   "ai_test_content": "Test Content",
   "@ai_test_content": {
     "description": "Test content label for model testing"
   },
-
   "ai_transcription_test_info_title": "Transcription Test Note",
   "@ai_transcription_test_info_title": {
     "description": "Transcription test info title"
   },
-
   "ai_transcription_test_info_description": "Transcription testing requires a sample audio file. Please ensure you have an audio file ready for testing.",
   "@ai_transcription_test_info_description": {
     "description": "Transcription test info description"
   },
-
   "ai_transcription_test_info_details": "Click \"Test Connection\" to use a built-in test audio for quick verification.",
   "@ai_transcription_test_info_details": {
     "description": "Transcription test info details"
   },
-
   "settings_response_speed": "Response Speed",
   "@settings_response_speed": {
     "description": "Response speed label"
   },
-
   "settings_response_very_fast": "Very Fast",
   "@settings_response_very_fast": {
     "description": "Very fast response"
   },
-
   "settings_response_normal": "Normal",
   "@settings_response_normal": {
     "description": "Normal response"
   },
-
   "settings_response_slow": "Slow",
   "@settings_response_slow": {
     "description": "Slow response"
   },
-
   "schedule_load_failed": "Load Failed",
   "@schedule_load_failed": {
     "description": "Schedule load failed message"
   },
-
   "schedule_no_config": "No configuration found",
   "@schedule_no_config": {
     "description": "No schedule configuration message"
   },
-
   "schedule_saving": "Saving...",
   "@schedule_saving": {
     "description": "Saving schedule state"
   },
-
   "schedule_save_settings": "Save Settings",
   "@schedule_save_settings": {
     "description": "Save settings button"
   },
-
   "schedule_current_config": "Current Configuration",
   "@schedule_current_config": {
     "description": "Current configuration section"
   },
-
   "schedule_update_frequency": "Update Frequency",
   "@schedule_update_frequency": {
     "description": "Update frequency label"
   },
-
   "schedule_update_time": "Update Time",
   "@schedule_update_time": {
     "description": "Update time label"
   },
-
   "schedule_update_day": "Update Day",
   "@schedule_update_day": {
     "description": "Update day label"
   },
-
   "schedule_next_update": "Next Update",
   "@schedule_next_update": {
     "description": "Next update label"
   },
-
   "schedule_hourly": "Hourly",
   "@schedule_hourly": {
     "description": "Hourly frequency option"
   },
-
   "schedule_daily": "Daily",
   "@schedule_daily": {
     "description": "Daily frequency option"
   },
-
   "schedule_weekly": "Weekly",
   "@schedule_weekly": {
     "description": "Weekly frequency option"
   },
-
   "schedule_settings": "Update Settings",
   "@schedule_settings": {
     "description": "Schedule settings page title"
   },
-
   "schedule_week_short": "Wk",
   "@schedule_week_short": {
     "description": "Week short label"
   },
-
   "schedule_day_mon": "Mon",
   "@schedule_day_mon": {
     "description": "Monday short"
   },
-
   "schedule_day_tue": "Tue",
   "@schedule_day_tue": {
     "description": "Tuesday short"
   },
-
   "schedule_day_wed": "Wed",
   "@schedule_day_wed": {
     "description": "Wednesday short"
   },
-
   "schedule_day_thu": "Thu",
   "@schedule_day_thu": {
     "description": "Thursday short"
   },
-
   "schedule_day_fri": "Fri",
   "@schedule_day_fri": {
     "description": "Friday short"
   },
-
   "schedule_day_sat": "Sat",
   "@schedule_day_sat": {
     "description": "Saturday short"
   },
-
   "schedule_day_sun": "Sun",
   "@schedule_day_sun": {
     "description": "Sunday short"
   },
-
   "schedule_select_time": "Select Time",
   "@schedule_select_time": {
     "description": "Select time placeholder"
   },
-
   "schedule_select_update_time": "Please select update time",
   "@schedule_select_update_time": {
     "description": "Validation: select time"
   },
-
   "schedule_select_time_and_day": "Please select update time and day",
   "@schedule_select_time_and_day": {
     "description": "Validation: select time and day"
   },
-
   "schedule_settings_saved": "Settings saved",
   "@schedule_settings_saved": {
     "description": "Settings saved message"
   },
-
   "schedule_save_failed": "Save failed",
   "@schedule_save_failed": {
     "description": "Save failed message"
   },
-
   "schedule_unknown_error": "Unknown error",
   "@schedule_unknown_error": {
     "description": "Unknown error message"
   },
-
   "feed_no_subscriptions": "No subscriptions yet",
   "@feed_no_subscriptions": {
     "description": "No subscriptions message"
   },
-
   "feed_no_subscriptions_hint": "Subscribe to podcasts you're interested in!",
   "@feed_no_subscriptions_hint": {
     "description": "Hint to subscribe to podcasts"
   },
-
   "feed_subscribe_podcast": "Subscribe Podcast",
   "@feed_subscribe_podcast": {
     "description": "Subscribe podcast button"
   },
-
-  "podcast_platform_xiaoyuzhou": "Xiaoyuzhou",
-  "@podcast_platform_xiaoyuzhou": {
-    "description": "Xiaoyuzhou platform name"
-  },
-
-  "podcast_platform_ximalaya": "Ximalaya",
-  "@podcast_platform_ximalaya": {
-    "description": "Ximalaya platform name"
-  },
-
   "podcast_no_shownotes": "No show notes available",
   "@podcast_no_shownotes": {
     "description": "No show notes message"
   },
-
-  "podcast_copy_shownotes": "Copy",
-  "@podcast_copy_shownotes": {
-    "description": "Copy shownotes button label"
-  },
-
-  "podcast_shownotes_copied": "Shownotes copied to clipboard",
-  "@podcast_shownotes_copied": {
-    "description": "Shownotes copied success message"
-  },
-
-  "podcast_unknown_error": "Unknown error",
-  "@podcast_unknown_error": {
-    "description": "Unknown error message"
-  },
-
-  "podcast_no_match_found": "No matching content found",
-  "@podcast_no_match_found": {
-    "description": "No search match message"
-  },
-
   "podcast_no_transcript": "No transcript available",
   "@podcast_no_transcript": {
     "description": "No transcript message"
   },
-
   "podcast_click_to_transcribe": "Click \"Start Transcription\" to generate transcript",
   "@podcast_click_to_transcribe": {
     "description": "Click to transcribe hint"
   },
-
-  "podcast_conversation": "Conversation",
-  "@podcast_conversation": {
-    "description": "Conversation tab label"
-  },
-
-  "podcast_transcription_waiting": "Waiting to start",
-  "@podcast_transcription_waiting": {
-    "description": "Transcription waiting status"
-  },
-
-  "podcast_transcription_completed": "Completed",
-  "@podcast_transcription_completed": {
-    "description": "Transcription completed status"
-  },
-
   "podcast_transcription_failed": "Failed",
   "@podcast_transcription_failed": {
     "description": "Transcription failed status"
   },
-
-  "podcast_unknown_status": "Unknown status",
-  "@podcast_unknown_status": {
-    "description": "Unknown transcription status"
-  },
-
   "date_format": "{year}-{month}-{day}",
   "@date_format": {
     "description": "Date format pattern",
     "placeholders": {
-      "year": {"type": "int"},
-      "month": {"type": "String"},
-      "day": {"type": "String"}
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "String"
+      },
+      "day": {
+        "type": "String"
+      }
     }
   },
-
   "podcast_search_hint": "Search podcasts or episodes...",
   "@podcast_search_hint": {
     "description": "Search input placeholder for podcasts"
   },
-
   "podcast_discover_title": "Discover",
   "@podcast_discover_title": {
     "description": "Podcast discover page title"
   },
-
-  "podcast_discover_search_hint": "Search podcasts & episodes...",
-  "@podcast_discover_search_hint": {
-    "description": "Search hint on podcast discover page"
-  },
-
   "podcast_discover_top_charts": "Top Charts",
   "@podcast_discover_top_charts": {
     "description": "Top charts section title on podcast discover page"
   },
-
   "podcast_discover_trending_in": "Trending in {country}",
   "@podcast_discover_trending_in": {
     "description": "Subtitle showing trending country on podcast discover page",
@@ -2665,77 +1326,50 @@
       }
     }
   },
-
   "podcast_discover_see_all": "See All",
   "@podcast_discover_see_all": {
     "description": "See all button text on podcast discover charts"
   },
-
-  "podcast_discover_collapse": "Collapse",
-  "@podcast_discover_collapse": {
-    "description": "Collapse button text on podcast discover charts"
-  },
-
   "podcast_discover_no_chart_data": "No chart data available",
   "@podcast_discover_no_chart_data": {
     "description": "Empty state text when discover charts are unavailable"
   },
-
   "podcast_discover_browse_by_category": "Browse by Category",
   "@podcast_discover_browse_by_category": {
     "description": "Category section title on podcast discover page"
   },
-
-  "podcast_discover_open_link_failed": "Failed to open link",
-  "@podcast_discover_open_link_failed": {
-    "description": "Error message shown when opening Apple Podcasts link fails"
-  },
-
   "podcast_country_label": "Country/Region",
   "@podcast_country_label": {
     "description": "Country selector label"
   },
-
-  "podcast_search_empty_hint": "Enter a podcast or episode name to search",
-  "@podcast_search_empty_hint": {
-    "description": "Empty search state hint message"
-  },
-
   "podcast_search_loading": "Searching...",
   "@podcast_search_loading": {
     "description": "Search loading message"
   },
-
   "podcast_search_error": "Search failed",
   "@podcast_search_error": {
     "description": "Search error title"
   },
-
   "podcast_search_no_results": "No results found",
   "@podcast_search_no_results": {
     "description": "No search results message"
   },
-
   "podcast_search_section_podcasts": "Podcasts",
   "@podcast_search_section_podcasts": {
     "description": "Podcasts section title in search results"
   },
-
   "podcast_search_section_episodes": "Episodes",
   "@podcast_search_section_episodes": {
     "description": "Episodes section title in search results"
   },
-
   "podcast_subscribe": "Subscribe",
   "@podcast_subscribe": {
     "description": "Subscribe button label"
   },
-
   "podcast_subscribed": "Subscribed",
   "@podcast_subscribed": {
     "description": "Subscribed status label"
   },
-
   "podcast_subscribe_success": "Subscribed to {podcastName}",
   "@podcast_subscribe_success": {
     "description": "Subscribe success message",
@@ -2745,7 +1379,6 @@
       }
     }
   },
-
   "podcast_subscribe_failed": "Failed to subscribe: {error}",
   "@podcast_subscribe_failed": {
     "description": "Subscribe failed message",
@@ -2755,362 +1388,214 @@
       }
     }
   },
-
-  "podcast_network_hint": "Network access to iTunes API may be restricted in some regions. Try using a VPN if connection fails.",
-  "@podcast_network_hint": {
-    "description": "Hint about network restrictions and VPN"
-  },
-
-  "podcast_vpn_required": "Connection failed. iTunes API may be blocked in your region. Please try using a VPN.",
-  "@podcast_vpn_required": {
-    "description": "VPN required message for iTunes API access"
-  },
-
   "podcast_country_china": "China",
   "@podcast_country_china": {
     "description": "Country name: China"
   },
-
   "podcast_country_usa": "USA",
   "@podcast_country_usa": {
     "description": "Country name: USA"
   },
-
   "podcast_country_japan": "Japan",
   "@podcast_country_japan": {
     "description": "Country name: Japan"
   },
-
   "podcast_country_uk": "United Kingdom",
   "@podcast_country_uk": {
     "description": "Country name: United Kingdom"
   },
-
   "podcast_country_germany": "Germany",
   "@podcast_country_germany": {
     "description": "Country name: Germany"
   },
-
   "podcast_country_france": "France",
   "@podcast_country_france": {
     "description": "Country name: France"
   },
-
   "podcast_country_canada": "Canada",
   "@podcast_country_canada": {
     "description": "Country name: Canada"
   },
-
   "podcast_country_australia": "Australia",
   "@podcast_country_australia": {
     "description": "Country name: Australia"
   },
-
   "podcast_country_korea": "South Korea",
   "@podcast_country_korea": {
     "description": "Country name: South Korea"
   },
-
   "podcast_country_taiwan": "Taiwan",
   "@podcast_country_taiwan": {
     "description": "Country name: Taiwan"
   },
-
   "podcast_country_hong_kong": "Hong Kong",
   "@podcast_country_hong_kong": {
     "description": "Country name: Hong Kong"
   },
-
   "podcast_country_india": "India",
   "@podcast_country_india": {
     "description": "Country name: India"
   },
-
   "podcast_country_brazil": "Brazil",
   "@podcast_country_brazil": {
     "description": "Country name: Brazil"
   },
-
   "podcast_country_mexico": "Mexico",
   "@podcast_country_mexico": {
     "description": "Country name: Mexico"
   },
-
   "podcast_country_spain": "Spain",
   "@podcast_country_spain": {
     "description": "Country name: Spain"
   },
-
   "podcast_country_italy": "Italy",
   "@podcast_country_italy": {
     "description": "Country name: Italy"
   },
-
   "podcast_reparse_tooltip": "Reparse podcast (fetch latest episodes and links)",
   "@podcast_reparse_tooltip": {
     "description": "Reparse podcast button tooltip"
   },
-
   "podcast_reparsing": "Reparse podcast...",
   "@podcast_reparsing": {
     "description": "Reparsing podcast message"
   },
-
   "podcast_reparse_completed": "✅ Reparse completed!",
   "@podcast_reparse_completed": {
     "description": "Reparse completed message"
   },
-
   "podcast_reparse_failed": "❌ Reparse failed:",
   "@podcast_reparse_failed": {
     "description": "Reparse failed message"
   },
-
   "podcast_player_now_playing": "Now Playing",
   "@podcast_player_now_playing": {
     "description": "Now playing label in floating player"
   },
-
   "podcast_player_collapse": "Collapse",
   "@podcast_player_collapse": {
     "description": "Collapse button tooltip in floating player"
   },
-
   "podcast_player_list": "Playlist",
   "@podcast_player_list": {
     "description": "Playlist button tooltip in floating player"
   },
-
   "podcast_player_sleep_mode": "Sleep Mode",
   "@podcast_player_sleep_mode": {
     "description": "Sleep mode button tooltip in floating player"
   },
-
-  "podcast_player_download": "Download",
-  "@podcast_player_download": {
-    "description": "Download button tooltip in floating player"
-  },
-
-  "podcast_player_expand": "Expand",
-  "@podcast_player_expand": {
-    "description": "Expand button tooltip in collapsed floating player"
-  },
-
   "podcast_player_play": "Play",
   "@podcast_player_play": {
     "description": "Play button tooltip in floating player"
   },
-
   "podcast_player_pause": "Pause",
   "@podcast_player_pause": {
     "description": "Pause button tooltip in floating player"
   },
-
   "podcast_player_rewind_10": "Rewind 10s",
   "@podcast_player_rewind_10": {
     "description": "Rewind 10 seconds button tooltip"
   },
-
   "podcast_player_forward_30": "Forward 30s",
   "@podcast_player_forward_30": {
     "description": "Forward 30 seconds button tooltip"
   },
-
-  "podcast_player_playback_speed": "Playback Speed",
-  "@podcast_player_playback_speed": {
-    "description": "Playback speed selector tooltip"
-  },
-
   "podcast_play_episode": "Play",
   "@podcast_play_episode": {
     "description": "Play button label (short version for mobile)"
   },
-
   "podcast_play_episode_full": "Play",
   "@podcast_play_episode_full": {
     "description": "Play button label (full version for desktop)"
   },
-
   "podcast_source": "Source",
   "@podcast_source": {
     "description": "Source link label"
   },
-
   "podcast_speed_title": "Playback Speed",
   "@podcast_speed_title": {
     "description": "Playback speed selection title"
   },
-
   "podcast_speed_done": "Done",
   "@podcast_speed_done": {
     "description": "Speed selection done button"
   },
-
-  "podcast_speed_current_speed": "Current Speed",
-  "@podcast_speed_current_speed": {
-    "description": "Current speed label"
-  },
-
-  "podcast_speed_select": "Select Speed",
-  "@podcast_speed_select": {
-    "description": "Speed selection label"
-  },
-
-  "podcast_speed_feature_1": "Quick Selection",
-  "@podcast_speed_feature_1": {
-    "description": "Speed feature 1: Quick Selection"
-  },
-
-  "podcast_speed_feature_2": "Precise Control",
-  "@podcast_speed_feature_2": {
-    "description": "Speed feature 2: Precise Control"
-  },
-
-  "podcast_speed_feature_3": "Ruler Scale",
-  "@podcast_speed_feature_3": {
-    "description": "Speed feature 3: Ruler Scale"
-  },
-
-  "podcast_speed_feature_4": "Instant Apply",
-  "@podcast_speed_feature_4": {
-    "description": "Speed feature 4: Instant Apply"
-  },
-
-  "podcast_speed_feature_5": "Smooth Experience",
-  "@podcast_speed_feature_5": {
-    "description": "Speed feature 5: Smooth Experience"
-  },
-
   "podcast_tab_shownotes": "Shownotes",
   "@podcast_tab_shownotes": {
     "description": "Episode detail tab: Shownotes"
   },
-
   "podcast_tab_transcript": "Transcript",
   "@podcast_tab_transcript": {
     "description": "Episode detail tab: Transcript"
   },
-
   "podcast_tab_chat": "Chat",
   "@podcast_tab_chat": {
     "description": "Episode detail tab: Chat"
   },
-
   "podcast_transcription_processing": "Transcription in progress...",
   "@podcast_transcription_processing": {
     "description": "Transcription status: Processing"
   },
-
   "podcast_transcription_auto_starting": "Auto-starting transcription...",
   "@podcast_transcription_auto_starting": {
     "description": "Transcription auto-starting message"
   },
-
-  "podcast_transcription_starting": "Starting transcription...",
-  "@podcast_transcription_starting": {
-    "description": "Transcription starting message"
-  },
-
-  "podcast_transcription_start_title": "Start Transcription",
-  "@podcast_transcription_start_title": {
-    "description": "Transcription start button title"
-  },
-
-  "podcast_transcription_start_desc": "Start transcribing this episode to generate text content and AI-powered summaries.",
-  "@podcast_transcription_start_desc": {
-    "description": "Transcription start description"
-  },
-
-  "podcast_transcription_start_button": "Start Transcription",
-  "@podcast_transcription_start_button": {
-    "description": "Transcription start button label"
-  },
-
-  "podcast_conversation_title": "AI Conversation",
-  "@podcast_conversation_title": {
-    "description": "AI Conversation title"
-  },
-
-  "podcast_conversation_empty_title": "Start a conversation",
-  "@podcast_conversation_empty_title": {
-    "description": "Empty conversation title"
-  },
-
-  "podcast_conversation_empty_hint": "Ask questions about this episode and get AI-powered answers based on the transcript.",
-  "@podcast_conversation_empty_hint": {
-    "description": "Empty conversation hint"
-  },
-
-  "podcast_conversation_clear_history": "Clear Conversation History",
-  "@podcast_conversation_clear_history": {
-    "description": "Clear conversation history dialog title"
-  },
-
-  "podcast_conversation_history": "Chat History",
-  "@podcast_conversation_history": {
-    "description": "Chat history title"
-  },
-
-  "podcast_conversation_delete_title": "Delete Chat",
-  "@podcast_conversation_delete_title": {
-    "description": "Delete chat dialog title"
-  },
-
-  "podcast_conversation_delete_confirm": "Are you sure you want to delete this chat? This action cannot be undone.",
-  "@podcast_conversation_delete_confirm": {
-    "description": "Delete chat confirmation message"
-  },
-
   "podcast_conversation_title": "Chat with AI",
   "@podcast_conversation_title": {
     "description": "Conversation screen title"
   },
-
-  "podcast_conversation_clear_confirm": "Are you sure you want to clear all conversation history? This cannot be undone.",
-  "@podcast_conversation_clear_confirm": {
-    "description": "Clear conversation confirmation message"
+  "podcast_conversation_empty_title": "Start a conversation",
+  "@podcast_conversation_empty_title": {
+    "description": "Empty conversation title"
   },
-
+  "podcast_conversation_empty_hint": "Ask questions about this episode and get AI-powered answers based on the transcript.",
+  "@podcast_conversation_empty_hint": {
+    "description": "Empty conversation hint"
+  },
+  "podcast_conversation_history": "Chat History",
+  "@podcast_conversation_history": {
+    "description": "Chat history title"
+  },
+  "podcast_conversation_delete_title": "Delete Chat",
+  "@podcast_conversation_delete_title": {
+    "description": "Delete chat dialog title"
+  },
+  "podcast_conversation_delete_confirm": "Are you sure you want to delete this chat? This action cannot be undone.",
+  "@podcast_conversation_delete_confirm": {
+    "description": "Delete chat confirmation message"
+  },
   "podcast_conversation_send_hint": "Send message (Ctrl+Enter)",
   "@podcast_conversation_send_hint": {
     "description": "Send message hint text"
   },
-
   "podcast_conversation_no_summary_hint": "Conversation requires a completed transcript. Please wait for transcription to complete.",
   "@podcast_conversation_no_summary_hint": {
     "description": "No summary hint for conversation"
   },
-
   "podcast_conversation_loading_failed": "Failed to load conversation history",
   "@podcast_conversation_loading_failed": {
     "description": "Failed to load conversation message"
   },
-
   "podcast_conversation_user": "You",
   "@podcast_conversation_user": {
     "description": "User label in conversation"
   },
-
   "podcast_conversation_assistant": "AI Assistant",
   "@podcast_conversation_assistant": {
     "description": "Assistant label in conversation"
   },
-
   "podcast_conversation_reload": "Reload",
   "@podcast_conversation_reload": {
     "description": "Reload button label"
   },
-
   "podcast_conversation_new_chat": "New Chat",
   "@podcast_conversation_new_chat": {
     "description": "New chat button tooltip"
   },
-
   "podcast_conversation_new_chat_confirm": "Starting a new chat will clear the current conversation history. Are you sure?",
   "@podcast_conversation_new_chat_confirm": {
     "description": "New chat confirmation message"
   },
-
   "podcast_conversation_message_count": "{count} messages",
   "@podcast_conversation_message_count": {
     "description": "Conversation message count",
@@ -3120,67 +1605,42 @@
       }
     }
   },
-
   "podcast_error_loading": "Failed to load content",
   "@podcast_error_loading": {
     "description": "Generic error loading message"
   },
-
   "podcast_transcription_delete": "Delete",
   "@podcast_transcription_delete": {
     "description": "Transcription delete button"
   },
-
   "podcast_transcription_clear": "Clear",
   "@podcast_transcription_clear": {
     "description": "Transcription clear button"
   },
-
   "podcast_episode_not_found": "Episode not found",
   "@podcast_episode_not_found": {
     "description": "Episode not found message"
   },
-
   "podcast_go_back": "Go back",
   "@podcast_go_back": {
     "description": "Go back button label"
   },
-
   "podcast_load_failed": "Failed to load",
   "@podcast_load_failed": {
     "description": "Load failed message"
   },
-
   "podcast_summary_empty_hint": "No summary available",
   "@podcast_summary_empty_hint": {
     "description": "Summary empty hint"
   },
-
-  "podcast_filter_refresh": "Refresh",
-  "@podcast_filter_refresh": {
-    "description": "Filter refresh button label"
-  },
-
   "podcast_please_select_time": "Please select a time",
   "@podcast_please_select_time": {
     "description": "Please select time validation message"
   },
-
   "podcast_please_select_time_and_day": "Please select a time and day",
   "@podcast_please_select_time_and_day": {
     "description": "Please select time and day validation message"
   },
-
-  "podcast_bulk_import_urls_extracted": "Extracted {count} URLs from file",
-  "@podcast_bulk_import_urls_extracted": {
-    "description": "Bulk import URLs extracted message with count",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-
   "podcast_bulk_import_file_error": "Failed to read file: {error}",
   "@podcast_bulk_import_file_error": {
     "description": "Bulk import file error message",
@@ -3190,32 +1650,18 @@
       }
     }
   },
-
-  "podcast_bulk_import_success": "Successfully imported {count} podcasts",
-  "@podcast_bulk_import_success": {
-    "description": "Bulk import success message with count",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-
   "podcast_bulk_import_input_text": "Text",
   "@podcast_bulk_import_input_text": {
     "description": "Bulk import input tab label for text input"
   },
-
   "podcast_bulk_import_input_file": "File",
   "@podcast_bulk_import_input_file": {
     "description": "Bulk import input tab label for file upload"
   },
-
   "podcast_bulk_import_no_urls_text": "No URLs found in text",
   "@podcast_bulk_import_no_urls_text": {
     "description": "Bulk import message when no URLs found in text input"
   },
-
   "podcast_bulk_import_links_found": "Found {total} links, {valid} valid RSS feeds",
   "@podcast_bulk_import_links_found": {
     "description": "Bulk import message showing total links found and valid feeds count",
@@ -3228,32 +1674,26 @@
       }
     }
   },
-
   "podcast_bulk_import_urls_exist": "All URLs already exist in the list",
   "@podcast_bulk_import_urls_exist": {
     "description": "Bulk import message when all URLs already exist"
   },
-
   "podcast_bulk_import_edit_url": "Edit RSS URL",
   "@podcast_bulk_import_edit_url": {
     "description": "Bulk import edit URL dialog title"
   },
-
   "podcast_bulk_import_save_revalidate": "Save & Re-validate",
   "@podcast_bulk_import_save_revalidate": {
     "description": "Bulk import save and re-validate button text"
   },
-
   "podcast_bulk_import_no_urls_file": "No URLs found in file",
   "@podcast_bulk_import_no_urls_file": {
     "description": "Bulk import message when no URLs found in file"
   },
-
   "podcast_bulk_import_no_valid_feeds": "No valid RSS feeds to import. Please remove invalid URLs or wait for validation to complete.",
   "@podcast_bulk_import_no_valid_feeds": {
     "description": "Bulk import message when no valid feeds to import"
   },
-
   "podcast_bulk_import_imported_count": "Successfully imported {count} RSS feeds",
   "@podcast_bulk_import_imported_count": {
     "description": "Bulk import success message with count",
@@ -3263,7 +1703,6 @@
       }
     }
   },
-
   "podcast_bulk_import_failed": "Import failed: {error}",
   "@podcast_bulk_import_failed": {
     "description": "Bulk import failed message",
@@ -3273,7 +1712,6 @@
       }
     }
   },
-
   "podcast_bulk_import_valid_count": "Valid ({count})",
   "@podcast_bulk_import_valid_count": {
     "description": "Bulk import valid count label",
@@ -3283,7 +1721,6 @@
       }
     }
   },
-
   "podcast_bulk_import_invalid_count": "Invalid ({count})",
   "@podcast_bulk_import_invalid_count": {
     "description": "Bulk import invalid count label",
@@ -3293,77 +1730,62 @@
       }
     }
   },
-
   "podcast_unknown_title": "Unknown Title",
   "@podcast_unknown_title": {
     "description": "Default title when podcast title is unknown"
   },
-
   "podcast_copy": "Copy",
   "@podcast_copy": {
     "description": "Copy button tooltip"
   },
-
   "podcast_edit_retry": "Edit & Retry",
   "@podcast_edit_retry": {
     "description": "Edit and retry button tooltip"
   },
-
   "podcast_remove": "Remove",
   "@podcast_remove": {
     "description": "Remove button tooltip"
   },
-
   "podcast_bulk_import_drag_drop": "Drag & Drop files here or",
   "@podcast_bulk_import_drag_drop": {
     "description": "Bulk import drag and drop instruction"
   },
-
   "podcast_bulk_import_select_file": "Select File",
   "@podcast_bulk_import_select_file": {
     "description": "Bulk import select file button text"
   },
-
   "podcast_rss_list": "RSS List",
   "@podcast_rss_list": {
     "description": "RSS list heading"
   },
-
   "podcast_import_all": "Import All",
   "@podcast_import_all": {
     "description": "Import all button text"
   },
-
   "podcast_no_items": "No items",
   "@podcast_no_items": {
     "description": "No items message"
   },
-
   "podcast_bulk_import_extract": "Extract",
   "@podcast_bulk_import_extract": {
     "description": "Bulk import extract button text"
   },
-
   "podcast_bulk_import_click_select": "Click to Select File",
   "@podcast_bulk_import_click_select": {
     "description": "Bulk import click to select file text"
   },
-
   "podcast_bulk_import_or_drag_drop": "or drag & drop here",
   "@podcast_bulk_import_or_drag_drop": {
     "description": "Bulk import or drag drop text"
   },
-
   "podcast_bulk_import_paste_hint": "Paste URLs or OPML content here...",
   "@podcast_bulk_import_paste_hint": {
     "description": "Bulk import paste text area hint"
   },
-
   "podcast_not_valid_rss": "Not a valid RSS feed",
   "@podcast_not_valid_rss": {
     "description": "Not a valid RSS feed error message"
   },
-
   "podcast_copied": "Copied: {text}",
   "@podcast_copied": {
     "description": "Copied to clipboard message",
@@ -3373,22 +1795,14 @@
       }
     }
   },
-
-  "podcast_bulk_import_label": "Label",
-  "@podcast_bulk_import_label": {
-    "description": "Generic label text"
-  },
-
   "podcast_bulk_import_hint_text": "URL",
   "@podcast_bulk_import_hint_text": {
     "description": "URL hint text in text field"
   },
-
   "podcast_global_rss_settings_title": "Global RSS Settings",
   "@podcast_global_rss_settings_title": {
     "description": "Global RSS settings page title"
   },
-
   "podcast_updated_subscriptions": "Updated {count} subscriptions",
   "@podcast_updated_subscriptions": {
     "description": "Updated subscriptions message with count",
@@ -3398,97 +1812,78 @@
       }
     }
   },
-
   "podcast_summary_generate_failed": "Failed to generate summary",
   "@podcast_summary_generate_failed": {
     "description": "Summary generation failed message"
   },
-
   "podcast_summary_no_summary": "No summary available",
   "@podcast_summary_no_summary": {
     "description": "No summary available message"
   },
-
   "podcast_summary_generate": "Generate Summary",
   "@podcast_summary_generate": {
     "description": "Generate AI summary button"
   },
-
   "podcast_summary_transcription_required": "Transcription required to generate AI summary",
   "@podcast_summary_transcription_required": {
     "description": "Message when transcription is required"
   },
-
   "podcast_advanced_options": "Advanced Options",
   "@podcast_advanced_options": {
     "description": "Advanced options button"
   },
-
   "podcast_regenerate": "Regenerate",
   "@podcast_regenerate": {
     "description": "Regenerate summary button"
   },
-
   "podcast_ai_model": "AI Model",
   "@podcast_ai_model": {
     "description": "Model selector label"
   },
-
   "podcast_default_model": "Default",
   "@podcast_default_model": {
     "description": "Default model badge"
   },
-
   "podcast_custom_prompt": "Custom Prompt (Optional)",
   "@podcast_custom_prompt": {
     "description": "Prompt input field label"
   },
-
   "podcast_custom_prompt_hint": "e.g., Focus on technical points...",
   "@podcast_custom_prompt_hint": {
     "description": "Prompt input placeholder"
   },
-
   "podcast_generating_summary": "Generating AI summary...",
   "@podcast_generating_summary": {
     "description": "Loading text for summary generation"
   },
-
   "podcast_summary_chars": "chars",
   "@podcast_summary_chars": {
     "description": "Word count unit"
   },
-
   "theme_mode": "Theme Mode",
   "@theme_mode": {
     "description": "Theme mode setting label"
   },
-
   "theme_mode_subtitle": "Choose your preferred theme",
   "@theme_mode_subtitle": {
     "description": "Theme mode subtitle"
   },
-
   "theme_mode_follow_system": "Follow System",
   "@theme_mode_follow_system": {
     "description": "Option to follow system theme"
   },
-
   "theme_mode_light": "Light",
   "@theme_mode_light": {
     "description": "Light theme option"
   },
-
   "theme_mode_dark": "Dark",
   "@theme_mode_dark": {
     "description": "Dark theme option"
   },
-
   "theme_mode_select_title": "Select Theme Mode",
   "@theme_mode_select_title": {
     "description": "Theme mode selection dialog title"
   },
-
   "theme_mode_changed": "Theme mode changed to {mode}",
   "@theme_mode_changed": {
     "description": "Theme mode changed success message",
@@ -3498,17 +1893,14 @@
       }
     }
   },
-
   "podcast_transcript_search_hint": "Search transcript content...",
   "@podcast_transcript_search_hint": {
     "description": "Search hint text for transcript content"
   },
-
   "podcast_transcript_no_match": "No matching content found",
   "@podcast_transcript_no_match": {
     "description": "No matching content found message"
   },
-
   "podcast_transcript_match": "Match {index}",
   "@podcast_transcript_match": {
     "description": "Match number label for search results",
@@ -3518,37 +1910,30 @@
       }
     }
   },
-
   "transcription_start_title": "Start Transcription",
   "@transcription_start_title": {
     "description": "Title for start transcription state"
   },
-
   "transcription_start_desc": "Generate full text transcription for this episode\nSupports multi-language and high accuracy",
   "@transcription_start_desc": {
     "description": "Description for start transcription state"
   },
-
   "transcription_start_button": "Start Transcription",
   "@transcription_start_button": {
     "description": "Button text to start transcription"
   },
-
   "transcription_auto_hint": "Or enable auto-transcription in settings",
   "@transcription_auto_hint": {
     "description": "Hint about auto-transcription setting"
   },
-
   "transcription_starting": "Starting transcription...",
   "@transcription_starting": {
     "description": "Snackbar text when starting transcription"
   },
-
   "transcription_started_success": "✓ Transcription started successfully",
   "@transcription_started_success": {
     "description": "Success snackbar text"
   },
-
   "transcription_start_failed": "✗ Failed to start: {error}",
   "@transcription_start_failed": {
     "description": "Failed to start transcription snackbar",
@@ -3558,22 +1943,18 @@
       }
     }
   },
-
   "transcription_pending_title": "Pending",
   "@transcription_pending_title": {
     "description": "Title for pending transcription state"
   },
-
   "transcription_pending_desc": "Transcription task has been queued\nProcessing will start shortly",
   "@transcription_pending_desc": {
     "description": "Description for pending transcription state"
   },
-
   "transcription_progress_complete": "Complete",
   "@transcription_progress_complete": {
     "description": "Label below percentage in progress ring"
   },
-
   "transcription_duration_label": "Duration: {duration}",
   "@transcription_duration_label": {
     "description": "Duration label in processing state",
@@ -3583,7 +1964,6 @@
       }
     }
   },
-
   "transcription_words_label": "~{count}K words",
   "@transcription_words_label": {
     "description": "Word count label in processing state",
@@ -3593,57 +1973,46 @@
       }
     }
   },
-
   "transcription_step_download": "Download",
   "@transcription_step_download": {
     "description": "Step label for download"
   },
-
   "transcription_step_convert": "Convert",
   "@transcription_step_convert": {
     "description": "Step label for convert"
   },
-
   "transcription_step_split": "Split",
   "@transcription_step_split": {
     "description": "Step label for split"
   },
-
   "transcription_step_transcribe": "Transcribe",
   "@transcription_step_transcribe": {
     "description": "Step label for transcribe"
   },
-
   "transcription_step_merge": "Merge",
   "@transcription_step_merge": {
     "description": "Step label for merge"
   },
-
   "transcription_complete_title": "Transcription Complete",
   "@transcription_complete_title": {
     "description": "Title for completed transcription state"
   },
-
   "transcription_complete_desc": "Transcript generated successfully\nYou can now read and search the content",
   "@transcription_complete_desc": {
     "description": "Description for completed transcription state"
   },
-
   "transcription_stat_words": "Words",
   "@transcription_stat_words": {
     "description": "Stat label for word count"
   },
-
   "transcription_stat_duration": "Duration",
   "@transcription_stat_duration": {
     "description": "Stat label for duration"
   },
-
   "transcription_stat_accuracy": "Accuracy",
   "@transcription_stat_accuracy": {
     "description": "Stat label for accuracy"
   },
-
   "transcription_completed_at": "Completed at: {time}",
   "@transcription_completed_at": {
     "description": "Completed time label",
@@ -3653,132 +2022,106 @@
       }
     }
   },
-
   "transcription_view_button": "View Transcript",
   "@transcription_view_button": {
     "description": "Button to view transcript"
   },
-
   "transcription_failed_title": "Transcription Failed",
   "@transcription_failed_title": {
     "description": "Title for failed transcription state"
   },
-
   "transcription_unknown_error": "Unknown error",
   "@transcription_unknown_error": {
     "description": "Default error message"
   },
-
   "transcription_technical_details": "Technical Details",
   "@transcription_technical_details": {
     "description": "Expandable section for error details"
   },
-
   "transcription_retry_button": "Retry",
   "@transcription_retry_button": {
     "description": "Button to retry transcription"
   },
-
   "transcription_error_already_progress": "Transcription already in progress",
   "@transcription_error_already_progress": {
     "description": "Error text when transcription is already running"
   },
-
   "transcription_error_network": "Network connection failed",
   "@transcription_error_network": {
     "description": "Network error message"
   },
-
   "transcription_error_audio_download": "Failed to download audio",
   "@transcription_error_audio_download": {
     "description": "Audio download error"
   },
-
   "transcription_error_service": "Transcription service error",
   "@transcription_error_service": {
     "description": "Service error"
   },
-
   "transcription_error_format": "Audio format conversion failed",
   "@transcription_error_format": {
     "description": "Format conversion error"
   },
-
   "transcription_error_server_restart": "Service was restarted",
   "@transcription_error_server_restart": {
     "description": "Server restart error"
   },
-
   "transcription_error_generic": "Transcription failed",
   "@transcription_error_generic": {
     "description": "Generic transcription failure"
   },
-
   "transcription_suggest_network": "Check your internet connection and try again",
   "@transcription_suggest_network": {
     "description": "Network error suggestion"
   },
-
   "transcription_suggest_audio": "The audio file may be unavailable. Try again later",
   "@transcription_suggest_audio": {
     "description": "Audio error suggestion"
   },
-
   "transcription_suggest_service": "The transcription service may be busy. Retry in a moment",
   "@transcription_suggest_service": {
     "description": "Service error suggestion"
   },
-
   "transcription_suggest_format": "The audio format may not be supported. Try a different episode",
   "@transcription_suggest_format": {
     "description": "Format error suggestion"
   },
-
   "transcription_suggest_restart": "Click Retry to start a new transcription task",
   "@transcription_suggest_restart": {
     "description": "Server restart suggestion"
   },
-
   "transcription_suggest_generic": "Try clicking Retry to start over",
   "@transcription_suggest_generic": {
     "description": "Generic error suggestion"
   },
-
   "player_playback_speed_title": "Playback Speed",
   "@player_playback_speed_title": {
     "description": "Title for playback speed section"
   },
-
   "player_apply_subscription_only": "Apply to current subscription only",
   "@player_apply_subscription_only": {
     "description": "Checkbox label for subscription-specific speed"
   },
-
   "player_apply_subscription_subtitle": "Checked: current subscription only; Unchecked: global default",
   "@player_apply_subscription_subtitle": {
     "description": "Subtitle for subscription checkbox"
   },
-
   "player_sleep_timer_title": "Sleep Timer",
   "@player_sleep_timer_title": {
     "description": "Title for sleep timer section"
   },
-
   "player_sleep_timer_desc": "Playback will automatically pause after the set time",
   "@player_sleep_timer_desc": {
     "description": "Description for sleep timer"
   },
-
   "player_stop_after_episode": "Stop after this episode",
   "@player_stop_after_episode": {
     "description": "Option to stop playback after current episode"
   },
-
   "player_cancel_timer": "Cancel timer",
   "@player_cancel_timer": {
     "description": "Button to cancel sleep timer"
   },
-
   "player_minutes": "{count} min",
   "@player_minutes": {
     "description": "Duration in minutes",
@@ -3788,7 +2131,6 @@
       }
     }
   },
-
   "player_hours_minutes": "{hours}h {minutes}min",
   "@player_hours_minutes": {
     "description": "Duration in hours and minutes",
@@ -3801,7 +2143,6 @@
       }
     }
   },
-
   "player_hours": "{count}h",
   "@player_hours": {
     "description": "Duration in hours only",
@@ -3811,17 +2152,14 @@
       }
     }
   },
-
   "global_rss_failed_load": "Failed to load",
   "@global_rss_failed_load": {
     "description": "Error title when loading fails"
   },
-
   "global_rss_retry": "Retry",
   "@global_rss_retry": {
     "description": "Retry button text"
   },
-
   "global_rss_affected_count": "Affected Subscriptions ({count})",
   "@global_rss_affected_count": {
     "description": "Section title showing affected subscriptions count",
@@ -3831,17 +2169,14 @@
       }
     }
   },
-
   "global_rss_no_subscriptions": "No RSS subscriptions",
   "@global_rss_no_subscriptions": {
     "description": "Empty state text"
   },
-
   "global_rss_schedule_title": "Update Schedule for All RSS Subscriptions",
   "@global_rss_schedule_title": {
     "description": "Card title for global RSS schedule"
   },
-
   "global_rss_apply_desc": "This will apply to all {count} subscriptions",
   "@global_rss_apply_desc": {
     "description": "Description of global apply scope",
@@ -3851,92 +2186,74 @@
       }
     }
   },
-
   "global_rss_update_frequency": "Update Frequency",
   "@global_rss_update_frequency": {
     "description": "Label for frequency selector"
   },
-
   "global_rss_hourly": "Hourly",
   "@global_rss_hourly": {
     "description": "Hourly frequency option"
   },
-
   "global_rss_daily": "Daily",
   "@global_rss_daily": {
     "description": "Daily frequency option"
   },
-
   "global_rss_weekly": "Weekly",
   "@global_rss_weekly": {
     "description": "Weekly frequency option"
   },
-
   "global_rss_update_time": "Update Time",
   "@global_rss_update_time": {
     "description": "Label for time picker"
   },
-
   "global_rss_select_time": "Select time",
   "@global_rss_select_time": {
     "description": "Hint text for time picker"
   },
-
   "global_rss_select_time_button": "Select Time",
   "@global_rss_select_time_button": {
     "description": "Button text for time picker"
   },
-
   "global_rss_day_of_week": "Day of Week",
   "@global_rss_day_of_week": {
     "description": "Label for day of week selector"
   },
-
   "global_rss_mon": "Mon",
   "@global_rss_mon": {
     "description": "Monday abbreviation"
   },
-
   "global_rss_tue": "Tue",
   "@global_rss_tue": {
     "description": "Tuesday abbreviation"
   },
-
   "global_rss_wed": "Wed",
   "@global_rss_wed": {
     "description": "Wednesday abbreviation"
   },
-
   "global_rss_thu": "Thu",
   "@global_rss_thu": {
     "description": "Thursday abbreviation"
   },
-
   "global_rss_fri": "Fri",
   "@global_rss_fri": {
     "description": "Friday abbreviation"
   },
-
   "global_rss_sat": "Sat",
   "@global_rss_sat": {
     "description": "Saturday abbreviation"
   },
-
   "global_rss_sun": "Sun",
   "@global_rss_sun": {
     "description": "Sunday abbreviation"
   },
-
   "global_rss_applying": "Applying...",
   "@global_rss_applying": {
     "description": "Button text when applying"
   },
-
   "global_rss_apply_all": "Apply to All Subscriptions",
   "@global_rss_apply_all": {
     "description": "Button text to apply to all"
   },
-
   "global_rss_current_label": "Current: {value}",
   "@global_rss_current_label": {
     "description": "Current schedule label",
@@ -3946,7 +2263,6 @@
       }
     }
   },
-
   "global_rss_next_label": "Next: {value}",
   "@global_rss_next_label": {
     "description": "Next update label",
@@ -3956,32 +2272,18 @@
       }
     }
   },
-
   "global_rss_failed_update": "Failed to update subscriptions",
   "@global_rss_failed_update": {
     "description": "Error message when update fails"
   },
-
-  "playback_speed_title": "Playback Speed",
-  "@playback_speed_title": {
-    "description": "Title for playback speed selector sheet"
-  },
-
-  "podcast_notification_channel": "Podcast Playback",
-  "@podcast_notification_channel": {
-    "description": "Android notification channel name for podcast playback"
-  },
-
   "page_not_found": "Page Not Found",
   "@page_not_found": {
     "description": "Page not found error title"
   },
-
   "page_not_found_subtitle": "Please select a valid tab from the navigation",
   "@page_not_found_subtitle": {
     "description": "Page not found error message"
   },
-
   "error_prefix": "Error: {error}",
   "@error_prefix": {
     "description": "Generic error message prefix",
@@ -3991,12 +2293,10 @@
       }
     }
   },
-
   "downloading_in_background": "Downloading in background...",
   "@downloading_in_background": {
     "description": "Message shown when downloading update in background"
   },
-
   "version_label": "Version: {version}",
   "@version_label": {
     "description": "Version label with placeholder",
@@ -4006,7 +2306,6 @@
       }
     }
   },
-
   "build_label": "Build: {build}",
   "@build_label": {
     "description": "Build label with placeholder",
@@ -4016,12 +2315,10 @@
       }
     }
   },
-
   "added_to_queue": "Added to queue",
   "@added_to_queue": {
     "description": "Message shown when item is added to queue"
   },
-
   "failed_to_add_to_queue": "Failed to add to queue: {error}",
   "@failed_to_add_to_queue": {
     "description": "Error message when failing to add to queue",
@@ -4031,17 +2328,14 @@
       }
     }
   },
-
   "play_button_short": "Play",
   "@play_button_short": {
     "description": "Short play button label for cards"
   },
-
   "retry_button_short": "Retry",
   "@retry_button_short": {
     "description": "Short retry button label"
   },
-
   "error_opening_link": "Error opening link: {error}",
   "@error_opening_link": {
     "description": "Error message when failing to open link",
@@ -4051,12 +2345,10 @@
       }
     }
   },
-
   "queue_is_empty": "Queue is empty",
   "@queue_is_empty": {
     "description": "Message shown when queue is empty"
   },
-
   "failed_to_load_queue": "Failed to load queue: {error}",
   "@failed_to_load_queue": {
     "description": "Error message when failing to load queue",
@@ -4066,7 +2358,6 @@
       }
     }
   },
-
   "failed_to_reorder_queue": "Failed to reorder queue: {error}",
   "@failed_to_reorder_queue": {
     "description": "Error message when failing to reorder queue",
@@ -4076,7 +2367,6 @@
       }
     }
   },
-
   "failed_to_play_item": "Failed to play item: {error}",
   "@failed_to_play_item": {
     "description": "Error message when failing to play item",
@@ -4086,7 +2376,6 @@
       }
     }
   },
-
   "failed_to_remove_item": "Failed to remove item: {error}",
   "@failed_to_remove_item": {
     "description": "Error message when failing to remove item",
@@ -4096,317 +2385,158 @@
       }
     }
   },
-
   "apply_button": "Apply",
   "@apply_button": {
     "description": "Generic apply button label"
   },
-
   "auth_test_page_title": "Authentication Test",
   "@auth_test_page_title": {
     "description": "Authentication test page title"
   },
-
-  "email_label": "Email: {email}",
-  "@email_label": {
-    "description": "Email label with value",
-    "placeholders": {
-      "email": {
-        "type": "String"
-      }
-    }
-  },
-
-  "username_label": "Username: {username}",
-  "@username_label": {
-    "description": "Username label with value",
-    "placeholders": {
-      "username": {
-        "type": "String"
-      }
-    }
-  },
-
-  "display_name_label": "Display Name: {displayName}",
-  "@display_name_label": {
-    "description": "Display name label with value",
-    "placeholders": {
-      "displayName": {
-        "type": "String"
-      }
-    }
-  },
-
-  "verified_label": "Verified: {isVerified}",
-  "@verified_label": {
-    "description": "Verified label with value",
-    "placeholders": {
-      "isVerified": {
-        "type": "String"
-      }
-    }
-  },
-
-  "user_not_logged_in": "User: Not logged in",
-  "@user_not_logged_in": {
-    "description": "Message shown when user is not logged in"
-  },
-
-  "current_operation_label": "Current Operation: {operation}",
-  "@current_operation_label": {
-    "description": "Current operation label with value",
-    "placeholders": {
-      "operation": {
-        "type": "String"
-      }
-    }
-  },
-
-  "login_button_short": "Login",
-  "@login_button_short": {
-    "description": "Short login button label"
-  },
-
-  "register_button_short": "Register",
-  "@register_button_short": {
-    "description": "Short register button label"
-  },
-
-  "base_url_label": "Base URL: {url}",
-  "@base_url_label": {
-    "description": "Base URL label with value",
-    "placeholders": {
-      "url": {
-        "type": "String"
-      }
-    }
-  },
-
-  "endpoints_label": "Endpoints:",
-  "@endpoints_label": {
-    "description": "Endpoints label"
-  },
-
   "auth_verification_title": "Auth Verification",
   "@auth_verification_title": {
     "description": "Authentication verification page title"
   },
-
   "text_gen_label": "Text Gen",
   "@text_gen_label": {
     "description": "Text generation model type label (short)"
   },
-
   "feed_load_failed_title": "Failed to Load Feed",
   "@feed_load_failed_title": {
     "description": "Error title when feed loading fails"
   },
-
   "auth_password_requirement_uppercase": "Contain at least one uppercase letter",
   "@auth_password_requirement_uppercase": {
     "description": "Password requirement: at least one uppercase letter"
   },
-
   "auth_password_requirement_lowercase": "Contain at least one lowercase letter",
   "@auth_password_requirement_lowercase": {
     "description": "Password requirement: at least one lowercase letter"
   },
-
   "auth_password_requirement_number": "Contain at least one number",
   "@auth_password_requirement_number": {
     "description": "Password requirement: at least one number"
   },
-
   "auth_password_req_uppercase_short": "At least one uppercase letter (A-Z)",
   "@auth_password_req_uppercase_short": {
     "description": "Password requirement short: uppercase letter"
   },
-
   "auth_password_req_lowercase_short": "At least one lowercase letter (a-z)",
   "@auth_password_req_lowercase_short": {
     "description": "Password requirement short: lowercase letter"
   },
-
   "auth_password_req_number_short": "At least one number (0-9)",
   "@auth_password_req_number_short": {
     "description": "Password requirement short: number"
   },
-
   "auth_password_requirement_min_length": "Be at least 8 characters",
   "@auth_password_requirement_min_length": {
     "description": "Password requirement: minimum 8 characters"
   },
-
   "auth_password_requirements_title": "Password must:",
   "@auth_password_requirements_title": {
     "description": "Password requirements section title"
   },
-
   "auth_terms_and_conditions": "Terms and Conditions",
   "@auth_terms_and_conditions": {
     "description": "Terms and conditions link text"
   },
-
   "auth_privacy_policy": "Privacy Policy",
   "@auth_privacy_policy": {
     "description": "Privacy policy link text"
   },
-
   "auth_set_new_password": "Set New Password",
   "@auth_set_new_password": {
     "description": "Set new password page title"
   },
-
   "auth_new_password": "New Password",
   "@auth_new_password": {
     "description": "New password field label"
   },
-
   "podcast_add_to_queue": "Add to queue",
   "@podcast_add_to_queue": {
     "description": "Add episode to queue button"
   },
-
-  "podcast_unknown_podcast": "Unknown Podcast",
-  "@podcast_unknown_podcast": {
-    "description": "Fallback podcast name when title is empty"
-  },
-
   "episode_unknown_title": "Unknown Episode",
   "@episode_unknown_title": {
     "description": "Fallback episode title when name is empty"
   },
-
-  "episode_details": "Episode Details",
-  "@episode_details": {
-    "description": "Episode details section header"
-  },
-
   "transcription_status_pending": "Pending",
   "@transcription_status_pending": {
     "description": "Transcription status: waiting to start"
   },
-
   "transcription_status_downloading": "Downloading audio...",
   "@transcription_status_downloading": {
     "description": "Transcription status: downloading audio file"
   },
-
   "transcription_status_converting": "Converting format...",
   "@transcription_status_converting": {
     "description": "Transcription status: converting audio format"
   },
-
   "transcription_status_transcribing": "Transcribing...",
   "@transcription_status_transcribing": {
     "description": "Transcription status: processing audio"
   },
-
   "transcription_status_processing": "Processing text...",
   "@transcription_status_processing": {
     "description": "Transcription status: processing transcript text"
   },
-
   "transcription_status_completed": "Completed",
   "@transcription_status_completed": {
     "description": "Transcription status: successfully completed"
   },
-
   "transcription_status_failed": "Failed",
   "@transcription_status_failed": {
     "description": "Transcription status: failed"
   },
-
-  "player_no_media": "No media",
-  "@player_no_media": {
-    "description": "Player state when no media is loaded"
-  },
-
-  "player_audio_playback": "Audio Playback",
-  "@player_audio_playback": {
-    "description": "Audio playback channel name for notifications"
-  },
-
   "ai_model_type_transcription": "Transcription Model",
   "@ai_model_type_transcription": {
     "description": "AI model type: transcription"
   },
-
   "ai_model_type_text_generation": "Text Generation Model",
   "@ai_model_type_text_generation": {
     "description": "AI model type: text generation"
   },
-
   "ai_provider_azure_openai": "Azure OpenAI",
   "@ai_provider_azure_openai": {
     "description": "AI provider name: Azure OpenAI"
   },
-
   "profile_ai_summary": "AI Summary",
   "@profile_ai_summary": {
     "description": "AI Summary section in profile"
   },
-
   "profile_support_section": "Support",
   "@profile_support_section": {
     "description": "Support section in profile"
   },
-
-  "error_unknown_dio": "Unknown Dio error",
-  "@error_unknown_dio": {
-    "description": "Generic unknown Dio error message"
-  },
-
   "auth_and": " and ",
   "@auth_and": {
     "description": "Conjunction 'and' for linking terms"
   },
-
-  "auth_enter_email_hint": "Enter email",
-  "@auth_enter_email_hint": {
-    "description": "Email input hint"
-  },
-
-  "auth_enter_email_error": "Please enter email",
-  "@auth_enter_email_error": {
-    "description": "Validation error for empty email"
-  },
-
-  "auth_invalid_email": "Please enter a valid email",
-  "@auth_invalid_email": {
-    "description": "Validation error for invalid email format"
-  },
-
   "api_key_leave_empty_hint": "Leave empty to keep unchanged",
   "@api_key_leave_empty_hint": {
     "description": "API key input hint when editing"
   },
-
   "ai_enter_config_name_error": "Please enter a config name",
   "@ai_enter_config_name_error": {
     "description": "Validation error for empty config name"
   },
-
   "ai_enter_base_url_error": "Please enter Base URL",
   "@ai_enter_base_url_error": {
     "description": "Validation error for empty base URL"
   },
-
   "ai_enter_model_name_error": "Please enter Model Name",
   "@ai_enter_model_name_error": {
     "description": "Validation error for empty model name"
   },
-
   "sidebarCollapseMenu": "Collapse Menu",
   "@sidebarCollapseMenu": {
     "description": "Tooltip for collapsing the desktop sidebar"
   },
-
   "sidebarExpandMenu": "Expand Menu",
   "@sidebarExpandMenu": {
     "description": "Tooltip for expanding the desktop sidebar"
   },
-
   "sidebarAppTitle": "AI Assistant",
   "@sidebarAppTitle": {
     "description": "App title shown in the desktop sidebar header"
