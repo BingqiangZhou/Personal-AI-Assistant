@@ -33,7 +33,7 @@ class TestPodcastSubscriptionService:
 
     @pytest.fixture
     def mock_redis(self):
-        with patch('app.core.redis.PodcastRedis') as mock:
+        with patch('app.domains.podcast.services.subscription_service.PodcastRedis') as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
             yield redis_instance
@@ -73,6 +73,28 @@ class TestPodcastSubscriptionService:
         mock_repo.get_user_subscriptions_paginated.assert_called_once()
 
     @pytest.mark.asyncio
+    async def test_list_subscriptions_cache_hit(self, service, mock_repo, mock_redis):
+        """Cached subscription list should short-circuit repository calls."""
+        cached_payload = {
+            "subscriptions": [
+                {
+                    "id": 1,
+                    "title": "cached",
+                    "source_url": "https://example.com/feed.xml",
+                }
+            ],
+            "total": 1,
+        }
+        mock_redis.get_subscription_list.return_value = cached_payload
+
+        results, total = await service.list_subscriptions(page=1, size=20)
+
+        assert results == cached_payload["subscriptions"]
+        assert total == 1
+        mock_redis.get_subscription_list.assert_awaited_once()
+        mock_repo.get_user_subscriptions_paginated.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_get_subscription_details_not_found(self, service, mock_repo):
         """测试获取不存在的订阅详情"""
         mock_repo.get_subscription_by_id.return_value = None
@@ -99,7 +121,7 @@ class TestPodcastEpisodeService:
 
     @pytest.fixture
     def mock_redis(self):
-        with patch('app.core.redis.PodcastRedis') as mock:
+        with patch('app.domains.podcast.services.episode_service.PodcastRedis') as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
             yield redis_instance
@@ -181,7 +203,7 @@ class TestPodcastSearchService:
 
     @pytest.fixture
     def mock_redis(self):
-        with patch('app.core.redis.PodcastRedis') as mock:
+        with patch('app.domains.podcast.services.search_service.PodcastRedis') as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
             yield redis_instance

@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../data/models/podcast_search_model.dart';
-import '../../data/models/podcast_state_models.dart';
 import '../../data/utils/podcast_url_utils.dart';
 import '../constants/podcast_ui_constants.dart';
 import '../providers/country_selector_provider.dart';
-import '../providers/podcast_providers.dart' as providers;
 import '../providers/podcast_search_provider.dart';
+import '../providers/podcast_subscription_selectors.dart';
 import 'country_selector_dropdown.dart';
 import 'podcast_episode_search_result_card.dart';
 import 'podcast_search_result_card.dart';
@@ -151,8 +150,13 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final searchState = ref.watch(podcastSearchProvider);
-    final subscriptionState = ref.watch(providers.podcastSubscriptionProvider);
-    final countryState = ref.watch(countrySelectorProvider);
+    final subscribedFeedUrls = ref.watch(subscribedNormalizedFeedUrlsProvider);
+    final subscribingFeedUrls = ref.watch(
+      subscribingNormalizedFeedUrlsProvider,
+    );
+    final selectedCountry = ref.watch(
+      countrySelectorProvider.select((state) => state.selectedCountry),
+    );
 
     if (!widget.expanded && !searchState.hasSearched) {
       return const SizedBox.shrink();
@@ -199,7 +203,7 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    countryState.selectedCountry.code.toUpperCase(),
+                    selectedCountry.code.toUpperCase(),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -252,8 +256,9 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
               child: _buildSearchResults(
                 context,
                 searchState,
-                subscriptionState,
-                l10n,
+                subscribedFeedUrls: subscribedFeedUrls,
+                subscribingFeedUrls: subscribingFeedUrls,
+                l10n: l10n,
               ),
             ),
           ],
@@ -304,10 +309,11 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
 
   Widget _buildSearchResults(
     BuildContext context,
-    PodcastSearchState searchState,
-    PodcastSubscriptionState subscriptionState,
-    AppLocalizations l10n,
-  ) {
+    PodcastSearchState searchState, {
+    required Set<String> subscribedFeedUrls,
+    required Set<String> subscribingFeedUrls,
+    required AppLocalizations l10n,
+  }) {
     if (searchState.isLoading) {
       return Center(
         child: Column(
@@ -388,28 +394,33 @@ class _SearchPanelState extends ConsumerState<SearchPanel>
     }
 
     if (searchState.searchMode == PodcastSearchMode.episodes) {
-      return ListView(
-        children: searchState.episodeResults.map((episode) {
+      return ListView.builder(
+        itemCount: searchState.episodeResults.length,
+        itemBuilder: (context, index) {
+          final episode = searchState.episodeResults[index];
           return PodcastEpisodeSearchResultCard(
             episode: episode,
             key: ValueKey('episode_search_${episode.trackId}'),
           );
-        }).toList(),
+        },
       );
     }
+
+    final normalizedSubscribingFeedUrls = subscribingFeedUrls;
 
     return ListView.builder(
       itemCount: searchState.podcastResults.length,
       itemBuilder: (context, index) {
         final result = searchState.podcastResults[index];
-        final isSubscribed = subscriptionState.subscriptions.any(
-          (sub) => PodcastUrlUtils.feedUrlMatches(sub.sourceUrl, result.feedUrl),
-        );
+        final normalizedResultFeedUrl = result.feedUrl == null
+            ? null
+            : PodcastUrlUtils.normalizeFeedUrl(result.feedUrl!);
+        final isSubscribed =
+            normalizedResultFeedUrl != null &&
+            subscribedFeedUrls.contains(normalizedResultFeedUrl);
         final isSubscribing =
-            result.feedUrl != null &&
-            subscriptionState.subscribingFeedUrls.any(
-              (url) => PodcastUrlUtils.feedUrlMatches(url, result.feedUrl),
-            );
+            normalizedResultFeedUrl != null &&
+            normalizedSubscribingFeedUrls.contains(normalizedResultFeedUrl);
 
         return PodcastSearchResultCard(
           result: result,

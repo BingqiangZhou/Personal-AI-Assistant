@@ -4,6 +4,7 @@ Performance monitoring middleware.
 
 import logging
 import time
+from collections import deque
 from collections.abc import Callable
 
 from fastapi import Request, Response
@@ -19,11 +20,25 @@ SLOW_API_THRESHOLD_MS = 500
 class PerformanceMetricsStore:
     """Process-wide request metrics store."""
 
+    _max_latency_samples = 1024
+
     def __init__(self):
         self.request_counts: dict[str, int] = {}
         self.response_times: dict[str, dict[str, float]] = {}
         self.error_counts: dict[str, int] = {}
         self.status_counts: dict[str, dict[str, int]] = {}
+        self.latency_samples: dict[str, deque[float]] = {}
+        self.global_latency_samples: deque[float] = deque(
+            maxlen=self._max_latency_samples
+        )
+
+    @staticmethod
+    def _p95(samples: deque[float]) -> float:
+        if not samples:
+            return 0.0
+        ordered = sorted(samples)
+        index = int((len(ordered) - 1) * 0.95)
+        return ordered[index]
 
     def track_request(
         self, key: str, duration_ms: float, status_code: int | None = None
@@ -43,6 +58,12 @@ class PerformanceMetricsStore:
         stats["total_ms"] += duration_ms
         stats["min_ms"] = min(stats["min_ms"], duration_ms)
         stats["max_ms"] = max(stats["max_ms"], duration_ms)
+        sample_bucket = self.latency_samples.get(key)
+        if sample_bucket is None:
+            sample_bucket = deque(maxlen=self._max_latency_samples)
+            self.latency_samples[key] = sample_bucket
+        sample_bucket.append(duration_ms)
+        self.global_latency_samples.append(duration_ms)
 
         if status_code is not None:
             if key not in self.status_counts:
@@ -66,6 +87,7 @@ class PerformanceMetricsStore:
                 "avg_ms": (stats["total_ms"] / count) if count else 0.0,
                 "min_ms": stats["min_ms"],
                 "max_ms": stats["max_ms"],
+                "p95_ms": self._p95(self.latency_samples.get(key, deque())),
             }
 
         endpoint_error_rates: dict[str, float] = {}
@@ -87,6 +109,7 @@ class PerformanceMetricsStore:
                 "total_requests": total_requests,
                 "total_errors": total_errors,
                 "global_error_rate": global_error_rate,
+                "global_p95_ms": self._p95(self.global_latency_samples),
             },
         }
 
@@ -95,6 +118,8 @@ class PerformanceMetricsStore:
         self.response_times.clear()
         self.error_counts.clear()
         self.status_counts.clear()
+        self.latency_samples.clear()
+        self.global_latency_samples.clear()
 
 
 _performance_metrics_store = PerformanceMetricsStore()

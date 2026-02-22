@@ -14,6 +14,7 @@ import '../constants/podcast_ui_constants.dart';
 import '../providers/country_selector_provider.dart';
 import '../providers/podcast_discover_provider.dart';
 import '../providers/podcast_providers.dart';
+import '../providers/podcast_subscription_selectors.dart';
 import '../providers/podcast_search_provider.dart' as search;
 import '../widgets/country_selector_dropdown.dart';
 import '../widgets/discover_episode_detail_sheet.dart';
@@ -423,10 +424,17 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final searchState = ref.watch(search.podcastSearchProvider);
-    final discoverState = ref.watch(podcastDiscoverProvider);
-    final countryState = ref.watch(countrySelectorProvider);
-    ref.watch(podcastSubscriptionProvider);
+    final selectedCountry = ref.watch(
+      countrySelectorProvider.select((state) => state.selectedCountry),
+    );
     const isDense = true;
+    final content = searchState.hasSearched
+        ? _buildSearchResults(context, searchState, l10n, isDense: isDense)
+        : _buildDiscoverContent(
+            context,
+            ref.watch(podcastDiscoverProvider),
+            isDense: isDense,
+          );
 
     return ResponsiveContainer(
       child: Material(
@@ -451,9 +459,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                     key: const Key('podcast_discover_country_button'),
                     onPressed: () => _openCountrySelector(context),
                     icon: const Icon(Icons.flag_outlined, size: 18),
-                    label: Text(
-                      countryState.selectedCountry.code.toUpperCase(),
-                    ),
+                    label: Text(selectedCountry.code.toUpperCase()),
                     style: FilledButton.styleFrom(
                       visualDensity: VisualDensity.compact,
                       padding: const EdgeInsets.symmetric(
@@ -479,20 +485,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               isDense: isDense,
             ),
             SizedBox(height: isDense ? 8 : 12),
-            Expanded(
-              child: searchState.hasSearched
-                  ? _buildSearchResults(
-                      context,
-                      searchState,
-                      l10n,
-                      isDense: isDense,
-                    )
-                  : _buildDiscoverContent(
-                      context,
-                      discoverState,
-                      isDense: isDense,
-                    ),
-            ),
+            Expanded(child: content),
           ],
         ),
       ),
@@ -1057,13 +1050,12 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     AppLocalizations l10n, {
     required bool isDense,
   }) {
-    final subscriptionState = ref.watch(podcastSubscriptionProvider);
-    final normalizedSubscribedFeedUrls = subscriptionState.subscriptions
-        .map((sub) => PodcastUrlUtils.normalizeFeedUrl(sub.sourceUrl))
-        .toSet();
-    final normalizedSubscribingFeedUrls = subscriptionState.subscribingFeedUrls
-        .map(PodcastUrlUtils.normalizeFeedUrl)
-        .toSet();
+    final normalizedSubscribedFeedUrls = ref.watch(
+      subscribedNormalizedFeedUrlsProvider,
+    );
+    final normalizedSubscribingFeedUrls = ref.watch(
+      subscribingNormalizedFeedUrlsProvider,
+    );
 
     if (searchState.isLoading) {
       return const Center(child: CircularProgressIndicator());

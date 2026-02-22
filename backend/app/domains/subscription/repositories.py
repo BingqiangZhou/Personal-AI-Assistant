@@ -54,38 +54,46 @@ class SubscriptionRepository:
             base_query = base_query.where(Subscription.source_type == source_type)
 
         # Exclude archived subscriptions
-        base_query = base_query.where(UserSubscription.is_archived == False)
+        base_query = base_query.where(UserSubscription.is_archived.is_(False))
 
-        # Get total count
-        count_query = select(func.count()).select_from(base_query.subquery())
-        total = await self.db.scalar(count_query) or 0
-
-        # Get items with categories
+        # Pre-aggregate item counts and join into the paginated query
+        # to avoid an extra round trip and IN (...) list construction.
+        item_count_subquery = (
+            select(
+                SubscriptionItem.subscription_id.label("subscription_id"),
+                func.count(SubscriptionItem.id).label("item_count"),
+            )
+            .group_by(SubscriptionItem.subscription_id)
+            .subquery()
+        )
         query = (
-            base_query.options(selectinload(Subscription.categories))
+            base_query.outerjoin(
+                item_count_subquery,
+                item_count_subquery.c.subscription_id == Subscription.id,
+            )
+            .options(selectinload(Subscription.categories))
+            .add_columns(
+                func.coalesce(item_count_subquery.c.item_count, 0),
+                func.count(Subscription.id).over(),
+            )
             .offset(skip)
             .limit(size)
             .order_by(Subscription.updated_at.desc())
         )
         result = await self.db.execute(query)
-        items = result.scalars().all()
-
-        # Batch fetch item counts for all subscriptions (single query)
-        if items:
-            subscription_ids = [sub.id for sub in items]
-            item_count_query = select(
-                SubscriptionItem.subscription_id,
-                func.count(SubscriptionItem.id).label('item_count')
-            ).where(
-                SubscriptionItem.subscription_id.in_(subscription_ids)
-            ).group_by(SubscriptionItem.subscription_id)
-
-            item_count_result = await self.db.execute(item_count_query)
-            item_counts = {row.subscription_id: row.item_count for row in item_count_result}
+        rows = result.all()
+        if rows:
+            total = int(rows[0][2])
         else:
-            item_counts = {}
+            # For out-of-range pages, window rows are empty; fallback keeps
+            # total semantics stable with previous behavior.
+            count_query = select(func.count()).select_from(base_query.subquery())
+            total = await self.db.scalar(count_query) or 0
 
-        return list(items), total, item_counts
+        items = [row[0] for row in rows]
+        item_counts = {row[0].id: int(row[1]) for row in rows}
+
+        return items, total, item_counts
 
     async def get_subscription_by_id(
         self, user_id: int, sub_id: int
@@ -98,7 +106,7 @@ class SubscriptionRepository:
             .where(
                 Subscription.id == sub_id,
                 UserSubscription.user_id == user_id,
-                UserSubscription.is_archived == False
+                UserSubscription.is_archived.is_(False)
             )
         )
         result = await self.db.execute(query)
@@ -319,40 +327,42 @@ class SubscriptionRepository:
         """Get items from a subscription."""
         skip = (page - 1) * size
 
-        # First verify subscription ownership via user_subscriptions
-        user_sub_query = select(UserSubscription).where(
-            UserSubscription.user_id == user_id,
-            UserSubscription.subscription_id == subscription_id,
-            UserSubscription.is_archived == False
-        )
-        user_sub_result = await self.db.execute(user_sub_query)
-        if not user_sub_result.scalar_one_or_none():
-            return [], 0
-
-        # Build query
-        base_query = select(SubscriptionItem).where(
-            SubscriptionItem.subscription_id == subscription_id
+        # Build query with ownership join to avoid an extra permission query.
+        base_query = (
+            select(SubscriptionItem)
+            .join(
+                UserSubscription,
+                UserSubscription.subscription_id == SubscriptionItem.subscription_id,
+            )
+            .where(
+                SubscriptionItem.subscription_id == subscription_id,
+                UserSubscription.user_id == user_id,
+                UserSubscription.is_archived.is_(False),
+            )
         )
 
         if unread_only:
             base_query = base_query.where(SubscriptionItem.read_at.is_(None))
         if bookmarked_only:
-            base_query = base_query.where(SubscriptionItem.bookmarked == True)
+            base_query = base_query.where(SubscriptionItem.bookmarked.is_(True))
 
-        # Get total count
-        count_query = select(func.count()).select_from(base_query.subquery())
-        total = await self.db.scalar(count_query) or 0
-
-        # Get items
         query = (
-            base_query.offset(skip)
+            base_query.add_columns(func.count(SubscriptionItem.id).over())
+            .offset(skip)
             .limit(size)
             .order_by(SubscriptionItem.published_at.desc())
         )
         result = await self.db.execute(query)
-        items = result.scalars().all()
+        rows = result.all()
+        if rows:
+            total = int(rows[0][1])
+            items = [row[0] for row in rows]
+        else:
+            count_query = select(func.count()).select_from(base_query.subquery())
+            total = await self.db.scalar(count_query) or 0
+            items = []
 
-        return list(items), total
+        return items, total
 
     async def get_all_user_items(
         self,
@@ -365,42 +375,43 @@ class SubscriptionRepository:
         """Get all items from all user's subscriptions."""
         skip = (page - 1) * size
 
-        # Get user's subscription IDs via user_subscriptions
-        sub_query = (
-            select(Subscription.id)
-            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
-            .where(UserSubscription.user_id == user_id, UserSubscription.is_archived == False)
-        )
-        sub_result = await self.db.execute(sub_query)
-        sub_ids = [row[0] for row in sub_result.fetchall()]
-
-        if not sub_ids:
-            return [], 0
-
-        # Build query
-        base_query = select(SubscriptionItem).where(
-            SubscriptionItem.subscription_id.in_(sub_ids)
+        # Build query directly with ownership join to avoid
+        # an extra round trip and large IN (...) lists.
+        base_query = (
+            select(SubscriptionItem)
+            .join(
+                UserSubscription,
+                UserSubscription.subscription_id == SubscriptionItem.subscription_id,
+            )
+            .where(
+                UserSubscription.user_id == user_id,
+                UserSubscription.is_archived.is_(False),
+            )
         )
 
         if unread_only:
             base_query = base_query.where(SubscriptionItem.read_at.is_(None))
         if bookmarked_only:
-            base_query = base_query.where(SubscriptionItem.bookmarked == True)
-
-        # Get total count
-        count_query = select(func.count()).select_from(base_query.subquery())
-        total = await self.db.scalar(count_query) or 0
+            base_query = base_query.where(SubscriptionItem.bookmarked.is_(True))
 
         # Get items
         query = (
-            base_query.offset(skip)
+            base_query.add_columns(func.count(SubscriptionItem.id).over())
+            .offset(skip)
             .limit(size)
             .order_by(SubscriptionItem.published_at.desc())
         )
         result = await self.db.execute(query)
-        items = result.scalars().all()
+        rows = result.all()
+        if rows:
+            total = int(rows[0][1])
+            items = [row[0] for row in rows]
+        else:
+            count_query = select(func.count()).select_from(base_query.subquery())
+            total = await self.db.scalar(count_query) or 0
+            items = []
 
-        return list(items), total
+        return items, total
 
     async def get_item_by_id(
         self, item_id: int, user_id: int
@@ -413,7 +424,7 @@ class SubscriptionRepository:
             .where(
                 SubscriptionItem.id == item_id,
                 UserSubscription.user_id == user_id,
-                UserSubscription.is_archived == False
+                UserSubscription.is_archived.is_(False)
             )
         )
         result = await self.db.execute(query)
@@ -640,7 +651,7 @@ class SubscriptionRepository:
             .where(
                 and_(
                     UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,  # noqa: E712
+                    UserSubscription.is_archived.is_(False),
                     SubscriptionItem.read_at.is_(None),
                 )
             )
