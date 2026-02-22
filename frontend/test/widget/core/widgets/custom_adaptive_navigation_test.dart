@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 
 void main() {
@@ -79,7 +80,9 @@ void main() {
       expect(sidebarSize.width, closeTo(280, 0.1));
     });
 
-    testWidgets('collapsed: shows narrow sidebar without title', (tester) async {
+    testWidgets('collapsed: shows narrow sidebar without title', (
+      tester,
+    ) async {
       await _pumpWithSize(
         tester: tester,
         size: const Size(1200, 900),
@@ -113,38 +116,35 @@ Future<void> _pumpWithSize({
 
 Widget _buildNavigation({bool desktopNavExpanded = true}) {
   return MaterialApp(
-    home: MediaQuery(
-      data: const MediaQueryData(
-        size: Size(1200, 900),
-        textScaler: TextScaler.linear(1.0),
-      ),
-      child: CustomAdaptiveNavigation(
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Feed',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.podcasts_outlined),
-            selectedIcon: Icon(Icons.podcasts),
-            label: 'Podcast',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        selectedIndex: 0,
-        desktopNavExpanded: desktopNavExpanded,
-        onDesktopNavToggle: () {},
-        body: const SizedBox.expand(child: ColoredBox(color: Colors.white)),
-        bottomAccessory: Container(
-          key: const Key('test_bottom_accessory'),
-          height: 60,
-          color: Colors.blue,
+    locale: const Locale('en'),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: CustomAdaptiveNavigation(
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.home_outlined),
+          selectedIcon: Icon(Icons.home),
+          label: 'Feed',
         ),
+        NavigationDestination(
+          icon: Icon(Icons.podcasts_outlined),
+          selectedIcon: Icon(Icons.podcasts),
+          label: 'Podcast',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.person_outline),
+          selectedIcon: Icon(Icons.person),
+          label: 'Profile',
+        ),
+      ],
+      selectedIndex: 0,
+      desktopNavExpanded: desktopNavExpanded,
+      onDesktopNavToggle: () {},
+      body: const SizedBox.expand(child: ColoredBox(color: Colors.white)),
+      bottomAccessory: Container(
+        key: const Key('test_bottom_accessory'),
+        height: 60,
+        color: Colors.blue,
       ),
     ),
   );

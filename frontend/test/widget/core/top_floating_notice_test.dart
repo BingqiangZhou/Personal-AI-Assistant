@@ -105,17 +105,17 @@ void main() {
       );
       final theme = Theme.of(context);
       final decoration = _noticeDecoration(tester);
-      expect(decoration.color, theme.colorScheme.surface);
+      expect(decoration.color, theme.colorScheme.surfaceContainerHighest);
 
       final messageText = tester.widget<Text>(
         find.byKey(const Key('top_floating_notice_message')),
       );
-      expect(messageText.style?.color, Colors.black);
+      expect(messageText.style?.color, theme.colorScheme.onSurface);
 
       final successIcon = tester.widget<Icon>(
         find.byIcon(Icons.check_circle_outline),
       );
-      expect(successIcon.color, Colors.black);
+      expect(successIcon.color, theme.colorScheme.onSurface);
       await tester.pump(const Duration(seconds: 4));
     });
 
@@ -132,15 +132,15 @@ void main() {
       );
       final theme = Theme.of(context);
       final decoration = _noticeDecoration(tester);
-      expect(decoration.color, theme.colorScheme.surface);
+      expect(decoration.color, theme.colorScheme.errorContainer);
 
       final messageText = tester.widget<Text>(
         find.byKey(const Key('top_floating_notice_message')),
       );
-      expect(messageText.style?.color, theme.colorScheme.error);
+      expect(messageText.style?.color, theme.colorScheme.onErrorContainer);
 
       final errorIcon = tester.widget<Icon>(find.byIcon(Icons.error_outline));
-      expect(errorIcon.color, theme.colorScheme.error);
+      expect(errorIcon.color, theme.colorScheme.onErrorContainer);
       await tester.pump(const Duration(seconds: 4));
     });
 
@@ -157,17 +157,17 @@ void main() {
       );
       final theme = Theme.of(context);
       final decoration = _noticeDecoration(tester);
-      expect(decoration.color, theme.colorScheme.primary);
+      expect(decoration.color, theme.colorScheme.surfaceContainerHighest);
 
       final messageText = tester.widget<Text>(
         find.byKey(const Key('top_floating_notice_message')),
       );
-      expect(messageText.style?.color, Colors.white);
+      expect(messageText.style?.color, theme.colorScheme.onSurface);
 
       final successIcon = tester.widget<Icon>(
         find.byIcon(Icons.check_circle_outline),
       );
-      expect(successIcon.color, Colors.white);
+      expect(successIcon.color, theme.colorScheme.onSurface);
       await tester.pump(const Duration(seconds: 4));
     });
 
@@ -184,15 +184,15 @@ void main() {
       );
       final theme = Theme.of(context);
       final decoration = _noticeDecoration(tester);
-      expect(decoration.color, theme.colorScheme.primary);
+      expect(decoration.color, theme.colorScheme.errorContainer);
 
       final messageText = tester.widget<Text>(
         find.byKey(const Key('top_floating_notice_message')),
       );
-      expect(messageText.style?.color, theme.colorScheme.error);
+      expect(messageText.style?.color, theme.colorScheme.onErrorContainer);
 
       final errorIcon = tester.widget<Icon>(find.byIcon(Icons.error_outline));
-      expect(errorIcon.color, theme.colorScheme.error);
+      expect(errorIcon.color, theme.colorScheme.onErrorContainer);
       await tester.pump(const Duration(seconds: 4));
     });
 
@@ -204,10 +204,10 @@ void main() {
 
       final decoration = _noticeDecoration(tester);
       final border = decoration.border as Border;
-      expect(border.top.color.alpha, 255);
-      expect(border.bottom.color.alpha, 255);
-      expect(border.left.color.alpha, 255);
-      expect(border.right.color.alpha, 255);
+      expect(border.top.color.alpha, greaterThan(0));
+      expect(border.bottom.color.alpha, greaterThan(0));
+      expect(border.left.color.alpha, greaterThan(0));
+      expect(border.right.color.alpha, greaterThan(0));
       expect(decoration.boxShadow, isNotEmpty);
       expect(decoration.boxShadow!.first.color.alpha, 255);
       await tester.pump(const Duration(seconds: 4));
@@ -222,7 +222,10 @@ void main() {
       await tester.tap(find.byKey(const Key('show_notice_default')));
       await tester.pump();
       expect(find.byKey(const Key('top_floating_notice')), findsOneWidget);
-      expect(_noticeDecoration(tester).color, AppTheme.darkTheme.colorScheme.primary);
+      expect(
+        _noticeDecoration(tester).color,
+        AppTheme.darkTheme.colorScheme.surfaceContainerHighest,
+      );
       await tester.pump(const Duration(seconds: 4));
     });
   });

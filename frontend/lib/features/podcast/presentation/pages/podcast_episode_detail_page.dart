@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/localization/app_localizations_en.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 
 import '../providers/podcast_providers.dart';
@@ -287,9 +288,8 @@ class _PodcastEpisodeDetailPageState
         if (nextData.isProcessing && !prevData.isProcessing) {
           showTopFloatingNotice(
             context,
-            message: AppLocalizations.of(
-              context,
-            )!.podcast_transcription_processing,
+            message: (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                .podcast_transcription_processing,
             extraTopOffset: 72,
           );
         }
@@ -299,9 +299,8 @@ class _PodcastEpisodeDetailPageState
         // Auto-start case
         showTopFloatingNotice(
           context,
-          message: AppLocalizations.of(
-            context,
-          )!.podcast_transcription_auto_starting,
+          message: (AppLocalizations.of(context) ?? AppLocalizationsEn())
+              .podcast_transcription_auto_starting,
           extraTopOffset: 72,
         );
       }
@@ -323,7 +322,8 @@ class _PodcastEpisodeDetailPageState
           body: episodeDetailAsync.when(
             data: (episodeDetail) {
               if (episodeDetail == null) {
-                final l10n = AppLocalizations.of(context)!;
+                final l10n =
+                    (AppLocalizations.of(context) ?? AppLocalizationsEn());
                 return _buildErrorState(
                   context,
                   l10n.podcast_episode_not_found,
@@ -495,7 +495,7 @@ class _PodcastEpisodeDetailPageState
                   bottom: 16,
                   child: _buildCollapsedFloatingActions(
                     episode,
-                    AppLocalizations.of(context)!,
+                    (AppLocalizations.of(context) ?? AppLocalizationsEn()),
                   ),
                 ),
             ],
@@ -598,7 +598,7 @@ class _PodcastEpisodeDetailPageState
   }
 
   Widget _buildHeader(dynamic episode) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -722,7 +722,10 @@ class _PodcastEpisodeDetailPageState
                             size: 20,
                           ),
                           onPressed: () => context.pop(),
-                          tooltip: AppLocalizations.of(context)!.back_button,
+                          tooltip:
+                              (AppLocalizations.of(context) ??
+                                      AppLocalizationsEn())
+                                  .back_button,
                           constraints: const BoxConstraints(
                             minWidth: 36,
                             minHeight: 36,
@@ -853,7 +856,7 @@ class _PodcastEpisodeDetailPageState
   }
 
   Widget _buildAnimatedHeader(dynamic episode) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
 
     if (_isHeaderExpanded) {
       return Container(
@@ -1030,7 +1033,7 @@ class _PodcastEpisodeDetailPageState
           .read(podcastQueueControllerProvider.notifier)
           .addToQueue(widget.episodeId);
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
         showTopFloatingNotice(
           context,
           message: l10n.added_to_queue,
@@ -1039,7 +1042,7 @@ class _PodcastEpisodeDetailPageState
       }
     } catch (error) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
         showTopFloatingNotice(
           context,
           message: l10n.failed_to_add_to_queue(error.toString()),
@@ -1296,7 +1299,8 @@ class _PodcastEpisodeDetailPageState
             // Shownotes Tab
             _buildTabButton(
               tabIndex: 0,
-              text: AppLocalizations.of(context)!.podcast_tab_shownotes,
+              text: (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                  .podcast_tab_shownotes,
               isSelected: _selectedTabIndex == 0,
               onTap: () {
                 if (_selectedTabIndex != 0) {
@@ -1314,7 +1318,8 @@ class _PodcastEpisodeDetailPageState
             // Transcript Tab
             _buildTabButton(
               tabIndex: 1,
-              text: AppLocalizations.of(context)!.podcast_tab_transcript,
+              text: (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                  .podcast_tab_transcript,
               isSelected: _selectedTabIndex == 1,
               onTap: () {
                 if (_selectedTabIndex != 1) {
@@ -1332,7 +1337,8 @@ class _PodcastEpisodeDetailPageState
             // AI Summary Tab
             _buildTabButton(
               tabIndex: 2,
-              text: AppLocalizations.of(context)!.podcast_filter_with_summary,
+              text: (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                  .podcast_filter_with_summary,
               isSelected: _selectedTabIndex == 2,
               onTap: () {
                 if (_selectedTabIndex != 2) {
@@ -1350,7 +1356,8 @@ class _PodcastEpisodeDetailPageState
             // Conversation Tab
             _buildTabButton(
               tabIndex: 3,
-              text: AppLocalizations.of(context)!.podcast_tab_chat,
+              text: (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                  .podcast_tab_chat,
               isSelected: _selectedTabIndex == 3,
               onTap: () {
                 if (_selectedTabIndex != 3) {
@@ -1388,7 +1395,8 @@ class _PodcastEpisodeDetailPageState
         children: [
           // Shownotes Tab
           _buildSidebarTabButton(
-            AppLocalizations.of(context)!.podcast_tab_shownotes,
+            (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                .podcast_tab_shownotes,
             _selectedTabIndex == 0,
             () {
               if (_selectedTabIndex != 0) {
@@ -1403,7 +1411,8 @@ class _PodcastEpisodeDetailPageState
           const SizedBox(height: 8),
           // Transcript Tab
           _buildSidebarTabButton(
-            AppLocalizations.of(context)!.podcast_tab_transcript,
+            (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                .podcast_tab_transcript,
             _selectedTabIndex == 1,
             () {
               if (_selectedTabIndex != 1) {
@@ -1418,7 +1427,8 @@ class _PodcastEpisodeDetailPageState
           const SizedBox(height: 8),
           // AI Summary Tab
           _buildSidebarTabButton(
-            AppLocalizations.of(context)!.podcast_filter_with_summary,
+            (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                .podcast_filter_with_summary,
             _selectedTabIndex == 2,
             () {
               if (_selectedTabIndex != 2) {
@@ -1433,7 +1443,8 @@ class _PodcastEpisodeDetailPageState
           const SizedBox(height: 8),
           // Conversation Tab
           _buildSidebarTabButton(
-            AppLocalizations.of(context)!.podcast_tab_chat,
+            (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                .podcast_tab_chat,
             _selectedTabIndex == 3,
             () {
               if (_selectedTabIndex != 3) {
@@ -1604,7 +1615,8 @@ class _PodcastEpisodeDetailPageState
           ),
           const SizedBox(height: 16),
           Text(
-            AppLocalizations.of(context)!.podcast_transcription_failed,
+            (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                .podcast_transcription_failed,
             style: TextStyle(
               fontSize: 16,
               color: Theme.of(context).colorScheme.onSurface,
@@ -1643,7 +1655,7 @@ class _PodcastEpisodeDetailPageState
     String episodeTitle,
     String fullSummaryMarkdown,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
     final markdownSelection = extractMarkdownSelection(
       markdown: fullSummaryMarkdown,
       selectedText: _selectedSummaryText,
@@ -1668,7 +1680,7 @@ class _PodcastEpisodeDetailPageState
     String episodeTitle,
     String summary,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
     try {
       await ContentImageShareService.shareAsImage(
         context,
@@ -1724,7 +1736,8 @@ class _PodcastEpisodeDetailPageState
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16),
                   Text(
-                    AppLocalizations.of(context)!.podcast_generating_summary,
+                    (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                        .podcast_generating_summary,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 14,
@@ -1746,9 +1759,8 @@ class _PodcastEpisodeDetailPageState
                   const SizedBox(height: 16),
                   Text(
                     summaryState.errorMessage ??
-                        AppLocalizations.of(
-                          context,
-                        )!.podcast_summary_generate_failed,
+                        (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                            .podcast_summary_generate_failed,
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.error,
                     ),
@@ -1777,9 +1789,8 @@ class _PodcastEpisodeDetailPageState
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        AppLocalizations.of(
-                          context,
-                        )!.podcast_filter_with_summary,
+                        (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                            .podcast_filter_with_summary,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1796,9 +1807,8 @@ class _PodcastEpisodeDetailPageState
                         ),
                         icon: const Icon(Icons.ios_share_outlined, size: 16),
                         label: Text(
-                          AppLocalizations.of(
-                            context,
-                          )!.podcast_share_all_content,
+                          (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                              .podcast_share_all_content,
                         ),
                       ),
                     ],
@@ -1815,9 +1825,10 @@ class _PodcastEpisodeDetailPageState
                         buttonItems: [
                           ...selectableRegionState.contextMenuButtonItems,
                           ContextMenuButtonItem(
-                            label: AppLocalizations.of(
-                              context,
-                            )!.podcast_share_as_image,
+                            label:
+                                (AppLocalizations.of(context) ??
+                                        AppLocalizationsEn())
+                                    .podcast_share_as_image,
                             onPressed: () {
                               ContextMenuController.removeAny();
                               unawaited(
@@ -1889,9 +1900,8 @@ class _PodcastEpisodeDetailPageState
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        AppLocalizations.of(
-                          context,
-                        )!.podcast_filter_with_summary,
+                        (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                            .podcast_filter_with_summary,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -1908,9 +1918,8 @@ class _PodcastEpisodeDetailPageState
                         ),
                         icon: const Icon(Icons.ios_share_outlined, size: 16),
                         label: Text(
-                          AppLocalizations.of(
-                            context,
-                          )!.podcast_share_all_content,
+                          (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                              .podcast_share_all_content,
                         ),
                       ),
                     ],
@@ -1927,9 +1936,10 @@ class _PodcastEpisodeDetailPageState
                         buttonItems: [
                           ...selectableRegionState.contextMenuButtonItems,
                           ContextMenuButtonItem(
-                            label: AppLocalizations.of(
-                              context,
-                            )!.podcast_share_as_image,
+                            label:
+                                (AppLocalizations.of(context) ??
+                                        AppLocalizationsEn())
+                                    .podcast_share_as_image,
                             onPressed: () {
                               ContextMenuController.removeAny();
                               unawaited(
@@ -1999,7 +2009,8 @@ class _PodcastEpisodeDetailPageState
           ),
           const SizedBox(height: 16),
           Text(
-            AppLocalizations.of(context)!.podcast_summary_no_summary,
+            (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                .podcast_summary_no_summary,
             style: TextStyle(
               fontSize: 16,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -2007,7 +2018,8 @@ class _PodcastEpisodeDetailPageState
           ),
           const SizedBox(height: 8),
           Text(
-            AppLocalizations.of(context)!.podcast_summary_empty_hint,
+            (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                .podcast_summary_empty_hint,
             style: TextStyle(
               fontSize: 14,
               color: Theme.of(
@@ -2030,7 +2042,8 @@ class _PodcastEpisodeDetailPageState
         if (episode == null) {
           return Center(
             child: Text(
-              AppLocalizations.of(context)!.podcast_episode_not_found,
+              (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                  .podcast_episode_not_found,
             ),
           );
         }
@@ -2053,7 +2066,8 @@ class _PodcastEpisodeDetailPageState
             ),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context)!.podcast_load_failed,
+              (AppLocalizations.of(context) ?? AppLocalizationsEn())
+                  .podcast_load_failed,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -2075,12 +2089,12 @@ class _PodcastEpisodeDetailPageState
     final year = localDate.year;
     final month = localDate.month.toString().padLeft(2, '0');
     final day = localDate.day.toString().padLeft(2, '0');
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
     return l10n.date_format(year, month, day);
   }
 
   Widget _buildErrorState(BuildContext context, dynamic error) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

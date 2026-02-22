@@ -6,6 +6,7 @@ import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_episode_model.dart';
+import '../../data/models/podcast_state_models.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../../core/utils/episode_description_helper.dart';
@@ -98,7 +99,14 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           const SizedBox(height: 4),
 
           // Feed鍐呭 - 鐩存帴浣跨敤Expanded濉厖鍓╀綑绌洪棿
-          Expanded(child: _buildFeedContent(context)),
+          Expanded(
+            child: Consumer(
+              builder: (context, localRef, child) {
+                final feedState = localRef.watch(podcastFeedProvider);
+                return _buildFeedContent(context, localRef, feedState);
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -255,9 +263,12 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     );
   }
 
-  Widget _buildFeedContent(BuildContext context) {
+  Widget _buildFeedContent(
+    BuildContext context,
+    WidgetRef localRef,
+    PodcastFeedState feedState,
+  ) {
     final l10n = AppLocalizations.of(context)!;
-    final feedState = ref.watch(podcastFeedProvider);
 
     if (feedState.isLoading && feedState.episodes.isEmpty) {
       return Center(
@@ -282,7 +293,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
             const SizedBox(height: 16),
             FilledButton(
               onPressed: () {
-                ref.read(podcastFeedProvider.notifier).loadInitialFeed();
+                localRef.read(podcastFeedProvider.notifier).loadInitialFeed();
               },
               child: Text(l10n.podcast_retry),
             ),
@@ -305,7 +316,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
         if (isMobile) {
           return RefreshIndicator(
             onRefresh: () async {
-              await ref.read(podcastFeedProvider.notifier).refreshFeed();
+              await localRef.read(podcastFeedProvider.notifier).refreshFeed();
             },
             child: ListView.builder(
               controller: _scrollController,
@@ -360,7 +371,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 
         return RefreshIndicator(
           onRefresh: () async {
-            await ref.read(podcastFeedProvider.notifier).refreshFeed();
+            await localRef.read(podcastFeedProvider.notifier).refreshFeed();
           },
           child: GridView.builder(
             controller: _scrollController,

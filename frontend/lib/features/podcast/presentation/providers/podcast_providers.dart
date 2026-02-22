@@ -23,21 +23,11 @@ import '../../data/models/podcast_state_models.dart';
 import '../../data/models/profile_stats_model.dart';
 import '../../data/models/playback_history_lite_model.dart';
 import '../../data/repositories/podcast_repository.dart';
-import '../../data/services/podcast_api_service.dart';
+import 'podcast_core_providers.dart';
 import 'playback_progress_policy.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
-// === API Service & Repository Providers ===
-
-final podcastApiServiceProvider = Provider<PodcastApiService>((ref) {
-  final dio = ref.watch(dioClientProvider).dio;
-  return PodcastApiService(dio);
-});
-
-final podcastRepositoryProvider = Provider<PodcastRepository>((ref) {
-  final apiService = ref.watch(podcastApiServiceProvider);
-  return PodcastRepository(apiService);
-});
+export 'podcast_core_providers.dart';
 
 final audioPlayerProvider =
     NotifierProvider<AudioPlayerNotifier, AudioPlayerState>(
@@ -176,12 +166,27 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
   PodcastAudioHandler get _audioHandler => main_app.audioHandler;
 
+  PodcastAudioHandler? _audioHandlerOrNull() {
+    try {
+      return main_app.audioHandler;
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   AudioPlayerState build() {
     _repository = ref.read(podcastRepositoryProvider);
     _isDisposed = false;
 
-    _setupListeners();
+    final handler = _audioHandlerOrNull();
+    if (handler != null) {
+      _setupListeners(handler);
+    } else {
+      logger.AppLogger.warning(
+        '[Playback] Audio handler is not initialized; running in degraded mode.',
+      );
+    }
 
     ref.onDispose(() {
       _isDisposed = true;
@@ -325,10 +330,10 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     return true;
   }
 
-  void _setupListeners() {
+  void _setupListeners(PodcastAudioHandler audioHandler) {
     if (_isDisposed) return;
 
-    _playerStateSubscription = _audioHandler.playbackState.listen((
+    _playerStateSubscription = audioHandler.playbackState.listen((
       playbackState,
     ) {
       if (_isDisposed || !ref.mounted) return;
@@ -370,7 +375,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     // CRITICAL: Use _audioHandler.positionStream instead of AudioService.position
     // AudioService is NOT available on desktop platforms (Windows, macOS, Linux)
     // _audioHandler.positionStream works on both mobile and desktop
-    _positionSubscription = _audioHandler.positionStream.listen((position) {
+    _positionSubscription = audioHandler.positionStream.listen((position) {
       if (_isDisposed || !ref.mounted) return;
 
       state = state.copyWith(position: position.inMilliseconds);
@@ -382,7 +387,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       }
     });
 
-    _durationSubscription = _audioHandler.mediaItem.listen((mediaItem) {
+    _durationSubscription = audioHandler.mediaItem.listen((mediaItem) {
       if (_isDisposed || !ref.mounted) return;
 
       // Duration listener as supplementary update (backend duration is used first)

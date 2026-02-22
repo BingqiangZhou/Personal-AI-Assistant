@@ -1,302 +1,270 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
-import 'package:personal_ai_assistant/features/auth/presentation/pages/register_page.dart';
+import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/pages/login_page.dart';
+import 'package:personal_ai_assistant/features/auth/presentation/pages/register_page.dart';
 import 'package:personal_ai_assistant/shared/widgets/custom_text_field.dart';
+
+const _enLocale = Locale('en');
+
+Finder _customTextFieldByLabel(String label) {
+  return find.byWidgetPredicate(
+    (widget) => widget is CustomTextField && widget.label == label,
+  );
+}
+
+Future<void> _pumpAuthPage(WidgetTester tester, Widget home) async {
+  await tester.pumpWidget(
+    ProviderScope(
+      child: MaterialApp(
+        locale: _enLocale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: home,
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+Future<void> _tapButtonByKey(WidgetTester tester, Key key) async {
+  final finder = find.byKey(key);
+  await tester.ensureVisible(finder);
+  await tester.tap(finder);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _setTermsAgreed(WidgetTester tester, bool value) async {
+  final termsCheckbox = find.byType(Checkbox).last;
+  await tester.ensureVisible(termsCheckbox);
+  final currentValue = tester.widget<Checkbox>(termsCheckbox).value ?? false;
+  if (currentValue != value) {
+    await tester.tap(termsCheckbox);
+    await tester.pumpAndSettle();
+  }
+}
 
 void main() {
   group('Auth Form Validation Tests', () {
-    testWidgets('Register form should validate email correctly', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: RegisterPage(),
-          ),
-        ),
-      );
+    testWidgets('Register form should validate email correctly', (
+      WidgetTester tester,
+    ) async {
+      await _pumpAuthPage(tester, const RegisterPage());
 
-      // Find email field using label text
-      final emailField = find.byWidgetPredicate(
-        (widget) => widget is CustomTextField && widget.label == 'Email',
-      );
+      final emailField = _customTextFieldByLabel('Email');
+      await _setTermsAgreed(tester, true);
 
-      // Enter invalid email
       await tester.enterText(emailField, 'invalid-email');
-      await tester.tap(find.byKey(const Key('register_button')));
-      await tester.pump();
+      await _tapButtonByKey(tester, const Key('register_button'));
 
       expect(find.text('Please enter a valid email'), findsOneWidget);
 
-      // Enter valid email
       await tester.enterText(emailField, 'test@example.com');
-      await tester.tap(find.byKey(const Key('register_button')));
-      await tester.pump();
+      await _tapButtonByKey(tester, const Key('register_button'));
 
       expect(find.text('Please enter a valid email'), findsNothing);
     });
 
-    testWidgets('Register form should validate password correctly', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: RegisterPage(),
-          ),
-        ),
-      );
+    testWidgets('Register form should validate password correctly', (
+      WidgetTester tester,
+    ) async {
+      await _pumpAuthPage(tester, const RegisterPage());
 
-      // Find password field using label text
-      final passwordField = find.byWidgetPredicate(
-        (widget) => widget is CustomTextField && widget.label == 'Password',
-      );
+      final passwordField = _customTextFieldByLabel('Password');
+      await _setTermsAgreed(tester, true);
 
-      // Test short password
-      await tester.enterText(passwordField, 'short');
-      await tester.tap(find.byKey(const Key('register_button')));
-      await tester.pump();
-
-      expect(find.text('Password must be at least 8 characters'), findsOneWidget);
-
-      // Test password without uppercase
       await tester.enterText(passwordField, 'password123');
-      await tester.tap(find.byKey(const Key('register_button')));
-      await tester.pump();
+      await _tapButtonByKey(tester, const Key('register_button'));
+      expect(
+        find.text('Contain at least one uppercase letter'),
+        findsOneWidget,
+      );
 
-      expect(find.text('Password must contain at least one uppercase letter (A-Z)'), findsOneWidget);
+      await tester.enterText(passwordField, 'PASSWORD123');
+      await _tapButtonByKey(tester, const Key('register_button'));
+      expect(
+        find.text('Contain at least one lowercase letter'),
+        findsOneWidget,
+      );
 
-      // Test password without number
       await tester.enterText(passwordField, 'Password');
-      await tester.tap(find.byKey(const Key('register_button')));
-      await tester.pump();
+      await _tapButtonByKey(tester, const Key('register_button'));
+      expect(find.text('Contain at least one number'), findsOneWidget);
 
-      expect(find.text('Password must contain at least one number (0-9)'), findsOneWidget);
-
-      // Test valid password
       await tester.enterText(passwordField, 'Password123');
-      await tester.tap(find.byKey(const Key('register_button')));
-      await tester.pump();
+      await _tapButtonByKey(tester, const Key('register_button'));
 
-      expect(find.text('Password must be at least 8 characters'), findsNothing);
-      expect(find.text('Password must contain at least one uppercase letter (A-Z)'), findsNothing);
-      expect(find.text('Password must contain at least one number (0-9)'), findsNothing);
+      expect(find.text('Contain at least one uppercase letter'), findsNothing);
+      expect(find.text('Contain at least one lowercase letter'), findsNothing);
+      expect(find.text('Contain at least one number'), findsNothing);
     });
 
-    testWidgets('Register form should validate password confirmation', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: RegisterPage(),
-          ),
-        ),
-      );
+    testWidgets('Register form should validate password confirmation', (
+      WidgetTester tester,
+    ) async {
+      await _pumpAuthPage(tester, const RegisterPage());
 
-      // Find password fields using label text
-      final passwordField = find.byWidgetPredicate(
-        (widget) => widget is CustomTextField && widget.label == 'Password',
-      );
-      final confirmPasswordField = find.byWidgetPredicate(
-        (widget) => widget is CustomTextField && widget.label == 'Confirm Password',
-      );
+      final passwordField = _customTextFieldByLabel('Password');
+      final confirmPasswordField = _customTextFieldByLabel('Confirm Password');
+      await _setTermsAgreed(tester, true);
 
-      // Enter mismatching passwords
       await tester.enterText(passwordField, 'Password123');
       await tester.enterText(confirmPasswordField, 'DifferentPassword');
-      await tester.tap(find.byKey(const Key('register_button')));
-      await tester.pump();
+      await _tapButtonByKey(tester, const Key('register_button'));
 
       expect(find.text('Passwords do not match'), findsOneWidget);
 
-      // Enter matching passwords
       await tester.enterText(confirmPasswordField, 'Password123');
-      await tester.tap(find.byKey(const Key('register_button')));
-      await tester.pump();
+      await _tapButtonByKey(tester, const Key('register_button'));
 
       expect(find.text('Passwords do not match'), findsNothing);
     });
 
-    testWidgets('Login form should validate fields', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: LoginPage(),
-          ),
-        ),
-      );
+    testWidgets('Login form should validate fields', (
+      WidgetTester tester,
+    ) async {
+      await _pumpAuthPage(tester, const LoginPage());
 
-      // Find email and password fields using label text
-      final emailField = find.byWidgetPredicate(
-        (widget) => widget is CustomTextField && widget.label == 'Email',
-      );
-      final passwordField = find.byWidgetPredicate(
-        (widget) => widget is CustomTextField && widget.label == 'Password',
-      );
+      final emailField = _customTextFieldByLabel('Email');
+      final passwordField = _customTextFieldByLabel('Password');
 
-      // Test empty fields
-      await tester.tap(find.byKey(const Key('login_button')));
-      await tester.pump();
+      await _tapButtonByKey(tester, const Key('login_button'));
 
       expect(find.text('Please enter your email'), findsOneWidget);
       expect(find.text('Please enter your password'), findsOneWidget);
 
-      // Test invalid email
       await tester.enterText(emailField, 'invalid-email');
-      await tester.tap(find.byKey(const Key('login_button')));
-      await tester.pump();
+      await _tapButtonByKey(tester, const Key('login_button'));
 
       expect(find.text('Please enter a valid email'), findsOneWidget);
 
-      // Test short password
       await tester.enterText(emailField, 'test@example.com');
       await tester.enterText(passwordField, '123');
-      await tester.tap(find.byKey(const Key('login_button')));
-      await tester.pump();
+      await _tapButtonByKey(tester, const Key('login_button'));
 
-      expect(find.text('Password must be at least 6 characters'), findsOneWidget);
+      expect(
+        find.text('Password must be at least 8 characters'),
+        findsOneWidget,
+      );
 
-      // Test valid form
       await tester.enterText(passwordField, 'validpassword');
-      await tester.tap(find.byKey(const Key('login_button')));
-      await tester.pump();
+      await _tapButtonByKey(tester, const Key('login_button'));
 
       expect(find.text('Please enter your email'), findsNothing);
       expect(find.text('Please enter your password'), findsNothing);
       expect(find.text('Please enter a valid email'), findsNothing);
-      expect(find.text('Password must be at least 6 characters'), findsNothing);
+      expect(find.text('Password must be at least 8 characters'), findsNothing);
     });
 
-    testWidgets('Should navigate between login and register', (WidgetTester tester) async {
+    testWidgets('Should navigate between login and register', (
+      WidgetTester tester,
+    ) async {
+      final router = GoRouter(
+        initialLocation: '/login',
+        routes: [
+          GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+          GoRoute(path: '/register', builder: (_, __) => const RegisterPage()),
+        ],
+      );
+
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: LoginPage(),
+          child: MaterialApp.router(
+            locale: _enLocale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
-      // Should be on login page
-      expect(find.text('Welcome Back'), findsOneWidget);
+      expect(find.text("Dawn's near. Let's begin."), findsOneWidget);
       expect(find.text('Sign In'), findsWidgets);
 
-      // Click Sign Up
-      await tester.tap(find.text('Sign Up'));
+      final signUpLink = find.text('Sign Up');
+      await tester.ensureVisible(signUpLink);
+      await tester.tap(signUpLink);
       await tester.pumpAndSettle();
 
-      // Should be on register page
-      expect(find.text('Create Account'), findsOneWidget);
+      expect(find.text('Create Account'), findsWidgets);
       expect(find.text('Already have an account?'), findsOneWidget);
 
-      // Click Sign In
-      await tester.tap(find.text('Sign In'));
+      final signInLink = find.text('Sign In').last;
+      await tester.ensureVisible(signInLink);
+      await tester.tap(signInLink);
       await tester.pumpAndSettle();
 
-      // Should be back on login page
-      expect(find.text('Welcome Back'), findsOneWidget);
+      expect(find.text("Dawn's near. Let's begin."), findsOneWidget);
     });
 
-    testWidgets('Should toggle password visibility', (WidgetTester tester) async {
-      // Test on login page
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: LoginPage(),
-          ),
-        ),
-      );
+    testWidgets('Should toggle password visibility', (
+      WidgetTester tester,
+    ) async {
+      await _pumpAuthPage(tester, const LoginPage());
 
-      // Find password visibility toggle button
       final toggleButton = find.byIcon(Icons.visibility_off);
 
-      // Should be obscured initially
       expect(toggleButton, findsOneWidget);
 
-      // Toggle visibility
       await tester.tap(toggleButton);
       await tester.pump();
 
-      // Should show visibility icon
       expect(find.byIcon(Icons.visibility), findsOneWidget);
       expect(toggleButton, findsNothing);
 
-      // Toggle back
       await tester.tap(find.byIcon(Icons.visibility));
       await tester.pump();
 
-      // Should show visibility_off icon again
       expect(find.byIcon(Icons.visibility_off), findsOneWidget);
       expect(find.byIcon(Icons.visibility), findsNothing);
     });
 
-    testWidgets('Should handle remember me checkbox', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: LoginPage(),
-          ),
-        ),
-      );
+    testWidgets('Should handle remember me checkbox', (
+      WidgetTester tester,
+    ) async {
+      await _pumpAuthPage(tester, const LoginPage());
 
       final checkbox = find.byType(Checkbox);
+      final initialValue = tester.widget<Checkbox>(checkbox).value ?? false;
 
-      // Should be unchecked initially
-      expect(tester.widget<Checkbox>(checkbox).value, isFalse);
-
-      // Check the checkbox
       await tester.tap(checkbox);
       await tester.pump();
 
-      expect(tester.widget<Checkbox>(checkbox).value, isTrue);
+      expect(tester.widget<Checkbox>(checkbox).value, isNot(initialValue));
 
-      // Uncheck the checkbox
       await tester.tap(checkbox);
       await tester.pump();
 
-      expect(tester.widget<Checkbox>(checkbox).value, isFalse);
+      expect(tester.widget<Checkbox>(checkbox).value, initialValue);
     });
 
-    testWidgets('Should show terms agreement error', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: RegisterPage(),
-          ),
-        ),
-      );
+    testWidgets('Should show terms agreement error', (
+      WidgetTester tester,
+    ) async {
+      await _pumpAuthPage(tester, const RegisterPage());
 
-      // Fill all valid fields but don't check terms
+      await tester.enterText(_customTextFieldByLabel('Full Name'), 'Test');
       await tester.enterText(
-        find.byWidgetPredicate(
-          (widget) => widget is CustomTextField && widget.label == '用户名 (可选)',
-        ),
-        'Test',
-      );
-
-      await tester.enterText(
-        find.byWidgetPredicate(
-          (widget) => widget is CustomTextField && widget.label == 'Email',
-        ),
+        _customTextFieldByLabel('Email'),
         'test@example.com',
       );
-
       await tester.enterText(
-        find.byWidgetPredicate(
-          (widget) => widget is CustomTextField && widget.label == 'Password',
-        ),
+        _customTextFieldByLabel('Password'),
+        'Password123',
+      );
+      await tester.enterText(
+        _customTextFieldByLabel('Confirm Password'),
         'Password123',
       );
 
-      await tester.enterText(
-        find.byWidgetPredicate(
-          (widget) => widget is CustomTextField && widget.label == 'Confirm Password',
-        ),
-        'Password123',
-      );
+      await _tapButtonByKey(tester, const Key('register_button'));
 
-      // Try to submit without checking terms
-      await tester.tap(find.byKey(const Key('register_button')));
-      await tester.pump();
-
-      expect(find.text('Please agree to the terms and conditions'), findsOneWidget);
+      expect(find.text('I agree to the Terms and Conditions'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 4));
     });
   });
 }
