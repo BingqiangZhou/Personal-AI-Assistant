@@ -210,7 +210,7 @@ async def subscriptions_page(
         raise HTTPException(
             status_code=500,
             detail="Failed to load subscriptions",
-        )
+        ) from e
 
 
 @router.post("/subscriptions/update-frequency")
@@ -244,11 +244,11 @@ async def update_subscription_frequency(
                 hour, minute = map(int, update_time.split(":"))
                 if not (0 <= hour <= 23 and 0 <= minute <= 59):
                     raise ValueError
-            except (ValueError, AttributeError):
+            except (ValueError, AttributeError) as err:
                 raise HTTPException(
                     status_code=400,
                     detail="Invalid time format. Use HH:MM",
-                )
+                ) from err
 
         day_of_week = None
         if update_frequency == UpdateFrequency.WEEKLY.value:
@@ -330,7 +330,7 @@ async def update_subscription_frequency(
         raise HTTPException(
             status_code=500,
             detail="Failed to update frequency settings",
-        )
+        ) from e
 
 
 @router.put("/subscriptions/{sub_id}/edit")
@@ -420,7 +420,7 @@ async def edit_subscription(
         raise HTTPException(
             status_code=500,
             detail="Failed to edit subscription",
-        )
+        ) from e
 
 
 @router.post("/subscriptions/test-url")
@@ -679,7 +679,7 @@ async def test_all_subscriptions(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to test subscriptions: {str(e)}",
-        )
+        ) from e
 
 
 @router.delete("/subscriptions/{sub_id}/delete")
@@ -775,7 +775,7 @@ async def delete_subscription(
         raise HTTPException(
             status_code=500,
             detail="Failed to delete subscription",
-        )
+        ) from e
 
 
 @router.post("/subscriptions/{sub_id}/refresh")
@@ -820,7 +820,7 @@ async def refresh_subscription(
         raise HTTPException(
             status_code=500,
             detail="Failed to refresh subscription",
-        )
+        ) from e
 
 
 # ==================== Subscription Batch Operations ====================
@@ -874,7 +874,7 @@ async def batch_refresh_subscriptions(
         raise HTTPException(
             status_code=500,
             detail="Failed to batch refresh subscriptions",
-        )
+        ) from e
 
 
 @router.post("/subscriptions/batch/toggle")
@@ -925,7 +925,7 @@ async def batch_toggle_subscriptions(
         raise HTTPException(
             status_code=500,
             detail="Failed to batch toggle subscriptions",
-        )
+        ) from e
 
 
 @router.post("/subscriptions/batch/delete")
@@ -1032,7 +1032,7 @@ async def batch_delete_subscriptions(
                 "message_en": "Failed to batch delete subscriptions",
                 "message_zh": "批量删除订阅失败"
             },
-        )
+        ) from e
 
 
 # ==================== OPML Export/Import ====================
@@ -1083,7 +1083,7 @@ async def export_subscriptions_opml(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to export OPML: {str(e)}",
-        )
+        ) from e
 
 
 @router.post("/api/subscriptions/import/opml")

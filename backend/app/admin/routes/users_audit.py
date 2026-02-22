@@ -92,7 +92,7 @@ async def audit_logs_page(
         raise HTTPException(
             status_code=500,
             detail="Failed to load audit logs",
-        )
+        ) from e
 
 
 # ==================== User Management ====================
@@ -143,7 +143,7 @@ async def users_page(
         raise HTTPException(
             status_code=500,
             detail="Failed to load users",
-        )
+        ) from e
 
 
 @router.put("/users/{user_id}/toggle")
@@ -203,7 +203,7 @@ async def toggle_user(
         raise HTTPException(
             status_code=500,
             detail="Failed to toggle user",
-        )
+        ) from e
 
 
 @router.put("/users/{user_id}/reset-password")
@@ -260,4 +260,4 @@ async def reset_user_password(
         raise HTTPException(
             status_code=500,
             detail="Failed to reset password",
-        )
+        ) from e

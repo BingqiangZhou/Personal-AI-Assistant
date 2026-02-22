@@ -87,16 +87,16 @@ class AdminAuthRequired:
 
             return user
 
-        except SignatureExpired:
+        except SignatureExpired as err:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Session expired",
-            )
-        except BadSignature:
+            ) from err
+        except BadSignature as err:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid session",
-            )
+            ) from err
         except Exception as e:
             # Re-raise HTTP exceptions
             if isinstance(e, HTTPException):
@@ -104,7 +104,7 @@ class AdminAuthRequired:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Authentication error: {str(e)}",
-            )
+            ) from e
 
 
 def create_admin_session(user_id: int) -> str:

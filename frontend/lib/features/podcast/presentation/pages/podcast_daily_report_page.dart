@@ -281,7 +281,7 @@ class _PodcastDailyReportPageState
           primary: false,
           padding: EdgeInsets.zero,
           itemCount: currentReport.items.length,
-          separatorBuilder: (_, _index) => const SizedBox(height: 8),
+          separatorBuilder: (_, index) => const SizedBox(height: 8),
           itemBuilder: (itemContext, index) {
             final item = currentReport.items[index];
             final metaLine =

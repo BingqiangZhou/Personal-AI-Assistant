@@ -191,11 +191,11 @@ class AudioDownloader:
                 logger.info(f"Successfully downloaded file to {destination}, size: {downloaded} bytes")
                 return destination, downloaded
 
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError as err:
             raise HTTPException(
                 status_code=status.HTTP_408_REQUEST_TIMEOUT,
                 detail="Download timeout"
-            )
+            ) from err
         except Exception as e:
             logger.error(f"Download failed: {str(e)}")
             # 清理部分下载的文件
@@ -204,7 +204,7 @@ class AudioDownloader:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Download failed: {str(e)}"
-            )
+            ) from e
 
     async def download_file_with_fallback(
         self,
@@ -241,7 +241,7 @@ class AudioDownloader:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail=f"Download failed: {str(e)}"
-                )
+                ) from e
 
 
 # Note: Browser fallback download has been removed.
@@ -346,7 +346,7 @@ class AudioConverter:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Audio conversion failed: {str(e)}"
-            )
+            ) from e
 
 
 class AudioSplitter:
@@ -442,7 +442,7 @@ class AudioSplitter:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Audio splitting by time failed: {str(e)}"
-            )
+            ) from e
 
     @staticmethod
     async def split_mp3(
@@ -486,7 +486,7 @@ class AudioSplitter:
                 logger.info(f"🔪 [SPLIT] Input duration: {duration:.2f}s")
             except Exception as e:
                 logger.error(f"🔪 [SPLIT] FFmpeg probe failed: {e}")
-                raise RuntimeError(f"Failed to probe input file: {e}")
+                raise RuntimeError(f"Failed to probe input file: {e}") from e
 
             # 计算需要切割的段数
             num_chunks = max(1, (file_size + chunk_size_bytes - 1) // chunk_size_bytes)
@@ -578,7 +578,7 @@ class AudioSplitter:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Audio splitting failed: {str(e)}"
-            )
+            ) from e
 
 
 class SiliconFlowTranscriber:

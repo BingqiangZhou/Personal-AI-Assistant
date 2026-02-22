@@ -277,7 +277,7 @@ class AIModelConfigService:
             return decrypted
         except Exception as e:
             logger.error(f"Failed to decrypt API key for model {model.name}: {e}")
-            raise ValidationError(f"Failed to decrypt API key for model {model.name}")
+            raise ValidationError(f"Failed to decrypt API key for model {model.name}") from e
 
     async def _clear_default_models(self, model_type: ModelType):
         """清除指定类型的所有默认模型标记"""

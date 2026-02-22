@@ -461,7 +461,7 @@ class ConversationService:
             return decrypted
         except Exception as e:
             logger.error(f"Failed to decrypt API key for model {model_config.name}: {e}")
-            raise ValidationError(f"Failed to decrypt API key for model {model_config.name}")
+            raise ValidationError(f"Failed to decrypt API key for model {model_config.name}") from e
 
     async def clear_conversation_history(
         self,

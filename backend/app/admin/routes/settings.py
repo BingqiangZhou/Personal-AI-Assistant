@@ -58,7 +58,7 @@ async def settings_page(
         raise HTTPException(
             status_code=500,
             detail="Failed to load settings page",
-        )
+        ) from e
 
 
 # ==================== Audio Settings ====================
@@ -101,7 +101,7 @@ async def get_audio_settings(
         raise HTTPException(
             status_code=500,
             detail="Failed to get audio settings",
-        )
+        ) from e
 
 
 @router.post("/settings/api/audio")
@@ -192,7 +192,7 @@ async def update_audio_settings(
         raise HTTPException(
             status_code=500,
             detail="Failed to update audio settings",
-        )
+        ) from e
 
 
 # ==================== Frequency Settings ====================
@@ -259,7 +259,7 @@ async def get_frequency_settings(
         raise HTTPException(
             status_code=500,
             detail="Failed to get frequency settings",
-        )
+        ) from e
 
 
 @router.post("/settings/frequency")
@@ -366,7 +366,7 @@ async def update_frequency_settings(
         raise HTTPException(
             status_code=500,
             detail="Failed to update frequency settings",
-        )
+        ) from e
 
 
 # ==================== Security Settings ====================
@@ -393,7 +393,7 @@ async def get_security_settings(
         raise HTTPException(
             status_code=500,
             detail="Failed to get security settings",
-        )
+        ) from e
 
 
 @router.post("/settings/api/security")
@@ -437,7 +437,7 @@ async def update_security_settings(
         raise HTTPException(
             status_code=500,
             detail="Failed to update security settings",
-        )
+        ) from e
 
 
 # ==================== Storage Management ====================
@@ -461,7 +461,7 @@ async def get_storage_info(
         raise HTTPException(
             status_code=500,
             detail="Failed to get storage information",
-        )
+        ) from e
 
 
 @router.get("/settings/api/storage/cleanup/config")
@@ -482,7 +482,7 @@ async def get_cleanup_config(
         raise HTTPException(
             status_code=500,
             detail="Failed to get cleanup configuration",
-        )
+        ) from e
 
 
 @router.post("/settings/api/storage/cleanup/config")
@@ -524,7 +524,7 @@ async def update_cleanup_config(
         raise HTTPException(
             status_code=500,
             detail="Failed to update cleanup configuration",
-        )
+        ) from e
 
 
 @router.post("/settings/api/storage/cleanup/execute")
@@ -565,4 +565,4 @@ async def execute_cleanup(
         raise HTTPException(
             status_code=500,
             detail="Failed to execute cleanup",
-        )
+        ) from e

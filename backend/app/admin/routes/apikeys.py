@@ -131,7 +131,7 @@ async def apikeys_page(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to load API keys",
-        )
+        ) from e
 
 
 @router.post("/apikeys/test")
@@ -269,7 +269,7 @@ async def create_apikey(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create API key",
-        )
+        ) from e
 
 
 @router.put("/apikeys/{key_id}/toggle")
@@ -316,7 +316,7 @@ async def toggle_apikey(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to toggle API key",
-        )
+        ) from e
 
 
 @router.put("/apikeys/{key_id}/edit")
@@ -415,7 +415,7 @@ async def edit_apikey(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update API key",
-        )
+        ) from e
 
 
 @router.delete("/apikeys/{key_id}/delete")
@@ -461,7 +461,7 @@ async def delete_apikey(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete API key",
-        )
+        ) from e
 
 
 class ExportRequest(BaseModel):
@@ -620,7 +620,7 @@ async def export_apikeys_json(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to export JSON: {str(e)}",
-        )
+        ) from e
 
 
 @router.post("/api/apikeys/import/json")

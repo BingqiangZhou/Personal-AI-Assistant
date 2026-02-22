@@ -165,8 +165,14 @@ void main() {
       final router = GoRouter(
         initialLocation: '/login',
         routes: [
-          GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
-          GoRoute(path: '/register', builder: (_, __) => const RegisterPage()),
+          GoRoute(
+            path: '/login',
+            builder: (context, state) => const LoginPage(),
+          ),
+          GoRoute(
+            path: '/register',
+            builder: (context, state) => const RegisterPage(),
+          ),
         ],
       );
 

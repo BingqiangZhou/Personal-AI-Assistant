@@ -386,9 +386,10 @@ class _ServerConfigDialogState extends ConsumerState<ServerConfigDialog> {
       // Add to history after successful save
       await _addToServerHistory(baseUrl);
 
-      if (!context.mounted) return;
+      if (!dialogContext.mounted) return;
+      if (!mounted) return;
       Navigator.of(dialogContext).pop();
-      if (!context.mounted) return;
+      if (!mounted) return;
       showTopFloatingNotice(
         context,
         message: l10n.restore_defaults_success,

@@ -464,7 +464,7 @@ class _PodcastEpisodeDetailPageState
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                               ),
-                              child: Container(
+                              child: SizedBox(
                                 key: const Key(
                                   'podcast_episode_detail_desktop_player_region',
                                 ),

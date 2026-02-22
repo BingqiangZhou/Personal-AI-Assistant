@@ -25,7 +25,7 @@ class AIModelConfigRepository:
             return model_config
         except Exception as e:
             await self.db.rollback()
-            raise DatabaseError(f"Failed to create model config: {str(e)}")
+            raise DatabaseError(f"Failed to create model config: {str(e)}") from e
 
     async def get_by_id(self, model_id: int) -> AIModelConfig | None:
         """根据ID获取模型配置"""
@@ -34,7 +34,7 @@ class AIModelConfigRepository:
             result = await self.db.execute(stmt)
             return result.scalar_one_or_none()
         except Exception as e:
-            raise DatabaseError(f"Failed to get model config by id: {str(e)}")
+            raise DatabaseError(f"Failed to get model config by id: {str(e)}") from e
 
     async def get_by_name(self, name: str) -> AIModelConfig | None:
         """根据名称获取模型配置"""
@@ -43,7 +43,7 @@ class AIModelConfigRepository:
             result = await self.db.execute(stmt)
             return result.scalar_one_or_none()
         except Exception as e:
-            raise DatabaseError(f"Failed to get model config by name: {str(e)}")
+            raise DatabaseError(f"Failed to get model config by name: {str(e)}") from e
 
     async def get_list(
         self,
@@ -84,7 +84,7 @@ class AIModelConfigRepository:
 
             return models, total
         except Exception as e:
-            raise DatabaseError(f"Failed to get model config list: {str(e)}")
+            raise DatabaseError(f"Failed to get model config list: {str(e)}") from e
 
     async def get_default_model(self, model_type: ModelType) -> AIModelConfig | None:
         """获取指定类型的默认模型"""
@@ -99,7 +99,7 @@ class AIModelConfigRepository:
             result = await self.db.execute(stmt)
             return result.scalar_one_or_none()
         except Exception as e:
-            raise DatabaseError(f"Failed to get default model: {str(e)}")
+            raise DatabaseError(f"Failed to get default model: {str(e)}") from e
 
     async def get_active_models(
         self,
@@ -117,7 +117,7 @@ class AIModelConfigRepository:
             result = await self.db.execute(stmt)
             return list(result.scalars().all())
         except Exception as e:
-            raise DatabaseError(f"Failed to get active models: {str(e)}")
+            raise DatabaseError(f"Failed to get active models: {str(e)}") from e
 
     async def get_active_models_by_priority(
         self,
@@ -137,7 +137,7 @@ class AIModelConfigRepository:
             return await self.get_by_id(model_id)
         except Exception as e:
             await self.db.rollback()
-            raise DatabaseError(f"Failed to update model config: {str(e)}")
+            raise DatabaseError(f"Failed to update model config: {str(e)}") from e
 
     async def set_default_model(self, model_id: int, model_type: ModelType) -> bool:
         """设置默认模型（会先取消同类型的其他默认模型）"""
@@ -168,7 +168,7 @@ class AIModelConfigRepository:
             return result.rowcount > 0
         except Exception as e:
             await self.db.rollback()
-            raise DatabaseError(f"Failed to set default model: {str(e)}")
+            raise DatabaseError(f"Failed to set default model: {str(e)}") from e
 
     async def delete(self, model_id: int) -> bool:
         """删除模型配置"""
@@ -185,7 +185,7 @@ class AIModelConfigRepository:
             return result.rowcount > 0
         except Exception as e:
             await self.db.rollback()
-            raise DatabaseError(f"Failed to delete model config: {str(e)}")
+            raise DatabaseError(f"Failed to delete model config: {str(e)}") from e
 
     async def increment_usage(
         self,
@@ -215,7 +215,7 @@ class AIModelConfigRepository:
             return result.rowcount > 0
         except Exception as e:
             await self.db.rollback()
-            raise DatabaseError(f"Failed to increment usage: {str(e)}")
+            raise DatabaseError(f"Failed to increment usage: {str(e)}") from e
 
     async def get_usage_stats(
         self,
@@ -265,7 +265,7 @@ class AIModelConfigRepository:
 
             return stats
         except Exception as e:
-            raise DatabaseError(f"Failed to get usage stats: {str(e)}")
+            raise DatabaseError(f"Failed to get usage stats: {str(e)}") from e
 
     async def search_models(
         self,
@@ -303,4 +303,4 @@ class AIModelConfigRepository:
 
             return models, total
         except Exception as e:
-            raise DatabaseError(f"Failed to search models: {str(e)}")
+            raise DatabaseError(f"Failed to search models: {str(e)}") from e

@@ -19,10 +19,10 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final audioNotifier = TestAudioPlayerNotifier(
+      final audioNotifier = _TestAudioPlayerNotifier(
         AudioPlayerState(currentEpisode: _episode(), duration: 180000),
       );
-      final episodesNotifier = TestPodcastEpisodesNotifier(
+      final episodesNotifier = _TestPodcastEpisodesNotifier(
         const PodcastEpisodesState(episodes: [], hasMore: false, total: 0),
       );
 
@@ -59,14 +59,14 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final audioNotifier = TestAudioPlayerNotifier(
+      final audioNotifier = _TestAudioPlayerNotifier(
         AudioPlayerState(
           currentEpisode: _episode(),
           duration: 180000,
           isExpanded: true,
         ),
       );
-      final episodesNotifier = TestPodcastEpisodesNotifier(
+      final episodesNotifier = _TestPodcastEpisodesNotifier(
         const PodcastEpisodesState(episodes: [], hasMore: false, total: 0),
       );
 
@@ -96,8 +96,8 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final audioNotifier = TestAudioPlayerNotifier(const AudioPlayerState());
-      final episodesNotifier = TestPodcastEpisodesNotifier(
+      final audioNotifier = _TestAudioPlayerNotifier(const AudioPlayerState());
+      final episodesNotifier = _TestPodcastEpisodesNotifier(
         const PodcastEpisodesState(episodes: [], hasMore: false, total: 0),
       );
 
@@ -119,8 +119,8 @@ void main() {
     testWidgets('switching subscription triggers forced reload once', (
       tester,
     ) async {
-      final audioNotifier = TestAudioPlayerNotifier(const AudioPlayerState());
-      final episodesNotifier = TestPodcastEpisodesNotifier(
+      final audioNotifier = _TestAudioPlayerNotifier(const AudioPlayerState());
+      final episodesNotifier = _TestPodcastEpisodesNotifier(
         const PodcastEpisodesState(episodes: [], hasMore: false, total: 0),
       );
 
@@ -152,8 +152,8 @@ void main() {
 }
 
 Widget _createWidget({
-  required TestAudioPlayerNotifier audioNotifier,
-  required TestPodcastEpisodesNotifier episodesNotifier,
+  required _TestAudioPlayerNotifier audioNotifier,
+  required _TestPodcastEpisodesNotifier episodesNotifier,
   int subscriptionId = 1,
 }) {
   return ProviderScope(
@@ -172,8 +172,8 @@ Widget _createWidget({
   );
 }
 
-class TestAudioPlayerNotifier extends AudioPlayerNotifier {
-  TestAudioPlayerNotifier(this._initialState);
+class _TestAudioPlayerNotifier extends AudioPlayerNotifier {
+  _TestAudioPlayerNotifier(this._initialState);
 
   final AudioPlayerState _initialState;
 
@@ -183,8 +183,8 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
   }
 }
 
-class TestPodcastEpisodesNotifier extends PodcastEpisodesNotifier {
-  TestPodcastEpisodesNotifier(this._initialState);
+class _TestPodcastEpisodesNotifier extends PodcastEpisodesNotifier {
+  _TestPodcastEpisodesNotifier(this._initialState);
 
   final PodcastEpisodesState _initialState;
   final List<_LoadEpisodesCall> loadCalls = [];

@@ -26,11 +26,15 @@ void main() {
       final router = GoRouter(
         initialLocation: '/',
         routes: [
-          GoRoute(path: '/', builder: (_, __) => const PodcastFeedPage()),
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const PodcastFeedPage(),
+          ),
           GoRoute(
             path: '/reports/daily',
             name: 'dailyReport',
-            builder: (_, __) => const Scaffold(body: Text('daily-route')),
+            builder: (context, state) =>
+                const Scaffold(body: Text('daily-route')),
           ),
         ],
       );
@@ -417,7 +421,10 @@ Widget _buildReportApp({
   final router = GoRouter(
     initialLocation: '/',
     routes: [
-      GoRoute(path: '/', builder: (_, __) => const PodcastDailyReportPage()),
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const PodcastDailyReportPage(),
+      ),
       GoRoute(
         path: '/podcast/episode/detail/:episodeId',
         builder: (context, state) {

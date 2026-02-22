@@ -98,7 +98,7 @@ async def create_subscription(
     try:
         return await service.create_subscription(subscription_data)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/batch", response_model=BatchSubscriptionResponse)
@@ -174,9 +174,9 @@ async def fetch_subscription_items(
         result = await service.fetch_subscription(subscription_id)
         return FetchResponse(**result)
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fetch failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Fetch failed: {str(e)}") from e
 
 
 @router.post("/fetch-all", response_model=list[FetchResponse])

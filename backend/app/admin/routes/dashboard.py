@@ -61,4 +61,4 @@ async def dashboard(
         raise HTTPException(
             status_code=500,
             detail="Failed to load dashboard",
-        )
+        ) from e

@@ -198,7 +198,7 @@ class SummaryModelManager:
                     await asyncio.sleep(delay)
                 else:
                     # 所有重试都失败了，抛出异常
-                    raise Exception(f"Model {model_config.name} failed after {max_retries} attempts: {str(e)}")
+                    raise Exception(f"Model {model_config.name} failed after {max_retries} attempts: {str(e)}") from e
 
         # 不应该到达这里
         raise Exception("Unexpected error in _call_ai_api_with_retry")

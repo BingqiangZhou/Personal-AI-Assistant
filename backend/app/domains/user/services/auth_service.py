@@ -97,9 +97,9 @@ class AuthenticationService:
             await self.db.commit()
             await self.db.refresh(user)
             return user
-        except IntegrityError:
+        except IntegrityError as err:
             await self.db.rollback()
-            raise ConflictError("User registration failed")
+            raise ConflictError("User registration failed") from err
 
     async def authenticate_user(
         self,
@@ -218,9 +218,9 @@ class AuthenticationService:
             self.db.add(session)
             await self.db.commit()
             await self.db.refresh(session)
-        except IntegrityError:
+        except IntegrityError as err:
             await self.db.rollback()
-            raise BadRequestError("Failed to create user session")
+            raise BadRequestError("Failed to create user session") from err
 
         return {
             "access_token": access_token,
@@ -254,8 +254,8 @@ class AuthenticationService:
         try:
             payload = verify_token(refresh_token, token_type="refresh")
             user_id = int(payload.get("sub"))
-        except Exception:
-            raise UnauthorizedError("Invalid refresh token")
+        except Exception as err:
+            raise UnauthorizedError("Invalid refresh token") from err
 
         # Find valid session
         session = await self._get_valid_session_by_refresh_token(refresh_token)
@@ -455,9 +455,9 @@ class AuthenticationService:
                 "expires_at": expires_at.isoformat()
             }
 
-        except IntegrityError:
+        except IntegrityError as err:
             await self.db.rollback()
-            raise BadRequestError("Failed to create password reset token")
+            raise BadRequestError("Failed to create password reset token") from err
 
     async def reset_password(self, token: str, new_password: str) -> dict[str, Any]:
         """

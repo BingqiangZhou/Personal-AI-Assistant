@@ -94,10 +94,10 @@ class EpisodeDescriptionHelper {
     String text = htmlContent;
 
     try {
-      text = text.replaceAll(RegExp(r'(?i)<br\s*/?>'), '\n');
-      text = text.replaceAll(RegExp(r'(?i)</p\s*>'), '\n');
-      text = text.replaceAll(RegExp(r'(?i)</div\s*>'), '\n');
-      text = text.replaceAll(RegExp(r'(?i)</li\s*>'), '\n');
+      text = text.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
+      text = text.replaceAll(RegExp(r'</p\s*>', caseSensitive: false), '\n');
+      text = text.replaceAll(RegExp(r'</div\s*>', caseSensitive: false), '\n');
+      text = text.replaceAll(RegExp(r'</li\s*>', caseSensitive: false), '\n');
       text = text.replaceAll(RegExp(r'<[^>]*>'), '');
 
       // Decode HTML entities (common ones)

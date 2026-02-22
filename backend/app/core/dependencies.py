@@ -45,7 +45,7 @@ async def get_current_user(
     except (JWTError, ValueError) as e:
         # This is an actual error
         logger.error(f"Exception in token verification: {e}")
-        raise credentials_exception
+        raise credentials_exception from e
 
     user_repo = UserRepository(db)
     user = await user_repo.get_by_id(user_id)

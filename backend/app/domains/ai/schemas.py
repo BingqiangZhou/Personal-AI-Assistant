@@ -40,8 +40,8 @@ class AIModelConfigBase(BaseModel):
                 temp = float(v)
                 if not 0 <= temp <= 2:
                     raise ValueError('温度参数必须在0-2之间')
-            except ValueError:
-                raise ValueError('温度参数必须是数字')
+            except ValueError as err:
+                raise ValueError('温度参数必须是数字') from err
         return v
 
     @validator('cost_per_input_token', 'cost_per_output_token')
@@ -51,8 +51,8 @@ class AIModelConfigBase(BaseModel):
                 float(v)
                 if float(v) < 0:
                     raise ValueError('成本不能为负数')
-            except ValueError:
-                raise ValueError('成本必须是数字')
+            except ValueError as err:
+                raise ValueError('成本必须是数字') from err
         return v
 
 
@@ -88,8 +88,8 @@ class AIModelConfigUpdate(BaseModel):
                 temp = float(v)
                 if not 0 <= temp <= 2:
                     raise ValueError('温度参数必须在0-2之间')
-            except ValueError:
-                raise ValueError('温度参数必须是数字')
+            except ValueError as err:
+                raise ValueError('温度参数必须是数字') from err
         return v
 
     @validator('cost_per_input_token', 'cost_per_output_token')
@@ -99,8 +99,8 @@ class AIModelConfigUpdate(BaseModel):
                 float(v)
                 if float(v) < 0:
                     raise ValueError('成本不能为负数')
-            except ValueError:
-                raise ValueError('成本必须是数字')
+            except ValueError as err:
+                raise ValueError('成本必须是数字') from err
         return v
 
 

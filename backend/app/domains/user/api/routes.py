@@ -102,7 +102,7 @@ async def register(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Registration failed: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/login", response_model=Token)
@@ -156,7 +156,7 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Login failed: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/refresh", response_model=Token)
@@ -186,7 +186,7 @@ async def refresh_token(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Token refresh failed: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
@@ -214,7 +214,7 @@ async def logout(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Logout failed: {str(e)}"
-        )
+        ) from e
 
 
 @router.get("/me", response_model=UserResponse)
@@ -249,7 +249,7 @@ async def logout_all(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Logout failed: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/forgot-password", response_model=PasswordResetResponse)
@@ -278,7 +278,7 @@ async def forgot_password(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to process password reset request: {str(e)}"
-        )
+        ) from e
 
 
 @router.post("/reset-password", response_model=PasswordResetResponse)
@@ -306,4 +306,4 @@ async def reset_password(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to reset password: {str(e)}"
-        )
+        ) from e

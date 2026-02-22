@@ -38,7 +38,7 @@ class _TestAuthNotifier extends AuthNotifier {
 
 void main() {
   group('PodcastFeedPage Basic Widget Tests', () {
-    Widget _wrap(Widget child, {required PodcastFeedState feedState}) {
+    Widget wrapWidget(Widget child, {required PodcastFeedState feedState}) {
       return ProviderScope(
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
@@ -55,7 +55,7 @@ void main() {
       );
     }
 
-    PodcastFeedState _feedState() {
+    PodcastFeedState createFeedState() {
       final now = DateTime.now();
       return PodcastFeedState(
         episodes: [
@@ -96,7 +96,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
-        _wrap(const PodcastFeedPage(), feedState: _feedState()),
+        wrapWidget(const PodcastFeedPage(), feedState: createFeedState()),
       );
 
       final l10n = AppLocalizations.of(
@@ -117,7 +117,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        _wrap(const PodcastFeedPage(), feedState: _feedState()),
+        wrapWidget(const PodcastFeedPage(), feedState: createFeedState()),
       );
 
       await tester.pumpAndSettle();
@@ -141,7 +141,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        _wrap(const PodcastFeedPage(), feedState: _feedState()),
+        wrapWidget(const PodcastFeedPage(), feedState: createFeedState()),
       );
 
       await tester.pumpAndSettle();
@@ -164,7 +164,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        _wrap(const PodcastFeedPage(), feedState: _feedState()),
+        wrapWidget(const PodcastFeedPage(), feedState: createFeedState()),
       );
 
       await tester.pumpAndSettle();
@@ -181,7 +181,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        _wrap(const PodcastFeedPage(), feedState: _feedState()),
+        wrapWidget(const PodcastFeedPage(), feedState: createFeedState()),
       );
 
       await tester.pumpAndSettle();
@@ -196,7 +196,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        _wrap(const PodcastFeedPage(), feedState: _feedState()),
+        wrapWidget(const PodcastFeedPage(), feedState: createFeedState()),
       );
 
       await tester.pumpAndSettle();

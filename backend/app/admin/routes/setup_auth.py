@@ -559,7 +559,7 @@ async def setup_2fa_page(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to load 2FA setup page",
-        )
+        ) from e
 
 
 @router.post("/2fa/verify")
@@ -624,7 +624,7 @@ async def verify_2fa_setup(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to verify 2FA",
-        )
+        ) from e
 
 
 @router.post("/2fa/disable")
@@ -666,4 +666,4 @@ async def disable_2fa(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to disable 2FA",
-        )
+        ) from e

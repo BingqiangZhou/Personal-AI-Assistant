@@ -204,12 +204,27 @@ void main() {
 
       final decoration = _noticeDecoration(tester);
       final border = decoration.border as Border;
-      expect(border.top.color.alpha, greaterThan(0));
-      expect(border.bottom.color.alpha, greaterThan(0));
-      expect(border.left.color.alpha, greaterThan(0));
-      expect(border.right.color.alpha, greaterThan(0));
+      expect(
+        (border.top.color.a * 255.0).round().clamp(0, 255),
+        greaterThan(0),
+      );
+      expect(
+        (border.bottom.color.a * 255.0).round().clamp(0, 255),
+        greaterThan(0),
+      );
+      expect(
+        (border.left.color.a * 255.0).round().clamp(0, 255),
+        greaterThan(0),
+      );
+      expect(
+        (border.right.color.a * 255.0).round().clamp(0, 255),
+        greaterThan(0),
+      );
       expect(decoration.boxShadow, isNotEmpty);
-      expect(decoration.boxShadow!.first.color.alpha, 255);
+      expect(
+        (decoration.boxShadow!.first.color.a * 255.0).round().clamp(0, 255),
+        255,
+      );
       await tester.pump(const Duration(seconds: 4));
     });
 
