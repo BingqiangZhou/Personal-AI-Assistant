@@ -1,4 +1,4 @@
-﻿"""
+"""
 Performance monitoring middleware.
 """
 
@@ -23,8 +23,11 @@ class PerformanceMetricsStore:
         self.request_counts: dict[str, int] = {}
         self.response_times: dict[str, dict[str, float]] = {}
         self.error_counts: dict[str, int] = {}
+        self.status_counts: dict[str, dict[str, int]] = {}
 
-    def track_request(self, key: str, duration_ms: float) -> None:
+    def track_request(
+        self, key: str, duration_ms: float, status_code: int | None = None
+    ) -> None:
         self.request_counts[key] = self.request_counts.get(key, 0) + 1
 
         if key not in self.response_times:
@@ -41,6 +44,16 @@ class PerformanceMetricsStore:
         stats["min_ms"] = min(stats["min_ms"], duration_ms)
         stats["max_ms"] = max(stats["max_ms"], duration_ms)
 
+        if status_code is not None:
+            if key not in self.status_counts:
+                self.status_counts[key] = {}
+            status_key = str(status_code)
+            status_map = self.status_counts[key]
+            status_map[status_key] = status_map.get(status_key, 0) + 1
+
+            if status_code >= 400:
+                self.track_error(key)
+
     def track_error(self, key: str) -> None:
         self.error_counts[key] = self.error_counts.get(key, 0) + 1
 
@@ -55,16 +68,33 @@ class PerformanceMetricsStore:
                 "max_ms": stats["max_ms"],
             }
 
+        endpoint_error_rates: dict[str, float] = {}
+        for key, count in self.request_counts.items():
+            errors = self.error_counts.get(key, 0)
+            endpoint_error_rates[key] = (errors / count) if count else 0.0
+
+        total_requests = sum(self.request_counts.values())
+        total_errors = sum(self.error_counts.values())
+        global_error_rate = (total_errors / total_requests) if total_requests else 0.0
+
         return {
             "request_counts": self.request_counts.copy(),
             "response_times": response_stats,
             "error_counts": self.error_counts.copy(),
+            "status_counts": {k: v.copy() for k, v in self.status_counts.items()},
+            "endpoint_error_rates": endpoint_error_rates,
+            "summary": {
+                "total_requests": total_requests,
+                "total_errors": total_errors,
+                "global_error_rate": global_error_rate,
+            },
         }
 
     def reset_metrics(self) -> None:
         self.request_counts.clear()
         self.response_times.clear()
         self.error_counts.clear()
+        self.status_counts.clear()
 
 
 _performance_metrics_store = PerformanceMetricsStore()
@@ -101,7 +131,7 @@ class PerformanceMonitoringMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
             duration_ms = (time.time() - start_time) * 1000
 
-            store.track_request(key, duration_ms)
+            store.track_request(key, duration_ms, response.status_code)
             if duration_ms > SLOW_API_THRESHOLD_MS:
                 logger.warning(
                     "Slow API: %s took %.2fms",

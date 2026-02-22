@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from app.core.config import settings
-from app.core.database import init_db
+from app.core.database import get_db_pool_snapshot, init_db
 from app.core.exceptions import setup_exception_handlers
 from app.core.json_encoder import CustomJSONResponse
 from app.core.logging_config import setup_logging_from_env
@@ -17,6 +17,7 @@ from app.core.middleware import (
     PerformanceMonitoringMiddleware,
     get_performance_middleware,
 )
+from app.core.redis import get_redis_runtime_metrics
 
 
 # 初始化日志系统
@@ -27,7 +28,9 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info(f"启动 {settings.PROJECT_NAME} v{settings.VERSION} - 环境: {settings.ENVIRONMENT}")
+    logger.info(
+        f"启动 {settings.PROJECT_NAME} v{settings.VERSION} - 环境: {settings.ENVIRONMENT}"
+    )
     await init_db()
 
     # Reset stale transcription tasks
@@ -48,6 +51,7 @@ async def lifespan(app: FastAPI):
     yield
     # Shutdown
     from app.core.database import close_db
+
     await close_db()
     logger.info("服务已关闭")
 
@@ -61,7 +65,7 @@ def create_application() -> FastAPI:
         version="1.0.0",
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
         lifespan=lifespan,
-        default_response_class=CustomJSONResponse  # 使用自定义 JSON 响应类
+        default_response_class=CustomJSONResponse,  # 使用自定义 JSON 响应类
     )
 
     # Set up a single app-scoped metrics store.
@@ -86,6 +90,7 @@ def create_application() -> FastAPI:
 
     # Set up first-run middleware for admin setup
     from app.admin.first_run import first_run_middleware
+
     app.middleware("http")(first_run_middleware)
 
     # Set up exception handlers
@@ -101,31 +106,39 @@ def create_application() -> FastAPI:
         if exc.status_code == status.HTTP_307_TEMPORARY_REDIRECT:
             return RedirectResponse(
                 url=exc.headers.get("Location", "/super/2fa/setup"),
-                status_code=status.HTTP_303_SEE_OTHER
+                status_code=status.HTTP_303_SEE_OTHER,
             )
 
         # Handle 401 Unauthorized for admin panel - redirect to login
-        if is_admin_request and exc.status_code == status.HTTP_401_UNAUTHORIZED:
-            # Don't redirect if already on login page
-            if request.url.path != "/super/login":
-                return RedirectResponse(url="/super/login", status_code=status.HTTP_303_SEE_OTHER)
+        if (
+            is_admin_request
+            and exc.status_code == status.HTTP_401_UNAUTHORIZED
+            and request.url.path != "/super/login"
+        ):
+            return RedirectResponse(
+                url="/super/login", status_code=status.HTTP_303_SEE_OTHER
+            )
 
         # Handle other errors for admin panel - show error page
         if is_admin_request and exc.status_code >= 400:
             from fastapi.templating import Jinja2Templates
+
             templates = Jinja2Templates(directory="app/admin/templates")
             return templates.TemplateResponse(
                 "error.html",
                 {
                     "request": request,
-                    "error_message": exc.detail if isinstance(exc.detail, str) else "发生了一个错误",
+                    "error_message": exc.detail
+                    if isinstance(exc.detail, str)
+                    else "发生了一个错误",
                     "error_detail": f"错误代码: {exc.status_code}",
                 },
-                status_code=exc.status_code
+                status_code=exc.status_code,
             )
 
         # For other HTTP exceptions, use default handler
         from fastapi.exception_handlers import http_exception_handler
+
         return await http_exception_handler(request, exc)
 
     # Include routers
@@ -138,35 +151,25 @@ def create_application() -> FastAPI:
     from app.domains.user.api.routes import router as user_router
 
     app.include_router(
-        user_router,
-        prefix=f"{settings.API_V1_STR}/auth",
-        tags=["authentication"]
+        user_router, prefix=f"{settings.API_V1_STR}/auth", tags=["authentication"]
     )
 
     app.include_router(
         subscription_router,
         prefix=f"{settings.API_V1_STR}/subscriptions",
-        tags=["subscriptions"]
+        tags=["subscriptions"],
     )
 
     app.include_router(
-        podcast_router,
-        prefix=f"{settings.API_V1_STR}/podcasts",
-        tags=["podcasts"]
+        podcast_router, prefix=f"{settings.API_V1_STR}/podcasts", tags=["podcasts"]
     )
 
     app.include_router(
-        ai_model_router,
-        prefix=f"{settings.API_V1_STR}/ai",
-        tags=["ai-models"]
+        ai_model_router, prefix=f"{settings.API_V1_STR}/ai", tags=["ai-models"]
     )
 
     # Admin panel routes (changed to /super for security)
-    app.include_router(
-        admin_router,
-        prefix="/super",
-        tags=["admin"]
-    )
+    app.include_router(admin_router, prefix="/super", tags=["admin"])
 
     # Register CSRF exception handler for admin panel
     app.add_exception_handler(CSRFException, csrf_exception_handler)
@@ -179,7 +182,7 @@ def create_application() -> FastAPI:
             "status": "healthy",
             "version": "1.0.0",
             "docs": "/api/v1/docs",
-            "health": "/health"
+            "health": "/health",
         }
 
     # Health check endpoint
@@ -196,9 +199,13 @@ def create_application() -> FastAPI:
     async def get_metrics():
         """Get performance metrics (internal use only)"""
         middleware = get_performance_middleware(app)
-        if middleware:
-            return middleware.get_metrics()
-        return {"error": "Performance monitoring not enabled"}
+        if not middleware:
+            return {"error": "Performance monitoring not enabled"}
+
+        metrics = middleware.get_metrics()
+        metrics["db_pool"] = get_db_pool_snapshot()
+        metrics["redis_runtime"] = get_redis_runtime_metrics()
+        return metrics
 
     return app
 
@@ -221,4 +228,3 @@ if __name__ == "__main__":
     else:
         command.extend(["--workers", "4", "--timeout", "120", "--log-level", "info"])
     os.execvp(command[0], command)
- 

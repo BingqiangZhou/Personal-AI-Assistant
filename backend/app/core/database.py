@@ -36,32 +36,27 @@ engine = create_async_engine(
     # Core pool settings - optimized for podcast workloads
     pool_size=settings.DATABASE_POOL_SIZE,
     max_overflow=settings.DATABASE_MAX_OVERFLOW,
-
     # Health check and connection validation (CRITICAL for long-running containers)
     pool_pre_ping=True,  # heartbeat connection before each borrow
     pool_recycle=settings.DATABASE_RECYCLE,  # recycle connections after configurable period
-
     # Performance optimizations
     echo=False,  # Disable SQL query logging to reduce noise
     future=True,  # SQLAlchemy 2.0 style
     isolation_level="READ COMMITTED",  # Optimized for read-heavy workload
-
     # Connection timeout settings - faster failure detection
     pool_timeout=settings.DATABASE_POOL_TIMEOUT,
     connect_args={
         "server_settings": {
             "application_name": "personal-ai-assistant",
-            "client_encoding": "utf8"
+            "client_encoding": "utf8",
         },
-        "timeout": settings.DATABASE_CONNECT_TIMEOUT
-    }
+        "timeout": settings.DATABASE_CONNECT_TIMEOUT,
+    },
 )
 
 # Create session factory
 async_session_factory = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    engine, class_=AsyncSession, expire_on_commit=False
 )
 
 # Create declarative base
@@ -86,16 +81,30 @@ async def init_db(run_metadata_sync: bool = False) -> None:
     # Import all models to register relationships and metadata.
     # This MUST happen before any database operations to ensure SQLAlchemy
     # can properly resolve all relationships between models.
-    from app.admin.models import AdminAuditLog, BackgroundTaskRun, SystemSettings
-    from app.domains.ai.models import AIModelConfig
-    from app.domains.podcast.models import (
-        PodcastConversation, PodcastEpisode, PodcastPlaybackState, TranscriptionTask,
+    from app.admin.models import (  # noqa: F401
+        AdminAuditLog,
+        BackgroundTaskRun,
+        SystemSettings,
     )
-    from app.domains.subscription.models import (
-        Subscription, SubscriptionCategory, SubscriptionCategoryMapping,
-        SubscriptionItem, UserSubscription,
+    from app.domains.ai.models import AIModelConfig  # noqa: F401
+    from app.domains.podcast.models import (  # noqa: F401
+        PodcastConversation,
+        PodcastEpisode,
+        PodcastPlaybackState,
+        TranscriptionTask,
     )
-    from app.domains.user.models import PasswordReset, User, UserSession
+    from app.domains.subscription.models import (  # noqa: F401
+        Subscription,
+        SubscriptionCategory,
+        SubscriptionCategoryMapping,
+        SubscriptionItem,
+        UserSubscription,
+    )
+    from app.domains.user.models import (  # noqa: F401
+        PasswordReset,
+        User,
+        UserSession,
+    )
 
     # Schema is managed by Alembic migrations - no manual ENUM creation needed
     async with engine.begin() as conn:
@@ -133,7 +142,7 @@ async def init_db(run_metadata_sync: bool = False) -> None:
                     logger.error(
                         f"Could not verify tables after ENUM error: {verify_error}"
                     )
-                    raise e
+                    raise e from verify_error
             else:
                 logger.error(f"Failed to initialize database: {e}")
                 raise
@@ -144,6 +153,7 @@ async def close_db() -> None:
     await engine.dispose()
     # Tiny delay to allow asyncpg/sqlalchemy background tasks to settle
     import asyncio
+
     await asyncio.sleep(0.1)
 
 
@@ -158,7 +168,7 @@ async def check_db_health() -> dict[str, Any]:
         "pool_size": engine.pool.size(),
         "checked_out": engine.pool.checkedout(),
         "overflow": engine.pool.overflow(),
-        "connection_url": str(engine.url).replace(engine.url.password, "***")
+        "connection_url": str(engine.url).replace(engine.url.password, "***"),
     }
 
     # Test minimal query
@@ -175,3 +185,19 @@ async def check_db_health() -> dict[str, Any]:
         health_info["error"] = str(e)
 
     return health_info
+
+
+def get_db_pool_snapshot() -> dict[str, Any]:
+    """Return lightweight DB pool occupancy metrics without extra SQL queries."""
+    pool_size = engine.pool.size()
+    checked_out = engine.pool.checkedout()
+    overflow = engine.pool.overflow()
+    capacity = max(pool_size + overflow, 1)
+
+    return {
+        "pool_size": pool_size,
+        "checked_out": checked_out,
+        "overflow": overflow,
+        "capacity": capacity,
+        "occupancy_ratio": checked_out / capacity,
+    }
