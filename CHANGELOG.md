@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.11.3](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.11.2...v0.11.3) - 2026-02-22 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.11.3))
+
+### 🐛 Bug Fixes
+
+- *(podcast)* Fix background prefetch loading state and improve daily report layout ([4f369ed](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4f369ed9ea4d23bb6a02cbe34ac6c8f43680b783))
+
+### 🚀 Features
+
+- *(podcast)* Add HTTP max-age caching support and refactor daily report calendar ([ed34c4b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ed34c4b3cca19475f4595d93048188b54a954797))
+
+### 🚜 Refactor
+
+- *(podcast)* Remove per-item expansion and consolidate regenerate button ([9caeb87](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9caeb872b23bce5681e27c5a3925c246ea95ddc8))
+
+
+
 ## [0.11.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.11.1...v0.11.2) - 2026-02-21 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.11.2))
 
 ### 🐛 Bug Fixes
