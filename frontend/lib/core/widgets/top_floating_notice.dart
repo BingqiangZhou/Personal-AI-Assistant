@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 OverlayEntry? _activeTopNoticeEntry;
 Timer? _activeTopNoticeTimer;
 
-const double _topFloatingNoticeGap = 24;
+const double _topFloatingNoticeGap = 16;
 
 void showTopFloatingNotice(
   BuildContext context, {
@@ -40,7 +40,11 @@ void showTopFloatingNotice(
     builder: (_) => Positioned(
       left: 16,
       right: 16,
-      top: topInset + effectiveTopBarHeight + extraTopOffset + _topFloatingNoticeGap,
+      top:
+          topInset +
+          effectiveTopBarHeight +
+          extraTopOffset +
+          _topFloatingNoticeGap,
       child: IgnorePointer(
         child: Center(
           child: ConstrainedBox(

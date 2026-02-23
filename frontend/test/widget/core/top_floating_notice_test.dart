@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 
+const double _defaultTopFloatingNoticeGap = 16;
+
 void main() {
   group('TopFloatingNotice', () {
     testWidgets('uses default 3s duration and stays in upper area', (
@@ -21,7 +23,13 @@ void main() {
       final noticeFinder = find.byKey(const Key('top_floating_notice'));
       expect(noticeFinder, findsOneWidget);
 
+      final noticeContext = tester.element(noticeFinder);
+      final expectedTop =
+          MediaQuery.of(noticeContext).viewPadding.top +
+          kToolbarHeight +
+          _defaultTopFloatingNoticeGap;
       final noticeRect = tester.getRect(noticeFinder);
+      expect(noticeRect.top, closeTo(expectedTop, 0.01));
       expect(noticeRect.top, greaterThan(kToolbarHeight));
       expect(noticeRect.top, lessThan(220));
       expect(noticeRect.center.dy, lessThan(400));
