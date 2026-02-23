@@ -42,7 +42,6 @@ class AppConfig {
     setServerBaseUrl(url);
   }
 
-
   // App Configuration
   static const String appName = 'Personal AI Assistant';
   static const String appVersion = '1.0.0';
@@ -93,6 +92,7 @@ class AppConstants {
   // Storage Keys
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
+  static const String tokenExpiryKey = 'token_expiry';
   static const String userProfileKey = 'user_profile';
   static const String savedUsernameKey = 'saved_username';
   static const String savedPasswordKey = 'saved_password';

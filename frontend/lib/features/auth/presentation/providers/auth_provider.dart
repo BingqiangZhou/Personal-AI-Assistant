@@ -8,6 +8,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../data/datasources/auth_remote_datasource.dart';
 import '../../../../core/auth/auth_event.dart';
+import '../../../../core/network/dio_client.dart';
 import '../../../../core/network/exceptions/network_exceptions.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../core/providers/core_providers.dart';
@@ -36,7 +37,9 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 // Auth state notifier provider
-final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+final authProvider = NotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);
 
 class AuthState {
   final User? user;
@@ -103,21 +106,20 @@ class AuthNotifier extends Notifier<AuthState> {
     _secureStorage = ref.read(secureStorageProvider);
 
     // Listen to auth events from DioClient
-    _authEventSubscription = AuthEventNotifier.instance.authEventStream.listen(
-      (event) {
-        if (event.type == AuthEventType.tokenCleared) {
-          // Sync auth state when tokens are cleared by DioClient
-          if (state.isAuthenticated) {
-            logger.AppLogger.debug('🔔 [AuthProvider] Received tokenCleared event, clearing auth state');
-            state = state.copyWith(
-              isAuthenticated: false,
-              user: null,
-            );
-          }
-          ref.read(dioClientProvider).clearETagCache();
+    _authEventSubscription = AuthEventNotifier.instance.authEventStream.listen((
+      event,
+    ) {
+      if (event.type == AuthEventType.tokenCleared) {
+        // Sync auth state when tokens are cleared by DioClient
+        if (state.isAuthenticated) {
+          logger.AppLogger.debug(
+            '🔔 [AuthProvider] Received tokenCleared event, clearing auth state',
+          );
+          state = state.copyWith(isAuthenticated: false, user: null);
         }
-      },
-    );
+        ref.read(dioClientProvider).clearETagCache();
+      }
+    });
 
     // Don't check auth status here to avoid circular dependency
     // Let the UI call checkAuthStatus when needed
@@ -129,7 +131,10 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> _checkAuthStatus() async {
-    state = state.copyWith(isLoading: true, currentOperation: AuthOperation.checkAuth);
+    state = state.copyWith(
+      isLoading: true,
+      currentOperation: AuthOperation.checkAuth,
+    );
 
     try {
       final token = await _secureStorage.getAccessToken();
@@ -138,14 +143,18 @@ class AuthNotifier extends Notifier<AuthState> {
         final tokenExpiry = await _secureStorage.getTokenExpiry();
         if (tokenExpiry != null && DateTime.now().isAfter(tokenExpiry)) {
           // Token expired, try refresh
-          final refreshSuccess = await _attemptTokenRefresh();
-          if (!refreshSuccess) {
+          final refreshResult = await _attemptTokenRefresh();
+          if (!refreshResult.success && refreshResult.isInvalidSessionFailure) {
             await _clearAuthState();
             state = state.copyWith(
               isLoading: false,
               isAuthenticated: false,
               error: 'Session expired. Please login again.',
             );
+            return;
+          }
+          if (!refreshResult.success) {
+            state = state.copyWith(isLoading: false, currentOperation: null);
             return;
           }
         }
@@ -159,7 +168,7 @@ class AuthNotifier extends Notifier<AuthState> {
               _handleAuthError();
               state = state.copyWith(
                 isLoading: false,
-                error: null,  // Don't show error message
+                error: null, // Don't show error message
                 currentOperation: null,
               );
             } else {
@@ -228,7 +237,9 @@ class AuthNotifier extends Notifier<AuthState> {
       (authResponse) async {
         // Save token expiry if available
         if (authResponse.expiresIn > 0) {
-          final expiryTime = DateTime.now().add(Duration(seconds: authResponse.expiresIn));
+          final expiryTime = DateTime.now().add(
+            Duration(seconds: authResponse.expiresIn),
+          );
           _secureStorage.saveTokenExpiry(expiryTime);
         }
 
@@ -313,7 +324,9 @@ class AuthNotifier extends Notifier<AuthState> {
       (authResponse) async {
         // Save token expiry if available
         if (authResponse.expiresIn > 0) {
-          final expiryTime = DateTime.now().add(Duration(seconds: authResponse.expiresIn));
+          final expiryTime = DateTime.now().add(
+            Duration(seconds: authResponse.expiresIn),
+          );
           _secureStorage.saveTokenExpiry(expiryTime);
         }
 
@@ -363,18 +376,12 @@ class AuthNotifier extends Notifier<AuthState> {
         // Even if logout API fails, clear local state
         _clearAuthState();
         ref.read(dioClientProvider).clearETagCache();
-        state = state.copyWith(
-          isLoading: false,
-          currentOperation: null,
-        );
+        state = state.copyWith(isLoading: false, currentOperation: null);
       },
       (_) {
         _clearAuthState();
         ref.read(dioClientProvider).clearETagCache();
-        state = const AuthState(
-          isAuthenticated: false,
-          isLoading: false,
-        );
+        state = const AuthState(isAuthenticated: false, isLoading: false);
       },
     );
   }
@@ -387,40 +394,27 @@ class AuthNotifier extends Notifier<AuthState> {
       currentOperation: AuthOperation.refreshToken,
     );
 
-    final refreshToken = await _secureStorage.getRefreshToken();
-    if (refreshToken == null) {
-      await _handleAuthError();
+    final refreshResult = await ref
+        .read(dioClientProvider)
+        .refreshSessionToken();
+    if (!refreshResult.success) {
+      if (refreshResult.isInvalidSessionFailure) {
+        // Clear auth state and let router handle redirect automatically
+        await _handleAuthError();
+      }
+
       state = state.copyWith(
         isRefreshingToken: false,
+        error: null,
         currentOperation: null,
       );
       return;
     }
 
-    final result = await _authRepository.refreshToken(refreshToken);
-    result.fold(
-      (error) async {
-        // Clear auth state and let router handle redirect automatically
-        await _handleAuthError();
-        state = state.copyWith(
-          isRefreshingToken: false,
-          error: null,  // Don't show error message
-          currentOperation: null,
-        );
-      },
-      (response) {
-        // Update token expiry if available
-        if (response.expiresIn > 0) {
-          final expiryTime = DateTime.now().add(Duration(seconds: response.expiresIn));
-          _secureStorage.saveTokenExpiry(expiryTime);
-        }
-
-        state = state.copyWith(
-          isRefreshingToken: false,
-          error: null,
-          currentOperation: null,
-        );
-      },
+    state = state.copyWith(
+      isRefreshingToken: false,
+      error: null,
+      currentOperation: null,
     );
   }
 
@@ -490,10 +484,7 @@ class AuthNotifier extends Notifier<AuthState> {
 
   Future<void> _handleAuthError() async {
     await _clearAuthState();
-    state = state.copyWith(
-      isAuthenticated: false,
-      user: null,
-    );
+    state = state.copyWith(isAuthenticated: false, user: null);
   }
 
   Future<void> _clearAuthState() async {
@@ -501,21 +492,8 @@ class AuthNotifier extends Notifier<AuthState> {
     await _secureStorage.clearTokenExpiry();
   }
 
-  Future<bool> _attemptTokenRefresh() async {
-    final refreshToken = await _secureStorage.getRefreshToken();
-    if (refreshToken == null) return false;
-
-    final result = await _authRepository.refreshToken(refreshToken);
-    return result.fold(
-      (error) => false,
-      (response) {
-        if (response.expiresIn > 0) {
-          final expiryTime = DateTime.now().add(Duration(seconds: response.expiresIn));
-          _secureStorage.saveTokenExpiry(expiryTime);
-        }
-        return true;
-      },
-    );
+  Future<TokenRefreshResult> _attemptTokenRefresh() async {
+    return ref.read(dioClientProvider).refreshSessionToken();
   }
 
   void clearError() {
@@ -646,7 +624,9 @@ class AuthNotifier extends Notifier<AuthState> {
 
       // Refresh if token expires in less than buffer time
       if (timeUntilExpiry <= Duration(minutes: _tokenRefreshBufferMinutes)) {
-        logger.AppLogger.debug('🔄 [Auth] Token expiring in ${timeUntilExpiry.inMinutes} minutes, auto-refreshing...');
+        logger.AppLogger.debug(
+          '🔄 [Auth] Token expiring in ${timeUntilExpiry.inMinutes} minutes, auto-refreshing...',
+        );
         await refreshToken();
       }
     } catch (e) {

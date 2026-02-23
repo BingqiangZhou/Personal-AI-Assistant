@@ -1,5 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../app/config/app_config.dart' as config;
+
 abstract class SecureStorageService {
   Future<void> saveAccessToken(String token);
   Future<String?> getAccessToken();
@@ -26,10 +28,10 @@ abstract class SecureStorageService {
 class SecureStorageServiceImpl implements SecureStorageService {
   final FlutterSecureStorage _secureStorage;
 
-  static const String _accessTokenKey = 'access_token';
-  static const String _refreshTokenKey = 'refresh_token';
+  static const String _accessTokenKey = config.AppConstants.accessTokenKey;
+  static const String _refreshTokenKey = config.AppConstants.refreshTokenKey;
   static const String _userIdKey = 'user_id';
-  static const String _tokenExpiryKey = 'token_expiry';
+  static const String _tokenExpiryKey = config.AppConstants.tokenExpiryKey;
 
   SecureStorageServiceImpl(this._secureStorage);
 

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:dio_cache_interceptor/dio_cache_interceptor.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:meta/meta.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Import ETag interceptor
@@ -15,6 +16,41 @@ import 'exceptions/network_exceptions.dart';
 import '../auth/auth_event.dart';
 import '../utils/app_logger.dart' as logger;
 
+enum TokenRefreshFailureReason {
+  invalid_session,
+  transient_failure,
+  unknown_failure,
+}
+
+class TokenRefreshResult {
+  final bool success;
+  final TokenRefreshFailureReason? reason;
+  final String? accessToken;
+  final int? expiresInSeconds;
+
+  const TokenRefreshResult._({
+    required this.success,
+    this.reason,
+    this.accessToken,
+    this.expiresInSeconds,
+  });
+
+  const TokenRefreshResult.success({
+    required String accessToken,
+    int? expiresInSeconds,
+  }) : this._(
+         success: true,
+         accessToken: accessToken,
+         expiresInSeconds: expiresInSeconds,
+       );
+
+  const TokenRefreshResult.failure(TokenRefreshFailureReason reason)
+    : this._(success: false, reason: reason);
+
+  bool get isInvalidSessionFailure =>
+      !success && reason == TokenRefreshFailureReason.invalid_session;
+}
+
 class DioClient {
   late final Dio _dio;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
@@ -22,7 +58,7 @@ class DioClient {
       'etag_invalidate_after_write';
 
   // Token refresh state - use Completer for proper synchronization
-  Completer<bool>? _refreshCompleter;
+  Completer<TokenRefreshResult>? _refreshCompleter;
 
   // Storage key for custom backend server base URL
   static const String _serverBaseUrlKey = 'server_base_url';
@@ -307,14 +343,16 @@ class DioClient {
 
             if (!isRefreshRequest) {
               // Try to refresh the token
-              final newToken = await _refreshToken();
-
-              if (newToken != null) {
+              final refreshResult = await refreshSessionToken();
+              if (refreshResult.success && refreshResult.accessToken != null) {
                 // Retry the original request with new token
                 try {
                   final response = await _retryRequest(
                     error.requestOptions,
-                    newToken,
+                    refreshResult.accessToken!,
+                  );
+                  logger.AppLogger.debug(
+                    '[AUTH] refresh_reason=none should_clear_tokens=false retry_result=success',
                   );
                   handler.resolve(response);
                   return;
@@ -322,13 +360,10 @@ class DioClient {
                   // Check if retry still fails with 401
                   if (retryError.response?.statusCode == 401) {
                     logger.AppLogger.debug(
-                      '[AUTH] ?Retry still returns 401, clearing tokens',
+                      '[AUTH] ?Retry still returns 401; treat as authorization/resource issue',
                     );
-                    await _clearTokens();
-                    // Token was refreshed but request still fails - likely permission/resource issue
-                    // Don't confuse user with authentication error when it's actually authorization
                     logger.AppLogger.debug(
-                      '[AUTH]  Token refreshed but resource access denied - may not exist or no permission',
+                      '[AUTH] refresh_reason=none should_clear_tokens=false retry_result=still_401',
                     );
                     handler.reject(retryError);
                     return;
@@ -337,21 +372,65 @@ class DioClient {
                   logger.AppLogger.debug(
                     '[AUTH]  Retry failed with status: ${retryError.response?.statusCode}',
                   );
+                  logger.AppLogger.debug(
+                    '[AUTH] refresh_reason=none should_clear_tokens=false retry_result=failed_status_${retryError.response?.statusCode}',
+                  );
                   handler.reject(retryError);
                   return;
                 } catch (e) {
                   // Unexpected error during retry
                   logger.AppLogger.debug('?Unexpected error during retry: $e');
-                  await _clearTokens();
+                  logger.AppLogger.debug(
+                    '[AUTH] refresh_reason=none should_clear_tokens=false retry_result=unexpected_error',
+                  );
                   handler.reject(error);
                   return;
                 }
               } else {
-                // Refresh failed, clear tokens and reject
-                logger.AppLogger.debug(
-                  '[AUTH] ?Token refresh failed, clearing tokens',
+                final reason =
+                    refreshResult.reason ??
+                    TokenRefreshFailureReason.unknown_failure;
+                final shouldClearTokens = shouldClearTokensForRefreshFailure(
+                  reason,
                 );
-                await _clearTokens();
+                logger.AppLogger.debug(
+                  '[AUTH] refresh_reason=${reason.name} should_clear_tokens=$shouldClearTokens retry_result=not_attempted',
+                );
+
+                if (shouldClearTokens) {
+                  logger.AppLogger.debug(
+                    '[AUTH] ?Token refresh failed due to invalid session, clearing tokens',
+                  );
+                  await _clearTokens();
+                  handler.reject(
+                    DioException(
+                      requestOptions: error.requestOptions,
+                      response: error.response,
+                      type: DioExceptionType.badResponse,
+                      error: AuthenticationException.fromDioError(error),
+                    ),
+                  );
+                  return;
+                }
+
+                logger.AppLogger.debug(
+                  '[AUTH]  Token refresh failed transiently; keeping tokens',
+                );
+                handler.reject(
+                  DioException(
+                    requestOptions: error.requestOptions,
+                    response: error.response,
+                    type: DioExceptionType.unknown,
+                    error: reason == TokenRefreshFailureReason.transient_failure
+                        ? const NetworkException(
+                            'Session refresh temporarily unavailable. Please retry.',
+                          )
+                        : const UnknownException(
+                            'Session refresh failed unexpectedly.',
+                          ),
+                  ),
+                );
+                return;
               }
             }
 
@@ -452,115 +531,159 @@ class DioClient {
   }
 
   // Token refresh methods
-  Future<String?> _refreshToken() async {
-    // Store completer in local variable to avoid race condition
+  Future<TokenRefreshResult> refreshSessionToken() async {
     final completer = _refreshCompleter;
     if (completer != null && !completer.isCompleted) {
       logger.AppLogger.debug(
         '[AUTH]  Token refresh already in progress, waiting...',
       );
-      final success = await completer.future;
-      if (success) {
-        // Return the token from storage for waiting requests
-        return await _secureStorage.read(
-          key: config.AppConstants.accessTokenKey,
-        );
-      }
-      return null;
+      return completer.future;
     }
 
-    // Start new refresh
     logger.AppLogger.debug('[AUTH]  Starting new token refresh...');
-    _refreshCompleter = Completer<bool>();
+    _refreshCompleter = Completer<TokenRefreshResult>();
     final currentCompleter = _refreshCompleter!;
 
     try {
       final refreshToken = await _secureStorage.read(
         key: config.AppConstants.refreshTokenKey,
       );
-      if (refreshToken == null) {
+      if (refreshToken == null || refreshToken.isEmpty) {
         logger.AppLogger.debug('[AUTH] ?No refresh token found in storage');
-        currentCompleter.complete(false);
-        await _clearTokens();
-        return null;
+        const result = TokenRefreshResult.failure(
+          TokenRefreshFailureReason.invalid_session,
+        );
+        currentCompleter.complete(result);
+        return result;
       }
 
       logger.AppLogger.debug('[AUTH]  Sending refresh token request...');
-
       final response = await _dio.post(
         '/auth/refresh',
         data: {'refresh_token': refreshToken},
         options: Options(headers: {'Content-Type': 'application/json'}),
       );
 
-      if (response.statusCode == 200 && response.data != null) {
-        final newAccessToken = response.data['access_token'];
-        final newRefreshToken = response.data['refresh_token'];
+      if (response.statusCode == 200 && response.data is Map<String, dynamic>) {
+        final responseData = response.data as Map<String, dynamic>;
+        final newAccessToken = responseData['access_token'] as String?;
+        final newRefreshToken = responseData['refresh_token'] as String?;
+        final expiresInRaw = responseData['expires_in'];
+        final expiresInSeconds = expiresInRaw is int
+            ? expiresInRaw
+            : (expiresInRaw is num
+                  ? expiresInRaw.toInt()
+                  : int.tryParse(expiresInRaw?.toString() ?? ''));
 
-        if (newAccessToken != null) {
+        if (newAccessToken != null && newAccessToken.isNotEmpty) {
           await _secureStorage.write(
             key: config.AppConstants.accessTokenKey,
             value: newAccessToken,
           );
-          if (newRefreshToken != null) {
+          if (newRefreshToken != null && newRefreshToken.isNotEmpty) {
             await _secureStorage.write(
               key: config.AppConstants.refreshTokenKey,
               value: newRefreshToken,
+            );
+          }
+          if (expiresInSeconds != null && expiresInSeconds > 0) {
+            final expiryTime = DateTime.now().add(
+              Duration(seconds: expiresInSeconds),
+            );
+            await _secureStorage.write(
+              key: config.AppConstants.tokenExpiryKey,
+              value: expiryTime.toIso8601String(),
             );
           }
 
           logger.AppLogger.debug(
             '[AUTH] ?Token refresh successful - New token: ${newAccessToken.substring(0, 20)}...',
           );
-          currentCompleter.complete(true);
-          return newAccessToken;
+          final result = TokenRefreshResult.success(
+            accessToken: newAccessToken,
+            expiresInSeconds: expiresInSeconds,
+          );
+          currentCompleter.complete(result);
+          return result;
         }
       }
 
       logger.AppLogger.debug(
         '[AUTH] ?Token refresh failed: invalid response format',
       );
-      currentCompleter.complete(false);
-      await _clearTokens();
-      return null;
+      const result = TokenRefreshResult.failure(
+        TokenRefreshFailureReason.unknown_failure,
+      );
+      currentCompleter.complete(result);
+      return result;
     } catch (e) {
-      // Better error handling with detailed logging
-      if (e is DioException) {
-        final statusCode = e.response?.statusCode;
-        final responseData = e.response?.data;
-
-        logger.AppLogger.debug('[AUTH] ?Token refresh failed:');
-        logger.AppLogger.debug('   Status: $statusCode');
-        logger.AppLogger.debug('   Type: ${e.type}');
-        logger.AppLogger.debug('   Response: $responseData');
-
-        // If refresh token is invalid (404, 401, or specific error), clear tokens
-        if (statusCode == 404 ||
-            statusCode == 401 ||
-            (responseData is Map &&
-                responseData['detail']?.toString().toLowerCase().contains(
-                      'invalid',
-                    ) ==
-                    true)) {
-          logger.AppLogger.debug(
-            '[AUTH]  Refresh token invalid, clearing all tokens',
-          );
-          await _clearTokens();
-        }
-      } else {
-        logger.AppLogger.debug(
-          '[AUTH] ?Token refresh failed with unexpected error: $e',
-        );
-        // Clear tokens on any unexpected error
-        await _clearTokens();
-      }
-
-      currentCompleter.complete(false);
-      return null;
+      logger.AppLogger.debug('[AUTH] ?Token refresh failed: $e');
+      final result = _buildRefreshFailureResult(e);
+      currentCompleter.complete(result);
+      return result;
     } finally {
-      // Reset completer immediately
       _refreshCompleter = null;
     }
+  }
+
+  TokenRefreshResult _buildRefreshFailureResult(Object error) {
+    if (error is DioException) {
+      logger.AppLogger.debug(
+        '[AUTH]  Refresh failure status=${error.response?.statusCode} type=${error.type} response=${error.response?.data}',
+      );
+      return TokenRefreshResult.failure(classifyRefreshFailure(error));
+    }
+    return const TokenRefreshResult.failure(
+      TokenRefreshFailureReason.unknown_failure,
+    );
+  }
+
+  @visibleForTesting
+  static TokenRefreshFailureReason classifyRefreshFailure(DioException error) {
+    final statusCode = error.response?.statusCode;
+    final responseData = error.response?.data;
+
+    if (statusCode == 401) {
+      return TokenRefreshFailureReason.invalid_session;
+    }
+
+    if (_looksLikeInvalidSessionResponse(responseData) &&
+        (statusCode == 404 || statusCode == 400 || statusCode == 422)) {
+      return TokenRefreshFailureReason.invalid_session;
+    }
+
+    final isTransientType =
+        error.type == DioExceptionType.connectionTimeout ||
+        error.type == DioExceptionType.sendTimeout ||
+        error.type == DioExceptionType.receiveTimeout ||
+        error.type == DioExceptionType.connectionError;
+
+    if (isTransientType || (statusCode != null && statusCode >= 500)) {
+      return TokenRefreshFailureReason.transient_failure;
+    }
+
+    return TokenRefreshFailureReason.unknown_failure;
+  }
+
+  static bool _looksLikeInvalidSessionResponse(dynamic responseData) {
+    String text = '';
+    if (responseData is Map) {
+      text =
+          '${responseData['detail'] ?? ''} ${responseData['message'] ?? ''} ${responseData['type'] ?? ''}'
+              .toLowerCase();
+    } else if (responseData is String) {
+      text = responseData.toLowerCase();
+    }
+    return text.contains('invalid') ||
+        text.contains('session') ||
+        text.contains('refresh token');
+  }
+
+  @visibleForTesting
+  static bool shouldClearTokensForRefreshFailure(
+    TokenRefreshFailureReason reason,
+  ) {
+    return reason == TokenRefreshFailureReason.invalid_session;
   }
 
   Future<Response> _retryRequest(RequestOptions options, String token) async {
@@ -596,6 +719,7 @@ class DioClient {
   Future<void> _clearTokens() async {
     await _secureStorage.delete(key: config.AppConstants.accessTokenKey);
     await _secureStorage.delete(key: config.AppConstants.refreshTokenKey);
+    await _secureStorage.delete(key: config.AppConstants.tokenExpiryKey);
     await _secureStorage.delete(key: config.AppConstants.userProfileKey);
     logger.AppLogger.debug(
       '[AUTH]  [DioClient] Tokens cleared, user will need to re-login',

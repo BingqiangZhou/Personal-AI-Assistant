@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 OverlayEntry? _activeTopNoticeEntry;
 Timer? _activeTopNoticeTimer;
 
-const double _topFloatingNoticeGap = 16;
+const double _topFloatingNoticeGap = 0;
 
 void showTopFloatingNotice(
   BuildContext context, {

@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 
-const double _defaultTopFloatingNoticeGap = 16;
+const double _defaultTopFloatingNoticeGap = 0;
 
 void main() {
   group('TopFloatingNotice', () {
@@ -236,7 +236,9 @@ void main() {
       await tester.pump(const Duration(seconds: 4));
     });
 
-    testWidgets('uses latest theme when shown after theme toggle', (tester) async {
+    testWidgets('uses latest theme when shown after theme toggle', (
+      tester,
+    ) async {
       await tester.pumpWidget(const _ThemeSwitchingApp());
 
       await tester.tap(find.byKey(const Key('toggle_theme')));
@@ -374,8 +376,9 @@ class _ThemeSwitchingAppState extends State<_ThemeSwitchingApp> {
       home: _TopNoticeHost(
         onToggleTheme: () {
           setState(() {
-            _themeMode =
-                _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+            _themeMode = _themeMode == ThemeMode.light
+                ? ThemeMode.dark
+                : ThemeMode.light;
           });
         },
       ),
