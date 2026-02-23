@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.12.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.1...v0.12.2) - 2026-02-23 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.2))
+
+### 🎨 Styling
+
+- *(ui)* Reduce top floating notice gap and add precise positioning test ([6825e09](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6825e09934bcb64f8f412610ad2fe773a15a72c2))
+
+### 🚜 Refactor
+
+- *(auth)* Restructure token refresh with failure classification and expiry tracking ([515f632](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/515f632854e5804bab710bc0440cdfb208349f1e))
+
+
+
 ## [0.12.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.0...v0.12.1) - 2026-02-22 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.1))
 
 ### 🎨 Styling
