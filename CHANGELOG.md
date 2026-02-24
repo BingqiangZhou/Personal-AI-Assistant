@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.12.4](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.3...v0.12.4) - 2026-02-24 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.4))
+
+### 🚀 Features
+
+- *(podcast)* Prefer AI one-line summary in feed and improve HTML sanitization ([4751b9f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4751b9f284a20ef6abe7bcad3f8153a9c8cb7585))
+
+
+
 ## [0.12.3](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.2...v0.12.3) - 2026-02-24 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.3))
 
 ### 🚀 Features
