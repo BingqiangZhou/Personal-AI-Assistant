@@ -59,6 +59,27 @@ class PodcastQueueService:
         queue = await self.repo.set_current(self.user_id, episode_id)
         return await self._serialize_queue(queue)
 
+    async def activate_episode(self, episode_id: int) -> dict[str, Any]:
+        started_at = perf_counter()
+        episode = await self.repo.get_episode_by_id(episode_id, self.user_id)
+        if not episode:
+            raise ValueError("EPISODE_NOT_FOUND")
+
+        queue = await self.repo.activate_episode(
+            user_id=self.user_id,
+            episode_id=episode_id,
+            max_items=self.MAX_QUEUE_ITEMS,
+        )
+        result = await self._serialize_queue(queue)
+        logger.debug(
+            "[Queue] activate_episode user_id=%s episode_id=%s items=%s elapsed_ms=%.2f",
+            self.user_id,
+            episode_id,
+            len(result["items"]),
+            (perf_counter() - started_at) * 1000,
+        )
+        return result
+
     async def complete_current(self) -> dict[str, Any]:
         queue = await self.repo.complete_current(self.user_id)
         return await self._serialize_queue(queue)

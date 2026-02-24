@@ -260,4 +260,9 @@ class TestPodcastQueueController extends PodcastQueueController {
     playedEpisodeId = episodeId;
     return state.value ?? initialQueue;
   }
+
+  @override
+  Future<PodcastQueueModel> activateEpisode(int episodeId) async {
+    return state.value ?? initialQueue;
+  }
 }

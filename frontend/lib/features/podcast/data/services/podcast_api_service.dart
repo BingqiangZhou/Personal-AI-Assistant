@@ -170,6 +170,11 @@ abstract class PodcastApiService {
     @Body() PodcastQueueSetCurrentRequest request,
   );
 
+  @POST('/podcasts/queue/activate')
+  Future<PodcastQueueModel> activateQueueEpisode(
+    @Body() PodcastQueueActivateRequest request,
+  );
+
   @POST('/podcasts/queue/current/complete')
   Future<PodcastQueueModel> completeQueueCurrent(
     @Body() Map<String, dynamic> request,

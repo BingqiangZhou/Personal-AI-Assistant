@@ -95,3 +95,26 @@ async def test_reorder_queue_propagates_payload(service, mock_repo):
     await service.reorder_queue([10])
 
     mock_repo.reorder_items.assert_called_once_with(1, [10])
+
+
+@pytest.mark.asyncio
+async def test_activate_episode_requires_accessible_episode(service, mock_repo):
+    mock_repo.get_episode_by_id.return_value = None
+
+    with pytest.raises(ValueError, match="EPISODE_NOT_FOUND"):
+        await service.activate_episode(999)
+
+
+@pytest.mark.asyncio
+async def test_activate_episode_propagates_to_repository(service, mock_repo):
+    mock_repo.get_episode_by_id.return_value = SimpleNamespace(id=10)
+    mock_repo.activate_episode.return_value = _queue_snapshot()
+    mock_repo.get_playback_states_batch.return_value = {}
+
+    await service.activate_episode(10)
+
+    mock_repo.activate_episode.assert_called_once_with(
+        user_id=1,
+        episode_id=10,
+        max_items=500,
+    )

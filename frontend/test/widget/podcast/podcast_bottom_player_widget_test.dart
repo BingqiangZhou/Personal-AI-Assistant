@@ -551,6 +551,11 @@ class TestPodcastQueueController extends PodcastQueueController {
     }
     state = const AsyncValue.data(PodcastQueueModel());
   }
+
+  @override
+  Future<PodcastQueueModel> activateEpisode(int episodeId) async {
+    return state.value ?? PodcastQueueModel.empty();
+  }
 }
 
 class _TestNavigatorObserver extends NavigatorObserver {

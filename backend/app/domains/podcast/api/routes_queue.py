@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.domains.podcast.api.dependencies import get_queue_service
 from app.domains.podcast.schemas import (
+    PodcastQueueActivateRequest,
     PodcastQueueCurrentCompleteRequest,
     PodcastQueueItemAddRequest,
     PodcastQueueReorderRequest,
@@ -123,6 +124,37 @@ async def set_queue_current(
         raise _bilingual_error(
             "Failed to set current",
             "\u8bbe\u7f6e\u5f53\u524d\u64ad\u653e\u5931\u8d25",
+            status.HTTP_400_BAD_REQUEST,
+        ) from exc
+
+
+@router.post(
+    "/queue/activate",
+    response_model=PodcastQueueResponse,
+    summary="Activate queue episode (ensure in queue + move to head + set current)",
+)
+async def activate_queue_episode(
+    request: PodcastQueueActivateRequest,
+    service: PodcastQueueService = Depends(get_queue_service),
+):
+    try:
+        return await service.activate_episode(request.episode_id)
+    except ValueError as exc:
+        if str(exc) == "EPISODE_NOT_FOUND":
+            raise _bilingual_error(
+                "Episode not found",
+                "\u672a\u627e\u5230\u8be5\u5355\u96c6",
+                status.HTTP_404_NOT_FOUND,
+            ) from exc
+        if str(exc) == "QUEUE_LIMIT_EXCEEDED":
+            raise _bilingual_error(
+                "Queue has reached its limit",
+                "\u64ad\u653e\u961f\u5217\u5df2\u8fbe\u5230\u4e0a\u9650",
+                status.HTTP_400_BAD_REQUEST,
+            ) from exc
+        raise _bilingual_error(
+            "Failed to activate episode",
+            "\u6fc0\u6d3b\u64ad\u653e\u961f\u5217\u5931\u8d25",
             status.HTTP_400_BAD_REQUEST,
         ) from exc
 

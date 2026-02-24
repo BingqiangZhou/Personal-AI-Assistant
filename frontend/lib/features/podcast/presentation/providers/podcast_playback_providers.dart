@@ -978,28 +978,19 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
     try {
       final queueController = ref.read(podcastQueueControllerProvider.notifier);
-      var queue = await queueController.addToQueue(episodeId);
-      final orderedEpisodeIds = <int>[
-        episodeId,
-        ...queue.items
-            .map((item) => item.episodeId)
-            .where((id) => id != episodeId),
-      ];
-      final currentOrder = queue.items.map((item) => item.episodeId).toList();
-
-      if (!listEquals(currentOrder, orderedEpisodeIds)) {
-        queue = await queueController.reorderQueue(orderedEpisodeIds);
-      }
-
-      if (queue.currentEpisodeId != episodeId) {
-        queue = await queueController.setCurrentEpisode(episodeId);
-      }
-
-      return queue;
+      return await queueController.activateEpisode(episodeId);
     } catch (error) {
       logger.AppLogger.debug('Failed to prepare manual play queue: $error');
       return null;
     }
+  }
+
+  bool _isCurrentEpisodeAtQueueHead(int episodeId) {
+    final queue = state.queue;
+    if (queue.currentEpisodeId != episodeId || queue.items.isEmpty) {
+      return false;
+    }
+    return queue.items.first.episodeId == episodeId;
   }
 
   Future<void> pause() async {
@@ -1056,14 +1047,16 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           }),
         );
 
-        // Ensure the currently playing episode is at the top of the queue
+        // Ensure the currently playing episode is at the top of the queue.
+        // Skip no-op activation if queue already reflects the invariant.
         final currentEpisode = state.currentEpisode;
         if (currentEpisode != null &&
-            !isDiscoverPreviewEpisode(currentEpisode)) {
+            !isDiscoverPreviewEpisode(currentEpisode) &&
+            !_isCurrentEpisodeAtQueueHead(currentEpisode.id)) {
           unawaited(
             _prepareManualPlayQueue(currentEpisode.id).catchError((error) {
               logger.AppLogger.debug(
-                '[Error] Queue reorder failed after resume: $error',
+                '[Error] Queue activation failed after resume: $error',
               );
               return null;
             }),
@@ -1362,6 +1355,8 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
   final Map<int, Future<PodcastQueueModel>> _inFlightAddToQueueByEpisodeId =
       <int, Future<PodcastQueueModel>>{};
   DateTime? _lastQueueRefreshAt;
+  int _latestAppliedQueueRevision = -1;
+  int _queueSyncInFlight = 0;
   static const Duration _queueRefreshThrottle = Duration(seconds: 20);
 
   @override
@@ -1386,10 +1381,34 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
         _queueRefreshThrottle;
   }
 
-  void _applyQueue(PodcastQueueModel queue) {
+  void _beginQueueSync() {
+    _queueSyncInFlight += 1;
+    if (_queueSyncInFlight == 1) {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    }
+  }
+
+  void _endQueueSync() {
+    if (_queueSyncInFlight <= 0) {
+      return;
+    }
+    _queueSyncInFlight -= 1;
+    if (_queueSyncInFlight == 0) {
+      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+    }
+  }
+
+  PodcastQueueModel _applyQueue(PodcastQueueModel queue) {
+    if (_latestAppliedQueueRevision >= 0 &&
+        queue.revision <= _latestAppliedQueueRevision) {
+      return state.value ?? queue;
+    }
+
     state = AsyncValue.data(queue);
     _lastQueueRefreshAt = DateTime.now();
+    _latestAppliedQueueRevision = queue.revision;
     ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
+    return queue;
   }
 
   Future<PodcastQueueModel> _loadQueueInternal({
@@ -1408,14 +1427,13 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
     }
 
     if (trackSyncing) {
-      ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+      _beginQueueSync();
     }
 
     final loadFuture = () async {
       try {
         final queue = await _repository.getQueue();
-        _applyQueue(queue);
-        return queue;
+        return _applyQueue(queue);
       } catch (error, stackTrace) {
         if (setErrorStateOnFailure || state.value == null) {
           state = AsyncValue.error(error, stackTrace);
@@ -1424,7 +1442,7 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
       } finally {
         _inFlightQueueLoad = null;
         if (trackSyncing) {
-          ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+          _endQueueSync();
         }
       }
     }();
@@ -1459,17 +1477,16 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
       return inFlight;
     }
 
-    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    _beginQueueSync();
     final addFuture = () async {
       try {
         final queue = await _repository.addQueueItem(episodeId);
-        _applyQueue(queue);
-        return queue;
+        return _applyQueue(queue);
       } catch (error, stackTrace) {
         state = AsyncValue.error(error, stackTrace);
         rethrow;
       } finally {
-        ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+        _endQueueSync();
       }
     }();
 
@@ -1484,50 +1501,60 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
   }
 
   Future<PodcastQueueModel> removeFromQueue(int episodeId) async {
-    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    _beginQueueSync();
     try {
       final queue = await _repository.removeQueueItem(episodeId);
-      _applyQueue(queue);
-      return queue;
+      return _applyQueue(queue);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
       rethrow;
     } finally {
-      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+      _endQueueSync();
     }
   }
 
   Future<PodcastQueueModel> reorderQueue(List<int> episodeIds) async {
-    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    _beginQueueSync();
     try {
       final queue = await _repository.reorderQueueItems(episodeIds);
-      _applyQueue(queue);
-      return queue;
+      return _applyQueue(queue);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
       rethrow;
     } finally {
-      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+      _endQueueSync();
     }
   }
 
   Future<PodcastQueueModel> setCurrentEpisode(int episodeId) async {
-    ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
+    _beginQueueSync();
     try {
       final queue = await _repository.setQueueCurrent(episodeId);
-      _applyQueue(queue);
-      return queue;
+      return _applyQueue(queue);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
       rethrow;
     } finally {
-      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
+      _endQueueSync();
+    }
+  }
+
+  Future<PodcastQueueModel> activateEpisode(int episodeId) async {
+    _beginQueueSync();
+    try {
+      final queue = await _repository.activateQueueEpisode(episodeId);
+      return _applyQueue(queue);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    } finally {
+      _endQueueSync();
     }
   }
 
   Future<PodcastQueueModel> playFromQueue(int episodeId) async {
     try {
-      final queue = await setCurrentEpisode(episodeId);
+      final queue = await activateEpisode(episodeId);
 
       final current = queue.currentItem;
       if (current != null) {
@@ -1547,8 +1574,12 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
   }
 
   Future<PodcastQueueModel> onQueueTrackCompleted() async {
-    final queue = await _repository.completeQueueCurrent();
-    _applyQueue(queue);
-    return queue;
+    _beginQueueSync();
+    try {
+      final queue = await _repository.completeQueueCurrent();
+      return _applyQueue(queue);
+    } finally {
+      _endQueueSync();
+    }
   }
 }

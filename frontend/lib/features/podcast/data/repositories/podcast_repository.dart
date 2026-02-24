@@ -366,6 +366,16 @@ class PodcastRepository {
     }
   }
 
+  Future<PodcastQueueModel> activateQueueEpisode(int episodeId) async {
+    try {
+      return await _apiService.activateQueueEpisode(
+        PodcastQueueActivateRequest(episodeId: episodeId),
+      );
+    } on DioException catch (e) {
+      throw NetworkException.fromDioError(e);
+    }
+  }
+
   Future<PodcastQueueModel> completeQueueCurrent() async {
     try {
       return await _apiService.completeQueueCurrent(const {});

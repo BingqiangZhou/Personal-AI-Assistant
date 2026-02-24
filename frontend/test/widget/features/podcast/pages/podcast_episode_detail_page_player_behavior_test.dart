@@ -1072,6 +1072,11 @@ class _ControlledQueueController extends PodcastQueueController {
     );
   }
 
+  @override
+  Future<PodcastQueueModel> activateEpisode(int episodeId) async {
+    return addToQueue(episodeId);
+  }
+
   void completeAddToQueue() {
     if (!_addToQueueCompleter.isCompleted) {
       _addToQueueCompleter.complete();

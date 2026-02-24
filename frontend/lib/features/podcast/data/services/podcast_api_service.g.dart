@@ -815,6 +815,36 @@ class _PodcastApiService implements PodcastApiService {
   }
 
   @override
+  Future<PodcastQueueModel> activateQueueEpisode(
+    PodcastQueueActivateRequest request,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(request.toJson());
+    final _options = _setStreamType<PodcastQueueModel>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/podcasts/queue/activate',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late PodcastQueueModel _value;
+    try {
+      _value = PodcastQueueModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<PodcastQueueModel> completeQueueCurrent(
     Map<String, dynamic> request,
   ) async {

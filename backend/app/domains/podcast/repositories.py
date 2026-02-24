@@ -37,7 +37,8 @@ class PodcastRepository:
     def __init__(self, db: AsyncSession, redis: PodcastRedis | None = None):
         self.db = db
         self.redis = redis or PodcastRedis()
-        self._queue_position_compaction_threshold = 100_000
+        self._queue_position_step = 1024
+        self._queue_position_compaction_threshold = 1_000_000
 
     # === 订阅管理 ===
 
@@ -799,20 +800,95 @@ class PodcastRepository:
     def _sorted_queue_items(queue: PodcastQueue) -> list[PodcastQueueItem]:
         return sorted(queue.items, key=lambda item: (item.position, item.id))
 
-    async def _rewrite_queue_positions(self, items: list[PodcastQueueItem]) -> None:
+    def _queue_needs_compaction(self, items: list[PodcastQueueItem]) -> bool:
+        if not items:
+            return False
+
+        head_position = items[0].position
+        tail_position = items[-1].position
+        threshold = self._queue_position_compaction_threshold
+        return head_position <= -threshold or tail_position >= threshold
+
+    async def _rewrite_queue_positions(
+        self,
+        items: list[PodcastQueueItem],
+        *,
+        start: int = 0,
+        step: int | None = None,
+    ) -> None:
         """Rewrite positions in two phases to avoid unique(position) conflicts."""
+        if not items:
+            return
+
+        position_step = step or self._queue_position_step
+        temp_base = self._queue_position_compaction_threshold + (
+            len(items) * position_step
+        )
         for idx, item in enumerate(items):
-            item.position = idx + 1000
+            item.position = temp_base + idx
         await self.db.flush()
 
         for idx, item in enumerate(items):
-            item.position = idx
+            item.position = start + (idx * position_step)
         await self.db.flush()
 
     @staticmethod
     def _touch_queue(queue: PodcastQueue) -> None:
         queue.revision = (queue.revision or 0) + 1
         queue.updated_at = datetime.now(timezone.utc)
+
+    async def _ensure_current_at_head(
+        self,
+        queue: PodcastQueue,
+        ordered_items: list[PodcastQueueItem],
+    ) -> bool:
+        """Enforce queue invariant: current_episode_id always points to head item."""
+        if not ordered_items:
+            if queue.current_episode_id is not None:
+                queue.current_episode_id = None
+                return True
+            return False
+
+        current_id = queue.current_episode_id
+        if current_id is None:
+            queue.current_episode_id = ordered_items[0].episode_id
+            return True
+
+        current_item = next(
+            (item for item in ordered_items if item.episode_id == current_id),
+            None,
+        )
+        if current_item is None:
+            queue.current_episode_id = ordered_items[0].episode_id
+            return True
+
+        head_item = ordered_items[0]
+        if current_item.id == head_item.id:
+            return False
+
+        current_item.position = head_item.position - self._queue_position_step
+        await self.db.flush()
+        return True
+
+    def _queue_operation_log(
+        self,
+        operation: str,
+        *,
+        user_id: int,
+        queue_size: int,
+        revision_before: int,
+        revision_after: int,
+        elapsed_ms: float,
+    ) -> None:
+        logger.debug(
+            "[Queue] operation=%s user_id=%s queue_size=%s revision_before=%s revision_after=%s elapsed_ms=%.2f",
+            operation,
+            user_id,
+            queue_size,
+            revision_before,
+            revision_after,
+            elapsed_ms,
+        )
 
     async def add_or_move_to_tail(
         self,
@@ -823,93 +899,193 @@ class PodcastRepository:
         """Add episode into queue, or move existing one to the tail."""
         started_at = perf_counter()
         queue = await self.get_queue_with_items(user_id)
+        revision_before = queue.revision or 0
         ordered_items = self._sorted_queue_items(queue)
         existing = next(
-            (item for item in ordered_items if item.episode_id == episode_id), None
+            (item for item in ordered_items if item.episode_id == episode_id),
+            None,
         )
+        changed = False
 
         if existing is None and len(ordered_items) >= max_items:
             raise ValueError("QUEUE_LIMIT_EXCEEDED")
 
-        tail_position = ordered_items[-1].position if ordered_items else -1
+        tail_position = ordered_items[-1].position if ordered_items else 0
 
-        added_item = None
-        if existing:
-            if existing.position != tail_position:
-                existing.position = tail_position + 1
+        if existing is not None:
+            if (
+                queue.current_episode_id != episode_id
+                and existing.position != tail_position
+            ):
+                existing.position = tail_position + self._queue_position_step
                 await self.db.flush()
+                changed = True
         else:
-            new_item = PodcastQueueItem(
-                queue_id=queue.id,
-                episode_id=episode_id,
-                position=tail_position + 1,
+            self.db.add(
+                PodcastQueueItem(
+                    queue_id=queue.id,
+                    episode_id=episode_id,
+                    position=tail_position + self._queue_position_step
+                    if ordered_items
+                    else 0,
+                )
             )
-            self.db.add(new_item)
             await self.db.flush()
-            added_item = new_item
+            changed = True
 
         ordered_items = self._sorted_queue_items(queue)
-        if added_item is not None and all(
-            item.id != added_item.id for item in ordered_items
-        ):
-            ordered_items.append(added_item)
-            ordered_items = sorted(
-                ordered_items, key=lambda item: (item.position, item.id)
-            )
-        if (
-            ordered_items
-            and ordered_items[-1].position >= self._queue_position_compaction_threshold
-        ):
-            await self._rewrite_queue_positions(ordered_items)
-            logger.debug(
-                "[Queue] Compacted queue positions for user_id=%s at size=%s",
-                user_id,
-                len(ordered_items),
-            )
+        if await self._ensure_current_at_head(queue, ordered_items):
+            changed = True
 
-        if queue.current_episode_id is None and ordered_items:
-            queue.current_episode_id = ordered_items[0].episode_id
+        ordered_items = self._sorted_queue_items(queue)
+        if self._queue_needs_compaction(ordered_items):
+            await self._rewrite_queue_positions(
+                ordered_items,
+                step=self._queue_position_step,
+            )
+            changed = True
 
-        self._touch_queue(queue)
-        await self.db.commit()
-        logger.debug(
-            "[Queue] add_or_move_to_tail user_id=%s episode_id=%s size=%s elapsed_ms=%.2f",
-            user_id,
-            episode_id,
-            len(ordered_items),
-            (perf_counter() - started_at) * 1000,
+        if changed:
+            self._touch_queue(queue)
+            await self.db.commit()
+
+        self._queue_operation_log(
+            "add_or_move_to_tail",
+            user_id=user_id,
+            queue_size=len(self._sorted_queue_items(queue)),
+            revision_before=revision_before,
+            revision_after=queue.revision or revision_before,
+            elapsed_ms=(perf_counter() - started_at) * 1000,
         )
         return await self.get_queue_with_items(user_id)
 
     async def remove_item(self, user_id: int, episode_id: int) -> PodcastQueue:
         """Remove queue item by episode id. Idempotent."""
+        started_at = perf_counter()
         queue = await self.get_queue_with_items(user_id)
+        revision_before = queue.revision or 0
         ordered_items = self._sorted_queue_items(queue)
 
         target = next(
-            (item for item in ordered_items if item.episode_id == episode_id), None
+            (item for item in ordered_items if item.episode_id == episode_id),
+            None,
         )
         if not target:
             return queue
 
         await self.db.delete(target)
-        ordered_items = [item for item in ordered_items if item.id != target.id]
-        await self._rewrite_queue_positions(ordered_items)
+        await self.db.flush()
+        ordered_items = self._sorted_queue_items(queue)
+        changed = True
 
         if queue.current_episode_id == episode_id:
             queue.current_episode_id = (
                 ordered_items[0].episode_id if ordered_items else None
             )
 
-        self._touch_queue(queue)
-        await self.db.commit()
+        if await self._ensure_current_at_head(queue, ordered_items):
+            changed = True
+
+        ordered_items = self._sorted_queue_items(queue)
+        if self._queue_needs_compaction(ordered_items):
+            await self._rewrite_queue_positions(
+                ordered_items,
+                step=self._queue_position_step,
+            )
+            changed = True
+
+        if changed:
+            self._touch_queue(queue)
+            await self.db.commit()
+
+        self._queue_operation_log(
+            "remove_item",
+            user_id=user_id,
+            queue_size=len(self._sorted_queue_items(queue)),
+            revision_before=revision_before,
+            revision_after=queue.revision or revision_before,
+            elapsed_ms=(perf_counter() - started_at) * 1000,
+        )
+        return await self.get_queue_with_items(user_id)
+
+    async def activate_episode(
+        self,
+        user_id: int,
+        episode_id: int,
+        max_items: int = 500,
+    ) -> PodcastQueue:
+        """Ensure episode in queue, move to head, and set as current in one transaction."""
+        started_at = perf_counter()
+        queue = await self.get_queue_with_items(user_id)
+        revision_before = queue.revision or 0
+        ordered_items = self._sorted_queue_items(queue)
+        existing = next(
+            (item for item in ordered_items if item.episode_id == episode_id),
+            None,
+        )
+        changed = False
+
+        if existing is None and len(ordered_items) >= max_items:
+            raise ValueError("QUEUE_LIMIT_EXCEEDED")
+
+        if existing is None:
+            head_position = ordered_items[0].position if ordered_items else 0
+            self.db.add(
+                PodcastQueueItem(
+                    queue_id=queue.id,
+                    episode_id=episode_id,
+                    position=head_position - self._queue_position_step
+                    if ordered_items
+                    else 0,
+                )
+            )
+            await self.db.flush()
+            changed = True
+            ordered_items = self._sorted_queue_items(queue)
+        else:
+            head_item = ordered_items[0] if ordered_items else None
+            if head_item is not None and existing.id != head_item.id:
+                existing.position = head_item.position - self._queue_position_step
+                await self.db.flush()
+                changed = True
+                ordered_items = self._sorted_queue_items(queue)
+
+        if queue.current_episode_id != episode_id:
+            queue.current_episode_id = episode_id
+            changed = True
+
+        if await self._ensure_current_at_head(queue, ordered_items):
+            changed = True
+
+        ordered_items = self._sorted_queue_items(queue)
+        if self._queue_needs_compaction(ordered_items):
+            await self._rewrite_queue_positions(
+                ordered_items,
+                step=self._queue_position_step,
+            )
+            changed = True
+
+        if changed:
+            self._touch_queue(queue)
+            await self.db.commit()
+
+        self._queue_operation_log(
+            "activate_episode",
+            user_id=user_id,
+            queue_size=len(self._sorted_queue_items(queue)),
+            revision_before=revision_before,
+            revision_after=queue.revision or revision_before,
+            elapsed_ms=(perf_counter() - started_at) * 1000,
+        )
         return await self.get_queue_with_items(user_id)
 
     async def reorder_items(
         self, user_id: int, ordered_episode_ids: list[int]
     ) -> PodcastQueue:
         """Reorder queue items. Payload must exactly match existing item set."""
+        started_at = perf_counter()
         queue = await self.get_queue_with_items(user_id)
+        revision_before = queue.revision or 0
         ordered_items = self._sorted_queue_items(queue)
 
         current_ids = [item.episode_id for item in ordered_items]
@@ -920,53 +1096,150 @@ class PodcastRepository:
         if len(current_ids) != len(ordered_episode_ids):
             raise ValueError("INVALID_REORDER_PAYLOAD")
 
-        item_map = {item.episode_id: item for item in ordered_items}
-        reordered_items = [item_map[episode_id] for episode_id in ordered_episode_ids]
-        await self._rewrite_queue_positions(reordered_items)
+        changed = current_ids != ordered_episode_ids
+        desired_current = ordered_episode_ids[0] if ordered_episode_ids else None
+        if changed:
+            item_map = {item.episode_id: item for item in ordered_items}
+            reordered_items = [
+                item_map[episode_id] for episode_id in ordered_episode_ids
+            ]
+            await self._rewrite_queue_positions(
+                reordered_items,
+                step=self._queue_position_step,
+            )
 
-        self._touch_queue(queue)
-        await self.db.commit()
-        return await self.get_queue_with_items(user_id)
+        if queue.current_episode_id != desired_current:
+            queue.current_episode_id = desired_current
+            changed = True
 
-    async def set_current(self, user_id: int, episode_id: int) -> PodcastQueue:
-        """Set current queue episode."""
-        queue = await self.get_queue_with_items(user_id)
-        if all(item.episode_id != episode_id for item in queue.items):
-            raise ValueError("EPISODE_NOT_IN_QUEUE")
-
-        if queue.current_episode_id != episode_id:
-            queue.current_episode_id = episode_id
+        if changed:
             self._touch_queue(queue)
             await self.db.commit()
 
+        self._queue_operation_log(
+            "reorder_items",
+            user_id=user_id,
+            queue_size=len(current_ids),
+            revision_before=revision_before,
+            revision_after=queue.revision or revision_before,
+            elapsed_ms=(perf_counter() - started_at) * 1000,
+        )
+        return await self.get_queue_with_items(user_id)
+
+    async def set_current(self, user_id: int, episode_id: int) -> PodcastQueue:
+        """Set current queue episode and move it to queue head."""
+        started_at = perf_counter()
+        queue = await self.get_queue_with_items(user_id)
+        revision_before = queue.revision or 0
+        ordered_items = self._sorted_queue_items(queue)
+        target = next(
+            (item for item in ordered_items if item.episode_id == episode_id),
+            None,
+        )
+        if target is None:
+            raise ValueError("EPISODE_NOT_IN_QUEUE")
+
+        changed = False
+        head_item = ordered_items[0] if ordered_items else None
+        if head_item is not None and target.id != head_item.id:
+            target.position = head_item.position - self._queue_position_step
+            await self.db.flush()
+            changed = True
+
+        if queue.current_episode_id != episode_id:
+            queue.current_episode_id = episode_id
+            changed = True
+
+        ordered_items = self._sorted_queue_items(queue)
+        if await self._ensure_current_at_head(queue, ordered_items):
+            changed = True
+
+        ordered_items = self._sorted_queue_items(queue)
+        if self._queue_needs_compaction(ordered_items):
+            await self._rewrite_queue_positions(
+                ordered_items,
+                step=self._queue_position_step,
+            )
+            changed = True
+
+        if changed:
+            self._touch_queue(queue)
+            await self.db.commit()
+
+        self._queue_operation_log(
+            "set_current",
+            user_id=user_id,
+            queue_size=len(self._sorted_queue_items(queue)),
+            revision_before=revision_before,
+            revision_after=queue.revision or revision_before,
+            elapsed_ms=(perf_counter() - started_at) * 1000,
+        )
         return await self.get_queue_with_items(user_id)
 
     async def complete_current(self, user_id: int) -> PodcastQueue:
-        """Complete current item: remove it and promote next item."""
+        """Complete current item: remove it and advance to the next item."""
+        started_at = perf_counter()
         queue = await self.get_queue_with_items(user_id)
+        revision_before = queue.revision or 0
         ordered_items = self._sorted_queue_items(queue)
 
-        if queue.current_episode_id is None:
+        if not ordered_items:
             return queue
 
-        target = next(
-            (
-                item
-                for item in ordered_items
-                if item.episode_id == queue.current_episode_id
-            ),
-            None,
-        )
-        if target is not None:
-            await self.db.delete(target)
-            ordered_items = [item for item in ordered_items if item.id != target.id]
-            await self._rewrite_queue_positions(ordered_items)
+        target_index = 0
+        if queue.current_episode_id is not None:
+            current_index = next(
+                (
+                    idx
+                    for idx, item in enumerate(ordered_items)
+                    if item.episode_id == queue.current_episode_id
+                ),
+                None,
+            )
+            if current_index is not None:
+                target_index = current_index
 
-        queue.current_episode_id = (
-            ordered_items[0].episode_id if ordered_items else None
+        target = ordered_items[target_index]
+        next_episode_id: int | None = None
+        if len(ordered_items) > 1:
+            next_index = target_index + 1
+            if next_index >= len(ordered_items):
+                next_index = 0
+            next_episode_id = ordered_items[next_index].episode_id
+
+        await self.db.delete(target)
+        await self.db.flush()
+        ordered_items = self._sorted_queue_items(queue)
+        if next_episode_id is not None and all(
+            item.episode_id != next_episode_id for item in ordered_items
+        ):
+            next_episode_id = ordered_items[0].episode_id if ordered_items else None
+        queue.current_episode_id = next_episode_id
+        changed = True
+
+        if await self._ensure_current_at_head(queue, ordered_items):
+            changed = True
+
+        ordered_items = self._sorted_queue_items(queue)
+        if self._queue_needs_compaction(ordered_items):
+            await self._rewrite_queue_positions(
+                ordered_items,
+                step=self._queue_position_step,
+            )
+            changed = True
+
+        if changed:
+            self._touch_queue(queue)
+            await self.db.commit()
+
+        self._queue_operation_log(
+            "complete_current",
+            user_id=user_id,
+            queue_size=len(self._sorted_queue_items(queue)),
+            revision_before=revision_before,
+            revision_after=queue.revision or revision_before,
+            elapsed_ms=(perf_counter() - started_at) * 1000,
         )
-        self._touch_queue(queue)
-        await self.db.commit()
         return await self.get_queue_with_items(user_id)
 
     async def _cache_episode_metadata(self, episode: PodcastEpisode):

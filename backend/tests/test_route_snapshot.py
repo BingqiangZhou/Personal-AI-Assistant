@@ -46,3 +46,4 @@ def test_queue_routes_exist() -> None:
     assert "/api/v1/podcasts/queue/items/reorder" in paths
     assert "/api/v1/podcasts/queue/current" in paths
     assert "/api/v1/podcasts/queue/current/complete" in paths
+    assert "/api/v1/podcasts/queue/activate" in paths

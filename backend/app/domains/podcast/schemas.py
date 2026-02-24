@@ -346,6 +346,12 @@ class PodcastQueueSetCurrentRequest(PodcastBaseSchema):
     episode_id: int = Field(..., ge=1)
 
 
+class PodcastQueueActivateRequest(PodcastBaseSchema):
+    """Ensure episode exists in queue, move to head, and set as current."""
+
+    episode_id: int = Field(..., ge=1)
+
+
 class PodcastQueueCurrentCompleteRequest(PodcastBaseSchema):
     """Complete current queue episode."""
 

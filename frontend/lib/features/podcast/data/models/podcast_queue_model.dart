@@ -190,3 +190,11 @@ class PodcastQueueSetCurrentRequest {
 
   Map<String, dynamic> toJson() => {'episode_id': episodeId};
 }
+
+class PodcastQueueActivateRequest {
+  final int episodeId;
+
+  const PodcastQueueActivateRequest({required this.episodeId});
+
+  Map<String, dynamic> toJson() => {'episode_id': episodeId};
+}
