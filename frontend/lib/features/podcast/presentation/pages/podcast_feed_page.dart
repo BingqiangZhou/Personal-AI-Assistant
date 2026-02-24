@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
+import '../../core/utils/episode_description_helper.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_state_models.dart';
 import '../navigation/podcast_navigation.dart';
@@ -420,7 +421,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
-    // Feed cards now display backend-truncated plain-text descriptions.
+    // Feed cards display sanitized plain-text descriptions.
     final displayDescription = _getFeedCardDescription(episode.description);
     final titleStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w600,
@@ -895,8 +896,106 @@ String _formatDate(DateTime date) {
 }
 
 String _getFeedCardDescription(String? description) {
-  if (description == null) {
+  final sanitized = EpisodeDescriptionHelper.stripHtmlTags(description);
+  if (sanitized.isEmpty) {
     return '';
   }
-  return description.trim();
+
+  // Recover visible content when malformed/truncated tag fragments remain.
+  final recovered = _recoverMalformedTagInlineContent(sanitized);
+  final cleaned = recovered.replaceAll(
+    RegExp(r'<[/!]?[a-zA-Z][^>\n]*(?=\n|$)'),
+    '',
+  );
+
+  final cssCleaned = _removeLikelyCssNoise(cleaned);
+  return cssCleaned.trim();
+}
+
+String _recoverMalformedTagInlineContent(String text) {
+  final lines = text.split('\n');
+  final recoveredLines = lines.map(_recoverMalformedTagLine).toList();
+  return recoveredLines.join('\n');
+}
+
+String _recoverMalformedTagLine(String line) {
+  final malformedTagMatch = RegExp(r'<[/!]?[a-zA-Z][^>]*$').firstMatch(line);
+  if (malformedTagMatch == null) {
+    return line;
+  }
+
+  final tagStart = malformedTagMatch.start;
+  final prefix = line.substring(0, tagStart);
+  final fragment = line.substring(tagStart);
+
+  // If content is appended after a quoted attribute value, keep that tail.
+  final lastDoubleQuote = fragment.lastIndexOf('"');
+  final lastSingleQuote = fragment.lastIndexOf("'");
+  final lastQuoteIndex = lastDoubleQuote > lastSingleQuote
+      ? lastDoubleQuote
+      : lastSingleQuote;
+
+  if (lastQuoteIndex != -1 && lastQuoteIndex + 1 < fragment.length) {
+    final tail = fragment.substring(lastQuoteIndex + 1).trimLeft();
+    if (tail.isNotEmpty &&
+        !RegExp(r'^[a-zA-Z_:-][\w:.-]*\s*=').hasMatch(tail)) {
+      return '$prefix$tail';
+    }
+  }
+
+  // Fallback for CJK text directly following malformed tag attributes.
+  final cjkMatch = RegExp(r'[\u4E00-\u9FFF]').firstMatch(fragment);
+  if (cjkMatch != null) {
+    return '$prefix${fragment.substring(cjkMatch.start)}';
+  }
+
+  return prefix;
+}
+
+String _removeLikelyCssNoise(String text) {
+  final lines = text.split('\n');
+  final cleanedLines = <String>[];
+
+  for (var line in lines) {
+    // Drop leading runs of style declarations (common malformed "<p style=..."
+    // remnants once tags are stripped).
+    line = line.replaceFirst(
+      RegExp(
+        r'^\s*(?:(?:color|font-weight|font-size|line-height|font-family|hyphens|text-align|letter-spacing|word-spacing|white-space|word-break|overflow-wrap|text-indent|text-decoration|font-style|font-variant|font-stretch|font)\s*:\s*[^;\n]+;?\s*){2,}',
+        caseSensitive: false,
+      ),
+      '',
+    );
+
+    // Remove inline attribute fragments if any survived.
+    line = line.replaceAll(
+      RegExp(
+        r'''\b(?:data-[\w-]+|style)\s*=\s*["'][^"']*["']''',
+        caseSensitive: false,
+      ),
+      '',
+    );
+
+    // Remove remaining standalone CSS declarations.
+    line = line.replaceAll(
+      RegExp(
+        r'\b(?:color|font-weight|font-size|line-height|font-family|hyphens|text-align|letter-spacing|word-spacing|white-space|word-break|overflow-wrap|text-indent|text-decoration|font-style|font-variant|font-stretch|font)\s*:\s*[^;\n]+;?',
+        caseSensitive: false,
+      ),
+      '',
+    );
+
+    line = line.replaceAll(RegExp(r'^[;,\s]+|[;,\s]+$'), '').trim();
+
+    final isPureCssLine = RegExp(
+      r'^(?:[a-z-]+\s*:[^;\n]+;?\s*)+$',
+      caseSensitive: false,
+    ).hasMatch(line);
+
+    if (line.isNotEmpty && !isPureCssLine) {
+      cleanedLines.add(line);
+    }
+  }
+
+  return cleanedLines.join('\n');
 }

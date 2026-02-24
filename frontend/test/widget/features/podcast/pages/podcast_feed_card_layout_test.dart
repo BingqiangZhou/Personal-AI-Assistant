@@ -198,6 +198,284 @@ void main() {
       },
     );
 
+    testWidgets('mobile card strips html tags in description', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastFeedProvider.overrideWith(
+            () => _MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: [
+                  _buildEpisode(
+                    description:
+                        '<p style="color:#333333;font-size:16px">A &amp; B</p>',
+                  ),
+                ],
+                isLoading: false,
+                hasMore: false,
+                total: 1,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastFeedPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final descriptionFinder = find.byKey(
+        const Key('podcast_feed_mobile_description'),
+      );
+      expect(descriptionFinder, findsOneWidget);
+
+      final descriptionText = tester.widget<Text>(descriptionFinder);
+      final renderedDescription = descriptionText.data ?? '';
+      expect(renderedDescription, contains('A & B'));
+      expect(renderedDescription, isNot(contains('<')));
+      expect(renderedDescription, isNot(contains('>')));
+      expect(renderedDescription, isNot(contains('style=')));
+    });
+
+    testWidgets('desktop card strips html tags in description', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastFeedProvider.overrideWith(
+            () => _MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: [
+                  _buildEpisode(
+                    description:
+                        '<p style="color:#333333;font-size:16px">A &amp; B</p>',
+                  ),
+                ],
+                isLoading: false,
+                hasMore: false,
+                total: 1,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastFeedPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final descriptionFinder = find.byKey(
+        const Key('podcast_feed_desktop_description'),
+      );
+      expect(descriptionFinder, findsOneWidget);
+
+      final descriptionText = tester.widget<Text>(descriptionFinder);
+      final renderedDescription = descriptionText.data ?? '';
+      expect(renderedDescription, contains('A & B'));
+      expect(renderedDescription, isNot(contains('<')));
+      expect(renderedDescription, isNot(contains('>')));
+      expect(renderedDescription, isNot(contains('style=')));
+    });
+
+    testWidgets('desktop card strips malformed html tag fragments', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastFeedProvider.overrideWith(
+            () => _MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: [
+                  _buildEpisode(
+                    description:
+                        '回到家，为什么总是前两天母慈子孝\n<p style="color:#333333;font-size:16px',
+                  ),
+                ],
+                isLoading: false,
+                hasMore: false,
+                total: 1,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastFeedPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final descriptionFinder = find.byKey(
+        const Key('podcast_feed_desktop_description'),
+      );
+      expect(descriptionFinder, findsOneWidget);
+
+      final descriptionText = tester.widget<Text>(descriptionFinder);
+      final renderedDescription = descriptionText.data ?? '';
+      expect(renderedDescription, contains('回到家，为什么总是前两天母慈子孝'));
+      expect(renderedDescription, isNot(contains('<p')));
+      expect(renderedDescription, isNot(contains('style=')));
+      expect(renderedDescription, isNot(contains('<')));
+      expect(renderedDescription, isNot(contains('>')));
+    });
+
+    testWidgets('desktop card keeps content after malformed tag fragment', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastFeedProvider.overrideWith(
+            () => _MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: [
+                  _buildEpisode(
+                    description:
+                        '<p style="color:#333333;font-size:16px;"This preview should stay visible',
+                  ),
+                ],
+                isLoading: false,
+                hasMore: false,
+                total: 1,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastFeedPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final descriptionFinder = find.byKey(
+        const Key('podcast_feed_desktop_description'),
+      );
+      expect(descriptionFinder, findsOneWidget);
+
+      final descriptionText = tester.widget<Text>(descriptionFinder);
+      final renderedDescription = descriptionText.data ?? '';
+      expect(renderedDescription, contains('This preview should stay visible'));
+      expect(renderedDescription, isNot(contains('<p')));
+      expect(renderedDescription, isNot(contains('style=')));
+      expect(renderedDescription, isNot(contains('<')));
+      expect(renderedDescription, isNot(contains('>')));
+    });
+
+    testWidgets('desktop card removes standalone css declaration lines', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastFeedProvider.overrideWith(
+            () => _MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: [
+                  _buildEpisode(
+                    description:
+                        'This teaser should remain visible\n'
+                        'color:#333333;font-weight:normal;font-size:16px;'
+                        'line-height:30px;font-family:Helvetica,Arial,sans-serif;'
+                        'hyphens:auto;text-align:justify;',
+                  ),
+                ],
+                isLoading: false,
+                hasMore: false,
+                total: 1,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastFeedPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final descriptionFinder = find.byKey(
+        const Key('podcast_feed_desktop_description'),
+      );
+      expect(descriptionFinder, findsOneWidget);
+
+      final descriptionText = tester.widget<Text>(descriptionFinder);
+      final renderedDescription = descriptionText.data ?? '';
+      expect(
+        renderedDescription,
+        contains('This teaser should remain visible'),
+      );
+      expect(renderedDescription, isNot(contains('color:#333333')));
+      expect(renderedDescription, isNot(contains('font-size:16px')));
+      expect(renderedDescription, isNot(contains('font-family:Helvetica')));
+    });
+
     testWidgets(
       'mobile add-to-queue button shows loading, disables repeat taps, and restores after completion',
       (WidgetTester tester) async {
@@ -299,16 +577,17 @@ class _MockPodcastFeedNotifier extends PodcastFeedNotifier {
   Future<void> refreshFeed({bool fastReturn = false}) async {}
 }
 
-PodcastEpisodeModel _buildEpisode() {
+PodcastEpisodeModel _buildEpisode({String? description}) {
   return PodcastEpisodeModel(
     id: 1,
     subscriptionId: 1,
     subscriptionTitle: 'Sample Show',
     title: 'S2E7 Why does luck look effortless?',
     description:
+        description ??
         'What is luck, really? Is it money, connections, or freedom? '
-        'Why do some people burn out while others seem to move smoothly? '
-        'This episode explores myths and reality around good fortune.',
+            'Why do some people burn out while others seem to move smoothly? '
+            'This episode explores myths and reality around good fortune.',
     audioUrl: 'https://example.com/audio.mp3',
     audioDuration: 4143,
     publishedAt: DateTime(2026, 2, 13),

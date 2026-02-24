@@ -4,10 +4,12 @@
 Unit tests for Podcast specialized services
 """
 
+from datetime import datetime, timezone
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from app.core.config import settings
 from app.domains.podcast.services import (
     PodcastEpisodeService,
     PodcastPlaybackService,
@@ -150,6 +152,127 @@ class TestPodcastEpisodeService:
         assert result == mock_episode
         mock_repo.get_episode_by_id.assert_called_once_with(1, 1)
 
+    @pytest.mark.asyncio
+    async def test_feed_page_lightweight_prefers_one_line_summary(
+        self, service, mock_repo, monkeypatch
+    ):
+        monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
+        mock_repo.get_feed_lightweight_page_paginated.return_value = (
+            [
+                {
+                    "id": 1,
+                    "description": "fallback description",
+                    "ai_summary": (
+                        "## Executive Summary\n"
+                        "A concise summary sentence.\n\n"
+                        "## Key Insights\n"
+                        "More details."
+                    ),
+                    "transcript_content": "transcript",
+                }
+            ],
+            1,
+        )
+
+        results, total = await service.list_feed_by_page(page=1, size=20)
+
+        assert total == 1
+        assert results[0]["description"] == "A concise summary sentence."
+        assert results[0]["ai_summary"] is None
+        assert results[0]["transcript_content"] is None
+
+    @pytest.mark.asyncio
+    async def test_feed_cursor_lightweight_falls_back_to_collapsed_description(
+        self, service, mock_repo, monkeypatch
+    ):
+        monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
+        raw_description = "   Fallback   text \n with   extra   spaces   "
+        mock_repo.get_feed_lightweight_cursor_paginated.return_value = (
+            [
+                {
+                    "id": 1,
+                    "description": raw_description,
+                    "ai_summary": None,
+                    "transcript_content": "transcript",
+                }
+            ],
+            1,
+            False,
+            None,
+        )
+
+        results, total, has_more, next_cursor = await service.list_feed_by_cursor(
+            size=20
+        )
+
+        assert total == 1
+        assert has_more is False
+        assert next_cursor is None
+        assert results[0]["description"] == "Fallback text with extra spaces"
+        assert results[0]["ai_summary"] is None
+        assert results[0]["transcript_content"] is None
+
+    @pytest.mark.asyncio
+    async def test_feed_page_non_lightweight_rewrites_description_only_for_feed(
+        self, service, mock_repo, monkeypatch
+    ):
+        monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", False)
+        now = datetime.now(timezone.utc)
+        episode = _build_mock_episode(
+            description="Original fallback description",
+            ai_summary=(
+                "## Executive Summary\n"
+                "Feed summary line.\n\n"
+                "## Key Insights\n"
+                "More details."
+            ),
+            created_at=now,
+            published_at=now,
+        )
+        mock_repo.get_episodes_paginated.return_value = ([episode], 1)
+        mock_repo.get_playback_states_batch.return_value = {}
+
+        results, total = await service.list_feed_by_page(page=1, size=20)
+
+        assert total == 1
+        assert results[0]["description"] == "Feed summary line."
+        assert "Executive Summary" in (results[0]["ai_summary"] or "")
+
+    @pytest.mark.asyncio
+    async def test_list_episodes_keeps_original_description(
+        self, service, mock_repo
+    ):
+        now = datetime.now(timezone.utc)
+        episode = _build_mock_episode(
+            description="Original episode description",
+            ai_summary=(
+                "## Executive Summary\n"
+                "Should not replace non-feed description.\n\n"
+                "## Details\n"
+                "More details."
+            ),
+            created_at=now,
+            published_at=now,
+        )
+        mock_repo.get_episodes_paginated.return_value = ([episode], 1)
+        mock_repo.get_playback_states_batch.return_value = {}
+
+        results, total = await service.list_episodes(page=1, size=20)
+
+        assert total == 1
+        assert results[0]["description"] == "Original episode description"
+
+    def test_resolve_feed_description_truncates_fallback(self, service):
+        long_description = "a" * 500
+
+        result = service._resolve_feed_description(
+            ai_summary=None,
+            fallback_description=long_description,
+        )
+
+        assert result is not None
+        assert len(result) == service._feed_description_max_length
+
 
 class TestPodcastPlaybackService:
     """测试播客播放服务"""
@@ -266,3 +389,39 @@ class TestPodcastSyncService:
         assert service.user_id == 1
         assert service.db is not None
         assert service.repo is not None
+
+
+def _build_mock_episode(
+    *,
+    description: str,
+    ai_summary: str | None,
+    created_at: datetime,
+    published_at: datetime,
+) -> Mock:
+    episode = Mock()
+    episode.id = 1
+    episode.subscription_id = 1
+    episode.subscription = None
+    episode.title = "Episode title"
+    episode.description = description
+    episode.audio_url = "https://example.com/audio.mp3"
+    episode.audio_duration = 120
+    episode.audio_file_size = 1024
+    episode.published_at = published_at
+    episode.image_url = None
+    episode.item_link = None
+    episode.transcript_url = None
+    episode.transcript_content = None
+    episode.ai_summary = ai_summary
+    episode.summary_version = "1.0"
+    episode.ai_confidence_score = 0.9
+    episode.play_count = 0
+    episode.last_played_at = None
+    episode.season = None
+    episode.episode_number = None
+    episode.explicit = False
+    episode.status = "published"
+    episode.metadata_json = {}
+    episode.created_at = created_at
+    episode.updated_at = created_at
+    return episode

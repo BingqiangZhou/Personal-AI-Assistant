@@ -15,6 +15,9 @@ from app.core.redis import PodcastRedis
 from app.core.utils import filter_thinking_content
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastRepository
+from app.domains.podcast.services.daily_report_summary_extractor import (
+    extract_one_line_summary,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -164,6 +167,10 @@ class PodcastEpisodeService:
             self.user_id, episode_ids
         )
         results = self._build_episode_response(episodes, playback_states)
+        results = [
+            self._rewrite_feed_item_description(item, hide_ai_summary=False)
+            for item in results
+        ]
         return results, total, has_more, next_cursor_values
 
     async def list_feed_by_page(
@@ -191,7 +198,12 @@ class PodcastEpisodeService:
             self.user_id,
             episode_ids,
         )
-        return self._build_episode_response(episodes, playback_states), total
+        results = self._build_episode_response(episodes, playback_states)
+        results = [
+            self._rewrite_feed_item_description(item, hide_ai_summary=False)
+            for item in results
+        ]
+        return results, total
 
     async def list_playback_history_by_cursor(
         self,
@@ -437,15 +449,36 @@ class PodcastEpisodeService:
 
     def _normalize_feed_item(self, item: dict[str, Any]) -> dict[str, Any]:
         """Normalize lightweight feed payload fields for stable frontend semantics."""
-        raw_description = item.get("description")
-        normalized_description: str | None = None
-        if isinstance(raw_description, str):
-            collapsed = " ".join(raw_description.split())
-            if collapsed:
-                normalized_description = collapsed[: self._feed_description_max_length]
+        return self._rewrite_feed_item_description(item, hide_ai_summary=True)
 
+    def _rewrite_feed_item_description(
+        self, item: dict[str, Any], *, hide_ai_summary: bool
+    ) -> dict[str, Any]:
         normalized = dict(item)
-        normalized["description"] = normalized_description
+        normalized["description"] = self._resolve_feed_description(
+            ai_summary=normalized.get("ai_summary"),
+            fallback_description=normalized.get("description"),
+        )
         normalized["transcript_content"] = None
-        normalized["ai_summary"] = None
+        if hide_ai_summary:
+            normalized["ai_summary"] = None
         return normalized
+
+    def _resolve_feed_description(
+        self, ai_summary: Any, fallback_description: Any
+    ) -> str | None:
+        summary_text = filter_thinking_content(ai_summary) if ai_summary else ""
+        one_line_summary = extract_one_line_summary(summary_text)
+        if one_line_summary:
+            collapsed_summary = " ".join(one_line_summary.split())
+            if collapsed_summary:
+                return collapsed_summary[: self._feed_description_max_length]
+        return self._collapse_feed_description(fallback_description)
+
+    def _collapse_feed_description(self, raw_description: Any) -> str | None:
+        if not isinstance(raw_description, str):
+            return None
+        collapsed = " ".join(raw_description.split())
+        if not collapsed:
+            return None
+        return collapsed[: self._feed_description_max_length]
