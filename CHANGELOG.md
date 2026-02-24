@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.12.3](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.2...v0.12.3) - 2026-02-24 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.3))
+
+### 🚀 Features
+
+- *(podcast)* Implement lightweight feed query path with fast refresh ([5a6e144](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5a6e1446087bd41ecbafeeccb74c76df0a5d1726))
+
+### 🚜 Refactor
+
+- *(podcast)* Implement unified queue activation with position-based ordering and revision guards ([424cdeb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/424cdebcaf58d42ea69f3bb45df45415aeffea80))
+
+
+
 ## [0.12.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.1...v0.12.2) - 2026-02-23 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.2))
 
 ### 🎨 Styling
