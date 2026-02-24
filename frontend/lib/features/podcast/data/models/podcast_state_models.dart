@@ -59,7 +59,7 @@ class PodcastFeedState extends Equatable {
   }
 
   /// Check if data is fresh (within cache duration)
-  bool isDataFresh({Duration cacheDuration = const Duration(minutes: 5)}) {
+  bool isDataFresh({Duration cacheDuration = const Duration(seconds: 30)}) {
     if (lastRefreshTime == null) return false;
     return DateTime.now().difference(lastRefreshTime!) < cacheDuration;
   }

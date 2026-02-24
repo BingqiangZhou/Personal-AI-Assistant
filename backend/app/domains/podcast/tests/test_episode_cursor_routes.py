@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock
 
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
 from app.domains.podcast.api.dependencies import get_episode_service, get_search_service
 from app.domains.podcast.api.routes_episodes import (
     _encode_keyset_cursor,
@@ -30,13 +31,14 @@ def _sample_episode(now: datetime) -> dict:
     }
 
 
-def test_feed_legacy_page_cursor_compatible():
+def test_feed_legacy_page_cursor_compatible(monkeypatch):
+    monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
     service = AsyncMock()
     app.dependency_overrides[get_episode_service] = lambda: service
     client = TestClient(app)
 
     now = datetime.now(timezone.utc)
-    service.list_episodes.return_value = ([_sample_episode(now)], 25)
+    service.list_feed_by_page.return_value = ([_sample_episode(now)], 25)
     page_cursor = _encode_page_cursor(2)
 
     response = client.get(
@@ -44,23 +46,52 @@ def test_feed_legacy_page_cursor_compatible():
     )
 
     assert response.status_code == 200
-    service.list_episodes.assert_awaited_once_with(filters=None, page=2, size=10)
+    assert response.headers["cache-control"] == "private, max-age=30"
+    service.list_feed_by_page.assert_awaited_once_with(page=2, size=10)
 
     app.dependency_overrides.pop(get_episode_service, None)
 
 
-def test_feed_accepts_size_alias():
+def test_feed_accepts_size_alias(monkeypatch):
+    monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
     service = AsyncMock()
     app.dependency_overrides[get_episode_service] = lambda: service
     client = TestClient(app)
 
     now = datetime.now(timezone.utc)
-    service.list_episodes.return_value = ([_sample_episode(now)], 25)
+    service.list_feed_by_page.return_value = ([_sample_episode(now)], 25)
 
     response = client.get("/api/v1/podcasts/episodes/feed?page=2&size=11")
 
     assert response.status_code == 200
-    service.list_episodes.assert_awaited_once_with(filters=None, page=2, size=11)
+    assert response.headers["cache-control"] == "private, max-age=30"
+    service.list_feed_by_page.assert_awaited_once_with(page=2, size=11)
+
+    app.dependency_overrides.pop(get_episode_service, None)
+
+
+def test_feed_first_page_prefers_keyset_path(monkeypatch):
+    monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
+    service = AsyncMock()
+    app.dependency_overrides[get_episode_service] = lambda: service
+    client = TestClient(app)
+
+    now = datetime.now(timezone.utc)
+    service.list_feed_by_cursor.return_value = (
+        [_sample_episode(now)],
+        25,
+        True,
+        (now, 1),
+    )
+
+    response = client.get("/api/v1/podcasts/episodes/feed?page=1&page_size=10")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["next_page"] is None
+    assert payload["next_cursor"]
+    service.list_feed_by_cursor.assert_awaited_once_with(size=10)
+    service.list_feed_by_page.assert_not_called()
 
     app.dependency_overrides.pop(get_episode_service, None)
 

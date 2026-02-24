@@ -28,7 +28,7 @@ class _TestPodcastFeedNotifier extends PodcastFeedNotifier {
   Future<void> loadMoreFeed() async {}
 
   @override
-  Future<void> refreshFeed() async {}
+  Future<void> refreshFeed({bool fastReturn = false}) async {}
 }
 
 class _TestAuthNotifier extends AuthNotifier {

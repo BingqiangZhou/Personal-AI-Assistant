@@ -439,7 +439,7 @@ class TestPodcastFeedNotifier extends PodcastFeedNotifier {
   }
 
   @override
-  Future<void> refreshFeed() async {}
+  Future<void> refreshFeed({bool fastReturn = false}) async {}
 
   @override
   Future<void> loadMoreFeed() async {}

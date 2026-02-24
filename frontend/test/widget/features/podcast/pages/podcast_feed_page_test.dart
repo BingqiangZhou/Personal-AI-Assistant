@@ -373,7 +373,7 @@ class MockPodcastFeedNotifier extends PodcastFeedNotifier {
   }
 
   @override
-  Future<void> refreshFeed() async {
+  Future<void> refreshFeed({bool fastReturn = false}) async {
     // Do nothing for testing
   }
 }

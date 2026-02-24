@@ -10,6 +10,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
+from app.core.config import settings
 from app.core.etag import build_conditional_etag_response
 from app.domains.podcast.api.dependencies import (
     get_episode_service,
@@ -157,7 +158,23 @@ async def get_podcast_feed(
     resolved_size = size or page_size
     decoded_cursor = _decode_cursor(cursor) if cursor else None
 
-    if decoded_cursor and decoded_cursor["mode"] == "keyset":
+    should_use_first_page_keyset = (
+        settings.PODCAST_FEED_LIGHTWEIGHT_ENABLED and cursor is None and page == 1
+    )
+    if should_use_first_page_keyset:
+        (
+            episodes,
+            total,
+            has_more,
+            next_cursor_values,
+        ) = await service.list_feed_by_cursor(size=resolved_size)
+        next_page = None
+        next_cursor = (
+            _encode_keyset_cursor("feed", next_cursor_values[0], next_cursor_values[1])
+            if next_cursor_values
+            else None
+        )
+    elif decoded_cursor and decoded_cursor["mode"] == "keyset":
         if decoded_cursor["type"] != "feed":
             raise _bilingual_error(
                 "Cursor is not valid for this endpoint",
@@ -187,8 +204,9 @@ async def get_podcast_feed(
             if decoded_cursor and decoded_cursor["mode"] == "page"
             else page
         )
-        episodes, total = await service.list_episodes(
-            filters=None, page=resolved_page, size=resolved_size
+        episodes, total = await service.list_feed_by_page(
+            page=resolved_page,
+            size=resolved_size,
         )
         has_more = (resolved_page * resolved_size) < total
         next_page = resolved_page + 1 if has_more else None
@@ -206,8 +224,12 @@ async def get_podcast_feed(
     return build_conditional_etag_response(
         request=request,
         content=response_data,
-        max_age=600,
-        cache_control="private, max-age=600",
+        max_age=30 if settings.PODCAST_FEED_LIGHTWEIGHT_ENABLED else 600,
+        cache_control=(
+            "private, max-age=30"
+            if settings.PODCAST_FEED_LIGHTWEIGHT_ENABLED
+            else "private, max-age=600"
+        ),
     )
 
 

@@ -10,6 +10,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.redis import PodcastRedis
 from app.core.utils import filter_thinking_content
 from app.domains.podcast.models import PodcastEpisode
@@ -41,6 +42,7 @@ class PodcastEpisodeService:
         self.user_id = user_id
         self.repo = PodcastRepository(db)
         self.redis = PodcastRedis()
+        self._feed_description_max_length = 320
 
     async def list_episodes(
         self, filters: Any | None = None, page: int = 1, size: int = 20
@@ -126,6 +128,25 @@ class PodcastEpisodeService:
         cursor_episode_id: int | None = None,
     ) -> tuple[list[dict], int, bool, tuple[datetime, int] | None]:
         """List feed via keyset cursor pagination."""
+        if settings.PODCAST_FEED_LIGHTWEIGHT_ENABLED:
+            (
+                items,
+                total,
+                has_more,
+                next_cursor_values,
+            ) = await self.repo.get_feed_lightweight_cursor_paginated(
+                self.user_id,
+                size=size,
+                cursor_published_at=cursor_published_at,
+                cursor_episode_id=cursor_episode_id,
+            )
+            return (
+                [self._normalize_feed_item(item) for item in items],
+                total,
+                has_more,
+                next_cursor_values,
+            )
+
         (
             episodes,
             total,
@@ -144,6 +165,33 @@ class PodcastEpisodeService:
         )
         results = self._build_episode_response(episodes, playback_states)
         return results, total, has_more, next_cursor_values
+
+    async def list_feed_by_page(
+        self,
+        page: int = 1,
+        size: int = 20,
+    ) -> tuple[list[dict], int]:
+        """List feed via legacy page-based pagination for backward compatibility."""
+        if settings.PODCAST_FEED_LIGHTWEIGHT_ENABLED:
+            items, total = await self.repo.get_feed_lightweight_page_paginated(
+                self.user_id,
+                page=page,
+                size=size,
+            )
+            return [self._normalize_feed_item(item) for item in items], total
+
+        episodes, total = await self.repo.get_episodes_paginated(
+            self.user_id,
+            page=page,
+            size=size,
+            filters=None,
+        )
+        episode_ids = [ep.id for ep in episodes]
+        playback_states = await self.repo.get_playback_states_batch(
+            self.user_id,
+            episode_ids,
+        )
+        return self._build_episode_response(episodes, playback_states), total
 
     async def list_playback_history_by_cursor(
         self,
@@ -386,3 +434,18 @@ class PodcastEpisodeService:
             )
 
         return results
+
+    def _normalize_feed_item(self, item: dict[str, Any]) -> dict[str, Any]:
+        """Normalize lightweight feed payload fields for stable frontend semantics."""
+        raw_description = item.get("description")
+        normalized_description: str | None = None
+        if isinstance(raw_description, str):
+            collapsed = " ".join(raw_description.split())
+            if collapsed:
+                normalized_description = collapsed[: self._feed_description_max_length]
+
+        normalized = dict(item)
+        normalized["description"] = normalized_description
+        normalized["transcript_content"] = None
+        normalized["ai_summary"] = None
+        return normalized

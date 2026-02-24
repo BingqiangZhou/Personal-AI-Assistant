@@ -9,7 +9,6 @@ import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_state_models.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
-import '../../core/utils/episode_description_helper.dart';
 import '../widgets/podcast_image_widget.dart';
 
 /// Material Design 3鑷€傚簲Feed椤甸潰
@@ -235,7 +234,9 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     final l10n = AppLocalizations.of(context)!;
     return RefreshIndicator(
       onRefresh: () async {
-        await ref.read(podcastFeedProvider.notifier).refreshFeed();
+        await ref
+            .read(podcastFeedProvider.notifier)
+            .refreshFeed(fastReturn: true);
       },
       child: ListView(
         padding: const EdgeInsets.symmetric(vertical: 4),
@@ -316,7 +317,9 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
         if (isMobile) {
           return RefreshIndicator(
             onRefresh: () async {
-              await localRef.read(podcastFeedProvider.notifier).refreshFeed();
+              await localRef
+                  .read(podcastFeedProvider.notifier)
+                  .refreshFeed(fastReturn: true);
             },
             child: ListView.builder(
               controller: _scrollController,
@@ -371,7 +374,9 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 
         return RefreshIndicator(
           onRefresh: () async {
-            await localRef.read(podcastFeedProvider.notifier).refreshFeed();
+            await localRef
+                .read(podcastFeedProvider.notifier)
+                .refreshFeed(fastReturn: true);
           },
           child: GridView.builder(
             controller: _scrollController,
@@ -415,11 +420,8 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
-    // Get display description: AI summary main topics or plain shownotes
-    final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
-      aiSummary: episode.aiSummary,
-      description: episode.description,
-    );
+    // Feed cards now display backend-truncated plain-text descriptions.
+    final displayDescription = _getFeedCardDescription(episode.description);
     final titleStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w600,
       fontSize: 13,
@@ -657,10 +659,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
-    final displayDescription = EpisodeDescriptionHelper.getDisplayDescription(
-      aiSummary: episode.aiSummary,
-      description: episode.description,
-    );
+    final displayDescription = _getFeedCardDescription(episode.description);
     final titleStyle = theme.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.w600,
       fontSize: 13,
@@ -893,4 +892,11 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 String _formatDate(DateTime date) {
   final localDate = date.isUtc ? date.toLocal() : date;
   return '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
+}
+
+String _getFeedCardDescription(String? description) {
+  if (description == null) {
+    return '';
+  }
+  return description.trim();
 }

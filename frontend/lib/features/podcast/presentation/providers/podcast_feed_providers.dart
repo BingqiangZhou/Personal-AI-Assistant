@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/exceptions/network_exceptions.dart';
@@ -140,7 +142,14 @@ class PodcastFeedNotifier extends Notifier<PodcastFeedState> {
     }
   }
 
-  Future<void> refreshFeed() async {
+  Future<void> refreshFeed({bool fastReturn = false}) async {
+    final hasExistingFeed = state.episodes.isNotEmpty;
+    if (fastReturn && hasExistingFeed) {
+      unawaited(loadInitialFeed(forceRefresh: true, background: true));
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      return;
+    }
+
     final isAuthenticated = ref.read(authProvider).isAuthenticated;
     if (!isAuthenticated) {
       await loadInitialFeed(

@@ -199,6 +199,40 @@ void main() {
       expect(dailyReportNotifier.loadCalls, 0);
       expect(dailyReportDatesNotifier.loadCalls, 0);
     });
+
+    test(
+      'refreshFeed fastReturn returns quickly and updates feed in background',
+      () async {
+        final fakeRepository = _FakePodcastRepository(
+          responses: <PodcastFeedResponse>[
+            _responseWithEpisodeIds(<int>[1]),
+            _responseWithEpisodeIds(<int>[2]),
+          ],
+          delays: const <Duration>[Duration.zero, Duration(milliseconds: 250)],
+        );
+        final container = ProviderContainer(
+          overrides: [
+            authProvider.overrideWith(_AuthenticatedAuthNotifier.new),
+            podcastRepositoryProvider.overrideWithValue(fakeRepository),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(podcastFeedProvider.notifier);
+        await notifier.loadInitialFeed();
+        expect(container.read(podcastFeedProvider).episodes.first.id, 1);
+
+        final stopwatch = Stopwatch()..start();
+        await notifier.refreshFeed(fastReturn: true);
+        stopwatch.stop();
+
+        expect(stopwatch.elapsedMilliseconds, lessThan(200));
+        expect(container.read(podcastFeedProvider).episodes.first.id, 1);
+
+        await Future<void>.delayed(const Duration(milliseconds: 320));
+        expect(container.read(podcastFeedProvider).episodes.first.id, 2);
+      },
+    );
   });
 }
 

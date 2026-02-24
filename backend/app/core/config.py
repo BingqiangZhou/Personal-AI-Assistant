@@ -49,7 +49,7 @@ class SecretKeyManager:
         """Save SECRET_KEY to file"""
         try:
             self.ensure_data_dir()
-            with open(self.secret_key_file, 'w') as f:
+            with open(self.secret_key_file, "w") as f:
                 f.write(secret_key)
         except (OSError, PermissionError):
             # Silently fail if we can't write to disk (e.g., in Docker with read-only volume)
@@ -89,7 +89,9 @@ class Settings(BaseSettings):
     # Base calculation: 5 domains × 6 concurrent/domain × 2 buffer = 60 connections
     DATABASE_URL: str
     DATABASE_POOL_SIZE: int = 20  # Increased from 10 - critical for RSS polling
-    DATABASE_MAX_OVERFLOW: int = 40  # Increased from 20 - total 60 connections available
+    DATABASE_MAX_OVERFLOW: int = (
+        40  # Increased from 20 - total 60 connections available
+    )
 
     # Database timeout settings
     DATABASE_POOL_TIMEOUT: int = 30  # Max wait for connection (seconds)
@@ -104,7 +106,9 @@ class Settings(BaseSettings):
 
     # JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7  # Sliding session: refresh extends to 7 days from now
+    REFRESH_TOKEN_EXPIRE_DAYS: int = (
+        7  # Sliding session: refresh extends to 7 days from now
+    )
     ALGORITHM: str = "HS256"
 
     # Celery
@@ -159,17 +163,26 @@ class Settings(BaseSettings):
     ADMIN_2FA_ENABLED: bool = True  # Admin panel 2FA toggle (default: enabled)
 
     # Assistant and Chat Configuration
-    ASSISTANT_TITLE_TRUNCATION_LENGTH: int = 50  # Max length for auto-generated conversation titles
-    ASSISTANT_TEST_PROMPT: str = "Hello, please respond with \"Test successful\"."
+    ASSISTANT_TITLE_TRUNCATION_LENGTH: int = (
+        50  # Max length for auto-generated conversation titles
+    )
+    ASSISTANT_TEST_PROMPT: str = 'Hello, please respond with "Test successful".'
 
     # Pagination and Batch Processing
     PODCAST_EPISODE_BATCH_SIZE: int = 50  # Default batch size for episode processing
-    PODCAST_RECENT_EPISODES_LIMIT: int = 3  # Number of recent episodes to fetch by default
+    PODCAST_RECENT_EPISODES_LIMIT: int = (
+        3  # Number of recent episodes to fetch by default
+    )
+    PODCAST_FEED_LIGHTWEIGHT_ENABLED: bool = (
+        True  # Enable lightweight feed payload/query path
+    )
 
     # ETag Configuration
     ETAG_ENABLED: bool = True  # Enable ETag caching for GET endpoints
     ETAG_DEFAULT_TTL: int = 300  # Default max-age for ETag responses (5 minutes)
-    ETAG_CACHE_IN_REDIS: bool = True  # Cache ETags in Redis for cross-instance validation
+    ETAG_CACHE_IN_REDIS: bool = (
+        True  # Cache ETags in Redis for cross-instance validation
+    )
     ETAG_REDIS_PREFIX: str = "etag:"  # Redis key prefix for ETag storage
 
     # Observability alert thresholds
