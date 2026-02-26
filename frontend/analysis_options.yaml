@@ -31,6 +31,8 @@ linter:
   # producing the lint.
   rules:
     avoid_print: true
+    cancel_subscriptions: true
+    close_sinks: true
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
 
 # Additional information about this file can be found at

@@ -90,7 +90,7 @@ def _decode_cursor(cursor: str) -> dict[str, Any]:
     except (ValueError, binascii.Error) as exc:
         raise _bilingual_error(
             "Invalid cursor",
-            "娓告爣鍙傛暟鏃犳晥",
+            "游标参数无效",
             status.HTTP_400_BAD_REQUEST,
         ) from exc
 
@@ -131,7 +131,7 @@ def _decode_cursor(cursor: str) -> dict[str, Any]:
     except (ValueError, TypeError, json.JSONDecodeError) as exc:
         raise _bilingual_error(
             "Invalid cursor",
-            "娓告爣鍙傛暟鏃犳晥",
+            "游标参数无效",
             status.HTTP_400_BAD_REQUEST,
         ) from exc
 
@@ -178,7 +178,7 @@ async def get_podcast_feed(
         if decoded_cursor["type"] != "feed":
             raise _bilingual_error(
                 "Cursor is not valid for this endpoint",
-                "娓告爣涓嶉€傜敤浜庡綋鍓嶆帴鍙?",
+                "该游标不适用于当前接口",
                 status.HTTP_400_BAD_REQUEST,
             )
 
@@ -284,7 +284,7 @@ async def list_playback_history(
         if decoded_cursor["type"] != "history":
             raise _bilingual_error(
                 "Cursor is not valid for this endpoint",
-                "娓告爣涓嶉€傜敤浜庡綋鍓嶆帴鍙?",
+                "该游标不适用于当前接口",
                 status.HTTP_400_BAD_REQUEST,
             )
 
@@ -471,18 +471,18 @@ async def update_playback_progress(
         if str(exc) == "Episode not found":
             raise _bilingual_error(
                 "Episode not found",
-                "鏈壘鍒拌鍗曢泦",
+                "未找到该单集",
                 status.HTTP_404_NOT_FOUND,
             ) from exc
         raise _bilingual_error(
             "Failed to update playback progress",
-            "鏇存柊鎾斁杩涘害澶辫触",
+            "更新播放进度失败",
             status.HTTP_400_BAD_REQUEST,
         ) from exc
     except Exception as exc:
         raise _bilingual_error(
             "Failed to update playback progress",
-            "鏇存柊鎾斁杩涘害澶辫触",
+            "更新播放进度失败",
             status.HTTP_500_INTERNAL_SERVER_ERROR,
         ) from exc
 
@@ -550,7 +550,7 @@ async def apply_playback_rate_preference(
         if code == "SUBSCRIPTION_NOT_FOUND":
             raise _bilingual_error(
                 "Subscription not found",
-                "鏈壘鍒拌璁㈤槄",
+                "未找到该订阅",
                 status.HTTP_404_NOT_FOUND,
             ) from exc
         if code == "USER_NOT_FOUND":
@@ -561,14 +561,14 @@ async def apply_playback_rate_preference(
             ) from exc
         raise _bilingual_error(
             "Failed to apply playback preference",
-            "搴旂敤鎾斁鍋忓ソ澶辫触",
+            "应用播放偏好失败",
             status.HTTP_400_BAD_REQUEST,
         ) from exc
     except Exception as exc:
         logger.error("Failed to apply playback rate preference: %s", exc)
         raise _bilingual_error(
             "Failed to apply playback preference",
-            "搴旂敤鎾斁鍋忓ソ澶辫触",
+            "应用播放偏好失败",
             status.HTTP_500_INTERNAL_SERVER_ERROR,
         ) from exc
 
@@ -638,7 +638,7 @@ async def search_podcasts(
     if not keyword:
         raise _bilingual_error(
             "Either q or query must be provided",
-            "蹇呴』鎻愪緵 q 鎴?query 鍙傛暟",
+            "必须提供 q 或 query 参数",
             status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
