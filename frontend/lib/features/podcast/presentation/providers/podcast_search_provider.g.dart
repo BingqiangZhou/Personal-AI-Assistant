@@ -11,13 +11,13 @@ part of 'podcast_search_provider.dart';
 /// 播客搜索 Notifier
 
 @ProviderFor(PodcastSearchNotifier)
-const podcastSearchProvider = PodcastSearchNotifierProvider._();
+final podcastSearchProvider = PodcastSearchNotifierProvider._();
 
 /// 播客搜索 Notifier
 final class PodcastSearchNotifierProvider
     extends $NotifierProvider<PodcastSearchNotifier, PodcastSearchState> {
   /// 播客搜索 Notifier
-  const PodcastSearchNotifierProvider._()
+  PodcastSearchNotifierProvider._()
     : super(
         from: null,
         argument: null,
@@ -45,7 +45,7 @@ final class PodcastSearchNotifierProvider
 }
 
 String _$podcastSearchNotifierHash() =>
-    r'428eb0269f753958495ec57977bd1b36bf3be586';
+    r'3fdfc308989350eb3d3be25190a5486ec3a06479';
 
 /// 播客搜索 Notifier
 
@@ -54,7 +54,6 @@ abstract class _$PodcastSearchNotifier extends $Notifier<PodcastSearchState> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<PodcastSearchState, PodcastSearchState>;
     final element =
         ref.element
@@ -64,6 +63,6 @@ abstract class _$PodcastSearchNotifier extends $Notifier<PodcastSearchState> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

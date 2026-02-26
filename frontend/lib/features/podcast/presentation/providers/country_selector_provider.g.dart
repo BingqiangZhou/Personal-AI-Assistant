@@ -11,13 +11,13 @@ part of 'country_selector_provider.dart';
 /// 国家选择器 Notifier
 
 @ProviderFor(CountrySelectorNotifier)
-const countrySelectorProvider = CountrySelectorNotifierProvider._();
+final countrySelectorProvider = CountrySelectorNotifierProvider._();
 
 /// 国家选择器 Notifier
 final class CountrySelectorNotifierProvider
     extends $NotifierProvider<CountrySelectorNotifier, CountrySelectorState> {
   /// 国家选择器 Notifier
-  const CountrySelectorNotifierProvider._()
+  CountrySelectorNotifierProvider._()
     : super(
         from: null,
         argument: null,
@@ -45,7 +45,7 @@ final class CountrySelectorNotifierProvider
 }
 
 String _$countrySelectorNotifierHash() =>
-    r'40d276376ebf1a6490e7c311b7f892cf9dfec280';
+    r'1718547545d4f819c0e4bddf1d0684708ca34d07';
 
 /// 国家选择器 Notifier
 
@@ -55,7 +55,6 @@ abstract class _$CountrySelectorNotifier
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<CountrySelectorState, CountrySelectorState>;
     final element =
         ref.element
@@ -65,6 +64,6 @@ abstract class _$CountrySelectorNotifier
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

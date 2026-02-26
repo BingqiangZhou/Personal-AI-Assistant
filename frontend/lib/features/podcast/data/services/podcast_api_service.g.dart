@@ -360,9 +360,15 @@ class _PodcastApiService implements PodcastApiService {
   }
 
   @override
-  Future<PodcastDailyReportResponse> generateDailyReport(String? date, bool rebuild) async {
+  Future<PodcastDailyReportResponse> generateDailyReport(
+    String? date,
+    bool rebuild,
+  ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'date': date, r'rebuild': rebuild};
+    final queryParameters = <String, dynamic>{
+      r'date': date,
+      r'rebuild': rebuild,
+    };
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;

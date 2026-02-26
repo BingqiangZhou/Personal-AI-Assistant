@@ -11,13 +11,13 @@ part of 'app_update_provider.dart';
 /// App Update Notifier / 应用更新通知器
 
 @ProviderFor(AppUpdate)
-const appUpdateProvider = AppUpdateProvider._();
+final appUpdateProvider = AppUpdateProvider._();
 
 /// App Update Notifier / 应用更新通知器
 final class AppUpdateProvider
     extends $NotifierProvider<AppUpdate, AppUpdateState> {
   /// App Update Notifier / 应用更新通知器
-  const AppUpdateProvider._()
+  AppUpdateProvider._()
     : super(
         from: null,
         argument: null,
@@ -44,7 +44,7 @@ final class AppUpdateProvider
   }
 }
 
-String _$appUpdateHash() => r'79f66d7df5640dc09be529ba1007931f6f8470dc';
+String _$appUpdateHash() => r'e47501ae789fc69b0fb4d89f4177349bce0910df';
 
 /// App Update Notifier / 应用更新通知器
 
@@ -53,7 +53,6 @@ abstract class _$AppUpdate extends $Notifier<AppUpdateState> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AppUpdateState, AppUpdateState>;
     final element =
         ref.element
@@ -63,14 +62,14 @@ abstract class _$AppUpdate extends $Notifier<AppUpdateState> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }
 
 /// Provider for AppUpdateService
 
 @ProviderFor(appUpdateService)
-const appUpdateServiceProvider = AppUpdateServiceProvider._();
+final appUpdateServiceProvider = AppUpdateServiceProvider._();
 
 /// Provider for AppUpdateService
 
@@ -83,7 +82,7 @@ final class AppUpdateServiceProvider
         >
     with $Provider<AppUpdateService> {
   /// Provider for AppUpdateService
-  const AppUpdateServiceProvider._()
+  AppUpdateServiceProvider._()
     : super(
         from: null,
         argument: null,
@@ -129,7 +128,7 @@ String _$appUpdateServiceHash() => r'eff87092f47ed1f1ad8ff4ed29d60f2c09dd2533';
 /// ```
 
 @ProviderFor(autoUpdateCheck)
-const autoUpdateCheckProvider = AutoUpdateCheckProvider._();
+final autoUpdateCheckProvider = AutoUpdateCheckProvider._();
 
 /// Stream provider that automatically checks for updates on app start
 ///
@@ -158,7 +157,7 @@ final class AutoUpdateCheckProvider
   ///   ShowUpdateDialog(release: updateState.latestRelease);
   /// }
   /// ```
-  const AutoUpdateCheckProvider._()
+  AutoUpdateCheckProvider._()
     : super(
         from: null,
         argument: null,
@@ -196,7 +195,7 @@ String _$autoUpdateCheckHash() => r'cabba2eb4f24c1d4966fa1b8e82cc74e9db7f7fe';
 /// ```
 
 @ProviderFor(ManualUpdateCheck)
-const manualUpdateCheckProvider = ManualUpdateCheckProvider._();
+final manualUpdateCheckProvider = ManualUpdateCheckProvider._();
 
 /// Provider for manual update checking with loading state
 ///
@@ -216,7 +215,7 @@ final class ManualUpdateCheckProvider
   /// final state = ref.watch(manualUpdateCheckProvider);
   /// if (state.hasUpdate) { ... }
   /// ```
-  const ManualUpdateCheckProvider._()
+  ManualUpdateCheckProvider._()
     : super(
         from: null,
         argument: null,
@@ -259,7 +258,6 @@ abstract class _$ManualUpdateCheck extends $Notifier<AppUpdateState> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final created = build();
     final ref = this.ref as $Ref<AppUpdateState, AppUpdateState>;
     final element =
         ref.element
@@ -269,6 +267,6 @@ abstract class _$ManualUpdateCheck extends $Notifier<AppUpdateState> {
               Object?,
               Object?
             >;
-    element.handleValue(ref, created);
+    element.handleCreate(ref, build);
   }
 }

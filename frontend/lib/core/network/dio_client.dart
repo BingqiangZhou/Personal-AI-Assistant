@@ -96,7 +96,6 @@ class DioClient {
       options: CacheOptions(
         store: _cacheStore,
         policy: CachePolicy.request,
-        hitCacheOnErrorExcept: [401, 403],
         maxStale: const Duration(days: 7),
         priority: CachePriority.high,
         cipher: null,
@@ -776,7 +775,6 @@ class DioClient {
       policy: useDioCache
           ? (cachePolicy ?? CachePolicy.request)
           : CachePolicy.noCache,
-      hitCacheOnErrorExcept: [401, 403],
       maxStale: maxStale ?? const Duration(days: 7),
       priority: CachePriority.high,
       cipher: null,

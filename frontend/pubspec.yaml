@@ -15,38 +15,38 @@ dependencies:
     sdk: flutter
 
   # State Management
-  flutter_riverpod: ^3.0.3
-  riverpod: ^3.0.3
-  riverpod_annotation: ^3.0.3
+  flutter_riverpod: ^3.2.1
+  riverpod: ^3.2.1
+  riverpod_annotation: ^4.0.2
   dartz: ^0.10.1
 
   # Navigation
-  go_router: ^17.0.1
+  go_router: ^17.1.0
 
   # HTTP Client
-  dio: ^5.5.0
-  dio_cache_interceptor: ^3.5.0
-  retrofit: ^4.9.1
-  json_annotation: ^4.9.0
+  dio: ^5.9.0
+  dio_cache_interceptor: ^4.0.5
+  retrofit: ^4.9.2
+  json_annotation: ^4.11.0
 
   # Local Storage
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.5.4
 
   # UI Components
   shimmer: ^3.0.0
-  flutter_markdown_plus: ^1.0.6
+  flutter_markdown_plus: ^1.0.7
   flutter_widget_from_html: ^0.17.1
-  html: ^0.15.0
+  html: ^0.15.6
   cached_network_image: ^3.3.0
   flutter_cache_manager: ^3.4.1
-  table_calendar: ^3.1.3
+  table_calendar: ^3.2.0
 
   # Utilities
   intl: ^0.20.2
 
   # Security
   flutter_secure_storage: ^10.0.0
-  encrypt: ^5.0.1
+  encrypt: ^5.0.3
   pointycastle: ^3.9.1
 
   # Audio Player
@@ -55,16 +55,16 @@ dependencies:
   permission_handler: ^12.0.1
 
   # File Handling
-  file_selector: ^1.0.3
-  file_picker: ^10.3.8
+  file_selector: ^1.1.0
+  file_picker: ^10.3.10
   desktop_drop: ^0.7.0
-  xml: ^6.5.0
+  xml: ^6.6.1
 
   # Desktop Info
   package_info_plus: ^9.0.0
 
   # Logging
-  logger: ^2.5.0
+  logger: ^2.6.2
   equatable: ^2.0.8
   url_launcher: ^6.3.2
   meta: ^1.17.0
@@ -81,15 +81,15 @@ dev_dependencies:
     sdk: flutter
 
   # Code Generation
-  build_runner: ^2.10.5
-  riverpod_generator: ^3.0.3
-  retrofit_generator: ^10.2.0
-  json_serializable: ^6.11.2
+  build_runner: ^2.11.1
+  riverpod_generator: ^4.0.3
+  retrofit_generator: ^10.2.1
+  json_serializable: ^6.13.0
 
   # Linting & Testing
   flutter_lints: ^6.0.0
-  very_good_analysis: ^10.0.0
-  mocktail: ^1.0.0
+  very_good_analysis: ^10.2.0
+  mocktail: ^1.0.4
   mockito: ^5.6.3
 
   # Build Tools
