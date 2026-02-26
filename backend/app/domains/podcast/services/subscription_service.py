@@ -476,9 +476,11 @@ class PodcastSubscriptionService:
             subscription_id, feed.last_fetched
         )
 
-        # Invalidate episode list cache since we've added new episodes
-        await self.redis.invalidate_episode_list(subscription_id)
-        await self.redis.invalidate_subscription_list(self.user_id)
+        # Invalidate related caches in best-effort mode.
+        await self._invalidate_subscription_related_caches(
+            subscription_id,
+            operation="refresh_subscription",
+        )
 
         if len(new_episodes) > 0:
             logger.info(
@@ -571,9 +573,11 @@ class PodcastSubscriptionService:
             subscription_id, feed.last_fetched
         )
 
-        # Invalidate episode list cache since we've updated episodes
-        await self.redis.invalidate_episode_list(subscription_id)
-        await self.redis.invalidate_subscription_list(self.user_id)
+        # Invalidate related caches in best-effort mode.
+        await self._invalidate_subscription_related_caches(
+            subscription_id,
+            operation="reparse_subscription",
+        )
 
         result = {
             "subscription_id": subscription_id,
@@ -614,8 +618,10 @@ class PodcastSubscriptionService:
             if not removed:
                 return False
 
-            await self.redis.invalidate_episode_list(subscription_id)
-            await self.redis.invalidate_subscription_list(self.user_id)
+            await self._invalidate_subscription_related_caches(
+                subscription_id,
+                operation="remove_subscription",
+            )
             logger.info(
                 f"User {self.user_id} unsubscribed from subscription {subscription_id}"
             )
@@ -743,3 +749,42 @@ class PodcastSubscriptionService:
 
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def _invalidate_subscription_related_caches(
+        self, subscription_id: int, *, operation: str
+    ) -> None:
+        """Invalidate caches without failing the business operation."""
+        await self._safe_cache_invalidation(
+            self.redis.invalidate_episode_list(subscription_id),
+            operation=operation,
+            cache_name="episode_list",
+            subscription_id=subscription_id,
+        )
+        await self._safe_cache_invalidation(
+            self.redis.invalidate_subscription_list(self.user_id),
+            operation=operation,
+            cache_name="subscription_list",
+            subscription_id=subscription_id,
+        )
+
+    async def _safe_cache_invalidation(
+        self,
+        awaitable: Any,
+        *,
+        operation: str,
+        cache_name: str,
+        subscription_id: int,
+    ) -> None:
+        """Run cache invalidation in best-effort mode."""
+        try:
+            await awaitable
+        except Exception as exc:
+            logger.warning(
+                "Cache invalidation skipped: op=%s cache=%s user_id=%s "
+                "subscription_id=%s error=%s",
+                operation,
+                cache_name,
+                self.user_id,
+                subscription_id,
+                exc,
+            )

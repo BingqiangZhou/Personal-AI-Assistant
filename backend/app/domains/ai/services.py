@@ -284,7 +284,7 @@ class AIModelConfigService:
         stmt = (
             update(AIModelConfig)
             .where(
-                AIModelConfig.model_type == model_type, AIModelConfig.is_default == True
+                AIModelConfig.model_type == model_type, AIModelConfig.is_default
             )
             .values(is_default=False)
         )
@@ -509,10 +509,9 @@ class AIModelConfigService:
 
         timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
 
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(
-                f"{model.api_url}/chat/completions", headers=headers, json=data
-            ) as response:
+        async with aiohttp.ClientSession(timeout=timeout) as session, session.post(
+            f"{model.api_url}/chat/completions", headers=headers, json=data
+        ) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     raise Exception(f"API error: {response.status} - {error_text}")

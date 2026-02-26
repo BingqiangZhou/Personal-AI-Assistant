@@ -109,10 +109,11 @@ class SecureRSSParser:
         """Fetch with size and timeout limits"""
         try:
             timeout = aiohttp.ClientTimeout(total=60, connect=10)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.get(url, headers={
+            async with aiohttp.ClientSession(timeout=timeout) as session, session.get(
+                url, headers={
                     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36'
-                }) as resp:
+                }
+            ) as resp:
                     if resp.status != 200:
                         return None, f"HTTP {resp.status}"
 
@@ -256,10 +257,13 @@ class SecureRSSParser:
             rel = link.get('rel', '')
             link_type = link.get('type', '')
             href = link.get('href', '')
-            if (rel == 'self' or 'image' in link_type.lower()) and href:
-                if self._is_valid_image_url(href):
-                    logger.debug(f"Found image via atom:link: {href}")
-                    return href
+            if (
+                (rel == 'self' or 'image' in link_type.lower())
+                and href
+                and self._is_valid_image_url(href)
+            ):
+                logger.debug(f"Found image via atom:link: {href}")
+                return href
 
         # Method 5: Google Play namespace
         gplay_ns = {'gplay': 'http://www.google.com/schemas/play-podcasts/1.0'}

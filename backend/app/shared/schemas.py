@@ -28,9 +28,8 @@ class UserBase(BaseSchema):
     @classmethod
     def validate_username(cls, v):
         """Validate username format."""
-        if v is not None:
-            if not v.replace('_', '').replace('-', '').isalnum():
-                raise ValueError('Username must contain only alphanumeric characters, hyphens, and underscores')
+        if v is not None and not v.replace('_', '').replace('-', '').isalnum():
+            raise ValueError('Username must contain only alphanumeric characters, hyphens, and underscores')
         return v
 
 

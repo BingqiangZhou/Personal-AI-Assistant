@@ -9,9 +9,6 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
-logger = logging.getLogger(__name__)
-
 from app.core.config import settings
 from app.core.email import email_service
 from app.core.exceptions import (
@@ -28,6 +25,9 @@ from app.core.security import (
     verify_token,
 )
 from app.domains.user.models import PasswordReset, User, UserSession
+
+
+logger = logging.getLogger(__name__)
 
 
 class AuthenticationService:
@@ -162,14 +162,14 @@ class AuthenticationService:
             Dictionary containing access and refresh tokens
         """
         # Security: Limit concurrent sessions (max 5 per user)
-        MAX_CONCURRENT_SESSIONS = 5
+        max_concurrent_sessions = 5
 
         # Get existing active sessions for this user
         existing_sessions = await self.db.execute(
             select(UserSession).where(
                 and_(
                     UserSession.user_id == user.id,
-                    UserSession.is_active == True,
+                    UserSession.is_active,
                     UserSession.expires_at > datetime.now(timezone.utc)
                 )
             ).order_by(UserSession.created_at)
@@ -177,8 +177,8 @@ class AuthenticationService:
         active_sessions = existing_sessions.scalars().all()
 
         # If limit reached, invalidate oldest sessions
-        if len(active_sessions) >= MAX_CONCURRENT_SESSIONS:
-            sessions_to_invalidate = len(active_sessions) - MAX_CONCURRENT_SESSIONS + 1
+        if len(active_sessions) >= max_concurrent_sessions:
+            sessions_to_invalidate = len(active_sessions) - max_concurrent_sessions + 1
             for i in range(sessions_to_invalidate):
                 old_session = active_sessions[i]
                 old_session.is_active = False
@@ -268,9 +268,9 @@ class AuthenticationService:
 
         # Security: Rate limit token refresh (prevent abuse)
         # Allow max 10 refreshes per minute per session
-        MIN_REFRESH_INTERVAL_SECONDS = 6  # ~10 refreshes per minute
+        min_refresh_interval_seconds = 6  # ~10 refreshes per minute
         time_since_last_activity = (datetime.now(timezone.utc) - session.last_activity_at).total_seconds()
-        if time_since_last_activity < MIN_REFRESH_INTERVAL_SECONDS:
+        if time_since_last_activity < min_refresh_interval_seconds:
             logger.warning(f"⚠️ Rate limit: User {user_id} refreshing too frequently (interval: {time_since_last_activity}s)")
             # Still allow refresh, but log suspicious activity
 
@@ -359,7 +359,7 @@ class AuthenticationService:
             select(UserSession).where(
                 and_(
                     UserSession.user_id == user_id,
-                    UserSession.is_active == True
+                    UserSession.is_active
                 )
             )
         )
@@ -385,7 +385,7 @@ class AuthenticationService:
                     UserSession.expires_at < datetime.now(timezone.utc),
                     and_(
                         UserSession.last_activity_at < datetime.now(timezone.utc) - timedelta(days=30),
-                        UserSession.is_active == False
+                        not UserSession.is_active
                     )
                 )
             )
@@ -519,7 +519,7 @@ class AuthenticationService:
             select(PasswordReset).where(
                 and_(
                     PasswordReset.email == email,
-                    PasswordReset.is_used == False,
+                    not PasswordReset.is_used,
                     PasswordReset.expires_at > datetime.now(timezone.utc)
                 )
             )
@@ -538,7 +538,7 @@ class AuthenticationService:
             select(PasswordReset).where(
                 and_(
                     PasswordReset.token == token,
-                    PasswordReset.is_used == False,
+                    not PasswordReset.is_used,
                     PasswordReset.expires_at > datetime.now(timezone.utc)
                 )
             )
@@ -588,7 +588,7 @@ class AuthenticationService:
             select(UserSession).where(
                 and_(
                     UserSession.refresh_token == refresh_token,
-                    UserSession.is_active == True,
+                    UserSession.is_active,
                     UserSession.expires_at > datetime.now(timezone.utc)
                 )
             )

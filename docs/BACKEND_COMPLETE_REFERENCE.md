@@ -1028,7 +1028,6 @@ tests/
 │   └── test_api_performance.py
 ├── podcast/                            # 播客测试
 │   ├── test_e2e_simulation.py
-│   ├── test_podcast_e2e_comprehensive.py
 │   ├── ../performance/test_api_performance.py
 ├── test_podcast_api.py                 # API 测试
 └── test_fix.py                         # 修复验证
@@ -1152,7 +1151,6 @@ CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
 - 单元测试: 各领域内的 tests/ 目录
 - 集成测试: tests/integration/
 - 性能测试: tests/performance/ (使用 Locust)
-- E2E 测试: tests/podcast/ 中的端到端测试
 
 ---
 

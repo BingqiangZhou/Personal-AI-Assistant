@@ -52,10 +52,7 @@ async def refresh_all_podcast_feeds_handler(session) -> dict:
         if item.should_update_now():
             subscriptions_to_update.add(item.subscription_id)
 
-    if subscriptions_to_update:
-        target_ids = subscriptions_to_update
-    else:
-        target_ids = {sub.id for sub in all_subscriptions}
+    target_ids = subscriptions_to_update or {sub.id for sub in all_subscriptions}
 
     refreshed_count = 0
     new_episodes_count = 0

@@ -16,7 +16,7 @@ from app.core.json_encoder import CustomJSONResponse
 logger = logging.getLogger(__name__)
 
 
-class BaseCustomException(Exception):
+class BaseCustomError(Exception):
     """Base custom exception.
 
     基础自定义异常
@@ -36,7 +36,7 @@ class BaseCustomException(Exception):
         super().__init__(self.message)
 
 
-class NotFoundError(BaseCustomException):
+class NotFoundError(BaseCustomError):
     """Resource not found exception.
 
     资源未找到异常
@@ -50,7 +50,7 @@ class NotFoundError(BaseCustomException):
         super().__init__(message, 404, **kwargs)
 
 
-class BadRequestError(BaseCustomException):
+class BadRequestError(BaseCustomError):
     """Bad request exception.
 
     错误请求异常
@@ -64,7 +64,7 @@ class BadRequestError(BaseCustomException):
         super().__init__(message, 400, **kwargs)
 
 
-class UnauthorizedError(BaseCustomException):
+class UnauthorizedError(BaseCustomError):
     """Unauthorized exception.
 
     未授权异常
@@ -78,7 +78,7 @@ class UnauthorizedError(BaseCustomException):
         super().__init__(message, 401, **kwargs)
 
 
-class ForbiddenError(BaseCustomException):
+class ForbiddenError(BaseCustomError):
     """Forbidden exception.
 
     禁止访问异常
@@ -92,7 +92,7 @@ class ForbiddenError(BaseCustomException):
         super().__init__(message, 403, **kwargs)
 
 
-class ConflictError(BaseCustomException):
+class ConflictError(BaseCustomError):
     """Conflict exception.
 
     冲突异常
@@ -106,7 +106,7 @@ class ConflictError(BaseCustomException):
         super().__init__(message, 409, "CONFLICT", **kwargs)
 
 
-class ValidationError(BaseCustomException):
+class ValidationError(BaseCustomError):
     """Validation exception.
 
     验证异常
@@ -120,7 +120,7 @@ class ValidationError(BaseCustomException):
         super().__init__(message, 400, "VALIDATION_ERROR", **kwargs)
 
 
-class DatabaseError(BaseCustomException):
+class DatabaseError(BaseCustomError):
     """Database exception.
 
     数据库异常
@@ -134,7 +134,7 @@ class DatabaseError(BaseCustomException):
         super().__init__(message, 500, "DATABASE_ERROR", **kwargs)
 
 
-class ExternalServiceError(BaseCustomException):
+class ExternalServiceError(BaseCustomError):
     """External service error exception.
 
     外部服务错误异常
@@ -148,7 +148,7 @@ class ExternalServiceError(BaseCustomException):
         super().__init__(message, 502, "EXTERNAL_SERVICE_ERROR", **kwargs)
 
 
-class FileProcessingError(BaseCustomException):
+class FileProcessingError(BaseCustomError):
     """File processing error exception.
 
     文件处理错误异常
@@ -162,7 +162,11 @@ class FileProcessingError(BaseCustomException):
         super().__init__(message, 422, "FILE_PROCESSING_ERROR", **kwargs)
 
 
-async def custom_exception_handler(request: Request, exc: BaseCustomException) -> CustomJSONResponse:
+# Backward compatibility alias for existing imports.
+BaseCustomException = BaseCustomError
+
+
+async def custom_exception_handler(request: Request, exc: BaseCustomError) -> CustomJSONResponse:
     """Handle custom exceptions.
 
     处理自定义异常
@@ -268,7 +272,7 @@ def setup_exception_handlers(app: FastAPI) -> None:
 
     为 FastAPI 应用设置异常处理器
     """
-    app.add_exception_handler(BaseCustomException, custom_exception_handler)
+    app.add_exception_handler(BaseCustomError, custom_exception_handler)
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(StarletteHTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)

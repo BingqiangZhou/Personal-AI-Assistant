@@ -8,6 +8,7 @@
 """
 
 import asyncio
+import contextlib
 import logging
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -431,10 +432,8 @@ class AutomatedTranscriptionScheduler:
         self._running = False
         if self._background_task:
             self._background_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._background_task
-            except asyncio.CancelledError:
-                pass
         logger.info("Stopped automated transcription scheduler")
 
     async def _run_scheduler(self, interval_minutes: int, hours_since_published: int):

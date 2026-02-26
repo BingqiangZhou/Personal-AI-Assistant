@@ -41,6 +41,9 @@ class TestPodcastSubscriptionPlatform:
         service = PodcastSubscriptionService(mock_db, user_id=1)
         service.repo = mock_repo
         service.parser = mock_parser
+        service.redis = Mock()
+        service.redis.invalidate_episode_list = AsyncMock(return_value=None)
+        service.redis.invalidate_subscription_list = AsyncMock(return_value=None)
         return service
 
     def create_mock_feed(self, platform: str):
@@ -213,6 +216,36 @@ class TestPodcastSubscriptionPlatform:
         await service.refresh_subscription(subscription_id)
 
         # Verify platform is preserved during refresh
+        mock_repo.update_subscription_fetch_time.assert_called_once_with(
+            subscription_id, mock_feed.last_fetched
+        )
+
+    @pytest.mark.asyncio
+    async def test_refresh_subscription_succeeds_when_redis_unavailable(
+        self, service, mock_repo, mock_parser
+    ):
+        """Refresh should still succeed when Redis invalidation fails."""
+        subscription_id = 1
+
+        mock_subscription = Mock()
+        mock_subscription.id = subscription_id
+        mock_subscription.source_url = "https://www.ximalaya.com/album/123.xml"
+        mock_subscription.config = {"platform": PodcastPlatform.XIMALAYA}
+        mock_repo.get_subscription_by_id.return_value = mock_subscription
+
+        mock_feed = self.create_mock_feed(PodcastPlatform.XIMALAYA)
+        mock_feed.last_fetched = datetime.now(timezone.utc)
+        mock_parser.fetch_and_parse_feed.return_value = (True, mock_feed, None)
+        mock_repo.create_or_update_episodes_batch.return_value = ([], [])
+
+        service.redis.invalidate_episode_list = AsyncMock(
+            side_effect=RuntimeError("redis unavailable")
+        )
+        service.redis.invalidate_subscription_list = AsyncMock(
+            side_effect=RuntimeError("redis unavailable")
+        )
+
+        await service.refresh_subscription(subscription_id)
         mock_repo.update_subscription_fetch_time.assert_called_once_with(
             subscription_id, mock_feed.last_fetched
         )

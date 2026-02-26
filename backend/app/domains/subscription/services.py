@@ -416,9 +416,14 @@ class SubscriptionService:
                         updated_items += 1
 
                     # Track the latest published_at
-                    if entry.published_at:
-                        if latest_published_at is None or entry.published_at > latest_published_at:
-                            latest_published_at = entry.published_at
+                    if (
+                        entry.published_at
+                        and (
+                            latest_published_at is None
+                            or entry.published_at > latest_published_at
+                        )
+                    ):
+                        latest_published_at = entry.published_at
 
                 except Exception as e:
                     logger.warning(f"Error processing entry {entry.id}: {e}")
@@ -701,7 +706,7 @@ class SubscriptionService:
                 select(Subscription)
                 .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
                 .options(selectinload(Subscription.categories))
-                .where(UserSubscription.user_id == user_id, UserSubscription.is_archived == False)
+                .where(UserSubscription.user_id == user_id, not UserSubscription.is_archived)
             )
         else:
             # Get all subscriptions

@@ -33,9 +33,12 @@ class LoginRequest(BaseModel):
     @classmethod
     def validate_identifier(cls, data):
         """Ensure either username or email_or_username is provided."""
-        if isinstance(data, dict):
-            if not data.get('username') and not data.get('email_or_username'):
-                raise ValueError('Either username or email_or_username must be provided')
+        if (
+            isinstance(data, dict)
+            and not data.get('username')
+            and not data.get('email_or_username')
+        ):
+            raise ValueError('Either username or email_or_username must be provided')
         return data
 
 

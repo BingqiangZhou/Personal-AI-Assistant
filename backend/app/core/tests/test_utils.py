@@ -62,7 +62,7 @@ class TestFilterThinkingContent:
 
     def test_filter_thinking_content_none_input(self):
         """Test None input / 测试 None 输入"""
-        assert filter_thinking_content(None) == None
+        assert filter_thinking_content(None) is None
 
     def test_filter_thinking_content_preserves_whitespace(self):
         """Test that internal whitespace and newlines are preserved / 测试内部空白和换行被保留"""

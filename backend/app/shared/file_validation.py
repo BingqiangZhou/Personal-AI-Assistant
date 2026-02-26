@@ -3,6 +3,10 @@
 This module provides functions to validate file uploads to prevent
 security issues such as MIME type spoofing, malicious file uploads,
 and excessive file sizes.
+
+Deprecated:
+    This module is kept for backward compatibility and is not used by the
+    current runtime code paths. Avoid adding new dependencies on it.
 """
 
 import logging

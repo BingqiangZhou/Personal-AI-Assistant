@@ -1280,9 +1280,8 @@ class PodcastRepository:
         )
 
         # 搴旂敤杩囨护鍣?
-        if filters:
-            if filters.status:
-                query = query.where(Subscription.status == filters.status)
+        if filters and filters.status:
+            query = query.where(Subscription.status == filters.status)
 
         # 璁＄畻鎬绘暟
         count_query = select(func.count()).select_from(query.subquery())

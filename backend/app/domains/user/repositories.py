@@ -130,7 +130,7 @@ class UserSessionRepository:
             select(UserSession).filter(
                 and_(
                     UserSession.session_token == session_token,
-                    UserSession.is_active == True
+                    UserSession.is_active
                 )
             )
         )
@@ -152,7 +152,7 @@ class UserSessionRepository:
             select(UserSession).filter(
                 and_(
                     UserSession.user_id == user_id,
-                    UserSession.is_active == True
+                    UserSession.is_active
                 )
             )
         )

@@ -143,7 +143,7 @@ async def subscriptions_page(
                     select(UserSubscription)
                     .where(
                         UserSubscription.subscription_id.in_(subscription_ids),
-                        UserSubscription.is_archived == False,
+                        not UserSubscription.is_archived,
                     )
                     .order_by(
                         UserSubscription.subscription_id,
@@ -1104,8 +1104,8 @@ async def import_subscriptions_opml(
     from app.domains.podcast.tasks.opml_import import process_opml_subscription_episodes
 
     # Constants
-    MAX_TITLE_LENGTH = 255
-    MAX_DESCRIPTION_LENGTH = 2000
+    max_title_length = 255
+    max_description_length = 2000
 
     def normalize_feed_url(feed_url: str) -> str:
         """Normalize feed:// URLs to https:// for parser compatibility."""
@@ -1139,8 +1139,8 @@ async def import_subscriptions_opml(
             logger.warning(f"Skipping invalid URL: {xml_url}")
             return None
 
-        title = title.strip()[:MAX_TITLE_LENGTH]
-        description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ""
+        title = title.strip()[:max_title_length]
+        description = description.strip()[:max_description_length] if description else ""
 
         return SubscriptionCreate(
             source_url=xml_url,
@@ -1220,8 +1220,10 @@ async def import_subscriptions_opml(
                 except Exception:
                     title = xml_url
 
-            title = title.strip()[:MAX_TITLE_LENGTH]
-            description = description.strip()[:MAX_DESCRIPTION_LENGTH] if description else ""
+            title = title.strip()[:max_title_length]
+            description = (
+                description.strip()[:max_description_length] if description else ""
+            )
 
             subscriptions.append(
                 SubscriptionCreate(

@@ -395,8 +395,9 @@ class ConversationService:
                     'Content-Type': 'application/json'
                 }
 
-                async with aiohttp.ClientSession(timeout=timeout) as session:
-                    async with session.post(f"{model.api_url}/chat/completions", headers=headers, json=data) as response:
+                async with aiohttp.ClientSession(timeout=timeout) as session, session.post(
+                    f"{model.api_url}/chat/completions", headers=headers, json=data
+                ) as response:
                         if response.status != 200:
                             error_text = await response.text()
                             last_error = f"HTTP {response.status}: {error_text}"

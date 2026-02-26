@@ -150,10 +150,7 @@ class PodcastSecurityValidator:
             return True
         if re.match(r'^172\.(1[6-9]|2[0-9]|3[0-1])\.', hostname_lower):
             return True
-        if re.match(r'^192\.168\.', hostname_lower):
-            return True
-
-        return False
+        return bool(re.match(r'^192\.168\.', hostname_lower))
 
     @classmethod
     async def validate_audio_download(cls, url: str) -> tuple[bool, str | None, bytes | None]:
@@ -173,8 +170,9 @@ class PodcastSecurityValidator:
 
         try:
             timeout = aiohttp.ClientTimeout(total=300)  # 5 minute total timeout
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.get(url) as response:
+            async with aiohttp.ClientSession(timeout=timeout) as session, session.get(
+                url
+            ) as response:
                     # Check content length before downloading
                     content_length = response.headers.get('Content-Length')
                     if content_length:

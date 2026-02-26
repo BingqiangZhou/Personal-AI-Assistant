@@ -261,8 +261,9 @@ class SummaryModelManager:
         logger.info(f"  - Max tokens: {model_config.max_tokens}")
         logger.info(f"  - Temperature: {data.get('temperature')}")
 
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.post(api_url, headers=headers, json=data) as response:
+        async with aiohttp.ClientSession(timeout=timeout) as session, session.post(
+            api_url, headers=headers, json=data
+        ) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     logger.error("❌ [AI API] Request failed:")
@@ -422,9 +423,7 @@ Shownotes: {description}
                 if key_lower == placeholder_lower or placeholder_lower in key_lower:
                     return True
             # Check for common placeholder patterns
-            if 'your-' in key_lower and ('key' in key_lower or 'api' in key_lower):
-                return True
-            return False
+            return bool('your-' in key_lower and ('key' in key_lower or 'api' in key_lower))
 
         # Helper to get and validate API key from a model
         async def get_valid_key_from_model(model) -> str | None:

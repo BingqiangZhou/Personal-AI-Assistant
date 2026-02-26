@@ -33,7 +33,7 @@ class TimezoneFormatter(logging.Formatter):
         super().__init__(fmt=fmt, datefmt=datefmt)
         self.timezone_str = timezone_str
 
-    def formatTime(self, record, datefmt=None):
+    def formatTime(self, record, datefmt=None):  # noqa: N802
         """格式化时间为指定时区"""
         # 获取 UTC 时间
         ct = datetime.fromtimestamp(record.created, tz=timezone.utc)
@@ -44,11 +44,12 @@ class TimezoneFormatter(logging.Formatter):
             offset = self._get_timezone_offset(self.timezone_str)
             ct = ct + timedelta(hours=offset)
 
-        if datefmt:
-            s = ct.strftime(datefmt)
-        else:
-            # 默认时间格式: 2025-12-26 14:30:45
-            s = ct.strftime("%Y-%m-%d %H:%M:%S")
+        # 默认时间格式: 2025-12-26 14:30:45
+        s = (
+            ct.strftime(datefmt)
+            if datefmt
+            else ct.strftime("%Y-%m-%d %H:%M:%S")
+        )
         return s
 
     def _get_timezone_offset(self, tz_str: str) -> float:

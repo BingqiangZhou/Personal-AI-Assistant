@@ -700,15 +700,16 @@ async def import_apikeys_json(
         export_mode = import_data.get("export_mode", "encrypted")
 
         # Validate import password for encrypted exports
-        if export_mode == "encrypted" or export_version == "1.0":
-            if not import_password:
-                return JSONResponse(
-                    content={
-                        "success": False,
-                        "message": "import_password is required for encrypted exports"
-                    },
-                    status_code=status.HTTP_400_BAD_REQUEST
-                )
+        if (
+            export_mode == "encrypted" or export_version == "1.0"
+        ) and not import_password:
+            return JSONResponse(
+                content={
+                    "success": False,
+                    "message": "import_password is required for encrypted exports"
+                },
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
         # Import statistics
         success_count = 0

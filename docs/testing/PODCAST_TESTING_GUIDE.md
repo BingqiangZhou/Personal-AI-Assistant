@@ -10,7 +10,6 @@
 ```
 backend/
 ├── tests/podcast/
-│   ├── test_podcast_e2e_comprehensive.py    # 端到端测试
 │   ├── ../performance/test_api_performance.py # 性能测试
 ├── app/domains/podcast/tests/
 │   ├── test_api.py                           # API单元测试
@@ -90,9 +89,6 @@ uv run pytest app/domains/podcast/tests/test_api.py -v
 
 # 服务层测试
 uv run pytest app/domains/podcast/tests/test_services.py -v
-
-# E2E测试
-uv run python tests/podcast/test_podcast_e2e_comprehensive.py
 
 # 性能测试
 RUN_PERFORMANCE_TESTS=1 uv run pytest tests/performance/test_api_performance.py -q

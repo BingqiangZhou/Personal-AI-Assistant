@@ -26,7 +26,7 @@ async def main():
     await init_db()
 
     async with async_session_factory() as db:
-        repo = PodcastRepository(db)
+        PodcastRepository(db)
 
         # Get first subscription
         result = await db.execute(

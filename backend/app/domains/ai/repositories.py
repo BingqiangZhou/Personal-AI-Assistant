@@ -92,8 +92,8 @@ class AIModelConfigRepository:
             stmt = select(AIModelConfig).where(
                 and_(
                     AIModelConfig.model_type == model_type,
-                    AIModelConfig.is_default == True,
-                    AIModelConfig.is_active == True
+                    AIModelConfig.is_default,
+                    AIModelConfig.is_active
                 )
             )
             result = await self.db.execute(stmt)
@@ -107,7 +107,7 @@ class AIModelConfigRepository:
     ) -> list[AIModelConfig]:
         """获取所有活跃的模型，按优先级排序"""
         try:
-            stmt = select(AIModelConfig).where(AIModelConfig.is_active == True)
+            stmt = select(AIModelConfig).where(AIModelConfig.is_active)
             if model_type:
                 stmt = stmt.where(AIModelConfig.model_type == model_type)
 
@@ -148,7 +148,7 @@ class AIModelConfigRepository:
                 .where(
                     and_(
                         AIModelConfig.model_type == model_type,
-                        AIModelConfig.is_default == True
+                        AIModelConfig.is_default
                     )
                 )
                 .values(is_default=False)

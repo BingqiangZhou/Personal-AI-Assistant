@@ -1,4 +1,9 @@
-"""Security middleware for XSS protection and secure headers."""
+"""Security middleware for XSS protection and secure headers.
+
+Deprecated:
+    This module is currently not wired into the runtime middleware stack.
+    Keep for compatibility only and avoid new imports from this module.
+"""
 
 import logging
 

@@ -23,7 +23,7 @@ async def check_admin_exists() -> bool:
     try:
         async with async_session_factory() as db:
             result = await db.execute(
-                select(User).where(User.is_superuser == True).limit(1)
+                select(User).where(User.is_superuser).limit(1)
             )
             admin_user = result.scalar_one_or_none()
             return admin_user is not None

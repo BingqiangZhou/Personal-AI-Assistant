@@ -137,9 +137,7 @@ class TranscriptionModelManager:
                 if key_lower == placeholder.lower() or placeholder.lower() in key_lower:
                     return True
             # Check for common placeholder patterns
-            if 'your-' in key_lower and ('key' in key_lower or 'api' in key_lower):
-                return True
-            return False
+            return bool('your-' in key_lower and ('key' in key_lower or 'api' in key_lower))
 
         # Helper to get and validate API key from a model
         async def get_valid_key_from_model(model) -> str | None:
@@ -243,8 +241,7 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
         existing_task = result.scalar_one_or_none()
 
         # 如果有 PENDING 状态的任务，重新发送到 Celery
-        if existing_task and existing_task.status == 'pending':  # Use string comparison
-            if not force:
+        if existing_task and existing_task.status == 'pending' and not force:  # Use string comparison
                 # Check if this task already owns the lock before re-dispatching
                 state_manager = await get_transcription_state_manager()
                 locked_task_id = await state_manager.is_episode_locked(episode_id)
@@ -279,8 +276,7 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
                 return existing_task
 
         # 如果有失败的任务且不是 force 模式，尝试重用它
-        if existing_task and existing_task.status in ['failed', 'cancelled']:  # Use string comparison
-            if not force:
+        if existing_task and existing_task.status in ['failed', 'cancelled'] and not force:  # Use string comparison
                 # 检查临时文件是否存在
                 import os
                 temp_episode_dir = os.path.join(self.temp_dir, f"episode_{episode_id}")
