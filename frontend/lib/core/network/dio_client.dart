@@ -17,9 +17,24 @@ import '../auth/auth_event.dart';
 import '../utils/app_logger.dart' as logger;
 
 enum TokenRefreshFailureReason {
-  invalid_session,
-  transient_failure,
-  unknown_failure,
+  invalidSession,
+  transientFailure,
+  unknownFailure,
+}
+
+typedef SavedServerBaseUrlLoader = Future<String?> Function();
+
+@immutable
+class DioClientInitOptions {
+  final bool applySavedBaseUrlOnInit;
+  final String? initialServerBaseUrl;
+  final SavedServerBaseUrlLoader? savedBaseUrlLoader;
+
+  const DioClientInitOptions({
+    this.applySavedBaseUrlOnInit = false,
+    this.initialServerBaseUrl,
+    this.savedBaseUrlLoader,
+  });
 }
 
 class TokenRefreshResult {
@@ -48,10 +63,11 @@ class TokenRefreshResult {
     : this._(success: false, reason: reason);
 
   bool get isInvalidSessionFailure =>
-      !success && reason == TokenRefreshFailureReason.invalid_session;
+      !success && reason == TokenRefreshFailureReason.invalidSession;
 }
 
 class DioClient {
+  final DioClientInitOptions _initOptions;
   late final Dio _dio;
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   static const String _etagInvalidateAfterWriteKey =
@@ -70,7 +86,8 @@ class DioClient {
   // ETag interceptor
   late final ETagInterceptor _etagInterceptor;
 
-  DioClient() {
+  DioClient({DioClientInitOptions initOptions = const DioClientInitOptions()})
+    : _initOptions = initOptions {
     // Initialize cache store
     _cacheStore = MemCacheStore();
 
@@ -91,11 +108,11 @@ class DioClient {
     // Initialize ETag interceptor
     _etagInterceptor = ETagInterceptor();
 
-    // Initialize with default/empty baseUrl first
-    // The actual baseUrl will be applied by _applySavedBaseUrl()
+    // Initialize with default/empty baseUrl first.
+    // The actual baseUrl is set by _initializeBaseUrl().
     _dio = Dio(
       BaseOptions(
-        baseUrl: '', // Will be set by _applySavedBaseUrl
+        baseUrl: '',
         headers: constants.ApiConstants.headers,
         connectTimeout: Duration(
           milliseconds: constants.ApiConstants.connectTimeout.inMilliseconds,
@@ -124,16 +141,21 @@ class DioClient {
       ),
     );
 
-    // Apply saved baseUrl synchronously before returning
-    _initializeBaseUrl();
+    // Apply base URL synchronously before returning.
+    _initializeBaseUrl(initialServerBaseUrl: _initOptions.initialServerBaseUrl);
+
+    if (_initOptions.applySavedBaseUrlOnInit) {
+      unawaited(initializeFromStorage());
+    }
   }
 
   /// Initialize baseUrl from saved storage or default config
   /// This must be called synchronously during construction
-  void _initializeBaseUrl() {
+  void _initializeBaseUrl({String? initialServerBaseUrl}) {
     // Try to get saved URL synchronously from AppConfig first
     // AppConfig.setServerBaseUrl() should have been called during app init
-    String savedBaseUrl = config.AppConfig.serverBaseUrl;
+    String savedBaseUrl =
+        initialServerBaseUrl ?? config.AppConfig.serverBaseUrl;
 
     // Normalize URL: remove trailing slashes
     if (savedBaseUrl.isNotEmpty) {
@@ -155,9 +177,6 @@ class DioClient {
     logger.AppLogger.debug(
       ' [DioClient] Initialized with baseUrl: $apiBaseUrl',
     );
-
-    // Apply any saved URL from storage asynchronously to ensure it's up to date
-    _applySavedBaseUrl();
   }
 
   Dio get dio => _dio;
@@ -173,10 +192,15 @@ class DioClient {
   String get currentBaseUrl => _dio.options.baseUrl;
 
   /// Apply saved baseUrl from local storage (called during initialization)
+  Future<void> initializeFromStorage() async {
+    await _applySavedBaseUrl();
+  }
+
   Future<void> _applySavedBaseUrl() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final savedUrl = prefs.getString(_serverBaseUrlKey);
+      final savedUrl = await (_initOptions.savedBaseUrlLoader != null
+          ? _initOptions.savedBaseUrlLoader!()
+          : _loadSavedBaseUrlFromSharedPrefs());
       if (savedUrl != null && savedUrl.isNotEmpty) {
         // Normalize URL (remove trailing slashes, /api/v1 suffix)
         var normalizedUrl = savedUrl.trim();
@@ -201,11 +225,16 @@ class DioClient {
     }
   }
 
+  Future<String?> _loadSavedBaseUrlFromSharedPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_serverBaseUrlKey);
+  }
+
   Future<void> _onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // 🔍 DEBUG: 输出完整的请求URL
+    // DEBUG: Log full request URL.
     final fullUrl = '${_dio.options.baseUrl}/${options.path}';
     logger.AppLogger.debug(' [API REQUEST] ${options.method} $fullUrl');
     if (options.data != null) {
@@ -262,7 +291,7 @@ class DioClient {
         );
       }
     }
-    // 🔍 Debug: 打印AI Summary相关响应
+    // Debug: log AI summary related responses.
     if (response.requestOptions.path.contains('/episodes/')) {
       final data = response.data;
       if (data is Map && data.containsKey('ai_summary')) {
@@ -304,11 +333,11 @@ class DioClient {
   }
 
   void _onError(DioException error, ErrorInterceptorHandler handler) async {
-    // 🔍 DEBUG: 输出错误请求的完整URL
+    // DEBUG: Log failed request URL.
     final errorUrl =
         '${error.requestOptions.baseUrl}/${error.requestOptions.path}';
     logger.AppLogger.debug(
-      '?[API ERROR] ${error.requestOptions.method} $errorUrl',
+      '[API ERROR] ${error.requestOptions.method} $errorUrl',
     );
     logger.AppLogger.debug('   Type: ${error.type}');
     logger.AppLogger.debug('   Message: ${error.message}');
@@ -389,7 +418,7 @@ class DioClient {
               } else {
                 final reason =
                     refreshResult.reason ??
-                    TokenRefreshFailureReason.unknown_failure;
+                    TokenRefreshFailureReason.unknownFailure;
                 final shouldClearTokens = shouldClearTokensForRefreshFailure(
                   reason,
                 );
@@ -421,7 +450,7 @@ class DioClient {
                     requestOptions: error.requestOptions,
                     response: error.response,
                     type: DioExceptionType.unknown,
-                    error: reason == TokenRefreshFailureReason.transient_failure
+                    error: reason == TokenRefreshFailureReason.transientFailure
                         ? const NetworkException(
                             'Session refresh temporarily unavailable. Please retry.',
                           )
@@ -551,7 +580,7 @@ class DioClient {
       if (refreshToken == null || refreshToken.isEmpty) {
         logger.AppLogger.debug('[AUTH] ?No refresh token found in storage');
         const result = TokenRefreshResult.failure(
-          TokenRefreshFailureReason.invalid_session,
+          TokenRefreshFailureReason.invalidSession,
         );
         currentCompleter.complete(result);
         return result;
@@ -612,7 +641,7 @@ class DioClient {
         '[AUTH] ?Token refresh failed: invalid response format',
       );
       const result = TokenRefreshResult.failure(
-        TokenRefreshFailureReason.unknown_failure,
+        TokenRefreshFailureReason.unknownFailure,
       );
       currentCompleter.complete(result);
       return result;
@@ -634,7 +663,7 @@ class DioClient {
       return TokenRefreshResult.failure(classifyRefreshFailure(error));
     }
     return const TokenRefreshResult.failure(
-      TokenRefreshFailureReason.unknown_failure,
+      TokenRefreshFailureReason.unknownFailure,
     );
   }
 
@@ -644,12 +673,12 @@ class DioClient {
     final responseData = error.response?.data;
 
     if (statusCode == 401) {
-      return TokenRefreshFailureReason.invalid_session;
+      return TokenRefreshFailureReason.invalidSession;
     }
 
     if (_looksLikeInvalidSessionResponse(responseData) &&
         (statusCode == 404 || statusCode == 400 || statusCode == 422)) {
-      return TokenRefreshFailureReason.invalid_session;
+      return TokenRefreshFailureReason.invalidSession;
     }
 
     final isTransientType =
@@ -659,10 +688,10 @@ class DioClient {
         error.type == DioExceptionType.connectionError;
 
     if (isTransientType || (statusCode != null && statusCode >= 500)) {
-      return TokenRefreshFailureReason.transient_failure;
+      return TokenRefreshFailureReason.transientFailure;
     }
 
-    return TokenRefreshFailureReason.unknown_failure;
+    return TokenRefreshFailureReason.unknownFailure;
   }
 
   static bool _looksLikeInvalidSessionResponse(dynamic responseData) {
@@ -683,7 +712,7 @@ class DioClient {
   static bool shouldClearTokensForRefreshFailure(
     TokenRefreshFailureReason reason,
   ) {
-    return reason == TokenRefreshFailureReason.invalid_session;
+    return reason == TokenRefreshFailureReason.invalidSession;
   }
 
   Future<Response> _retryRequest(RequestOptions options, String token) async {
@@ -830,7 +859,9 @@ class DioClient {
   }
 
   // Static factory method for ServiceLocator
-  static Dio createDio() {
-    return DioClient()._dio;
+  static Dio createDio({
+    DioClientInitOptions initOptions = const DioClientInitOptions(),
+  }) {
+    return DioClient(initOptions: initOptions)._dio;
   }
 }

@@ -12,6 +12,7 @@ import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_colors.dart';
 import '../theme/theme_provider.dart';
+import '../utils/app_logger.dart' as logger;
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/settings/presentation/providers/app_update_provider.dart';
 import '../../features/settings/presentation/widgets/update_dialog.dart';
@@ -140,9 +141,9 @@ class _PersonalAIAssistantAppState
       // - On desktop: Stop playback, dispose player
       await main_app.audioHandler.stopService();
 
-      debugPrint('✅ Audio handler stopped and cleaned up');
+      logger.AppLogger.debug('[AppInit] Audio handler stopped and cleaned up');
     } catch (e) {
-      debugPrint('⚠️ Error cleaning up audio handler: $e');
+      logger.AppLogger.debug('[AppInit] Error cleaning up audio handler: $e');
     }
   }
 
@@ -164,22 +165,26 @@ class _PersonalAIAssistantAppState
           .timeout(
             const Duration(seconds: 5),
             onTimeout: () {
-              debugPrint('⚠️ [AppInit] Auth check timed out after 5 seconds');
+              logger.AppLogger.debug(
+                '[AppInit] Auth check timed out after 5 seconds',
+              );
               // Mark as incomplete - the background task will complete eventually
               // but we won't wait for it
               throw TimeoutException('Auth check timed out');
             },
           );
     } on TimeoutException catch (_) {
-      debugPrint('⚠️ [AppInit] Auth check timed out - continuing anyway');
+      logger.AppLogger.debug(
+        '[AppInit] Auth check timed out - continuing anyway',
+      );
       // CRITICAL: Reset loading state to prevent infinite loading
       // The timeout happens externally, so auth provider's state doesn't get updated
       ref.read(authProvider.notifier).resetLoadingState();
       // The router will redirect to login since isAuthenticated defaults to false
       // Background auth check may complete later but won't affect UI
     } catch (e) {
-      debugPrint(
-        '⚠️ [AppInit] Auth check failed: $e, continuing initialization',
+      logger.AppLogger.debug(
+        '[AppInit] Auth check failed: $e, continuing initialization',
       );
       // CRITICAL: Reset loading state on error
       ref.read(authProvider.notifier).resetLoadingState();
@@ -229,7 +234,7 @@ class _PersonalAIAssistantAppState
       }
     } catch (e) {
       // Silently fail on auto-check errors
-      debugPrint('Auto-check for updates failed: $e');
+      logger.AppLogger.debug('Auto-check for updates failed: $e');
     }
   }
 

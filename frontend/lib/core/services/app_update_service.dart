@@ -5,9 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/constants/app_constants.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
+import 'package:personal_ai_assistant/core/utils/app_logger.dart' as logger;
 
-/// App Update Service / 应用更新服务
-///
+/// App Update Service
 /// Checks for app updates from GitHub releases.
 /// Handles caching, error recovery, and platform-specific downloads.
 /// Supports native background download on Android.
@@ -18,8 +18,9 @@ class AppUpdateService {
     }
   }
 
-  static const MethodChannel _channel =
-      MethodChannel('com.example.personal_ai_assistant/app_update');
+  static const MethodChannel _channel = MethodChannel(
+    'com.example.personal_ai_assistant/app_update',
+  );
 
   /// Get current app version
   ///
@@ -27,14 +28,20 @@ class AppUpdateService {
   static Future<String> getCurrentVersion() async {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
-      debugPrint('📱 [APP VERSION] Package info loaded:');
-      debugPrint('📱 [APP VERSION] ├─ Version: ${packageInfo.version}');
-      debugPrint('📱 [APP VERSION] ├─ Build number: ${packageInfo.buildNumber}');
-      debugPrint('📱 [APP VERSION] ├─ App name: ${packageInfo.appName}');
-      debugPrint('📱 [APP VERSION] └─ Package name: ${packageInfo.packageName}');
+      logger.AppLogger.debug('[APP VERSION] Package info loaded:');
+      logger.AppLogger.debug('[APP VERSION] - Version: ${packageInfo.version}');
+      logger.AppLogger.debug(
+        '[APP VERSION] - Build number: ${packageInfo.buildNumber}',
+      );
+      logger.AppLogger.debug(
+        '[APP VERSION] - App name: ${packageInfo.appName}',
+      );
+      logger.AppLogger.debug(
+        '[APP VERSION] - Package name: ${packageInfo.packageName}',
+      );
       return packageInfo.version;
     } catch (e) {
-      debugPrint('❌ [APP VERSION] Error getting package info: $e');
+      logger.AppLogger.debug('[APP VERSION] Error getting package info: $e');
       // Fallback to a default version if package_info fails
       return '0.0.0';
     }
@@ -79,117 +86,152 @@ class AppUpdateService {
     try {
       // Get current version once (async)
       final currentVersion = await getCurrentVersion();
-      debugPrint('🔄 [UPDATE CHECK] Current version: $currentVersion');
-      debugPrint('🔄 [UPDATE CHECK] Platform: ${getCurrentPlatform()}');
-      debugPrint('🔄 [UPDATE CHECK] Force refresh: $forceRefresh');
+      logger.AppLogger.debug('[UPDATE CHECK] Current version: $currentVersion');
+      logger.AppLogger.debug(
+        '[UPDATE CHECK] Platform: ${getCurrentPlatform()}',
+      );
+      logger.AppLogger.debug('[UPDATE CHECK] Force refresh: $forceRefresh');
 
       // Check cache first (unless force refresh)
       if (!forceRefresh) {
         final isValid = await GitHubReleaseCache.isCacheValid();
-        debugPrint('🔄 [UPDATE CHECK] Cache valid: $isValid');
+        logger.AppLogger.debug('[UPDATE CHECK] Cache valid: $isValid');
         if (isValid) {
           final cached = await GitHubReleaseCache.get();
           if (cached != null) {
-            debugPrint('🔄 [UPDATE CHECK] Cached version: ${cached.version}');
+            logger.AppLogger.debug(
+              '[UPDATE CHECK] Cached version: ${cached.version}',
+            );
             if (cached.isNewerThan(currentVersion)) {
-              debugPrint('🔄 [UPDATE CHECK] ✅ Cached version is newer!');
+              logger.AppLogger.debug('[UPDATE CHECK] Cached version is newer!');
               // Also check if this version was skipped
-              final skippedVersion = await GitHubReleaseCache.getSkippedVersion();
+              final skippedVersion =
+                  await GitHubReleaseCache.getSkippedVersion();
               if (skippedVersion != null && skippedVersion == cached.version) {
-                debugPrint('🔄 [UPDATE CHECK] ⏭️ Version was skipped by user');
+                logger.AppLogger.debug(
+                  '[UPDATE CHECK] Skipped: Version was skipped by user',
+                );
                 // User skipped this version, don't notify again
                 return null;
               }
               return cached;
             } else {
-              debugPrint('🔄 [UPDATE CHECK] ✅ Cached version is not newer');
+              logger.AppLogger.debug(
+                '[UPDATE CHECK] Cached version is not newer',
+              );
             }
           }
         }
       }
 
       // Fetch from GitHub API
-      debugPrint('🔄 [UPDATE CHECK] Fetching from GitHub API...');
-      debugPrint('🔄 [UPDATE CHECK] URL: ${AppUpdateConstants.githubLatestReleaseUrl}');
+      logger.AppLogger.debug('[UPDATE CHECK] Fetching from GitHub API...');
+      logger.AppLogger.debug(
+        '[UPDATE CHECK] URL: ${AppUpdateConstants.githubLatestReleaseUrl}',
+      );
 
-      final dio = Dio(BaseOptions(
-        connectTimeout: AppUpdateConstants.updateCheckTimeout,
-        receiveTimeout: AppUpdateConstants.updateCheckTimeout,
-      ));
-
-      final response = await dio.get(
-        AppUpdateConstants.githubLatestReleaseUrl,
-        options: Options(
-          headers: {
-            'Accept': 'application/vnd.github.v3+json',
-          },
+      final dio = Dio(
+        BaseOptions(
+          connectTimeout: AppUpdateConstants.updateCheckTimeout,
+          receiveTimeout: AppUpdateConstants.updateCheckTimeout,
         ),
       );
 
+      final response = await dio.get(
+        AppUpdateConstants.githubLatestReleaseUrl,
+        options: Options(headers: {'Accept': 'application/vnd.github.v3+json'}),
+      );
+
       if (response.statusCode == 200 && response.data != null) {
-        final release = GitHubRelease.fromJson(response.data as Map<String, dynamic>);
+        final release = GitHubRelease.fromJson(
+          response.data as Map<String, dynamic>,
+        );
 
         // Print GitHub release info
-        debugPrint('🔄 [UPDATE CHECK] ┌─────────────────────────────────────');
-        debugPrint('🔄 [UPDATE CHECK] 📦 GitHub Release Info:');
-        debugPrint('🔄 [UPDATE CHECK] ├─ Tag: ${release.tagName}');
-        debugPrint('🔄 [UPDATE CHECK] ├─ Version: ${release.version}');
-        debugPrint('🔄 [UPDATE CHECK] ├─ Name: ${release.name}');
-        debugPrint('🔄 [UPDATE CHECK] ├─ Pre-release: ${release.prerelease}');
-        debugPrint('🔄 [UPDATE CHECK] ├─ Draft: ${release.draft}');
-        debugPrint('🔄 [UPDATE CHECK] ├─ Published: ${release.publishedAt}');
-        debugPrint('🔄 [UPDATE CHECK] ├─ Assets count: ${release.assets.length}');
+        logger.AppLogger.debug(
+          '[UPDATE CHECK] ----------------------------------------',
+        );
+        logger.AppLogger.debug('[UPDATE CHECK] GitHub Release Info:');
+        logger.AppLogger.debug('[UPDATE CHECK] - Tag: ${release.tagName}');
+        logger.AppLogger.debug('[UPDATE CHECK] - Version: ${release.version}');
+        logger.AppLogger.debug('[UPDATE CHECK] - Name: ${release.name}');
+        logger.AppLogger.debug(
+          '[UPDATE CHECK] - Pre-release: ${release.prerelease}',
+        );
+        logger.AppLogger.debug('[UPDATE CHECK] - Draft: ${release.draft}');
+        logger.AppLogger.debug(
+          '[UPDATE CHECK] - Published: ${release.publishedAt}',
+        );
+        logger.AppLogger.debug(
+          '[UPDATE CHECK] - Assets count: ${release.assets.length}',
+        );
         if (release.assets.isNotEmpty) {
-          debugPrint('🔄 [UPDATE CHECK] ├─ First asset: ${release.assets.first.name}');
-          debugPrint('🔄 [UPDATE CHECK] ├─ Download URL: ${release.assets.first.downloadUrl}');
+          logger.AppLogger.debug(
+            '[UPDATE CHECK] - First asset: ${release.assets.first.name}',
+          );
+          logger.AppLogger.debug(
+            '[UPDATE CHECK] - Download URL: ${release.assets.first.downloadUrl}',
+          );
         }
-        debugPrint('🔄 [UPDATE CHECK] └─────────────────────────────────────');
+        logger.AppLogger.debug(
+          '[UPDATE CHECK] ----------------------------------------',
+        );
 
         // Filter out prereleases if not requested
         if (!includePrerelease && release.prerelease) {
-          debugPrint('🔄 [UPDATE CHECK] ⚠️ Pre-release skipped (includePrerelease=$includePrerelease)');
+          logger.AppLogger.debug(
+            '[UPDATE CHECK] Pre-release skipped (includePrerelease=$includePrerelease)',
+          );
           return null;
         }
 
         // Cache the result
         await GitHubReleaseCache.save(release);
-        debugPrint('🔄 [UPDATE CHECK] 💾 Cached to local storage');
+        logger.AppLogger.debug('[UPDATE CHECK] Cached to local storage');
 
         // Check if newer than current version
-        debugPrint('🔄 [UPDATE CHECK] 🔍 Comparing versions:');
-        debugPrint('🔄 [UPDATE CHECK]    Current:  $currentVersion');
-        debugPrint('🔄 [UPDATE CHECK]    Latest:   ${release.version}');
-        debugPrint('🔄 [UPDATE CHECK]    Is Newer: ${release.isNewerThan(currentVersion)}');
+        logger.AppLogger.debug('[UPDATE CHECK] Comparing versions:');
+        logger.AppLogger.debug('[UPDATE CHECK]    Current:  $currentVersion');
+        logger.AppLogger.debug(
+          '[UPDATE CHECK]    Latest:   ${release.version}',
+        );
+        logger.AppLogger.debug(
+          '[UPDATE CHECK]    Is Newer: ${release.isNewerThan(currentVersion)}',
+        );
 
         if (release.isNewerThan(currentVersion)) {
-          debugPrint('🔄 [UPDATE CHECK] 🎉 NEW VERSION AVAILABLE!');
+          logger.AppLogger.debug('[UPDATE CHECK] NEW VERSION AVAILABLE!');
           // Also check if this version was skipped
           final skippedVersion = await GitHubReleaseCache.getSkippedVersion();
           if (skippedVersion != null && skippedVersion == release.version) {
-            debugPrint('🔄 [UPDATE CHECK] ⏭️ Version was skipped by user');
+            logger.AppLogger.debug(
+              '[UPDATE CHECK] Skipped: Version was skipped by user',
+            );
             return null;
           }
           return release;
         } else {
-          debugPrint('🔄 [UPDATE CHECK] ✅ App is up to date!');
+          logger.AppLogger.debug('[UPDATE CHECK] App is up to date!');
         }
       }
 
       return null;
     } on DioException catch (e) {
-      debugPrint('❌ [UPDATE CHECK] Network error: ${e.message}');
-      debugPrint('❌ [UPDATE CHECK] Error type: ${e.type}');
-      debugPrint('❌ [UPDATE CHECK] Response: ${e.response}');
+      logger.AppLogger.debug('[UPDATE CHECK] Network error: ${e.message}');
+      logger.AppLogger.debug('[UPDATE CHECK] Error type: ${e.type}');
+      logger.AppLogger.debug('[UPDATE CHECK] Response: ${e.response}');
       // If network error, return cached result if available
       final cached = await GitHubReleaseCache.get();
       final currentVersion = await getCurrentVersion();
       if (cached != null && cached.isNewerThan(currentVersion)) {
-        debugPrint('❌ [UPDATE CHECK] 📦 Using cached version due to network error');
+        logger.AppLogger.debug(
+          '[UPDATE CHECK] Using cached version due to network error',
+        );
         return cached;
       }
       return null;
     } catch (e) {
-      debugPrint('❌ [UPDATE CHECK] Unexpected error: $e');
+      logger.AppLogger.debug('[UPDATE CHECK] Unexpected error: $e');
       return null;
     }
   }
@@ -218,9 +260,13 @@ class AppUpdateService {
       final name = asset.name.toLowerCase();
       if (name.contains('windows') || name.contains('exe')) {
         platforms.add('windows');
-      } else if (name.contains('macos') || name.contains('darwin') || name.contains('dmg')) {
+      } else if (name.contains('macos') ||
+          name.contains('darwin') ||
+          name.contains('dmg')) {
         platforms.add('macos');
-      } else if (name.contains('linux') || name.contains('appimage') || name.contains('deb')) {
+      } else if (name.contains('linux') ||
+          name.contains('appimage') ||
+          name.contains('deb')) {
         platforms.add('linux');
       } else if (name.contains('android') || name.contains('apk')) {
         platforms.add('android');
@@ -237,7 +283,9 @@ class AppUpdateService {
   /// Setup MethodChannel for native communication
   void _setupMethodChannel() {
     _channel.setMethodCallHandler((call) async {
-      debugPrint('AppUpdateService: Received method call ${call.method}');
+      logger.AppLogger.debug(
+        'AppUpdateService: Received method call ${call.method}',
+      );
       // Handle callbacks from native if needed
       // For now, the native service handles everything autonomously
     });
@@ -254,17 +302,19 @@ class AppUpdateService {
     String? fileName,
   }) async {
     if (!Platform.isAndroid) {
-      debugPrint('⚠️ [DOWNLOAD] Background download is only supported on Android');
+      logger.AppLogger.debug(
+        '[DOWNLOAD] Background download is only supported on Android',
+      );
       return false;
     }
 
     final finalFileName = fileName ?? _generateFileName(downloadUrl);
 
     try {
-      debugPrint('📥 [DOWNLOAD] Starting background download...');
-      debugPrint('📥 [DOWNLOAD] ├─ URL: $downloadUrl');
-      debugPrint('📥 [DOWNLOAD] ├─ File: $finalFileName');
-      debugPrint('📥 [DOWNLOAD] └─ Platform: Android');
+      logger.AppLogger.debug('[DOWNLOAD] Starting background download...');
+      logger.AppLogger.debug('[DOWNLOAD] - URL: $downloadUrl');
+      logger.AppLogger.debug('[DOWNLOAD] - File: $finalFileName');
+      logger.AppLogger.debug('[DOWNLOAD] - Platform: Android');
 
       final result = await _channel.invokeMethod('startDownload', {
         'downloadUrl': downloadUrl,
@@ -272,20 +322,24 @@ class AppUpdateService {
       });
 
       if (result == true) {
-        debugPrint('✅ [DOWNLOAD] Download service started successfully');
-        debugPrint('✅ [DOWNLOAD] Check notification bar for progress');
+        logger.AppLogger.debug(
+          '[DOWNLOAD] Download service started successfully',
+        );
+        logger.AppLogger.debug(
+          '[DOWNLOAD] Check notification bar for progress',
+        );
       } else {
-        debugPrint('❌ [DOWNLOAD] Download service returned false');
+        logger.AppLogger.debug('[DOWNLOAD] Download service returned false');
       }
 
       return result == true;
     } on PlatformException catch (e) {
-      debugPrint('❌ [DOWNLOAD] Platform exception: ${e.message}');
-      debugPrint('❌ [DOWNLOAD] Error code: ${e.code}');
-      debugPrint('❌ [DOWNLOAD] Error details: ${e.details}');
+      logger.AppLogger.debug('[DOWNLOAD] Platform exception: ${e.message}');
+      logger.AppLogger.debug('[DOWNLOAD] Error code: ${e.code}');
+      logger.AppLogger.debug('[DOWNLOAD] Error details: ${e.details}');
       return false;
     } catch (e) {
-      debugPrint('❌ [DOWNLOAD] Unexpected error: $e');
+      logger.AppLogger.debug('[DOWNLOAD] Unexpected error: $e');
       return false;
     }
   }

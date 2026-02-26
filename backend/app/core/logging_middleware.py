@@ -1,4 +1,4 @@
-﻿"""
+"""
 Request logging middleware.
 """
 

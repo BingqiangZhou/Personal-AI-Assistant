@@ -30,7 +30,7 @@ void main() {
           _defaultTopFloatingNoticeGap;
       final noticeRect = tester.getRect(noticeFinder);
       expect(noticeRect.top, closeTo(expectedTop, 0.01));
-      expect(noticeRect.top, greaterThan(kToolbarHeight));
+      expect(noticeRect.top, greaterThanOrEqualTo(kToolbarHeight));
       expect(noticeRect.top, lessThan(220));
       expect(noticeRect.center.dy, lessThan(400));
 
@@ -253,19 +253,85 @@ void main() {
       );
       await tester.pump(const Duration(seconds: 4));
     });
+
+    testWidgets('positions notice exactly at app bar when no top inset', (
+      tester,
+    ) async {
+      await _pumpHost(tester, viewPadding: EdgeInsets.zero);
+
+      await tester.tap(find.byKey(const Key('show_notice_default')));
+      await tester.pump();
+
+      final noticeTop = tester
+          .getRect(find.byKey(const Key('top_floating_notice')))
+          .top;
+      expect(noticeTop, closeTo(kToolbarHeight, 0.01));
+      await tester.pump(const Duration(seconds: 4));
+    });
+
+    testWidgets('positions notice below status bar inset on notch devices', (
+      tester,
+    ) async {
+      const topInset = 32.0;
+      late BuildContext hostContext;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          home: Builder(
+            builder: (context) {
+              final mediaQuery = MediaQuery.of(context);
+              return MediaQuery(
+                data: mediaQuery.copyWith(
+                  viewPadding: const EdgeInsets.only(top: topInset),
+                  padding: const EdgeInsets.only(top: topInset),
+                ),
+                child: Builder(
+                  builder: (context) {
+                    hostContext = context;
+                    return const _TopNoticeHost();
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      );
+
+      showTopFloatingNotice(hostContext, message: 'Quick Notice');
+      await tester.pump();
+
+      final noticeTop = tester
+          .getRect(find.byKey(const Key('top_floating_notice')))
+          .top;
+      expect(noticeTop, closeTo(topInset + kToolbarHeight, 0.01));
+      await tester.pump(const Duration(seconds: 4));
+    });
   });
 }
 
 Future<void> _pumpHost(
   WidgetTester tester, {
   ThemeMode themeMode = ThemeMode.light,
+  EdgeInsets viewPadding = EdgeInsets.zero,
 }) {
   return tester.pumpWidget(
     MaterialApp(
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
-      home: const _TopNoticeHost(),
+      home: Builder(
+        builder: (context) {
+          final mediaQuery = MediaQuery.of(context);
+          return MediaQuery(
+            data: mediaQuery.copyWith(
+              viewPadding: viewPadding,
+              padding: viewPadding,
+            ),
+            child: const _TopNoticeHost(),
+          );
+        },
+      ),
     ),
   );
 }

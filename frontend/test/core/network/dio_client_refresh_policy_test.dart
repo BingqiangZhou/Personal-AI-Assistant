@@ -31,7 +31,7 @@ void main() {
       );
 
       final reason = DioClient.classifyRefreshFailure(error);
-      expect(reason, TokenRefreshFailureReason.invalid_session);
+      expect(reason, TokenRefreshFailureReason.invalidSession);
       expect(DioClient.shouldClearTokensForRefreshFailure(reason), isTrue);
     });
 
@@ -43,7 +43,7 @@ void main() {
       );
 
       final reason = DioClient.classifyRefreshFailure(error);
-      expect(reason, TokenRefreshFailureReason.invalid_session);
+      expect(reason, TokenRefreshFailureReason.invalidSession);
       expect(DioClient.shouldClearTokensForRefreshFailure(reason), isTrue);
     });
 
@@ -51,7 +51,7 @@ void main() {
       final error = _buildDioError(type: DioExceptionType.connectionTimeout);
 
       final reason = DioClient.classifyRefreshFailure(error);
-      expect(reason, TokenRefreshFailureReason.transient_failure);
+      expect(reason, TokenRefreshFailureReason.transientFailure);
       expect(DioClient.shouldClearTokensForRefreshFailure(reason), isFalse);
     });
 
@@ -63,7 +63,7 @@ void main() {
       );
 
       final reason = DioClient.classifyRefreshFailure(error);
-      expect(reason, TokenRefreshFailureReason.transient_failure);
+      expect(reason, TokenRefreshFailureReason.transientFailure);
       expect(DioClient.shouldClearTokensForRefreshFailure(reason), isFalse);
     });
 
@@ -75,7 +75,7 @@ void main() {
       );
 
       final reason = DioClient.classifyRefreshFailure(error);
-      expect(reason, TokenRefreshFailureReason.unknown_failure);
+      expect(reason, TokenRefreshFailureReason.unknownFailure);
       expect(DioClient.shouldClearTokensForRefreshFailure(reason), isFalse);
     });
   });

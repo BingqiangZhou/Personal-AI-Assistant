@@ -19,120 +19,13 @@ import 'podcast_core_providers.dart';
 import 'playback_progress_policy.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
+part 'podcast_playback_helpers.dart';
+part 'podcast_playback_queue_controller.dart';
+
 final audioPlayerProvider =
     NotifierProvider<AudioPlayerNotifier, AudioPlayerState>(
       AudioPlayerNotifier.new,
     );
-
-String? _extractSubscriptionTitle(Map<String, dynamic>? subscription) {
-  if (subscription == null) {
-    return null;
-  }
-
-  final dynamic title = subscription['title'] ?? subscription['name'];
-  if (title is String && title.trim().isNotEmpty) {
-    return title;
-  }
-  return null;
-}
-
-@visibleForTesting
-bool isDiscoverPreviewEpisode(PodcastEpisodeModel episode) {
-  final metadata = episode.metadata;
-  if (metadata == null) {
-    return false;
-  }
-
-  final raw = metadata['discover_preview'];
-  if (raw is bool) {
-    return raw;
-  }
-  if (raw is String) {
-    return raw.toLowerCase() == 'true';
-  }
-  if (raw is num) {
-    return raw != 0;
-  }
-  return false;
-}
-
-@visibleForTesting
-bool shouldSyncPlaybackToServer(PodcastEpisodeModel episode) {
-  return !isDiscoverPreviewEpisode(episode);
-}
-
-@visibleForTesting
-PodcastEpisodeModel mergeEpisodeForPlayback(
-  PodcastEpisodeModel incoming,
-  PodcastEpisodeDetailResponse latest,
-) {
-  final latestEpisode = latest.toEpisodeModel();
-  final backendSubscriptionTitle = _extractSubscriptionTitle(
-    latest.subscription,
-  );
-  final resolvedPlaybackRate = latestEpisode.playbackRate > 0
-      ? latestEpisode.playbackRate
-      : incoming.playbackRate;
-
-  return latestEpisode.copyWith(
-    subscriptionTitle: backendSubscriptionTitle ?? incoming.subscriptionTitle,
-    subscriptionImageUrl:
-        latestEpisode.subscriptionImageUrl ?? incoming.subscriptionImageUrl,
-    description: latestEpisode.description ?? incoming.description,
-    imageUrl: latestEpisode.imageUrl ?? incoming.imageUrl,
-    itemLink: latestEpisode.itemLink ?? incoming.itemLink,
-    transcriptUrl: latestEpisode.transcriptUrl ?? incoming.transcriptUrl,
-    transcriptContent:
-        latestEpisode.transcriptContent ?? incoming.transcriptContent,
-    aiSummary: latestEpisode.aiSummary ?? incoming.aiSummary,
-    summaryVersion: latestEpisode.summaryVersion ?? incoming.summaryVersion,
-    aiConfidenceScore:
-        latestEpisode.aiConfidenceScore ?? incoming.aiConfidenceScore,
-    metadata: latestEpisode.metadata ?? incoming.metadata,
-    playCount: latestEpisode.playCount > 0
-        ? latestEpisode.playCount
-        : incoming.playCount,
-    lastPlayedAt: latestEpisode.lastPlayedAt ?? incoming.lastPlayedAt,
-    playbackPosition:
-        latestEpisode.playbackPosition ?? incoming.playbackPosition,
-    audioDuration: latestEpisode.audioDuration ?? incoming.audioDuration,
-    audioFileSize: latestEpisode.audioFileSize ?? incoming.audioFileSize,
-    audioUrl: latestEpisode.audioUrl.isNotEmpty
-        ? latestEpisode.audioUrl
-        : incoming.audioUrl,
-    playbackRate: resolvedPlaybackRate,
-    isPlayed: latestEpisode.isPlayed || incoming.isPlayed,
-  );
-}
-
-@visibleForTesting
-Future<PodcastEpisodeModel> resolveEpisodeForPlayback(
-  PodcastEpisodeModel incoming,
-  Future<PodcastEpisodeDetailResponse> Function() fetchLatest,
-) async {
-  try {
-    final latest = await fetchLatest();
-    return mergeEpisodeForPlayback(incoming, latest);
-  } catch (_) {
-    return incoming;
-  }
-}
-
-class _LastPlaybackSnapshot {
-  final PodcastEpisodeModel episode;
-  final int positionMs;
-  final int durationMs;
-  final double playbackRate;
-  final DateTime? savedAt;
-
-  const _LastPlaybackSnapshot({
-    required this.episode,
-    required this.positionMs,
-    required this.durationMs,
-    required this.playbackRate,
-    this.savedAt,
-  });
-}
 
 class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   late PodcastRepository _repository;
@@ -543,7 +436,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
             }
             await _audioHandler.setSpeed(state.playbackRate);
           } catch (e) {
-            debugPrint('[PlaybackRestore] Failed to preload audio source: $e');
+            logger.AppLogger.debug(
+              '[PlaybackRestore] Failed to preload audio source: $e',
+            );
           }
         }
         unawaited(_restoreLastPlayedEpisodeFromServer(expectedEpisodeId));
@@ -1180,7 +1075,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
     state = state.copyWith(
       sleepTimerAfterEpisode: true,
-      sleepTimerRemainingLabel: '本集',
+      sleepTimerRemainingLabel: 'After current episode',
       clearSleepTimer: false,
     );
     // Explicitly clear the endTime by using copyWith then overriding
@@ -1200,7 +1095,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       error: state.error,
       sleepTimerEndTime: null,
       sleepTimerAfterEpisode: true,
-      sleepTimerRemainingLabel: '本集',
+      sleepTimerRemainingLabel: 'After current episode',
     );
 
     logger.AppLogger.debug(
@@ -1340,246 +1235,6 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       }
 
       // Don't update the UI state for server errors - continue playback
-    }
-  }
-}
-
-final podcastQueueControllerProvider =
-    AsyncNotifierProvider<PodcastQueueController, PodcastQueueModel>(
-      PodcastQueueController.new,
-    );
-
-class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
-  late PodcastRepository _repository;
-  Future<PodcastQueueModel>? _inFlightQueueLoad;
-  final Map<int, Future<PodcastQueueModel>> _inFlightAddToQueueByEpisodeId =
-      <int, Future<PodcastQueueModel>>{};
-  DateTime? _lastQueueRefreshAt;
-  int _latestAppliedQueueRevision = -1;
-  int _queueSyncInFlight = 0;
-  static const Duration _queueRefreshThrottle = Duration(seconds: 20);
-
-  @override
-  FutureOr<PodcastQueueModel> build() async {
-    _repository = ref.read(podcastRepositoryProvider);
-    try {
-      return await _loadQueueInternal(
-        forceRefresh: false,
-        trackSyncing: false,
-        setErrorStateOnFailure: false,
-      );
-    } catch (_) {
-      return PodcastQueueModel.empty();
-    }
-  }
-
-  bool _hasFreshQueueState() {
-    if (_lastQueueRefreshAt == null) {
-      return false;
-    }
-    return DateTime.now().difference(_lastQueueRefreshAt!) <
-        _queueRefreshThrottle;
-  }
-
-  void _beginQueueSync() {
-    _queueSyncInFlight += 1;
-    if (_queueSyncInFlight == 1) {
-      ref.read(audioPlayerProvider.notifier).setQueueSyncing(true);
-    }
-  }
-
-  void _endQueueSync() {
-    if (_queueSyncInFlight <= 0) {
-      return;
-    }
-    _queueSyncInFlight -= 1;
-    if (_queueSyncInFlight == 0) {
-      ref.read(audioPlayerProvider.notifier).setQueueSyncing(false);
-    }
-  }
-
-  PodcastQueueModel _applyQueue(PodcastQueueModel queue) {
-    if (_latestAppliedQueueRevision >= 0 &&
-        queue.revision <= _latestAppliedQueueRevision) {
-      return state.value ?? queue;
-    }
-
-    state = AsyncValue.data(queue);
-    _lastQueueRefreshAt = DateTime.now();
-    _latestAppliedQueueRevision = queue.revision;
-    ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
-    return queue;
-  }
-
-  Future<PodcastQueueModel> _loadQueueInternal({
-    required bool forceRefresh,
-    bool trackSyncing = true,
-    bool setErrorStateOnFailure = true,
-  }) {
-    final inFlight = _inFlightQueueLoad;
-    if (inFlight != null) {
-      return inFlight;
-    }
-
-    final cachedQueue = state.value;
-    if (!forceRefresh && cachedQueue != null && _hasFreshQueueState()) {
-      return Future.value(cachedQueue);
-    }
-
-    if (trackSyncing) {
-      _beginQueueSync();
-    }
-
-    final loadFuture = () async {
-      try {
-        final queue = await _repository.getQueue();
-        return _applyQueue(queue);
-      } catch (error, stackTrace) {
-        if (setErrorStateOnFailure || state.value == null) {
-          state = AsyncValue.error(error, stackTrace);
-        }
-        rethrow;
-      } finally {
-        _inFlightQueueLoad = null;
-        if (trackSyncing) {
-          _endQueueSync();
-        }
-      }
-    }();
-
-    _inFlightQueueLoad = loadFuture;
-    return loadFuture;
-  }
-
-  Future<PodcastQueueModel> loadQueue({bool forceRefresh = true}) async {
-    return _loadQueueInternal(
-      forceRefresh: forceRefresh,
-      trackSyncing: true,
-      setErrorStateOnFailure: true,
-    );
-  }
-
-  Future<void> refreshQueueInBackground() async {
-    try {
-      await _loadQueueInternal(
-        forceRefresh: false,
-        trackSyncing: false,
-        setErrorStateOnFailure: false,
-      );
-    } catch (_) {
-      // Keep existing queue UI state when background refresh fails.
-    }
-  }
-
-  Future<PodcastQueueModel> addToQueue(int episodeId) async {
-    final inFlight = _inFlightAddToQueueByEpisodeId[episodeId];
-    if (inFlight != null) {
-      return inFlight;
-    }
-
-    _beginQueueSync();
-    final addFuture = () async {
-      try {
-        final queue = await _repository.addQueueItem(episodeId);
-        return _applyQueue(queue);
-      } catch (error, stackTrace) {
-        state = AsyncValue.error(error, stackTrace);
-        rethrow;
-      } finally {
-        _endQueueSync();
-      }
-    }();
-
-    _inFlightAddToQueueByEpisodeId[episodeId] = addFuture;
-    try {
-      return await addFuture;
-    } finally {
-      if (identical(_inFlightAddToQueueByEpisodeId[episodeId], addFuture)) {
-        _inFlightAddToQueueByEpisodeId.remove(episodeId);
-      }
-    }
-  }
-
-  Future<PodcastQueueModel> removeFromQueue(int episodeId) async {
-    _beginQueueSync();
-    try {
-      final queue = await _repository.removeQueueItem(episodeId);
-      return _applyQueue(queue);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
-    } finally {
-      _endQueueSync();
-    }
-  }
-
-  Future<PodcastQueueModel> reorderQueue(List<int> episodeIds) async {
-    _beginQueueSync();
-    try {
-      final queue = await _repository.reorderQueueItems(episodeIds);
-      return _applyQueue(queue);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
-    } finally {
-      _endQueueSync();
-    }
-  }
-
-  Future<PodcastQueueModel> setCurrentEpisode(int episodeId) async {
-    _beginQueueSync();
-    try {
-      final queue = await _repository.setQueueCurrent(episodeId);
-      return _applyQueue(queue);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
-    } finally {
-      _endQueueSync();
-    }
-  }
-
-  Future<PodcastQueueModel> activateEpisode(int episodeId) async {
-    _beginQueueSync();
-    try {
-      final queue = await _repository.activateQueueEpisode(episodeId);
-      return _applyQueue(queue);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
-    } finally {
-      _endQueueSync();
-    }
-  }
-
-  Future<PodcastQueueModel> playFromQueue(int episodeId) async {
-    try {
-      final queue = await activateEpisode(episodeId);
-
-      final current = queue.currentItem;
-      if (current != null) {
-        await ref
-            .read(audioPlayerProvider.notifier)
-            .playEpisode(
-              current.toEpisodeModel(),
-              source: PlaySource.queue,
-              queueEpisodeId: current.episodeId,
-            );
-      }
-      return queue;
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
-    }
-  }
-
-  Future<PodcastQueueModel> onQueueTrackCompleted() async {
-    _beginQueueSync();
-    try {
-      final queue = await _repository.completeQueueCurrent();
-      return _applyQueue(queue);
-    } finally {
-      _endQueueSync();
     }
   }
 }

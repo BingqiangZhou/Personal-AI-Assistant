@@ -1,4 +1,4 @@
-﻿"""Podcast architecture end-to-end simulation checks (mocked, no external deps)."""
+"""Podcast architecture end-to-end simulation checks (mocked, no external deps)."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 

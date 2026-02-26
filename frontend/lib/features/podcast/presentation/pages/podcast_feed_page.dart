@@ -12,7 +12,6 @@ import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
 import '../widgets/podcast_image_widget.dart';
 
-/// Material Design 3鑷€傚簲Feed椤甸潰
 class PodcastFeedPage extends ConsumerStatefulWidget {
   const PodcastFeedPage({super.key});
 
@@ -72,7 +71,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 椤甸潰鏍囬
+          // Header row
           SizedBox(
             height: 56,
             child: Row(
@@ -98,7 +97,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 
           const SizedBox(height: 4),
 
-          // Feed鍐呭 - 鐩存帴浣跨敤Expanded濉厖鍓╀綑绌洪棿
+          // Feed content fills remaining space with Expanded.
           Expanded(
             child: Consumer(
               builder: (context, localRef, child) {
@@ -112,7 +111,6 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     );
   }
 
-  /// 鏋勫缓Feed鍐呭
   Future<void> _addToQueue(PodcastEpisodeModel episode) async {
     if (_addingEpisodeIds.contains(episode.id)) {
       return;
@@ -304,7 +302,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       );
     }
 
-    // 浣跨敤LayoutBuilder鏉ュ姩鎬佽皟鏁村竷灞€
+    // Use LayoutBuilder to switch between mobile and desktop layouts.
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
@@ -314,7 +312,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           return _buildEmptyFeedWithEntry(context, mobile: isMobile);
         }
 
-        // 绉诲姩绔細浣跨敤ListView
+        // Mobile uses a ListView layout.
         if (isMobile) {
           return RefreshIndicator(
             onRefresh: () async {
@@ -356,7 +354,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           );
         }
 
-        // 妗岄潰绔細浣跨敤GridView锛屼紭鍖栧崱鐗囬珮搴?
+        // Desktop uses a responsive grid layout.
         final crossAxisCount = screenWidth < 900
             ? 2
             : (screenWidth < 1200 ? 3 : 4);
@@ -369,7 +367,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
             screenWidth - horizontalPadding - (crossAxisCount - 1) * spacing;
         final cardWidth = availableWidth / crossAxisCount;
 
-        // 浼樺寲瀹介珮姣旓細鍗＄墖鍐呭楂樺害绾?80-200锛岀‘淇濅笉婧㈠嚭
+        // Keep desktop cards at a stable visual height.
         const desktopCardHeight = 172.0;
         final childAspectRatio = cardWidth / desktopCardHeight;
 
@@ -416,7 +414,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     );
   }
 
-  /// 鏋勫缓绉诲姩绔崱鐗?
+  /// Build mobile feed card.
   Widget _buildMobileCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
@@ -655,7 +653,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     );
   }
 
-  /// 鏋勫缓妗岄潰绔崱鐗囷紙浣跨敤灏忓浘鏍囧竷灞€锛?
+  /// Build desktop feed card.
   Widget _buildDesktopCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);

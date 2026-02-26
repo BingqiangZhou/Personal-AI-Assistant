@@ -55,7 +55,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   final Set<int> _addingEpisodeIds = <int>{};
   String _selectedFilter = 'all';
   bool _showOnlyWithSummary = false;
-  bool _isReparsing = false; // 闁插秵鏌婄憴锝嗙€介悩鑸碘偓?
+  bool _isReparsing = false; // Guard to avoid duplicate reparse requests.
   static const double _mobileMenuBarHeight = 65.0;
   static const double _desktopEpisodeCardHeight = 160.0;
 
@@ -101,15 +101,17 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     // Check if subscriptionId has changed
     if (oldWidget.subscriptionId != widget.subscriptionId) {
       logger.AppLogger.debug(
-        '棣冩敡 ===== didUpdateWidget: Subscription ID changed =====',
+        '[Episodes] ===== didUpdateWidget: Subscription ID changed =====',
       );
       logger.AppLogger.debug(
-        '棣冩敡 Old Subscription ID: ${oldWidget.subscriptionId}',
+        '[Episodes] Old Subscription ID: ${oldWidget.subscriptionId}',
       );
       logger.AppLogger.debug(
-        '棣冩敡 New Subscription ID: ${widget.subscriptionId}',
+        '[Episodes] New Subscription ID: ${widget.subscriptionId}',
       );
-      logger.AppLogger.debug('棣冩敡 Reloading episodes for new subscription');
+      logger.AppLogger.debug(
+        '[Episodes] Reloading episodes for new subscription',
+      );
 
       // Reset filters
       _selectedFilter = 'all';
@@ -118,13 +120,13 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
       // Reload episodes for the new subscription
       _loadEpisodesForSubscription(forceRefresh: true);
 
-      logger.AppLogger.debug('棣冩敡 ===== didUpdateWidget complete =====');
+      logger.AppLogger.debug('[Episodes] ===== didUpdateWidget complete =====');
     }
   }
 
   Future<void> _loadEpisodesForSubscription({bool forceRefresh = false}) async {
     logger.AppLogger.debug(
-      '棣冩惖 Loading episodes for subscription: ${widget.subscriptionId}',
+      '[Episodes] Loading episodes for subscription: ${widget.subscriptionId}',
     );
     await ref
         .read(podcastEpisodesProvider.notifier)
@@ -152,7 +154,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         );
   }
 
-  // 闁插秵鏌婄憴锝嗙€界拋銏ゆ
+  // Add episode to queue and show feedback.
   Future<void> _handleAddToQueue(PodcastEpisodeModel episode) async {
     if (_addingEpisodeIds.contains(episode.id)) {
       return;
@@ -191,7 +193,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   }
 
   Future<void> _reparseSubscription() async {
-    if (_isReparsing) return; // 闂冨弶顒涢柌宥咁槻閻愮懓鍤?
+    if (_isReparsing) return; // Ignore repeated taps while reparsing.
 
     setState(() {
       _isReparsing = true;
@@ -200,7 +202,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
     final l10n = AppLocalizations.of(context)!;
 
     try {
-      // 閺勫墽銇?loading 閹绘劗銇?
+      // Show loading notice.
       if (mounted) {
         showTopFloatingNotice(
           context,
@@ -209,18 +211,18 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         );
       }
 
-      // 鐠嬪啰鏁ら柌宥嗘煀鐟欙絾鐎?
+      // Trigger reparse on backend.
       await ref
           .read(podcastSubscriptionProvider.notifier)
           .reparseSubscription(
             widget.subscriptionId,
-            true, // forceAll: 闁插秵鏌婄憴锝嗙€介幍鈧張澶婂瀻闂?
+            true, // forceAll: full reparse
           );
 
-      // 闁插秵鏌婇崝鐘烘祰閸掑棝娉﹂崚妤勩€?
+      // Refresh list after reparse.
       await _refreshEpisodes();
 
-      // 閺勫墽銇氶幋鎰閹绘劗銇?
+      // Show success notice.
       if (mounted) {
         showTopFloatingNotice(
           context,
@@ -229,7 +231,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         );
       }
     } catch (error) {
-      // 閺勫墽銇氶柨娆掝嚖閹绘劗銇?
+      // Show error notice.
       if (mounted) {
         showTopFloatingNotice(
           context,
@@ -257,10 +259,10 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         null;
     final isMobileLayout = MediaQuery.of(context).size.width < 600;
 
-    // Debug: 鏉堟挸鍤崚鍡涙肠閸ユ儳鍎氶柧鐐复娣団剝浼呴敍鍫濆嚒濞夈劑鍣撮敍?
+    // Debug helper for first episode image fields.
     // if (episodesState.episodes.isNotEmpty) {
     //   final firstEpisode = episodesState.episodes.first;
-    //   logger.AppLogger.debug('棣冩懙 PodcastEpisodesPage - First episode image debug:');
+    //   logger.AppLogger.debug('[Episodes] First episode image debug:');
     //   logger.AppLogger.debug('  Episode ID: ${firstEpisode.id}');
     //   logger.AppLogger.debug('  Episode Title: ${firstEpisode.title}');
     //   logger.AppLogger.debug('  Image URL: ${firstEpisode.imageUrl}');
@@ -359,7 +361,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  // 闁插秵鏌婄憴锝嗙€介幐澶愭尦
+                  // Reparse action.
                   IconButton(
                     icon: _isReparsing
                         ? SizedBox(
@@ -374,7 +376,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                     onPressed: _isReparsing ? null : _reparseSubscription,
                     tooltip: l10n.podcast_reparse_tooltip,
                   ),
-                  // 缁涙盯鈧瀵滈柦顔拘╅崚鐗堢垼妫版顢?
+                  // Mobile shows filter button; desktop shows inline chips.
                   if (MediaQuery.of(context).size.width < 700) ...[
                     IconButton(
                       icon: const Icon(Icons.filter_list),
@@ -446,13 +448,13 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                             );
                                           },
                                           onPlay: () async {
-                                            // 閹绢厽鏂侀崚鍡涙肠
+                                            // Start playback first.
                                             await ref
                                                 .read(
                                                   audioPlayerProvider.notifier,
                                                 )
                                                 .playEpisode(episode);
-                                            // 鐠哄疇娴嗛崚鎷岊嚊閹懘銆?
+                                            // Navigate only if context is still mounted.
                                             if (context.mounted) {
                                               context.push(
                                                 '/podcast/episode/detail/${episode.id}',
@@ -503,13 +505,13 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                                           );
                                         },
                                         onPlay: () async {
-                                          // 閹绢厽鏂侀崚鍡涙肠
+                                          // Start playback first.
                                           await ref
                                               .read(
                                                 audioPlayerProvider.notifier,
                                               )
                                               .playEpisode(episode);
-                                          // 鐠哄疇娴嗛崚鎷岊嚊閹懘銆?
+                                          // Navigate only if context is still mounted.
                                           if (context.mounted) {
                                             context.push(
                                               '/podcast/episode/detail/${episode.id}',

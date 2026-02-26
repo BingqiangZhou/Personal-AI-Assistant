@@ -1,4 +1,4 @@
-﻿"""Core deployment sanity tests for current podcast architecture."""
+"""Core deployment sanity tests for current podcast architecture."""
 
 from pathlib import Path
 
