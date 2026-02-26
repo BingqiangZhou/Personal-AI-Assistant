@@ -69,9 +69,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get update => 'Update';
 
   @override
-  String get create => 'Create';
-
-  @override
   String get search => 'Search';
 
   @override
@@ -320,9 +317,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get action_completed => 'Action completed successfully';
 
   @override
-  String get delete_confirm_title => 'Delete Item';
-
-  @override
   String get no_data => 'No data available';
 
   @override
@@ -424,113 +418,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcast_adding => 'Adding...';
-
-  @override
-  String get ai_model_management => 'AI Model Management';
-
-  @override
-  String get ai_add_model => 'Add Model';
-
-  @override
-  String get ai_api_key => 'API Key';
-
-  @override
-  String get ai_enter_api_key => 'Please enter API key';
-
-  @override
-  String get ai_confirm_delete_model =>
-      'Are you sure you want to delete this model?';
-
-  @override
-  String get ai_create_model_config => 'Create AI Model Config';
-
-  @override
-  String get ai_config_name => 'Config Name';
-
-  @override
-  String get ai_base_url => 'Base URL';
-
-  @override
-  String get ai_base_url_hint => 'https://api.openai.com/v1';
-
-  @override
-  String get ai_model_name_field => 'Model Name';
-
-  @override
-  String get ai_model_id_hint => 'e.g. gpt-4o';
-
-  @override
-  String get ai_config_name_hint => 'e.g. My GPT-4o';
-
-  @override
-  String get ai_enter_config_name => 'Please enter a config name';
-
-  @override
-  String get ai_enter_base_url => 'Please enter Base URL';
-
-  @override
-  String get ai_enter_model_id => 'Please enter Model Name';
-
-  @override
-  String get ai_transcription_model => 'Transcription Model';
-
-  @override
-  String get ai_text_generation_model => 'Text Generation Model';
-
-  @override
-  String get ai_model_type_label => 'Model Type:';
-
-  @override
-  String get ai_only_show_active => 'Only Show Active';
-
-  @override
-  String get ai_search_models => 'Search model name, description...';
-
-  @override
-  String ai_model_created(Object name) {
-    return 'Model \'$name\' created successfully';
-  }
-
-  @override
-  String ai_model_updated_msg(Object name) {
-    return 'Model \'$name\' updated successfully';
-  }
-
-  @override
-  String ai_model_deleted_msg(Object name) {
-    return 'Model \'$name\' deleted';
-  }
-
-  @override
-  String ai_set_as_default_success(Object name) {
-    return 'Set \'$name\' as default model';
-  }
-
-  @override
-  String get ai_model_enabled => 'Model enabled';
-
-  @override
-  String get ai_model_disabled => 'Model disabled';
-
-  @override
-  String get ai_operation_failed => 'Operation failed';
-
-  @override
-  String get ai_set_default_failed => 'Failed to set as default model';
-
-  @override
-  String get ai_delete_failed => 'Delete failed';
-
-  @override
-  String ai_load_failed(Object error) {
-    return 'Load failed: $error';
-  }
-
-  @override
-  String get ai_no_models_configured_yet => 'No model configurations yet';
-
-  @override
-  String get ai_add_first_model_btn => 'Add first model';
 
   @override
   String get profile_guest_user => 'Guest User';
@@ -684,15 +571,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile_logged_out => 'Logged out successfully';
 
   @override
-  String get settings_edit_config => 'Edit Config';
-
-  @override
-  String get settings_test_connection => 'Test Connection';
-
-  @override
-  String get settings_testing_connection => 'Testing connection...';
-
-  @override
   String get invalid_navigation_arguments => 'Invalid navigation arguments';
 
   @override
@@ -762,27 +640,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get podcast_bulk_delete_title => 'Delete Selected Podcasts';
-
-  @override
-  String podcast_bulk_delete_message(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: 's',
-      one: '',
-    );
-    return 'Are you sure you want to delete $count podcast$_temp0?';
-  }
-
-  @override
-  String get podcast_bulk_delete_warning =>
-      'This action will also delete all episodes associated with these podcasts. This cannot be undone.';
-
-  @override
-  String get podcast_bulk_delete_confirm => 'Delete';
-
-  @override
   String get update_check_updates => 'Check for Updates';
 
   @override
@@ -831,158 +688,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get back_button => 'Back';
 
   @override
-  String get ai_model_default => 'Default';
-
-  @override
-  String get ai_model_system => 'System';
-
-  @override
-  String get ai_model_enable => 'Enable model';
-
-  @override
-  String get ai_model_disable => 'Disable model';
-
-  @override
-  String get ai_edit_config => 'Edit Config';
-
-  @override
-  String get ai_test_connection => 'Test Connection';
-
-  @override
-  String get ai_set_as_default => 'Set as Default';
-
-  @override
-  String get ai_test_prompt_transcription => 'Test audio transcription';
-
-  @override
-  String get ai_test_prompt_generation => 'Please briefly introduce AI';
-
-  @override
-  String get ai_enter_test_content => 'Please enter test content';
-
-  @override
-  String get ai_test_success => 'Test Successful';
-
-  @override
-  String get ai_test_failed => 'Test Failed';
-
-  @override
-  String get ai_test_content => 'Test Content';
-
-  @override
-  String get ai_transcription_test_info_title => 'Transcription Test Note';
-
-  @override
-  String get ai_transcription_test_info_description =>
-      'Transcription testing requires a sample audio file. Please ensure you have an audio file ready for testing.';
-
-  @override
-  String get ai_transcription_test_info_details =>
-      'Click \"Test Connection\" to use a built-in test audio for quick verification.';
-
-  @override
-  String get settings_response_speed => 'Response Speed';
-
-  @override
-  String get settings_response_very_fast => 'Very Fast';
-
-  @override
-  String get settings_response_normal => 'Normal';
-
-  @override
-  String get settings_response_slow => 'Slow';
-
-  @override
-  String get schedule_load_failed => 'Load Failed';
-
-  @override
-  String get schedule_no_config => 'No configuration found';
-
-  @override
-  String get schedule_saving => 'Saving...';
-
-  @override
-  String get schedule_save_settings => 'Save Settings';
-
-  @override
-  String get schedule_current_config => 'Current Configuration';
-
-  @override
-  String get schedule_update_frequency => 'Update Frequency';
-
-  @override
-  String get schedule_update_time => 'Update Time';
-
-  @override
-  String get schedule_update_day => 'Update Day';
-
-  @override
-  String get schedule_next_update => 'Next Update';
-
-  @override
-  String get schedule_hourly => 'Hourly';
-
-  @override
-  String get schedule_daily => 'Daily';
-
-  @override
-  String get schedule_weekly => 'Weekly';
-
-  @override
-  String get schedule_settings => 'Update Settings';
-
-  @override
-  String get schedule_week_short => 'Wk';
-
-  @override
-  String get schedule_day_mon => 'Mon';
-
-  @override
-  String get schedule_day_tue => 'Tue';
-
-  @override
-  String get schedule_day_wed => 'Wed';
-
-  @override
-  String get schedule_day_thu => 'Thu';
-
-  @override
-  String get schedule_day_fri => 'Fri';
-
-  @override
-  String get schedule_day_sat => 'Sat';
-
-  @override
-  String get schedule_day_sun => 'Sun';
-
-  @override
-  String get schedule_select_time => 'Select Time';
-
-  @override
-  String get schedule_select_update_time => 'Please select update time';
-
-  @override
-  String get schedule_select_time_and_day =>
-      'Please select update time and day';
-
-  @override
-  String get schedule_settings_saved => 'Settings saved';
-
-  @override
-  String get schedule_save_failed => 'Save failed';
-
-  @override
-  String get schedule_unknown_error => 'Unknown error';
-
-  @override
-  String get feed_no_subscriptions => 'No subscriptions yet';
-
-  @override
   String get feed_no_subscriptions_hint =>
       'Subscribe to podcasts you\'re interested in!';
-
-  @override
-  String get feed_subscribe_podcast => 'Subscribe Podcast';
 
   @override
   String get podcast_no_shownotes => 'No show notes available';
@@ -1001,9 +708,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String date_format(int year, String month, String day) {
     return '$year-$month-$day';
   }
-
-  @override
-  String get podcast_search_hint => 'Search podcasts or episodes...';
 
   @override
   String get podcast_discover_title => 'Discover';
@@ -1027,12 +731,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get podcast_country_label => 'Country/Region';
-
-  @override
-  String get podcast_search_loading => 'Searching...';
-
-  @override
-  String get podcast_search_error => 'Search failed';
 
   @override
   String get podcast_search_no_results => 'No results found';
@@ -1671,41 +1369,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get global_rss_day_of_week => 'Day of Week';
 
   @override
-  String get global_rss_mon => 'Mon';
-
-  @override
-  String get global_rss_tue => 'Tue';
-
-  @override
-  String get global_rss_wed => 'Wed';
-
-  @override
-  String get global_rss_thu => 'Thu';
-
-  @override
-  String get global_rss_fri => 'Fri';
-
-  @override
-  String get global_rss_sat => 'Sat';
-
-  @override
-  String get global_rss_sun => 'Sun';
-
-  @override
   String get global_rss_applying => 'Applying...';
 
   @override
   String get global_rss_apply_all => 'Apply to All Subscriptions';
-
-  @override
-  String global_rss_current_label(String value) {
-    return 'Current: $value';
-  }
-
-  @override
-  String global_rss_next_label(String value) {
-    return 'Next: $value';
-  }
 
   @override
   String get global_rss_failed_update => 'Failed to update subscriptions';
@@ -1744,12 +1411,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get play_button_short => 'Play';
-
-  @override
-  String get retry_button_short => 'Retry';
-
-  @override
   String error_opening_link(String error) {
     return 'Error opening link: $error';
   }
@@ -1785,12 +1446,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get auth_verification_title => 'Auth Verification';
-
-  @override
-  String get text_gen_label => 'Text Gen';
-
-  @override
-  String get feed_load_failed_title => 'Failed to Load Feed';
 
   @override
   String get auth_password_requirement_uppercase =>
@@ -1860,15 +1515,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transcription_status_failed => 'Failed';
 
   @override
-  String get ai_model_type_transcription => 'Transcription Model';
-
-  @override
-  String get ai_model_type_text_generation => 'Text Generation Model';
-
-  @override
-  String get ai_provider_azure_openai => 'Azure OpenAI';
-
-  @override
   String get profile_ai_summary => 'AI Summary';
 
   @override
@@ -1876,18 +1522,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get auth_and => ' and ';
-
-  @override
-  String get api_key_leave_empty_hint => 'Leave empty to keep unchanged';
-
-  @override
-  String get ai_enter_config_name_error => 'Please enter a config name';
-
-  @override
-  String get ai_enter_base_url_error => 'Please enter Base URL';
-
-  @override
-  String get ai_enter_model_name_error => 'Please enter Model Name';
 
   @override
   String get sidebarCollapseMenu => 'Collapse Menu';

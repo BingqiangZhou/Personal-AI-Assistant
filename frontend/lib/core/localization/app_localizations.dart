@@ -218,12 +218,6 @@ abstract class AppLocalizations {
   /// **'Update'**
   String get update;
 
-  /// Create button label
-  ///
-  /// In en, this message translates to:
-  /// **'Create'**
-  String get create;
-
   /// Search button label
   ///
   /// In en, this message translates to:
@@ -698,12 +692,6 @@ abstract class AppLocalizations {
   /// **'Action completed successfully'**
   String get action_completed;
 
-  /// Delete confirmation title
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Item'**
-  String get delete_confirm_title;
-
   /// No data state message
   ///
   /// In en, this message translates to:
@@ -907,198 +895,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Adding...'**
   String get podcast_adding;
-
-  /// AI Model Management page title
-  ///
-  /// In en, this message translates to:
-  /// **'AI Model Management'**
-  String get ai_model_management;
-
-  /// Add model button
-  ///
-  /// In en, this message translates to:
-  /// **'Add Model'**
-  String get ai_add_model;
-
-  /// API Key field
-  ///
-  /// In en, this message translates to:
-  /// **'API Key'**
-  String get ai_api_key;
-
-  /// Enter API key validation
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter API key'**
-  String get ai_enter_api_key;
-
-  /// Confirm delete model
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete this model?'**
-  String get ai_confirm_delete_model;
-
-  /// Create model dialog title
-  ///
-  /// In en, this message translates to:
-  /// **'Create AI Model Config'**
-  String get ai_create_model_config;
-
-  /// Config name field
-  ///
-  /// In en, this message translates to:
-  /// **'Config Name'**
-  String get ai_config_name;
-
-  /// Base URL field
-  ///
-  /// In en, this message translates to:
-  /// **'Base URL'**
-  String get ai_base_url;
-
-  /// Base URL hint
-  ///
-  /// In en, this message translates to:
-  /// **'https://api.openai.com/v1'**
-  String get ai_base_url_hint;
-
-  /// Model name field
-  ///
-  /// In en, this message translates to:
-  /// **'Model Name'**
-  String get ai_model_name_field;
-
-  /// Model ID hint
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. gpt-4o'**
-  String get ai_model_id_hint;
-
-  /// Config name hint
-  ///
-  /// In en, this message translates to:
-  /// **'e.g. My GPT-4o'**
-  String get ai_config_name_hint;
-
-  /// Enter config name validation
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter a config name'**
-  String get ai_enter_config_name;
-
-  /// Enter base URL validation
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter Base URL'**
-  String get ai_enter_base_url;
-
-  /// Enter model ID validation
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter Model Name'**
-  String get ai_enter_model_id;
-
-  /// Transcription model type
-  ///
-  /// In en, this message translates to:
-  /// **'Transcription Model'**
-  String get ai_transcription_model;
-
-  /// Text generation model type
-  ///
-  /// In en, this message translates to:
-  /// **'Text Generation Model'**
-  String get ai_text_generation_model;
-
-  /// Model type label
-  ///
-  /// In en, this message translates to:
-  /// **'Model Type:'**
-  String get ai_model_type_label;
-
-  /// Only show active toggle
-  ///
-  /// In en, this message translates to:
-  /// **'Only Show Active'**
-  String get ai_only_show_active;
-
-  /// Search models placeholder
-  ///
-  /// In en, this message translates to:
-  /// **'Search model name, description...'**
-  String get ai_search_models;
-
-  /// Model created success
-  ///
-  /// In en, this message translates to:
-  /// **'Model \'{name}\' created successfully'**
-  String ai_model_created(Object name);
-
-  /// Model updated success
-  ///
-  /// In en, this message translates to:
-  /// **'Model \'{name}\' updated successfully'**
-  String ai_model_updated_msg(Object name);
-
-  /// Model deleted success
-  ///
-  /// In en, this message translates to:
-  /// **'Model \'{name}\' deleted'**
-  String ai_model_deleted_msg(Object name);
-
-  /// Set as default success message
-  ///
-  /// In en, this message translates to:
-  /// **'Set \'{name}\' as default model'**
-  String ai_set_as_default_success(Object name);
-
-  /// Model enabled message
-  ///
-  /// In en, this message translates to:
-  /// **'Model enabled'**
-  String get ai_model_enabled;
-
-  /// Model disabled message
-  ///
-  /// In en, this message translates to:
-  /// **'Model disabled'**
-  String get ai_model_disabled;
-
-  /// Operation failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Operation failed'**
-  String get ai_operation_failed;
-
-  /// Set default failed
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to set as default model'**
-  String get ai_set_default_failed;
-
-  /// Delete failed
-  ///
-  /// In en, this message translates to:
-  /// **'Delete failed'**
-  String get ai_delete_failed;
-
-  /// Load failed error
-  ///
-  /// In en, this message translates to:
-  /// **'Load failed: {error}'**
-  String ai_load_failed(Object error);
-
-  /// No models state
-  ///
-  /// In en, this message translates to:
-  /// **'No model configurations yet'**
-  String get ai_no_models_configured_yet;
-
-  /// Add first model button
-  ///
-  /// In en, this message translates to:
-  /// **'Add first model'**
-  String get ai_add_first_model_btn;
 
   /// Guest user label when not logged in
   ///
@@ -1376,24 +1172,6 @@ abstract class AppLocalizations {
   /// **'Logged out successfully'**
   String get profile_logged_out;
 
-  /// Edit config tooltip
-  ///
-  /// In en, this message translates to:
-  /// **'Edit Config'**
-  String get settings_edit_config;
-
-  /// Test connection button
-  ///
-  /// In en, this message translates to:
-  /// **'Test Connection'**
-  String get settings_test_connection;
-
-  /// Testing connection message
-  ///
-  /// In en, this message translates to:
-  /// **'Testing connection...'**
-  String get settings_testing_connection;
-
   /// Invalid navigation arguments error
   ///
   /// In en, this message translates to:
@@ -1520,30 +1298,6 @@ abstract class AppLocalizations {
   /// **'{count} selected'**
   String podcast_selected_count(int count);
 
-  /// Bulk delete dialog title
-  ///
-  /// In en, this message translates to:
-  /// **'Delete Selected Podcasts'**
-  String get podcast_bulk_delete_title;
-
-  /// Bulk delete confirmation message
-  ///
-  /// In en, this message translates to:
-  /// **'Are you sure you want to delete {count} podcast{count, plural, =1{} other{s}}?'**
-  String podcast_bulk_delete_message(int count);
-
-  /// Bulk delete warning message
-  ///
-  /// In en, this message translates to:
-  /// **'This action will also delete all episodes associated with these podcasts. This cannot be undone.'**
-  String get podcast_bulk_delete_warning;
-
-  /// Bulk delete confirm button
-  ///
-  /// In en, this message translates to:
-  /// **'Delete'**
-  String get podcast_bulk_delete_confirm;
-
   /// Check for updates button/label
   ///
   /// In en, this message translates to:
@@ -1640,305 +1394,11 @@ abstract class AppLocalizations {
   /// **'Back'**
   String get back_button;
 
-  /// Default model badge
-  ///
-  /// In en, this message translates to:
-  /// **'Default'**
-  String get ai_model_default;
-
-  /// System model badge
-  ///
-  /// In en, this message translates to:
-  /// **'System'**
-  String get ai_model_system;
-
-  /// Enable model tooltip
-  ///
-  /// In en, this message translates to:
-  /// **'Enable model'**
-  String get ai_model_enable;
-
-  /// Disable model tooltip
-  ///
-  /// In en, this message translates to:
-  /// **'Disable model'**
-  String get ai_model_disable;
-
-  /// Edit config menu item
-  ///
-  /// In en, this message translates to:
-  /// **'Edit Config'**
-  String get ai_edit_config;
-
-  /// Test connection menu item
-  ///
-  /// In en, this message translates to:
-  /// **'Test Connection'**
-  String get ai_test_connection;
-
-  /// Set as default menu item
-  ///
-  /// In en, this message translates to:
-  /// **'Set as Default'**
-  String get ai_set_as_default;
-
-  /// Default test prompt for transcription
-  ///
-  /// In en, this message translates to:
-  /// **'Test audio transcription'**
-  String get ai_test_prompt_transcription;
-
-  /// Default test prompt for text generation
-  ///
-  /// In en, this message translates to:
-  /// **'Please briefly introduce AI'**
-  String get ai_test_prompt_generation;
-
-  /// Test content validation
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter test content'**
-  String get ai_enter_test_content;
-
-  /// Test success message
-  ///
-  /// In en, this message translates to:
-  /// **'Test Successful'**
-  String get ai_test_success;
-
-  /// Test failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Test Failed'**
-  String get ai_test_failed;
-
-  /// Test content label for model testing
-  ///
-  /// In en, this message translates to:
-  /// **'Test Content'**
-  String get ai_test_content;
-
-  /// Transcription test info title
-  ///
-  /// In en, this message translates to:
-  /// **'Transcription Test Note'**
-  String get ai_transcription_test_info_title;
-
-  /// Transcription test info description
-  ///
-  /// In en, this message translates to:
-  /// **'Transcription testing requires a sample audio file. Please ensure you have an audio file ready for testing.'**
-  String get ai_transcription_test_info_description;
-
-  /// Transcription test info details
-  ///
-  /// In en, this message translates to:
-  /// **'Click \"Test Connection\" to use a built-in test audio for quick verification.'**
-  String get ai_transcription_test_info_details;
-
-  /// Response speed label
-  ///
-  /// In en, this message translates to:
-  /// **'Response Speed'**
-  String get settings_response_speed;
-
-  /// Very fast response
-  ///
-  /// In en, this message translates to:
-  /// **'Very Fast'**
-  String get settings_response_very_fast;
-
-  /// Normal response
-  ///
-  /// In en, this message translates to:
-  /// **'Normal'**
-  String get settings_response_normal;
-
-  /// Slow response
-  ///
-  /// In en, this message translates to:
-  /// **'Slow'**
-  String get settings_response_slow;
-
-  /// Schedule load failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Load Failed'**
-  String get schedule_load_failed;
-
-  /// No schedule configuration message
-  ///
-  /// In en, this message translates to:
-  /// **'No configuration found'**
-  String get schedule_no_config;
-
-  /// Saving schedule state
-  ///
-  /// In en, this message translates to:
-  /// **'Saving...'**
-  String get schedule_saving;
-
-  /// Save settings button
-  ///
-  /// In en, this message translates to:
-  /// **'Save Settings'**
-  String get schedule_save_settings;
-
-  /// Current configuration section
-  ///
-  /// In en, this message translates to:
-  /// **'Current Configuration'**
-  String get schedule_current_config;
-
-  /// Update frequency label
-  ///
-  /// In en, this message translates to:
-  /// **'Update Frequency'**
-  String get schedule_update_frequency;
-
-  /// Update time label
-  ///
-  /// In en, this message translates to:
-  /// **'Update Time'**
-  String get schedule_update_time;
-
-  /// Update day label
-  ///
-  /// In en, this message translates to:
-  /// **'Update Day'**
-  String get schedule_update_day;
-
-  /// Next update label
-  ///
-  /// In en, this message translates to:
-  /// **'Next Update'**
-  String get schedule_next_update;
-
-  /// Hourly frequency option
-  ///
-  /// In en, this message translates to:
-  /// **'Hourly'**
-  String get schedule_hourly;
-
-  /// Daily frequency option
-  ///
-  /// In en, this message translates to:
-  /// **'Daily'**
-  String get schedule_daily;
-
-  /// Weekly frequency option
-  ///
-  /// In en, this message translates to:
-  /// **'Weekly'**
-  String get schedule_weekly;
-
-  /// Schedule settings page title
-  ///
-  /// In en, this message translates to:
-  /// **'Update Settings'**
-  String get schedule_settings;
-
-  /// Week short label
-  ///
-  /// In en, this message translates to:
-  /// **'Wk'**
-  String get schedule_week_short;
-
-  /// Monday short
-  ///
-  /// In en, this message translates to:
-  /// **'Mon'**
-  String get schedule_day_mon;
-
-  /// Tuesday short
-  ///
-  /// In en, this message translates to:
-  /// **'Tue'**
-  String get schedule_day_tue;
-
-  /// Wednesday short
-  ///
-  /// In en, this message translates to:
-  /// **'Wed'**
-  String get schedule_day_wed;
-
-  /// Thursday short
-  ///
-  /// In en, this message translates to:
-  /// **'Thu'**
-  String get schedule_day_thu;
-
-  /// Friday short
-  ///
-  /// In en, this message translates to:
-  /// **'Fri'**
-  String get schedule_day_fri;
-
-  /// Saturday short
-  ///
-  /// In en, this message translates to:
-  /// **'Sat'**
-  String get schedule_day_sat;
-
-  /// Sunday short
-  ///
-  /// In en, this message translates to:
-  /// **'Sun'**
-  String get schedule_day_sun;
-
-  /// Select time placeholder
-  ///
-  /// In en, this message translates to:
-  /// **'Select Time'**
-  String get schedule_select_time;
-
-  /// Validation: select time
-  ///
-  /// In en, this message translates to:
-  /// **'Please select update time'**
-  String get schedule_select_update_time;
-
-  /// Validation: select time and day
-  ///
-  /// In en, this message translates to:
-  /// **'Please select update time and day'**
-  String get schedule_select_time_and_day;
-
-  /// Settings saved message
-  ///
-  /// In en, this message translates to:
-  /// **'Settings saved'**
-  String get schedule_settings_saved;
-
-  /// Save failed message
-  ///
-  /// In en, this message translates to:
-  /// **'Save failed'**
-  String get schedule_save_failed;
-
-  /// Unknown error message
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown error'**
-  String get schedule_unknown_error;
-
-  /// No subscriptions message
-  ///
-  /// In en, this message translates to:
-  /// **'No subscriptions yet'**
-  String get feed_no_subscriptions;
-
   /// Hint to subscribe to podcasts
   ///
   /// In en, this message translates to:
   /// **'Subscribe to podcasts you\'re interested in!'**
   String get feed_no_subscriptions_hint;
-
-  /// Subscribe podcast button
-  ///
-  /// In en, this message translates to:
-  /// **'Subscribe Podcast'**
-  String get feed_subscribe_podcast;
 
   /// No show notes message
   ///
@@ -1969,12 +1429,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{year}-{month}-{day}'**
   String date_format(int year, String month, String day);
-
-  /// Search input placeholder for podcasts
-  ///
-  /// In en, this message translates to:
-  /// **'Search podcasts or episodes...'**
-  String get podcast_search_hint;
 
   /// Podcast discover page title
   ///
@@ -2017,18 +1471,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Country/Region'**
   String get podcast_country_label;
-
-  /// Search loading message
-  ///
-  /// In en, this message translates to:
-  /// **'Searching...'**
-  String get podcast_search_loading;
-
-  /// Search error title
-  ///
-  /// In en, this message translates to:
-  /// **'Search failed'**
-  String get podcast_search_error;
 
   /// No search results message
   ///
@@ -3158,48 +2600,6 @@ abstract class AppLocalizations {
   /// **'Day of Week'**
   String get global_rss_day_of_week;
 
-  /// Monday abbreviation
-  ///
-  /// In en, this message translates to:
-  /// **'Mon'**
-  String get global_rss_mon;
-
-  /// Tuesday abbreviation
-  ///
-  /// In en, this message translates to:
-  /// **'Tue'**
-  String get global_rss_tue;
-
-  /// Wednesday abbreviation
-  ///
-  /// In en, this message translates to:
-  /// **'Wed'**
-  String get global_rss_wed;
-
-  /// Thursday abbreviation
-  ///
-  /// In en, this message translates to:
-  /// **'Thu'**
-  String get global_rss_thu;
-
-  /// Friday abbreviation
-  ///
-  /// In en, this message translates to:
-  /// **'Fri'**
-  String get global_rss_fri;
-
-  /// Saturday abbreviation
-  ///
-  /// In en, this message translates to:
-  /// **'Sat'**
-  String get global_rss_sat;
-
-  /// Sunday abbreviation
-  ///
-  /// In en, this message translates to:
-  /// **'Sun'**
-  String get global_rss_sun;
-
   /// Button text when applying
   ///
   /// In en, this message translates to:
@@ -3211,18 +2611,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Apply to All Subscriptions'**
   String get global_rss_apply_all;
-
-  /// Current schedule label
-  ///
-  /// In en, this message translates to:
-  /// **'Current: {value}'**
-  String global_rss_current_label(String value);
-
-  /// Next update label
-  ///
-  /// In en, this message translates to:
-  /// **'Next: {value}'**
-  String global_rss_next_label(String value);
 
   /// Error message when update fails
   ///
@@ -3278,18 +2666,6 @@ abstract class AppLocalizations {
   /// **'Failed to add to queue: {error}'**
   String failed_to_add_to_queue(String error);
 
-  /// Short play button label for cards
-  ///
-  /// In en, this message translates to:
-  /// **'Play'**
-  String get play_button_short;
-
-  /// Short retry button label
-  ///
-  /// In en, this message translates to:
-  /// **'Retry'**
-  String get retry_button_short;
-
   /// Error message when failing to open link
   ///
   /// In en, this message translates to:
@@ -3343,18 +2719,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auth Verification'**
   String get auth_verification_title;
-
-  /// Text generation model type label (short)
-  ///
-  /// In en, this message translates to:
-  /// **'Text Gen'**
-  String get text_gen_label;
-
-  /// Error title when feed loading fails
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to Load Feed'**
-  String get feed_load_failed_title;
 
   /// Password requirement: at least one uppercase letter
   ///
@@ -3482,24 +2846,6 @@ abstract class AppLocalizations {
   /// **'Failed'**
   String get transcription_status_failed;
 
-  /// AI model type: transcription
-  ///
-  /// In en, this message translates to:
-  /// **'Transcription Model'**
-  String get ai_model_type_transcription;
-
-  /// AI model type: text generation
-  ///
-  /// In en, this message translates to:
-  /// **'Text Generation Model'**
-  String get ai_model_type_text_generation;
-
-  /// AI provider name: Azure OpenAI
-  ///
-  /// In en, this message translates to:
-  /// **'Azure OpenAI'**
-  String get ai_provider_azure_openai;
-
   /// AI Summary section in profile
   ///
   /// In en, this message translates to:
@@ -3517,30 +2863,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **' and '**
   String get auth_and;
-
-  /// API key input hint when editing
-  ///
-  /// In en, this message translates to:
-  /// **'Leave empty to keep unchanged'**
-  String get api_key_leave_empty_hint;
-
-  /// Validation error for empty config name
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter a config name'**
-  String get ai_enter_config_name_error;
-
-  /// Validation error for empty base URL
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter Base URL'**
-  String get ai_enter_base_url_error;
-
-  /// Validation error for empty model name
-  ///
-  /// In en, this message translates to:
-  /// **'Please enter Model Name'**
-  String get ai_enter_model_name_error;
 
   /// Tooltip for collapsing the desktop sidebar
   ///

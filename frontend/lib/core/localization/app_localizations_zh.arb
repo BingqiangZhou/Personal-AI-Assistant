@@ -1,2545 +1,2078 @@
 {
-  "@@locale": "zh",
-  "appTitle": "Stella",
-  "@appTitle": {
-    "description": "应用程序标题"
-  },
-  "appSlogan": "你关注的一切，交给我。",
-  "@appSlogan": {
-    "description": "应用程序标语"
-  },
-  "settings": "设置",
-  "@settings": {
-    "description": "设置页面标题"
-  },
-  "language": "语言",
-  "@language": {
-    "description": "语言设置标签"
-  },
-  "languageFollowSystem": "跟随系统",
-  "@languageFollowSystem": {
-    "description": "跟随系统语言选项"
-  },
-  "languageEnglish": "English",
-  "@languageEnglish": {
-    "description": "英文语言选项"
-  },
-  "languageChinese": "简体中文",
-  "@languageChinese": {
-    "description": "简体中文语言选项"
-  },
-  "about": "关于",
-  "@about": {
-    "description": "关于部分标题"
-  },
-  "version": "版本",
-  "@version": {
-    "description": "应用版本标签"
-  },
-  "profile": "个人资料",
-  "@profile": {
-    "description": "个人资料页面标题"
-  },
-  "preferences": "偏好设置",
-  "@preferences": {
-    "description": "偏好设置部分标题"
-  },
-  "logout": "退出登录",
-  "@logout": {
-    "description": "退出登录按钮标签"
-  },
-  "cancel": "取消",
-  "@cancel": {
-    "description": "取消按钮标签"
-  },
-  "clear": "清空",
-  "@clear": {
-    "description": "清空按钮标签"
-  },
-  "confirm": "确认",
-  "@confirm": {
-    "description": "确认按钮标签"
-  },
-  "save": "保存",
-  "@save": {
-    "description": "保存按钮标签"
-  },
-  "delete": "删除",
-  "@delete": {
-    "description": "删除按钮标签"
-  },
-  "edit": "编辑",
-  "@edit": {
-    "description": "编辑按钮标签"
-  },
-  "add": "添加",
-  "@add": {
-    "description": "添加按钮标签"
-  },
-  "update": "更新",
-  "@update": {
-    "description": "更新按钮标签"
-  },
-  "create": "创建",
-  "@create": {
-    "description": "创建按钮标签"
-  },
-  "search": "搜索",
-  "@search": {
-    "description": "搜索按钮标签"
-  },
-  "filter": "筛选",
-  "@filter": {
-    "description": "筛选按钮标签"
-  },
-  "refresh": "刷新",
-  "@refresh": {
-    "description": "刷新按钮标签"
-  },
-  "loading": "加载中...",
-  "@loading": {
-    "description": "加载消息"
-  },
-  "error": "错误",
-  "@error": {
-    "description": "错误标签"
-  },
-  "success": "成功",
-  "@success": {
-    "description": "成功标签"
-  },
-  "retry": "重试",
-  "@retry": {
-    "description": "重试按钮标签"
-  },
-  "close": "关闭",
-  "@close": {
-    "description": "关闭按钮标签"
-  },
-  "ok": "确定",
-  "@ok": {
-    "description": "确定按钮标签"
-  },
-  "no": "否",
-  "@no": {
-    "description": "否按钮标签"
-  },
-  "auth_welcome_back": "天快亮了，我们开始吧。",
-  "@auth_welcome_back": {
-    "description": "登录页面欢迎标题"
-  },
-  "auth_sign_in_subtitle": "登录以继续",
-  "@auth_sign_in_subtitle": {
-    "description": "登录页面副标题"
-  },
-  "auth_enter_email": "请输入您的邮箱",
-  "@auth_enter_email": {
-    "description": "邮箱字段验证消息"
-  },
-  "auth_enter_valid_email": "请输入有效的邮箱地址",
-  "@auth_enter_valid_email": {
-    "description": "邮箱验证错误"
-  },
-  "auth_enter_password": "请输入您的密码",
-  "@auth_enter_password": {
-    "description": "密码字段验证消息"
-  },
-  "auth_password_too_short": "密码至少需要8个字符",
-  "@auth_password_too_short": {
-    "description": "密码长度验证"
-  },
-  "auth_email": "邮箱",
-  "@auth_email": {
-    "description": "邮箱字段标签"
-  },
-  "auth_password": "密码",
-  "@auth_password": {
-    "description": "密码字段标签"
-  },
-  "auth_remember_me": "记住我",
-  "@auth_remember_me": {
-    "description": "记住我复选框标签"
-  },
-  "auth_forgot_password": "忘记密码？",
-  "@auth_forgot_password": {
-    "description": "忘记密码链接"
-  },
-  "auth_login": "登录",
-  "@auth_login": {
-    "description": "登录按钮标签"
-  },
-  "auth_no_account": "还没有账号？",
-  "@auth_no_account": {
-    "description": "无账号提示"
-  },
-  "auth_sign_up": "注册",
-  "@auth_sign_up": {
-    "description": "注册按钮标签"
-  },
-  "auth_create_account": "创建账号",
-  "@auth_create_account": {
-    "description": "创建账号页面标题"
-  },
-  "auth_sign_up_subtitle": "加入我们开始使用",
-  "@auth_sign_up_subtitle": {
-    "description": "注册页面副标题"
-  },
-  "auth_full_name": "姓名",
-  "@auth_full_name": {
-    "description": "全名字段标签"
-  },
-  "auth_enter_name": "请输入您的姓名",
-  "@auth_enter_name": {
-    "description": "姓名字段验证"
-  },
-  "auth_confirm_password": "确认密码",
-  "@auth_confirm_password": {
-    "description": "确认密码字段标签"
-  },
-  "auth_passwords_not_match": "两次输入的密码不一致",
-  "@auth_passwords_not_match": {
-    "description": "密码不匹配错误"
-  },
-  "auth_agree_terms": "我同意条款和条件",
-  "@auth_agree_terms": {
-    "description": "条款同意复选框"
-  },
-  "auth_already_have_account": "已有账号？",
-  "@auth_already_have_account": {
-    "description": "已有账号提示"
-  },
-  "auth_sign_in_link": "登录",
-  "@auth_sign_in_link": {
-    "description": "登录链接标签"
-  },
-  "auth_reset_password": "重置密码",
-  "@auth_reset_password": {
-    "description": "重置密码页面标题"
-  },
-  "auth_reset_password_subtitle": "输入您的邮箱以接收重置说明",
-  "@auth_reset_password_subtitle": {
-    "description": "重置密码副标题"
-  },
-  "auth_send_reset_link": "发送重置链接",
-  "@auth_send_reset_link": {
-    "description": "发送重置链接按钮"
-  },
-  "auth_back_to_login": "返回登录",
-  "@auth_back_to_login": {
-    "description": "返回登录链接"
-  },
-  "auth_reset_email_sent": "密码重置邮件已发送",
-  "@auth_reset_email_sent": {
-    "description": "重置邮件已发送消息"
-  },
-  "profile_subscriptions": "订阅",
-  "@profile_subscriptions": {
-    "description": "Subscriptions label (without \"My\")"
-  },
-  "podcast_add_subscription": "添加订阅",
-  "@podcast_add_subscription": {
-    "description": "添加订阅按钮"
-  },
-  "podcast_episodes": "单集",
-  "@podcast_episodes": {
-    "description": "剧集标签"
-  },
-  "podcast_unknown_author": "未知作者",
-  "@podcast_unknown_author": {
-    "description": "播客未知作者标签"
-  },
-  "podcast_no_subscriptions": "还没有订阅",
-  "@podcast_no_subscriptions": {
-    "description": "无订阅状态"
-  },
-  "podcast_play": "播放",
-  "@podcast_play": {
-    "description": "播放按钮"
-  },
-  "home": "首页",
-  "@home": {
-    "description": "首页标题"
-  },
-  "nav_feed": "资料库",
-  "@nav_feed": {
-    "description": "Navigation item: Feed"
-  },
-  "nav_podcast": "发现",
-  "@nav_podcast": {
-    "description": "Navigation item: Podcast"
-  },
-  "nav_profile": "个人资料",
-  "@nav_profile": {
-    "description": "导航项：个人资料"
-  },
-  "podcast_feed_page_title": "资料库",
-  "@podcast_feed_page_title": {
-    "description": "播客信息流页面标题"
-  },
-  "podcast_add_podcast": "添加播客",
-  "@podcast_add_podcast": {
-    "description": "添加播客按钮"
-  },
-  "podcast_bulk_import": "批量导入",
-  "@podcast_bulk_import": {
-    "description": "批量导入按钮"
-  },
-  "podcast_failed_to_load_feed": "加载信息流失败",
-  "@podcast_failed_to_load_feed": {
-    "description": "加载信息流失败错误消息"
-  },
-  "podcast_retry": "重试",
-  "@podcast_retry": {
-    "description": "重试按钮"
-  },
-  "podcast_no_episodes_found": "未找到剧集",
-  "@podcast_no_episodes_found": {
-    "description": "无剧集状态"
-  },
-  "podcast_daily_report_title": "日报",
-  "@podcast_daily_report_title": {
-    "description": "播客日报卡片标题"
-  },
-  "podcast_daily_report_open": "打开日报",
-  "@podcast_daily_report_open": {
-    "description": "用于打开日报页的可访问性标签和提示"
-  },
-  "podcast_daily_report_entry_subtitle": "查看历史并按日期生成日报",
-  "@podcast_daily_report_entry_subtitle": {
-    "description": "资料库中日报入口的副标题"
-  },
-  "podcast_daily_report_generate_success": "日报已生成",
-  "@podcast_daily_report_generate_success": {
-    "description": "生成日报成功提示"
-  },
-  "podcast_daily_report_generate_failed": "生成日报失败",
-  "@podcast_daily_report_generate_failed": {
-    "description": "生成日报失败提示"
-  },
-  "podcast_daily_report_empty": "暂无可用日报",
-  "@podcast_daily_report_empty": {
-    "description": "日报卡片空状态文案"
-  },
-  "podcast_daily_report_loading": "正在加载日报...",
-  "@podcast_daily_report_loading": {
-    "description": "日报卡片加载中提示"
-  },
-  "podcast_daily_report_dates": "历史日期",
-  "@podcast_daily_report_dates": {
-    "description": "打开日报历史日期选择器按钮文案"
-  },
-  "podcast_daily_report_generated_prefix": "生成于",
-  "@podcast_daily_report_generated_prefix": {
-    "description": "日报生成时间前缀"
-  },
-  "podcast_daily_report_items": "{count}条",
-  "@podcast_daily_report_items": {
-    "description": "日报条目数量文案",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "podcast_share_as_image": "分享为图片",
-  "@podcast_share_as_image": {
-    "description": "将选中文本分享为图片"
-  },
-  "podcast_save_image_success": "图片已保存",
-  "@podcast_save_image_success": {
-    "description": "图片保存成功提示"
-  },
-  "podcast_save_image_failed": "保存图片失败",
-  "@podcast_save_image_failed": {
-    "description": "图片保存失败提示"
-  },
-  "podcast_save_image_permission": "需要照片权限才能保存图片",
-  "@podcast_save_image_permission": {
-    "description": "保存图片权限提示"
-  },
-  "podcast_share_all_content": "分享全部",
-  "@podcast_share_all_content": {
-    "description": "将全部内容分享为图片"
-  },
-  "podcast_share_selection_required": "请先选择要分享的内容",
-  "@podcast_share_selection_required": {
-    "description": "分享为图片前需要选择内容提示"
-  },
-  "podcast_share_not_supported": "当前平台暂不支持图片分享",
-  "@podcast_share_not_supported": {
-    "description": "平台不支持图片分享提示"
-  },
-  "podcast_share_failed": "图片分享失败",
-  "@podcast_share_failed": {
-    "description": "图片分享失败提示"
-  },
-  "podcast_share_preparing_image": "正在生成图片...",
-  "@podcast_share_preparing_image": {
-    "description": "生成分享图片时的进度提示"
-  },
-  "podcast_share_in_progress": "图片正在生成中，请稍候",
-  "@podcast_share_in_progress": {
-    "description": "重复触发分享时的提示"
-  },
-  "podcast_share_truncated": "内容已截断为前 {max} 个字符",
-  "@podcast_share_truncated": {
-    "description": "超长内容截断提示",
-    "placeholders": {
-      "max": {
-        "type": "int"
-      }
-    }
-  },
-  "podcast_default_podcast": "播客",
-  "@podcast_default_podcast": {
-    "description": "默认播客名称"
-  },
-  "validation_invalid_url": "无效的 URL 格式",
-  "@validation_invalid_url": {
-    "description": "无效 URL 验证"
-  },
-  "validation_too_short": "太短",
-  "@validation_too_short": {
-    "description": "太短验证"
-  },
-  "unknown_error": "发生未知错误",
-  "@unknown_error": {
-    "description": "未知错误消息"
-  },
-  "forbidden": "访问被拒绝",
-  "@forbidden": {
-    "description": "禁止错误消息"
-  },
-  "action_completed": "操作成功完成",
-  "@action_completed": {
-    "description": "通用成功消息"
-  },
-  "delete_confirm_title": "删除项目",
-  "@delete_confirm_title": {
-    "description": "删除确认标题"
-  },
-  "no_data": "没有可用数据",
-  "@no_data": {
-    "description": "无数据状态消息"
-  },
-  "pull_to_refresh": "下拉刷新",
-  "@pull_to_refresh": {
-    "description": "下拉刷新提示"
-  },
-  "refreshing": "刷新中...",
-  "@refreshing": {
-    "description": "刷新中消息"
-  },
-  "podcast_title": "播客",
-  "@podcast_title": {
-    "description": "播客页面标题"
-  },
-  "podcast_description": "无描述",
-  "@podcast_description": {
-    "description": "无描述标签"
-  },
-  "podcast_player_unknown_episode": "未知剧集",
-  "@podcast_player_unknown_episode": {
-    "description": "未知剧集标题"
-  },
-  "podcast_player_no_audio": "无音频链接",
-  "@podcast_player_no_audio": {
-    "description": "无音频链接消息"
-  },
-  "podcast_coming_soon": "即将推出",
-  "@podcast_coming_soon": {
-    "description": "即将推出标签"
-  },
-  "podcast_filter_all": "全部",
-  "@podcast_filter_all": {
-    "description": "筛选全部剧集"
-  },
-  "podcast_filter_unplayed": "未播放",
-  "@podcast_filter_unplayed": {
-    "description": "筛选未播放剧集"
-  },
-  "podcast_filter_played": "已播放",
-  "@podcast_filter_played": {
-    "description": "筛选已播放剧集"
-  },
-  "podcast_filter_with_summary": "摘要",
-  "@podcast_filter_with_summary": {
-    "description": "摘要标签"
-  },
-  "podcast_mark_all_played": "全部标记为已播放",
-  "@podcast_mark_all_played": {
-    "description": "全部标记为已播放选项"
-  },
-  "podcast_mark_all_unplayed": "全部标记为未播放",
-  "@podcast_mark_all_unplayed": {
-    "description": "全部标记为未播放选项"
-  },
-  "podcast_no_episodes": "未找到剧集",
-  "@podcast_no_episodes": {
-    "description": "无剧集状态"
-  },
-  "podcast_no_episodes_with_summary": "没有带摘要的剧集",
-  "@podcast_no_episodes_with_summary": {
-    "description": "无带摘要剧集状态"
-  },
-  "podcast_try_adjusting_filters": "尝试调整您的筛选条件",
-  "@podcast_try_adjusting_filters": {
-    "description": "尝试调整筛选提示"
-  },
-  "podcast_no_episodes_yet": "该播客可能还没有任何剧集",
-  "@podcast_no_episodes_yet": {
-    "description": "还没有剧集消息"
-  },
-  "podcast_failed_load_episodes": "加载剧集失败",
-  "@podcast_failed_load_episodes": {
-    "description": "加载剧集失败错误"
-  },
-  "podcast_filter_episodes": "筛选剧集",
-  "@podcast_filter_episodes": {
-    "description": "筛选剧集对话框标题"
-  },
-  "podcast_playback_status": "播放状态：",
-  "@podcast_playback_status": {
-    "description": "播放状态标签"
-  },
-  "podcast_all_episodes": "全部剧集",
-  "@podcast_all_episodes": {
-    "description": "全部剧集筛选选项"
-  },
-  "podcast_unplayed_only": "仅未播放",
-  "@podcast_unplayed_only": {
-    "description": "仅未播放筛选选项"
-  },
-  "podcast_played_only": "仅已播放",
-  "@podcast_played_only": {
-    "description": "仅已播放筛选选项"
-  },
-  "podcast_only_with_summary": "仅显示有摘要的剧集",
-  "@podcast_only_with_summary": {
-    "description": "仅显示有摘要筛选选项"
-  },
-  "podcast_apply": "应用",
-  "@podcast_apply": {
-    "description": "应用按钮标签"
-  },
-  "podcast_add_dialog_title": "添加播客",
-  "@podcast_add_dialog_title": {
-    "description": "添加播客对话框标题"
-  },
-  "podcast_rss_feed_url": "RSS 订阅源 URL",
-  "@podcast_rss_feed_url": {
-    "description": "RSS 订阅源 URL 字段标签"
-  },
-  "podcast_feed_url_hint": "https://example.com/feed.xml",
-  "@podcast_feed_url_hint": {
-    "description": "订阅源 URL 提示"
-  },
-  "podcast_enter_url": "请输入 URL",
-  "@podcast_enter_url": {
-    "description": "输入 URL 验证"
-  },
-  "podcast_added_successfully": "播客添加成功！",
-  "@podcast_added_successfully": {
-    "description": "播客添加成功消息"
-  },
-  "podcast_failed_add": "添加播客失败：",
-  "@podcast_failed_add": {
-    "description": "添加播客失败错误"
-  },
-  "podcast_need_many": "需要添加多个？",
-  "@podcast_need_many": {
-    "description": "需要添加多个提示"
-  },
-  "podcast_adding": "添加中...",
-  "@podcast_adding": {
-    "description": "添加播客加载文本"
-  },
-  "ai_model_management": "AI 模型管理",
-  "@ai_model_management": {
-    "description": "AI 模型管理页面标题"
-  },
-  "ai_add_model": "添加模型",
-  "@ai_add_model": {
-    "description": "添加模型按钮"
-  },
-  "ai_api_key": "API 密钥",
-  "@ai_api_key": {
-    "description": "API 密钥字段"
-  },
-  "ai_enter_api_key": "请输入 API 密钥",
-  "@ai_enter_api_key": {
-    "description": "输入 API 密钥验证"
-  },
-  "ai_confirm_delete_model": "确定要删除此模型吗？",
-  "@ai_confirm_delete_model": {
-    "description": "确认删除模型"
-  },
-  "ai_create_model_config": "创建 AI 模型配置",
-  "@ai_create_model_config": {
-    "description": "创建模型对话框标题"
-  },
-  "ai_config_name": "配置名称",
-  "@ai_config_name": {
-    "description": "配置名称字段"
-  },
-  "ai_base_url": "基础 URL",
-  "@ai_base_url": {
-    "description": "基础 URL 字段"
-  },
-  "ai_base_url_hint": "https://api.openai.com/v1",
-  "@ai_base_url_hint": {
-    "description": "基础 URL 提示"
-  },
-  "ai_model_name_field": "模型名称",
-  "@ai_model_name_field": {
-    "description": "模型名称字段"
-  },
-  "ai_model_id_hint": "例如：gpt-4o",
-  "@ai_model_id_hint": {
-    "description": "模型 ID 提示"
-  },
-  "ai_config_name_hint": "例如：我的 GPT-4o",
-  "@ai_config_name_hint": {
-    "description": "配置名称提示"
-  },
-  "ai_enter_config_name": "请输入配置名称",
-  "@ai_enter_config_name": {
-    "description": "输入配置名称验证"
-  },
-  "ai_enter_base_url": "请输入基础 URL",
-  "@ai_enter_base_url": {
-    "description": "输入基础 URL 验证"
-  },
-  "ai_enter_model_id": "请输入模型名称",
-  "@ai_enter_model_id": {
-    "description": "输入模型 ID 验证"
-  },
-  "ai_transcription_model": "转录模型",
-  "@ai_transcription_model": {
-    "description": "转录模型类型"
-  },
-  "ai_text_generation_model": "文本生成模型",
-  "@ai_text_generation_model": {
-    "description": "文本生成模型类型"
-  },
-  "ai_model_type_label": "模型类型：",
-  "@ai_model_type_label": {
-    "description": "模型类型标签"
-  },
-  "ai_only_show_active": "仅显示活跃",
-  "@ai_only_show_active": {
-    "description": "仅显示活跃开关"
-  },
-  "ai_search_models": "搜索模型名称、描述...",
-  "@ai_search_models": {
-    "description": "搜索模型占位符"
-  },
-  "ai_model_created": "模型 '{name}' 创建成功",
-  "@ai_model_created": {
-    "description": "模型创建成功"
-  },
-  "ai_model_updated_msg": "模型 '{name}' 更新成功",
-  "@ai_model_updated_msg": {
-    "description": "模型更新成功"
-  },
-  "ai_model_deleted_msg": "模型 '{name}' 已删除",
-  "@ai_model_deleted_msg": {
-    "description": "模型删除成功"
-  },
-  "ai_set_as_default_success": "已将 '{name}' 设为默认模型",
-  "@ai_set_as_default_success": {
-    "description": "设为默认成功消息"
-  },
-  "ai_model_enabled": "模型已启用",
-  "@ai_model_enabled": {
-    "description": "模型已启用消息"
-  },
-  "ai_model_disabled": "模型已禁用",
-  "@ai_model_disabled": {
-    "description": "模型已禁用消息"
-  },
-  "ai_operation_failed": "操作失败",
-  "@ai_operation_failed": {
-    "description": "操作失败消息"
-  },
-  "ai_set_default_failed": "设置默认模型失败",
-  "@ai_set_default_failed": {
-    "description": "设置默认失败"
-  },
-  "ai_delete_failed": "删除失败",
-  "@ai_delete_failed": {
-    "description": "删除失败"
-  },
-  "ai_load_failed": "加载失败：{error}",
-  "@ai_load_failed": {
-    "description": "加载失败错误"
-  },
-  "ai_no_models_configured_yet": "暂无模型配置",
-  "@ai_no_models_configured_yet": {
-    "description": "无模型状态"
-  },
-  "ai_add_first_model_btn": "添加第一个模型",
-  "@ai_add_first_model_btn": {
-    "description": "添加第一个模型按钮"
-  },
-  "profile_guest_user": "访客用户",
-  "@profile_guest_user": {
-    "description": "未登录时显示的访客用户标签"
-  },
-  "profile_please_login": "请先登录",
-  "@profile_please_login": {
-    "description": "请登录消息"
-  },
-  "profile_account_settings": "账号设置",
-  "@profile_account_settings": {
-    "description": "账号设置分组"
-  },
-  "profile_edit_profile": "编辑个人资料",
-  "@profile_edit_profile": {
-    "description": "编辑个人资料按钮/标题"
-  },
-  "profile_security": "安全设置",
-  "@profile_security": {
-    "description": "安全设置"
-  },
-  "profile_security_subtitle": "密码、身份验证和隐私",
-  "@profile_security_subtitle": {
-    "description": "安全设置副标题"
-  },
-  "profile_notifications": "通知设置",
-  "@profile_notifications": {
-    "description": "通知设置"
-  },
-  "profile_notifications_subtitle": "推送通知和邮件提醒",
-  "@profile_notifications_subtitle": {
-    "description": "通知副标题"
-  },
-  "profile_auto_sync": "自动同步",
-  "@profile_auto_sync": {
-    "description": "自动同步开关"
-  },
-  "profile_help_center": "帮助中心",
-  "@profile_help_center": {
-    "description": "帮助中心标题"
-  },
-  "profile_help_center_subtitle": "获取帮助和支持",
-  "@profile_help_center_subtitle": {
-    "description": "帮助中心副标题"
-  },
-  "profile_clear_cache": "清理缓存",
-  "@profile_clear_cache": {
-    "description": "清理缓存标题"
-  },
-  "profile_cache_management": "缓存管理",
-  "@profile_cache_management": {
-    "description": "缓存管理标题"
-  },
-  "profile_cache_management_subtitle": "查看并清理图片、音频等缓存数据",
-  "@profile_cache_management_subtitle": {
-    "description": "缓存管理副标题"
-  },
-  "profile_clear_cache_confirm": "将清理图片、音频以及接口缓存，是否继续？",
-  "@profile_clear_cache_confirm": {
-    "description": "清理缓存确认提示"
-  },
-  "profile_clearing_cache": "正在清理缓存…",
-  "@profile_clearing_cache": {
-    "description": "清理缓存进行中提示"
-  },
-  "profile_cache_cleared": "缓存已清理",
-  "@profile_cache_cleared": {
-    "description": "清理缓存成功提示"
-  },
-  "profile_cache_clear_failed": "清理缓存失败：{error}",
-  "@profile_cache_clear_failed": {
-    "description": "清理缓存失败提示",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "profile_cache_manage_title": "存储与缓存",
-  "@profile_cache_manage_title": {
-    "description": "缓存管理页面标题"
-  },
-  "profile_cache_manage_total_used": "已使用",
-  "@profile_cache_manage_total_used": {
-    "description": "缓存管理已使用标题"
-  },
-  "profile_cache_manage_images": "图片",
-  "@profile_cache_manage_images": {
-    "description": "缓存管理图片标签"
-  },
-  "profile_cache_manage_audio": "音频",
-  "@profile_cache_manage_audio": {
-    "description": "缓存管理音频标签"
-  },
-  "profile_cache_manage_other": "其他",
-  "@profile_cache_manage_other": {
-    "description": "缓存管理其他标签"
-  },
-  "profile_cache_manage_item_count": "{count} 项",
-  "@profile_cache_manage_item_count": {
-    "description": "缓存管理数量",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "profile_cache_manage_details": "详情",
-  "@profile_cache_manage_details": {
-    "description": "缓存管理详情标题"
-  },
-  "profile_cache_manage_clean": "清理",
-  "@profile_cache_manage_clean": {
-    "description": "缓存管理清理按钮"
-  },
-  "profile_cache_manage_notice": "清理缓存会删除已下载的图片和临时文件。你的订阅和偏好设置会保留。",
-  "@profile_cache_manage_notice": {
-    "description": "缓存管理提示文案"
-  },
-  "profile_cache_manage_deep_clean_all": "一键深度清理（{size}）",
-  "@profile_cache_manage_deep_clean_all": {
-    "description": "缓存管理一键清理按钮",
-    "placeholders": {
-      "size": {
-        "type": "String"
-      }
-    }
-  },
-  "profile_cache_manage_delete_selected_confirm": "确定删除所选分类中的 {count} 项缓存（{size}）吗？",
-  "@profile_cache_manage_delete_selected_confirm": {
-    "description": "缓存管理删除所选确认提示",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "size": {
-        "type": "String"
-      }
-    }
-  },
-  "profile_about_subtitle": "应用版本和信息",
-  "@profile_about_subtitle": {
-    "description": "关于副标题"
-  },
-  "profile_name": "姓名",
-  "@profile_name": {
-    "description": "姓名字段标签"
-  },
-  "profile_email_field": "邮箱",
-  "@profile_email_field": {
-    "description": "个人资料中的邮箱字段标签"
-  },
-  "profile_bio": "个人简介",
-  "@profile_bio": {
-    "description": "个人简介字段标签"
-  },
-  "profile_updated_successfully": "个人资料更新成功",
-  "@profile_updated_successfully": {
-    "description": "个人资料更新成功消息"
-  },
-  "profile_change_password": "修改密码",
-  "@profile_change_password": {
-    "description": "修改密码选项"
-  },
-  "profile_biometric_auth": "生物识别认证",
-  "@profile_biometric_auth": {
-    "description": "生物识别认证选项"
-  },
-  "profile_two_factor_auth": "双因素认证",
-  "@profile_two_factor_auth": {
-    "description": "双因素认证选项"
-  },
-  "profile_user_guide": "用户指南",
-  "@profile_user_guide": {
-    "description": "用户指南选项"
-  },
-  "profile_user_guide_subtitle": "了解如何使用应用",
-  "@profile_user_guide_subtitle": {
-    "description": "用户指南副标题"
-  },
-  "profile_video_tutorials": "视频教程",
-  "@profile_video_tutorials": {
-    "description": "视频教程选项"
-  },
-  "profile_video_tutorials_subtitle": "观看分步指南",
-  "@profile_video_tutorials_subtitle": {
-    "description": "视频教程副标题"
-  },
-  "profile_contact_support": "联系客服",
-  "@profile_contact_support": {
-    "description": "联系客服选项"
-  },
-  "profile_contact_support_subtitle": "获取我们团队的帮助",
-  "@profile_contact_support_subtitle": {
-    "description": "联系客服副标题"
-  },
-  "profile_logout_title": "退出登录",
-  "@profile_logout_title": {
-    "description": "退出登录对话框标题"
-  },
-  "profile_logout_message": "确定要退出登录吗？",
-  "@profile_logout_message": {
-    "description": "退出登录确认消息"
-  },
-  "profile_logged_out": "已成功退出登录",
-  "@profile_logged_out": {
-    "description": "退出登录成功消息"
-  },
-  "settings_edit_config": "编辑配置",
-  "@settings_edit_config": {
-    "description": "编辑配置提示"
-  },
-  "settings_test_connection": "测试连接",
-  "@settings_test_connection": {
-    "description": "测试连接按钮"
-  },
-  "settings_testing_connection": "正在测试连接...",
-  "@settings_testing_connection": {
-    "description": "测试连接消息"
-  },
-  "invalid_navigation_arguments": "导航参数无效",
-  "@invalid_navigation_arguments": {
-    "description": "导航参数无效错误"
-  },
-  "invalid_episode_id": "剧集ID无效",
-  "@invalid_episode_id": {
-    "description": "剧集ID无效错误"
-  },
-  "backend_api_server_config": "后端 API 服务器配置",
-  "@backend_api_server_config": {
-    "description": "后端 API 服务器配置对话框标题"
-  },
-  "backend_api_url_label": "后端 API URL",
-  "@backend_api_url_label": {
-    "description": "后端 API URL 标签"
-  },
-  "backend_api_url_hint": "https://api.example.com\\n或 http://192.168.1.10:8080",
-  "@backend_api_url_hint": {
-    "description": "后端 API URL 提示文本"
-  },
-  "backend_api_description": "说明：此为后端 API 服务器，与 AI 模型 API 无关",
-  "@backend_api_description": {
-    "description": "后端 API 说明"
-  },
-  "use_local_url": "本地服务器",
-  "@use_local_url": {
-    "description": "使用本地链接按钮标签"
-  },
-  "connection_error_hint": "连接错误",
-  "@connection_error_hint": {
-    "description": "连接错误提示文本"
-  },
-  "connection_status_unverified": "未验证",
-  "@connection_status_unverified": {
-    "description": "连接状态 - 尚未验证"
-  },
-  "connection_status_verifying": "验证中...",
-  "@connection_status_verifying": {
-    "description": "连接状态 - 正在验证"
-  },
-  "connection_status_success": "成功",
-  "@connection_status_success": {
-    "description": "连接状态 - 连接成功"
-  },
-  "connection_status_failed": "失败",
-  "@connection_status_failed": {
-    "description": "连接状态 - 连接失败"
-  },
-  "server_history_title": "历史记录",
-  "@server_history_title": {
-    "description": "服务器历史记录标题"
-  },
-  "profile_viewed_title": "查看历史",
-  "@profile_viewed_title": {
-    "description": "个人中心查看历史标题"
-  },
-  "server_history_empty": "暂无历史记录",
-  "@server_history_empty": {
-    "description": "没有历史记录消息"
-  },
-  "save_failed": "保存失败: {error}",
-  "@save_failed": {
-    "description": "保存失败错误消息"
-  },
-  "restore_defaults_success": "已恢复默认服务器地址",
-  "@restore_defaults_success": {
-    "description": "恢复默认成功消息"
-  },
-  "drop_files_here": "拖放文件到这里！",
-  "@drop_files_here": {
-    "description": "拖放文件提示"
-  },
-  "podcast_enter_select_mode": "选择模式",
-  "@podcast_enter_select_mode": {
-    "description": "进入选择模式提示"
-  },
-  "podcast_deselect_all": "取消全选",
-  "@podcast_deselect_all": {
-    "description": "取消全选提示"
-  },
-  "podcast_selected_count": "已选择 {count} 个",
-  "@podcast_selected_count": {
-    "description": "选中数量标签",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "podcast_bulk_delete_title": "删除选中的播客",
-  "@podcast_bulk_delete_title": {
-    "description": "批量删除对话框标题"
-  },
-  "podcast_bulk_delete_message": "确定要删除 {count} 个播客吗？",
-  "@podcast_bulk_delete_message": {
-    "description": "批量删除确认消息",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "podcast_bulk_delete_warning": "此操作还将删除这些播客的所有关联单集。此操作无法撤销。",
-  "@podcast_bulk_delete_warning": {
-    "description": "批量删除警告消息"
-  },
-  "podcast_bulk_delete_confirm": "删除",
-  "@podcast_bulk_delete_confirm": {
-    "description": "批量删除确认按钮"
-  },
-  "update_check_updates": "检查更新",
-  "@update_check_updates": {
-    "description": "检查更新按钮/标签"
-  },
-  "update_auto_check": "自动检查更新",
-  "@update_auto_check": {
-    "description": "自动检查更新描述"
-  },
-  "update_new_version_available": "发现新版本",
-  "@update_new_version_available": {
-    "description": "新版本可用标题"
-  },
-  "update_skip_this_version": "跳过此版本",
-  "@update_skip_this_version": {
-    "description": "跳过此版本按钮标签"
-  },
-  "update_later": "稍后提醒",
-  "@update_later": {
-    "description": "稍后提醒按钮标签"
-  },
-  "update_download": "下载",
-  "@update_download": {
-    "description": "下载更新按钮标签"
-  },
-  "update_latest_version": "最新版本",
-  "@update_latest_version": {
-    "description": "最新版本标签"
-  },
-  "update_published_at": "发布时间",
-  "@update_published_at": {
-    "description": "发布日期标签"
-  },
-  "update_file_size": "大小",
-  "@update_file_size": {
-    "description": "文件大小标签"
-  },
-  "update_release_notes": "更新说明",
-  "@update_release_notes": {
-    "description": "更新说明部分标签"
-  },
-  "update_download_failed": "下载失败",
-  "@update_download_failed": {
-    "description": "下载失败错误消息"
-  },
-  "update_checking": "正在检查更新...",
-  "@update_checking": {
-    "description": "正在检查更新消息"
-  },
-  "update_check_failed": "检查失败",
-  "@update_check_failed": {
-    "description": "更新检查失败标题"
-  },
-  "update_up_to_date": "已是最新版本",
-  "@update_up_to_date": {
-    "description": "应用已是最新版本消息"
-  },
-  "update_try_again": "重试",
-  "@update_try_again": {
-    "description": "重试按钮标签"
-  },
-  "back_button": "返回",
-  "@back_button": {
-    "description": "返回按钮工具提示标签"
-  },
-  "ai_model_default": "默认",
-  "@ai_model_default": {
-    "description": "默认模型徽章"
-  },
-  "ai_model_system": "系统",
-  "@ai_model_system": {
-    "description": "系统模型徽章"
-  },
-  "ai_model_enable": "启用模型",
-  "@ai_model_enable": {
-    "description": "启用模型工具提示"
-  },
-  "ai_model_disable": "禁用模型",
-  "@ai_model_disable": {
-    "description": "禁用模型工具提示"
-  },
-  "ai_edit_config": "编辑配置",
-  "@ai_edit_config": {
-    "description": "编辑配置菜单项"
-  },
-  "ai_test_connection": "测试连接",
-  "@ai_test_connection": {
-    "description": "测试连接菜单项"
-  },
-  "ai_set_as_default": "设为默认",
-  "@ai_set_as_default": {
-    "description": "设为默认菜单项"
-  },
-  "ai_test_prompt_transcription": "测试音频转录功能",
-  "@ai_test_prompt_transcription": {
-    "description": "转录测试默认提示词"
-  },
-  "ai_test_prompt_generation": "请用中文简单介绍一下人工智能",
-  "@ai_test_prompt_generation": {
-    "description": "文本生成测试默认提示词"
-  },
-  "ai_enter_test_content": "请输入测试内容",
-  "@ai_enter_test_content": {
-    "description": "测试内容验证"
-  },
-  "ai_test_success": "测试成功",
-  "@ai_test_success": {
-    "description": "测试成功消息"
-  },
-  "ai_test_failed": "测试失败",
-  "@ai_test_failed": {
-    "description": "测试失败消息"
-  },
-  "ai_test_content": "测试内容",
-  "@ai_test_content": {
-    "description": "模型测试的测试内容标签"
-  },
-  "ai_transcription_test_info_title": "转录测试提示",
-  "@ai_transcription_test_info_title": {
-    "description": "转录测试信息标题"
-  },
-  "ai_transcription_test_info_description": "转录测试需要提供音频文件。请确保您已准备好用于测试的音频文件。",
-  "@ai_transcription_test_info_description": {
-    "description": "转录测试信息描述"
-  },
-  "ai_transcription_test_info_details": "点击\"测试连接\"可使用内置测试音频进行快速验证。",
-  "@ai_transcription_test_info_details": {
-    "description": "转录测试信息详情"
-  },
-  "settings_response_speed": "响应速度",
-  "@settings_response_speed": {
-    "description": "响应速度标签"
-  },
-  "settings_response_very_fast": "非常快",
-  "@settings_response_very_fast": {
-    "description": "非常快响应"
-  },
-  "settings_response_normal": "正常",
-  "@settings_response_normal": {
-    "description": "正常响应"
-  },
-  "settings_response_slow": "较慢",
-  "@settings_response_slow": {
-    "description": "较慢响应"
-  },
-  "schedule_load_failed": "加载失败",
-  "@schedule_load_failed": {
-    "description": "计划加载失败消息"
-  },
-  "schedule_no_config": "没有找到配置信息",
-  "@schedule_no_config": {
-    "description": "无计划配置消息"
-  },
-  "schedule_saving": "保存中...",
-  "@schedule_saving": {
-    "description": "保存计划状态"
-  },
-  "schedule_save_settings": "保存设置",
-  "@schedule_save_settings": {
-    "description": "保存设置按钮"
-  },
-  "schedule_current_config": "当前配置",
-  "@schedule_current_config": {
-    "description": "当前配置部分"
-  },
-  "schedule_update_frequency": "更新频率",
-  "@schedule_update_frequency": {
-    "description": "更新频率标签"
-  },
-  "schedule_update_time": "更新时间",
-  "@schedule_update_time": {
-    "description": "更新时间标签"
-  },
-  "schedule_update_day": "更新星期",
-  "@schedule_update_day": {
-    "description": "更新星期标签"
-  },
-  "schedule_next_update": "下次更新",
-  "@schedule_next_update": {
-    "description": "下次更新标签"
-  },
-  "schedule_hourly": "每小时",
-  "@schedule_hourly": {
-    "description": "每小时频率选项"
-  },
-  "schedule_daily": "每天",
-  "@schedule_daily": {
-    "description": "每天频率选项"
-  },
-  "schedule_weekly": "每周",
-  "@schedule_weekly": {
-    "description": "每周频率选项"
-  },
-  "schedule_settings": "更新设置",
-  "@schedule_settings": {
-    "description": "计划设置页面标题"
-  },
-  "schedule_week_short": "周",
-  "@schedule_week_short": {
-    "description": "周简称"
-  },
-  "schedule_day_mon": "一",
-  "@schedule_day_mon": {
-    "description": "周一简称"
-  },
-  "schedule_day_tue": "二",
-  "@schedule_day_tue": {
-    "description": "周二简称"
-  },
-  "schedule_day_wed": "三",
-  "@schedule_day_wed": {
-    "description": "周三简称"
-  },
-  "schedule_day_thu": "四",
-  "@schedule_day_thu": {
-    "description": "周四简称"
-  },
-  "schedule_day_fri": "五",
-  "@schedule_day_fri": {
-    "description": "周五简称"
-  },
-  "schedule_day_sat": "六",
-  "@schedule_day_sat": {
-    "description": "周六简称"
-  },
-  "schedule_day_sun": "日",
-  "@schedule_day_sun": {
-    "description": "周日简称"
-  },
-  "schedule_select_time": "选择时间",
-  "@schedule_select_time": {
-    "description": "选择时间占位符"
-  },
-  "schedule_select_update_time": "请选择更新时间",
-  "@schedule_select_update_time": {
-    "description": "验证：选择时间"
-  },
-  "schedule_select_time_and_day": "请选择更新时间和星期",
-  "@schedule_select_time_and_day": {
-    "description": "验证：选择时间和星期"
-  },
-  "schedule_settings_saved": "设置已保存",
-  "@schedule_settings_saved": {
-    "description": "设置已保存消息"
-  },
-  "schedule_save_failed": "保存失败",
-  "@schedule_save_failed": {
-    "description": "保存失败消息"
-  },
-  "schedule_unknown_error": "未知错误",
-  "@schedule_unknown_error": {
-    "description": "未知错误消息"
-  },
-  "feed_no_subscriptions": "还没有订阅内容",
-  "@feed_no_subscriptions": {
-    "description": "无订阅消息"
-  },
-  "feed_no_subscriptions_hint": "去订阅一些你感兴趣的播客吧！",
-  "@feed_no_subscriptions_hint": {
-    "description": "提示订阅播客"
-  },
-  "feed_subscribe_podcast": "订阅播客",
-  "@feed_subscribe_podcast": {
-    "description": "订阅播客按钮"
-  },
-  "podcast_no_shownotes": "暂无节目简介",
-  "@podcast_no_shownotes": {
-    "description": "无节目简介消息"
-  },
-  "podcast_no_transcript": "暂无转录内容",
-  "@podcast_no_transcript": {
-    "description": "无转录消息"
-  },
-  "podcast_click_to_transcribe": "点击\\\"开始转录\\\"按钮生成转录文本",
-  "@podcast_click_to_transcribe": {
-    "description": "点击转录提示"
-  },
-  "podcast_transcription_failed": "转录失败",
-  "@podcast_transcription_failed": {
-    "description": "转录失败状态"
-  },
-  "date_format": "{year}年{month}月{day}日",
-  "@date_format": {
-    "description": "日期格式模式",
-    "placeholders": {
-      "year": {
-        "type": "int"
-      },
-      "month": {
-        "type": "String"
-      },
-      "day": {
-        "type": "String"
-      }
-    }
-  },
-  "podcast_search_hint": "搜索播客或分集...",
-  "@podcast_search_hint": {
-    "description": "播客搜索输入占位符"
-  },
-  "podcast_discover_title": "发现",
-  "@podcast_discover_title": {
-    "description": "播客发现页标题"
-  },
-  "podcast_discover_top_charts": "热门榜单",
-  "@podcast_discover_top_charts": {
-    "description": "播客发现页热门榜单分区标题"
-  },
-  "podcast_discover_trending_in": "{country} 热门",
-  "@podcast_discover_trending_in": {
-    "description": "播客发现页榜单地区副标题",
-    "placeholders": {
-      "country": {
-        "type": "String"
-      }
-    }
-  },
-  "podcast_discover_see_all": "查看全部",
-  "@podcast_discover_see_all": {
-    "description": "播客发现页榜单查看全部按钮"
-  },
-  "podcast_discover_no_chart_data": "暂无榜单数据",
-  "@podcast_discover_no_chart_data": {
-    "description": "播客发现页榜单空状态文案"
-  },
-  "podcast_discover_browse_by_category": "按分类浏览",
-  "@podcast_discover_browse_by_category": {
-    "description": "播客发现页分类分区标题"
-  },
-  "podcast_country_label": "国家或地区",
-  "@podcast_country_label": {
-    "description": "国家选择器标签"
-  },
-  "podcast_search_loading": "搜索中...",
-  "@podcast_search_loading": {
-    "description": "搜索加载消息"
-  },
-  "podcast_search_error": "搜索失败",
-  "@podcast_search_error": {
-    "description": "搜索错误标题"
-  },
-  "podcast_search_no_results": "未找到结果",
-  "@podcast_search_no_results": {
-    "description": "无搜索结果消息"
-  },
-  "podcast_search_section_podcasts": "播客",
-  "@podcast_search_section_podcasts": {
-    "description": "搜索结果播客分区标题"
-  },
-  "podcast_search_section_episodes": "分集",
-  "@podcast_search_section_episodes": {
-    "description": "搜索结果分集分区标题"
-  },
-  "podcast_subscribe": "订阅",
-  "@podcast_subscribe": {
-    "description": "订阅按钮标签"
-  },
-  "podcast_subscribed": "已订阅",
-  "@podcast_subscribed": {
-    "description": "已订阅状态标签"
-  },
-  "podcast_subscribe_success": "已订阅 {podcastName}",
-  "@podcast_subscribe_success": {
-    "description": "订阅成功消息",
-    "placeholders": {
-      "podcastName": {
-        "type": "String"
-      }
-    }
-  },
-  "podcast_subscribe_failed": "订阅失败：{error}",
-  "@podcast_subscribe_failed": {
-    "description": "订阅失败消息",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "podcast_country_china": "中国",
-  "@podcast_country_china": {
-    "description": "国家名称：中国"
-  },
-  "podcast_country_usa": "美国",
-  "@podcast_country_usa": {
-    "description": "国家名称：美国"
-  },
-  "podcast_country_japan": "日本",
-  "@podcast_country_japan": {
-    "description": "国家名称：日本"
-  },
-  "podcast_country_uk": "英国",
-  "@podcast_country_uk": {
-    "description": "国家名称：英国"
-  },
-  "podcast_country_germany": "德国",
-  "@podcast_country_germany": {
-    "description": "国家名称：德国"
-  },
-  "podcast_country_france": "法国",
-  "@podcast_country_france": {
-    "description": "国家名称：法国"
-  },
-  "podcast_country_canada": "加拿大",
-  "@podcast_country_canada": {
-    "description": "国家名称：加拿大"
-  },
-  "podcast_country_australia": "澳大利亚",
-  "@podcast_country_australia": {
-    "description": "国家名称：澳大利亚"
-  },
-  "podcast_country_korea": "韩国",
-  "@podcast_country_korea": {
-    "description": "国家名称：韩国"
-  },
-  "podcast_country_taiwan": "台湾",
-  "@podcast_country_taiwan": {
-    "description": "国家名称：台湾"
-  },
-  "podcast_country_hong_kong": "香港",
-  "@podcast_country_hong_kong": {
-    "description": "国家名称：香港"
-  },
-  "podcast_country_india": "印度",
-  "@podcast_country_india": {
-    "description": "国家名称：印度"
-  },
-  "podcast_country_brazil": "巴西",
-  "@podcast_country_brazil": {
-    "description": "国家名称：巴西"
-  },
-  "podcast_country_mexico": "墨西哥",
-  "@podcast_country_mexico": {
-    "description": "国家名称：墨西哥"
-  },
-  "podcast_country_spain": "西班牙",
-  "@podcast_country_spain": {
-    "description": "国家名称：西班牙"
-  },
-  "podcast_country_italy": "意大利",
-  "@podcast_country_italy": {
-    "description": "国家名称：意大利"
-  },
-  "podcast_reparse_tooltip": "重新解析播客（获取最新分集和链接）",
-  "@podcast_reparse_tooltip": {
-    "description": "重新解析播客按钮提示"
-  },
-  "podcast_reparsing": "正在重新解析播客...",
-  "@podcast_reparsing": {
-    "description": "正在重新解析消息"
-  },
-  "podcast_reparse_completed": "✅ 重新解析完成！",
-  "@podcast_reparse_completed": {
-    "description": "重新解析完成消息"
-  },
-  "podcast_reparse_failed": "❌ 重新解析失败：",
-  "@podcast_reparse_failed": {
-    "description": "重新解析失败消息"
-  },
-  "podcast_player_now_playing": "正在播放",
-  "@podcast_player_now_playing": {
-    "description": "浮动播放器中的正在播放标签"
-  },
-  "podcast_player_collapse": "收起",
-  "@podcast_player_collapse": {
-    "description": "浮动播放器中的收起按钮提示"
-  },
-  "podcast_player_list": "播放列表",
-  "@podcast_player_list": {
-    "description": "浮动播放器中的列表按钮提示"
-  },
-  "podcast_player_sleep_mode": "睡眠模式",
-  "@podcast_player_sleep_mode": {
-    "description": "浮动播放器中的睡眠模式按钮提示"
-  },
-  "podcast_player_play": "播放",
-  "@podcast_player_play": {
-    "description": "浮动播放器中的播放按钮提示"
-  },
-  "podcast_player_pause": "暂停",
-  "@podcast_player_pause": {
-    "description": "浮动播放器中的暂停按钮提示"
-  },
-  "podcast_player_rewind_10": "后退10秒",
-  "@podcast_player_rewind_10": {
-    "description": "后退10秒按钮提示"
-  },
-  "podcast_player_forward_30": "前进30秒",
-  "@podcast_player_forward_30": {
-    "description": "前进30秒按钮提示"
-  },
-  "podcast_play_episode": "播放",
-  "@podcast_play_episode": {
-    "description": "播放按钮标签（移动端简短版本）"
-  },
-  "podcast_play_episode_full": "播放",
-  "@podcast_play_episode_full": {
-    "description": "播放按钮标签（桌面端完整版本）"
-  },
-  "podcast_source": "来源",
-  "@podcast_source": {
-    "description": "来源链接标签"
-  },
-  "podcast_speed_title": "倍速播放",
-  "@podcast_speed_title": {
-    "description": "播放速度选择标题"
-  },
-  "podcast_speed_done": "完成",
-  "@podcast_speed_done": {
-    "description": "速度选择完成按钮"
-  },
-  "podcast_tab_shownotes": "节目详情",
-  "@podcast_tab_shownotes": {
-    "description": "分集详情标签：节目详情"
-  },
-  "podcast_tab_transcript": "文字稿",
-  "@podcast_tab_transcript": {
-    "description": "分集详情标签：文字稿"
-  },
-  "podcast_tab_chat": "AI对话",
-  "@podcast_tab_chat": {
-    "description": "分集详情标签：AI对话"
-  },
-  "podcast_transcription_processing": "正在转录中...",
-  "@podcast_transcription_processing": {
-    "description": "转录状态：处理中"
-  },
-  "podcast_transcription_auto_starting": "自动开始转录...",
-  "@podcast_transcription_auto_starting": {
-    "description": "转录自动开始消息"
-  },
-  "podcast_conversation_title": "AI对话",
-  "@podcast_conversation_title": {
-    "description": "对话界面标题"
-  },
-  "podcast_conversation_empty_title": "开始对话",
-  "@podcast_conversation_empty_title": {
-    "description": "空对话标题"
-  },
-  "podcast_conversation_empty_hint": "向AI提问本集节目的相关问题，基于文字稿获取智能回答。",
-  "@podcast_conversation_empty_hint": {
-    "description": "空对话提示"
-  },
-  "podcast_conversation_send_hint": "发送消息（Ctrl+Enter）",
-  "@podcast_conversation_send_hint": {
-    "description": "发送消息提示文本"
-  },
-  "podcast_conversation_no_summary_hint": "对话功能需要先完成转录。请等待转录完成。",
-  "@podcast_conversation_no_summary_hint": {
-    "description": "无摘要提示的对话"
-  },
-  "podcast_conversation_loading_failed": "加载对话历史失败",
-  "@podcast_conversation_loading_failed": {
-    "description": "加载对话失败消息"
-  },
-  "podcast_conversation_user": "你",
-  "@podcast_conversation_user": {
-    "description": "对话中的用户标签"
-  },
-  "podcast_conversation_assistant": "AI助手",
-  "@podcast_conversation_assistant": {
-    "description": "对话中的助手标签"
-  },
-  "podcast_conversation_reload": "重新加载",
-  "@podcast_conversation_reload": {
-    "description": "重新加载按钮标签"
-  },
-  "podcast_conversation_new_chat": "新对话",
-  "@podcast_conversation_new_chat": {
-    "description": "新建对话按钮提示"
-  },
-  "podcast_conversation_new_chat_confirm": "确定要开始新的对话吗？当前的对话将会被清除。",
-  "@podcast_conversation_new_chat_confirm": {
-    "description": "新建对话确认消息"
-  },
-  "podcast_conversation_history": "对话历史",
-  "@podcast_conversation_history": {
-    "description": "对话历史标题"
-  },
-  "podcast_conversation_delete_title": "删除对话",
-  "@podcast_conversation_delete_title": {
-    "description": "删除对话确认框标题"
-  },
-  "podcast_conversation_delete_confirm": "确定要删除这个对话吗？此操作无法撤销。",
-  "@podcast_conversation_delete_confirm": {
-    "description": "删除对话确认消息"
-  },
-  "podcast_conversation_message_count": "{count}条消息",
-  "@podcast_conversation_message_count": {
-    "description": "对话消息数量",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "podcast_error_loading": "加载内容失败",
-  "@podcast_error_loading": {
-    "description": "通用加载错误消息"
-  },
-  "podcast_transcription_delete": "删除",
-  "@podcast_transcription_delete": {
-    "description": "转录删除按钮"
-  },
-  "podcast_transcription_clear": "清空",
-  "@podcast_transcription_clear": {
-    "description": "转录清空按钮"
-  },
-  "podcast_episode_not_found": "未找到分集",
-  "@podcast_episode_not_found": {
-    "description": "未找到分集消息"
-  },
-  "podcast_go_back": "返回",
-  "@podcast_go_back": {
-    "description": "返回按钮标签"
-  },
-  "podcast_load_failed": "加载失败",
-  "@podcast_load_failed": {
-    "description": "加载失败消息"
-  },
-  "podcast_summary_empty_hint": "暂无摘要",
-  "@podcast_summary_empty_hint": {
-    "description": "摘要空提示"
-  },
-  "podcast_please_select_time": "请选择时间",
-  "@podcast_please_select_time": {
-    "description": "请选择时间验证消息"
-  },
-  "podcast_please_select_time_and_day": "请选择时间和星期",
-  "@podcast_please_select_time_and_day": {
-    "description": "请选择时间和星期验证消息"
-  },
-  "podcast_bulk_import_file_error": "读取文件失败：{error}",
-  "@podcast_bulk_import_file_error": {
-    "description": "批量导入文件错误消息",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "podcast_bulk_import_input_text": "文本",
-  "@podcast_bulk_import_input_text": {
-    "description": "批量导入文本输入标签"
-  },
-  "podcast_bulk_import_input_file": "文件",
-  "@podcast_bulk_import_input_file": {
-    "description": "批量导入文件上传标签"
-  },
-  "podcast_bulk_import_no_urls_text": "未找到URL",
-  "@podcast_bulk_import_no_urls_text": {
-    "description": "批量导入未在文本中找到URL时的消息"
-  },
-  "podcast_bulk_import_links_found": "找到{total}个链接，{valid}个有效RSS订阅",
-  "@podcast_bulk_import_links_found": {
-    "description": "批量导入显示找到的总链接数和有效订阅数",
-    "placeholders": {
-      "total": {
-        "type": "int"
-      },
-      "valid": {
-        "type": "int"
-      }
-    }
-  },
-  "podcast_bulk_import_urls_exist": "所有URL已存在于列表中",
-  "@podcast_bulk_import_urls_exist": {
-    "description": "批量导入当所有URL已存在时的消息"
-  },
-  "podcast_bulk_import_edit_url": "编辑RSS URL",
-  "@podcast_bulk_import_edit_url": {
-    "description": "批量导入编辑URL对话框标题"
-  },
-  "podcast_bulk_import_save_revalidate": "保存并重新验证",
-  "@podcast_bulk_import_save_revalidate": {
-    "description": "批量导入保存并重新验证按钮文本"
-  },
-  "podcast_bulk_import_no_urls_file": "文件中未找到URL",
-  "@podcast_bulk_import_no_urls_file": {
-    "description": "批量导入在文件中未找到URL时的消息"
-  },
-  "podcast_bulk_import_no_valid_feeds": "没有有效的RSS订阅可导入。请移除无效URL或等待验证完成。",
-  "@podcast_bulk_import_no_valid_feeds": {
-    "description": "批量导入没有有效订阅可导入时的消息"
-  },
-  "podcast_bulk_import_imported_count": "成功导入{count}个RSS订阅",
-  "@podcast_bulk_import_imported_count": {
-    "description": "批量导入成功消息（带数量）",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "podcast_bulk_import_failed": "导入失败：{error}",
-  "@podcast_bulk_import_failed": {
-    "description": "批量导入失败消息",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "podcast_bulk_import_valid_count": "有效 ({count})",
-  "@podcast_bulk_import_valid_count": {
-    "description": "批量导入有效数量标签",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "podcast_bulk_import_invalid_count": "无效 ({count})",
-  "@podcast_bulk_import_invalid_count": {
-    "description": "批量导入无效数量标签",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "podcast_unknown_title": "未知标题",
-  "@podcast_unknown_title": {
-    "description": "播客标题未知时的默认标题"
-  },
-  "podcast_copy": "复制",
-  "@podcast_copy": {
-    "description": "复制按钮提示"
-  },
-  "podcast_edit_retry": "编辑重试",
-  "@podcast_edit_retry": {
-    "description": "编辑并重试按钮提示"
-  },
-  "podcast_remove": "移除",
-  "@podcast_remove": {
-    "description": "移除按钮提示"
-  },
-  "podcast_bulk_import_drag_drop": "拖放文件到此处或",
-  "@podcast_bulk_import_drag_drop": {
-    "description": "批量导入拖放说明"
-  },
-  "podcast_bulk_import_select_file": "选择文件",
-  "@podcast_bulk_import_select_file": {
-    "description": "批量导入选择文件按钮文本"
-  },
-  "podcast_rss_list": "RSS列表",
-  "@podcast_rss_list": {
-    "description": "RSS列表标题"
-  },
-  "podcast_import_all": "全部导入",
-  "@podcast_import_all": {
-    "description": "全部导入按钮文本"
-  },
-  "podcast_no_items": "无项目",
-  "@podcast_no_items": {
-    "description": "无项目消息"
-  },
-  "podcast_bulk_import_extract": "提取",
-  "@podcast_bulk_import_extract": {
-    "description": "批量导入提取按钮文本"
-  },
-  "podcast_bulk_import_click_select": "点击选择文件",
-  "@podcast_bulk_import_click_select": {
-    "description": "批量导入点击选择文件文本"
-  },
-  "podcast_bulk_import_or_drag_drop": "或拖放到此处",
-  "@podcast_bulk_import_or_drag_drop": {
-    "description": "批量导入或拖放文本"
-  },
-  "podcast_bulk_import_paste_hint": "在此粘贴URL或OPML内容...",
-  "@podcast_bulk_import_paste_hint": {
-    "description": "批量导入粘贴文本区域提示"
-  },
-  "podcast_not_valid_rss": "不是有效的RSS订阅",
-  "@podcast_not_valid_rss": {
-    "description": "无效RSS订阅错误消息"
-  },
-  "podcast_copied": "已复制：{text}",
-  "@podcast_copied": {
-    "description": "复制到剪贴板消息",
-    "placeholders": {
-      "text": {
-        "type": "String"
-      }
-    }
-  },
-  "podcast_bulk_import_hint_text": "URL",
-  "@podcast_bulk_import_hint_text": {
-    "description": "文本字段中的URL提示文本"
-  },
-  "podcast_global_rss_settings_title": "全局RSS设置",
-  "@podcast_global_rss_settings_title": {
-    "description": "全局RSS设置页面标题"
-  },
-  "podcast_updated_subscriptions": "已更新{count}个订阅",
-  "@podcast_updated_subscriptions": {
-    "description": "更新订阅消息（带数量）",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "podcast_summary_generate_failed": "生成摘要失败",
-  "@podcast_summary_generate_failed": {
-    "description": "摘要生成失败消息"
-  },
-  "podcast_summary_no_summary": "暂无摘要",
-  "@podcast_summary_no_summary": {
-    "description": "无摘要可用消息"
-  },
-  "podcast_advanced_options": "高级选项",
-  "@podcast_advanced_options": {
-    "description": "展开/收起高级选项按钮"
-  },
-  "podcast_regenerate": "重新生成",
-  "@podcast_regenerate": {
-    "description": "重新生成摘要按钮"
-  },
-  "podcast_ai_model": "AI模型",
-  "@podcast_ai_model": {
-    "description": "模型选择器标签"
-  },
-  "podcast_custom_prompt": "自定义提示词（可选）",
-  "@podcast_custom_prompt": {
-    "description": "提示词输入框标签"
-  },
-  "podcast_custom_prompt_hint": "例如：重点关注技术要点...",
-  "@podcast_custom_prompt_hint": {
-    "description": "提示词占位符"
-  },
-  "podcast_generating_summary": "正在生成AI摘要...",
-  "@podcast_generating_summary": {
-    "description": "加载状态文本"
-  },
-  "podcast_summary_generate": "生成摘要",
-  "@podcast_summary_generate": {
-    "description": "生成AI摘要按钮"
-  },
-  "podcast_summary_transcription_required": "需要转录才能生成AI摘要",
-  "@podcast_summary_transcription_required": {
-    "description": "无转录内容时的提示"
-  },
-  "podcast_default_model": "默认",
-  "@podcast_default_model": {
-    "description": "默认模型标记"
-  },
-  "podcast_summary_chars": "字符",
-  "@podcast_summary_chars": {
-    "description": "字数统计单位"
-  },
-  "theme_mode": "主题模式",
-  "@theme_mode": {
-    "description": "主题模式设置标签"
-  },
-  "theme_mode_subtitle": "选择您偏好的主题",
-  "@theme_mode_subtitle": {
-    "description": "主题模式副标题"
-  },
-  "theme_mode_follow_system": "跟随系统",
-  "@theme_mode_follow_system": {
-    "description": "跟随系统主题选项"
-  },
-  "theme_mode_light": "浅色",
-  "@theme_mode_light": {
-    "description": "浅色主题选项"
-  },
-  "theme_mode_dark": "深色",
-  "@theme_mode_dark": {
-    "description": "深色主题选项"
-  },
-  "theme_mode_select_title": "选择主题模式",
-  "@theme_mode_select_title": {
-    "description": "主题模式选择对话框标题"
-  },
-  "theme_mode_changed": "主题模式已更改为 {mode}",
-  "@theme_mode_changed": {
-    "description": "主题模式更改成功消息",
-    "placeholders": {
-      "mode": {
-        "type": "String"
-      }
-    }
-  },
-  "podcast_transcript_search_hint": "搜索转录内容...",
-  "@podcast_transcript_search_hint": {
-    "description": "转录内容搜索提示文本"
-  },
-  "podcast_transcript_no_match": "未找到匹配内容",
-  "@podcast_transcript_no_match": {
-    "description": "未找到匹配内容消息"
-  },
-  "podcast_transcript_match": "第 {index} 个匹配",
-  "@podcast_transcript_match": {
-    "description": "搜索结果匹配编号标签",
-    "placeholders": {
-      "index": {
-        "type": "int"
-      }
-    }
-  },
-  "transcription_start_title": "开始转录",
-  "@transcription_start_title": {
-    "description": "开始转录状态标题"
-  },
-  "transcription_start_desc": "为本集生成完整文字转录\n支持多语言和高精度",
-  "@transcription_start_desc": {
-    "description": "开始转录状态描述"
-  },
-  "transcription_start_button": "开始转录",
-  "@transcription_start_button": {
-    "description": "开始转录按钮文本"
-  },
-  "transcription_auto_hint": "或在设置中启用自动转录",
-  "@transcription_auto_hint": {
-    "description": "自动转录设置提示"
-  },
-  "transcription_starting": "正在启动转录...",
-  "@transcription_starting": {
-    "description": "启动转录时的提示"
-  },
-  "transcription_started_success": "✓ 转录已成功启动",
-  "@transcription_started_success": {
-    "description": "启动成功提示"
-  },
-  "transcription_start_failed": "✗ 启动失败：{error}",
-  "@transcription_start_failed": {
-    "description": "启动转录失败提示",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "transcription_pending_title": "等待中",
-  "@transcription_pending_title": {
-    "description": "等待中转录状态标题"
-  },
-  "transcription_pending_desc": "转录任务已加入队列\n即将开始处理",
-  "@transcription_pending_desc": {
-    "description": "等待中转录状态描述"
-  },
-  "transcription_progress_complete": "完成",
-  "@transcription_progress_complete": {
-    "description": "进度环中百分比下方的标签"
-  },
-  "transcription_duration_label": "时长：{duration}",
-  "@transcription_duration_label": {
-    "description": "处理状态中的时长标签",
-    "placeholders": {
-      "duration": {
-        "type": "String"
-      }
-    }
-  },
-  "transcription_words_label": "约{count}K字",
-  "@transcription_words_label": {
-    "description": "处理状态中的字数标签",
-    "placeholders": {
-      "count": {
-        "type": "String"
-      }
-    }
-  },
-  "transcription_step_download": "下载",
-  "@transcription_step_download": {
-    "description": "下载步骤标签"
-  },
-  "transcription_step_convert": "转换",
-  "@transcription_step_convert": {
-    "description": "转换步骤标签"
-  },
-  "transcription_step_split": "分割",
-  "@transcription_step_split": {
-    "description": "分割步骤标签"
-  },
-  "transcription_step_transcribe": "转录",
-  "@transcription_step_transcribe": {
-    "description": "转录步骤标签"
-  },
-  "transcription_step_merge": "合并",
-  "@transcription_step_merge": {
-    "description": "合并步骤标签"
-  },
-  "transcription_complete_title": "转录完成",
-  "@transcription_complete_title": {
-    "description": "转录完成状态标题"
-  },
-  "transcription_complete_desc": "转录文本已成功生成\n您现在可以阅读和搜索内容",
-  "@transcription_complete_desc": {
-    "description": "转录完成状态描述"
-  },
-  "transcription_stat_words": "字数",
-  "@transcription_stat_words": {
-    "description": "字数统计标签"
-  },
-  "transcription_stat_duration": "时长",
-  "@transcription_stat_duration": {
-    "description": "时长统计标签"
-  },
-  "transcription_stat_accuracy": "准确率",
-  "@transcription_stat_accuracy": {
-    "description": "准确率统计标签"
-  },
-  "transcription_completed_at": "完成时间：{time}",
-  "@transcription_completed_at": {
-    "description": "完成时间标签",
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "transcription_view_button": "查看转录",
-  "@transcription_view_button": {
-    "description": "查看转录按钮"
-  },
-  "transcription_failed_title": "转录失败",
-  "@transcription_failed_title": {
-    "description": "转录失败状态标题"
-  },
-  "transcription_unknown_error": "未知错误",
-  "@transcription_unknown_error": {
-    "description": "默认错误信息"
-  },
-  "transcription_technical_details": "技术详情",
-  "@transcription_technical_details": {
-    "description": "错误详情展开区域"
-  },
-  "transcription_retry_button": "重试",
-  "@transcription_retry_button": {
-    "description": "重试转录按钮"
-  },
-  "transcription_error_already_progress": "转录正在进行中",
-  "@transcription_error_already_progress": {
-    "description": "转录已在运行时的错误文本"
-  },
-  "transcription_error_network": "网络连接失败",
-  "@transcription_error_network": {
-    "description": "网络错误消息"
-  },
-  "transcription_error_audio_download": "音频下载失败",
-  "@transcription_error_audio_download": {
-    "description": "音频下载错误"
-  },
-  "transcription_error_service": "转录服务错误",
-  "@transcription_error_service": {
-    "description": "服务错误"
-  },
-  "transcription_error_format": "音频格式转换失败",
-  "@transcription_error_format": {
-    "description": "格式转换错误"
-  },
-  "transcription_error_server_restart": "服务已重启",
-  "@transcription_error_server_restart": {
-    "description": "服务器重启错误"
-  },
-  "transcription_error_generic": "转录失败",
-  "@transcription_error_generic": {
-    "description": "通用转录失败"
-  },
-  "transcription_suggest_network": "请检查您的网络连接后重试",
-  "@transcription_suggest_network": {
-    "description": "网络错误建议"
-  },
-  "transcription_suggest_audio": "音频文件可能暂时不可用，请稍后重试",
-  "@transcription_suggest_audio": {
-    "description": "音频错误建议"
-  },
-  "transcription_suggest_service": "转录服务可能正忙，请稍后重试",
-  "@transcription_suggest_service": {
-    "description": "服务错误建议"
-  },
-  "transcription_suggest_format": "该音频格式可能不支持，请尝试其他集数",
-  "@transcription_suggest_format": {
-    "description": "格式错误建议"
-  },
-  "transcription_suggest_restart": "点击重试以启动新的转录任务",
-  "@transcription_suggest_restart": {
-    "description": "服务器重启建议"
-  },
-  "transcription_suggest_generic": "请尝试点击重试重新开始",
-  "@transcription_suggest_generic": {
-    "description": "通用错误建议"
-  },
-  "player_playback_speed_title": "播放倍速",
-  "@player_playback_speed_title": {
-    "description": "播放倍速区域标题"
-  },
-  "player_apply_subscription_only": "仅应用于当前订阅",
-  "@player_apply_subscription_only": {
-    "description": "仅当前订阅的复选框标签"
-  },
-  "player_apply_subscription_subtitle": "选中：仅当前订阅；未选中：全局默认",
-  "@player_apply_subscription_subtitle": {
-    "description": "订阅复选框副标题"
-  },
-  "player_sleep_timer_title": "睡眠定时",
-  "@player_sleep_timer_title": {
-    "description": "睡眠定时区域标题"
-  },
-  "player_sleep_timer_desc": "设置定时后，播放将在指定时间自动暂停",
-  "@player_sleep_timer_desc": {
-    "description": "睡眠定时描述"
-  },
-  "player_stop_after_episode": "播放完本集后停止",
-  "@player_stop_after_episode": {
-    "description": "当前集播放完后停止选项"
-  },
-  "player_cancel_timer": "取消定时",
-  "@player_cancel_timer": {
-    "description": "取消睡眠定时按钮"
-  },
-  "player_minutes": "{count}分钟",
-  "@player_minutes": {
-    "description": "分钟时长",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "player_hours_minutes": "{hours}小时{minutes}分钟",
-  "@player_hours_minutes": {
-    "description": "小时和分钟时长",
-    "placeholders": {
-      "hours": {
-        "type": "int"
-      },
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "player_hours": "{count}小时",
-  "@player_hours": {
-    "description": "仅小时时长",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "global_rss_failed_load": "加载失败",
-  "@global_rss_failed_load": {
-    "description": "加载失败错误标题"
-  },
-  "global_rss_retry": "重试",
-  "@global_rss_retry": {
-    "description": "重试按钮文本"
-  },
-  "global_rss_affected_count": "受影响的订阅 ({count})",
-  "@global_rss_affected_count": {
-    "description": "显示受影响订阅数量的区域标题",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "global_rss_no_subscriptions": "暂无RSS订阅",
-  "@global_rss_no_subscriptions": {
-    "description": "空状态文本"
-  },
-  "global_rss_schedule_title": "所有RSS订阅的更新计划",
-  "@global_rss_schedule_title": {
-    "description": "全局RSS计划卡片标题"
-  },
-  "global_rss_apply_desc": "这将应用于所有 {count} 个订阅",
-  "@global_rss_apply_desc": {
-    "description": "全局应用范围描述",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "global_rss_update_frequency": "更新频率",
-  "@global_rss_update_frequency": {
-    "description": "频率选择器标签"
-  },
-  "global_rss_hourly": "每小时",
-  "@global_rss_hourly": {
-    "description": "每小时频率选项"
-  },
-  "global_rss_daily": "每天",
-  "@global_rss_daily": {
-    "description": "每天频率选项"
-  },
-  "global_rss_weekly": "每周",
-  "@global_rss_weekly": {
-    "description": "每周频率选项"
-  },
-  "global_rss_update_time": "更新时间",
-  "@global_rss_update_time": {
-    "description": "时间选择器标签"
-  },
-  "global_rss_select_time": "选择时间",
-  "@global_rss_select_time": {
-    "description": "时间选择器提示文本"
-  },
-  "global_rss_select_time_button": "选择时间",
-  "@global_rss_select_time_button": {
-    "description": "时间选择器按钮文本"
-  },
-  "global_rss_day_of_week": "星期",
-  "@global_rss_day_of_week": {
-    "description": "星期选择器标签"
-  },
-  "global_rss_mon": "一",
-  "@global_rss_mon": {
-    "description": "星期一缩写"
-  },
-  "global_rss_tue": "二",
-  "@global_rss_tue": {
-    "description": "星期二缩写"
-  },
-  "global_rss_wed": "三",
-  "@global_rss_wed": {
-    "description": "星期三缩写"
-  },
-  "global_rss_thu": "四",
-  "@global_rss_thu": {
-    "description": "星期四缩写"
-  },
-  "global_rss_fri": "五",
-  "@global_rss_fri": {
-    "description": "星期五缩写"
-  },
-  "global_rss_sat": "六",
-  "@global_rss_sat": {
-    "description": "星期六缩写"
-  },
-  "global_rss_sun": "日",
-  "@global_rss_sun": {
-    "description": "星期日缩写"
-  },
-  "global_rss_applying": "正在应用...",
-  "@global_rss_applying": {
-    "description": "应用中的按钮文本"
-  },
-  "global_rss_apply_all": "应用到所有订阅",
-  "@global_rss_apply_all": {
-    "description": "应用到所有按钮文本"
-  },
-  "global_rss_current_label": "当前：{value}",
-  "@global_rss_current_label": {
-    "description": "当前计划标签",
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
-  "global_rss_next_label": "下次：{value}",
-  "@global_rss_next_label": {
-    "description": "下次更新标签",
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
-  "global_rss_failed_update": "更新订阅失败",
-  "@global_rss_failed_update": {
-    "description": "更新失败错误消息"
-  },
-  "page_not_found": "页面未找到",
-  "@page_not_found": {
-    "description": "页面未找到错误标题"
-  },
-  "page_not_found_subtitle": "请从导航中选择有效的标签页",
-  "@page_not_found_subtitle": {
-    "description": "页面未找到错误消息"
-  },
-  "error_prefix": "错误：{error}",
-  "@error_prefix": {
-    "description": "通用错误消息前缀",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "downloading_in_background": "正在后台下载...",
-  "@downloading_in_background": {
-    "description": "在后台下载更新时显示的消息"
-  },
-  "version_label": "版本：{version}",
-  "@version_label": {
-    "description": "版本标签（带占位符）",
-    "placeholders": {
-      "version": {
-        "type": "String"
-      }
-    }
-  },
-  "build_label": "构建：{build}",
-  "@build_label": {
-    "description": "构建标签（带占位符）",
-    "placeholders": {
-      "build": {
-        "type": "String"
-      }
-    }
-  },
-  "added_to_queue": "已添加到播放队列",
-  "@added_to_queue": {
-    "description": "将项目添加到队列时显示的消息"
-  },
-  "failed_to_add_to_queue": "添加到队列失败：{error}",
-  "@failed_to_add_to_queue": {
-    "description": "添加到队列失败时的错误消息",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "play_button_short": "播放",
-  "@play_button_short": {
-    "description": "卡片上使用的简短播放按钮标签"
-  },
-  "retry_button_short": "重试",
-  "@retry_button_short": {
-    "description": "简短的重试按钮标签"
-  },
-  "error_opening_link": "打开链接时出错：{error}",
-  "@error_opening_link": {
-    "description": "打开链接失败时的错误消息",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "queue_is_empty": "播放队列为空",
-  "@queue_is_empty": {
-    "description": "队列为空时显示的消息"
-  },
-  "failed_to_load_queue": "加载队列失败：{error}",
-  "@failed_to_load_queue": {
-    "description": "加载队列失败时的错误消息",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "failed_to_reorder_queue": "重新排序队列失败：{error}",
-  "@failed_to_reorder_queue": {
-    "description": "重新排序队列失败时的错误消息",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "failed_to_play_item": "播放项目失败：{error}",
-  "@failed_to_play_item": {
-    "description": "播放项目失败时的错误消息",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "failed_to_remove_item": "移除项目失败：{error}",
-  "@failed_to_remove_item": {
-    "description": "移除项目失败时的错误消息",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "apply_button": "应用",
-  "@apply_button": {
-    "description": "通用应用按钮标签"
-  },
-  "auth_test_page_title": "身份验证测试",
-  "@auth_test_page_title": {
-    "description": "身份验证测试页面标题"
-  },
-  "auth_verification_title": "身份验证",
-  "@auth_verification_title": {
-    "description": "身份验证页面标题"
-  },
-  "text_gen_label": "文本生成",
-  "@text_gen_label": {
-    "description": "文本生成模型类型标签（简短）"
-  },
-  "feed_load_failed_title": "加载信息流失败",
-  "@feed_load_failed_title": {
-    "description": "加载信息流失败时的错误标题"
-  },
-  "auth_password_requirement_uppercase": "至少包含一个大写字母",
-  "@auth_password_requirement_uppercase": {
-    "description": "密码要求：至少一个大写字母"
-  },
-  "auth_password_requirement_lowercase": "至少包含一个小写字母",
-  "@auth_password_requirement_lowercase": {
-    "description": "密码要求：至少一个小写字母"
-  },
-  "auth_password_requirement_number": "至少包含一个数字",
-  "@auth_password_requirement_number": {
-    "description": "密码要求：至少一个数字"
-  },
-  "auth_password_req_uppercase_short": "至少一个大写字母（A-Z）",
-  "@auth_password_req_uppercase_short": {
-    "description": "密码要求简短版：大写字母"
-  },
-  "auth_password_req_lowercase_short": "至少一个小写字母（a-z）",
-  "@auth_password_req_lowercase_short": {
-    "description": "密码要求简短版：小写字母"
-  },
-  "auth_password_req_number_short": "至少一个数字（0-9）",
-  "@auth_password_req_number_short": {
-    "description": "密码要求简短版：数字"
-  },
-  "auth_password_requirement_min_length": "至少8个字符",
-  "@auth_password_requirement_min_length": {
-    "description": "密码要求：最少8个字符"
-  },
-  "auth_password_requirements_title": "密码必须满足：",
-  "@auth_password_requirements_title": {
-    "description": "密码要求部分标题"
-  },
-  "auth_terms_and_conditions": "条款和条件",
-  "@auth_terms_and_conditions": {
-    "description": "条款和条件链接文本"
-  },
-  "auth_privacy_policy": "隐私政策",
-  "@auth_privacy_policy": {
-    "description": "隐私政策链接文本"
-  },
-  "auth_set_new_password": "设置新密码",
-  "@auth_set_new_password": {
-    "description": "设置新密码页面标题"
-  },
-  "auth_new_password": "新密码",
-  "@auth_new_password": {
-    "description": "新密码字段标签"
-  },
-  "podcast_add_to_queue": "添加到播放队列",
-  "@podcast_add_to_queue": {
-    "description": "添加到播放队列按钮"
-  },
-  "episode_unknown_title": "未知集数",
-  "@episode_unknown_title": {
-    "description": "集数名称为空时的后备标题"
-  },
-  "transcription_status_pending": "等待开始",
-  "@transcription_status_pending": {
-    "description": "转录状态：等待开始"
-  },
-  "transcription_status_downloading": "下载音频中...",
-  "@transcription_status_downloading": {
-    "description": "转录状态：下载音频文件中"
-  },
-  "transcription_status_converting": "转换格式中...",
-  "@transcription_status_converting": {
-    "description": "转录状态：转换音频格式中"
-  },
-  "transcription_status_transcribing": "转录中...",
-  "@transcription_status_transcribing": {
-    "description": "转录状态：处理音频中"
-  },
-  "transcription_status_processing": "处理文本中...",
-  "@transcription_status_processing": {
-    "description": "转录状态：处理转录文本中"
-  },
-  "transcription_status_completed": "转录完成",
-  "@transcription_status_completed": {
-    "description": "转录状态：成功完成"
-  },
-  "transcription_status_failed": "转录失败",
-  "@transcription_status_failed": {
-    "description": "转录状态：失败"
-  },
-  "ai_model_type_transcription": "转录模型",
-  "@ai_model_type_transcription": {
-    "description": "AI模型类型：转录"
-  },
-  "ai_model_type_text_generation": "文本生成模型",
-  "@ai_model_type_text_generation": {
-    "description": "AI模型类型：文本生成"
-  },
-  "ai_provider_azure_openai": "Azure OpenAI",
-  "@ai_provider_azure_openai": {
-    "description": "AI提供商名称：Azure OpenAI"
-  },
-  "profile_ai_summary": "AI 总结",
-  "@profile_ai_summary": {
-    "description": "个人资料中的AI总结部分"
-  },
-  "profile_support_section": "支持",
-  "@profile_support_section": {
-    "description": "个人资料中的支持部分"
-  },
-  "auth_and": " 和 ",
-  "@auth_and": {
-    "description": "连接词'和'，用于连接条款"
-  },
-  "api_key_leave_empty_hint": "留空以保持不变",
-  "@api_key_leave_empty_hint": {
-    "description": "编辑时API密钥输入提示"
-  },
-  "ai_enter_config_name_error": "请输入配置名称",
-  "@ai_enter_config_name_error": {
-    "description": "配置名称为空时的验证错误"
-  },
-  "ai_enter_base_url_error": "请输入基础URL",
-  "@ai_enter_base_url_error": {
-    "description": "基础URL为空时的验证错误"
-  },
-  "ai_enter_model_name_error": "请输入模型名称",
-  "@ai_enter_model_name_error": {
-    "description": "模型名称为空时的验证错误"
-  },
-  "sidebarCollapseMenu": "收起菜单",
-  "@sidebarCollapseMenu": {
-    "description": "桌面端侧边栏收起按钮提示"
-  },
-  "sidebarExpandMenu": "展开菜单",
-  "@sidebarExpandMenu": {
-    "description": "桌面端侧边栏展开按钮提示"
-  },
-  "sidebarAppTitle": "AI 助手",
-  "@sidebarAppTitle": {
-    "description": "桌面端侧边栏标题"
-  }
+    "@@locale":  "zh",
+    "appTitle":  "Stella",
+    "@appTitle":  {
+                      "description":  "应用程序标题"
+                  },
+    "appSlogan":  "你关注的一切，交给我。",
+    "@appSlogan":  {
+                       "description":  "应用程序标语"
+                   },
+    "settings":  "设置",
+    "@settings":  {
+                      "description":  "设置页面标题"
+                  },
+    "language":  "语言",
+    "@language":  {
+                      "description":  "语言设置标签"
+                  },
+    "languageFollowSystem":  "跟随系统",
+    "@languageFollowSystem":  {
+                                  "description":  "跟随系统语言选项"
+                              },
+    "languageEnglish":  "English",
+    "@languageEnglish":  {
+                             "description":  "英文语言选项"
+                         },
+    "languageChinese":  "简体中文",
+    "@languageChinese":  {
+                             "description":  "简体中文语言选项"
+                         },
+    "about":  "关于",
+    "@about":  {
+                   "description":  "关于部分标题"
+               },
+    "version":  "版本",
+    "@version":  {
+                     "description":  "应用版本标签"
+                 },
+    "profile":  "个人资料",
+    "@profile":  {
+                     "description":  "个人资料页面标题"
+                 },
+    "preferences":  "偏好设置",
+    "@preferences":  {
+                         "description":  "偏好设置部分标题"
+                     },
+    "logout":  "退出登录",
+    "@logout":  {
+                    "description":  "退出登录按钮标签"
+                },
+    "cancel":  "取消",
+    "@cancel":  {
+                    "description":  "取消按钮标签"
+                },
+    "clear":  "清空",
+    "@clear":  {
+                   "description":  "清空按钮标签"
+               },
+    "confirm":  "确认",
+    "@confirm":  {
+                     "description":  "确认按钮标签"
+                 },
+    "save":  "保存",
+    "@save":  {
+                  "description":  "保存按钮标签"
+              },
+    "delete":  "删除",
+    "@delete":  {
+                    "description":  "删除按钮标签"
+                },
+    "edit":  "编辑",
+    "@edit":  {
+                  "description":  "编辑按钮标签"
+              },
+    "add":  "添加",
+    "@add":  {
+                 "description":  "添加按钮标签"
+             },
+    "update":  "更新",
+    "@update":  {
+                    "description":  "更新按钮标签"
+                },
+    "search":  "搜索",
+    "@search":  {
+                    "description":  "搜索按钮标签"
+                },
+    "filter":  "筛选",
+    "@filter":  {
+                    "description":  "筛选按钮标签"
+                },
+    "refresh":  "刷新",
+    "@refresh":  {
+                     "description":  "刷新按钮标签"
+                 },
+    "loading":  "加载中...",
+    "@loading":  {
+                     "description":  "加载消息"
+                 },
+    "error":  "错误",
+    "@error":  {
+                   "description":  "错误标签"
+               },
+    "success":  "成功",
+    "@success":  {
+                     "description":  "成功标签"
+                 },
+    "retry":  "重试",
+    "@retry":  {
+                   "description":  "重试按钮标签"
+               },
+    "close":  "关闭",
+    "@close":  {
+                   "description":  "关闭按钮标签"
+               },
+    "ok":  "确定",
+    "@ok":  {
+                "description":  "确定按钮标签"
+            },
+    "no":  "否",
+    "@no":  {
+                "description":  "否按钮标签"
+            },
+    "auth_welcome_back":  "天快亮了，我们开始吧。",
+    "@auth_welcome_back":  {
+                               "description":  "登录页面欢迎标题"
+                           },
+    "auth_sign_in_subtitle":  "登录以继续",
+    "@auth_sign_in_subtitle":  {
+                                   "description":  "登录页面副标题"
+                               },
+    "auth_enter_email":  "请输入您的邮箱",
+    "@auth_enter_email":  {
+                              "description":  "邮箱字段验证消息"
+                          },
+    "auth_enter_valid_email":  "请输入有效的邮箱地址",
+    "@auth_enter_valid_email":  {
+                                    "description":  "邮箱验证错误"
+                                },
+    "auth_enter_password":  "请输入您的密码",
+    "@auth_enter_password":  {
+                                 "description":  "密码字段验证消息"
+                             },
+    "auth_password_too_short":  "密码至少需要8个字符",
+    "@auth_password_too_short":  {
+                                     "description":  "密码长度验证"
+                                 },
+    "auth_email":  "邮箱",
+    "@auth_email":  {
+                        "description":  "邮箱字段标签"
+                    },
+    "auth_password":  "密码",
+    "@auth_password":  {
+                           "description":  "密码字段标签"
+                       },
+    "auth_remember_me":  "记住我",
+    "@auth_remember_me":  {
+                              "description":  "记住我复选框标签"
+                          },
+    "auth_forgot_password":  "忘记密码？",
+    "@auth_forgot_password":  {
+                                  "description":  "忘记密码链接"
+                              },
+    "auth_login":  "登录",
+    "@auth_login":  {
+                        "description":  "登录按钮标签"
+                    },
+    "auth_no_account":  "还没有账号？",
+    "@auth_no_account":  {
+                             "description":  "无账号提示"
+                         },
+    "auth_sign_up":  "注册",
+    "@auth_sign_up":  {
+                          "description":  "注册按钮标签"
+                      },
+    "auth_create_account":  "创建账号",
+    "@auth_create_account":  {
+                                 "description":  "创建账号页面标题"
+                             },
+    "auth_sign_up_subtitle":  "加入我们开始使用",
+    "@auth_sign_up_subtitle":  {
+                                   "description":  "注册页面副标题"
+                               },
+    "auth_full_name":  "姓名",
+    "@auth_full_name":  {
+                            "description":  "全名字段标签"
+                        },
+    "auth_enter_name":  "请输入您的姓名",
+    "@auth_enter_name":  {
+                             "description":  "姓名字段验证"
+                         },
+    "auth_confirm_password":  "确认密码",
+    "@auth_confirm_password":  {
+                                   "description":  "确认密码字段标签"
+                               },
+    "auth_passwords_not_match":  "两次输入的密码不一致",
+    "@auth_passwords_not_match":  {
+                                      "description":  "密码不匹配错误"
+                                  },
+    "auth_agree_terms":  "我同意条款和条件",
+    "@auth_agree_terms":  {
+                              "description":  "条款同意复选框"
+                          },
+    "auth_already_have_account":  "已有账号？",
+    "@auth_already_have_account":  {
+                                       "description":  "已有账号提示"
+                                   },
+    "auth_sign_in_link":  "登录",
+    "@auth_sign_in_link":  {
+                               "description":  "登录链接标签"
+                           },
+    "auth_reset_password":  "重置密码",
+    "@auth_reset_password":  {
+                                 "description":  "重置密码页面标题"
+                             },
+    "auth_reset_password_subtitle":  "输入您的邮箱以接收重置说明",
+    "@auth_reset_password_subtitle":  {
+                                          "description":  "重置密码副标题"
+                                      },
+    "auth_send_reset_link":  "发送重置链接",
+    "@auth_send_reset_link":  {
+                                  "description":  "发送重置链接按钮"
+                              },
+    "auth_back_to_login":  "返回登录",
+    "@auth_back_to_login":  {
+                                "description":  "返回登录链接"
+                            },
+    "auth_reset_email_sent":  "密码重置邮件已发送",
+    "@auth_reset_email_sent":  {
+                                   "description":  "重置邮件已发送消息"
+                               },
+    "profile_subscriptions":  "订阅",
+    "@profile_subscriptions":  {
+                                   "description":  "Subscriptions label (without \"My\")"
+                               },
+    "podcast_add_subscription":  "添加订阅",
+    "@podcast_add_subscription":  {
+                                      "description":  "添加订阅按钮"
+                                  },
+    "podcast_episodes":  "单集",
+    "@podcast_episodes":  {
+                              "description":  "剧集标签"
+                          },
+    "podcast_unknown_author":  "未知作者",
+    "@podcast_unknown_author":  {
+                                    "description":  "播客未知作者标签"
+                                },
+    "podcast_no_subscriptions":  "还没有订阅",
+    "@podcast_no_subscriptions":  {
+                                      "description":  "无订阅状态"
+                                  },
+    "podcast_play":  "播放",
+    "@podcast_play":  {
+                          "description":  "播放按钮"
+                      },
+    "home":  "首页",
+    "@home":  {
+                  "description":  "首页标题"
+              },
+    "nav_feed":  "资料库",
+    "@nav_feed":  {
+                      "description":  "Navigation item: Feed"
+                  },
+    "nav_podcast":  "发现",
+    "@nav_podcast":  {
+                         "description":  "Navigation item: Podcast"
+                     },
+    "nav_profile":  "个人资料",
+    "@nav_profile":  {
+                         "description":  "导航项：个人资料"
+                     },
+    "podcast_feed_page_title":  "资料库",
+    "@podcast_feed_page_title":  {
+                                     "description":  "播客信息流页面标题"
+                                 },
+    "podcast_add_podcast":  "添加播客",
+    "@podcast_add_podcast":  {
+                                 "description":  "添加播客按钮"
+                             },
+    "podcast_bulk_import":  "批量导入",
+    "@podcast_bulk_import":  {
+                                 "description":  "批量导入按钮"
+                             },
+    "podcast_failed_to_load_feed":  "加载信息流失败",
+    "@podcast_failed_to_load_feed":  {
+                                         "description":  "加载信息流失败错误消息"
+                                     },
+    "podcast_retry":  "重试",
+    "@podcast_retry":  {
+                           "description":  "重试按钮"
+                       },
+    "podcast_no_episodes_found":  "未找到剧集",
+    "@podcast_no_episodes_found":  {
+                                       "description":  "无剧集状态"
+                                   },
+    "podcast_daily_report_title":  "日报",
+    "@podcast_daily_report_title":  {
+                                        "description":  "播客日报卡片标题"
+                                    },
+    "podcast_daily_report_open":  "打开日报",
+    "@podcast_daily_report_open":  {
+                                       "description":  "用于打开日报页的可访问性标签和提示"
+                                   },
+    "podcast_daily_report_entry_subtitle":  "查看历史并按日期生成日报",
+    "@podcast_daily_report_entry_subtitle":  {
+                                                 "description":  "资料库中日报入口的副标题"
+                                             },
+    "podcast_daily_report_generate_success":  "日报已生成",
+    "@podcast_daily_report_generate_success":  {
+                                                   "description":  "生成日报成功提示"
+                                               },
+    "podcast_daily_report_generate_failed":  "生成日报失败",
+    "@podcast_daily_report_generate_failed":  {
+                                                  "description":  "生成日报失败提示"
+                                              },
+    "podcast_daily_report_empty":  "暂无可用日报",
+    "@podcast_daily_report_empty":  {
+                                        "description":  "日报卡片空状态文案"
+                                    },
+    "podcast_daily_report_loading":  "正在加载日报...",
+    "@podcast_daily_report_loading":  {
+                                          "description":  "日报卡片加载中提示"
+                                      },
+    "podcast_daily_report_dates":  "历史日期",
+    "@podcast_daily_report_dates":  {
+                                        "description":  "打开日报历史日期选择器按钮文案"
+                                    },
+    "podcast_daily_report_generated_prefix":  "生成于",
+    "@podcast_daily_report_generated_prefix":  {
+                                                   "description":  "日报生成时间前缀"
+                                               },
+    "podcast_daily_report_items":  "{count}条",
+    "@podcast_daily_report_items":  {
+                                        "description":  "日报条目数量文案",
+                                        "placeholders":  {
+                                                             "count":  {
+                                                                           "type":  "int"
+                                                                       }
+                                                         }
+                                    },
+    "podcast_share_as_image":  "分享为图片",
+    "@podcast_share_as_image":  {
+                                    "description":  "将选中文本分享为图片"
+                                },
+    "podcast_save_image_success":  "图片已保存",
+    "@podcast_save_image_success":  {
+                                        "description":  "图片保存成功提示"
+                                    },
+    "podcast_save_image_failed":  "保存图片失败",
+    "@podcast_save_image_failed":  {
+                                       "description":  "图片保存失败提示"
+                                   },
+    "podcast_save_image_permission":  "需要照片权限才能保存图片",
+    "@podcast_save_image_permission":  {
+                                           "description":  "保存图片权限提示"
+                                       },
+    "podcast_share_all_content":  "分享全部",
+    "@podcast_share_all_content":  {
+                                       "description":  "将全部内容分享为图片"
+                                   },
+    "podcast_share_selection_required":  "请先选择要分享的内容",
+    "@podcast_share_selection_required":  {
+                                              "description":  "分享为图片前需要选择内容提示"
+                                          },
+    "podcast_share_not_supported":  "当前平台暂不支持图片分享",
+    "@podcast_share_not_supported":  {
+                                         "description":  "平台不支持图片分享提示"
+                                     },
+    "podcast_share_failed":  "图片分享失败",
+    "@podcast_share_failed":  {
+                                  "description":  "图片分享失败提示"
+                              },
+    "podcast_share_preparing_image":  "正在生成图片...",
+    "@podcast_share_preparing_image":  {
+                                           "description":  "生成分享图片时的进度提示"
+                                       },
+    "podcast_share_in_progress":  "图片正在生成中，请稍候",
+    "@podcast_share_in_progress":  {
+                                       "description":  "重复触发分享时的提示"
+                                   },
+    "podcast_share_truncated":  "内容已截断为前 {max} 个字符",
+    "@podcast_share_truncated":  {
+                                     "description":  "超长内容截断提示",
+                                     "placeholders":  {
+                                                          "max":  {
+                                                                      "type":  "int"
+                                                                  }
+                                                      }
+                                 },
+    "podcast_default_podcast":  "播客",
+    "@podcast_default_podcast":  {
+                                     "description":  "默认播客名称"
+                                 },
+    "validation_invalid_url":  "无效的 URL 格式",
+    "@validation_invalid_url":  {
+                                    "description":  "无效 URL 验证"
+                                },
+    "validation_too_short":  "太短",
+    "@validation_too_short":  {
+                                  "description":  "太短验证"
+                              },
+    "unknown_error":  "发生未知错误",
+    "@unknown_error":  {
+                           "description":  "未知错误消息"
+                       },
+    "forbidden":  "访问被拒绝",
+    "@forbidden":  {
+                       "description":  "禁止错误消息"
+                   },
+    "action_completed":  "操作成功完成",
+    "@action_completed":  {
+                              "description":  "通用成功消息"
+                          },
+    "no_data":  "没有可用数据",
+    "@no_data":  {
+                     "description":  "无数据状态消息"
+                 },
+    "pull_to_refresh":  "下拉刷新",
+    "@pull_to_refresh":  {
+                             "description":  "下拉刷新提示"
+                         },
+    "refreshing":  "刷新中...",
+    "@refreshing":  {
+                        "description":  "刷新中消息"
+                    },
+    "podcast_title":  "播客",
+    "@podcast_title":  {
+                           "description":  "播客页面标题"
+                       },
+    "podcast_description":  "无描述",
+    "@podcast_description":  {
+                                 "description":  "无描述标签"
+                             },
+    "podcast_player_unknown_episode":  "未知剧集",
+    "@podcast_player_unknown_episode":  {
+                                            "description":  "未知剧集标题"
+                                        },
+    "podcast_player_no_audio":  "无音频链接",
+    "@podcast_player_no_audio":  {
+                                     "description":  "无音频链接消息"
+                                 },
+    "podcast_coming_soon":  "即将推出",
+    "@podcast_coming_soon":  {
+                                 "description":  "即将推出标签"
+                             },
+    "podcast_filter_all":  "全部",
+    "@podcast_filter_all":  {
+                                "description":  "筛选全部剧集"
+                            },
+    "podcast_filter_unplayed":  "未播放",
+    "@podcast_filter_unplayed":  {
+                                     "description":  "筛选未播放剧集"
+                                 },
+    "podcast_filter_played":  "已播放",
+    "@podcast_filter_played":  {
+                                   "description":  "筛选已播放剧集"
+                               },
+    "podcast_filter_with_summary":  "摘要",
+    "@podcast_filter_with_summary":  {
+                                         "description":  "摘要标签"
+                                     },
+    "podcast_mark_all_played":  "全部标记为已播放",
+    "@podcast_mark_all_played":  {
+                                     "description":  "全部标记为已播放选项"
+                                 },
+    "podcast_mark_all_unplayed":  "全部标记为未播放",
+    "@podcast_mark_all_unplayed":  {
+                                       "description":  "全部标记为未播放选项"
+                                   },
+    "podcast_no_episodes":  "未找到剧集",
+    "@podcast_no_episodes":  {
+                                 "description":  "无剧集状态"
+                             },
+    "podcast_no_episodes_with_summary":  "没有带摘要的剧集",
+    "@podcast_no_episodes_with_summary":  {
+                                              "description":  "无带摘要剧集状态"
+                                          },
+    "podcast_try_adjusting_filters":  "尝试调整您的筛选条件",
+    "@podcast_try_adjusting_filters":  {
+                                           "description":  "尝试调整筛选提示"
+                                       },
+    "podcast_no_episodes_yet":  "该播客可能还没有任何剧集",
+    "@podcast_no_episodes_yet":  {
+                                     "description":  "还没有剧集消息"
+                                 },
+    "podcast_failed_load_episodes":  "加载剧集失败",
+    "@podcast_failed_load_episodes":  {
+                                          "description":  "加载剧集失败错误"
+                                      },
+    "podcast_filter_episodes":  "筛选剧集",
+    "@podcast_filter_episodes":  {
+                                     "description":  "筛选剧集对话框标题"
+                                 },
+    "podcast_playback_status":  "播放状态：",
+    "@podcast_playback_status":  {
+                                     "description":  "播放状态标签"
+                                 },
+    "podcast_all_episodes":  "全部剧集",
+    "@podcast_all_episodes":  {
+                                  "description":  "全部剧集筛选选项"
+                              },
+    "podcast_unplayed_only":  "仅未播放",
+    "@podcast_unplayed_only":  {
+                                   "description":  "仅未播放筛选选项"
+                               },
+    "podcast_played_only":  "仅已播放",
+    "@podcast_played_only":  {
+                                 "description":  "仅已播放筛选选项"
+                             },
+    "podcast_only_with_summary":  "仅显示有摘要的剧集",
+    "@podcast_only_with_summary":  {
+                                       "description":  "仅显示有摘要筛选选项"
+                                   },
+    "podcast_apply":  "应用",
+    "@podcast_apply":  {
+                           "description":  "应用按钮标签"
+                       },
+    "podcast_add_dialog_title":  "添加播客",
+    "@podcast_add_dialog_title":  {
+                                      "description":  "添加播客对话框标题"
+                                  },
+    "podcast_rss_feed_url":  "RSS 订阅源 URL",
+    "@podcast_rss_feed_url":  {
+                                  "description":  "RSS 订阅源 URL 字段标签"
+                              },
+    "podcast_feed_url_hint":  "https://example.com/feed.xml",
+    "@podcast_feed_url_hint":  {
+                                   "description":  "订阅源 URL 提示"
+                               },
+    "podcast_enter_url":  "请输入 URL",
+    "@podcast_enter_url":  {
+                               "description":  "输入 URL 验证"
+                           },
+    "podcast_added_successfully":  "播客添加成功！",
+    "@podcast_added_successfully":  {
+                                        "description":  "播客添加成功消息"
+                                    },
+    "podcast_failed_add":  "添加播客失败：",
+    "@podcast_failed_add":  {
+                                "description":  "添加播客失败错误"
+                            },
+    "podcast_need_many":  "需要添加多个？",
+    "@podcast_need_many":  {
+                               "description":  "需要添加多个提示"
+                           },
+    "podcast_adding":  "添加中...",
+    "@podcast_adding":  {
+                            "description":  "添加播客加载文本"
+                        },
+    "profile_guest_user":  "访客用户",
+    "@profile_guest_user":  {
+                                "description":  "未登录时显示的访客用户标签"
+                            },
+    "profile_please_login":  "请先登录",
+    "@profile_please_login":  {
+                                  "description":  "请登录消息"
+                              },
+    "profile_account_settings":  "账号设置",
+    "@profile_account_settings":  {
+                                      "description":  "账号设置分组"
+                                  },
+    "profile_edit_profile":  "编辑个人资料",
+    "@profile_edit_profile":  {
+                                  "description":  "编辑个人资料按钮/标题"
+                              },
+    "profile_security":  "安全设置",
+    "@profile_security":  {
+                              "description":  "安全设置"
+                          },
+    "profile_security_subtitle":  "密码、身份验证和隐私",
+    "@profile_security_subtitle":  {
+                                       "description":  "安全设置副标题"
+                                   },
+    "profile_notifications":  "通知设置",
+    "@profile_notifications":  {
+                                   "description":  "通知设置"
+                               },
+    "profile_notifications_subtitle":  "推送通知和邮件提醒",
+    "@profile_notifications_subtitle":  {
+                                            "description":  "通知副标题"
+                                        },
+    "profile_auto_sync":  "自动同步",
+    "@profile_auto_sync":  {
+                               "description":  "自动同步开关"
+                           },
+    "profile_help_center":  "帮助中心",
+    "@profile_help_center":  {
+                                 "description":  "帮助中心标题"
+                             },
+    "profile_help_center_subtitle":  "获取帮助和支持",
+    "@profile_help_center_subtitle":  {
+                                          "description":  "帮助中心副标题"
+                                      },
+    "profile_clear_cache":  "清理缓存",
+    "@profile_clear_cache":  {
+                                 "description":  "清理缓存标题"
+                             },
+    "profile_cache_management":  "缓存管理",
+    "@profile_cache_management":  {
+                                      "description":  "缓存管理标题"
+                                  },
+    "profile_cache_management_subtitle":  "查看并清理图片、音频等缓存数据",
+    "@profile_cache_management_subtitle":  {
+                                               "description":  "缓存管理副标题"
+                                           },
+    "profile_clear_cache_confirm":  "将清理图片、音频以及接口缓存，是否继续？",
+    "@profile_clear_cache_confirm":  {
+                                         "description":  "清理缓存确认提示"
+                                     },
+    "profile_clearing_cache":  "正在清理缓存…",
+    "@profile_clearing_cache":  {
+                                    "description":  "清理缓存进行中提示"
+                                },
+    "profile_cache_cleared":  "缓存已清理",
+    "@profile_cache_cleared":  {
+                                   "description":  "清理缓存成功提示"
+                               },
+    "profile_cache_clear_failed":  "清理缓存失败：{error}",
+    "@profile_cache_clear_failed":  {
+                                        "description":  "清理缓存失败提示",
+                                        "placeholders":  {
+                                                             "error":  {
+                                                                           "type":  "String"
+                                                                       }
+                                                         }
+                                    },
+    "profile_cache_manage_title":  "存储与缓存",
+    "@profile_cache_manage_title":  {
+                                        "description":  "缓存管理页面标题"
+                                    },
+    "profile_cache_manage_total_used":  "已使用",
+    "@profile_cache_manage_total_used":  {
+                                             "description":  "缓存管理已使用标题"
+                                         },
+    "profile_cache_manage_images":  "图片",
+    "@profile_cache_manage_images":  {
+                                         "description":  "缓存管理图片标签"
+                                     },
+    "profile_cache_manage_audio":  "音频",
+    "@profile_cache_manage_audio":  {
+                                        "description":  "缓存管理音频标签"
+                                    },
+    "profile_cache_manage_other":  "其他",
+    "@profile_cache_manage_other":  {
+                                        "description":  "缓存管理其他标签"
+                                    },
+    "profile_cache_manage_item_count":  "{count} 项",
+    "@profile_cache_manage_item_count":  {
+                                             "description":  "缓存管理数量",
+                                             "placeholders":  {
+                                                                  "count":  {
+                                                                                "type":  "int"
+                                                                            }
+                                                              }
+                                         },
+    "profile_cache_manage_details":  "详情",
+    "@profile_cache_manage_details":  {
+                                          "description":  "缓存管理详情标题"
+                                      },
+    "profile_cache_manage_clean":  "清理",
+    "@profile_cache_manage_clean":  {
+                                        "description":  "缓存管理清理按钮"
+                                    },
+    "profile_cache_manage_notice":  "清理缓存会删除已下载的图片和临时文件。你的订阅和偏好设置会保留。",
+    "@profile_cache_manage_notice":  {
+                                         "description":  "缓存管理提示文案"
+                                     },
+    "profile_cache_manage_deep_clean_all":  "一键深度清理（{size}）",
+    "@profile_cache_manage_deep_clean_all":  {
+                                                 "description":  "缓存管理一键清理按钮",
+                                                 "placeholders":  {
+                                                                      "size":  {
+                                                                                   "type":  "String"
+                                                                               }
+                                                                  }
+                                             },
+    "profile_cache_manage_delete_selected_confirm":  "确定删除所选分类中的 {count} 项缓存（{size}）吗？",
+    "@profile_cache_manage_delete_selected_confirm":  {
+                                                          "description":  "缓存管理删除所选确认提示",
+                                                          "placeholders":  {
+                                                                               "count":  {
+                                                                                             "type":  "int"
+                                                                                         },
+                                                                               "size":  {
+                                                                                            "type":  "String"
+                                                                                        }
+                                                                           }
+                                                      },
+    "profile_about_subtitle":  "应用版本和信息",
+    "@profile_about_subtitle":  {
+                                    "description":  "关于副标题"
+                                },
+    "profile_name":  "姓名",
+    "@profile_name":  {
+                          "description":  "姓名字段标签"
+                      },
+    "profile_email_field":  "邮箱",
+    "@profile_email_field":  {
+                                 "description":  "个人资料中的邮箱字段标签"
+                             },
+    "profile_bio":  "个人简介",
+    "@profile_bio":  {
+                         "description":  "个人简介字段标签"
+                     },
+    "profile_updated_successfully":  "个人资料更新成功",
+    "@profile_updated_successfully":  {
+                                          "description":  "个人资料更新成功消息"
+                                      },
+    "profile_change_password":  "修改密码",
+    "@profile_change_password":  {
+                                     "description":  "修改密码选项"
+                                 },
+    "profile_biometric_auth":  "生物识别认证",
+    "@profile_biometric_auth":  {
+                                    "description":  "生物识别认证选项"
+                                },
+    "profile_two_factor_auth":  "双因素认证",
+    "@profile_two_factor_auth":  {
+                                     "description":  "双因素认证选项"
+                                 },
+    "profile_user_guide":  "用户指南",
+    "@profile_user_guide":  {
+                                "description":  "用户指南选项"
+                            },
+    "profile_user_guide_subtitle":  "了解如何使用应用",
+    "@profile_user_guide_subtitle":  {
+                                         "description":  "用户指南副标题"
+                                     },
+    "profile_video_tutorials":  "视频教程",
+    "@profile_video_tutorials":  {
+                                     "description":  "视频教程选项"
+                                 },
+    "profile_video_tutorials_subtitle":  "观看分步指南",
+    "@profile_video_tutorials_subtitle":  {
+                                              "description":  "视频教程副标题"
+                                          },
+    "profile_contact_support":  "联系客服",
+    "@profile_contact_support":  {
+                                     "description":  "联系客服选项"
+                                 },
+    "profile_contact_support_subtitle":  "获取我们团队的帮助",
+    "@profile_contact_support_subtitle":  {
+                                              "description":  "联系客服副标题"
+                                          },
+    "profile_logout_title":  "退出登录",
+    "@profile_logout_title":  {
+                                  "description":  "退出登录对话框标题"
+                              },
+    "profile_logout_message":  "确定要退出登录吗？",
+    "@profile_logout_message":  {
+                                    "description":  "退出登录确认消息"
+                                },
+    "profile_logged_out":  "已成功退出登录",
+    "@profile_logged_out":  {
+                                "description":  "退出登录成功消息"
+                            },
+    "invalid_navigation_arguments":  "导航参数无效",
+    "@invalid_navigation_arguments":  {
+                                          "description":  "导航参数无效错误"
+                                      },
+    "invalid_episode_id":  "剧集ID无效",
+    "@invalid_episode_id":  {
+                                "description":  "剧集ID无效错误"
+                            },
+    "backend_api_server_config":  "后端 API 服务器配置",
+    "@backend_api_server_config":  {
+                                       "description":  "后端 API 服务器配置对话框标题"
+                                   },
+    "backend_api_url_label":  "后端 API URL",
+    "@backend_api_url_label":  {
+                                   "description":  "后端 API URL 标签"
+                               },
+    "backend_api_url_hint":  "https://api.example.com\\n或 http://192.168.1.10:8080",
+    "@backend_api_url_hint":  {
+                                  "description":  "后端 API URL 提示文本"
+                              },
+    "backend_api_description":  "说明：此为后端 API 服务器，与 AI 模型 API 无关",
+    "@backend_api_description":  {
+                                     "description":  "后端 API 说明"
+                                 },
+    "use_local_url":  "本地服务器",
+    "@use_local_url":  {
+                           "description":  "使用本地链接按钮标签"
+                       },
+    "connection_error_hint":  "连接错误",
+    "@connection_error_hint":  {
+                                   "description":  "连接错误提示文本"
+                               },
+    "connection_status_unverified":  "未验证",
+    "@connection_status_unverified":  {
+                                          "description":  "连接状态 - 尚未验证"
+                                      },
+    "connection_status_verifying":  "验证中...",
+    "@connection_status_verifying":  {
+                                         "description":  "连接状态 - 正在验证"
+                                     },
+    "connection_status_success":  "成功",
+    "@connection_status_success":  {
+                                       "description":  "连接状态 - 连接成功"
+                                   },
+    "connection_status_failed":  "失败",
+    "@connection_status_failed":  {
+                                      "description":  "连接状态 - 连接失败"
+                                  },
+    "server_history_title":  "历史记录",
+    "@server_history_title":  {
+                                  "description":  "服务器历史记录标题"
+                              },
+    "profile_viewed_title":  "查看历史",
+    "@profile_viewed_title":  {
+                                  "description":  "个人中心查看历史标题"
+                              },
+    "server_history_empty":  "暂无历史记录",
+    "@server_history_empty":  {
+                                  "description":  "没有历史记录消息"
+                              },
+    "save_failed":  "保存失败: {error}",
+    "@save_failed":  {
+                         "description":  "保存失败错误消息"
+                     },
+    "restore_defaults_success":  "已恢复默认服务器地址",
+    "@restore_defaults_success":  {
+                                      "description":  "恢复默认成功消息"
+                                  },
+    "drop_files_here":  "拖放文件到这里！",
+    "@drop_files_here":  {
+                             "description":  "拖放文件提示"
+                         },
+    "podcast_enter_select_mode":  "选择模式",
+    "@podcast_enter_select_mode":  {
+                                       "description":  "进入选择模式提示"
+                                   },
+    "podcast_deselect_all":  "取消全选",
+    "@podcast_deselect_all":  {
+                                  "description":  "取消全选提示"
+                              },
+    "podcast_selected_count":  "已选择 {count} 个",
+    "@podcast_selected_count":  {
+                                    "description":  "选中数量标签",
+                                    "placeholders":  {
+                                                         "count":  {
+                                                                       "type":  "int"
+                                                                   }
+                                                     }
+                                },
+    "update_check_updates":  "检查更新",
+    "@update_check_updates":  {
+                                  "description":  "检查更新按钮/标签"
+                              },
+    "update_auto_check":  "自动检查更新",
+    "@update_auto_check":  {
+                               "description":  "自动检查更新描述"
+                           },
+    "update_new_version_available":  "发现新版本",
+    "@update_new_version_available":  {
+                                          "description":  "新版本可用标题"
+                                      },
+    "update_skip_this_version":  "跳过此版本",
+    "@update_skip_this_version":  {
+                                      "description":  "跳过此版本按钮标签"
+                                  },
+    "update_later":  "稍后提醒",
+    "@update_later":  {
+                          "description":  "稍后提醒按钮标签"
+                      },
+    "update_download":  "下载",
+    "@update_download":  {
+                             "description":  "下载更新按钮标签"
+                         },
+    "update_latest_version":  "最新版本",
+    "@update_latest_version":  {
+                                   "description":  "最新版本标签"
+                               },
+    "update_published_at":  "发布时间",
+    "@update_published_at":  {
+                                 "description":  "发布日期标签"
+                             },
+    "update_file_size":  "大小",
+    "@update_file_size":  {
+                              "description":  "文件大小标签"
+                          },
+    "update_release_notes":  "更新说明",
+    "@update_release_notes":  {
+                                  "description":  "更新说明部分标签"
+                              },
+    "update_download_failed":  "下载失败",
+    "@update_download_failed":  {
+                                    "description":  "下载失败错误消息"
+                                },
+    "update_checking":  "正在检查更新...",
+    "@update_checking":  {
+                             "description":  "正在检查更新消息"
+                         },
+    "update_check_failed":  "检查失败",
+    "@update_check_failed":  {
+                                 "description":  "更新检查失败标题"
+                             },
+    "update_up_to_date":  "已是最新版本",
+    "@update_up_to_date":  {
+                               "description":  "应用已是最新版本消息"
+                           },
+    "update_try_again":  "重试",
+    "@update_try_again":  {
+                              "description":  "重试按钮标签"
+                          },
+    "back_button":  "返回",
+    "@back_button":  {
+                         "description":  "返回按钮工具提示标签"
+                     },
+    "feed_no_subscriptions_hint":  "去订阅一些你感兴趣的播客吧！",
+    "@feed_no_subscriptions_hint":  {
+                                        "description":  "提示订阅播客"
+                                    },
+    "podcast_no_shownotes":  "暂无节目简介",
+    "@podcast_no_shownotes":  {
+                                  "description":  "无节目简介消息"
+                              },
+    "podcast_no_transcript":  "暂无转录内容",
+    "@podcast_no_transcript":  {
+                                   "description":  "无转录消息"
+                               },
+    "podcast_click_to_transcribe":  "点击\\\"开始转录\\\"按钮生成转录文本",
+    "@podcast_click_to_transcribe":  {
+                                         "description":  "点击转录提示"
+                                     },
+    "podcast_transcription_failed":  "转录失败",
+    "@podcast_transcription_failed":  {
+                                          "description":  "转录失败状态"
+                                      },
+    "date_format":  "{year}年{month}月{day}日",
+    "@date_format":  {
+                         "description":  "日期格式模式",
+                         "placeholders":  {
+                                              "year":  {
+                                                           "type":  "int"
+                                                       },
+                                              "month":  {
+                                                            "type":  "String"
+                                                        },
+                                              "day":  {
+                                                          "type":  "String"
+                                                      }
+                                          }
+                     },
+    "podcast_discover_title":  "发现",
+    "@podcast_discover_title":  {
+                                    "description":  "播客发现页标题"
+                                },
+    "podcast_discover_top_charts":  "热门榜单",
+    "@podcast_discover_top_charts":  {
+                                         "description":  "播客发现页热门榜单分区标题"
+                                     },
+    "podcast_discover_trending_in":  "{country} 热门",
+    "@podcast_discover_trending_in":  {
+                                          "description":  "播客发现页榜单地区副标题",
+                                          "placeholders":  {
+                                                               "country":  {
+                                                                               "type":  "String"
+                                                                           }
+                                                           }
+                                      },
+    "podcast_discover_see_all":  "查看全部",
+    "@podcast_discover_see_all":  {
+                                      "description":  "播客发现页榜单查看全部按钮"
+                                  },
+    "podcast_discover_no_chart_data":  "暂无榜单数据",
+    "@podcast_discover_no_chart_data":  {
+                                            "description":  "播客发现页榜单空状态文案"
+                                        },
+    "podcast_discover_browse_by_category":  "按分类浏览",
+    "@podcast_discover_browse_by_category":  {
+                                                 "description":  "播客发现页分类分区标题"
+                                             },
+    "podcast_country_label":  "国家或地区",
+    "@podcast_country_label":  {
+                                   "description":  "国家选择器标签"
+                               },
+    "podcast_search_no_results":  "未找到结果",
+    "@podcast_search_no_results":  {
+                                       "description":  "无搜索结果消息"
+                                   },
+    "podcast_search_section_podcasts":  "播客",
+    "@podcast_search_section_podcasts":  {
+                                             "description":  "搜索结果播客分区标题"
+                                         },
+    "podcast_search_section_episodes":  "分集",
+    "@podcast_search_section_episodes":  {
+                                             "description":  "搜索结果分集分区标题"
+                                         },
+    "podcast_subscribe":  "订阅",
+    "@podcast_subscribe":  {
+                               "description":  "订阅按钮标签"
+                           },
+    "podcast_subscribed":  "已订阅",
+    "@podcast_subscribed":  {
+                                "description":  "已订阅状态标签"
+                            },
+    "podcast_subscribe_success":  "已订阅 {podcastName}",
+    "@podcast_subscribe_success":  {
+                                       "description":  "订阅成功消息",
+                                       "placeholders":  {
+                                                            "podcastName":  {
+                                                                                "type":  "String"
+                                                                            }
+                                                        }
+                                   },
+    "podcast_subscribe_failed":  "订阅失败：{error}",
+    "@podcast_subscribe_failed":  {
+                                      "description":  "订阅失败消息",
+                                      "placeholders":  {
+                                                           "error":  {
+                                                                         "type":  "String"
+                                                                     }
+                                                       }
+                                  },
+    "podcast_country_china":  "中国",
+    "@podcast_country_china":  {
+                                   "description":  "国家名称：中国"
+                               },
+    "podcast_country_usa":  "美国",
+    "@podcast_country_usa":  {
+                                 "description":  "国家名称：美国"
+                             },
+    "podcast_country_japan":  "日本",
+    "@podcast_country_japan":  {
+                                   "description":  "国家名称：日本"
+                               },
+    "podcast_country_uk":  "英国",
+    "@podcast_country_uk":  {
+                                "description":  "国家名称：英国"
+                            },
+    "podcast_country_germany":  "德国",
+    "@podcast_country_germany":  {
+                                     "description":  "国家名称：德国"
+                                 },
+    "podcast_country_france":  "法国",
+    "@podcast_country_france":  {
+                                    "description":  "国家名称：法国"
+                                },
+    "podcast_country_canada":  "加拿大",
+    "@podcast_country_canada":  {
+                                    "description":  "国家名称：加拿大"
+                                },
+    "podcast_country_australia":  "澳大利亚",
+    "@podcast_country_australia":  {
+                                       "description":  "国家名称：澳大利亚"
+                                   },
+    "podcast_country_korea":  "韩国",
+    "@podcast_country_korea":  {
+                                   "description":  "国家名称：韩国"
+                               },
+    "podcast_country_taiwan":  "台湾",
+    "@podcast_country_taiwan":  {
+                                    "description":  "国家名称：台湾"
+                                },
+    "podcast_country_hong_kong":  "香港",
+    "@podcast_country_hong_kong":  {
+                                       "description":  "国家名称：香港"
+                                   },
+    "podcast_country_india":  "印度",
+    "@podcast_country_india":  {
+                                   "description":  "国家名称：印度"
+                               },
+    "podcast_country_brazil":  "巴西",
+    "@podcast_country_brazil":  {
+                                    "description":  "国家名称：巴西"
+                                },
+    "podcast_country_mexico":  "墨西哥",
+    "@podcast_country_mexico":  {
+                                    "description":  "国家名称：墨西哥"
+                                },
+    "podcast_country_spain":  "西班牙",
+    "@podcast_country_spain":  {
+                                   "description":  "国家名称：西班牙"
+                               },
+    "podcast_country_italy":  "意大利",
+    "@podcast_country_italy":  {
+                                   "description":  "国家名称：意大利"
+                               },
+    "podcast_reparse_tooltip":  "重新解析播客（获取最新分集和链接）",
+    "@podcast_reparse_tooltip":  {
+                                     "description":  "重新解析播客按钮提示"
+                                 },
+    "podcast_reparsing":  "正在重新解析播客...",
+    "@podcast_reparsing":  {
+                               "description":  "正在重新解析消息"
+                           },
+    "podcast_reparse_completed":  "✅ 重新解析完成！",
+    "@podcast_reparse_completed":  {
+                                       "description":  "重新解析完成消息"
+                                   },
+    "podcast_reparse_failed":  "❌ 重新解析失败：",
+    "@podcast_reparse_failed":  {
+                                    "description":  "重新解析失败消息"
+                                },
+    "podcast_player_now_playing":  "正在播放",
+    "@podcast_player_now_playing":  {
+                                        "description":  "浮动播放器中的正在播放标签"
+                                    },
+    "podcast_player_collapse":  "收起",
+    "@podcast_player_collapse":  {
+                                     "description":  "浮动播放器中的收起按钮提示"
+                                 },
+    "podcast_player_list":  "播放列表",
+    "@podcast_player_list":  {
+                                 "description":  "浮动播放器中的列表按钮提示"
+                             },
+    "podcast_player_sleep_mode":  "睡眠模式",
+    "@podcast_player_sleep_mode":  {
+                                       "description":  "浮动播放器中的睡眠模式按钮提示"
+                                   },
+    "podcast_player_play":  "播放",
+    "@podcast_player_play":  {
+                                 "description":  "浮动播放器中的播放按钮提示"
+                             },
+    "podcast_player_pause":  "暂停",
+    "@podcast_player_pause":  {
+                                  "description":  "浮动播放器中的暂停按钮提示"
+                              },
+    "podcast_player_rewind_10":  "后退10秒",
+    "@podcast_player_rewind_10":  {
+                                      "description":  "后退10秒按钮提示"
+                                  },
+    "podcast_player_forward_30":  "前进30秒",
+    "@podcast_player_forward_30":  {
+                                       "description":  "前进30秒按钮提示"
+                                   },
+    "podcast_play_episode":  "播放",
+    "@podcast_play_episode":  {
+                                  "description":  "播放按钮标签（移动端简短版本）"
+                              },
+    "podcast_play_episode_full":  "播放",
+    "@podcast_play_episode_full":  {
+                                       "description":  "播放按钮标签（桌面端完整版本）"
+                                   },
+    "podcast_source":  "来源",
+    "@podcast_source":  {
+                            "description":  "来源链接标签"
+                        },
+    "podcast_speed_title":  "倍速播放",
+    "@podcast_speed_title":  {
+                                 "description":  "播放速度选择标题"
+                             },
+    "podcast_speed_done":  "完成",
+    "@podcast_speed_done":  {
+                                "description":  "速度选择完成按钮"
+                            },
+    "podcast_tab_shownotes":  "节目详情",
+    "@podcast_tab_shownotes":  {
+                                   "description":  "分集详情标签：节目详情"
+                               },
+    "podcast_tab_transcript":  "文字稿",
+    "@podcast_tab_transcript":  {
+                                    "description":  "分集详情标签：文字稿"
+                                },
+    "podcast_tab_chat":  "AI对话",
+    "@podcast_tab_chat":  {
+                              "description":  "分集详情标签：AI对话"
+                          },
+    "podcast_transcription_processing":  "正在转录中...",
+    "@podcast_transcription_processing":  {
+                                              "description":  "转录状态：处理中"
+                                          },
+    "podcast_transcription_auto_starting":  "自动开始转录...",
+    "@podcast_transcription_auto_starting":  {
+                                                 "description":  "转录自动开始消息"
+                                             },
+    "podcast_conversation_title":  "AI对话",
+    "@podcast_conversation_title":  {
+                                        "description":  "对话界面标题"
+                                    },
+    "podcast_conversation_empty_title":  "开始对话",
+    "@podcast_conversation_empty_title":  {
+                                              "description":  "空对话标题"
+                                          },
+    "podcast_conversation_empty_hint":  "向AI提问本集节目的相关问题，基于文字稿获取智能回答。",
+    "@podcast_conversation_empty_hint":  {
+                                             "description":  "空对话提示"
+                                         },
+    "podcast_conversation_send_hint":  "发送消息（Ctrl+Enter）",
+    "@podcast_conversation_send_hint":  {
+                                            "description":  "发送消息提示文本"
+                                        },
+    "podcast_conversation_no_summary_hint":  "对话功能需要先完成转录。请等待转录完成。",
+    "@podcast_conversation_no_summary_hint":  {
+                                                  "description":  "无摘要提示的对话"
+                                              },
+    "podcast_conversation_loading_failed":  "加载对话历史失败",
+    "@podcast_conversation_loading_failed":  {
+                                                 "description":  "加载对话失败消息"
+                                             },
+    "podcast_conversation_user":  "你",
+    "@podcast_conversation_user":  {
+                                       "description":  "对话中的用户标签"
+                                   },
+    "podcast_conversation_assistant":  "AI助手",
+    "@podcast_conversation_assistant":  {
+                                            "description":  "对话中的助手标签"
+                                        },
+    "podcast_conversation_reload":  "重新加载",
+    "@podcast_conversation_reload":  {
+                                         "description":  "重新加载按钮标签"
+                                     },
+    "podcast_conversation_new_chat":  "新对话",
+    "@podcast_conversation_new_chat":  {
+                                           "description":  "新建对话按钮提示"
+                                       },
+    "podcast_conversation_new_chat_confirm":  "确定要开始新的对话吗？当前的对话将会被清除。",
+    "@podcast_conversation_new_chat_confirm":  {
+                                                   "description":  "新建对话确认消息"
+                                               },
+    "podcast_conversation_history":  "对话历史",
+    "@podcast_conversation_history":  {
+                                          "description":  "对话历史标题"
+                                      },
+    "podcast_conversation_delete_title":  "删除对话",
+    "@podcast_conversation_delete_title":  {
+                                               "description":  "删除对话确认框标题"
+                                           },
+    "podcast_conversation_delete_confirm":  "确定要删除这个对话吗？此操作无法撤销。",
+    "@podcast_conversation_delete_confirm":  {
+                                                 "description":  "删除对话确认消息"
+                                             },
+    "podcast_conversation_message_count":  "{count}条消息",
+    "@podcast_conversation_message_count":  {
+                                                "description":  "对话消息数量",
+                                                "placeholders":  {
+                                                                     "count":  {
+                                                                                   "type":  "int"
+                                                                               }
+                                                                 }
+                                            },
+    "podcast_error_loading":  "加载内容失败",
+    "@podcast_error_loading":  {
+                                   "description":  "通用加载错误消息"
+                               },
+    "podcast_transcription_delete":  "删除",
+    "@podcast_transcription_delete":  {
+                                          "description":  "转录删除按钮"
+                                      },
+    "podcast_transcription_clear":  "清空",
+    "@podcast_transcription_clear":  {
+                                         "description":  "转录清空按钮"
+                                     },
+    "podcast_episode_not_found":  "未找到分集",
+    "@podcast_episode_not_found":  {
+                                       "description":  "未找到分集消息"
+                                   },
+    "podcast_go_back":  "返回",
+    "@podcast_go_back":  {
+                             "description":  "返回按钮标签"
+                         },
+    "podcast_load_failed":  "加载失败",
+    "@podcast_load_failed":  {
+                                 "description":  "加载失败消息"
+                             },
+    "podcast_summary_empty_hint":  "暂无摘要",
+    "@podcast_summary_empty_hint":  {
+                                        "description":  "摘要空提示"
+                                    },
+    "podcast_please_select_time":  "请选择时间",
+    "@podcast_please_select_time":  {
+                                        "description":  "请选择时间验证消息"
+                                    },
+    "podcast_please_select_time_and_day":  "请选择时间和星期",
+    "@podcast_please_select_time_and_day":  {
+                                                "description":  "请选择时间和星期验证消息"
+                                            },
+    "podcast_bulk_import_file_error":  "读取文件失败：{error}",
+    "@podcast_bulk_import_file_error":  {
+                                            "description":  "批量导入文件错误消息",
+                                            "placeholders":  {
+                                                                 "error":  {
+                                                                               "type":  "String"
+                                                                           }
+                                                             }
+                                        },
+    "podcast_bulk_import_input_text":  "文本",
+    "@podcast_bulk_import_input_text":  {
+                                            "description":  "批量导入文本输入标签"
+                                        },
+    "podcast_bulk_import_input_file":  "文件",
+    "@podcast_bulk_import_input_file":  {
+                                            "description":  "批量导入文件上传标签"
+                                        },
+    "podcast_bulk_import_no_urls_text":  "未找到URL",
+    "@podcast_bulk_import_no_urls_text":  {
+                                              "description":  "批量导入未在文本中找到URL时的消息"
+                                          },
+    "podcast_bulk_import_links_found":  "找到{total}个链接，{valid}个有效RSS订阅",
+    "@podcast_bulk_import_links_found":  {
+                                             "description":  "批量导入显示找到的总链接数和有效订阅数",
+                                             "placeholders":  {
+                                                                  "total":  {
+                                                                                "type":  "int"
+                                                                            },
+                                                                  "valid":  {
+                                                                                "type":  "int"
+                                                                            }
+                                                              }
+                                         },
+    "podcast_bulk_import_urls_exist":  "所有URL已存在于列表中",
+    "@podcast_bulk_import_urls_exist":  {
+                                            "description":  "批量导入当所有URL已存在时的消息"
+                                        },
+    "podcast_bulk_import_edit_url":  "编辑RSS URL",
+    "@podcast_bulk_import_edit_url":  {
+                                          "description":  "批量导入编辑URL对话框标题"
+                                      },
+    "podcast_bulk_import_save_revalidate":  "保存并重新验证",
+    "@podcast_bulk_import_save_revalidate":  {
+                                                 "description":  "批量导入保存并重新验证按钮文本"
+                                             },
+    "podcast_bulk_import_no_urls_file":  "文件中未找到URL",
+    "@podcast_bulk_import_no_urls_file":  {
+                                              "description":  "批量导入在文件中未找到URL时的消息"
+                                          },
+    "podcast_bulk_import_no_valid_feeds":  "没有有效的RSS订阅可导入。请移除无效URL或等待验证完成。",
+    "@podcast_bulk_import_no_valid_feeds":  {
+                                                "description":  "批量导入没有有效订阅可导入时的消息"
+                                            },
+    "podcast_bulk_import_imported_count":  "成功导入{count}个RSS订阅",
+    "@podcast_bulk_import_imported_count":  {
+                                                "description":  "批量导入成功消息（带数量）",
+                                                "placeholders":  {
+                                                                     "count":  {
+                                                                                   "type":  "int"
+                                                                               }
+                                                                 }
+                                            },
+    "podcast_bulk_import_failed":  "导入失败：{error}",
+    "@podcast_bulk_import_failed":  {
+                                        "description":  "批量导入失败消息",
+                                        "placeholders":  {
+                                                             "error":  {
+                                                                           "type":  "String"
+                                                                       }
+                                                         }
+                                    },
+    "podcast_bulk_import_valid_count":  "有效 ({count})",
+    "@podcast_bulk_import_valid_count":  {
+                                             "description":  "批量导入有效数量标签",
+                                             "placeholders":  {
+                                                                  "count":  {
+                                                                                "type":  "int"
+                                                                            }
+                                                              }
+                                         },
+    "podcast_bulk_import_invalid_count":  "无效 ({count})",
+    "@podcast_bulk_import_invalid_count":  {
+                                               "description":  "批量导入无效数量标签",
+                                               "placeholders":  {
+                                                                    "count":  {
+                                                                                  "type":  "int"
+                                                                              }
+                                                                }
+                                           },
+    "podcast_unknown_title":  "未知标题",
+    "@podcast_unknown_title":  {
+                                   "description":  "播客标题未知时的默认标题"
+                               },
+    "podcast_copy":  "复制",
+    "@podcast_copy":  {
+                          "description":  "复制按钮提示"
+                      },
+    "podcast_edit_retry":  "编辑重试",
+    "@podcast_edit_retry":  {
+                                "description":  "编辑并重试按钮提示"
+                            },
+    "podcast_remove":  "移除",
+    "@podcast_remove":  {
+                            "description":  "移除按钮提示"
+                        },
+    "podcast_bulk_import_drag_drop":  "拖放文件到此处或",
+    "@podcast_bulk_import_drag_drop":  {
+                                           "description":  "批量导入拖放说明"
+                                       },
+    "podcast_bulk_import_select_file":  "选择文件",
+    "@podcast_bulk_import_select_file":  {
+                                             "description":  "批量导入选择文件按钮文本"
+                                         },
+    "podcast_rss_list":  "RSS列表",
+    "@podcast_rss_list":  {
+                              "description":  "RSS列表标题"
+                          },
+    "podcast_import_all":  "全部导入",
+    "@podcast_import_all":  {
+                                "description":  "全部导入按钮文本"
+                            },
+    "podcast_no_items":  "无项目",
+    "@podcast_no_items":  {
+                              "description":  "无项目消息"
+                          },
+    "podcast_bulk_import_extract":  "提取",
+    "@podcast_bulk_import_extract":  {
+                                         "description":  "批量导入提取按钮文本"
+                                     },
+    "podcast_bulk_import_click_select":  "点击选择文件",
+    "@podcast_bulk_import_click_select":  {
+                                              "description":  "批量导入点击选择文件文本"
+                                          },
+    "podcast_bulk_import_or_drag_drop":  "或拖放到此处",
+    "@podcast_bulk_import_or_drag_drop":  {
+                                              "description":  "批量导入或拖放文本"
+                                          },
+    "podcast_bulk_import_paste_hint":  "在此粘贴URL或OPML内容...",
+    "@podcast_bulk_import_paste_hint":  {
+                                            "description":  "批量导入粘贴文本区域提示"
+                                        },
+    "podcast_not_valid_rss":  "不是有效的RSS订阅",
+    "@podcast_not_valid_rss":  {
+                                   "description":  "无效RSS订阅错误消息"
+                               },
+    "podcast_copied":  "已复制：{text}",
+    "@podcast_copied":  {
+                            "description":  "复制到剪贴板消息",
+                            "placeholders":  {
+                                                 "text":  {
+                                                              "type":  "String"
+                                                          }
+                                             }
+                        },
+    "podcast_bulk_import_hint_text":  "URL",
+    "@podcast_bulk_import_hint_text":  {
+                                           "description":  "文本字段中的URL提示文本"
+                                       },
+    "podcast_global_rss_settings_title":  "全局RSS设置",
+    "@podcast_global_rss_settings_title":  {
+                                               "description":  "全局RSS设置页面标题"
+                                           },
+    "podcast_updated_subscriptions":  "已更新{count}个订阅",
+    "@podcast_updated_subscriptions":  {
+                                           "description":  "更新订阅消息（带数量）",
+                                           "placeholders":  {
+                                                                "count":  {
+                                                                              "type":  "int"
+                                                                          }
+                                                            }
+                                       },
+    "podcast_summary_generate_failed":  "生成摘要失败",
+    "@podcast_summary_generate_failed":  {
+                                             "description":  "摘要生成失败消息"
+                                         },
+    "podcast_summary_no_summary":  "暂无摘要",
+    "@podcast_summary_no_summary":  {
+                                        "description":  "无摘要可用消息"
+                                    },
+    "podcast_advanced_options":  "高级选项",
+    "@podcast_advanced_options":  {
+                                      "description":  "展开/收起高级选项按钮"
+                                  },
+    "podcast_regenerate":  "重新生成",
+    "@podcast_regenerate":  {
+                                "description":  "重新生成摘要按钮"
+                            },
+    "podcast_ai_model":  "AI模型",
+    "@podcast_ai_model":  {
+                              "description":  "模型选择器标签"
+                          },
+    "podcast_custom_prompt":  "自定义提示词（可选）",
+    "@podcast_custom_prompt":  {
+                                   "description":  "提示词输入框标签"
+                               },
+    "podcast_custom_prompt_hint":  "例如：重点关注技术要点...",
+    "@podcast_custom_prompt_hint":  {
+                                        "description":  "提示词占位符"
+                                    },
+    "podcast_generating_summary":  "正在生成AI摘要...",
+    "@podcast_generating_summary":  {
+                                        "description":  "加载状态文本"
+                                    },
+    "podcast_summary_generate":  "生成摘要",
+    "@podcast_summary_generate":  {
+                                      "description":  "生成AI摘要按钮"
+                                  },
+    "podcast_summary_transcription_required":  "需要转录才能生成AI摘要",
+    "@podcast_summary_transcription_required":  {
+                                                    "description":  "无转录内容时的提示"
+                                                },
+    "podcast_default_model":  "默认",
+    "@podcast_default_model":  {
+                                   "description":  "默认模型标记"
+                               },
+    "podcast_summary_chars":  "字符",
+    "@podcast_summary_chars":  {
+                                   "description":  "字数统计单位"
+                               },
+    "theme_mode":  "主题模式",
+    "@theme_mode":  {
+                        "description":  "主题模式设置标签"
+                    },
+    "theme_mode_subtitle":  "选择您偏好的主题",
+    "@theme_mode_subtitle":  {
+                                 "description":  "主题模式副标题"
+                             },
+    "theme_mode_follow_system":  "跟随系统",
+    "@theme_mode_follow_system":  {
+                                      "description":  "跟随系统主题选项"
+                                  },
+    "theme_mode_light":  "浅色",
+    "@theme_mode_light":  {
+                              "description":  "浅色主题选项"
+                          },
+    "theme_mode_dark":  "深色",
+    "@theme_mode_dark":  {
+                             "description":  "深色主题选项"
+                         },
+    "theme_mode_select_title":  "选择主题模式",
+    "@theme_mode_select_title":  {
+                                     "description":  "主题模式选择对话框标题"
+                                 },
+    "theme_mode_changed":  "主题模式已更改为 {mode}",
+    "@theme_mode_changed":  {
+                                "description":  "主题模式更改成功消息",
+                                "placeholders":  {
+                                                     "mode":  {
+                                                                  "type":  "String"
+                                                              }
+                                                 }
+                            },
+    "podcast_transcript_search_hint":  "搜索转录内容...",
+    "@podcast_transcript_search_hint":  {
+                                            "description":  "转录内容搜索提示文本"
+                                        },
+    "podcast_transcript_no_match":  "未找到匹配内容",
+    "@podcast_transcript_no_match":  {
+                                         "description":  "未找到匹配内容消息"
+                                     },
+    "podcast_transcript_match":  "第 {index} 个匹配",
+    "@podcast_transcript_match":  {
+                                      "description":  "搜索结果匹配编号标签",
+                                      "placeholders":  {
+                                                           "index":  {
+                                                                         "type":  "int"
+                                                                     }
+                                                       }
+                                  },
+    "transcription_start_title":  "开始转录",
+    "@transcription_start_title":  {
+                                       "description":  "开始转录状态标题"
+                                   },
+    "transcription_start_desc":  "为本集生成完整文字转录\n支持多语言和高精度",
+    "@transcription_start_desc":  {
+                                      "description":  "开始转录状态描述"
+                                  },
+    "transcription_start_button":  "开始转录",
+    "@transcription_start_button":  {
+                                        "description":  "开始转录按钮文本"
+                                    },
+    "transcription_auto_hint":  "或在设置中启用自动转录",
+    "@transcription_auto_hint":  {
+                                     "description":  "自动转录设置提示"
+                                 },
+    "transcription_starting":  "正在启动转录...",
+    "@transcription_starting":  {
+                                    "description":  "启动转录时的提示"
+                                },
+    "transcription_started_success":  "✓ 转录已成功启动",
+    "@transcription_started_success":  {
+                                           "description":  "启动成功提示"
+                                       },
+    "transcription_start_failed":  "✗ 启动失败：{error}",
+    "@transcription_start_failed":  {
+                                        "description":  "启动转录失败提示",
+                                        "placeholders":  {
+                                                             "error":  {
+                                                                           "type":  "String"
+                                                                       }
+                                                         }
+                                    },
+    "transcription_pending_title":  "等待中",
+    "@transcription_pending_title":  {
+                                         "description":  "等待中转录状态标题"
+                                     },
+    "transcription_pending_desc":  "转录任务已加入队列\n即将开始处理",
+    "@transcription_pending_desc":  {
+                                        "description":  "等待中转录状态描述"
+                                    },
+    "transcription_progress_complete":  "完成",
+    "@transcription_progress_complete":  {
+                                             "description":  "进度环中百分比下方的标签"
+                                         },
+    "transcription_duration_label":  "时长：{duration}",
+    "@transcription_duration_label":  {
+                                          "description":  "处理状态中的时长标签",
+                                          "placeholders":  {
+                                                               "duration":  {
+                                                                                "type":  "String"
+                                                                            }
+                                                           }
+                                      },
+    "transcription_words_label":  "约{count}K字",
+    "@transcription_words_label":  {
+                                       "description":  "处理状态中的字数标签",
+                                       "placeholders":  {
+                                                            "count":  {
+                                                                          "type":  "String"
+                                                                      }
+                                                        }
+                                   },
+    "transcription_step_download":  "下载",
+    "@transcription_step_download":  {
+                                         "description":  "下载步骤标签"
+                                     },
+    "transcription_step_convert":  "转换",
+    "@transcription_step_convert":  {
+                                        "description":  "转换步骤标签"
+                                    },
+    "transcription_step_split":  "分割",
+    "@transcription_step_split":  {
+                                      "description":  "分割步骤标签"
+                                  },
+    "transcription_step_transcribe":  "转录",
+    "@transcription_step_transcribe":  {
+                                           "description":  "转录步骤标签"
+                                       },
+    "transcription_step_merge":  "合并",
+    "@transcription_step_merge":  {
+                                      "description":  "合并步骤标签"
+                                  },
+    "transcription_complete_title":  "转录完成",
+    "@transcription_complete_title":  {
+                                          "description":  "转录完成状态标题"
+                                      },
+    "transcription_complete_desc":  "转录文本已成功生成\n您现在可以阅读和搜索内容",
+    "@transcription_complete_desc":  {
+                                         "description":  "转录完成状态描述"
+                                     },
+    "transcription_stat_words":  "字数",
+    "@transcription_stat_words":  {
+                                      "description":  "字数统计标签"
+                                  },
+    "transcription_stat_duration":  "时长",
+    "@transcription_stat_duration":  {
+                                         "description":  "时长统计标签"
+                                     },
+    "transcription_stat_accuracy":  "准确率",
+    "@transcription_stat_accuracy":  {
+                                         "description":  "准确率统计标签"
+                                     },
+    "transcription_completed_at":  "完成时间：{time}",
+    "@transcription_completed_at":  {
+                                        "description":  "完成时间标签",
+                                        "placeholders":  {
+                                                             "time":  {
+                                                                          "type":  "String"
+                                                                      }
+                                                         }
+                                    },
+    "transcription_view_button":  "查看转录",
+    "@transcription_view_button":  {
+                                       "description":  "查看转录按钮"
+                                   },
+    "transcription_failed_title":  "转录失败",
+    "@transcription_failed_title":  {
+                                        "description":  "转录失败状态标题"
+                                    },
+    "transcription_unknown_error":  "未知错误",
+    "@transcription_unknown_error":  {
+                                         "description":  "默认错误信息"
+                                     },
+    "transcription_technical_details":  "技术详情",
+    "@transcription_technical_details":  {
+                                             "description":  "错误详情展开区域"
+                                         },
+    "transcription_retry_button":  "重试",
+    "@transcription_retry_button":  {
+                                        "description":  "重试转录按钮"
+                                    },
+    "transcription_error_already_progress":  "转录正在进行中",
+    "@transcription_error_already_progress":  {
+                                                  "description":  "转录已在运行时的错误文本"
+                                              },
+    "transcription_error_network":  "网络连接失败",
+    "@transcription_error_network":  {
+                                         "description":  "网络错误消息"
+                                     },
+    "transcription_error_audio_download":  "音频下载失败",
+    "@transcription_error_audio_download":  {
+                                                "description":  "音频下载错误"
+                                            },
+    "transcription_error_service":  "转录服务错误",
+    "@transcription_error_service":  {
+                                         "description":  "服务错误"
+                                     },
+    "transcription_error_format":  "音频格式转换失败",
+    "@transcription_error_format":  {
+                                        "description":  "格式转换错误"
+                                    },
+    "transcription_error_server_restart":  "服务已重启",
+    "@transcription_error_server_restart":  {
+                                                "description":  "服务器重启错误"
+                                            },
+    "transcription_error_generic":  "转录失败",
+    "@transcription_error_generic":  {
+                                         "description":  "通用转录失败"
+                                     },
+    "transcription_suggest_network":  "请检查您的网络连接后重试",
+    "@transcription_suggest_network":  {
+                                           "description":  "网络错误建议"
+                                       },
+    "transcription_suggest_audio":  "音频文件可能暂时不可用，请稍后重试",
+    "@transcription_suggest_audio":  {
+                                         "description":  "音频错误建议"
+                                     },
+    "transcription_suggest_service":  "转录服务可能正忙，请稍后重试",
+    "@transcription_suggest_service":  {
+                                           "description":  "服务错误建议"
+                                       },
+    "transcription_suggest_format":  "该音频格式可能不支持，请尝试其他集数",
+    "@transcription_suggest_format":  {
+                                          "description":  "格式错误建议"
+                                      },
+    "transcription_suggest_restart":  "点击重试以启动新的转录任务",
+    "@transcription_suggest_restart":  {
+                                           "description":  "服务器重启建议"
+                                       },
+    "transcription_suggest_generic":  "请尝试点击重试重新开始",
+    "@transcription_suggest_generic":  {
+                                           "description":  "通用错误建议"
+                                       },
+    "player_playback_speed_title":  "播放倍速",
+    "@player_playback_speed_title":  {
+                                         "description":  "播放倍速区域标题"
+                                     },
+    "player_apply_subscription_only":  "仅应用于当前订阅",
+    "@player_apply_subscription_only":  {
+                                            "description":  "仅当前订阅的复选框标签"
+                                        },
+    "player_apply_subscription_subtitle":  "选中：仅当前订阅；未选中：全局默认",
+    "@player_apply_subscription_subtitle":  {
+                                                "description":  "订阅复选框副标题"
+                                            },
+    "player_sleep_timer_title":  "睡眠定时",
+    "@player_sleep_timer_title":  {
+                                      "description":  "睡眠定时区域标题"
+                                  },
+    "player_sleep_timer_desc":  "设置定时后，播放将在指定时间自动暂停",
+    "@player_sleep_timer_desc":  {
+                                     "description":  "睡眠定时描述"
+                                 },
+    "player_stop_after_episode":  "播放完本集后停止",
+    "@player_stop_after_episode":  {
+                                       "description":  "当前集播放完后停止选项"
+                                   },
+    "player_cancel_timer":  "取消定时",
+    "@player_cancel_timer":  {
+                                 "description":  "取消睡眠定时按钮"
+                             },
+    "player_minutes":  "{count}分钟",
+    "@player_minutes":  {
+                            "description":  "分钟时长",
+                            "placeholders":  {
+                                                 "count":  {
+                                                               "type":  "int"
+                                                           }
+                                             }
+                        },
+    "player_hours_minutes":  "{hours}小时{minutes}分钟",
+    "@player_hours_minutes":  {
+                                  "description":  "小时和分钟时长",
+                                  "placeholders":  {
+                                                       "hours":  {
+                                                                     "type":  "int"
+                                                                 },
+                                                       "minutes":  {
+                                                                       "type":  "int"
+                                                                   }
+                                                   }
+                              },
+    "player_hours":  "{count}小时",
+    "@player_hours":  {
+                          "description":  "仅小时时长",
+                          "placeholders":  {
+                                               "count":  {
+                                                             "type":  "int"
+                                                         }
+                                           }
+                      },
+    "global_rss_failed_load":  "加载失败",
+    "@global_rss_failed_load":  {
+                                    "description":  "加载失败错误标题"
+                                },
+    "global_rss_retry":  "重试",
+    "@global_rss_retry":  {
+                              "description":  "重试按钮文本"
+                          },
+    "global_rss_affected_count":  "受影响的订阅 ({count})",
+    "@global_rss_affected_count":  {
+                                       "description":  "显示受影响订阅数量的区域标题",
+                                       "placeholders":  {
+                                                            "count":  {
+                                                                          "type":  "int"
+                                                                      }
+                                                        }
+                                   },
+    "global_rss_no_subscriptions":  "暂无RSS订阅",
+    "@global_rss_no_subscriptions":  {
+                                         "description":  "空状态文本"
+                                     },
+    "global_rss_schedule_title":  "所有RSS订阅的更新计划",
+    "@global_rss_schedule_title":  {
+                                       "description":  "全局RSS计划卡片标题"
+                                   },
+    "global_rss_apply_desc":  "这将应用于所有 {count} 个订阅",
+    "@global_rss_apply_desc":  {
+                                   "description":  "全局应用范围描述",
+                                   "placeholders":  {
+                                                        "count":  {
+                                                                      "type":  "int"
+                                                                  }
+                                                    }
+                               },
+    "global_rss_update_frequency":  "更新频率",
+    "@global_rss_update_frequency":  {
+                                         "description":  "频率选择器标签"
+                                     },
+    "global_rss_hourly":  "每小时",
+    "@global_rss_hourly":  {
+                               "description":  "每小时频率选项"
+                           },
+    "global_rss_daily":  "每天",
+    "@global_rss_daily":  {
+                              "description":  "每天频率选项"
+                          },
+    "global_rss_weekly":  "每周",
+    "@global_rss_weekly":  {
+                               "description":  "每周频率选项"
+                           },
+    "global_rss_update_time":  "更新时间",
+    "@global_rss_update_time":  {
+                                    "description":  "时间选择器标签"
+                                },
+    "global_rss_select_time":  "选择时间",
+    "@global_rss_select_time":  {
+                                    "description":  "时间选择器提示文本"
+                                },
+    "global_rss_select_time_button":  "选择时间",
+    "@global_rss_select_time_button":  {
+                                           "description":  "时间选择器按钮文本"
+                                       },
+    "global_rss_day_of_week":  "星期",
+    "@global_rss_day_of_week":  {
+                                    "description":  "星期选择器标签"
+                                },
+    "global_rss_applying":  "正在应用...",
+    "@global_rss_applying":  {
+                                 "description":  "应用中的按钮文本"
+                             },
+    "global_rss_apply_all":  "应用到所有订阅",
+    "@global_rss_apply_all":  {
+                                  "description":  "应用到所有按钮文本"
+                              },
+    "global_rss_failed_update":  "更新订阅失败",
+    "@global_rss_failed_update":  {
+                                      "description":  "更新失败错误消息"
+                                  },
+    "page_not_found":  "页面未找到",
+    "@page_not_found":  {
+                            "description":  "页面未找到错误标题"
+                        },
+    "page_not_found_subtitle":  "请从导航中选择有效的标签页",
+    "@page_not_found_subtitle":  {
+                                     "description":  "页面未找到错误消息"
+                                 },
+    "error_prefix":  "错误：{error}",
+    "@error_prefix":  {
+                          "description":  "通用错误消息前缀",
+                          "placeholders":  {
+                                               "error":  {
+                                                             "type":  "String"
+                                                         }
+                                           }
+                      },
+    "downloading_in_background":  "正在后台下载...",
+    "@downloading_in_background":  {
+                                       "description":  "在后台下载更新时显示的消息"
+                                   },
+    "version_label":  "版本：{version}",
+    "@version_label":  {
+                           "description":  "版本标签（带占位符）",
+                           "placeholders":  {
+                                                "version":  {
+                                                                "type":  "String"
+                                                            }
+                                            }
+                       },
+    "build_label":  "构建：{build}",
+    "@build_label":  {
+                         "description":  "构建标签（带占位符）",
+                         "placeholders":  {
+                                              "build":  {
+                                                            "type":  "String"
+                                                        }
+                                          }
+                     },
+    "added_to_queue":  "已添加到播放队列",
+    "@added_to_queue":  {
+                            "description":  "将项目添加到队列时显示的消息"
+                        },
+    "failed_to_add_to_queue":  "添加到队列失败：{error}",
+    "@failed_to_add_to_queue":  {
+                                    "description":  "添加到队列失败时的错误消息",
+                                    "placeholders":  {
+                                                         "error":  {
+                                                                       "type":  "String"
+                                                                   }
+                                                     }
+                                },
+    "error_opening_link":  "打开链接时出错：{error}",
+    "@error_opening_link":  {
+                                "description":  "打开链接失败时的错误消息",
+                                "placeholders":  {
+                                                     "error":  {
+                                                                   "type":  "String"
+                                                               }
+                                                 }
+                            },
+    "queue_is_empty":  "播放队列为空",
+    "@queue_is_empty":  {
+                            "description":  "队列为空时显示的消息"
+                        },
+    "failed_to_load_queue":  "加载队列失败：{error}",
+    "@failed_to_load_queue":  {
+                                  "description":  "加载队列失败时的错误消息",
+                                  "placeholders":  {
+                                                       "error":  {
+                                                                     "type":  "String"
+                                                                 }
+                                                   }
+                              },
+    "failed_to_reorder_queue":  "重新排序队列失败：{error}",
+    "@failed_to_reorder_queue":  {
+                                     "description":  "重新排序队列失败时的错误消息",
+                                     "placeholders":  {
+                                                          "error":  {
+                                                                        "type":  "String"
+                                                                    }
+                                                      }
+                                 },
+    "failed_to_play_item":  "播放项目失败：{error}",
+    "@failed_to_play_item":  {
+                                 "description":  "播放项目失败时的错误消息",
+                                 "placeholders":  {
+                                                      "error":  {
+                                                                    "type":  "String"
+                                                                }
+                                                  }
+                             },
+    "failed_to_remove_item":  "移除项目失败：{error}",
+    "@failed_to_remove_item":  {
+                                   "description":  "移除项目失败时的错误消息",
+                                   "placeholders":  {
+                                                        "error":  {
+                                                                      "type":  "String"
+                                                                  }
+                                                    }
+                               },
+    "apply_button":  "应用",
+    "@apply_button":  {
+                          "description":  "通用应用按钮标签"
+                      },
+    "auth_test_page_title":  "身份验证测试",
+    "@auth_test_page_title":  {
+                                  "description":  "身份验证测试页面标题"
+                              },
+    "auth_verification_title":  "身份验证",
+    "@auth_verification_title":  {
+                                     "description":  "身份验证页面标题"
+                                 },
+    "auth_password_requirement_uppercase":  "至少包含一个大写字母",
+    "@auth_password_requirement_uppercase":  {
+                                                 "description":  "密码要求：至少一个大写字母"
+                                             },
+    "auth_password_requirement_lowercase":  "至少包含一个小写字母",
+    "@auth_password_requirement_lowercase":  {
+                                                 "description":  "密码要求：至少一个小写字母"
+                                             },
+    "auth_password_requirement_number":  "至少包含一个数字",
+    "@auth_password_requirement_number":  {
+                                              "description":  "密码要求：至少一个数字"
+                                          },
+    "auth_password_req_uppercase_short":  "至少一个大写字母（A-Z）",
+    "@auth_password_req_uppercase_short":  {
+                                               "description":  "密码要求简短版：大写字母"
+                                           },
+    "auth_password_req_lowercase_short":  "至少一个小写字母（a-z）",
+    "@auth_password_req_lowercase_short":  {
+                                               "description":  "密码要求简短版：小写字母"
+                                           },
+    "auth_password_req_number_short":  "至少一个数字（0-9）",
+    "@auth_password_req_number_short":  {
+                                            "description":  "密码要求简短版：数字"
+                                        },
+    "auth_password_requirement_min_length":  "至少8个字符",
+    "@auth_password_requirement_min_length":  {
+                                                  "description":  "密码要求：最少8个字符"
+                                              },
+    "auth_password_requirements_title":  "密码必须满足：",
+    "@auth_password_requirements_title":  {
+                                              "description":  "密码要求部分标题"
+                                          },
+    "auth_terms_and_conditions":  "条款和条件",
+    "@auth_terms_and_conditions":  {
+                                       "description":  "条款和条件链接文本"
+                                   },
+    "auth_privacy_policy":  "隐私政策",
+    "@auth_privacy_policy":  {
+                                 "description":  "隐私政策链接文本"
+                             },
+    "auth_set_new_password":  "设置新密码",
+    "@auth_set_new_password":  {
+                                   "description":  "设置新密码页面标题"
+                               },
+    "auth_new_password":  "新密码",
+    "@auth_new_password":  {
+                               "description":  "新密码字段标签"
+                           },
+    "podcast_add_to_queue":  "添加到播放队列",
+    "@podcast_add_to_queue":  {
+                                  "description":  "添加到播放队列按钮"
+                              },
+    "episode_unknown_title":  "未知集数",
+    "@episode_unknown_title":  {
+                                   "description":  "集数名称为空时的后备标题"
+                               },
+    "transcription_status_pending":  "等待开始",
+    "@transcription_status_pending":  {
+                                          "description":  "转录状态：等待开始"
+                                      },
+    "transcription_status_downloading":  "下载音频中...",
+    "@transcription_status_downloading":  {
+                                              "description":  "转录状态：下载音频文件中"
+                                          },
+    "transcription_status_converting":  "转换格式中...",
+    "@transcription_status_converting":  {
+                                             "description":  "转录状态：转换音频格式中"
+                                         },
+    "transcription_status_transcribing":  "转录中...",
+    "@transcription_status_transcribing":  {
+                                               "description":  "转录状态：处理音频中"
+                                           },
+    "transcription_status_processing":  "处理文本中...",
+    "@transcription_status_processing":  {
+                                             "description":  "转录状态：处理转录文本中"
+                                         },
+    "transcription_status_completed":  "转录完成",
+    "@transcription_status_completed":  {
+                                            "description":  "转录状态：成功完成"
+                                        },
+    "transcription_status_failed":  "转录失败",
+    "@transcription_status_failed":  {
+                                         "description":  "转录状态：失败"
+                                     },
+    "profile_ai_summary":  "AI 总结",
+    "@profile_ai_summary":  {
+                                "description":  "个人资料中的AI总结部分"
+                            },
+    "profile_support_section":  "支持",
+    "@profile_support_section":  {
+                                     "description":  "个人资料中的支持部分"
+                                 },
+    "auth_and":  " 和 ",
+    "@auth_and":  {
+                      "description":  "连接词\u0027和\u0027，用于连接条款"
+                  },
+    "sidebarCollapseMenu":  "收起菜单",
+    "@sidebarCollapseMenu":  {
+                                 "description":  "桌面端侧边栏收起按钮提示"
+                             },
+    "sidebarExpandMenu":  "展开菜单",
+    "@sidebarExpandMenu":  {
+                               "description":  "桌面端侧边栏展开按钮提示"
+                           },
+    "sidebarAppTitle":  "AI 助手",
+    "@sidebarAppTitle":  {
+                             "description":  "桌面端侧边栏标题"
+                         }
 }
