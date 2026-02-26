@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.13.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.13.0...v0.13.1) - 2026-02-26 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.13.1))
+
+### 🐛 Bug Fixes
+
+- *(podcast)* Prevent queue wrap-around on last episode completion and improve add-to-queue positioning ([551e4a5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/551e4a53d2f686c9a5cd44a7e2585fcc80a4e150))
+
+### 🚜 Refactor
+
+- *(core, podcast, ai)* Centralize ORM registration and remove unused schemas ([66b1ff9](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/66b1ff919e48de3309179b809d68e3e181c2eaf1))
+
+
+
 ## [0.13.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.5...v0.13.0) - 2026-02-26 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.13.0))
 
 ### ⚙️ Miscellaneous Tasks
