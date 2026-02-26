@@ -8,7 +8,6 @@
 """
 
 import asyncio
-import contextlib
 import logging
 from datetime import datetime, timedelta, timezone
 from enum import Enum
@@ -24,7 +23,6 @@ from app.domains.podcast.models import (
     TranscriptionTask,
 )
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
-from app.domains.subscription.models import Subscription
 
 
 logger = logging.getLogger(__name__)
@@ -393,94 +391,6 @@ class TranscriptionScheduler:
         stmt = select(TranscriptionTask).where(TranscriptionTask.episode_id == episode_id)
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
-
-
-class AutomatedTranscriptionScheduler:
-    """自动化转录调度器（后台运行）"""
-
-    def __init__(self, db: AsyncSession):
-        self.db = db
-        self.scheduler = TranscriptionScheduler(db)
-        self._running = False
-        self._background_task: asyncio.Task | None = None
-
-    async def start(
-        self,
-        check_interval_minutes: int = 60,
-        hours_since_published: int = 24
-    ):
-        """
-        启动自动化调度
-
-        Args:
-            check_interval_minutes: 检查间隔（分钟）
-            hours_since_published: 检查多少小时内发布的分集
-        """
-        if self._running:
-            logger.warning("Automated scheduler already running")
-            return
-
-        self._running = True
-        self._background_task = asyncio.create_task(
-            self._run_scheduler(check_interval_minutes, hours_since_published)
-        )
-
-        logger.info(f"Started automated transcription scheduler (interval: {check_interval_minutes}min)")
-
-    async def stop(self):
-        """停止自动化调度"""
-        self._running = False
-        if self._background_task:
-            self._background_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._background_task
-        logger.info("Stopped automated transcription scheduler")
-
-    async def _run_scheduler(self, interval_minutes: int, hours_since_published: int):
-        """后台调度循环"""
-        while self._running:
-            try:
-                # 获取所有播客订阅
-                stmt = select(Subscription).where(
-                    Subscription.source_type == "podcast-rss"
-                )
-                result = await self.db.execute(stmt)
-                subscriptions = result.scalars().all()
-
-                for subscription in subscriptions:
-                    try:
-                        # 检查并转录新分集
-                        result = await self.scheduler.check_and_transcribe_new_episodes(
-                            subscription_id=subscription.id,
-                            hours_since_published=hours_since_published
-                        )
-
-                        if result["scheduled"] > 0:
-                            logger.info(
-                                f"Subscription {subscription.id} ({subscription.title}): "
-                                f"Scheduled {result['scheduled']} new episodes for transcription"
-                            )
-
-                    except Exception as e:
-                        logger.error(f"Error processing subscription {subscription.id}: {str(e)}")
-
-                # 等待下一次检查
-                await asyncio.sleep(interval_minutes * 60)
-
-            except Exception as e:
-                logger.error(f"Scheduler error: {str(e)}")
-                await asyncio.sleep(interval_minutes * 60)  # 出错后等待重试
-
-
-# 便捷函数
-async def schedule_episode_transcription(
-    db: AsyncSession,
-    episode_id: int,
-    force: bool = False
-) -> dict[str, Any]:
-    """便捷函数：为单个分集安排转录"""
-    scheduler = TranscriptionScheduler(db)
-    return await scheduler.schedule_transcription(episode_id, force=force)
 
 
 async def get_episode_transcript(

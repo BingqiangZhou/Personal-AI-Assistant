@@ -29,6 +29,7 @@ from app.core.config import settings
 
 
 logger = logging.getLogger(__name__)
+_orm_models_registered = False
 
 # Create async engine with production-ready configuration
 engine = create_async_engine(
@@ -63,6 +64,26 @@ async_session_factory = async_sessionmaker(
 Base = declarative_base()
 
 
+def register_orm_models() -> None:
+    """Import all ORM model modules exactly once to populate Base metadata."""
+    global _orm_models_registered
+    if _orm_models_registered:
+        return
+
+    from importlib import import_module
+
+    for module in (
+        "app.admin.models",
+        "app.domains.ai.models",
+        "app.domains.podcast.models",
+        "app.domains.subscription.models",
+        "app.domains.user.models",
+    ):
+        import_module(module)
+
+    _orm_models_registered = True
+
+
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """Get database session."""
     async with async_session_factory() as session:
@@ -78,33 +99,7 @@ async def init_db(run_metadata_sync: bool = False) -> None:
     Note: PostgreSQL ENUM types may already exist from previous deployments.
     We handle this by creating them manually first with existence checks.
     """
-    # Import all models to register relationships and metadata.
-    # This MUST happen before any database operations to ensure SQLAlchemy
-    # can properly resolve all relationships between models.
-    from app.admin.models import (  # noqa: F401
-        AdminAuditLog,
-        BackgroundTaskRun,
-        SystemSettings,
-    )
-    from app.domains.ai.models import AIModelConfig  # noqa: F401
-    from app.domains.podcast.models import (  # noqa: F401
-        PodcastConversation,
-        PodcastEpisode,
-        PodcastPlaybackState,
-        TranscriptionTask,
-    )
-    from app.domains.subscription.models import (  # noqa: F401
-        Subscription,
-        SubscriptionCategory,
-        SubscriptionCategoryMapping,
-        SubscriptionItem,
-        UserSubscription,
-    )
-    from app.domains.user.models import (  # noqa: F401
-        PasswordReset,
-        User,
-        UserSession,
-    )
+    register_orm_models()
 
     # Schema is managed by Alembic migrations - no manual ENUM creation needed
     async with engine.begin() as conn:

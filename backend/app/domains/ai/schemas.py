@@ -181,21 +181,6 @@ class PresetModelConfig(BaseModel):
 
 
 # 导出配置
-class ModelExportConfig(BaseModel):
-    """模型配置导出格式"""
-    models: list[dict[str, Any]]
-    export_time: datetime
-    version: str = "1.0"
-
-
-class ModelImportConfig(BaseModel):
-    """模型配置导入格式"""
-    models: list[AIModelConfigCreate]
-    overwrite_existing: bool = Field(default=False, description="是否覆盖已存在的模型")
-    mark_as_system: bool = Field(default=False, description="是否标记为系统预设")
-
-
-# API密钥验证
 class APIKeyValidationRequest(BaseModel):
     """API密钥验证请求"""
     api_url: str

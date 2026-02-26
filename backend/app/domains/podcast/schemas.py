@@ -46,16 +46,6 @@ class PodcastSubscriptionCreate(PodcastBaseSchema):
         return v
 
 
-class PodcastSubscriptionUpdate(PodcastBaseSchema):
-    """更新播客订阅请求"""
-
-    custom_name: str | None = Field(None, max_length=255)
-    fetch_interval: int | None = Field(
-        None, ge=300, le=86400, description="抓取间隔(秒)"
-    )
-    is_active: bool | None = None
-
-
 class PodcastSubscriptionResponse(PodcastTimestampedSchema):
     """播客订阅响应"""
 
@@ -381,35 +371,6 @@ class PodcastQueueResponse(PodcastBaseSchema):
     items: list[PodcastQueueItemResponse] = Field(default_factory=list)
 
 
-class PodcastCategoryCreate(PodcastBaseSchema):
-    """创建播客分类请求"""
-
-    name: str = Field(..., min_length=1, max_length=100, description="分类名称")
-    description: str | None = Field(None, max_length=500, description="分类描述")
-    color: str | None = Field(
-        None, pattern=r"^#[0-9A-Fa-f]{6}$", description="十六进制颜色代码"
-    )
-
-
-class PodcastCategoryUpdate(PodcastBaseSchema):
-    """更新播客分类请求"""
-
-    name: str | None = Field(None, min_length=1, max_length=100)
-    description: str | None = Field(None, max_length=500)
-    color: str | None = Field(None, pattern=r"^#[0-9A-Fa-f]{6}$")
-
-
-class PodcastCategoryResponse(PodcastTimestampedSchema):
-    """播客分类响应"""
-
-    id: int
-    user_id: int
-    name: str
-    description: str | None = None
-    color: str | None = None
-    subscription_count: int | None = 0
-
-
 # === Summary相关 ===
 
 
@@ -513,46 +474,6 @@ class PodcastProfileStatsResponse(PodcastBaseSchema):
     played_episodes: int
 
 
-class PodcastOPMLImport(PodcastBaseSchema):
-    """OPML导入请求"""
-
-    opml_content: str = Field(..., description="OPML格式内容")
-    category_mapping: dict[str, int] | None = Field(
-        default_factory=dict, description="分类映射"
-    )
-
-
-class PodcastOPMLExport(PodcastBaseSchema):
-    """OPML导出响应"""
-
-    opml_content: str
-    exported_at: datetime
-    subscription_count: int
-
-
-# === Bulk Operations相关 ===
-
-
-class PodcastBulkAction(PodcastBaseSchema):
-    """批量操作请求"""
-
-    action: str = Field(
-        ..., description="操作类型: refresh, delete, mark_played, mark_unplayed"
-    )
-    subscription_ids: list[int] = Field(..., description="订阅ID列表")
-    episode_ids: list[int] | None = Field(
-        None, description="单集ID列表（用于单集操作）"
-    )
-
-
-class PodcastBulkActionResponse(PodcastBaseSchema):
-    """批量操作响应"""
-
-    success_count: int
-    failed_count: int
-    errors: list[str] = []
-
-
 class PodcastSubscriptionBatchResponse(PodcastBaseSchema):
     """播客批量订阅响应"""
 
@@ -639,16 +560,6 @@ class PodcastTranscriptionDetailResponse(PodcastTranscriptionResponse):
     formatted_completed_at: str | None = None
 
 
-class PodcastTranscriptionListResponse(PodcastBaseSchema):
-    """转录任务列表响应"""
-
-    tasks: list[PodcastTranscriptionResponse]
-    total: int
-    page: int
-    size: int
-    pages: int
-
-
 class PodcastTranscriptionStatusResponse(PodcastBaseSchema):
     """转录状态响应"""
 
@@ -667,16 +578,6 @@ class PodcastTranscriptionStatusResponse(PodcastBaseSchema):
         if hasattr(v, "value"):
             return v.value
         return str(v) if v else None
-
-
-class PodcastTranscriptionChunkInfo(PodcastBaseSchema):
-    """转录分片信息"""
-
-    index: int
-    start_time: float
-    duration: float
-    transcript: str | None = None
-    word_count: int = 0
 
 
 # === Conversation相关 ===

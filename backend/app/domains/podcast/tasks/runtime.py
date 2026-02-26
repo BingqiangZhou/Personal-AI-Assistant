@@ -11,26 +11,13 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
-# Import ALL models to ensure SQLAlchemy properly initializes all relationships
-# This is critical for Celery workers which create isolated DB engines
-from app.admin.models import BackgroundTaskRun  # noqa: F401
 from app.core.config import settings
-from app.domains.ai.models import AIModelConfig  # noqa: F401
-from app.domains.podcast.models import (  # noqa: F401
-    PodcastConversation,
-    PodcastEpisode,
-    PodcastPlaybackState,
-    TranscriptionTask,
-)
+from app.core.database import register_orm_models
 from app.domains.podcast.tasks._runlog import _insert_run_async
-from app.domains.subscription.models import (  # noqa: F401
-    Subscription,
-    SubscriptionCategory,
-    SubscriptionCategoryMapping,
-    SubscriptionItem,
-    UserSubscription,
-)
-from app.domains.user.models import PasswordReset, User, UserSession  # noqa: F401
+
+
+# Ensure model metadata is registered before worker sessions execute ORM operations.
+register_orm_models()
 
 
 def _new_session_factory(

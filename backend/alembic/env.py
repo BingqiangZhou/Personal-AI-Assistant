@@ -205,29 +205,10 @@ sys.modules["app.core.security"] = mock_security_module
 
 # === STEP 2: Import database module to get Base ===
 # Import after mocking config and security to avoid circular imports
-from app.core.database import Base
+from app.core.database import Base, register_orm_models
 
-
-# === STEP 3: Import all models ===
-# Import all domain models so they're registered with Base.metadata
-from app.admin.models import AdminAuditLog, BackgroundTaskRun, SystemSettings  # noqa: F401,E402
-from app.domains.ai.models import AIModelConfig  # noqa: F401,E402
-from app.domains.podcast.models import (  # noqa: F401,E402
-    PodcastConversation,
-    PodcastEpisode,
-    PodcastPlaybackState,
-    PodcastQueue,
-    PodcastQueueItem,
-    TranscriptionTask,
-)
-from app.domains.subscription.models import (  # noqa: F401,E402
-    Subscription,
-    SubscriptionCategory,
-    SubscriptionCategoryMapping,
-    SubscriptionItem,
-    UserSubscription,
-)
-from app.domains.user.models import PasswordReset, User, UserSession  # noqa: F401,E402
+# === STEP 3: Register all models ===
+register_orm_models()
 
 
 # === STEP 4: Configure Alembic ===

@@ -71,16 +71,6 @@ class AudioChunk:
     transcript: str | None = None  # 转录结果
 
 
-@dataclass
-class TranscriptionProgress:
-    """转录进度信息"""
-    task_id: int
-    status: TranscriptionStatus
-    progress: float  # 0-100
-    message: str
-    current_chunk: int = 0
-    total_chunks: int = 0
-
 
 class AudioDownloader:
     """音频文件下载器"""
