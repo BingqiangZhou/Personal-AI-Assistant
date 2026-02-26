@@ -57,7 +57,9 @@ r &= check("API端点定义", test_api)
 def test_service():
     from app.domains.podcast.services.episode_service import PodcastEpisodeService
     from app.domains.podcast.services.playback_service import PodcastPlaybackService
-    from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
+    from app.domains.podcast.services.subscription_service import (
+        PodcastSubscriptionService,
+    )
 
     assert hasattr(PodcastSubscriptionService, "add_subscription")
     assert hasattr(PodcastEpisodeService, "get_episode_with_summary")

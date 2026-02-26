@@ -58,9 +58,11 @@ class PodcastRedis:
             "by_namespace": {},
         },
     }
+    _health_check_interval_seconds = 30.0
 
     def __init__(self):
         self._client = None
+        self._last_health_check_at = 0.0
 
     @staticmethod
     def _cache_namespace(key: str) -> str:
@@ -194,32 +196,42 @@ class PodcastRedis:
         self._record_command_timing("SCAN_ITER", (perf_counter() - started) * 1000)
         return keys
 
+    @staticmethod
+    def _build_client() -> aioredis.Redis:
+        return aioredis.from_url(
+            settings.REDIS_URL,
+            decode_responses=True,
+            socket_timeout=5,
+            socket_connect_timeout=5,
+            retry_on_timeout=True,
+            max_connections=20,
+        )
+
+    async def _ping_client(self, client: aioredis.Redis) -> None:
+        started = perf_counter()
+        await client.ping()
+        self._record_command_timing("PING", (perf_counter() - started) * 1000)
+
     async def _get_client(self) -> aioredis.Redis:
         """Get Redis client instance"""
         if self._client is None:
-            self._client = aioredis.from_url(
-                settings.REDIS_URL,
-                decode_responses=True,
-                socket_timeout=5,
-                socket_connect_timeout=5,
-                retry_on_timeout=True,
-                max_connections=20,
-            )
-        # Ping to verify connection (async)
+            self._client = self._build_client()
+            await self._ping_client(self._client)
+            self._last_health_check_at = perf_counter()
+            return self._client
+
+        now = perf_counter()
+        if (now - self._last_health_check_at) < self._health_check_interval_seconds:
+            return self._client
+
         try:
-            started = perf_counter()
-            await self._client.ping()
-            self._record_command_timing("PING", (perf_counter() - started) * 1000)
+            await self._ping_client(self._client)
+            self._last_health_check_at = now
         except Exception:
-            # Reconnect if ping fails
-            self._client = aioredis.from_url(
-                settings.REDIS_URL,
-                decode_responses=True,
-                socket_timeout=5,
-                socket_connect_timeout=5,
-                retry_on_timeout=True,
-                max_connections=20,
-            )
+            # Reconnect if health check fails
+            self._client = self._build_client()
+            await self._ping_client(self._client)
+            self._last_health_check_at = perf_counter()
         return self._client
 
     # === Cache Operations ===
@@ -256,6 +268,14 @@ class PodcastRedis:
         self._record_command_timing("HGET", (perf_counter() - started) * 1000)
         return value
 
+    async def cache_hgetall(self, key: str) -> dict[str, str]:
+        """Get all hash fields."""
+        client = await self._get_client()
+        started = perf_counter()
+        value = await client.hgetall(key)
+        self._record_command_timing("HGETALL", (perf_counter() - started) * 1000)
+        return value
+
     async def cache_hset(self, key: str, mapping: dict, ttl: int | None = None) -> int:
         """Set hash fields with optional TTL"""
         client = await self._get_client()
@@ -275,8 +295,8 @@ class PodcastRedis:
     async def get_episode_metadata(self, episode_id: int) -> dict | None:
         """Get cached episode metadata"""
         key = f"podcast:meta:{episode_id}"
-        data = await self.cache_hget(key, "*")
-        return data
+        data = await self.cache_hgetall(key)
+        return data or None
 
     async def set_episode_metadata(self, episode_id: int, metadata: dict) -> None:
         """Cache episode metadata (24 hours)"""

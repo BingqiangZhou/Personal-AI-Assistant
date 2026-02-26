@@ -29,6 +29,7 @@ from app.domains.podcast.models import (
     TranscriptionTask,
 )
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
+from app.domains.podcast.transcription_state import _progress_throttle
 
 
 logger = logging.getLogger(__name__)
@@ -647,9 +648,11 @@ class SiliconFlowTranscriber:
                     # 准备文件上传 (Re-open file for each attempt)
                     data = aiohttp.FormData()
                     data.add_field('model', model)
+                    with open(chunk.file_path, "rb") as file_obj:
+                        chunk_payload = file_obj.read()
                     data.add_field(
                         'file',
-                        open(chunk.file_path, 'rb'),
+                        chunk_payload,
                         filename=os.path.basename(chunk.file_path),
                         content_type='audio/mpeg'
                     )
@@ -854,8 +857,11 @@ class PodcastTranscriptionService:
             update_data['error_message'] = error_message
 
         # 设置开始时间
-        if status == 'downloading' and not await self._get_task_field(task_id, 'started_at'):
-            update_data['started_at'] = datetime.now(timezone.utc)
+        if (
+            status == TranscriptionStatus.IN_PROGRESS
+            and not await self._get_task_field(task_id, "started_at")
+        ):
+            update_data["started_at"] = datetime.now(timezone.utc)
 
         # 设置完成时间
         if status in [TranscriptionStatus.COMPLETED, TranscriptionStatus.FAILED, TranscriptionStatus.CANCELLED]:

@@ -2,6 +2,7 @@
 
 from app.core.celery_app import celery_app
 
+
 def main():
     print("Registered tasks:")
     for name in sorted(celery_app.tasks.keys()):

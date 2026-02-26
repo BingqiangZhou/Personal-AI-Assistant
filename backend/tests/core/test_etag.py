@@ -5,12 +5,13 @@ import json
 from starlette.requests import Request
 
 from app.core.etag import (
+    ETagResponse,
+    check_etag_precondition,
     generate_etag,
     matches_any_etag,
     parse_if_none_match,
     validate_etag,
 )
-from app.core.etag import ETagResponse, check_etag_precondition
 from app.core.json_encoder import CustomJSONEncoder
 
 

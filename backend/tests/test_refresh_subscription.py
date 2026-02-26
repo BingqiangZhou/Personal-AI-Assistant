@@ -3,16 +3,18 @@ Quick test script to refresh podcast subscriptions and verify image URL extracti
 Run this in the backend container with: python test_refresh_subscription.py
 """
 import asyncio
-import sys
 import os
+import sys
+
 
 # Add the app directory to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+from sqlalchemy import select, update
+
 from app.core.database import async_session_factory, init_db
 from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 from app.domains.podcast.repositories import PodcastRepository
-from sqlalchemy import select, update
 from app.domains.subscription.models import Subscription
 
 
@@ -72,7 +74,7 @@ async def main():
 
             print(f"\n✓ Updated subscription config with image_url: {feed.image_url}")
         else:
-            print(f"\n✗ No image URL found in feed")
+            print("\n✗ No image URL found in feed")
 
 
 if __name__ == "__main__":

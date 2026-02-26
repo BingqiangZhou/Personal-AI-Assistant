@@ -46,8 +46,6 @@ dependencies:
 
   # Security
   flutter_secure_storage: ^10.0.0
-  encrypt: ^5.0.3
-  pointycastle: ^3.9.1
 
   # Audio Player
   audioplayers: ^6.5.1

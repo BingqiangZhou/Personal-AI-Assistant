@@ -60,7 +60,9 @@ async def test_routes_aggregator_exports_endpoints() -> None:
 async def test_subscription_service_mocked_add_subscription() -> None:
     from sqlalchemy.ext.asyncio import AsyncSession
 
-    from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
+    from app.domains.podcast.services.subscription_service import (
+        PodcastSubscriptionService,
+    )
 
     with patch("app.domains.podcast.services.subscription_service.PodcastRepository") as mock_repo_cls, patch(
         "app.domains.podcast.services.subscription_service.SecureRSSParser"

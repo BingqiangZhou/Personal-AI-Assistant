@@ -1,5 +1,5 @@
-"""
-播客数据访问层 - Podcast Repository
+﻿"""
+鎾鏁版嵁璁块棶灞?- Podcast Repository
 """
 
 import logging
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 class PodcastRepository:
     """
-    播客数据持久化操作
+    鎾鏁版嵁鎸佷箙鍖栨搷浣?
     """
 
     def __init__(self, db: AsyncSession, redis: PodcastRedis | None = None):
@@ -40,7 +40,19 @@ class PodcastRepository:
         self._queue_position_step = 1024
         self._queue_position_compaction_threshold = 1_000_000
 
-    # === 订阅管理 ===
+    @staticmethod
+    def _active_user_subscription_filters(user_id: int) -> tuple[Any, Any]:
+        """Common filter for active user-subscription mappings."""
+        return (
+            UserSubscription.user_id == user_id,
+            UserSubscription.is_archived.is_(False),
+        )
+
+    @staticmethod
+    def _podcast_source_type_filter() -> Any:
+        return Subscription.source_type.in_(["podcast-rss", "rss"])
+
+    # === 璁㈤槄绠＄悊 ===
 
     async def create_or_update_subscription(
         self,
@@ -52,7 +64,7 @@ class PodcastRepository:
         metadata: dict | None = None,
     ) -> Subscription:
         """
-        创建或更新播客订阅
+        鍒涘缓鎴栨洿鏂版挱瀹㈣闃?
 
         With many-to-many relationship:
         1. Check if subscription exists globally by URL
@@ -63,7 +75,7 @@ class PodcastRepository:
         from app.admin.models import SystemSettings
         from app.domains.subscription.models import UpdateFrequency
 
-        # 查找现有订阅（全局查找）
+        # 鏌ユ壘鐜版湁璁㈤槄锛堝叏灞€鏌ユ壘锛?
         stmt = select(Subscription).where(
             and_(
                 Subscription.source_url == feed_url,
@@ -114,30 +126,30 @@ class PodcastRepository:
                 # Unarchive if it was archived
                 user_sub.is_archived = False
 
-            # 更新订阅元数据
+            # 鏇存柊璁㈤槄鍏冩暟鎹?
             subscription.title = custom_name or title
             subscription.description = description
             subscription.updated_at = datetime.now(timezone.utc)
-            # 更新元数据 - 使用新字典对象确保 SQLAlchemy 检测到变更
+            # 鏇存柊鍏冩暟鎹?- 浣跨敤鏂板瓧鍏稿璞＄‘淇?SQLAlchemy 妫€娴嬪埌鍙樻洿
             if metadata:
                 # NEW: Also store image_url in the direct column
                 if "image_url" in metadata:
                     subscription.image_url = metadata.get("image_url")
                 existing_config = dict(subscription.config or {})
-                # 合并新旧元数据，保留原有的其他配置
+                # 鍚堝苟鏂版棫鍏冩暟鎹紝淇濈暀鍘熸湁鐨勫叾浠栭厤缃?
                 existing_config.update(metadata)
                 subscription.config = existing_config
-                # 显式标记字段已修改，确保 JSON 列变更被持久化
+                # 鏄惧紡鏍囪瀛楁宸蹭慨鏀癸紝纭繚 JSON 鍒楀彉鏇磋鎸佷箙鍖?
                 attributes.flag_modified(subscription, "config")
         else:
-            # 创建新订阅（无user_id）
+            # 鍒涘缓鏂拌闃咃紙鏃爑ser_id锛?
             subscription = Subscription(
                 source_url=feed_url,
-                source_type="podcast-rss",  # 区分原生RSS和播客RSS
+                source_type="podcast-rss",  # 鍖哄垎鍘熺敓RSS鍜屾挱瀹SS
                 title=custom_name or title,
                 description=description,
                 status="active",
-                fetch_interval=3600,  # 默认1小时（秒）
+                fetch_interval=3600,  # 榛樿1灏忔椂锛堢锛?
                 image_url=(metadata or {}).get(
                     "image_url"
                 ),  # NEW: Also store in direct column
@@ -161,15 +173,14 @@ class PodcastRepository:
         return subscription
 
     async def get_user_subscriptions(self, user_id: int) -> list[Subscription]:
-        """获取用户所有播客订阅"""
+        """Get all podcast subscriptions for a user."""
         stmt = (
             select(Subscription)
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
-                    Subscription.source_type.in_(["podcast-rss", "rss"]),
+                    *self._active_user_subscription_filters(user_id),
+                    self._podcast_source_type_filter(),
                 )
             )
             .order_by(Subscription.created_at.desc())
@@ -181,16 +192,15 @@ class PodcastRepository:
     async def get_subscription_by_id(
         self, user_id: int, sub_id: int
     ) -> Subscription | None:
-        """获取特定订阅"""
+        """鑾峰彇鐗瑰畾璁㈤槄"""
         stmt = (
             select(Subscription)
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                     Subscription.id == sub_id,
-                    Subscription.source_type.in_(["podcast-rss", "rss"]),
+                    self._podcast_source_type_filter(),
                 )
             )
         )
@@ -200,16 +210,15 @@ class PodcastRepository:
     async def get_subscription_by_url(
         self, user_id: int, feed_url: str
     ) -> Subscription | None:
-        """通过URL获取订阅"""
+        """閫氳繃URL鑾峰彇璁㈤槄"""
         stmt = (
             select(Subscription)
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                     Subscription.source_url == feed_url,
-                    Subscription.source_type.in_(["podcast-rss", "rss"]),
+                    self._podcast_source_type_filter(),
                 )
             )
         )
@@ -232,7 +241,7 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    # === 单集管理 ===
+    # === 鍗曢泦绠＄悊 ===
 
     async def create_or_update_episode(
         self,
@@ -247,16 +256,16 @@ class PodcastRepository:
         metadata: dict | None = None,
     ) -> PodcastEpisode:
         """
-        创建或更新播客单集
-        使用item_link作为唯一标识
+        鍒涘缓鎴栨洿鏂版挱瀹㈠崟闆?
+        浣跨敤item_link浣滀负鍞竴鏍囪瘑
         """
-        # 首先尝试按 item_link 查找
+        # 棣栧厛灏濊瘯鎸?item_link 鏌ユ壘
         stmt = select(PodcastEpisode).where(PodcastEpisode.item_link == item_link)
         result = await self.db.execute(stmt)
         episode = result.scalar_one_or_none()
 
         if episode:
-            # 找到，更新字段
+            # 鎵惧埌锛屾洿鏂板瓧娈?
             episode.title = title
             episode.description = description
             episode.audio_url = audio_url
@@ -272,7 +281,7 @@ class PodcastRepository:
                 episode.metadata_json = {**current_metadata, **metadata}
             is_new = False
         else:
-            # 不存在，创建新记录
+            # 涓嶅瓨鍦紝鍒涘缓鏂拌褰?
             episode = PodcastEpisode(
                 subscription_id=subscription_id,
                 title=title,
@@ -282,7 +291,7 @@ class PodcastRepository:
                 audio_duration=audio_duration,
                 transcript_url=transcript_url,
                 item_link=item_link,
-                status="pending_summary",  # 等待AI总结
+                status="pending_summary",  # 绛夊緟AI鎬荤粨
                 metadata_json=metadata or {},
             )
             self.db.add(episode)
@@ -291,7 +300,7 @@ class PodcastRepository:
         await self.db.commit()
         await self.db.refresh(episode)
 
-        # 缓存前几天 episode metadata
+        # 缂撳瓨鍓嶅嚑澶?episode metadata
         if is_new or episode.ai_summary:
             await self._cache_episode_metadata(episode)
 
@@ -388,7 +397,7 @@ class PodcastRepository:
     async def get_unsummarized_episodes(
         self, subscription_id: int | None = None
     ) -> list[PodcastEpisode]:
-        """获取待AI总结的单集"""
+        """Get episodes that are pending AI summaries."""
         stmt = select(PodcastEpisode).where(
             and_(
                 PodcastEpisode.ai_summary.is_(None),
@@ -405,7 +414,7 @@ class PodcastRepository:
     async def get_subscription_episodes(
         self, subscription_id: int, limit: int = 20
     ) -> list[PodcastEpisode]:
-        """获取订阅的所有单集"""
+        """Get episodes for one subscription."""
         stmt = (
             select(PodcastEpisode)
             .options(joinedload(PodcastEpisode.subscription))
@@ -428,14 +437,14 @@ class PodcastRepository:
     async def get_episode_by_id(
         self, episode_id: int, user_id: int | None = None
     ) -> PodcastEpisode | None:
-        """获取单集详情"""
+        """鑾峰彇鍗曢泦璇︽儏"""
         stmt = (
             select(PodcastEpisode)
             .options(joinedload(PodcastEpisode.subscription))
             .where(PodcastEpisode.id == episode_id)
         )
         if user_id:
-            # 确保是该用户的订阅 - use UserSubscription join
+            # 纭繚鏄鐢ㄦ埛鐨勮闃?- use UserSubscription join
             stmt = (
                 stmt.join(Subscription)
                 .join(
@@ -444,8 +453,7 @@ class PodcastRepository:
                 )
                 .where(
                     and_(
-                        UserSubscription.user_id == user_id,
-                        UserSubscription.is_archived == False,
+                        *self._active_user_subscription_filters(user_id),
                     )
                 )
             )
@@ -456,7 +464,7 @@ class PodcastRepository:
     async def get_episode_by_item_link(
         self, subscription_id: int, item_link: str
     ) -> PodcastEpisode | None:
-        """通过item_link查找单集"""
+        """閫氳繃item_link鏌ユ壘鍗曢泦"""
         stmt = select(PodcastEpisode).where(
             and_(
                 PodcastEpisode.subscription_id == subscription_id,
@@ -466,7 +474,7 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    # === AI总结相关 ===
+    # === AI鎬荤粨鐩稿叧 ===
 
     async def update_ai_summary(
         self,
@@ -476,7 +484,7 @@ class PodcastRepository:
         confidence: float | None = None,
         transcript_used: bool = False,
     ) -> PodcastEpisode:
-        """更新AI总结"""
+        """鏇存柊AI鎬荤粨"""
         episode = await self.get_episode_by_id(episode_id)
         if not episode:
             raise ValueError(f"Episode {episode_id} not found")
@@ -495,13 +503,13 @@ class PodcastRepository:
         await self.db.commit()
         await self.db.refresh(episode)
 
-        # 更新缓存
+        # 鏇存柊缂撳瓨
         await self.redis.set_ai_summary(episode_id, summary, version)
 
         return episode
 
     async def mark_summary_failed(self, episode_id: int, error: str) -> None:
-        """标记总结失败"""
+        """鏍囪鎬荤粨澶辫触"""
         episode = await self.get_episode_by_id(episode_id)
         if episode:
             episode.status = "summary_failed"
@@ -511,12 +519,12 @@ class PodcastRepository:
             episode.metadata_json = metadata
             await self.db.commit()
 
-    # === 播放状态管理 ===
+    # === 鎾斁鐘舵€佺鐞?===
 
     async def get_playback_state(
         self, user_id: int, episode_id: int
     ) -> PodcastPlaybackState | None:
-        """获取用户播放状态"""
+        """Get playback state for one user and episode."""
         stmt = select(PodcastPlaybackState).where(
             and_(
                 PodcastPlaybackState.user_id == user_id,
@@ -565,9 +573,8 @@ class PodcastRepository:
         """Get user-specific playback rate preference for a subscription."""
         stmt = select(UserSubscription.playback_rate_preference).where(
             and_(
-                UserSubscription.user_id == user_id,
+                *self._active_user_subscription_filters(user_id),
                 UserSubscription.subscription_id == subscription_id,
-                UserSubscription.is_archived == False,  # noqa: E712
             )
         )
         result = await self.db.execute(stmt)
@@ -619,9 +626,8 @@ class PodcastRepository:
 
             stmt = select(UserSubscription).where(
                 and_(
-                    UserSubscription.user_id == user_id,
+                    *self._active_user_subscription_filters(user_id),
                     UserSubscription.subscription_id == subscription_id,
-                    UserSubscription.is_archived == False,  # noqa: E712
                 )
             )
             result = await self.db.execute(stmt)
@@ -644,9 +650,8 @@ class PodcastRepository:
         if subscription_id is not None:
             sub_stmt = select(UserSubscription).where(
                 and_(
-                    UserSubscription.user_id == user_id,
+                    *self._active_user_subscription_filters(user_id),
                     UserSubscription.subscription_id == subscription_id,
-                    UserSubscription.is_archived == False,  # noqa: E712
                 )
             )
             sub_result = await self.db.execute(sub_stmt)
@@ -664,7 +669,7 @@ class PodcastRepository:
         """
         Batch fetch episode counts for multiple subscriptions.
 
-        批量获取多个订阅的剧集计数
+        鎵归噺鑾峰彇澶氫釜璁㈤槄鐨勫墽闆嗚鏁?
 
         Args:
             subscription_ids: List of subscription IDs
@@ -691,7 +696,7 @@ class PodcastRepository:
         """
         Batch fetch recent episodes for multiple subscriptions.
 
-        批量获取多个订阅的最新剧集
+        鎵归噺鑾峰彇澶氫釜璁㈤槄鐨勬渶鏂板墽闆?
 
         Args:
             subscription_ids: List of subscription IDs
@@ -732,7 +737,7 @@ class PodcastRepository:
         is_playing: bool = False,
         playback_rate: float = 1.0,
     ) -> PodcastPlaybackState:
-        """更新播放进度"""
+        """鏇存柊鎾斁杩涘害"""
         state = await self.get_playback_state(user_id, episode_id)
 
         if state:
@@ -757,13 +762,13 @@ class PodcastRepository:
         await self.db.commit()
         await self.db.refresh(state)
 
-        # 也缓存到Redis作为快速读取
+        # 涔熺紦瀛樺埌Redis浣滀负蹇€熻鍙?
         if self.redis:
             await self.redis.set_user_progress(user_id, episode_id, position / 100)
 
         return state
 
-    # === 统计与缓存辅助 ===
+    # === 缁熻涓庣紦瀛樿緟鍔?===
 
     # === Queue management ===
 
@@ -1243,7 +1248,7 @@ class PodcastRepository:
         return await self.get_queue_with_items(user_id)
 
     async def _cache_episode_metadata(self, episode: PodcastEpisode):
-        """缓存episode元数据到Redis"""
+        """缂撳瓨episode鍏冩暟鎹埌Redis"""
         if not self.redis:
             return
 
@@ -1257,35 +1262,34 @@ class PodcastRepository:
 
         await self.redis.set_episode_metadata(episode.id, metadata)
 
-    # === 新增方法支持分页、搜索、统计等 ===
+    # === 鏂板鏂规硶鏀寔鍒嗛〉銆佹悳绱€佺粺璁＄瓑 ===
 
     async def get_user_subscriptions_paginated(
         self, user_id: int, page: int = 1, size: int = 20, filters: dict | None = None
     ) -> tuple[list[Subscription], int]:
-        """分页获取用户订阅"""
+        """鍒嗛〉鑾峰彇鐢ㄦ埛璁㈤槄"""
         query = (
             select(Subscription)
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
-                    Subscription.source_type.in_(["podcast-rss", "rss"]),
+                    *self._active_user_subscription_filters(user_id),
+                    self._podcast_source_type_filter(),
                 )
             )
         )
 
-        # 应用过滤器
+        # 搴旂敤杩囨护鍣?
         if filters:
             if filters.status:
                 query = query.where(Subscription.status == filters.status)
 
-        # 计算总数
+        # 璁＄畻鎬绘暟
         count_query = select(func.count()).select_from(query.subquery())
         total_result = await self.db.execute(count_query)
         total = total_result.scalar()
 
-        # 应用排序和分页
+        # 搴旂敤鎺掑簭鍜屽垎椤?
         query = query.order_by(Subscription.created_at.desc())
         query = query.offset((page - 1) * size).limit(size)
 
@@ -1297,7 +1301,7 @@ class PodcastRepository:
     async def get_episodes_paginated(
         self, user_id: int, page: int = 1, size: int = 20, filters: dict | None = None
     ) -> tuple[list[PodcastEpisode], int]:
-        """分页获取用户播客单集"""
+        """鍒嗛〉鑾峰彇鐢ㄦ埛鎾鍗曢泦"""
         query = (
             select(PodcastEpisode)
             .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
@@ -1305,13 +1309,12 @@ class PodcastRepository:
             .options(joinedload(PodcastEpisode.subscription))
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                 )
             )
         )
 
-        # 应用过滤器
+        # 搴旂敤杩囨护鍣?
         if filters:
             if filters.subscription_id:
                 query = query.where(
@@ -1323,15 +1326,15 @@ class PodcastRepository:
                 else:
                     query = query.where(PodcastEpisode.ai_summary.is_(None))
             if filters.is_played is not None:
-                # 播放状态需要JOIN播放记录表
+                # 鎾斁鐘舵€侀渶瑕丣OIN鎾斁璁板綍琛?
                 if filters.is_played:
-                    # 已播放：播放进度超过90%
+                    # 宸叉挱鏀撅細鎾斁杩涘害瓒呰繃90%
                     query = query.join(PodcastPlaybackState).where(
                         PodcastPlaybackState.current_position
                         >= PodcastEpisode.audio_duration * 0.9
                     )
                 else:
-                    # 未播放或未听完
+                    # 鏈挱鏀炬垨鏈惉瀹?
                     query = query.outerjoin(PodcastPlaybackState).where(
                         or_(
                             PodcastPlaybackState.id.is_(None),
@@ -1340,12 +1343,12 @@ class PodcastRepository:
                         )
                     )
 
-        # 计算总数
+        # 璁＄畻鎬绘暟
         count_query = select(func.count()).select_from(query.subquery())
         total_result = await self.db.execute(count_query)
         total = total_result.scalar()
 
-        # 应用排序和分页
+        # 搴旂敤鎺掑簭鍜屽垎椤?
         query = query.order_by(
             PodcastEpisode.published_at.desc(),
             PodcastEpisode.id.desc(),
@@ -1377,8 +1380,7 @@ class PodcastRepository:
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                 )
             )
         )
@@ -1431,8 +1433,7 @@ class PodcastRepository:
             )
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                 )
             )
         )
@@ -1567,8 +1568,7 @@ class PodcastRepository:
             .options(joinedload(PodcastEpisode.subscription))
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                 )
             )
         )
@@ -1626,8 +1626,7 @@ class PodcastRepository:
             .options(joinedload(PodcastEpisode.subscription))
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                 )
             )
         )
@@ -1671,8 +1670,7 @@ class PodcastRepository:
             .options(joinedload(PodcastEpisode.subscription))
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                 )
             )
         )
@@ -1743,8 +1741,7 @@ class PodcastRepository:
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                 )
             )
         )
@@ -1887,8 +1884,7 @@ class PodcastRepository:
                 .options(joinedload(PodcastEpisode.subscription))
                 .where(
                     and_(
-                        UserSubscription.user_id == user_id,
-                        UserSubscription.is_archived == False,
+                        *self._active_user_subscription_filters(user_id),
                         or_(*search_conditions),
                     )
                 )
@@ -1932,13 +1928,13 @@ class PodcastRepository:
     async def update_subscription_fetch_time(
         self, subscription_id: int, fetch_time: datetime | None = None
     ):
-        """更新订阅的最后抓取时间"""
+        """Update the last fetch timestamp for a subscription."""
         stmt = select(Subscription).where(Subscription.id == subscription_id)
         result = await self.db.execute(stmt)
         subscription = result.scalar_one_or_none()
 
         if subscription:
-            # 移除时区信息以匹配数据库的TIMESTAMP WITHOUT TIME ZONE
+            # 绉婚櫎鏃跺尯淇℃伅浠ュ尮閰嶆暟鎹簱鐨凾IMESTAMP WITHOUT TIME ZONE
             time_to_set = sanitize_published_date(
                 fetch_time or datetime.now(timezone.utc)
             )
@@ -1946,17 +1942,17 @@ class PodcastRepository:
             await self.db.commit()
 
     async def update_subscription_metadata(self, subscription_id: int, metadata: dict):
-        """更新订阅的元数据配置"""
+        """鏇存柊璁㈤槄鐨勫厓鏁版嵁閰嶇疆"""
         stmt = select(Subscription).where(Subscription.id == subscription_id)
         result = await self.db.execute(stmt)
         subscription = result.scalar_one_or_none()
 
         if subscription:
-            # 合并现有配置和新元数据 - 使用新字典对象确保 SQLAlchemy 检测到变更
+            # 鍚堝苟鐜版湁閰嶇疆鍜屾柊鍏冩暟鎹?- 浣跨敤鏂板瓧鍏稿璞＄‘淇?SQLAlchemy 妫€娴嬪埌鍙樻洿
             current_config = dict(subscription.config or {})
             current_config.update(metadata)
             subscription.config = current_config
-            # 显式标记字段已修改，确保 JSON 列变更被持久化
+            # 鏄惧紡鏍囪瀛楁宸蹭慨鏀癸紝纭繚 JSON 鍒楀彉鏇磋鎸佷箙鍖?
             attributes.flag_modified(subscription, "config")
             subscription.updated_at = datetime.now(timezone.utc)
             await self.db.commit()
@@ -1964,7 +1960,7 @@ class PodcastRepository:
     async def get_recently_played(
         self, user_id: int, limit: int = 5
     ) -> list[dict[str, Any]]:
-        """获取最近播放的单集"""
+        """鑾峰彇鏈€杩戞挱鏀剧殑鍗曢泦"""
         stmt = (
             select(
                 PodcastEpisode,
@@ -1977,8 +1973,7 @@ class PodcastRepository:
             .options(joinedload(PodcastEpisode.subscription))
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                     PodcastPlaybackState.last_updated_at
                     >= datetime.now(timezone.utc) - timedelta(days=7),
                 )
@@ -2009,8 +2004,8 @@ class PodcastRepository:
     async def get_liked_episodes(
         self, user_id: int, limit: int = 20
     ) -> list[PodcastEpisode]:
-        """获取用户喜欢的单集（播放完成率高的）"""
-        # 播放完成率 > 80% 的单集
+        """鑾峰彇鐢ㄦ埛鍠滄鐨勫崟闆嗭紙鎾斁瀹屾垚鐜囬珮鐨勶級"""
+        # 鎾斁瀹屾垚鐜?> 80% 鐨勫崟闆?
         stmt = (
             select(PodcastEpisode)
             .join(PodcastPlaybackState)
@@ -2018,8 +2013,7 @@ class PodcastRepository:
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                     PodcastEpisode.audio_duration > 0,
                     PodcastPlaybackState.current_position
                     >= PodcastEpisode.audio_duration * 0.8,
@@ -2033,7 +2027,7 @@ class PodcastRepository:
         return list(result.scalars().all())
 
     async def get_recent_play_dates(self, user_id: int, days: int = 30) -> set[date]:
-        """获取最近播放的日期集合"""
+        """鑾峰彇鏈€杩戞挱鏀剧殑鏃ユ湡闆嗗悎"""
         stmt = (
             select(PodcastPlaybackState.last_updated_at)
             .where(
@@ -2060,8 +2054,7 @@ class PodcastRepository:
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                 )
             )
         )
@@ -2088,8 +2081,7 @@ class PodcastRepository:
                 UserSubscription.__table__,
                 and_(
                     UserSubscription.subscription_id == Subscription.id,
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                 ),
             )
             .outerjoin(
@@ -2123,8 +2115,7 @@ class PodcastRepository:
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                 )
             )
         )
@@ -2152,8 +2143,7 @@ class PodcastRepository:
                 UserSubscription.__table__,
                 and_(
                     UserSubscription.subscription_id == Subscription.id,
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                 ),
             )
             .outerjoin(
@@ -2174,8 +2164,7 @@ class PodcastRepository:
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
                 and_(
-                    UserSubscription.user_id == user_id,
-                    UserSubscription.is_archived == False,
+                    *self._active_user_subscription_filters(user_id),
                     Subscription.status == "active",
                 )
             )
@@ -2191,3 +2180,4 @@ class PodcastRepository:
             "pending_summaries": episode_stats.pending_summaries or 0,
             "has_active_plus": has_active_plus,
         }
+
