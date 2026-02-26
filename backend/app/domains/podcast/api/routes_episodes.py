@@ -59,11 +59,6 @@ def _bilingual_error(
     )
 
 
-def _encode_page_cursor(page: int) -> str:
-    raw = str(page).encode("utf-8")
-    return base64.urlsafe_b64encode(raw).decode("utf-8").rstrip("=")
-
-
 def _encode_keyset_cursor(
     cursor_type: str, timestamp: datetime, episode_id: int
 ) -> str:
@@ -83,7 +78,7 @@ def _encode_keyset_cursor(
 
 
 def _decode_cursor(cursor: str) -> dict[str, Any]:
-    """Decode cursor token with backward compatibility for legacy page cursor."""
+    """Decode keyset cursor token."""
     padding = "=" * (-len(cursor) % 4)
     try:
         decoded = base64.urlsafe_b64decode(f"{cursor}{padding}").decode("utf-8")
@@ -93,15 +88,6 @@ def _decode_cursor(cursor: str) -> dict[str, Any]:
             "游标参数无效",
             status.HTTP_400_BAD_REQUEST,
         ) from exc
-
-    # Legacy page cursor.
-    try:
-        page = int(decoded)
-        if page < 1:
-            raise ValueError("page must be >= 1")
-        return {"mode": "page", "page": page}
-    except ValueError:
-        pass
 
     try:
         payload = json.loads(decoded)
@@ -123,7 +109,6 @@ def _decode_cursor(cursor: str) -> dict[str, Any]:
             timestamp = timestamp.astimezone(timezone.utc).replace(tzinfo=None)
 
         return {
-            "mode": "keyset",
             "type": cursor_type,
             "ts": timestamp,
             "id": episode_id,
@@ -174,7 +159,7 @@ async def get_podcast_feed(
             if next_cursor_values
             else None
         )
-    elif decoded_cursor and decoded_cursor["mode"] == "keyset":
+    elif decoded_cursor:
         if decoded_cursor["type"] != "feed":
             raise _bilingual_error(
                 "Cursor is not valid for this endpoint",
@@ -199,18 +184,13 @@ async def get_podcast_feed(
             else None
         )
     else:
-        resolved_page = (
-            decoded_cursor["page"]
-            if decoded_cursor and decoded_cursor["mode"] == "page"
-            else page
-        )
         episodes, total = await service.list_feed_by_page(
-            page=resolved_page,
+            page=page,
             size=resolved_size,
         )
-        has_more = (resolved_page * resolved_size) < total
-        next_page = resolved_page + 1 if has_more else None
-        next_cursor = _encode_page_cursor(next_page) if next_page else None
+        has_more = (page * resolved_size) < total
+        next_page = page + 1 if has_more else None
+        next_cursor = None
 
     episode_responses = [PodcastEpisodeResponse(**ep) for ep in episodes]
 
@@ -280,7 +260,7 @@ async def list_playback_history(
 ):
     decoded_cursor = _decode_cursor(cursor) if cursor else None
 
-    if decoded_cursor and decoded_cursor["mode"] == "keyset":
+    if decoded_cursor:
         if decoded_cursor["type"] != "history":
             raise _bilingual_error(
                 "Cursor is not valid for this endpoint",
@@ -307,17 +287,11 @@ async def list_playback_history(
             else None
         )
     else:
-        resolved_page = (
-            decoded_cursor["page"]
-            if decoded_cursor and decoded_cursor["mode"] == "page"
-            else page
-        )
         episodes, total = await service.list_playback_history(
-            page=resolved_page, size=size
+            page=page, size=size
         )
-        pages = (total + size - 1) // size
-        next_page = resolved_page + 1 if resolved_page < pages else None
-        next_cursor = _encode_page_cursor(next_page) if next_page else None
+        resolved_page = page
+        next_cursor = None
 
     episode_responses = [PodcastEpisodeResponse(**ep) for ep in episodes]
     pages = (total + size - 1) // size
@@ -621,12 +595,6 @@ async def get_summary_models(
 )
 async def search_podcasts(
     q: Optional[str] = Query(None, min_length=1, description="Search keyword"),
-    query: Optional[str] = Query(
-        None,
-        alias="query",
-        min_length=1,
-        description="Backward-compatible alias for q",
-    ),
     search_in: Optional[str] = Query(
         "all", description="Search scope: title, description, summary, all"
     ),
@@ -634,11 +602,11 @@ async def search_podcasts(
     size: int = Query(20, ge=1, le=100, description="Page size"),
     service: PodcastSearchService = Depends(get_search_service),
 ):
-    keyword = (q or query or "").strip()
+    keyword = (q or "").strip()
     if not keyword:
         raise _bilingual_error(
-            "Either q or query must be provided",
-            "必须提供 q 或 query 参数",
+            "q is required",
+            "必须提供 q 参数",
             status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 

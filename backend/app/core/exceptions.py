@@ -162,10 +162,6 @@ class FileProcessingError(BaseCustomError):
         super().__init__(message, 422, "FILE_PROCESSING_ERROR", **kwargs)
 
 
-# Backward compatibility alias for existing imports.
-BaseCustomException = BaseCustomError
-
-
 async def custom_exception_handler(request: Request, exc: BaseCustomError) -> CustomJSONResponse:
     """Handle custom exceptions.
 

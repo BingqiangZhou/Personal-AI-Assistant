@@ -1,4 +1,3 @@
-# from app.core.security_middleware import SecurityHeadersMiddleware
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -82,9 +81,6 @@ def create_application() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
-    # Set up security headers middleware for XSS protection
-    # app.add_middleware(SecurityHeadersMiddleware)
 
     # Set up logging middleware
     setup_logging_middleware(app, slow_threshold=5.0)

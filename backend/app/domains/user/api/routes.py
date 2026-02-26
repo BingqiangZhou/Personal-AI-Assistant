@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
 from app.core.dependencies import get_current_user
-from app.core.exceptions import BaseCustomException, UnauthorizedError
+from app.core.exceptions import BaseCustomError, UnauthorizedError
 from app.domains.user.services import AuthenticationService
 from app.shared.schemas import (
     ForgotPasswordRequest,
@@ -99,7 +99,7 @@ async def register(
             expires_in=token_data["expires_in"]
         )
 
-    except BaseCustomException:
+    except BaseCustomError:
         raise
     except Exception as e:
         raise HTTPException(
@@ -153,7 +153,7 @@ async def login(
             expires_in=token_data["expires_in"]
         )
 
-    except BaseCustomException:
+    except BaseCustomError:
         raise
     except Exception as e:
         raise HTTPException(
@@ -183,7 +183,7 @@ async def refresh_token(
             expires_in=token_data["expires_in"]
         )
 
-    except BaseCustomException:
+    except BaseCustomError:
         raise
     except Exception as e:
         raise HTTPException(
@@ -211,7 +211,7 @@ async def logout(
 
         return {"message": "Successfully logged out"}
 
-    except BaseCustomException:
+    except BaseCustomError:
         raise
     except Exception as e:
         raise HTTPException(
@@ -233,7 +233,7 @@ async def get_current_user_info(
         is_superuser=current_user.is_superuser,
         is_verified=current_user.is_verified,
         avatar_url=current_user.avatar_url,
-        full_name=current_user.account_name,
+        account_name=current_user.account_name,
         created_at=current_user.created_at
     )
 
@@ -275,7 +275,7 @@ async def forgot_password(
             expires_at=result.get("expires_at")
         )
 
-    except BaseCustomException:
+    except BaseCustomError:
         raise
     except Exception as e:
         raise HTTPException(
@@ -303,7 +303,7 @@ async def reset_password(
             message=result["message"]
         )
 
-    except BaseCustomException:
+    except BaseCustomError:
         raise
     except Exception as e:
         raise HTTPException(

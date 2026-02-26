@@ -176,10 +176,3 @@ class PerformanceMonitoringMiddleware(BaseHTTPMiddleware):
 def get_performance_middleware(app: ASGIApp | None = None) -> PerformanceMetricsStore:
     """Get performance metrics store bound to app state when possible."""
     return _get_store_from_app(app)
-
-
-def set_performance_middleware(
-    middleware: PerformanceMonitoringMiddleware,
-):
-    """Backward-compatible no-op setter."""
-    return middleware

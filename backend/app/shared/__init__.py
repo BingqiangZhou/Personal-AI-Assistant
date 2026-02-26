@@ -2,22 +2,8 @@
 
 This package currently exposes only actively used shared modules:
 - schemas
-- file validation utilities
 """
 
-from .file_validation import (
-    ALLOWED_AUDIO_TYPES,
-    ALLOWED_DOCUMENT_TYPES,
-    ALLOWED_IMAGE_TYPES,
-    ALLOWED_VIDEO_TYPES,
-    FileValidationError,
-    get_allowed_types_for_media,
-    sanitize_filename,
-    validate_file_extension,
-    validate_file_size,
-    validate_file_upload,
-    validate_mime_type,
-)
 from .schemas import (
     APIResponse,
     BaseSchema,
@@ -79,15 +65,4 @@ __all__ = [
     "PasswordResetResponse",
     "PaginationParams",
     "PaginatedResponse",
-    "FileValidationError",
-    "validate_file_size",
-    "validate_file_extension",
-    "validate_mime_type",
-    "sanitize_filename",
-    "validate_file_upload",
-    "get_allowed_types_for_media",
-    "ALLOWED_IMAGE_TYPES",
-    "ALLOWED_AUDIO_TYPES",
-    "ALLOWED_VIDEO_TYPES",
-    "ALLOWED_DOCUMENT_TYPES",
 ]

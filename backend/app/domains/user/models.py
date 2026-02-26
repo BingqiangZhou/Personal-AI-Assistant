@@ -74,11 +74,6 @@ class User(Base):
         """Check if user is active based on status."""
         return self.status == UserStatus.ACTIVE
 
-    @property
-    def full_name(self) -> str | None:
-        """Alias for account_name for backward compatibility."""
-        return self.account_name
-
 
 class UserSession(Base):
     """User session model for tracking active sessions."""

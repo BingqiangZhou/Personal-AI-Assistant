@@ -410,9 +410,6 @@ class PodcastRedis:
         if not keys:
             pattern = f"podcast:subscriptions:v2:{user_id}:*"
             keys = await self._scan_keys(pattern)
-        if not keys:
-            legacy_pattern = f"podcast:subscriptions:{user_id}:*"
-            keys = await self._scan_keys(legacy_pattern)
         if keys:
             delete_started = perf_counter()
             await client.delete(*keys, index_key)

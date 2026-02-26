@@ -9,21 +9,10 @@ This module contains all routes related to AI Model Config management:
 
 import logging
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request, status
-
-
-if TYPE_CHECKING:
-    from pydantic import BaseModel
-else:
-    try:
-        from pydantic import BaseModel
-    except ImportError:
-        # Fallback for older pydantic versions
-        from pydantic import BaseModel as BaseModelLegacy
-        BaseModel = BaseModelLegacy
 from fastapi.responses import HTMLResponse, JSONResponse, Response
+from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -696,13 +685,29 @@ async def import_apikeys_json(
             )
 
         # Detect export format version
-        export_version = import_data.get("version", "1.0")
+        export_version = import_data.get("version")
         export_mode = import_data.get("export_mode", "encrypted")
 
+        if export_version != "2.0":
+            return JSONResponse(
+                content={
+                    "success": False,
+                    "message": "Unsupported export version. Please import version 2.0 data."
+                },
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+        if export_mode not in {"plaintext", "encrypted"}:
+            return JSONResponse(
+                content={
+                    "success": False,
+                    "message": f"Invalid export_mode: {export_mode}"
+                },
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
         # Validate import password for encrypted exports
-        if (
-            export_mode == "encrypted" or export_version == "1.0"
-        ) and not import_password:
+        if export_mode == "encrypted" and not import_password:
             return JSONResponse(
                 content={
                     "success": False,
@@ -746,7 +751,7 @@ async def import_apikeys_json(
                 # Decrypt API key based on export format
                 api_key_plaintext = None
 
-                if export_version == "2.0" and export_mode == "plaintext":
+                if export_mode == "plaintext":
                     # Plaintext export (v2.0)
                     api_key_plaintext = key_data.get("api_key")
                     if not api_key_plaintext:
@@ -755,7 +760,7 @@ async def import_apikeys_json(
                         error_count += 1
                         continue
 
-                elif export_version == "2.0" and export_mode == "encrypted":
+                elif export_mode == "encrypted":
                     # Encrypted export (v2.0)
                     encrypted_dict = key_data.get("api_key_encrypted_export")
                     if not encrypted_dict:
@@ -768,25 +773,6 @@ async def import_apikeys_json(
                         api_key_plaintext = decrypt_data_with_password(encrypted_dict, import_password)
                     except ValueError as e:
                         error_msg = f"Row {idx + 1}: Failed to decrypt API key: {str(e)}"
-                        errors.append(error_msg)
-                        error_count += 1
-                        continue
-
-                else:  # export_version == "1.0" (legacy format)
-                    # Legacy format - api_key_encrypted contains Fernet-encrypted data
-                    encrypted_key = key_data.get("api_key_encrypted", "")
-                    if not encrypted_key:
-                        error_msg = f"Row {idx + 1}: Missing api_key_encrypted in legacy format"
-                        errors.append(error_msg)
-                        error_count += 1
-                        continue
-
-                    # For legacy format, we need to handle the SECRET_KEY issue
-                    # Try to decrypt first - if it fails, the user must re-enter
-                    try:
-                        api_key_plaintext = decrypt_data(encrypted_key)
-                    except ValueError:
-                        error_msg = f"Row {idx + 1}: Cannot decrypt API key (different SECRET_KEY). Please re-export using v2.0 format."
                         errors.append(error_msg)
                         error_count += 1
                         continue

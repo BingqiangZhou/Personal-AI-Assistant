@@ -21,7 +21,4 @@ router.include_router(stats_router)
 router.include_router(transcriptions_router)
 router.include_router(conversations_router)
 
-__all__ = ["router", "podcast_router"]
-
-# Backward compatibility alias
-podcast_router = router
+__all__ = ["router"]

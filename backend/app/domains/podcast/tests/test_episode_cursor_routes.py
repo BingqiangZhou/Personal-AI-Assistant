@@ -1,3 +1,4 @@
+import base64
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock
 
@@ -7,7 +8,6 @@ from app.core.config import settings
 from app.domains.podcast.api.dependencies import get_episode_service, get_search_service
 from app.domains.podcast.api.routes_episodes import (
     _encode_keyset_cursor,
-    _encode_page_cursor,
 )
 from app.main import app
 
@@ -31,23 +31,21 @@ def _sample_episode(now: datetime) -> dict:
     }
 
 
-def test_feed_legacy_page_cursor_compatible(monkeypatch):
+def test_feed_rejects_legacy_page_cursor(monkeypatch):
     monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
     service = AsyncMock()
     app.dependency_overrides[get_episode_service] = lambda: service
     client = TestClient(app)
 
-    now = datetime.now(timezone.utc)
-    service.list_feed_by_page.return_value = ([_sample_episode(now)], 25)
-    page_cursor = _encode_page_cursor(2)
+    page_cursor = base64.urlsafe_b64encode(b"2").decode("utf-8").rstrip("=")
 
     response = client.get(
         f"/api/v1/podcasts/episodes/feed?cursor={page_cursor}&page_size=10"
     )
 
-    assert response.status_code == 200
-    assert response.headers["cache-control"] == "private, max-age=30"
-    service.list_feed_by_page.assert_awaited_once_with(page=2, size=10)
+    assert response.status_code == 400
+    service.list_feed_by_page.assert_not_called()
+    service.list_feed_by_cursor.assert_not_called()
 
     app.dependency_overrides.pop(get_episode_service, None)
 
@@ -149,49 +147,19 @@ def test_history_keyset_cursor_path():
     app.dependency_overrides.pop(get_episode_service, None)
 
 
-def test_search_accepts_query_alias():
+def test_search_rejects_query_alias():
     service = AsyncMock()
     app.dependency_overrides[get_search_service] = lambda: service
     client = TestClient(app)
 
-    now = datetime.now(timezone.utc)
-    service.search_podcasts.return_value = ([_sample_episode(now)], 1)
+    response = client.get("/api/v1/podcasts/search?query=slow")
 
-    response = client.get("/api/v1/podcasts/search?query=daily")
-
-    assert response.status_code == 200
-    service.search_podcasts.assert_awaited_once_with(
-        query="daily",
-        search_in="all",
-        page=1,
-        size=20,
-    )
-
+    assert response.status_code == 422
+    service.search_podcasts.assert_not_awaited()
     app.dependency_overrides.pop(get_search_service, None)
 
 
-def test_search_prefers_q_when_both_q_and_query_present():
-    service = AsyncMock()
-    app.dependency_overrides[get_search_service] = lambda: service
-    client = TestClient(app)
-
-    now = datetime.now(timezone.utc)
-    service.search_podcasts.return_value = ([_sample_episode(now)], 1)
-
-    response = client.get("/api/v1/podcasts/search?q=fast&query=slow")
-
-    assert response.status_code == 200
-    service.search_podcasts.assert_awaited_once_with(
-        query="fast",
-        search_in="all",
-        page=1,
-        size=20,
-    )
-
-    app.dependency_overrides.pop(get_search_service, None)
-
-
-def test_search_requires_q_or_query():
+def test_search_requires_q():
     service = AsyncMock()
     app.dependency_overrides[get_search_service] = lambda: service
     client = TestClient(app)
