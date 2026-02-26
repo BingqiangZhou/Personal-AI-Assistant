@@ -129,6 +129,45 @@ async def test_complete_current_advances_to_next_when_current_not_head() -> None
 
 
 @pytest.mark.asyncio
+async def test_complete_current_clears_current_when_queue_becomes_empty() -> None:
+    db = _mock_db()
+    repo = PodcastRepository(db=db, redis=AsyncMock())
+    only = _queue_item(item_id=1, episode_id=10, position=0)
+    queue = _queue_with_items([only], current_episode_id=10)
+    db.delete = AsyncMock(side_effect=lambda item: queue.items.remove(item))
+
+    repo.get_queue_with_items = AsyncMock(side_effect=[queue, queue])
+    repo._rewrite_queue_positions = AsyncMock()
+
+    await repo.complete_current(user_id=1)
+
+    db.delete.assert_awaited_once_with(only)
+    assert queue.current_episode_id is None
+    db.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_complete_current_falls_back_to_head_when_current_missing() -> None:
+    db = _mock_db()
+    repo = PodcastRepository(db=db, redis=AsyncMock())
+    head = _queue_item(item_id=1, episode_id=10, position=0)
+    next_item = _queue_item(
+        item_id=2, episode_id=11, position=repo._queue_position_step
+    )
+    queue = _queue_with_items([head, next_item], current_episode_id=999)
+    db.delete = AsyncMock(side_effect=lambda item: queue.items.remove(item))
+
+    repo.get_queue_with_items = AsyncMock(side_effect=[queue, queue])
+    repo._rewrite_queue_positions = AsyncMock()
+
+    await repo.complete_current(user_id=1)
+
+    db.delete.assert_awaited_once_with(head)
+    assert queue.current_episode_id == 11
+    db.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
 async def test_add_or_move_to_tail_compacts_positions_when_threshold_reached() -> None:
     db = _mock_db()
     repo = PodcastRepository(db=db, redis=AsyncMock())

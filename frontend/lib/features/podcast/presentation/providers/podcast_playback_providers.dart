@@ -337,7 +337,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       return;
     }
 
-    if (state.playSource != PlaySource.queue || _isHandlingQueueCompletion) {
+    if (!shouldAdvanceQueueOnCompletion(state) || _isHandlingQueueCompletion) {
       return;
     }
 
@@ -350,6 +350,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       final next = queue.currentItem;
       if (next == null) {
         state = state.copyWith(
+          clearCurrentEpisode: true,
           isPlaying: false,
           position: 0,
           playSource: PlaySource.direct,

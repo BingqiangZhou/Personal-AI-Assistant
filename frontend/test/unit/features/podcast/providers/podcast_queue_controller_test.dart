@@ -31,6 +31,124 @@ void main() {
 
       expect(repository.addQueueItemCallCount, 1);
     });
+
+    test('inserts added episode right after currently playing item', () async {
+      final addedQueue = _queueWithIds(
+        [1, 2, 3, 4],
+        revision: 11,
+        currentEpisodeId: 1,
+      );
+      final reorderedQueue = _queueWithIds(
+        [1, 4, 2, 3],
+        revision: 12,
+        currentEpisodeId: 1,
+      );
+      final repository = _FakePodcastRepository(
+        queuedAddQueueResponses: <PodcastQueueModel>[addedQueue],
+        reorderQueueResult: reorderedQueue,
+      );
+      final audioNotifier = _FakeAudioPlayerNotifier(
+        initialState: AudioPlayerState(
+          isPlaying: true,
+          currentEpisode: _episode(1),
+        ),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          podcastRepositoryProvider.overrideWithValue(repository),
+          audioPlayerProvider.overrideWith(() => audioNotifier),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(podcastQueueControllerProvider.notifier);
+      final queue = await notifier.addToQueue(4);
+
+      expect(repository.lastReorderEpisodeIds, <int>[1, 4, 2, 3]);
+      expect(_episodeIds(queue), <int>[1, 4, 2, 3]);
+    });
+
+    test(
+      'treats paused current episode as active context and inserts second',
+      () async {
+        final addedQueue = _queueWithIds(
+          [1, 2, 3, 4],
+          revision: 21,
+          currentEpisodeId: 1,
+        );
+        final reorderedQueue = _queueWithIds(
+          [1, 4, 2, 3],
+          revision: 22,
+          currentEpisodeId: 1,
+        );
+        final repository = _FakePodcastRepository(
+          queuedAddQueueResponses: <PodcastQueueModel>[addedQueue],
+          reorderQueueResult: reorderedQueue,
+        );
+        final audioNotifier = _FakeAudioPlayerNotifier(
+          initialState: AudioPlayerState(
+            isPlaying: false,
+            currentEpisode: _episode(1),
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            podcastRepositoryProvider.overrideWithValue(repository),
+            audioPlayerProvider.overrideWith(() => audioNotifier),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(
+          podcastQueueControllerProvider.notifier,
+        );
+        final queue = await notifier.addToQueue(4);
+
+        expect(repository.lastReorderEpisodeIds, <int>[1, 4, 2, 3]);
+        expect(_episodeIds(queue), <int>[1, 4, 2, 3]);
+      },
+    );
+
+    test(
+      'inserts added episode to head when there is no current episode',
+      () async {
+        final addedQueue = _queueWithIds(
+          [1, 2, 3, 4],
+          revision: 31,
+          currentEpisodeId: null,
+        );
+        final reorderedQueue = _queueWithIds(
+          [4, 1, 2, 3],
+          revision: 32,
+          currentEpisodeId: 4,
+        );
+        final repository = _FakePodcastRepository(
+          queuedAddQueueResponses: <PodcastQueueModel>[addedQueue],
+          reorderQueueResult: reorderedQueue,
+        );
+        final audioNotifier = _FakeAudioPlayerNotifier(
+          initialState: const AudioPlayerState(
+            isPlaying: false,
+            currentEpisode: null,
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            podcastRepositoryProvider.overrideWithValue(repository),
+            audioPlayerProvider.overrideWith(() => audioNotifier),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(
+          podcastQueueControllerProvider.notifier,
+        );
+        final queue = await notifier.addToQueue(4);
+
+        expect(repository.lastReorderEpisodeIds, <int>[4, 1, 2, 3]);
+        expect(_episodeIds(queue), <int>[4, 1, 2, 3]);
+      },
+    );
   });
 
   group('PodcastQueueController.playFromQueue', () {
@@ -148,15 +266,58 @@ PodcastQueueModel _queue({
   );
 }
 
+PodcastQueueModel _queueWithIds(
+  List<int> episodeIds, {
+  required int revision,
+  required int? currentEpisodeId,
+}) {
+  return PodcastQueueModel(
+    currentEpisodeId: currentEpisodeId,
+    revision: revision,
+    items: episodeIds
+        .asMap()
+        .entries
+        .map(
+          (entry) => PodcastQueueItemModel(
+            episodeId: entry.value,
+            position: entry.key * 1024,
+            title: 'Episode ${entry.value}',
+            podcastId: 1,
+            audioUrl: 'https://example.com/audio-${entry.value}.mp3',
+          ),
+        )
+        .toList(),
+  );
+}
+
+List<int> _episodeIds(PodcastQueueModel queue) {
+  return queue.items.map((item) => item.episodeId).toList();
+}
+
+PodcastEpisodeModel _episode(int episodeId) {
+  return PodcastEpisodeModel(
+    id: episodeId,
+    subscriptionId: 1,
+    title: 'Episode $episodeId',
+    audioUrl: 'https://example.com/audio-$episodeId.mp3',
+    publishedAt: DateTime(2026, 2, 1),
+    createdAt: DateTime(2026, 2, 1),
+  );
+}
+
 class _FakePodcastRepository extends PodcastRepository {
   _FakePodcastRepository({
     this.addDelay = Duration.zero,
     List<PodcastQueueModel>? queuedGetQueueResponses,
+    List<PodcastQueueModel>? queuedAddQueueResponses,
     PodcastQueueModel? reorderQueueResult,
     PodcastQueueModel? activateQueueResult,
   }) : _queuedGetQueueResponses = List<PodcastQueueModel>.from(
          queuedGetQueueResponses ??
              <PodcastQueueModel>[const PodcastQueueModel()],
+       ),
+       _queuedAddQueueResponses = List<PodcastQueueModel>.from(
+         queuedAddQueueResponses ?? const <PodcastQueueModel>[],
        ),
        _reorderQueueResult =
            reorderQueueResult ?? const PodcastQueueModel(revision: 1),
@@ -179,11 +340,13 @@ class _FakePodcastRepository extends PodcastRepository {
 
   final Duration addDelay;
   final List<PodcastQueueModel> _queuedGetQueueResponses;
+  final List<PodcastQueueModel> _queuedAddQueueResponses;
   final PodcastQueueModel _reorderQueueResult;
   final PodcastQueueModel _activateQueueResult;
 
   int addQueueItemCallCount = 0;
   int activateQueueEpisodeCallCount = 0;
+  List<int>? lastReorderEpisodeIds;
   Completer<void>? removeCompleter;
   Completer<void>? reorderCompleter;
 
@@ -200,6 +363,12 @@ class _FakePodcastRepository extends PodcastRepository {
     addQueueItemCallCount += 1;
     if (addDelay > Duration.zero) {
       await Future<void>.delayed(addDelay);
+    }
+    if (_queuedAddQueueResponses.isNotEmpty) {
+      if (_queuedAddQueueResponses.length > 1) {
+        return _queuedAddQueueResponses.removeAt(0);
+      }
+      return _queuedAddQueueResponses.first;
     }
     return PodcastQueueModel(
       currentEpisodeId: episodeId,
@@ -227,6 +396,7 @@ class _FakePodcastRepository extends PodcastRepository {
 
   @override
   Future<PodcastQueueModel> reorderQueueItems(List<int> episodeIds) async {
+    lastReorderEpisodeIds = List<int>.from(episodeIds);
     final completer = reorderCompleter;
     if (completer != null) {
       await completer.future;
@@ -247,13 +417,17 @@ class _NoopPodcastApiService implements PodcastApiService {
 }
 
 class _FakeAudioPlayerNotifier extends AudioPlayerNotifier {
+  _FakeAudioPlayerNotifier({this.initialState = const AudioPlayerState()});
+
+  final AudioPlayerState initialState;
+
   int playEpisodeCalls = 0;
   PlaySource? lastPlaySource;
   int? lastQueueEpisodeId;
 
   @override
   AudioPlayerState build() {
-    return const AudioPlayerState();
+    return initialState;
   }
 
   @override

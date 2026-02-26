@@ -1,4 +1,4 @@
-﻿"""
+"""
 鎾鏁版嵁璁块棶灞?- Podcast Repository
 """
 
@@ -1208,14 +1208,15 @@ class PodcastRepository:
         next_episode_id: int | None = None
         if len(ordered_items) > 1:
             next_index = target_index + 1
-            if next_index >= len(ordered_items):
-                next_index = 0
-            next_episode_id = ordered_items[next_index].episode_id
+            if next_index < len(ordered_items):
+                next_episode_id = ordered_items[next_index].episode_id
 
         await self.db.delete(target)
         await self.db.flush()
         ordered_items = self._sorted_queue_items(queue)
-        if next_episode_id is not None and all(
+        if next_episode_id is None and ordered_items:
+            next_episode_id = ordered_items[0].episode_id
+        elif next_episode_id is not None and all(
             item.episode_id != next_episode_id for item in ordered_items
         ):
             next_episode_id = ordered_items[0].episode_id if ordered_items else None
@@ -1825,7 +1826,7 @@ class PodcastRepository:
             return case((coalesced.ilike(like_pattern), weight), else_=0.0)
 
         async def _execute_search(
-            enable_pg_trgm: bool
+            enable_pg_trgm: bool,
         ) -> tuple[list[PodcastEpisode], int]:
             search_conditions: list[Any] = []
             relevance_terms: list[Any] = []
@@ -2179,4 +2180,3 @@ class PodcastRepository:
             "pending_summaries": episode_stats.pending_summaries or 0,
             "has_active_plus": has_active_plus,
         }
-

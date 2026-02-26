@@ -38,6 +38,50 @@ bool shouldSyncPlaybackToServer(PodcastEpisodeModel episode) {
 }
 
 @visibleForTesting
+List<int> buildQueueOrderAfterAdd({
+  required PodcastQueueModel queue,
+  required int episodeId,
+  required bool isPlaying,
+  required int? playingEpisodeId,
+}) {
+  final orderedIds = queue.items.map((item) => item.episodeId).toList();
+  orderedIds.removeWhere((id) => id == episodeId);
+
+  var targetIndex = 0;
+  final anchorEpisodeId = playingEpisodeId ?? queue.currentEpisodeId;
+  if (anchorEpisodeId != null && episodeId != anchorEpisodeId) {
+    final anchorIndex = orderedIds.indexOf(anchorEpisodeId);
+    if (anchorIndex >= 0) {
+      targetIndex = anchorIndex + 1;
+    }
+  } else if (isPlaying && orderedIds.isNotEmpty) {
+    targetIndex = 1;
+  }
+
+  final clampedIndex = targetIndex.clamp(0, orderedIds.length);
+  orderedIds.insert(clampedIndex, episodeId);
+  return orderedIds;
+}
+
+@visibleForTesting
+bool isSameEpisodeOrder(List<int> left, List<int> right) {
+  return listEquals(left, right);
+}
+
+@visibleForTesting
+bool shouldAdvanceQueueOnCompletion(AudioPlayerState state) {
+  if (state.playSource == PlaySource.queue) {
+    return true;
+  }
+
+  final currentEpisodeId = state.currentEpisode?.id;
+  if (currentEpisodeId == null) {
+    return false;
+  }
+  return state.queue.currentEpisodeId == currentEpisodeId;
+}
+
+@visibleForTesting
 PodcastEpisodeModel mergeEpisodeForPlayback(
   PodcastEpisodeModel incoming,
   PodcastEpisodeDetailResponse latest,

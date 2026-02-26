@@ -136,8 +136,40 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
     _beginQueueSync();
     final addFuture = () async {
       try {
-        final queue = await _repository.addQueueItem(episodeId);
-        return _applyQueue(queue);
+        final playerSnapshot = ref.read(audioPlayerProvider);
+
+        var queue = await _repository.addQueueItem(episodeId);
+        queue = _applyQueue(queue);
+
+        final currentOrder = queue.items.map((item) => item.episodeId).toList();
+        final desiredOrder = buildQueueOrderAfterAdd(
+          queue: queue,
+          episodeId: episodeId,
+          isPlaying: playerSnapshot.isPlaying,
+          playingEpisodeId: playerSnapshot.currentEpisode?.id,
+        );
+
+        if (!isSameEpisodeOrder(currentOrder, desiredOrder)) {
+          try {
+            final reorderedQueue = await _repository.reorderQueueItems(
+              desiredOrder,
+            );
+            queue = _applyQueue(reorderedQueue);
+          } catch (error) {
+            logger.AppLogger.debug(
+              '[Queue] Reorder after add failed; keeping add result. error=$error',
+            );
+            unawaited(
+              _loadQueueInternal(
+                forceRefresh: true,
+                trackSyncing: false,
+                setErrorStateOnFailure: false,
+              ),
+            );
+          }
+        }
+
+        return queue;
       } catch (error, stackTrace) {
         state = AsyncValue.error(error, stackTrace);
         rethrow;
