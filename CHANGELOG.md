@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.12.5](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.4...v0.12.5) - 2026-02-26 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.5))
+
+### 🐛 Bug Fixes
+
+- *(podcast)* Correct garbled Chinese text in bilingual error messages ([a7ddc30](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a7ddc306111899645293f9b206a08750738f1ada))
+
+### 🚜 Refactor
+
+- *(core, network, podcast)* Standardize logging, improve DioClient initialization, and extract episode detail page parts ([0bec966](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0bec9668e935d9e44932cb85e1542b6611c767dc))
+- *(ai, podcast, core)* Remove deprecated features and clean up unused code ([9434a85](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9434a8576d74c7aeba5cb1eac6e841f7262f6770))
+
+
+
 ## [0.12.4](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.3...v0.12.4) - 2026-02-24 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.4))
 
 ### 🚀 Features
