@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.13.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.5...v0.13.0) - 2026-02-26 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.13.0))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(frontend)* Update dependencies to latest versions ([b3cba60](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b3cba6054de6367d3ce4eb0a73614489ec5ac954))
+
+### 🚜 Refactor
+
+- *(core, podcast, frontend)* Fix deprecations, reduce code duplication, and clean up unused code ([dc49a78](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/dc49a78d30f71b4eb6a787f4c27dd744bbd9bb6e))
+- Fix deprecations, reduce code duplication, and clean up unused code ([bb1a33b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/bb1a33b26e09e5269aef8af0e90a211b1de83b4a))
+- Remove deprecated features and legacy code ([302f260](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/302f260b133428113afb1b72916ea2747f40c158))
+
+
+
 ## [0.12.5](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.12.4...v0.12.5) - 2026-02-26 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.12.5))
 
 ### 🐛 Bug Fixes
