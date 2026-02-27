@@ -66,7 +66,7 @@ class PodcastStatsService:
 
         return result
 
-    async def get_profile_stats(self) -> dict[str, int]:
+    async def get_profile_stats(self) -> dict[str, Any]:
         """Get lightweight profile stats for profile page cards."""
         try:
             cached = await self.redis.get_profile_stats(self.user_id)

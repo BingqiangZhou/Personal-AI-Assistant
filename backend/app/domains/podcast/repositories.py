@@ -21,6 +21,7 @@ from app.domains.podcast.models import (
     PodcastPlaybackState,
     PodcastQueue,
     PodcastQueueItem,
+    PodcastDailyReport,
 )
 from app.domains.subscription.models import Subscription, UserSubscription
 from app.domains.user.models import User
@@ -2050,7 +2051,7 @@ class PodcastRepository:
 
         return dates
 
-    async def get_profile_stats_aggregated(self, user_id: int) -> dict[str, int]:
+    async def get_profile_stats_aggregated(self, user_id: int) -> dict[str, Any]:
         """Get lightweight profile statistics with played episodes count."""
         sub_count_stmt = (
             select(func.count(Subscription.id))
@@ -2098,12 +2099,22 @@ class PodcastRepository:
         episode_stats_result = await self.db.execute(episode_stats_stmt)
         episode_stats = episode_stats_result.one()
 
+        latest_report_stmt = (
+            select(PodcastDailyReport.report_date)
+            .where(PodcastDailyReport.user_id == user_id)
+            .order_by(PodcastDailyReport.report_date.desc())
+            .limit(1)
+        )
+        latest_report_result = await self.db.execute(latest_report_stmt)
+        latest_report_date = latest_report_result.scalar_one_or_none()
+
         return {
             "total_subscriptions": total_subscriptions,
             "total_episodes": episode_stats.total_episodes or 0,
             "summaries_generated": episode_stats.summaries_generated or 0,
             "pending_summaries": episode_stats.pending_summaries or 0,
             "played_episodes": episode_stats.played_episodes or 0,
+            "latest_daily_report_date": latest_report_date.isoformat() if latest_report_date else None,
         }
 
     async def get_user_stats_aggregated(self, user_id: int) -> dict[str, Any]:

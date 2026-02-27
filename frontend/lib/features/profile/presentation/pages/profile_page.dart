@@ -39,17 +39,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     super.initState();
     _loadVersion();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref
-          .read(podcastSubscriptionProvider.notifier)
-          .loadSubscriptions()
-          .catchError((_) {});
       ref.read(profileStatsProvider.notifier).load(forceRefresh: false);
-      unawaited(
-        ref
-            .read(dailyReportDatesProvider.notifier)
-            .load(forceRefresh: false)
-            .catchError((_) => null),
-      );
     });
   }
 
@@ -1104,8 +1094,6 @@ class _ProfileActivityCards extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final isMobile = _isMobile(context);
     final statsAsync = ref.watch(profileStatsProvider);
-    final subscriptionState = ref.watch(podcastSubscriptionProvider);
-    final dailyReportDatesAsync = ref.watch(dailyReportDatesProvider);
 
     final episodeCount = statsAsync.when(
       data: (stats) => stats?.totalEpisodes.toString() ?? '0',
@@ -1122,18 +1110,22 @@ class _ProfileActivityCards extends ConsumerWidget {
       loading: () => '...',
       error: (error, stackTrace) => '0',
     );
-    final subscriptionCount = subscriptionState.isLoading
-        ? '...'
-        : (subscriptionState.error != null
-              ? '0'
-              : subscriptionState.total.toString());
-    final latestDailyReportDateText = dailyReportDatesAsync.when(
-      data: (payload) {
-        final dates = payload?.dates;
-        if (dates == null || dates.isEmpty) {
+    final subscriptionCount = statsAsync.when(
+      data: (stats) => stats?.totalSubscriptions.toString() ?? '0',
+      loading: () => '...',
+      error: (error, stackTrace) => '0',
+    );
+    final latestDailyReportDateText = statsAsync.when(
+      data: (stats) {
+        if (stats?.latestDailyReportDate == null) {
           return '--';
         }
-        return _formatDateOnly(dates.first.reportDate);
+        try {
+          final date = DateTime.parse(stats!.latestDailyReportDate!);
+          return _formatDateOnly(date);
+        } catch (_) {
+          return '--';
+        }
       },
       loading: () => '--',
       error: (error, stackTrace) => '--',

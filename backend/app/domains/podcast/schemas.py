@@ -472,6 +472,7 @@ class PodcastProfileStatsResponse(PodcastBaseSchema):
     summaries_generated: int
     pending_summaries: int
     played_episodes: int
+    latest_daily_report_date: str | None = None
 
 
 class PodcastSubscriptionBatchResponse(PodcastBaseSchema):

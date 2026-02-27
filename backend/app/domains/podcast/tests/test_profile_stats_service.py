@@ -18,6 +18,7 @@ async def test_get_profile_stats_returns_repo_payload_when_cache_miss():
         "summaries_generated": 4,
         "pending_summaries": 6,
         "played_episodes": 3,
+        "latest_daily_report_date": None,
     }
 
     result = await service.get_profile_stats()
@@ -39,6 +40,7 @@ async def test_get_profile_stats_uses_cache_when_available():
         "summaries_generated": 70,
         "pending_summaries": 20,
         "played_episodes": 55,
+        "latest_daily_report_date": None,
     }
     service.redis.get_profile_stats.return_value = cached
 

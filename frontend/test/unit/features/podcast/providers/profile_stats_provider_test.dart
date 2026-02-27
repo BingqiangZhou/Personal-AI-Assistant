@@ -92,5 +92,6 @@ ProfileStatsModel _stats(int totalEpisodes) {
     summariesGenerated: 0,
     pendingSummaries: 0,
     playedEpisodes: 0,
+    latestDailyReportDate: null,
   );
 }
