@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.13.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.13.1...v0.13.2) - 2026-02-27 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.13.2))
+
+### 🐛 Bug Fixes
+
+- *(podcast)* Fix queue state synchronization issues and add optimistic removal ([9a06b30](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/9a06b305efcacde8b9eb0adca247d95e70ee4bb3))
+
+
+
 ## [0.13.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.13.0...v0.13.1) - 2026-02-26 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.13.1))
 
 ### 🐛 Bug Fixes
