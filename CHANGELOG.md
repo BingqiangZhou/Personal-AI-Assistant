@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.13.3](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.13.2...v0.13.3) - 2026-02-27 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.13.3))
+
+### 🚀 Features
+
+- *(podcast)* Add latest daily report date to profile stats and consolidate provider calls ([5bc3cbd](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5bc3cbdad5031778e1a5cf031d77e31ee74492d7))
+
+
+
 ## [0.13.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.13.1...v0.13.2) - 2026-02-27 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.13.2))
 
 ### 🐛 Bug Fixes
