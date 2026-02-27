@@ -1,5 +1,6 @@
 part of 'podcast_playback_providers.dart';
 
+
 final podcastQueueControllerProvider =
     AsyncNotifierProvider<PodcastQueueController, PodcastQueueModel>(
       PodcastQueueController.new,
@@ -55,14 +56,11 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
   }
 
   PodcastQueueModel _applyQueue(PodcastQueueModel queue) {
-    if (_latestAppliedQueueRevision >= 0 &&
-        queue.revision <= _latestAppliedQueueRevision) {
-      return state.value ?? queue;
-    }
-
     state = AsyncValue.data(queue);
     _lastQueueRefreshAt = DateTime.now();
-    _latestAppliedQueueRevision = queue.revision;
+    if (queue.revision > _latestAppliedQueueRevision) {
+      _latestAppliedQueueRevision = queue.revision;
+    }
     ref.read(audioPlayerProvider.notifier).syncQueueState(queue);
     return queue;
   }
@@ -80,6 +78,10 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
     final cachedQueue = state.value;
     if (!forceRefresh && cachedQueue != null && _hasFreshQueueState()) {
       return Future.value(cachedQueue);
+    }
+
+    if (forceRefresh) {
+      _latestAppliedQueueRevision = -1;
     }
 
     if (trackSyncing) {
@@ -189,13 +191,60 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
   }
 
   Future<PodcastQueueModel> removeFromQueue(int episodeId) async {
+    // --- Optimistic UI update: remove item instantly ---
+    // Use addPostFrameCallback to defer the state mutation so it does not
+    // trigger a rebuild while RenderSliverList is still performing layout.
+    final previousQueue = state.value;
+    if (previousQueue != null) {
+      final updatedItems =
+          previousQueue.items.where((i) => i.episodeId != episodeId).toList();
+      int? updatedCurrentEpisodeId = previousQueue.currentEpisodeId;
+      if (updatedCurrentEpisodeId == episodeId) {
+        final oldIndex = previousQueue.items
+            .indexWhere((i) => i.episodeId == episodeId);
+        if (oldIndex >= 0 && oldIndex + 1 < previousQueue.items.length) {
+          updatedCurrentEpisodeId = previousQueue.items[oldIndex + 1].episodeId;
+        } else if (updatedItems.isNotEmpty) {
+          updatedCurrentEpisodeId = updatedItems.first.episodeId;
+        } else {
+          updatedCurrentEpisodeId = null;
+        }
+      }
+      final optimistic = PodcastQueueModel(
+        items: updatedItems,
+        currentEpisodeId: updatedCurrentEpisodeId,
+        revision: previousQueue.revision + 1,
+        updatedAt: DateTime.now(),
+      );
+      // Defer state update until after the current frame completes layout/paint.
+      final completer = Completer<void>();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!completer.isCompleted) {
+          completer.complete();
+        }
+      });
+      await completer.future;
+      state = AsyncValue.data(optimistic);
+      _latestAppliedQueueRevision = optimistic.revision;
+      ref.read(audioPlayerProvider.notifier).syncQueueState(optimistic);
+    }
+
+    // --- Background API call (no rollback) ---
     _beginQueueSync();
     try {
       final queue = await _repository.removeQueueItem(episodeId);
       return _applyQueue(queue);
-    } catch (error, stackTrace) {
-      state = AsyncValue.error(error, stackTrace);
-      rethrow;
+    } catch (error) {
+      // Server likely already completed the delete.
+      // Refresh in background to reconcile state rather than rolling back.
+      unawaited(
+        _loadQueueInternal(
+          forceRefresh: true,
+          trackSyncing: false,
+          setErrorStateOnFailure: false,
+        ),
+      );
+      return state.value ?? PodcastQueueModel.empty();
     } finally {
       _endQueueSync();
     }
@@ -262,12 +311,12 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
   }
 
   Future<PodcastQueueModel> onQueueTrackCompleted() async {
-    _beginQueueSync();
     try {
       final queue = await _repository.completeQueueCurrent();
       return _applyQueue(queue);
-    } finally {
-      _endQueueSync();
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
     }
   }
 }

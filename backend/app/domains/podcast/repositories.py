@@ -1002,6 +1002,9 @@ class PodcastRepository:
         if changed:
             self._touch_queue(queue)
             await self.db.commit()
+            # expire_on_commit=False means the identity map is stale after commit.
+            # Expire the queue so get_queue_with_items re-fetches fresh items.
+            self.db.expire(queue)
 
         self._queue_operation_log(
             "remove_item",
@@ -1246,7 +1249,7 @@ class PodcastRepository:
             revision_after=queue.revision or revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
-        return await self.get_queue_with_items(user_id)
+        return queue
 
     async def _cache_episode_metadata(self, episode: PodcastEpisode):
         """缂撳瓨episode鍏冩暟鎹埌Redis"""

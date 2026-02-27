@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
 
@@ -326,7 +327,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     }
 
     state = state.copyWith(isPlaying: false, position: 0);
-    await _updatePlaybackStateOnServer(immediate: true);
+    unawaited(_updatePlaybackStateOnServer(immediate: true));
 
     // If sleep timer is set to "after episode", stop here
     if (state.sleepTimerAfterEpisode) {
