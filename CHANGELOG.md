@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.13.4](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.13.3...v0.13.4) - 2026-02-28 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.13.4))
+
+### 🎨 Styling
+
+- *(frontend)* Standardize color tokens using onSurfaceVariant for consistent UI elements ([4d71477](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4d71477ae0ca027152478d46484c45dbcb2dcf0e))
+
+### 🚜 Refactor
+
+- *(frontend)* Extract widgets, add performance optimizations, and improve code organization ([c7687ff](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c7687ff42794fa6ccbfbcb51eb23238d70aea444))
+- *(podcast)* Extract widgets, add selectors, and improve code organization ([0683171](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/0683171a1794006b65742b2e96992b308a933e7d))
+
+
+
 ## [0.13.3](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.13.2...v0.13.3) - 2026-02-27 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.13.3))
 
 ### 🚀 Features
