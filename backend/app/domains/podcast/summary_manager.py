@@ -16,6 +16,7 @@ from app.core.exceptions import HTTPException, ValidationError
 from app.core.utils import filter_thinking_content
 from app.domains.ai.models import ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
+from app.domains.podcast.ai_key_resolver import resolve_api_key_with_fallback
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.subscription.parsers.feed_parser import strip_html_tags
 
@@ -35,12 +36,20 @@ class SummaryModelManager:
         if model_name:
             # 根据名称获取指定模型
             model = await self.ai_model_repo.get_by_name(model_name)
-            if not model or not model.is_active or model.model_type != ModelType.TEXT_GENERATION:
-                raise ValidationError(f"Summary model '{model_name}' not found or not active")
+            if (
+                not model
+                or not model.is_active
+                or model.model_type != ModelType.TEXT_GENERATION
+            ):
+                raise ValidationError(
+                    f"Summary model '{model_name}' not found or not active"
+                )
             return model
         else:
             # 按优先级获取文本生成模型列表
-            active_models = await self.ai_model_repo.get_active_models_by_priority(ModelType.TEXT_GENERATION)
+            active_models = await self.ai_model_repo.get_active_models_by_priority(
+                ModelType.TEXT_GENERATION
+            )
             if not active_models:
                 raise ValidationError("No active summary model found")
             # 返回优先级最高的模型（priority 数字最小的）
@@ -51,7 +60,7 @@ class SummaryModelManager:
         transcript: str,
         episode_info: dict[str, Any],
         model_name: str | None = None,
-        custom_prompt: str | None = None
+        custom_prompt: str | None = None,
     ) -> dict[str, Any]:
         """
         生成AI摘要（支持模型fallback机制）
@@ -75,7 +84,9 @@ class SummaryModelManager:
             models_to_try = [model]
         else:
             # 获取所有按优先级排序的活跃文本生成模型
-            models_to_try = await self.ai_model_repo.get_active_models_by_priority(ModelType.TEXT_GENERATION)
+            models_to_try = await self.ai_model_repo.get_active_models_by_priority(
+                ModelType.TEXT_GENERATION
+            )
             if not models_to_try:
                 raise ValidationError("No active text generation models available")
 
@@ -86,7 +97,9 @@ class SummaryModelManager:
         # 尝试每个模型（按优先级从高到低）
         for model_config in models_to_try:
             try:
-                logger.info(f"Trying text generation model: {model_config.name} (priority: {model_config.priority})")
+                logger.info(
+                    f"Trying text generation model: {model_config.name} (priority: {model_config.priority})"
+                )
 
                 # 解密API密钥
                 api_key = await self._get_api_key(model_config)
@@ -96,17 +109,23 @@ class SummaryModelManager:
                     custom_prompt = self._build_default_prompt(episode_info, transcript)
 
                 # 调用AI API生成摘要（带重试）
-                summary_content, processing_time, tokens_used = await self._call_ai_api_with_retry(
+                (
+                    summary_content,
+                    processing_time,
+                    tokens_used,
+                ) = await self._call_ai_api_with_retry(
                     model_config=model_config,
                     api_key=api_key,
                     prompt=custom_prompt,
-                    episode_info=episode_info
+                    episode_info=episode_info,
                 )
 
                 total_processing_time += processing_time
                 total_tokens_used += tokens_used
 
-                logger.info(f"Text generation succeeded with model: {model_config.name}")
+                logger.info(
+                    f"Text generation succeeded with model: {model_config.name}"
+                )
 
                 # 更新成功统计（只记录最后一次成功的调用，因为重试的失败已经在内部记录了）
                 # 实际上重试的统计已经在 _call_ai_api_with_retry 中记录了，这里不需要重复记录
@@ -116,12 +135,14 @@ class SummaryModelManager:
                     "model_name": model_config.name,
                     "model_id": model_config.id,
                     "processing_time": total_processing_time,
-                    "tokens_used": total_tokens_used
+                    "tokens_used": total_tokens_used,
                 }
 
             except Exception as e:
                 last_error = e
-                logger.warning(f"Text generation failed with model {model_config.name}: {str(e)}")
+                logger.warning(
+                    f"Text generation failed with model {model_config.name}: {str(e)}"
+                )
                 # 失败的统计已经在 _call_ai_api_with_retry 中记录了，这里不需要重复记录
                 continue
 
@@ -131,11 +152,7 @@ class SummaryModelManager:
         raise ValidationError(error_msg)
 
     async def _call_ai_api_with_retry(
-        self,
-        model_config,
-        api_key: str,
-        prompt: str,
-        episode_info: dict[str, Any]
+        self, model_config, api_key: str, prompt: str, episode_info: dict[str, Any]
     ) -> tuple[str, float, int]:
         """
         调用AI API生成摘要（带重试机制）
@@ -158,14 +175,16 @@ class SummaryModelManager:
         for attempt in range(max_retries):
             attempt_start = time.time()
             try:
-                logger.info(f"📝 [SUMMARY] Attempt {attempt+1}/{max_retries} with model {model_config.name}")
+                logger.info(
+                    f"📝 [SUMMARY] Attempt {attempt + 1}/{max_retries} with model {model_config.name}"
+                )
 
                 # 调用API
                 summary_content = await self._call_ai_api(
                     model_config=model_config,
                     api_key=api_key,
                     prompt=prompt,
-                    episode_info=episode_info
+                    episode_info=episode_info,
                 )
 
                 processing_time = time.time() - attempt_start
@@ -173,55 +192,56 @@ class SummaryModelManager:
 
                 # 记录本次尝试成功
                 await self.ai_model_repo.increment_usage(
-                    model_config.id,
-                    success=True,
-                    tokens_used=tokens_used
+                    model_config.id, success=True, tokens_used=tokens_used
                 )
-                logger.debug(f"📊 [STATS] Recorded success for model {model_config.name}, attempt {attempt+1}")
+                logger.debug(
+                    f"📊 [STATS] Recorded success for model {model_config.name}, attempt {attempt + 1}"
+                )
 
                 return summary_content, processing_time, tokens_used
 
             except Exception as e:
                 processing_time = time.time() - attempt_start
-                logger.error(f"❌ [SUMMARY] Attempt {attempt+1} failed for model {model_config.name}: {str(e)}")
+                logger.error(
+                    f"❌ [SUMMARY] Attempt {attempt + 1} failed for model {model_config.name}: {str(e)}"
+                )
 
                 # 记录本次尝试失败
-                await self.ai_model_repo.increment_usage(
-                    model_config.id,
-                    success=False
+                await self.ai_model_repo.increment_usage(model_config.id, success=False)
+                logger.debug(
+                    f"📊 [STATS] Recorded failure for model {model_config.name}, attempt {attempt + 1}"
                 )
-                logger.debug(f"📊 [STATS] Recorded failure for model {model_config.name}, attempt {attempt+1}")
 
                 if attempt < max_retries - 1:
-                    delay = base_delay * (2 ** attempt)
+                    delay = base_delay * (2**attempt)
                     logger.info(f"⏳ [SUMMARY] Retrying in {delay}s...")
                     await asyncio.sleep(delay)
                 else:
                     # 所有重试都失败了，抛出异常
-                    raise Exception(f"Model {model_config.name} failed after {max_retries} attempts: {str(e)}") from e
+                    raise Exception(
+                        f"Model {model_config.name} failed after {max_retries} attempts: {str(e)}"
+                    ) from e
 
         # 不应该到达这里
         raise Exception("Unexpected error in _call_ai_api_with_retry")
 
     async def _call_ai_api(
-        self,
-        model_config,
-        api_key: str,
-        prompt: str,
-        episode_info: dict[str, Any]
+        self, model_config, api_key: str, prompt: str, episode_info: dict[str, Any]
     ) -> str:
         """调用AI API生成摘要"""
         # 检查并处理过长的转录文本
         max_prompt_length = 100000  # 约 25k tokens
         if len(prompt) > max_prompt_length:
-            logger.warning(f"Prompt too long ({len(prompt)} chars), truncating to {max_prompt_length} chars")
+            logger.warning(
+                f"Prompt too long ({len(prompt)} chars), truncating to {max_prompt_length} chars"
+            )
             prompt = prompt[:max_prompt_length] + "\n\n[内容过长，已截断]"
 
         # 构建 API URL - 避免路径重复
         api_url = model_config.api_url
-        if not api_url.endswith('/chat/completions'):
+        if not api_url.endswith("/chat/completions"):
             # 如果 URL 不包含完整路径，则添加
-            if api_url.endswith('/'):
+            if api_url.endswith("/"):
                 api_url = f"{api_url}chat/completions"
             else:
                 api_url = f"{api_url}/chat/completions"
@@ -229,25 +249,20 @@ class SummaryModelManager:
         timeout = aiohttp.ClientTimeout(total=model_config.timeout_seconds)
 
         headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
         }
 
         # 构建请求数据
         data = {
-            'model': model_config.model_id,
-            'messages': [
-                {
-                    'role': 'user',
-                    'content': prompt
-                }
-            ],
-            'temperature': model_config.get_temperature_float() or 0.7
+            "model": model_config.model_id,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": model_config.get_temperature_float() or 0.7,
         }
 
         # Only include max_tokens if it's set (some APIs don't accept null)
         if model_config.max_tokens is not None:
-            data['max_tokens'] = model_config.max_tokens
+            data["max_tokens"] = model_config.max_tokens
 
         # 添加额外配置
         if model_config.extra_config:
@@ -261,67 +276,73 @@ class SummaryModelManager:
         logger.info(f"  - Max tokens: {model_config.max_tokens}")
         logger.info(f"  - Temperature: {data.get('temperature')}")
 
-        async with aiohttp.ClientSession(timeout=timeout) as session, session.post(
-            api_url, headers=headers, json=data
-        ) as response:
-                if response.status != 200:
-                    error_text = await response.text()
-                    logger.error("❌ [AI API] Request failed:")
-                    logger.error(f"  - Status: {response.status}")
-                    logger.error(f"  - Error: {error_text}")
-                    logger.error(f"  - Request data keys: {list(data.keys())}")
-                    logger.error(f"  - Headers: {headers}")
+        async with (
+            aiohttp.ClientSession(timeout=timeout) as session,
+            session.post(api_url, headers=headers, json=data) as response,
+        ):
+            if response.status != 200:
+                error_text = await response.text()
+                logger.error("❌ [AI API] Request failed:")
+                logger.error(f"  - Status: {response.status}")
+                logger.error(f"  - Error: {error_text}")
+                logger.error(f"  - Request data keys: {list(data.keys())}")
+                logger.error(f"  - Headers: {headers}")
 
-                    # 提供更具体的错误信息
-                    if response.status == 400:
-                        raise HTTPException(
-                            status_code=500,
-                            detail=f"AI API bad request (400). Possible causes: invalid model ID, malformed request, or prompt too long. Error: {error_text[:200]}"
-                        )
-                    elif response.status == 401:
-                        raise HTTPException(
-                            status_code=500,
-                            detail="AI API authentication failed (401). Check API key configuration."
-                        )
-                    else:
-                        raise HTTPException(
-                            status_code=500,
-                            detail=f"AI summary API error: {response.status} - {error_text[:200]}"
-                        )
-
-                result = await response.json()
-
-                if 'choices' not in result or not result['choices']:
-                    logger.error(f"❌ [AI API] Invalid response structure: {result}")
+                # 提供更具体的错误信息
+                if response.status == 400:
                     raise HTTPException(
                         status_code=500,
-                        detail="Invalid response from AI API"
+                        detail=f"AI API bad request (400). Possible causes: invalid model ID, malformed request, or prompt too long. Error: {error_text[:200]}",
                     )
-
-                content = result['choices'][0].get('message', {}).get('content')
-                if not content or not isinstance(content, str):
-                    logger.error(f"❌ [AI API] Returned invalid content: {result}")
+                elif response.status == 401:
                     raise HTTPException(
                         status_code=500,
-                        detail="AI API returned empty or invalid content"
+                        detail="AI API authentication failed (401). Check API key configuration.",
+                    )
+                else:
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"AI summary API error: {response.status} - {error_text[:200]}",
                     )
 
-                # Filter out <thinking> tags and content
-                # 过滤掉 <thinking> 标签及其内容
-                from app.core.utils import filter_thinking_content
-                original_length = len(content)
-                cleaned_content = filter_thinking_content(content)
+            result = await response.json()
 
-                if len(cleaned_content) != original_length:
-                    logger.info(f"🧹 [FILTER] Removed thinking content: {original_length} -> {len(cleaned_content)} chars")
+            if "choices" not in result or not result["choices"]:
+                logger.error(f"❌ [AI API] Invalid response structure: {result}")
+                raise HTTPException(
+                    status_code=500, detail="Invalid response from AI API"
+                )
 
-                logger.info(f"✅ [AI API] Summary generated successfully: {len(cleaned_content)} chars")
-                return cleaned_content.strip()
+            content = result["choices"][0].get("message", {}).get("content")
+            if not content or not isinstance(content, str):
+                logger.error(f"❌ [AI API] Returned invalid content: {result}")
+                raise HTTPException(
+                    status_code=500, detail="AI API returned empty or invalid content"
+                )
 
-    def _build_default_prompt(self, episode_info: dict[str, Any], transcript: str) -> str:
+            # Filter out <thinking> tags and content
+            # 过滤掉 <thinking> 标签及其内容
+            from app.core.utils import filter_thinking_content
+
+            original_length = len(content)
+            cleaned_content = filter_thinking_content(content)
+
+            if len(cleaned_content) != original_length:
+                logger.info(
+                    f"🧹 [FILTER] Removed thinking content: {original_length} -> {len(cleaned_content)} chars"
+                )
+
+            logger.info(
+                f"✅ [AI API] Summary generated successfully: {len(cleaned_content)} chars"
+            )
+            return cleaned_content.strip()
+
+    def _build_default_prompt(
+        self, episode_info: dict[str, Any], transcript: str
+    ) -> str:
         """构建默认的摘要提示词"""
-        title = episode_info.get('title', '未知标题')
-        raw_description = episode_info.get('description', '')
+        title = episode_info.get("title", "未知标题")
+        raw_description = episode_info.get("description", "")
 
         # 剥离HTML标签，确保AI只看到纯文本内容
         description = strip_html_tags(raw_description)
@@ -399,78 +420,24 @@ Shownotes: {description}
         return prompt
 
     async def _get_api_key(self, model_config) -> str:
-        """获取API密钥（统一从数据库读取，支持后备查找）"""
-        # Placeholders that indicate invalid API keys
-        invalid_api_keys = {
-            'your-openai-api-key-here',
-            'your-api-key-here',
-            '',
-            'none',
-            'null',
-            'your-ope************here',  # Partial match from error logs
-        }
-
-        def is_invalid_key(key: str) -> bool:
-            """Check if API key is invalid/placeholder"""
-            if not key:
-                return True
-            key_lower = key.lower().strip()
-            # Check against known placeholders (skip empty strings to avoid false positives)
-            for placeholder in invalid_api_keys:
-                if not placeholder:
-                    continue  # Skip empty placeholders
-                placeholder_lower = placeholder.lower()
-                if key_lower == placeholder_lower or placeholder_lower in key_lower:
-                    return True
-            # Check for common placeholder patterns
-            return bool('your-' in key_lower and ('key' in key_lower or 'api' in key_lower))
-
-        # Helper to get and validate API key from a model
-        async def get_valid_key_from_model(model) -> str | None:
-            if not model or not model.api_key:
-                return None
-
-            key = model.api_key
-            if not model.api_key_encrypted:
-                if is_invalid_key(key):
-                    return None
-                return key
-
-            # Decrypt if encrypted
-            from app.core.security import decrypt_data
-            try:
-                decrypted = decrypt_data(model.api_key)
-                if is_invalid_key(decrypted):
-                    return None
-                return decrypted
-            except Exception as e:
-                logger.error(f"Failed to decrypt API key for model {model.name}: {e}")
-                return None
-
-        # First try to get API key from the provided model_config
-        api_key = await get_valid_key_from_model(model_config)
-        if api_key:
-            logger.info(f"Using API key from model {model_config.name}")
-            return api_key
-
-        # If current model has invalid key, try to find another active model with valid key
-        logger.warning(f"Model {model_config.name} has invalid or placeholder API key, searching for alternative...")
-
-        active_models = await self.ai_model_repo.get_active_models(ModelType.TEXT_GENERATION)
-        for model in active_models:
-            if model.id == model_config.id:
-                continue  # Skip the same model
-            alt_key = await get_valid_key_from_model(model)
-            if alt_key:
-                logger.info(f"Found valid API key from alternative model: {model.name}")
-                return alt_key
-
-        # No valid API key found
-        raise ValidationError(
-            f"No valid API key found. Model '{model_config.name}' has a placeholder/invalid API key, "
-            f"and no alternative models with valid API keys were found. "
-            f"Please configure a valid API key for at least one TEXT_GENERATION model."
+        """Get API key from current model with fallback to other active models."""
+        active_models = await self.ai_model_repo.get_active_models(
+            ModelType.TEXT_GENERATION
         )
+        try:
+            return resolve_api_key_with_fallback(
+                primary_model=model_config,
+                fallback_models=active_models,
+                logger=logger,
+                invalid_message=(
+                    f"No valid API key found. Model '{model_config.name}' has a "
+                    "placeholder/invalid API key, and no alternative models with "
+                    "valid API keys were found. Please configure a valid API key "
+                    "for at least one TEXT_GENERATION model."
+                ),
+            )
+        except ValueError as exc:
+            raise ValidationError(str(exc)) from exc
 
     async def get_model_info(self, model_name: str | None = None) -> dict[str, Any]:
         """获取模型信息"""
@@ -484,12 +451,14 @@ Shownotes: {description}
             "max_tokens": model_config.max_tokens,
             "temperature": model_config.temperature,
             "timeout_seconds": model_config.timeout_seconds,
-            "extra_config": model_config.extra_config or {}
+            "extra_config": model_config.extra_config or {},
         }
 
     async def list_available_models(self):
         """列出所有可用的摘要模型"""
-        active_models = await self.ai_model_repo.get_active_models(ModelType.TEXT_GENERATION)
+        active_models = await self.ai_model_repo.get_active_models(
+            ModelType.TEXT_GENERATION
+        )
         return [
             {
                 "id": model.id,
@@ -497,7 +466,7 @@ Shownotes: {description}
                 "display_name": model.display_name,
                 "provider": model.provider,
                 "model_id": model.model_id,
-                "is_default": model.is_default
+                "is_default": model.is_default,
             }
             for model in active_models
         ]
@@ -514,11 +483,12 @@ class DatabaseBackedAISummaryService:
         self,
         episode_id: int,
         model_name: str | None = None,
-        custom_prompt: str | None = None
+        custom_prompt: str | None = None,
     ) -> dict[str, Any]:
         """为播客单集生成AI摘要"""
         # 获取播客单集信息
         from sqlalchemy import select
+
         stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
         result = await self.db.execute(stmt)
         episode = result.scalar_one_or_none()
@@ -529,13 +499,15 @@ class DatabaseBackedAISummaryService:
         # 获取转录内容
         transcript_content = episode.transcript_content
         if not transcript_content:
-            raise ValidationError(f"No transcript content available for episode {episode_id}")
+            raise ValidationError(
+                f"No transcript content available for episode {episode_id}"
+            )
 
         # 构建播客信息
         episode_info = {
             "title": episode.title,
             "description": episode.description,
-            "duration": episode.audio_duration
+            "duration": episode.audio_duration,
         }
 
         # 生成摘要
@@ -543,7 +515,7 @@ class DatabaseBackedAISummaryService:
             transcript=transcript_content,
             episode_info=episode_info,
             model_name=model_name,
-            custom_prompt=custom_prompt
+            custom_prompt=custom_prompt,
         )
 
         # 更新数据库中的摘要信息
@@ -551,9 +523,12 @@ class DatabaseBackedAISummaryService:
 
         return summary_result
 
-    async def _update_episode_summary(self, episode_id: int, summary_result: dict[str, Any]):
+    async def _update_episode_summary(
+        self, episode_id: int, summary_result: dict[str, Any]
+    ):
         """更新播客单集的摘要信息"""
         import logging
+
         logger = logging.getLogger(__name__)
         from sqlalchemy import update
 
@@ -562,15 +537,17 @@ class DatabaseBackedAISummaryService:
             summary_content = summary_result["summary_content"]
             model_name = summary_result["model_name"]
             processing_time = summary_result["processing_time"]
-            
+
             # Final safeguard to remove model reasoning content before persistence.
             summary_content = filter_thinking_content(summary_content)
             summary_result["summary_content"] = summary_content
-            
+
             # 计算字数
             word_count = len(summary_content.split())
-            
-            logger.info(f"Updating summary for episode {episode_id}: {word_count} words, model: {model_name}")
+
+            logger.info(
+                f"Updating summary for episode {episode_id}: {word_count} words, model: {model_name}"
+            )
             logger.debug(f"Summary content: {summary_content[:100]}...")
 
             # 更新播客单集表
@@ -580,15 +557,20 @@ class DatabaseBackedAISummaryService:
                 .values(
                     ai_summary=summary_content,
                     summary_version="1.0",
-                    updated_at=datetime.now(timezone.utc)
+                    updated_at=datetime.now(timezone.utc),
                 )
             )
-            logger.debug(f"Executing update on podcast_episodes table for episode {episode_id}")
+            logger.debug(
+                f"Executing update on podcast_episodes table for episode {episode_id}"
+            )
             result = await self.db.execute(stmt)
-            logger.debug(f"Update result on podcast_episodes: {result.rowcount} rows affected")
+            logger.debug(
+                f"Update result on podcast_episodes: {result.rowcount} rows affected"
+            )
 
             # 更新转录任务表（如果存在）
             from app.domains.podcast.models import TranscriptionTask
+
             stmt = (
                 update(TranscriptionTask)
                 .where(TranscriptionTask.episode_id == episode_id)
@@ -598,17 +580,21 @@ class DatabaseBackedAISummaryService:
                     summary_word_count=word_count,
                     summary_processing_time=processing_time,
                     summary_error_message=None,
-                    updated_at=datetime.now(timezone.utc)
+                    updated_at=datetime.now(timezone.utc),
                 )
             )
-            logger.debug(f"Executing update on transcription_tasks table for episode {episode_id}")
+            logger.debug(
+                f"Executing update on transcription_tasks table for episode {episode_id}"
+            )
             result = await self.db.execute(stmt)
-            logger.debug(f"Update result on transcription_tasks: {result.rowcount} rows affected")
+            logger.debug(
+                f"Update result on transcription_tasks: {result.rowcount} rows affected"
+            )
 
             logger.debug(f"Committing transaction for episode {episode_id}")
             await self.db.commit()
             logger.info(f"Successfully updated summary for episode {episode_id}")
-            
+
         except Exception as e:
             logger.error(f"Failed to update summary for episode {episode_id}: {str(e)}")
             logger.exception("Exception details:")
@@ -617,7 +603,9 @@ class DatabaseBackedAISummaryService:
                 await self.db.rollback()
                 logger.debug(f"Transaction rolled back for episode {episode_id}")
             except Exception as rollback_error:
-                logger.error(f"Failed to rollback transaction for episode {episode_id}: {str(rollback_error)}")
+                logger.error(
+                    f"Failed to rollback transaction for episode {episode_id}: {str(rollback_error)}"
+                )
             # 重新抛出异常，让上层处理
             raise
 
@@ -625,7 +613,7 @@ class DatabaseBackedAISummaryService:
         self,
         episode_id: int,
         model_name: str | None = None,
-        custom_prompt: str | None = None
+        custom_prompt: str | None = None,
     ) -> dict[str, Any]:
         """重新生成AI摘要"""
         return await self.generate_summary(episode_id, model_name, custom_prompt)

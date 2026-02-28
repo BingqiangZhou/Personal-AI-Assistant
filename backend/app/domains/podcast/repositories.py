@@ -17,11 +17,11 @@ from sqlalchemy.orm import attributes, joinedload
 from app.core.datetime_utils import sanitize_published_date
 from app.core.redis import PodcastRedis
 from app.domains.podcast.models import (
+    PodcastDailyReport,
     PodcastEpisode,
     PodcastPlaybackState,
     PodcastQueue,
     PodcastQueueItem,
-    PodcastDailyReport,
 )
 from app.domains.subscription.models import Subscription, UserSubscription
 from app.domains.user.models import User
@@ -52,6 +52,18 @@ class PodcastRepository:
     @staticmethod
     def _podcast_source_type_filter() -> Any:
         return Subscription.source_type.in_(["podcast-rss", "rss"])
+
+    async def _resolve_window_total(
+        self,
+        rows: list[Any],
+        *,
+        total_index: int,
+        fallback_count_query: Any,
+    ) -> int:
+        """Resolve paged total via window count with empty-page fallback."""
+        if rows:
+            return int(rows[0][total_index] or 0)
+        return int(await self.db.scalar(fallback_count_query) or 0)
 
     # === 璁㈤槄绠＄悊 ===
 
@@ -387,11 +399,13 @@ class PodcastRepository:
             processed_episodes.append(new_episode)
             new_episodes.append(new_episode)
 
+        # Flush once so new episode IDs are available without per-row refresh.
+        await self.db.flush()
         await self.db.commit()
 
         for episode in new_episodes:
-            await self.db.refresh(episode)
-            await self._cache_episode_metadata(episode)
+            if episode.id:
+                await self._cache_episode_metadata(episode)
 
         return processed_episodes, new_episodes
 
@@ -709,25 +723,43 @@ class PodcastRepository:
         if not subscription_ids:
             return {}
 
-        # Get all episodes for these subscriptions, ordered by published_at
+        ranked_subquery = (
+            select(
+                PodcastEpisode.id.label("episode_id"),
+                func.row_number()
+                .over(
+                    partition_by=PodcastEpisode.subscription_id,
+                    order_by=(
+                        PodcastEpisode.published_at.desc(),
+                        PodcastEpisode.id.desc(),
+                    ),
+                )
+                .label("row_number"),
+            )
+            .where(PodcastEpisode.subscription_id.in_(subscription_ids))
+            .subquery()
+        )
+
         stmt = (
             select(PodcastEpisode)
-            .where(PodcastEpisode.subscription_id.in_(subscription_ids))
-            .order_by(desc(PodcastEpisode.published_at))
+            .join(
+                ranked_subquery,
+                ranked_subquery.c.episode_id == PodcastEpisode.id,
+            )
+            .where(ranked_subquery.c.row_number <= limit_per_subscription)
+            .order_by(
+                PodcastEpisode.subscription_id.asc(),
+                PodcastEpisode.published_at.desc(),
+                PodcastEpisode.id.desc(),
+            )
         )
 
         result = await self.db.execute(stmt)
-        all_episodes = result.scalars().all()
+        rows = result.scalars().all()
 
-        # Group episodes by subscription_id and limit per subscription
-        episodes_by_sub = {}
-        for ep in all_episodes:
-            if ep.subscription_id not in episodes_by_sub:
-                episodes_by_sub[ep.subscription_id] = []
-
-            if len(episodes_by_sub[ep.subscription_id]) < limit_per_subscription:
-                episodes_by_sub[ep.subscription_id].append(ep)
-
+        episodes_by_sub: dict[int, list[PodcastEpisode]] = {}
+        for episode in rows:
+            episodes_by_sub.setdefault(episode.subscription_id, []).append(episode)
         return episodes_by_sub
 
     async def update_playback_progress(
@@ -1271,9 +1303,10 @@ class PodcastRepository:
 
     async def get_user_subscriptions_paginated(
         self, user_id: int, page: int = 1, size: int = 20, filters: dict | None = None
-    ) -> tuple[list[Subscription], int]:
-        """鍒嗛〉鑾峰彇鐢ㄦ埛璁㈤槄"""
-        query = (
+    ) -> tuple[list[Subscription], int, dict[int, int]]:
+        """??????????????????"""
+        skip = (page - 1) * size
+        base_query = (
             select(Subscription)
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
@@ -1284,29 +1317,52 @@ class PodcastRepository:
             )
         )
 
-        # 搴旂敤杩囨护鍣?
         if filters and filters.status:
-            query = query.where(Subscription.status == filters.status)
+            base_query = base_query.where(Subscription.status == filters.status)
 
-        # 璁＄畻鎬绘暟
-        count_query = select(func.count()).select_from(query.subquery())
-        total_result = await self.db.execute(count_query)
-        total = total_result.scalar()
+        episode_count_subquery = (
+            select(
+                PodcastEpisode.subscription_id.label("subscription_id"),
+                func.count(PodcastEpisode.id).label("episode_count"),
+            )
+            .group_by(PodcastEpisode.subscription_id)
+            .subquery()
+        )
 
-        # 搴旂敤鎺掑簭鍜屽垎椤?
-        query = query.order_by(Subscription.created_at.desc())
-        query = query.offset((page - 1) * size).limit(size)
+        query = (
+            base_query.outerjoin(
+                episode_count_subquery,
+                episode_count_subquery.c.subscription_id == Subscription.id,
+            )
+            .add_columns(
+                func.coalesce(episode_count_subquery.c.episode_count, 0),
+                func.count(Subscription.id).over(),
+            )
+            .order_by(Subscription.created_at.desc(), Subscription.id.desc())
+            .offset(skip)
+            .limit(size)
+        )
 
         result = await self.db.execute(query)
-        subscriptions = list(result.scalars().all())
+        rows = result.all()
 
-        return subscriptions, total
+        total = await self._resolve_window_total(
+            rows,
+            total_index=2,
+            fallback_count_query=select(func.count()).select_from(
+                base_query.subquery()
+            ),
+        )
+        subscriptions = [row[0] for row in rows]
+        episode_counts = {row[0].id: int(row[1]) for row in rows}
+        return subscriptions, total, episode_counts
 
     async def get_episodes_paginated(
         self, user_id: int, page: int = 1, size: int = 20, filters: dict | None = None
     ) -> tuple[list[PodcastEpisode], int]:
-        """鍒嗛〉鑾峰彇鐢ㄦ埛鎾鍗曢泦"""
-        query = (
+        """???????????????????????"""
+        skip = (page - 1) * size
+        base_query = (
             select(PodcastEpisode)
             .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
@@ -1318,28 +1374,24 @@ class PodcastRepository:
             )
         )
 
-        # 搴旂敤杩囨护鍣?
         if filters:
             if filters.subscription_id:
-                query = query.where(
+                base_query = base_query.where(
                     PodcastEpisode.subscription_id == filters.subscription_id
                 )
             if filters.has_summary is not None:
                 if filters.has_summary:
-                    query = query.where(PodcastEpisode.ai_summary.isnot(None))
+                    base_query = base_query.where(PodcastEpisode.ai_summary.isnot(None))
                 else:
-                    query = query.where(PodcastEpisode.ai_summary.is_(None))
+                    base_query = base_query.where(PodcastEpisode.ai_summary.is_(None))
             if filters.is_played is not None:
-                # 鎾斁鐘舵€侀渶瑕丣OIN鎾斁璁板綍琛?
                 if filters.is_played:
-                    # 宸叉挱鏀撅細鎾斁杩涘害瓒呰繃90%
-                    query = query.join(PodcastPlaybackState).where(
+                    base_query = base_query.join(PodcastPlaybackState).where(
                         PodcastPlaybackState.current_position
                         >= PodcastEpisode.audio_duration * 0.9
                     )
                 else:
-                    # 鏈挱鏀炬垨鏈惉瀹?
-                    query = query.outerjoin(PodcastPlaybackState).where(
+                    base_query = base_query.outerjoin(PodcastPlaybackState).where(
                         or_(
                             PodcastPlaybackState.id.is_(None),
                             PodcastPlaybackState.current_position
@@ -1347,20 +1399,26 @@ class PodcastRepository:
                         )
                     )
 
-        # 璁＄畻鎬绘暟
-        count_query = select(func.count()).select_from(query.subquery())
-        total_result = await self.db.execute(count_query)
-        total = total_result.scalar()
-
-        # 搴旂敤鎺掑簭鍜屽垎椤?
-        query = query.order_by(
-            PodcastEpisode.published_at.desc(),
-            PodcastEpisode.id.desc(),
+        query = (
+            base_query.add_columns(func.count(PodcastEpisode.id).over())
+            .order_by(
+                PodcastEpisode.published_at.desc(),
+                PodcastEpisode.id.desc(),
+            )
+            .offset(skip)
+            .limit(size)
         )
-        query = query.offset((page - 1) * size).limit(size)
 
         result = await self.db.execute(query)
-        episodes = list(result.scalars().all())
+        rows = list(result.unique().all())
+        total = await self._resolve_window_total(
+            rows,
+            total_index=1,
+            fallback_count_query=select(func.count()).select_from(
+                base_query.subquery()
+            ),
+        )
+        episodes = [row[0] for row in rows]
 
         return episodes, total
 
@@ -1576,10 +1634,7 @@ class PodcastRepository:
                 )
             )
         )
-
-        count_query = select(func.count()).select_from(query.subquery())
-        total_result = await self.db.execute(count_query)
-        total = total_result.scalar() or 0
+        total = await self._get_feed_total_count(user_id)
 
         if cursor_published_at is not None and cursor_episode_id is not None:
             query = query.where(
@@ -1616,7 +1671,8 @@ class PodcastRepository:
         size: int = 20,
     ) -> tuple[list[PodcastEpisode], int]:
         """Get user playback/view history ordered by latest activity."""
-        query = (
+        skip = (page - 1) * size
+        base_query = (
             select(PodcastEpisode)
             .join(
                 PodcastPlaybackState,
@@ -1635,18 +1691,26 @@ class PodcastRepository:
             )
         )
 
-        count_query = select(func.count()).select_from(query.subquery())
-        total_result = await self.db.execute(count_query)
-        total = total_result.scalar() or 0
-
-        query = query.order_by(
-            PodcastPlaybackState.last_updated_at.desc(),
-            PodcastEpisode.id.desc(),
+        query = (
+            base_query.add_columns(func.count(PodcastEpisode.id).over())
+            .order_by(
+                PodcastPlaybackState.last_updated_at.desc(),
+                PodcastEpisode.id.desc(),
+            )
+            .offset(skip)
+            .limit(size)
         )
-        query = query.offset((page - 1) * size).limit(size)
 
         result = await self.db.execute(query)
-        episodes = list(result.unique().scalars().all())
+        rows = list(result.unique().all())
+        total = await self._resolve_window_total(
+            rows,
+            total_index=1,
+            fallback_count_query=select(func.count()).select_from(
+                base_query.subquery()
+            ),
+        )
+        episodes = [row[0] for row in rows]
         return episodes, total
 
     async def get_playback_history_cursor_paginated(
@@ -1720,7 +1784,8 @@ class PodcastRepository:
         size: int = 20,
     ) -> tuple[list[dict[str, Any]], int]:
         """Get lightweight playback history for profile history page."""
-        query = (
+        skip = (page - 1) * size
+        base_query = (
             select(
                 PodcastEpisode.id.label("id"),
                 PodcastEpisode.subscription_id.label("subscription_id"),
@@ -1750,18 +1815,31 @@ class PodcastRepository:
             )
         )
 
-        count_query = select(func.count()).select_from(query.subquery())
-        total_result = await self.db.execute(count_query)
-        total = total_result.scalar() or 0
-
-        query = query.order_by(PodcastPlaybackState.last_updated_at.desc())
-        query = query.offset((page - 1) * size).limit(size)
+        query = (
+            base_query.add_columns(
+                func.count(PodcastEpisode.id).over().label("total_count")
+            )
+            .order_by(PodcastPlaybackState.last_updated_at.desc())
+            .offset(skip)
+            .limit(size)
+        )
 
         result = await self.db.execute(query)
         rows = result.mappings().all()
+        if rows:
+            total = int(rows[0].get("total_count") or 0)
+        else:
+            total = int(
+                await self.db.scalar(
+                    select(func.count()).select_from(base_query.subquery())
+                )
+                or 0
+            )
+
         items: list[dict[str, Any]] = []
         for row in rows:
             item = dict(row)
+            item.pop("total_count", None)
             subscription_config = item.pop("subscription_config", None)
 
             config_image_url = None
@@ -1817,7 +1895,6 @@ class PodcastRepository:
             ilike_condition = coalesced.ilike(like_pattern)
             if not enable_pg_trgm:
                 return ilike_condition
-            # Prefer pg_trgm operator for index-friendly matching on PostgreSQL.
             return or_(coalesced.op("%")(keyword), ilike_condition)
 
         def _build_relevance_term(
@@ -1826,7 +1903,6 @@ class PodcastRepository:
             coalesced = _coalesced_text(column)
             if enable_pg_trgm:
                 return func.similarity(coalesced, keyword) * weight
-            # SQLite/MySQL fallback without pg_trgm similarity().
             return case((coalesced.ilike(like_pattern), weight), else_=0.0)
 
         async def _execute_search(
@@ -1894,12 +1970,11 @@ class PodcastRepository:
                 )
             )
 
-            count_query = select(func.count()).select_from(base_query.subquery())
-            total_result = await self.db.execute(count_query)
-            total = total_result.scalar() or 0
-
             paged_query = (
-                base_query.order_by(
+                base_query.add_columns(
+                    func.count(PodcastEpisode.id).over().label("total_count")
+                )
+                .order_by(
                     desc(relevance_score),
                     desc(PodcastEpisode.published_at),
                     desc(PodcastEpisode.id),
@@ -1908,7 +1983,24 @@ class PodcastRepository:
                 .limit(size)
             )
             result = await self.db.execute(paged_query)
-            episodes = [row[0] for row in result.unique().all()]
+            rows = list(result.unique().all())
+            if rows:
+                total = int(rows[0][2] or 0)
+            else:
+                total = int(
+                    await self.db.scalar(
+                        select(func.count()).select_from(base_query.subquery())
+                    )
+                    or 0
+                )
+
+            episodes: list[PodcastEpisode] = []
+            for episode, score, _ in rows:
+                try:
+                    episode.relevance_score = float(score or 0.0)
+                except Exception:
+                    episode.relevance_score = 0.0
+                episodes.append(episode)
             return episodes, total
 
         try:
@@ -2051,9 +2143,8 @@ class PodcastRepository:
 
         return dates
 
-    async def get_profile_stats_aggregated(self, user_id: int) -> dict[str, Any]:
-        """Get lightweight profile statistics with played episodes count."""
-        sub_count_stmt = (
+    def _subscription_count_stmt(self, user_id: int) -> Any:
+        return (
             select(func.count(Subscription.id))
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
             .where(
@@ -2062,10 +2153,15 @@ class PodcastRepository:
                 )
             )
         )
-        sub_count_result = await self.db.execute(sub_count_stmt)
-        total_subscriptions = sub_count_result.scalar() or 0
 
-        episode_stats_stmt = select(
+    def _episode_stats_stmt(
+        self,
+        user_id: int,
+        *,
+        include_played_episodes: bool = False,
+        include_total_playtime: bool = False,
+    ) -> Any:
+        columns: list[Any] = [
             func.count(PodcastEpisode.id).label("total_episodes"),
             func.sum(case((PodcastEpisode.ai_summary.isnot(None), 1), else_=0)).label(
                 "summaries_generated"
@@ -2073,10 +2169,22 @@ class PodcastRepository:
             func.sum(case((PodcastEpisode.ai_summary.is_(None), 1), else_=0)).label(
                 "pending_summaries"
             ),
-            func.count(func.distinct(PodcastPlaybackState.episode_id)).label(
-                "played_episodes"
-            ),
-        ).select_from(
+        ]
+
+        if include_played_episodes:
+            columns.append(
+                func.count(func.distinct(PodcastPlaybackState.episode_id)).label(
+                    "played_episodes"
+                )
+            )
+        if include_total_playtime:
+            columns.append(
+                func.coalesce(func.sum(PodcastPlaybackState.current_position), 0).label(
+                    "total_playtime"
+                )
+            )
+
+        return select(*columns).select_from(
             PodcastEpisode.__table__.join(
                 Subscription.__table__,
                 PodcastEpisode.subscription_id == Subscription.id,
@@ -2096,7 +2204,16 @@ class PodcastRepository:
                 ),
             )
         )
-        episode_stats_result = await self.db.execute(episode_stats_stmt)
+
+    async def get_profile_stats_aggregated(self, user_id: int) -> dict[str, Any]:
+        """Get lightweight profile statistics with played episodes count."""
+        total_subscriptions = (
+            await self.db.scalar(self._subscription_count_stmt(user_id)) or 0
+        )
+
+        episode_stats_result = await self.db.execute(
+            self._episode_stats_stmt(user_id, include_played_episodes=True)
+        )
         episode_stats = episode_stats_result.one()
 
         latest_report_stmt = (
@@ -2114,7 +2231,9 @@ class PodcastRepository:
             "summaries_generated": episode_stats.summaries_generated or 0,
             "pending_summaries": episode_stats.pending_summaries or 0,
             "played_episodes": episode_stats.played_episodes or 0,
-            "latest_daily_report_date": latest_report_date.isoformat() if latest_report_date else None,
+            "latest_daily_report_date": latest_report_date.isoformat()
+            if latest_report_date
+            else None,
         }
 
     async def get_user_stats_aggregated(self, user_id: int) -> dict[str, Any]:
@@ -2123,56 +2242,15 @@ class PodcastRepository:
 
         Replaces the O(n*m) nested loop implementation with aggregate queries.
         """
-        # Count total subscriptions via UserSubscription
-        sub_count_stmt = (
-            select(func.count(Subscription.id))
-            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
-            .where(
-                and_(
-                    *self._active_user_subscription_filters(user_id),
-                )
-            )
-        )
-        sub_count_result = await self.db.execute(sub_count_stmt)
-        total_subscriptions = sub_count_result.scalar() or 0
-
-        # Aggregate episode statistics
-        episode_stats_stmt = select(
-            func.count(PodcastEpisode.id).label("total_episodes"),
-            func.sum(case((PodcastEpisode.ai_summary.isnot(None), 1), else_=0)).label(
-                "summaries_generated"
-            ),
-            func.sum(case((PodcastEpisode.ai_summary.is_(None), 1), else_=0)).label(
-                "pending_summaries"
-            ),
-            func.coalesce(func.sum(PodcastPlaybackState.current_position), 0).label(
-                "total_playtime"
-            ),
-        ).select_from(
-            PodcastEpisode.__table__.join(
-                Subscription.__table__,
-                PodcastEpisode.subscription_id == Subscription.id,
-            )
-            .join(
-                UserSubscription.__table__,
-                and_(
-                    UserSubscription.subscription_id == Subscription.id,
-                    *self._active_user_subscription_filters(user_id),
-                ),
-            )
-            .outerjoin(
-                PodcastPlaybackState.__table__,
-                and_(
-                    PodcastPlaybackState.episode_id == PodcastEpisode.id,
-                    PodcastPlaybackState.user_id == user_id,
-                ),
-            )
+        total_subscriptions = (
+            await self.db.scalar(self._subscription_count_stmt(user_id)) or 0
         )
 
-        episode_stats_result = await self.db.execute(episode_stats_stmt)
+        episode_stats_result = await self.db.execute(
+            self._episode_stats_stmt(user_id, include_total_playtime=True)
+        )
         episode_stats = episode_stats_result.one()
 
-        # Check for active subscriptions
         active_check_stmt = (
             select(func.count(Subscription.id))
             .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)

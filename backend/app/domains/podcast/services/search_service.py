@@ -10,9 +10,10 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import PodcastRedis
-from app.core.utils import filter_thinking_content
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastRepository
+from app.domains.podcast.services.cache_utils import safe_cache_get, safe_cache_write
+from app.domains.podcast.services.episode_mapper import build_episode_responses
 
 
 logger = logging.getLogger(__name__)
@@ -41,11 +42,7 @@ class PodcastSearchService:
         self.redis = PodcastRedis()
 
     async def search_podcasts(
-        self,
-        query: str,
-        search_in: str = "all",
-        page: int = 1,
-        size: int = 20
+        self, query: str, search_in: str = "all", page: int = 1, size: int = 20
     ) -> tuple[list[dict], int]:
         """
         Search podcast content.
@@ -60,16 +57,14 @@ class PodcastSearchService:
             Tuple of (results list, total count)
         """
         # Try cache first
-        cached = None
-        try:
-            cached = await self.redis.get_search_results(query, search_in, page, size)
-        except Exception as exc:
-            logger.warning(
-                "Search cache read failed (continuing without cache) user=%s query=%s error=%s",
-                self.user_id,
-                query,
-                exc,
-            )
+        cached = await safe_cache_get(
+            lambda: self.redis.get_search_results(query, search_in, page, size),
+            log_warning=logger.warning,
+            error_message=(
+                "Search cache read failed (continuing without cache) "
+                f"user={self.user_id} query={query}"
+            ),
+        )
 
         if cached:
             logger.info(f"Cache HIT for search: {query}")
@@ -78,27 +73,25 @@ class PodcastSearchService:
         logger.info(f"Cache MISS for search: {query}, querying database")
 
         episodes, total = await self.repo.search_episodes(
-            self.user_id,
-            query=query,
-            search_in=search_in,
-            page=page,
-            size=size
+            self.user_id, query=query, search_in=search_in, page=page, size=size
         )
 
         # Batch fetch playback states
         episode_ids = [ep.id for ep in episodes]
-        playback_states = await self.repo.get_playback_states_batch(self.user_id, episode_ids)
+        playback_states = await self.repo.get_playback_states_batch(
+            self.user_id, episode_ids
+        )
 
         # Build response
         results = self._build_episode_response(episodes, playback_states)
 
         # Add relevance scores
         for i, ep in enumerate(episodes):
-            results[i]["relevance_score"] = getattr(ep, 'relevance_score', 1.0)
+            results[i]["relevance_score"] = getattr(ep, "relevance_score", 1.0)
 
         # Cache results
-        try:
-            await self.redis.set_search_results(
+        await safe_cache_write(
+            lambda: self.redis.set_search_results(
                 query,
                 search_in,
                 page,
@@ -107,14 +100,13 @@ class PodcastSearchService:
                     "results": results,
                     "total": total,
                 },
-            )
-        except Exception as exc:
-            logger.warning(
-                "Search cache write failed (results already returned) user=%s query=%s error=%s",
-                self.user_id,
-                query,
-                exc,
-            )
+            ),
+            log_warning=logger.warning,
+            error_message=(
+                "Search cache write failed (results already returned) "
+                f"user={self.user_id} query={query}"
+            ),
+        )
 
         return results, total
 
@@ -136,65 +128,29 @@ class PodcastSearchService:
 
         recommendations = []
         for ep in liked_episodes[:limit]:
-            recommendations.append({
-                "episode_id": ep.id,
-                "title": ep.title,
-                "description": ep.description[:150] + "..." if len(ep.description) > 150 else ep.description,
-                "subscription_title": ep.subscription.title if ep.subscription else None,
-                "recommendation_reason": "Based on your listening history",
-                "match_score": 0.85
-            })
+            recommendations.append(
+                {
+                    "episode_id": ep.id,
+                    "title": ep.title,
+                    "description": ep.description[:150] + "..."
+                    if len(ep.description) > 150
+                    else ep.description,
+                    "subscription_title": ep.subscription.title
+                    if ep.subscription
+                    else None,
+                    "recommendation_reason": "Based on your listening history",
+                    "match_score": 0.85,
+                }
+            )
 
         return recommendations
 
     def _build_episode_response(
-        self,
-        episodes: list[PodcastEpisode],
-        playback_states: dict[int, Any]
+        self, episodes: list[PodcastEpisode], playback_states: dict[int, Any]
     ) -> list[dict]:
-        """
-        Build episode response list with playback states.
-
-        Args:
-            episodes: List of podcast episodes
-            playback_states: Dictionary mapping episode_id to playback state
-
-        Returns:
-            List of episode response dictionaries
-        """
-        results = []
-        for ep in episodes:
-            playback = playback_states.get(ep.id)
-            cleaned_summary = filter_thinking_content(ep.ai_summary)
-
-            # Extract image URL from subscription config
-            subscription_image_url = None
-            if ep.subscription and ep.subscription.config:
-                subscription_image_url = ep.subscription.config.get("image_url")
-
-            # Use episode image_url or fallback to subscription image
-            image_url = ep.image_url or subscription_image_url
-
-            # Calculate is_played
-            is_played = bool(
-                playback and playback.current_position and
-                ep.audio_duration and
-                playback.current_position >= ep.audio_duration * 0.9
-            )
-
-            results.append({
-                "id": ep.id,
-                "subscription_id": ep.subscription_id,
-                "subscription_title": ep.subscription.title if ep.subscription else None,
-                "subscription_image_url": subscription_image_url,
-                "title": ep.title,
-                "description": ep.description,
-                "audio_url": ep.audio_url,
-                "audio_duration": ep.audio_duration,
-                "published_at": ep.published_at,
-                "image_url": image_url,
-                "ai_summary": cleaned_summary,
-                "is_played": is_played,
-            })
-
-        return results
+        """Build episode response list with playback states."""
+        return build_episode_responses(
+            episodes=episodes,
+            playback_states=playback_states,
+            include_extended_fields=False,
+        )

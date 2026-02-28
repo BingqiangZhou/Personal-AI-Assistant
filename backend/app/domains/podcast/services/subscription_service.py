@@ -16,6 +16,10 @@ from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.schemas import PodcastSubscriptionCreate
+from app.domains.podcast.services.cache_utils import safe_cache_get, safe_cache_write
+from app.domains.podcast.services.subscription_metadata import (
+    extract_subscription_metadata,
+)
 from app.domains.subscription.models import Subscription
 from app.domains.subscription.repositories import SubscriptionRepository
 
@@ -204,31 +208,33 @@ class PodcastSubscriptionService:
             Tuple of (subscriptions list, total count)
         """
         cache_filters = self._build_subscription_cache_filters(filters)
-        try:
-            cached = await self.redis.get_subscription_list(
+        cached = await safe_cache_get(
+            lambda: self.redis.get_subscription_list(
                 self.user_id,
                 page,
                 size,
                 filters=cache_filters,
-            )
-            if (
-                isinstance(cached, dict)
-                and isinstance(cached.get("subscriptions"), list)
-                and isinstance(cached.get("total"), int)
-            ):
-                return cached["subscriptions"], cached["total"]
-        except Exception:
-            logger.warning(
-                "Redis cache read failed for subscription list, falling back to DB"
-            )
+            ),
+            log_warning=logger.warning,
+            error_message="Redis cache read failed for subscription list, falling back to DB",
+        )
+        if (
+            isinstance(cached, dict)
+            and isinstance(cached.get("subscriptions"), list)
+            and isinstance(cached.get("total"), int)
+        ):
+            return cached["subscriptions"], cached["total"]
 
-        subscriptions, total = await self.repo.get_user_subscriptions_paginated(
+        (
+            subscriptions,
+            total,
+            episode_counts,
+        ) = await self.repo.get_user_subscriptions_paginated(
             self.user_id, page=page, size=size, filters=filters
         )
 
-        # Batch fetch episode counts and recent episodes
+        # Batch fetch recent episodes
         subscription_ids = [sub.id for sub in subscriptions]
-        episode_counts = await self.repo.get_episodes_counts_batch(subscription_ids)
         episodes_batch = await self.repo.get_subscription_episodes_batch(
             subscription_ids,
             limit_per_subscription=settings.PODCAST_RECENT_EPISODES_LIMIT,
@@ -263,26 +269,14 @@ class PodcastSubscriptionService:
 
             episode_count = episode_counts.get(sub.id, 0)
 
-            # Extract metadata from config
-            config = sub.config or {}
-            image_url = config.get("image_url")
-            # Fallback to subscription.image_url column if config doesn't have it
-            if not image_url:
-                image_url = sub.image_url
-            author = config.get("author")
-            platform = config.get("platform")
+            metadata = extract_subscription_metadata(sub)
 
             # Debug logging for missing image_url
-            if not image_url:
+            if not metadata["image_url"]:
+                config = sub.config or {}
                 logger.warning(
                     f"[DEBUG] Subscription {sub.id} ({sub.title}) has no image_url. config keys: {list(config.keys()) if config else 'config is None'}"
                 )
-            categories = self._normalize_categories(config.get("categories") or [])
-            podcast_type = config.get("podcast_type")
-            language = config.get("language")
-            explicit = config.get("explicit", False)
-            link = config.get("link")
-            total_episodes_from_config = config.get("total_episodes")
 
             # Latest episode
             latest_episode_dict = None
@@ -312,30 +306,33 @@ class PodcastSubscriptionService:
                     "episode_count": episode_count,
                     "unplayed_count": unplayed_count,
                     "latest_episode": latest_episode_dict,
-                    "categories": categories,
-                    "image_url": image_url,
-                    "author": author,
-                    "platform": platform,
-                    "podcast_type": podcast_type,
-                    "language": language,
-                    "explicit": explicit,
-                    "link": link,
-                    "total_episodes_from_config": total_episodes_from_config,
+                    "categories": metadata["categories"],
+                    "image_url": metadata["image_url"],
+                    "author": metadata["author"],
+                    "platform": metadata["platform"],
+                    "podcast_type": metadata["podcast_type"],
+                    "language": metadata["language"],
+                    "explicit": metadata["explicit"],
+                    "link": metadata["link"],
+                    "total_episodes_from_config": metadata[
+                        "total_episodes_from_config"
+                    ],
                     "created_at": sub.created_at,
                     "updated_at": sub.updated_at,
                 }
             )
 
-        try:
-            await self.redis.set_subscription_list(
+        await safe_cache_write(
+            lambda: self.redis.set_subscription_list(
                 self.user_id,
                 page,
                 size,
                 {"subscriptions": results, "total": total},
                 filters=cache_filters,
-            )
-        except Exception:
-            logger.warning("Redis cache write failed for subscription list, skipping")
+            ),
+            log_warning=logger.warning,
+            error_message="Redis cache write failed for subscription list, skipping",
+        )
 
         return results, total
 
@@ -358,31 +355,20 @@ class PodcastSubscriptionService:
         )
         pending_count = len([e for e in episodes if not e.ai_summary])
 
-        # Extract metadata from config
-        config = sub.config or {}
-        image_url = config.get("image_url")
-        # Fallback to subscription.image_url column if config doesn't have it
-        if not image_url:
-            image_url = sub.image_url
-        author = config.get("author")
-        categories = config.get("categories") or []
-        podcast_type = config.get("podcast_type")
-        language = config.get("language")
-        explicit = config.get("explicit", False)
-        link = config.get("link")
+        metadata = extract_subscription_metadata(sub, normalize_category_items=False)
 
         return {
             "id": sub.id,
             "title": sub.title,
             "description": sub.description,
             "source_url": sub.source_url,
-            "image_url": image_url,
-            "author": author,
-            "categories": categories,
-            "podcast_type": podcast_type,
-            "language": language,
-            "explicit": explicit,
-            "link": link,
+            "image_url": metadata["image_url"],
+            "author": metadata["author"],
+            "categories": metadata["categories"],
+            "podcast_type": metadata["podcast_type"],
+            "language": metadata["language"],
+            "explicit": metadata["explicit"],
+            "link": metadata["link"],
             "episode_count": len(episodes),
             "pending_summaries": pending_count,
             "episodes": [
@@ -680,18 +666,6 @@ class PodcastSubscriptionService:
         }
 
     # === Private helper methods ===
-
-    def _normalize_categories(self, raw_categories: list) -> list[dict[str, str]]:
-        """Normalize categories to list of dicts."""
-        categories = []
-        for cat in raw_categories:
-            if isinstance(cat, str):
-                categories.append({"name": cat})
-            elif isinstance(cat, dict):
-                categories.append(cat)
-            else:
-                categories.append({"name": str(cat)})
-        return categories
 
     @staticmethod
     def _build_subscription_cache_filters(filters: Any) -> dict[str, Any]:

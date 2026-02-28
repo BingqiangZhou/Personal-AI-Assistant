@@ -10,6 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import PodcastRedis
 from app.domains.podcast.repositories import PodcastRepository
+from app.domains.podcast.services.cache_utils import (
+    safe_cache_get,
+    safe_cache_invalidate,
+    safe_cache_write,
+)
 from app.domains.podcast.services.playback_service import PodcastPlaybackService
 
 
@@ -28,13 +33,14 @@ class PodcastStatsService:
 
     async def get_user_stats(self) -> dict[str, Any]:
         """Get cached/aggregated user stats with playback context."""
-        try:
-            cached = await self.redis.get_user_stats(self.user_id)
-            if cached:
-                logger.info("Cache HIT for user stats: user_id=%s", self.user_id)
-                return cached
-        except Exception:
-            logger.warning("Redis cache read failed for user stats, skipping cache")
+        cached = await safe_cache_get(
+            lambda: self.redis.get_user_stats(self.user_id),
+            log_warning=logger.warning,
+            error_message="Redis cache read failed for user stats, skipping cache",
+        )
+        if cached:
+            logger.info("Cache HIT for user stats: user_id=%s", self.user_id)
+            return cached
 
         logger.info("Cache MISS for user stats: user_id=%s", self.user_id)
 
@@ -59,37 +65,45 @@ class PodcastStatsService:
             "listening_streak": listening_streak,
         }
 
-        try:
-            await self.redis.set_user_stats(self.user_id, result)
-        except Exception:
-            logger.warning("Redis cache write failed for user stats, skipping cache")
+        await safe_cache_write(
+            lambda: self.redis.set_user_stats(self.user_id, result),
+            log_warning=logger.warning,
+            error_message="Redis cache write failed for user stats, skipping cache",
+        )
 
         return result
 
     async def get_profile_stats(self) -> dict[str, Any]:
         """Get lightweight profile stats for profile page cards."""
-        try:
-            cached = await self.redis.get_profile_stats(self.user_id)
-            if cached:
-                logger.info("Cache HIT for profile stats: user_id=%s", self.user_id)
-                return cached
-        except Exception:
-            logger.warning("Redis cache read failed for profile stats, skipping cache")
+        cached = await safe_cache_get(
+            lambda: self.redis.get_profile_stats(self.user_id),
+            log_warning=logger.warning,
+            error_message="Redis cache read failed for profile stats, skipping cache",
+        )
+        if cached:
+            logger.info("Cache HIT for profile stats: user_id=%s", self.user_id)
+            return cached
 
         logger.info("Cache MISS for profile stats: user_id=%s", self.user_id)
         result = await self.repo.get_profile_stats_aggregated(self.user_id)
 
-        try:
-            await self.redis.set_profile_stats(self.user_id, result)
-        except Exception:
-            logger.warning("Redis cache write failed for profile stats, skipping cache")
+        await safe_cache_write(
+            lambda: self.redis.set_profile_stats(self.user_id, result),
+            log_warning=logger.warning,
+            error_message="Redis cache write failed for profile stats, skipping cache",
+        )
 
         return result
 
     async def invalidate_cached_stats(self) -> None:
         """Invalidate user stats/profile stats caches."""
-        try:
-            await self.redis.invalidate_user_stats(self.user_id)
-            await self.redis.invalidate_profile_stats(self.user_id)
-        except Exception:
-            logger.warning("Redis cache invalidation failed for user_id=%s", self.user_id)
+        await safe_cache_invalidate(
+            lambda: self.redis.invalidate_user_stats(self.user_id),
+            log_warning=logger.warning,
+            error_message=f"Redis user stats cache invalidation failed for user_id={self.user_id}",
+        )
+        await safe_cache_invalidate(
+            lambda: self.redis.invalidate_profile_stats(self.user_id),
+            log_warning=logger.warning,
+            error_message=f"Redis profile stats cache invalidation failed for user_id={self.user_id}",
+        )

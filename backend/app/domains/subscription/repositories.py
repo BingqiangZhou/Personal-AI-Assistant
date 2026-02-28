@@ -23,6 +23,17 @@ class SubscriptionRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def _resolve_window_total(
+        self,
+        rows: list,
+        *,
+        total_index: int,
+        fallback_count_query,
+    ) -> int:
+        if rows:
+            return int(rows[0][total_index] or 0)
+        return int(await self.db.scalar(fallback_count_query) or 0)
+
     # Subscription operations
     async def get_user_subscriptions(
         self,
@@ -82,13 +93,13 @@ class SubscriptionRepository:
         )
         result = await self.db.execute(query)
         rows = result.all()
-        if rows:
-            total = int(rows[0][2])
-        else:
-            # For out-of-range pages, window rows are empty; fallback keeps
-            # total semantics stable with previous behavior.
-            count_query = select(func.count()).select_from(base_query.subquery())
-            total = await self.db.scalar(count_query) or 0
+        total = await self._resolve_window_total(
+            rows,
+            total_index=2,
+            fallback_count_query=select(func.count()).select_from(
+                base_query.subquery()
+            ),
+        )
 
         items = [row[0] for row in rows]
         item_counts = {row[0].id: int(row[1]) for row in rows}
@@ -106,7 +117,7 @@ class SubscriptionRepository:
             .where(
                 Subscription.id == sub_id,
                 UserSubscription.user_id == user_id,
-                UserSubscription.is_archived.is_(False)
+                UserSubscription.is_archived.is_(False),
             )
         )
         result = await self.db.execute(query)
@@ -249,7 +260,7 @@ class SubscriptionRepository:
         # Get the UserSubscription mapping
         user_sub_query = select(UserSubscription).where(
             UserSubscription.user_id == user_id,
-            UserSubscription.subscription_id == sub_id
+            UserSubscription.subscription_id == sub_id,
         )
         result = await self.db.execute(user_sub_query)
         user_sub = result.scalar_one_or_none()
@@ -262,9 +273,9 @@ class SubscriptionRepository:
 
         # Check if other users are subscribed to this subscription
         other_subs_query = select(func.count()).select_from(
-            select(UserSubscription).where(
-                UserSubscription.subscription_id == sub_id
-            ).subquery()
+            select(UserSubscription)
+            .where(UserSubscription.subscription_id == sub_id)
+            .subquery()
         )
         remaining_count = await self.db.scalar(other_subs_query) or 0
 
@@ -354,13 +365,14 @@ class SubscriptionRepository:
         )
         result = await self.db.execute(query)
         rows = result.all()
-        if rows:
-            total = int(rows[0][1])
-            items = [row[0] for row in rows]
-        else:
-            count_query = select(func.count()).select_from(base_query.subquery())
-            total = await self.db.scalar(count_query) or 0
-            items = []
+        total = await self._resolve_window_total(
+            rows,
+            total_index=1,
+            fallback_count_query=select(func.count()).select_from(
+                base_query.subquery()
+            ),
+        )
+        items = [row[0] for row in rows]
 
         return items, total
 
@@ -403,13 +415,14 @@ class SubscriptionRepository:
         )
         result = await self.db.execute(query)
         rows = result.all()
-        if rows:
-            total = int(rows[0][1])
-            items = [row[0] for row in rows]
-        else:
-            count_query = select(func.count()).select_from(base_query.subquery())
-            total = await self.db.scalar(count_query) or 0
-            items = []
+        total = await self._resolve_window_total(
+            rows,
+            total_index=1,
+            fallback_count_query=select(func.count()).select_from(
+                base_query.subquery()
+            ),
+        )
+        items = [row[0] for row in rows]
 
         return items, total
 
@@ -424,7 +437,7 @@ class SubscriptionRepository:
             .where(
                 SubscriptionItem.id == item_id,
                 UserSubscription.user_id == user_id,
-                UserSubscription.is_archived.is_(False)
+                UserSubscription.is_archived.is_(False),
             )
         )
         result = await self.db.execute(query)

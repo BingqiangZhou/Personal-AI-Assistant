@@ -18,6 +18,7 @@ from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.services.daily_report_summary_extractor import (
     extract_one_line_summary,
 )
+from app.domains.podcast.services.episode_mapper import build_episode_responses
 
 
 logger = logging.getLogger(__name__)
@@ -372,80 +373,12 @@ class PodcastEpisodeService:
     def _build_episode_response(
         self, episodes: list[PodcastEpisode], playback_states: dict[int, Any]
     ) -> list[dict]:
-        """
-        Build episode response list with playback states.
-
-        Args:
-            episodes: List of podcast episodes
-            playback_states: Dictionary mapping episode_id to playback state
-
-        Returns:
-            List of episode response dictionaries
-        """
-        results = []
-        for ep in episodes:
-            playback = playback_states.get(ep.id)
-            cleaned_summary = filter_thinking_content(ep.ai_summary)
-
-            # Extract image URL from subscription config
-            subscription_image_url = None
-            if ep.subscription and ep.subscription.config:
-                subscription_image_url = ep.subscription.config.get("image_url")
-
-            # Use episode image_url or fallback to subscription image
-            image_url = ep.image_url or subscription_image_url
-
-            # Calculate is_played
-            is_played = bool(
-                playback
-                and playback.current_position
-                and ep.audio_duration
-                and playback.current_position >= ep.audio_duration * 0.9
-            )
-
-            results.append(
-                {
-                    "id": ep.id,
-                    "subscription_id": ep.subscription_id,
-                    "subscription_title": ep.subscription.title
-                    if ep.subscription
-                    else None,
-                    "subscription_image_url": subscription_image_url,
-                    "title": ep.title,
-                    "description": ep.description,
-                    "audio_url": ep.audio_url,
-                    "audio_duration": ep.audio_duration,
-                    "audio_file_size": ep.audio_file_size,
-                    "published_at": ep.published_at,
-                    "image_url": image_url,
-                    "item_link": ep.item_link,
-                    "transcript_url": ep.transcript_url,
-                    "transcript_content": ep.transcript_content,
-                    "ai_summary": cleaned_summary,
-                    "summary_version": ep.summary_version,
-                    "ai_confidence_score": ep.ai_confidence_score,
-                    "play_count": ep.play_count,
-                    # Use per-user playback timestamp when available.
-                    "last_played_at": playback.last_updated_at
-                    if playback
-                    else ep.last_played_at,
-                    "season": ep.season,
-                    "episode_number": ep.episode_number,
-                    "explicit": ep.explicit,
-                    "status": ep.status,
-                    "metadata": ep.metadata_json,
-                    "playback_position": playback.current_position
-                    if playback
-                    else None,
-                    "is_playing": playback.is_playing if playback else False,
-                    "playback_rate": playback.playback_rate if playback else 1.0,
-                    "is_played": is_played,
-                    "created_at": ep.created_at,
-                    "updated_at": ep.updated_at,
-                }
-            )
-
-        return results
+        """Build episode response list with playback states."""
+        return build_episode_responses(
+            episodes=episodes,
+            playback_states=playback_states,
+            include_extended_fields=True,
+        )
 
     def _normalize_feed_item(self, item: dict[str, Any]) -> dict[str, Any]:
         """Normalize lightweight feed payload fields for stable frontend semantics."""

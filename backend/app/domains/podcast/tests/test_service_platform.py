@@ -22,7 +22,7 @@ class TestPodcastSubscriptionPlatform:
     @pytest.fixture
     def mock_repo(self):
         """Mock repository"""
-        with patch('app.domains.podcast.repositories.PodcastRepository') as mock:
+        with patch("app.domains.podcast.repositories.PodcastRepository") as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
             yield repo_instance
@@ -30,7 +30,9 @@ class TestPodcastSubscriptionPlatform:
     @pytest.fixture
     def mock_parser(self):
         """Mock RSS parser"""
-        with patch('app.domains.podcast.integration.secure_rss_parser.SecureRSSParser') as mock:
+        with patch(
+            "app.domains.podcast.integration.secure_rss_parser.SecureRSSParser"
+        ) as mock:
             parser_instance = AsyncMock()
             mock.return_value = parser_instance
             yield parser_instance
@@ -83,8 +85,8 @@ class TestPodcastSubscriptionPlatform:
 
         # Verify platform was passed to repository
         call_args = mock_repo.create_or_update_subscription.call_args
-        metadata = call_args.kwargs.get('metadata') or call_args[0][5]
-        assert metadata['platform'] == PodcastPlatform.XIMALAYA
+        metadata = call_args.kwargs.get("metadata") or call_args[0][5]
+        assert metadata["platform"] == PodcastPlatform.XIMALAYA
 
     @pytest.mark.asyncio
     async def test_add_subscription_stores_xiaoyuzhou_platform(
@@ -107,8 +109,8 @@ class TestPodcastSubscriptionPlatform:
 
         # Verify platform was passed to repository
         call_args = mock_repo.create_or_update_subscription.call_args
-        metadata = call_args.kwargs.get('metadata') or call_args[0][5]
-        assert metadata['platform'] == PodcastPlatform.XIAOYUZHOU
+        metadata = call_args.kwargs.get("metadata") or call_args[0][5]
+        assert metadata["platform"] == PodcastPlatform.XIAOYUZHOU
 
     @pytest.mark.asyncio
     async def test_add_subscription_stores_generic_platform(
@@ -131,8 +133,8 @@ class TestPodcastSubscriptionPlatform:
 
         # Verify platform was passed to repository
         call_args = mock_repo.create_or_update_subscription.call_args
-        metadata = call_args.kwargs.get('metadata') or call_args[0][5]
-        assert metadata['platform'] == PodcastPlatform.GENERIC
+        metadata = call_args.kwargs.get("metadata") or call_args[0][5]
+        assert metadata["platform"] == PodcastPlatform.GENERIC
 
     @pytest.mark.asyncio
     async def test_add_subscription_includes_all_metadata_with_platform(
@@ -153,19 +155,17 @@ class TestPodcastSubscriptionPlatform:
 
         # Verify all metadata fields including platform
         call_args = mock_repo.create_or_update_subscription.call_args
-        metadata = call_args.kwargs.get('metadata') or call_args[0][5]
+        metadata = call_args.kwargs.get("metadata") or call_args[0][5]
 
-        assert 'platform' in metadata
-        assert metadata['platform'] == PodcastPlatform.XIMALAYA
-        assert 'author' in metadata
-        assert 'language' in metadata
-        assert 'categories' in metadata
-        assert 'image_url' in metadata
+        assert "platform" in metadata
+        assert metadata["platform"] == PodcastPlatform.XIMALAYA
+        assert "author" in metadata
+        assert "language" in metadata
+        assert "categories" in metadata
+        assert "image_url" in metadata
 
     @pytest.mark.asyncio
-    async def test_list_subscriptions_returns_platform(
-        self, service, mock_repo
-    ):
+    async def test_list_subscriptions_returns_platform(self, service, mock_repo):
         """Test listing subscriptions returns platform information"""
         mock_subscription = Mock()
         mock_subscription.id = 1
@@ -181,7 +181,11 @@ class TestPodcastSubscriptionPlatform:
         mock_subscription.image_url = "https://example.com/image.jpg"
         mock_subscription.updated_at = datetime.now(timezone.utc)
 
-        mock_repo.get_user_subscriptions_paginated.return_value = ([mock_subscription], 1)
+        mock_repo.get_user_subscriptions_paginated.return_value = (
+            [mock_subscription],
+            1,
+            {1: 0},
+        )
         mock_repo.get_episodes_counts_batch.return_value = {1: 0}
         mock_repo.get_subscription_episodes_batch.return_value = {1: []}
         mock_repo.get_playback_states_batch.return_value = {}
@@ -191,7 +195,7 @@ class TestPodcastSubscriptionPlatform:
         assert total == 1
         assert len(result) == 1
         # Platform should be included in subscription data
-        assert 'config' in result[0] or 'platform' in str(result[0])
+        assert "config" in result[0] or "platform" in str(result[0])
 
     @pytest.mark.asyncio
     async def test_refresh_subscription_preserves_platform(

@@ -28,21 +28,27 @@ class TestPodcastSubscriptionService:
 
     @pytest.fixture
     def mock_repo(self):
-        with patch('app.domains.podcast.services.subscription_service.PodcastRepository') as mock:
+        with patch(
+            "app.domains.podcast.services.subscription_service.PodcastRepository"
+        ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
             yield repo_instance
 
     @pytest.fixture
     def mock_redis(self):
-        with patch('app.domains.podcast.services.subscription_service.PodcastRedis') as mock:
+        with patch(
+            "app.domains.podcast.services.subscription_service.PodcastRedis"
+        ) as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
             yield redis_instance
 
     @pytest.fixture
     def mock_parser(self):
-        with patch('app.domains.podcast.services.subscription_service.SecureRSSParser') as mock:
+        with patch(
+            "app.domains.podcast.services.subscription_service.SecureRSSParser"
+        ) as mock:
             parser_instance = AsyncMock()
             mock.return_value = parser_instance
             yield parser_instance
@@ -63,7 +69,7 @@ class TestPodcastSubscriptionService:
     @pytest.mark.asyncio
     async def test_list_subscriptions_empty(self, service, mock_repo):
         """测试空订阅列表"""
-        mock_repo.get_user_subscriptions_paginated.return_value = ([], 0)
+        mock_repo.get_user_subscriptions_paginated.return_value = ([], 0, {})
         mock_repo.get_episodes_counts_batch.return_value = {}
         mock_repo.get_subscription_episodes_batch.return_value = {}
         mock_repo.get_playback_states_batch.return_value = {}
@@ -116,14 +122,16 @@ class TestPodcastEpisodeService:
 
     @pytest.fixture
     def mock_repo(self):
-        with patch('app.domains.podcast.services.episode_service.PodcastRepository') as mock:
+        with patch(
+            "app.domains.podcast.services.episode_service.PodcastRepository"
+        ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
             yield repo_instance
 
     @pytest.fixture
     def mock_redis(self):
-        with patch('app.domains.podcast.services.episode_service.PodcastRedis') as mock:
+        with patch("app.domains.podcast.services.episode_service.PodcastRedis") as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
             yield redis_instance
@@ -239,9 +247,7 @@ class TestPodcastEpisodeService:
         assert "Executive Summary" in (results[0]["ai_summary"] or "")
 
     @pytest.mark.asyncio
-    async def test_list_episodes_keeps_original_description(
-        self, service, mock_repo
-    ):
+    async def test_list_episodes_keeps_original_description(self, service, mock_repo):
         now = datetime.now(timezone.utc)
         episode = _build_mock_episode(
             description="Original episode description",
@@ -283,7 +289,9 @@ class TestPodcastPlaybackService:
 
     @pytest.fixture
     def mock_repo(self):
-        with patch('app.domains.podcast.services.playback_service.PodcastRepository') as mock:
+        with patch(
+            "app.domains.podcast.services.playback_service.PodcastRepository"
+        ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
             yield repo_instance
@@ -319,14 +327,16 @@ class TestPodcastSearchService:
 
     @pytest.fixture
     def mock_repo(self):
-        with patch('app.domains.podcast.services.search_service.PodcastRepository') as mock:
+        with patch(
+            "app.domains.podcast.services.search_service.PodcastRepository"
+        ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
             yield repo_instance
 
     @pytest.fixture
     def mock_redis(self):
-        with patch('app.domains.podcast.services.search_service.PodcastRedis') as mock:
+        with patch("app.domains.podcast.services.search_service.PodcastRedis") as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
             yield redis_instance
@@ -374,7 +384,9 @@ class TestPodcastSyncService:
 
     @pytest.fixture
     def mock_repo(self):
-        with patch('app.domains.podcast.services.sync_service.PodcastRepository') as mock:
+        with patch(
+            "app.domains.podcast.services.sync_service.PodcastRepository"
+        ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
             yield repo_instance
