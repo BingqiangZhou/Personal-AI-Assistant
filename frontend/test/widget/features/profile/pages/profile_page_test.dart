@@ -55,6 +55,15 @@ const _defaultProfileStats = ProfileStatsModel(
   playedEpisodes: 8,
 );
 
+const _profileStatsWithDailyReport = ProfileStatsModel(
+  totalSubscriptions: 1,
+  totalEpisodes: 23,
+  summariesGenerated: 12,
+  pendingSummaries: 11,
+  playedEpisodes: 8,
+  latestDailyReportDate: '2026-02-20',
+);
+
 class _FixedProfileStatsNotifier extends ProfileStatsNotifier {
   _FixedProfileStatsNotifier(this._value);
 
@@ -273,7 +282,7 @@ void main() {
           overrides: [
             authProvider.overrideWith(_TestAuthNotifier.new),
             profileStatsProvider.overrideWith(
-              () => _FixedProfileStatsNotifier(_defaultProfileStats),
+              () => _FixedProfileStatsNotifier(_profileStatsWithDailyReport),
             ),
             podcastSubscriptionProvider.overrideWith(
               _TestPodcastSubscriptionNotifier.new,
@@ -297,7 +306,7 @@ void main() {
       expect(find.text('23'), findsOneWidget);
       expect(find.text('12'), findsOneWidget);
       expect(find.text('8'), findsOneWidget);
-      expect(find.text('5'), findsOneWidget);
+      expect(find.text('1'), findsOneWidget);
       expect(
         find.byKey(const Key('profile_viewed_card_chevron')),
         findsOneWidget,
@@ -328,7 +337,7 @@ void main() {
         overrides: [
           authProvider.overrideWith(_TestAuthNotifier.new),
           profileStatsProvider.overrideWith(
-            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+            () => _FixedProfileStatsNotifier(_profileStatsWithDailyReport),
           ),
           podcastSubscriptionProvider.overrideWith(
             _TestPodcastSubscriptionNotifier.new,
@@ -367,7 +376,7 @@ void main() {
           overrides: [
             authProvider.overrideWith(_TestAuthNotifier.new),
             profileStatsProvider.overrideWith(
-              () => _FixedProfileStatsNotifier(_defaultProfileStats),
+              () => _FixedProfileStatsNotifier(_profileStatsWithDailyReport),
             ),
             podcastSubscriptionProvider.overrideWith(
               _TestPodcastSubscriptionNotifier.new,
@@ -478,8 +487,8 @@ void main() {
 
     await tester.pump();
 
-    expect(find.text('...'), findsNWidgets(3));
-    expect(find.text('5'), findsOneWidget);
+    expect(find.text('...'), findsNWidgets(4));
+    expect(find.text('--'), findsOneWidget);
   });
 
   testWidgets('falls back to 0 when profile stats provider returns null', (
@@ -511,8 +520,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('0'), findsNWidgets(3));
-    expect(find.text('5'), findsOneWidget);
+    expect(find.text('0'), findsNWidgets(4));
+    expect(find.text('5'), findsNothing);
   });
 
   testWidgets('falls back to 0 when repository throws in provider chain', (
@@ -544,8 +553,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('0'), findsNWidgets(3));
-    expect(find.text('5'), findsOneWidget);
+    expect(find.text('0'), findsNWidgets(4));
+    expect(find.text('5'), findsNothing);
   });
 
   testWidgets('clear cache entry triggers cache clear flow', (

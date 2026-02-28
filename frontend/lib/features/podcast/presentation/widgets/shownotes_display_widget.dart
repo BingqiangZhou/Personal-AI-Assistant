@@ -1,13 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import '../../../../core/localization/app_localizations.dart';
-import '../../../../core/widgets/top_floating_notice.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-import '../../data/models/podcast_episode_model.dart';
-import '../../core/utils/html_sanitizer.dart';
+import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
+import '../../../../core/widgets/top_floating_notice.dart';
+import '../../core/utils/html_sanitizer.dart';
+import '../../data/models/podcast_episode_model.dart';
 
 class ShownotesDisplayWidget extends ConsumerStatefulWidget {
   final PodcastEpisodeDetailResponse episode;
@@ -22,8 +23,9 @@ class ShownotesDisplayWidget extends ConsumerStatefulWidget {
 class ShownotesDisplayWidgetState
     extends ConsumerState<ShownotesDisplayWidget> {
   final ScrollController _scrollController = ScrollController();
+  String _shownotes = '';
+  String _sanitizedShownotes = '';
 
-  /// 滚动到顶部
   void scrollToTop() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -35,6 +37,21 @@ class ShownotesDisplayWidgetState
   }
 
   @override
+  void initState() {
+    super.initState();
+    _refreshShownotesCache(shouldSetState: false);
+  }
+
+  @override
+  void didUpdateWidget(covariant ShownotesDisplayWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_contentSignature(oldWidget.episode) !=
+        _contentSignature(widget.episode)) {
+      _refreshShownotesCache(shouldSetState: true);
+    }
+  }
+
+  @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
@@ -42,49 +59,9 @@ class ShownotesDisplayWidgetState
 
   @override
   Widget build(BuildContext context) {
-    // Try to get shownotes from different sources
-    final shownotes = _getShownotesContent();
-
-    // Debug: Log the shownotes content
-    if (widget.episode.description != null &&
-        widget.episode.description!.isNotEmpty) {
-      final preview = widget.episode.description!.length > 100
-          ? '${widget.episode.description!.substring(0, 100)}...'
-          : widget.episode.description!;
-      logger.AppLogger.debug('📝 [Shownotes] Description: $preview');
-    } else {
-      logger.AppLogger.debug('📝 [Shownotes] Description: NULL or EMPTY');
-    }
-
-    if (widget.episode.aiSummary != null &&
-        widget.episode.aiSummary!.isNotEmpty) {
-      final preview = widget.episode.aiSummary!.length > 100
-          ? '${widget.episode.aiSummary!.substring(0, 100)}...'
-          : widget.episode.aiSummary!;
-      logger.AppLogger.debug('📝 [Shownotes] AI Summary: $preview');
-    } else {
-      logger.AppLogger.debug('📝 [Shownotes] AI Summary: NULL or EMPTY');
-    }
-
-    logger.AppLogger.debug(
-      '📝 [Shownotes] Metadata shownotes: ${widget.episode.metadata?['shownotes']}',
-    );
-    logger.AppLogger.debug(
-      '📝 [Shownotes] Final content length: ${shownotes.length}',
-    );
-
-    if (shownotes.isEmpty) {
-      logger.AppLogger.debug(
-        '📝 [Shownotes] No content found, showing empty state',
-      );
+    if (_shownotes.isEmpty) {
       return _buildEmptyState(context);
     }
-
-    // Sanitize HTML to prevent XSS attacks
-    final sanitizedHtml = HtmlSanitizer.sanitize(shownotes);
-    logger.AppLogger.debug(
-      '📝 [Shownotes] Sanitized HTML length: ${sanitizedHtml.length}',
-    );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -93,7 +70,6 @@ class ShownotesDisplayWidgetState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Shownotes header
             Text(
               'Shownotes',
               style: TextStyle(
@@ -107,18 +83,14 @@ class ShownotesDisplayWidgetState
               ),
             ),
             const SizedBox(height: 12),
-
-            // HTML content with text selection support
             SelectionArea(
               child: HtmlWidget(
-                sanitizedHtml,
-                // Material 3 styling
+                _sanitizedShownotes,
                 textStyle: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontSize: 15,
                   height: 1.6,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
-                // Handle link taps
                 onTapUrl: (url) async {
                   try {
                     final uri = Uri.parse(url);
@@ -142,7 +114,6 @@ class ShownotesDisplayWidgetState
                     return false;
                   }
                 },
-                // Handle errors gracefully
                 onErrorBuilder: (context, error, stackTrace) {
                   return Container(
                     padding: const EdgeInsets.all(16),
@@ -163,12 +134,9 @@ class ShownotesDisplayWidgetState
                     ),
                   );
                 },
-                // Custom styling for HTML elements
                 customStylesBuilder: (element) {
-                  // Add custom styling for specific elements
                   final styles = <String, String>{};
 
-                  // Blockquote styling
                   if (element.localName == 'blockquote') {
                     styles['border-left'] =
                         '4px solid ${_colorToHex(Theme.of(context).colorScheme.primary)}';
@@ -179,7 +147,6 @@ class ShownotesDisplayWidgetState
                     );
                   }
 
-                  // Code block styling
                   if (element.localName == 'pre' ||
                       element.localName == 'code') {
                     styles['background-color'] = _colorToHex(
@@ -190,7 +157,6 @@ class ShownotesDisplayWidgetState
                     styles['font-family'] = 'monospace';
                   }
 
-                  // Heading styling
                   if (element.localName?.startsWith('h') == true) {
                     styles['color'] = _colorToHex(
                       Theme.of(context).colorScheme.onSurface,
@@ -198,7 +164,6 @@ class ShownotesDisplayWidgetState
                     styles['font-weight'] = 'bold';
                   }
 
-                  // Link styling
                   if (element.localName == 'a') {
                     styles['color'] = _colorToHex(
                       Theme.of(context).colorScheme.primary,
@@ -208,9 +173,7 @@ class ShownotesDisplayWidgetState
 
                   return styles.isNotEmpty ? styles : null;
                 },
-                // Enable selection for text
                 enableCaching: true,
-                // Build mode for better performance
                 renderMode: RenderMode.column,
               ),
             ),
@@ -220,38 +183,58 @@ class ShownotesDisplayWidgetState
     );
   }
 
-  String _getShownotesContent() {
-    // Priority:
-    // 1. Episode description (Most accurate for shownotes)
-    // 2. Episode AI summary
-    // 3. Metadata
-    // 4. Subscription description (Fallback)
-
-    // 1. Try to get episode description first
-    if (widget.episode.description?.isNotEmpty == true) {
-      return widget.episode.description!;
+  void _refreshShownotesCache({required bool shouldSetState}) {
+    final nextShownotes = _resolveShownotesContent(widget.episode);
+    final nextSanitized = nextShownotes.isEmpty
+        ? ''
+        : HtmlSanitizer.sanitize(nextShownotes);
+    if (nextShownotes == _shownotes && nextSanitized == _sanitizedShownotes) {
+      return;
     }
 
-    // 2. Fallback to episode AI summary
-    if (widget.episode.aiSummary?.isNotEmpty == true) {
-      return widget.episode.aiSummary!;
+    if (kDebugMode) {
+      logger.AppLogger.debug(
+        '[Shownotes] content=${nextShownotes.length}, sanitized=${nextSanitized.length}',
+      );
     }
 
-    // 3. Try to get from metadata
-    if (widget.episode.metadata != null &&
-        widget.episode.metadata!['shownotes'] != null) {
-      return widget.episode.metadata!['shownotes'].toString();
+    if (shouldSetState) {
+      setState(() {
+        _shownotes = nextShownotes;
+        _sanitizedShownotes = nextSanitized;
+      });
+      return;
     }
 
-    // 4. Fallback to subscription description
-    if (widget.episode.subscription != null) {
-      final subscriptionDesc = widget.episode.subscription!['description'];
+    _shownotes = nextShownotes;
+    _sanitizedShownotes = nextSanitized;
+  }
+
+  String _resolveShownotesContent(PodcastEpisodeDetailResponse episode) {
+    if (episode.description?.isNotEmpty == true) {
+      return episode.description!;
+    }
+
+    if (episode.aiSummary?.isNotEmpty == true) {
+      return episode.aiSummary!;
+    }
+
+    if (episode.metadata != null && episode.metadata!['shownotes'] != null) {
+      return episode.metadata!['shownotes'].toString();
+    }
+
+    if (episode.subscription != null) {
+      final subscriptionDesc = episode.subscription!['description'];
       if (subscriptionDesc != null && subscriptionDesc.toString().isNotEmpty) {
         return subscriptionDesc.toString();
       }
     }
 
     return '';
+  }
+
+  String _contentSignature(PodcastEpisodeDetailResponse episode) {
+    return '${episode.description}|${episode.aiSummary}|${episode.metadata?['shownotes']}|${episode.subscription?['description']}';
   }
 
   Widget _buildEmptyState(BuildContext context) {
@@ -278,7 +261,6 @@ class ShownotesDisplayWidgetState
     );
   }
 
-  // Helper method to convert Color to hex string
   String _colorToHex(Color color) {
     return '#${color.toARGB32().toRadixString(16).substring(2)}';
   }

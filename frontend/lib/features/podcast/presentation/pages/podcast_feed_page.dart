@@ -312,106 +312,91 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           return _buildEmptyFeedWithEntry(context, mobile: isMobile);
         }
 
-        // Mobile uses a ListView layout.
-        if (isMobile) {
-          return RefreshIndicator(
-            onRefresh: () async {
-              await localRef
-                  .read(podcastFeedProvider.notifier)
-                  .refreshFeed(fastReturn: true);
-            },
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              itemCount:
-                  feedState.episodes.length + (feedState.hasMore ? 1 : 0) + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return _buildDailyReportEntryTile(context, compact: true);
-                }
-
-                final episodeIndex = index - 1;
-                if (episodeIndex >= feedState.episodes.length) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: feedState.isLoadingMore
-                          ? CircularProgressIndicator(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  );
-                }
-                return _buildMobileCard(
-                  context,
-                  feedState.episodes[episodeIndex],
-                );
-              },
-            ),
-          );
-        }
-
-        // Desktop uses a responsive grid layout.
-        final crossAxisCount = screenWidth < 900
-            ? 2
-            : (screenWidth < 1200 ? 3 : 4);
-        final horizontalPadding =
-            0.0; // ResponsiveContainer handles padding? Checking...
-        // ResponsiveContainer has default padding, so we might not need extra.
-        // But GridView needs spacing.
-        final spacing = 6.0;
-        final availableWidth =
-            screenWidth - horizontalPadding - (crossAxisCount - 1) * spacing;
-        final cardWidth = availableWidth / crossAxisCount;
-
-        // Keep desktop cards at a stable visual height.
-        const desktopCardHeight = 172.0;
-        final childAspectRatio = cardWidth / desktopCardHeight;
-
         return RefreshIndicator(
-          onRefresh: () async {
-            await localRef
-                .read(podcastFeedProvider.notifier)
-                .refreshFeed(fastReturn: true);
-          },
-          child: GridView.builder(
-            controller: _scrollController,
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              crossAxisSpacing: spacing,
-              mainAxisSpacing: spacing,
-              childAspectRatio: childAspectRatio,
-            ),
-            itemCount:
-                feedState.episodes.length + (feedState.hasMore ? 1 : 0) + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return _buildDailyReportEntryTile(context, compact: false);
-              }
-
-              final episodeIndex = index - 1;
-              if (episodeIndex >= feedState.episodes.length) {
-                return Center(
-                  child: feedState.isLoadingMore
-                      ? CircularProgressIndicator(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        )
-                      : const SizedBox.shrink(),
-                );
-              }
-              return _buildDesktopCard(
-                context,
-                feedState.episodes[episodeIndex],
-              );
-            },
+          onRefresh: () => localRef
+              .read(podcastFeedProvider.notifier)
+              .refreshFeed(fastReturn: true),
+          child: _buildFeedScrollable(
+            context,
+            feedState: feedState,
+            screenWidth: screenWidth,
           ),
         );
       },
     );
+  }
+
+  Widget _buildFeedScrollable(
+    BuildContext context, {
+    required PodcastFeedState feedState,
+    required double screenWidth,
+  }) {
+    final isMobile = screenWidth < 600;
+    final itemCount =
+        feedState.episodes.length + (feedState.hasMore ? 1 : 0) + 1;
+
+    if (isMobile) {
+      return ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        itemCount: itemCount,
+        itemBuilder: (context, index) =>
+            _buildFeedListItem(context, feedState, index, compact: true),
+      );
+    }
+
+    final crossAxisCount = screenWidth < 900 ? 2 : (screenWidth < 1200 ? 3 : 4);
+    const spacing = 6.0;
+    final availableWidth = screenWidth - (crossAxisCount - 1) * spacing;
+    final cardWidth = availableWidth / crossAxisCount;
+    const desktopCardHeight = 172.0;
+    final childAspectRatio = cardWidth / desktopCardHeight;
+
+    return GridView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        crossAxisSpacing: spacing,
+        mainAxisSpacing: spacing,
+        childAspectRatio: childAspectRatio,
+      ),
+      itemCount: itemCount,
+      itemBuilder: (context, index) =>
+          _buildFeedListItem(context, feedState, index, compact: false),
+    );
+  }
+
+  Widget _buildFeedListItem(
+    BuildContext context,
+    PodcastFeedState feedState,
+    int index, {
+    required bool compact,
+  }) {
+    if (index == 0) {
+      return _buildDailyReportEntryTile(context, compact: compact);
+    }
+
+    final episodeIndex = index - 1;
+    if (episodeIndex >= feedState.episodes.length) {
+      if (!feedState.isLoadingMore) {
+        return const SizedBox.shrink();
+      }
+      final loader = CircularProgressIndicator(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      );
+      if (compact) {
+        return Center(
+          child: Padding(padding: const EdgeInsets.all(8), child: loader),
+        );
+      }
+      return Center(child: loader);
+    }
+
+    final episode = feedState.episodes[episodeIndex];
+    return compact
+        ? _buildMobileCard(context, episode)
+        : _buildDesktopCard(context, episode);
   }
 
   /// Build mobile feed card.

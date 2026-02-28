@@ -10,7 +10,15 @@ const kLanguageChinese = 'zh';
 const kLanguageSystem = 'system';
 
 /// Locale provider
-final localeProvider = NotifierProvider<LocaleNotifier, Locale>(LocaleNotifier.new);
+final localeProvider = NotifierProvider<LocaleNotifier, Locale>(
+  LocaleNotifier.new,
+);
+
+/// Selected language code for UI controls.
+final localeCodeProvider = Provider<String>((ref) {
+  ref.watch(localeProvider);
+  return ref.read(localeProvider.notifier).languageCode;
+});
 
 /// Locale notifier for managing app language
 class LocaleNotifier extends Notifier<Locale> {
@@ -71,5 +79,3 @@ class LocaleNotifier extends Notifier<Locale> {
     return const Locale(kLanguageEnglish);
   }
 }
-
-

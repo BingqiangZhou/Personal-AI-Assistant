@@ -184,42 +184,8 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           ),
           const VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            child: ClipRect(
-              child: Navigator(
-                pages: [
-                  MaterialPage(
-                    key: const ValueKey('right_pane_root_tablet'),
-                    child: Stack(
-                      children: [
-                        AnimatedPadding(
-                          duration: _kBottomAccessoryPaddingTransition,
-                          curve: Curves.easeOutCubic,
-                          padding: EdgeInsets.only(
-                            bottom: bottomAccessory != null
-                                ? bottomAccessoryBodyPadding
-                                : 0,
-                          ),
-                          child: body ?? const SizedBox.shrink(),
-                        ),
-                        if (floatingActionButton != null)
-                          Positioned(
-                            right: 24,
-                            bottom: (bottomAccessory != null ? 84.0 : 24.0),
-                            child: floatingActionButton!,
-                          ),
-                        if (bottomAccessory != null)
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            child: bottomAccessory!,
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-                onDidRemovePage: (page) {},
-              ),
+            child: _buildRightPaneNavigator(
+              pageKey: const ValueKey('right_pane_root_tablet'),
             ),
           ),
         ],
@@ -245,9 +211,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                 width: width,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest
                         .withValues(alpha: 0.3),
                     border: Border(
                       right: BorderSide(
@@ -267,46 +231,51 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           ),
           const VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            child: ClipRect(
-              child: Navigator(
-                pages: [
-                  MaterialPage(
-                    key: const ValueKey('right_pane_root_desktop'),
-                    child: Stack(
-                      children: [
-                        AnimatedPadding(
-                          duration: _kBottomAccessoryPaddingTransition,
-                          curve: Curves.easeOutCubic,
-                          padding: EdgeInsets.only(
-                            bottom: bottomAccessory != null
-                                ? bottomAccessoryBodyPadding
-                                : 0,
-                          ),
-                          child: body ?? const SizedBox.shrink(),
-                        ),
-                        if (floatingActionButton != null)
-                          Positioned(
-                            right: 24,
-                            bottom: (bottomAccessory != null ? 84.0 : 24.0),
-                            child: floatingActionButton!,
-                          ),
-                        if (bottomAccessory != null)
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            child: bottomAccessory!,
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-                onDidRemovePage: (page) {},
-              ),
+            child: _buildRightPaneNavigator(
+              pageKey: const ValueKey('right_pane_root_desktop'),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildRightPaneNavigator({required ValueKey<String> pageKey}) {
+    return ClipRect(
+      child: Navigator(
+        pages: [MaterialPage(key: pageKey, child: _buildRightPaneContent())],
+        onDidRemovePage: (page) {},
+      ),
+    );
+  }
+
+  Widget _buildRightPaneContent() {
+    return Stack(
+      children: [
+        RepaintBoundary(
+          child: AnimatedPadding(
+            duration: _kBottomAccessoryPaddingTransition,
+            curve: Curves.easeOutCubic,
+            padding: EdgeInsets.only(
+              bottom: bottomAccessory != null ? bottomAccessoryBodyPadding : 0,
+            ),
+            child: body ?? const SizedBox.shrink(),
+          ),
+        ),
+        if (floatingActionButton != null)
+          Positioned(
+            right: 24,
+            bottom: (bottomAccessory != null ? 84.0 : 24.0),
+            child: floatingActionButton!,
+          ),
+        if (bottomAccessory != null)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: RepaintBoundary(child: bottomAccessory!),
+          ),
+      ],
     );
   }
 

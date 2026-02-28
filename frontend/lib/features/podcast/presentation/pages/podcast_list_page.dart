@@ -96,9 +96,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   }
 
   void _clearSearch() {
-    setState(() {
-      _searchController.clear();
-    });
+    _searchController.clear();
     ref.read(search.podcastSearchProvider.notifier).clearSearch();
     _searchFocusNode.requestFocus();
   }
@@ -1114,23 +1112,10 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         itemCount: searchState.episodeResults.length,
         itemBuilder: (context, index) {
           final episode = searchState.episodeResults[index];
-          return PodcastEpisodeSearchResultCard(
+          return _buildEpisodeSearchResultItem(
             episode: episode,
-            dense: isDense,
-            onTap: () => _showEpisodeDetailSheetFromSearch(episode),
-            onPlay: () async {
-              final resolved = await _resolveEpisodeForSearchResult(episode);
-              if (!mounted) return;
-              if (resolved == null) {
-                _showErrorNotice(l10n.podcast_player_no_audio);
-                return;
-              }
-              await _playDiscoverEpisode(
-                episode: resolved,
-                showId: resolved.collectionId,
-              );
-            },
-            key: ValueKey('episode_search_${episode.trackId}'),
+            isDense: isDense,
+            l10n: l10n,
           );
         },
       );
@@ -1148,26 +1133,67 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       itemCount: searchState.podcastResults.length,
       itemBuilder: (context, index) {
         final result = searchState.podcastResults[index];
-        final normalizedResultFeedUrl = result.feedUrl == null
-            ? null
-            : PodcastUrlUtils.normalizeFeedUrl(result.feedUrl!);
-        final isSubscribed =
-            normalizedResultFeedUrl != null &&
-            normalizedSubscribedFeedUrls.contains(normalizedResultFeedUrl);
-        final isSubscribing =
-            normalizedResultFeedUrl != null &&
-            normalizedSubscribingFeedUrls.contains(normalizedResultFeedUrl);
-
-        return PodcastSearchResultCard(
+        return _buildPodcastSearchResultItem(
           result: result,
-          onSubscribe: _handleSubscribeFromSearch,
-          isSubscribed: isSubscribed,
-          isSubscribing: isSubscribing,
+          isDense: isDense,
           searchCountry: searchState.searchCountry,
-          dense: isDense,
-          key: ValueKey('search_${result.feedUrl}'),
+          normalizedSubscribedFeedUrls: normalizedSubscribedFeedUrls,
+          normalizedSubscribingFeedUrls: normalizedSubscribingFeedUrls,
         );
       },
+    );
+  }
+
+  Widget _buildEpisodeSearchResultItem({
+    required ITunesPodcastEpisodeResult episode,
+    required bool isDense,
+    required AppLocalizations l10n,
+  }) {
+    return PodcastEpisodeSearchResultCard(
+      episode: episode,
+      dense: isDense,
+      onTap: () => _showEpisodeDetailSheetFromSearch(episode),
+      onPlay: () async {
+        final resolved = await _resolveEpisodeForSearchResult(episode);
+        if (!mounted) return;
+        if (resolved == null) {
+          _showErrorNotice(l10n.podcast_player_no_audio);
+          return;
+        }
+        await _playDiscoverEpisode(
+          episode: resolved,
+          showId: resolved.collectionId,
+        );
+      },
+      key: ValueKey('episode_search_${episode.trackId}'),
+    );
+  }
+
+  Widget _buildPodcastSearchResultItem({
+    required PodcastSearchResult result,
+    required bool isDense,
+    required PodcastCountry searchCountry,
+    required Set<String> normalizedSubscribedFeedUrls,
+    required Set<String> normalizedSubscribingFeedUrls,
+  }) {
+    final normalizedResultFeedUrl = result.feedUrl == null
+        ? null
+        : PodcastUrlUtils.normalizeFeedUrl(result.feedUrl!);
+    final isSubscribed =
+        normalizedResultFeedUrl != null &&
+        normalizedSubscribedFeedUrls.contains(normalizedResultFeedUrl);
+    final isSubscribing =
+        normalizedResultFeedUrl != null &&
+        normalizedSubscribingFeedUrls.contains(normalizedResultFeedUrl);
+
+    return PodcastSearchResultCard(
+      result: result,
+      onSubscribe: _handleSubscribeFromSearch,
+      isSubscribed: isSubscribed,
+      isSubscribing: isSubscribing,
+      searchCountry: searchCountry,
+      dense: isDense,
+      key: ValueKey('search_${result.feedUrl}'),
     );
   }
 

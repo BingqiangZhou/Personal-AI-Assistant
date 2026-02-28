@@ -9,9 +9,19 @@ const kThemeModeDark = 'dark';
 const kThemeModeSystem = 'system';
 
 /// Theme mode provider
-final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(ThemeModeNotifier.new);
+final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
+  ThemeModeNotifier.new,
+);
 
-final initialThemeModeCodeProvider = Provider<String>((ref) => kThemeModeSystem);
+/// Selected theme mode code for UI controls.
+final themeModeCodeProvider = Provider<String>((ref) {
+  ref.watch(themeModeProvider);
+  return ref.read(themeModeProvider.notifier).themeModeCode;
+});
+
+final initialThemeModeCodeProvider = Provider<String>(
+  (ref) => kThemeModeSystem,
+);
 
 /// Theme mode notifier for managing app theme
 class ThemeModeNotifier extends Notifier<ThemeMode> {

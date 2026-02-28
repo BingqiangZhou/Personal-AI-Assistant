@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_episode_model.dart';
+import '../../data/models/podcast_state_models.dart';
 import '../../data/models/podcast_subscription_model.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
@@ -406,128 +407,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                     ? _buildEmptyState()
                     : RefreshIndicator(
                         onRefresh: _refreshEpisodes,
-                        child: Column(
-                          children: [
-                            // Episodes list - Grid Layout
-                            Expanded(
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final screenWidth = constraints.maxWidth;
-
-                                  // Mobile: single column
-                                  if (screenWidth < 600) {
-                                    return ListView.builder(
-                                      controller: _scrollController,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 8,
-                                        horizontal: 12,
-                                      ),
-                                      itemCount:
-                                          episodesState.episodes.length +
-                                          (episodesState.isLoadingMore ? 1 : 0),
-                                      itemBuilder: (context, index) {
-                                        if (index ==
-                                            episodesState.episodes.length) {
-                                          return const Center(
-                                            child: Padding(
-                                              padding: EdgeInsets.all(16),
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            ),
-                                          );
-                                        }
-                                        final episode =
-                                            episodesState.episodes[index];
-                                        return SimplifiedEpisodeCard(
-                                          episode: episode,
-                                          isAddingToQueue: _addingEpisodeIds
-                                              .contains(episode.id),
-                                          onTap: () {
-                                            context.push(
-                                              '/podcast/episode/detail/${episode.id}',
-                                            );
-                                          },
-                                          onPlay: () async {
-                                            // Start playback first.
-                                            await ref
-                                                .read(
-                                                  audioPlayerProvider.notifier,
-                                                )
-                                                .playEpisode(episode);
-                                            // Navigate only if context is still mounted.
-                                            if (context.mounted) {
-                                              context.push(
-                                                '/podcast/episode/detail/${episode.id}',
-                                              );
-                                            }
-                                          },
-                                          onAddToQueue: () =>
-                                              _handleAddToQueue(episode),
-                                        );
-                                      },
-                                    );
-                                  }
-
-                                  // Desktop: grid layout
-                                  final crossAxisCount = screenWidth < 900
-                                      ? 2
-                                      : (screenWidth < 1200 ? 3 : 4);
-                                  return GridView.builder(
-                                    controller: _scrollController,
-                                    padding: const EdgeInsets.all(12),
-                                    gridDelegate:
-                                        SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: crossAxisCount,
-                                          crossAxisSpacing: 12,
-                                          mainAxisSpacing: 12,
-                                          mainAxisExtent:
-                                              _desktopEpisodeCardHeight,
-                                        ),
-                                    itemCount:
-                                        episodesState.episodes.length +
-                                        (episodesState.isLoadingMore ? 1 : 0),
-                                    itemBuilder: (context, index) {
-                                      if (index ==
-                                          episodesState.episodes.length) {
-                                        return const Center(
-                                          child: CircularProgressIndicator(),
-                                        );
-                                      }
-                                      final episode =
-                                          episodesState.episodes[index];
-                                      return SimplifiedEpisodeCard(
-                                        episode: episode,
-                                        isAddingToQueue: _addingEpisodeIds
-                                            .contains(episode.id),
-                                        onTap: () {
-                                          context.push(
-                                            '/podcast/episode/detail/${episode.id}',
-                                          );
-                                        },
-                                        onPlay: () async {
-                                          // Start playback first.
-                                          await ref
-                                              .read(
-                                                audioPlayerProvider.notifier,
-                                              )
-                                              .playEpisode(episode);
-                                          // Navigate only if context is still mounted.
-                                          if (context.mounted) {
-                                            context.push(
-                                              '/podcast/episode/detail/${episode.id}',
-                                            );
-                                          }
-                                        },
-                                        onAddToQueue: () =>
-                                            _handleAddToQueue(episode),
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: _buildEpisodesScrollable(episodesState),
                       );
               },
             ),
@@ -535,6 +415,75 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildEpisodesScrollable(PodcastEpisodesState episodesState) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final itemCount =
+            episodesState.episodes.length +
+            (episodesState.isLoadingMore ? 1 : 0);
+
+        if (screenWidth < 600) {
+          return ListView.builder(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            itemCount: itemCount,
+            itemBuilder: (context, index) {
+              if (index == episodesState.episodes.length) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+              final episode = episodesState.episodes[index];
+              return _buildEpisodeCard(episode);
+            },
+          );
+        }
+
+        final crossAxisCount = screenWidth < 900
+            ? 2
+            : (screenWidth < 1200 ? 3 : 4);
+        return GridView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(12),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            mainAxisExtent: _desktopEpisodeCardHeight,
+          ),
+          itemCount: itemCount,
+          itemBuilder: (context, index) {
+            if (index == episodesState.episodes.length) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final episode = episodesState.episodes[index];
+            return _buildEpisodeCard(episode);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEpisodeCard(PodcastEpisodeModel episode) {
+    return SimplifiedEpisodeCard(
+      episode: episode,
+      isAddingToQueue: _addingEpisodeIds.contains(episode.id),
+      onTap: () => context.push('/podcast/episode/detail/${episode.id}'),
+      onPlay: () => _playAndOpenEpisodeDetail(episode),
+      onAddToQueue: () => _handleAddToQueue(episode),
+    );
+  }
+
+  Future<void> _playAndOpenEpisodeDetail(PodcastEpisodeModel episode) async {
+    await ref.read(audioPlayerProvider.notifier).playEpisode(episode);
+    if (!mounted) return;
+    context.push('/podcast/episode/detail/${episode.id}');
   }
 
   Widget? _buildBottomPlayerBar({
