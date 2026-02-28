@@ -186,7 +186,6 @@ class TestPodcastSubscriptionPlatform:
             1,
             {1: 0},
         )
-        mock_repo.get_episodes_counts_batch.return_value = {1: 0}
         mock_repo.get_subscription_episodes_batch.return_value = {1: []}
         mock_repo.get_playback_states_batch.return_value = {}
 
@@ -196,6 +195,7 @@ class TestPodcastSubscriptionPlatform:
         assert len(result) == 1
         # Platform should be included in subscription data
         assert "config" in result[0] or "platform" in str(result[0])
+        mock_repo.get_episodes_counts_batch.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_refresh_subscription_preserves_platform(

@@ -70,7 +70,6 @@ class TestPodcastSubscriptionService:
     async def test_list_subscriptions_empty(self, service, mock_repo):
         """测试空订阅列表"""
         mock_repo.get_user_subscriptions_paginated.return_value = ([], 0, {})
-        mock_repo.get_episodes_counts_batch.return_value = {}
         mock_repo.get_subscription_episodes_batch.return_value = {}
         mock_repo.get_playback_states_batch.return_value = {}
 
@@ -79,6 +78,7 @@ class TestPodcastSubscriptionService:
         assert results == []
         assert total == 0
         mock_repo.get_user_subscriptions_paginated.assert_called_once()
+        mock_repo.get_episodes_counts_batch.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_list_subscriptions_cache_hit(self, service, mock_repo, mock_redis):

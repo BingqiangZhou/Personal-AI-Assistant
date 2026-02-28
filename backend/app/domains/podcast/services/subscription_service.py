@@ -16,7 +16,11 @@ from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.schemas import PodcastSubscriptionCreate
-from app.domains.podcast.services.cache_utils import safe_cache_get, safe_cache_write
+from app.domains.podcast.services.cache_utils import (
+    safe_cache_get,
+    safe_cache_invalidate,
+    safe_cache_write,
+)
 from app.domains.podcast.services.subscription_metadata import (
     extract_subscription_metadata,
 )
@@ -728,37 +732,21 @@ class PodcastSubscriptionService:
         self, subscription_id: int, *, operation: str
     ) -> None:
         """Invalidate caches without failing the business operation."""
-        await self._safe_cache_invalidation(
-            self.redis.invalidate_episode_list(subscription_id),
-            operation=operation,
-            cache_name="episode_list",
-            subscription_id=subscription_id,
+        await safe_cache_invalidate(
+            lambda: self.redis.invalidate_episode_list(subscription_id),
+            log_warning=logger.warning,
+            error_message=(
+                "Cache invalidation skipped: "
+                f"op={operation} cache=episode_list user_id={self.user_id} "
+                f"subscription_id={subscription_id}"
+            ),
         )
-        await self._safe_cache_invalidation(
-            self.redis.invalidate_subscription_list(self.user_id),
-            operation=operation,
-            cache_name="subscription_list",
-            subscription_id=subscription_id,
+        await safe_cache_invalidate(
+            lambda: self.redis.invalidate_subscription_list(self.user_id),
+            log_warning=logger.warning,
+            error_message=(
+                "Cache invalidation skipped: "
+                f"op={operation} cache=subscription_list user_id={self.user_id} "
+                f"subscription_id={subscription_id}"
+            ),
         )
-
-    async def _safe_cache_invalidation(
-        self,
-        awaitable: Any,
-        *,
-        operation: str,
-        cache_name: str,
-        subscription_id: int,
-    ) -> None:
-        """Run cache invalidation in best-effort mode."""
-        try:
-            await awaitable
-        except Exception as exc:
-            logger.warning(
-                "Cache invalidation skipped: op=%s cache=%s user_id=%s "
-                "subscription_id=%s error=%s",
-                operation,
-                cache_name,
-                self.user_id,
-                subscription_id,
-                exc,
-            )

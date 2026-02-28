@@ -210,9 +210,9 @@ async def test_podcast_list_cache_performance(performance_client: AsyncClient):
     details = f"Status: {response.status_code}, server={duration_ms:.2f}ms"
 
     metrics.add_result("Podcast List (Cached)", duration_ms, passed, details)
-    assert (
-        passed
-    ), f"Cached response {duration_ms}ms too slow (cache may not be working)"
+    assert passed, (
+        f"Cached response {duration_ms}ms too slow (cache may not be working)"
+    )
 
 
 @pytest.mark.performance
@@ -285,17 +285,14 @@ async def test_user_stats_performance(performance_client: AsyncClient):
 @pytest.mark.asyncio
 async def test_episode_list_performance(performance_client: AsyncClient):
     """Test episode list loading performance"""
-    # First get a subscription ID
     response = await performance_client.get("/api/v1/subscriptions/podcasts")
-    if response.status_code != 200 or not response.json()["subscriptions"]:
-        pytest.skip("No subscriptions available")
-
-    subscription_id = response.json()["subscriptions"][0]["id"]
+    url = "/api/v1/podcasts/episodes"
+    if response.status_code == 200 and response.json().get("subscriptions"):
+        subscription_id = response.json()["subscriptions"][0]["id"]
+        url = f"/api/v1/podcasts/episodes?subscription_id={subscription_id}"
 
     start = time.time()
-    response = await performance_client.get(
-        f"/api/v1/podcasts/episodes?subscription_id={subscription_id}"
-    )
+    response = await performance_client.get(url)
     duration_ms = (time.time() - start) * 1000
 
     passed = response.status_code == 200 and duration_ms < 400

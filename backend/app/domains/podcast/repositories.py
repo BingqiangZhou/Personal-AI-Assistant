@@ -678,33 +678,6 @@ class PodcastRepository:
         await self.db.commit()
         return await self.get_effective_playback_rate(user_id, subscription_id)
 
-    async def get_episodes_counts_batch(
-        self, subscription_ids: list[int]
-    ) -> dict[int, int]:
-        """
-        Batch fetch episode counts for multiple subscriptions.
-
-        鎵归噺鑾峰彇澶氫釜璁㈤槄鐨勫墽闆嗚鏁?
-
-        Args:
-            subscription_ids: List of subscription IDs
-
-        Returns:
-            Dictionary mapping subscription_id to episode count
-        """
-        if not subscription_ids:
-            return {}
-
-        # Use GROUP BY to count episodes for all subscriptions in one query
-        stmt = (
-            select(PodcastEpisode.subscription_id, func.count(PodcastEpisode.id))
-            .where(PodcastEpisode.subscription_id.in_(subscription_ids))
-            .group_by(PodcastEpisode.subscription_id)
-        )
-
-        result = await self.db.execute(stmt)
-        return {row[0]: row[1] for row in result.all()}
-
     async def get_subscription_episodes_batch(
         self, subscription_ids: list[int], limit_per_subscription: int = 3
     ) -> dict[int, list[PodcastEpisode]]:
@@ -1721,7 +1694,7 @@ class PodcastRepository:
         cursor_episode_id: int | None = None,
     ) -> tuple[list[PodcastEpisode], int, bool, tuple[datetime, int] | None]:
         """Keyset-pagination playback history query ordered by latest activity."""
-        query = (
+        base_query = (
             select(
                 PodcastEpisode,
                 PodcastPlaybackState.last_updated_at.label("last_updated_at"),
@@ -1742,10 +1715,7 @@ class PodcastRepository:
                 )
             )
         )
-
-        count_query = select(func.count()).select_from(query.subquery())
-        total_result = await self.db.execute(count_query)
-        total = total_result.scalar() or 0
+        query = base_query
 
         if cursor_last_updated_at is not None and cursor_episode_id is not None:
             query = query.where(
@@ -1758,13 +1728,24 @@ class PodcastRepository:
                 )
             )
 
-        query = query.order_by(
-            desc(PodcastPlaybackState.last_updated_at),
-            desc(PodcastEpisode.id),
-        ).limit(size + 1)
+        query = (
+            query.add_columns(func.count(PodcastEpisode.id).over().label("total_count"))
+            .order_by(
+                desc(PodcastPlaybackState.last_updated_at),
+                desc(PodcastEpisode.id),
+            )
+            .limit(size + 1)
+        )
 
         result = await self.db.execute(query)
         rows = list(result.all())
+        total = await self._resolve_window_total(
+            rows,
+            total_index=2,
+            fallback_count_query=select(func.count()).select_from(
+                base_query.subquery()
+            ),
+        )
 
         has_more = len(rows) > size
         trimmed_rows = rows[:size]
@@ -1772,7 +1753,7 @@ class PodcastRepository:
 
         next_cursor_values: tuple[datetime, int] | None = None
         if has_more and trimmed_rows:
-            tail_episode, tail_last_updated_at = trimmed_rows[-1]
+            tail_episode, tail_last_updated_at, _ = trimmed_rows[-1]
             next_cursor_values = (tail_last_updated_at, tail_episode.id)
 
         return episodes, total, has_more, next_cursor_values

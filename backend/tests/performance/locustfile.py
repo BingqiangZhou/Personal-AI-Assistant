@@ -18,13 +18,14 @@ class PodcastUser(HttpUser):
 
     Wait time between tasks: 1-3 seconds (simulates real user behavior)
     """
+
     wait_time = between(1, 3)
 
     def on_start(self):
         """Called when a user starts. Login and get initial data."""
         token = os.getenv("PERF_BEARER_TOKEN", "")
         self.auth_headers = {"Authorization": f"Bearer {token}"} if token else {}
-        self.client.get("/health")
+        self.client.get("/api/v1/health")
 
     @task(3)
     def view_podcast_list(self):
@@ -57,12 +58,13 @@ class AdminUser(HttpUser):
     """
     Simulates an admin user with different usage patterns.
     """
+
     wait_time = between(2, 5)
 
     @task
     def view_metrics(self):
         """View performance metrics (internal endpoint)"""
-        self.client.get("/metrics")
+        self.client.get("/metrics/summary")
 
 
 # Stress test user - more aggressive
@@ -70,6 +72,7 @@ class StressTestUser(HttpUser):
     """
     Simulates stress test conditions with rapid requests.
     """
+
     wait_time = between(0.1, 0.5)  # Very short wait time
 
     def on_start(self):
