@@ -97,7 +97,7 @@ flutter:
   uses-material-design: true
   generate: true
   assets:
-    - assets/icons/
+    - assets/icons/Logo3.png
 
 # flutter_launcher_icons configuration
 flutter_launcher_icons:

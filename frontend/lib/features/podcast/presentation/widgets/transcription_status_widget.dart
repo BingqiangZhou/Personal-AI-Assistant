@@ -6,6 +6,8 @@ import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import '../providers/transcription_providers.dart';
 import '../../data/models/podcast_transcription_model.dart';
 import '../../data/models/podcast_transcription_model_extensions.dart';
+import 'transcription/transcription_step_indicators.dart';
+import 'transcription/transcription_step_mapper.dart';
 
 class TranscriptionStatusWidget extends ConsumerWidget {
   final int episodeId;
@@ -41,16 +43,15 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   Widget _buildNotStartedState(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final accentColor =
-        theme.brightness == Brightness.dark ? scheme.tertiary : scheme.primary;
+    final accentColor = theme.brightness == Brightness.dark
+        ? scheme.tertiary
+        : scheme.primary;
     return Card(
       elevation: 0,
       color: scheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: scheme.outline.withValues(alpha: 0.2),
-        ),
+        side: BorderSide(color: scheme.outline.withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -65,11 +66,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                 color: accentColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(40),
               ),
-              child: Icon(
-                Icons.transcribe,
-                size: 40,
-                color: accentColor,
-              ),
+              child: Icon(Icons.transcribe, size: 40, color: accentColor),
             ),
 
             const SizedBox(height: 16),
@@ -272,7 +269,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
   ) {
     final progress = transcription.progressPercentage;
     final statusText = transcription.getLocalizedStatusDescription(context);
-    final currentStep = _getCurrentStep(transcription);
+    final currentStep = transcriptionCurrentStepNumber(progress);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -379,7 +376,7 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _getStatusIcon(currentStep),
+                          TranscriptionStatusStepIcon(step: currentStep),
                           SizedBox(width: isSmallScreen ? 6 : 8),
                           Flexible(
                             child: Text(
@@ -399,7 +396,41 @@ class TranscriptionStatusWidget extends ConsumerWidget {
                     SizedBox(height: isSmallScreen ? 16 : 20),
 
                     // Step indicators
-                    _buildStepIndicators(context, transcription),
+                    TranscriptionStepIndicators(
+                      progressPercentage: progress,
+                      steps: [
+                        TranscriptionStepDescriptor(
+                          icon: Icons.download,
+                          label: AppLocalizations.of(
+                            context,
+                          )!.transcription_step_download,
+                        ),
+                        TranscriptionStepDescriptor(
+                          icon: Icons.transform,
+                          label: AppLocalizations.of(
+                            context,
+                          )!.transcription_step_convert,
+                        ),
+                        TranscriptionStepDescriptor(
+                          icon: Icons.content_cut,
+                          label: AppLocalizations.of(
+                            context,
+                          )!.transcription_step_split,
+                        ),
+                        TranscriptionStepDescriptor(
+                          icon: Icons.transcribe,
+                          label: AppLocalizations.of(
+                            context,
+                          )!.transcription_step_transcribe,
+                        ),
+                        TranscriptionStepDescriptor(
+                          icon: Icons.merge_type,
+                          label: AppLocalizations.of(
+                            context,
+                          )!.transcription_step_merge,
+                        ),
+                      ],
+                    ),
 
                     SizedBox(height: isSmallScreen ? 12 : 16),
 
@@ -527,230 +558,6 @@ class TranscriptionStatusWidget extends ConsumerWidget {
         );
       },
     );
-  }
-
-  Widget _buildStepIndicators(
-    BuildContext context,
-    PodcastTranscriptionResponse transcription,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final steps = [
-      {
-        'icon': Icons.download,
-        'label': l10n.transcription_step_download,
-        'status': _getStepStatus(transcription, 0),
-      },
-      {
-        'icon': Icons.transform,
-        'label': l10n.transcription_step_convert,
-        'status': _getStepStatus(transcription, 1),
-      },
-      {
-        'icon': Icons.content_cut,
-        'label': l10n.transcription_step_split,
-        'status': _getStepStatus(transcription, 2),
-      },
-      {
-        'icon': Icons.transcribe,
-        'label': l10n.transcription_step_transcribe,
-        'status': _getStepStatus(transcription, 3),
-      },
-      {
-        'icon': Icons.merge_type,
-        'label': l10n.transcription_step_merge,
-        'status': _getStepStatus(transcription, 4),
-      },
-    ];
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: steps.asMap().entries.map((entry) {
-        final index = entry.key;
-        final step = entry.value;
-        final isLast = index == steps.length - 1;
-
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildStepIndicator(
-              context,
-              step['icon'] as IconData,
-              step['label'] as String,
-              step['status'] as String,
-            ),
-            if (!isLast) ...[
-              SizedBox(
-                width: 20,
-                child: Center(
-                  child: Container(
-                    height: 2,
-                    width: 16,
-                    color: _getStepConnectorColor(
-                      context,
-                      index,
-                      steps.length,
-                      transcription.progressPercentage,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ],
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildStepIndicator(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String status,
-  ) {
-    Color iconColor;
-    Color bgColor;
-
-    switch (status) {
-      case 'completed':
-        iconColor = Colors.green;
-        bgColor = Colors.green.withValues(alpha: 0.1);
-        break;
-      case 'current':
-        iconColor = Theme.of(context).colorScheme.primary;
-        bgColor = Theme.of(
-          context,
-        ).colorScheme.primaryContainer.withValues(alpha: 0.5);
-        break;
-      case 'pending':
-      default:
-        iconColor = Theme.of(
-          context,
-        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4);
-        bgColor = Theme.of(context).colorScheme.surface;
-        break;
-    }
-
-    return Column(
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: bgColor,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: iconColor.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
-          child: Icon(
-            status == 'completed' ? Icons.check : icon,
-            size: 18,
-            color: iconColor,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: iconColor,
-            fontWeight: status == 'current' ? FontWeight.w600 : FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _getStepStatus(
-    PodcastTranscriptionResponse transcription,
-    int stepIndex,
-  ) {
-    final progress = transcription.progressPercentage;
-
-    // Step thresholds based on backend progress percentages
-    // Download: 5-20% (Index 0)
-    // Convert: 20-35% (Index 1)
-    // Split: 35-45% (Index 2)
-    // Transcribe: 45-95% (Index 3)
-    // Merge: 95-100% (Index 4)
-
-    // Determine the current active step index based on progress
-    int currentActiveIndex = 0;
-    if (progress >= 95) {
-      currentActiveIndex = 4;
-    } else if (progress >= 45) {
-      currentActiveIndex = 3;
-    } else if (progress >= 35) {
-      currentActiveIndex = 2;
-    } else if (progress >= 20) {
-      currentActiveIndex = 1;
-    } else {
-      currentActiveIndex = 0;
-    }
-
-    if (stepIndex < currentActiveIndex) {
-      return 'completed';
-    } else if (stepIndex == currentActiveIndex) {
-      return 'current';
-    } else {
-      return 'pending';
-    }
-  }
-
-  Color _getStepConnectorColor(
-    BuildContext context,
-    int stepIndex,
-    int totalSteps,
-    double progress,
-  ) {
-    // Determine current active step index
-    int currentActiveIndex = 0;
-    if (progress >= 95) {
-      currentActiveIndex = 4;
-    } else if (progress >= 45) {
-      currentActiveIndex = 3;
-    } else if (progress >= 35) {
-      currentActiveIndex = 2;
-    } else if (progress >= 20) {
-      currentActiveIndex = 1;
-    } else {
-      currentActiveIndex = 0;
-    }
-
-    // Connector is colored if the step it originates from is completed or current
-    // stepIndex is the index of the step BEFORE the connector
-    if (stepIndex < currentActiveIndex) {
-      return Theme.of(context).colorScheme.primary.withValues(alpha: 0.5);
-    }
-    return Colors.grey.withValues(alpha: 0.2);
-  }
-
-  int _getCurrentStep(PodcastTranscriptionResponse transcription) {
-    final progress = transcription.progressPercentage;
-    if (progress >= 95) return 5;
-    if (progress >= 45) return 4;
-    if (progress >= 35) return 3;
-    if (progress >= 20) return 2;
-    if (progress >= 5) return 1;
-    return 0;
-  }
-
-  Widget _getStatusIcon(int step) {
-    switch (step) {
-      case 1:
-        return Icon(Icons.download, size: 16, color: Colors.blue);
-      case 2:
-        return Icon(Icons.transform, size: 16, color: Colors.orange);
-      case 3:
-        return Icon(Icons.content_cut, size: 16, color: Colors.purple);
-      case 4:
-        return Icon(Icons.transcribe, size: 16, color: Colors.teal);
-      case 5:
-        return Icon(Icons.merge_type, size: 16, color: Colors.green);
-      default:
-        return Icon(Icons.pending, size: 16, color: Colors.grey);
-    }
   }
 
   Widget _buildCompletedState(

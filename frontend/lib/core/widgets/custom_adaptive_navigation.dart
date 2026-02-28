@@ -121,62 +121,16 @@ class CustomAdaptiveNavigation extends StatelessWidget {
                   // 应用标题或图标
                   Container(
                     padding: const EdgeInsets.all(8),
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.secondary.withValues(alpha: 0.3),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          'assets/icons/Logo3.png',
-                          width: 32,
-                          height: 32,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
+                    child: _buildBrandLogoBadge(context),
                   ),
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 8),
-                  // 导航项目（除了最后一个Profile）
-                  ...destinations
-                      .take(destinations.length - 1)
-                      .toList()
-                      .asMap()
-                      .entries
-                      .map((entry) {
-                        final index = entry.key;
-                        final destination = entry.value;
-                        return _buildCompactNavItem(
-                          context,
-                          destination,
-                          index == selectedIndex,
-                          () => onDestinationSelected?.call(index),
-                        );
-                      }),
+                  ..._buildNavigationItems(context, compact: true),
                   const Spacer(),
                   // Profile按钮单独在底部
                   if (destinations.isNotEmpty)
-                    _buildCompactNavItem(
-                      context,
-                      destinations.last,
-                      destinations.length - 1 == selectedIndex,
-                      () =>
-                          onDestinationSelected?.call(destinations.length - 1),
-                    ),
+                    _buildProfileNavigationItem(context, compact: true),
                   const SizedBox(height: 8),
                 ],
               ),
@@ -288,32 +242,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.secondary.withValues(alpha: 0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    'assets/icons/Logo3.png',
-                    width: 32,
-                    height: 32,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
+              _buildBrandLogoBadge(context),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -341,29 +270,10 @@ class CustomAdaptiveNavigation extends StatelessWidget {
         ),
         const Divider(),
         const SizedBox(height: 8),
-        ...destinations
-            .take(destinations.length - 1)
-            .toList()
-            .asMap()
-            .entries
-            .map((entry) {
-              final index = entry.key;
-              final destination = entry.value;
-              return _buildExpandedNavItem(
-                context,
-                destination,
-                index == selectedIndex,
-                () => onDestinationSelected?.call(index),
-              );
-            }),
+        ..._buildNavigationItems(context, compact: false),
         const Spacer(),
         if (destinations.isNotEmpty)
-          _buildExpandedNavItem(
-            context,
-            destinations.last,
-            destinations.length - 1 == selectedIndex,
-            () => onDestinationSelected?.call(destinations.length - 1),
-          ),
+          _buildProfileNavigationItem(context, compact: false),
         const SizedBox(height: 8),
       ],
     );
@@ -378,32 +288,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.secondary.withValues(alpha: 0.3),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    'assets/icons/Logo3.png',
-                    width: 32,
-                    height: 32,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
+              _buildBrandLogoBadge(context),
               IconButton(
                 onPressed: onDesktopNavToggle,
                 tooltip: AppLocalizations.of(context)!.sidebarExpandMenu,
@@ -420,32 +305,95 @@ class CustomAdaptiveNavigation extends StatelessWidget {
         ),
         const Divider(),
         const SizedBox(height: 8),
-        ...destinations
-            .take(destinations.length - 1)
-            .toList()
-            .asMap()
-            .entries
-            .map((entry) {
-              final index = entry.key;
-              final destination = entry.value;
-              return _buildCompactNavItem(
-                context,
-                destination,
-                index == selectedIndex,
-                () => onDestinationSelected?.call(index),
-              );
-            }),
+        ..._buildNavigationItems(context, compact: true),
         const Spacer(),
         if (destinations.isNotEmpty)
-          _buildCompactNavItem(
-            context,
-            destinations.last,
-            destinations.length - 1 == selectedIndex,
-            () => onDestinationSelected?.call(destinations.length - 1),
-          ),
+          _buildProfileNavigationItem(context, compact: true),
         const SizedBox(height: 8),
       ],
     );
+  }
+
+  Widget _buildBrandLogoBadge(BuildContext context) {
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(
+              context,
+            ).colorScheme.secondary.withValues(alpha: 0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.asset(
+          'assets/icons/Logo3.png',
+          width: 32,
+          height: 32,
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildNavigationItems(
+    BuildContext context, {
+    required bool compact,
+  }) {
+    if (destinations.length <= 1) {
+      return const <Widget>[];
+    }
+
+    final items = <Widget>[];
+    for (var index = 0; index < destinations.length - 1; index++) {
+      final destination = destinations[index];
+      final isSelected = index == selectedIndex;
+      items.add(
+        compact
+            ? _buildCompactNavItem(
+                context,
+                destination,
+                isSelected,
+                () => onDestinationSelected?.call(index),
+              )
+            : _buildExpandedNavItem(
+                context,
+                destination,
+                isSelected,
+                () => onDestinationSelected?.call(index),
+              ),
+      );
+    }
+    return items;
+  }
+
+  Widget _buildProfileNavigationItem(
+    BuildContext context, {
+    required bool compact,
+  }) {
+    final profileIndex = destinations.length - 1;
+    final destination = destinations[profileIndex];
+    final isSelected = profileIndex == selectedIndex;
+    return compact
+        ? _buildCompactNavItem(
+            context,
+            destination,
+            isSelected,
+            () => onDestinationSelected?.call(profileIndex),
+          )
+        : _buildExpandedNavItem(
+            context,
+            destination,
+            isSelected,
+            () => onDestinationSelected?.call(profileIndex),
+          );
   }
 
   /// 构建紧凑的导航项（平板端）

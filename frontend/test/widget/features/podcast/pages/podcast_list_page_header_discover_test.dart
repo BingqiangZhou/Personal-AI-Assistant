@@ -35,8 +35,8 @@ void main() {
           applePodcastRssServiceProvider.overrideWithValue(
             _FakeApplePodcastRssService(),
           ),
-          search.podcastSearchProvider.overrideWithValue(
-            const search.PodcastSearchState(),
+          search.podcastSearchProvider.overrideWith(
+            () => _TestPodcastSearchNotifier(const search.PodcastSearchState()),
           ),
         ],
       );
@@ -132,57 +132,153 @@ void main() {
       );
     });
 
-    testWidgets(
-      'uses dense layout when subscription total is at least 20',
-      (tester) async {
-        final container = ProviderContainer(
-          overrides: [
-            localStorageServiceProvider.overrideWithValue(
-              _MockLocalStorageService(),
-            ),
-            podcastSubscriptionProvider.overrideWith(
-              () => _TestPodcastSubscriptionNotifier(
-                PodcastSubscriptionState(
-                  subscriptions: [_subscription()],
-                  hasMore: true,
-                  total: 25,
-                ),
+    testWidgets('search clear button follows controller text changes', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            _MockLocalStorageService(),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            () => _TestPodcastSubscriptionNotifier(
+              PodcastSubscriptionState(
+                subscriptions: [_subscription()],
+                hasMore: false,
+                total: 1,
               ),
             ),
-            applePodcastRssServiceProvider.overrideWithValue(
-              _FakeApplePodcastRssService(),
-            ),
-            search.podcastSearchProvider.overrideWithValue(
-              const search.PodcastSearchState(),
-            ),
-          ],
-        );
-        addTearDown(container.dispose);
+          ),
+          applePodcastRssServiceProvider.overrideWithValue(
+            _FakeApplePodcastRssService(),
+          ),
+          search.podcastSearchProvider.overrideWith(
+            () => _TestPodcastSearchNotifier(const search.PodcastSearchState()),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
 
-        await tester.pumpWidget(
-          UncontrolledProviderScope(
-            container: container,
-            child: MaterialApp(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: const PodcastListPage(),
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastListPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final searchInput = find.byKey(
+        const Key('podcast_discover_search_input'),
+      );
+      final clearButton = find.descendant(
+        of: find.byKey(const Key('podcast_discover_search_bar')),
+        matching: find.byIcon(Icons.clear),
+      );
+
+      expect(clearButton, findsNothing);
+
+      await tester.enterText(searchInput, 'flutter');
+      await tester.pump();
+
+      expect(clearButton, findsOneWidget);
+
+      await tester.tap(clearButton);
+      await tester.pump();
+
+      final textField = tester.widget<TextField>(searchInput);
+      expect(textField.controller?.text, isEmpty);
+      expect(clearButton, findsNothing);
+    });
+
+    testWidgets('uses dense layout when subscription total is at least 20', (
+      tester,
+    ) async {
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            _MockLocalStorageService(),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            () => _TestPodcastSubscriptionNotifier(
+              PodcastSubscriptionState(
+                subscriptions: [_subscription()],
+                hasMore: true,
+                total: 25,
+              ),
             ),
           ),
-        );
-        await tester.pumpAndSettle();
+          applePodcastRssServiceProvider.overrideWithValue(
+            _FakeApplePodcastRssService(),
+          ),
+          search.podcastSearchProvider.overrideWithValue(
+            const search.PodcastSearchState(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
 
-        final rowFinder = find.byKey(const Key('podcast_discover_chart_row_1000'));
-        expect(rowFinder, findsOneWidget);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastListPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-        final imageWidget = tester.widget<PodcastImageWidget>(
-          find
-              .descendant(of: rowFinder, matching: find.byType(PodcastImageWidget))
-              .first,
-        );
-        expect(imageWidget.width, 56.0);
-      },
-    );
+      final rowFinder = find.byKey(
+        const Key('podcast_discover_chart_row_1000'),
+      );
+      expect(rowFinder, findsOneWidget);
+
+      final imageWidget = tester.widget<PodcastImageWidget>(
+        find
+            .descendant(
+              of: rowFinder,
+              matching: find.byType(PodcastImageWidget),
+            )
+            .first,
+      );
+      expect(imageWidget.width, 56.0);
+    });
   });
+}
+
+class _TestPodcastSearchNotifier extends search.PodcastSearchNotifier {
+  _TestPodcastSearchNotifier(this._initialState);
+
+  final search.PodcastSearchState _initialState;
+
+  @override
+  search.PodcastSearchState build() => _initialState;
+
+  @override
+  void searchPodcasts(String query) {
+    state = state.copyWith(
+      currentQuery: query,
+      hasSearched: query.trim().isNotEmpty,
+    );
+  }
+
+  @override
+  void searchEpisodes(String query) {
+    state = state.copyWith(
+      currentQuery: query,
+      hasSearched: query.trim().isNotEmpty,
+    );
+  }
+
+  @override
+  void clearSearch() {
+    state = search.PodcastSearchState(searchMode: state.searchMode);
+  }
 }
 
 class _FakeApplePodcastRssService extends ApplePodcastRssService {

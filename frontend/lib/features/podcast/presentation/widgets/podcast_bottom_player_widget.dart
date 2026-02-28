@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
-import '../../data/models/audio_player_state_model.dart';
+import '../../data/models/podcast_episode_model.dart';
 import '../constants/playback_speed_options.dart';
 import '../constants/podcast_ui_constants.dart';
 import '../navigation/podcast_navigation.dart';
@@ -24,19 +24,24 @@ class PodcastBottomPlayerWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(audioPlayerProvider);
-    final episode = state.currentEpisode;
+    final episode = ref.watch(audioCurrentEpisodeProvider);
     if (episode == null) {
       return const SizedBox.shrink();
     }
+    final isExpanded = ref.watch(
+      audioPlayerProvider.select((state) => state.isExpanded),
+    );
 
     Widget content = AnimatedSwitcher(
       duration: _kMiniPlayerTransition,
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
-      child: state.isExpanded
-          ? _ExpandedBottomPlayer(key: const ValueKey('expanded'), state: state)
-          : _MiniBottomPlayer(key: const ValueKey('mini'), state: state),
+      child: isExpanded
+          ? _ExpandedBottomPlayer(
+              key: const ValueKey('expanded'),
+              episode: episode,
+            )
+          : _MiniBottomPlayer(key: const ValueKey('mini'), episode: episode),
     );
 
     if (applySafeArea) {
@@ -53,9 +58,9 @@ class PodcastBottomPlayerWidget extends ConsumerWidget {
 }
 
 class _MiniBottomPlayer extends ConsumerWidget {
-  const _MiniBottomPlayer({super.key, required this.state});
+  const _MiniBottomPlayer({super.key, required this.episode});
 
-  final AudioPlayerState state;
+  final PodcastEpisodeModel episode;
   static const double _miniHeight = kPodcastMiniPlayerHeight;
   static const double _mobileHorizontalInset = 20;
 
@@ -102,9 +107,7 @@ class _MiniBottomPlayer extends ConsumerWidget {
                   onTap: () =>
                       ref.read(audioPlayerProvider.notifier).setExpanded(true),
                   child: _CoverImage(
-                    imageUrl:
-                        state.currentEpisode!.subscriptionImageUrl ??
-                        state.currentEpisode!.imageUrl,
+                    imageUrl: episode.subscriptionImageUrl ?? episode.imageUrl,
                     size: 42,
                   ),
                 ),
@@ -121,7 +124,7 @@ class _MiniBottomPlayer extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          state.currentEpisode!.title,
+                          episode.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleSmall?.copyWith(
@@ -134,26 +137,19 @@ class _MiniBottomPlayer extends ConsumerWidget {
                             Expanded(
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(999),
-                                child: LinearProgressIndicator(
-                                  key: const Key(
-                                    'podcast_bottom_player_mini_progress',
-                                  ),
-                                  value: state.progress,
-                                  minHeight: 3,
-                                  color: progressColor,
-                                  backgroundColor: progressTrackColor,
+                                child: _MiniProgressIndicator(
+                                  progressColor: progressColor,
+                                  progressTrackColor: progressTrackColor,
                                 ),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              key: const Key('podcast_bottom_player_mini_time'),
-                              '${state.formattedPosition} / ${state.formattedDuration}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
+                            _MiniProgressText(
+                              textStyle:
+                                  theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ) ??
+                                  const TextStyle(),
                             ),
                           ],
                         ),
@@ -162,39 +158,11 @@ class _MiniBottomPlayer extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                IconButton(
+                _MiniPlayPauseButton(
                   key: const Key('podcast_bottom_player_mini_play_pause'),
-                  tooltip: state.isPlaying
-                      ? (l10n?.podcast_player_pause ?? 'Pause')
-                      : (l10n?.podcast_player_play ?? 'Play'),
-                  onPressed: () async {
-                    if (state.isLoading) return;
-                    if (state.isPlaying) {
-                      await ref.read(audioPlayerProvider.notifier).pause();
-                    } else {
-                      await ref.read(audioPlayerProvider.notifier).resume();
-                    }
-                  },
-                  style: IconButton.styleFrom(
-                    minimumSize: const Size(40, 40),
-                    maximumSize: const Size(40, 40),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    foregroundColor: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  icon: state.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(
-                          state.isPlaying
-                              ? Icons.pause_circle_outline
-                              : Icons.play_circle_outline,
-                          size: 26,
-                        ),
+                  iconColor: theme.colorScheme.onSurfaceVariant,
+                  pauseTooltip: l10n?.podcast_player_pause ?? 'Pause',
+                  playTooltip: l10n?.podcast_player_play ?? 'Play',
                 ),
                 IconButton(
                   key: const Key('podcast_bottom_player_mini_playlist'),
@@ -212,26 +180,33 @@ class _MiniBottomPlayer extends ConsumerWidget {
 }
 
 class _ExpandedBottomPlayer extends ConsumerWidget {
-  const _ExpandedBottomPlayer({super.key, required this.state});
+  const _ExpandedBottomPlayer({super.key, required this.episode});
 
-  final AudioPlayerState state;
+  final PodcastEpisodeModel episode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final transport = ref.watch(audioTransportStateProvider);
+    final miniProgress = ref.watch(audioMiniProgressProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
     final sliderActiveColor = theme.colorScheme.onSurfaceVariant;
     final sliderInactiveColor = theme.colorScheme.onSurfaceVariant.withValues(
       alpha: 0.25,
     );
-    final maxSlider = state.duration > 0 ? state.duration.toDouble() : 1.0;
-    final sliderValue = state.position.toDouble().clamp(0.0, maxSlider);
+    final maxSlider = miniProgress.durationMs > 0
+        ? miniProgress.durationMs.toDouble()
+        : 1.0;
+    final sliderValue = miniProgress.positionMs.toDouble().clamp(
+      0.0,
+      maxSlider,
+    );
     final nowPlayingText = l10n?.podcast_player_now_playing ?? 'Now Playing';
 
     Future<void> showSpeedSelector() async {
       final selection = await showPlaybackSpeedSelectorSheet(
         context: context,
-        initialSpeed: state.playbackRate,
+        initialSpeed: transport.playbackRate,
       );
       if (!context.mounted || selection == null) return;
       await ref
@@ -245,7 +220,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
     Future<void> showSleepSelector() async {
       final selection = await showSleepTimerSelectorSheet(
         context: context,
-        isTimerActive: state.isSleepTimerActive,
+        isTimerActive: transport.isSleepTimerActive,
       );
       if (!context.mounted || selection == null) return;
 
@@ -283,10 +258,21 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                     ),
                     const Spacer(),
                     IconButton(
-                      key: const Key('podcast_bottom_player_playlist'),
-                      tooltip: l10n?.podcast_player_list ?? 'List',
-                      onPressed: () => _showQueueSheet(context, ref),
-                      icon: const Icon(Icons.playlist_play),
+                      key: const Key('podcast_bottom_player_sleep'),
+                      tooltip: l10n?.podcast_player_sleep_mode ?? 'Sleep Mode',
+                      onPressed: showSleepSelector,
+                      icon: Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.identity()..scale(-1.0, 1.0, 1.0),
+                        child: Icon(
+                          transport.isSleepTimerActive
+                              ? Icons.bedtime_rounded
+                              : Icons.bedtime_outlined,
+                          color: transport.isSleepTimerActive
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                     IconButton(
                       tooltip: l10n?.podcast_player_collapse ?? 'Collapse',
@@ -301,8 +287,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                   children: [
                     _CoverImage(
                       imageUrl:
-                          state.currentEpisode!.subscriptionImageUrl ??
-                          state.currentEpisode!.imageUrl,
+                          episode.subscriptionImageUrl ?? episode.imageUrl,
                       size: 52,
                     ),
                     const SizedBox(width: 12),
@@ -311,7 +296,6 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                         key: const Key('podcast_bottom_player_expanded_title'),
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
-                          final episode = state.currentEpisode!;
                           final currentLocation = GoRouterState.of(
                             context,
                           ).uri.toString();
@@ -331,7 +315,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              state.currentEpisode!.title,
+                              episode.title,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.titleSmall?.copyWith(
@@ -349,9 +333,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  state.currentEpisode!.publishedAt
-                                      .toString()
-                                      .split(' ')[0],
+                                  episode.publishedAt.toString().split(' ')[0],
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant
                                         .withValues(alpha: 0.7),
@@ -367,7 +349,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  state.currentEpisode!.formattedDuration,
+                                  episode.formattedDuration,
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant
                                         .withValues(alpha: 0.7),
@@ -405,11 +387,11 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        state.formattedPosition,
+                        miniProgress.formattedPosition,
                         style: theme.textTheme.bodySmall,
                       ),
                       Text(
-                        state.formattedDuration,
+                        miniProgress.formattedDuration,
                         style: theme.textTheme.bodySmall,
                       ),
                     ],
@@ -444,7 +426,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                                   vertical: 10,
                                 ),
                                 child: Text(
-                                  formatPlaybackSpeed(state.playbackRate),
+                                  formatPlaybackSpeed(transport.playbackRate),
                                   style: theme.textTheme.labelLarge?.copyWith(
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -459,10 +441,8 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                                 l10n?.podcast_player_rewind_10 ?? 'Rewind 10s',
                             iconSize: 32,
                             onPressed: () {
-                              final next = (state.position - 10000).clamp(
-                                0,
-                                state.duration,
-                              );
+                              final next = (miniProgress.positionMs - 10000)
+                                  .clamp(0, miniProgress.durationMs);
                               ref
                                   .read(audioPlayerProvider.notifier)
                                   .seekTo(next);
@@ -481,12 +461,12 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                       child: IconButton(
                         key: const Key('podcast_bottom_player_play_pause'),
                         iconSize: 48,
-                        tooltip: state.isPlaying
+                        tooltip: transport.isPlaying
                             ? (l10n?.podcast_player_pause ?? 'Pause')
                             : (l10n?.podcast_player_play ?? 'Play'),
                         onPressed: () async {
-                          if (state.isLoading) return;
-                          if (state.isPlaying) {
+                          if (transport.isLoading) return;
+                          if (transport.isPlaying) {
                             await ref
                                 .read(audioPlayerProvider.notifier)
                                 .pause();
@@ -496,7 +476,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                                 .resume();
                           }
                         },
-                        icon: state.isLoading
+                        icon: transport.isLoading
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,
@@ -505,7 +485,7 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                                 ),
                               )
                             : Icon(
-                                state.isPlaying
+                                transport.isPlaying
                                     ? Icons.pause
                                     : Icons.play_arrow,
                               ),
@@ -523,10 +503,8 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                                 'Forward 30s',
                             iconSize: 32,
                             onPressed: () {
-                              final next = (state.position + 30000).clamp(
-                                0,
-                                state.duration,
-                              );
+                              final next = (miniProgress.positionMs + 30000)
+                                  .clamp(0, miniProgress.durationMs);
                               ref
                                   .read(audioPlayerProvider.notifier)
                                   .seekTo(next);
@@ -535,19 +513,11 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
                           ),
                           const SizedBox(width: 8),
                           IconButton(
-                            key: const Key('podcast_bottom_player_sleep'),
-                            tooltip:
-                                l10n?.podcast_player_sleep_mode ?? 'Sleep Mode',
+                            key: const Key('podcast_bottom_player_playlist'),
+                            tooltip: l10n?.podcast_player_list ?? 'List',
                             iconSize: 32,
-                            onPressed: showSleepSelector,
-                            icon: Icon(
-                              state.isSleepTimerActive
-                                  ? Icons.bedtime_rounded
-                                  : Icons.bedtime_outlined,
-                              color: state.isSleepTimerActive
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
+                            onPressed: () => _showQueueSheet(context, ref),
+                            icon: const Icon(Icons.playlist_play),
                           ),
                         ],
                       ),
@@ -559,6 +529,96 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MiniProgressIndicator extends ConsumerWidget {
+  const _MiniProgressIndicator({
+    required this.progressColor,
+    required this.progressTrackColor,
+  });
+
+  final Color progressColor;
+  final Color progressTrackColor;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final miniProgress = ref.watch(audioMiniProgressProvider);
+    return LinearProgressIndicator(
+      key: const Key('podcast_bottom_player_mini_progress'),
+      value: miniProgress.progress,
+      minHeight: 3,
+      color: progressColor,
+      backgroundColor: progressTrackColor,
+    );
+  }
+}
+
+class _MiniProgressText extends ConsumerWidget {
+  const _MiniProgressText({required this.textStyle});
+
+  final TextStyle textStyle;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final miniProgress = ref.watch(audioMiniProgressProvider);
+    return Text(
+      key: const Key('podcast_bottom_player_mini_time'),
+      '${miniProgress.formattedPosition} / ${miniProgress.formattedDuration}',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: textStyle,
+    );
+  }
+}
+
+class _MiniPlayPauseButton extends ConsumerWidget {
+  const _MiniPlayPauseButton({
+    required super.key,
+    required this.iconColor,
+    required this.pauseTooltip,
+    required this.playTooltip,
+  });
+
+  final Color iconColor;
+  final String pauseTooltip;
+  final String playTooltip;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final transport = ref.watch(audioTransportStateProvider);
+    return IconButton(
+      key: key,
+      tooltip: transport.isPlaying ? pauseTooltip : playTooltip,
+      onPressed: () async {
+        if (transport.isLoading) return;
+        if (transport.isPlaying) {
+          await ref.read(audioPlayerProvider.notifier).pause();
+        } else {
+          await ref.read(audioPlayerProvider.notifier).resume();
+        }
+      },
+      style: IconButton.styleFrom(
+        minimumSize: const Size(40, 40),
+        maximumSize: const Size(40, 40),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
+        padding: EdgeInsets.zero,
+        foregroundColor: iconColor,
+      ),
+      icon: transport.isLoading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(
+              transport.isPlaying
+                  ? Icons.pause_circle_outline
+                  : Icons.play_circle_outline,
+              size: 26,
+            ),
     );
   }
 }

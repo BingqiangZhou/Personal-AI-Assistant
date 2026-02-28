@@ -691,22 +691,26 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   ),
                 ),
                 onChanged: (value) {
-                  setState(() {});
                   _onSearchChanged(value);
                 },
               ),
             ),
-            if (_searchController.text.isNotEmpty)
-              IconButton(
-                onPressed: _clearSearch,
-                icon: Icon(
-                  Icons.clear,
-                  size: isDense ? 16 : 18,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              )
-            else
-              SizedBox(width: isDense ? 6 : 8),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _searchController,
+              builder: (context, value, _) {
+                if (value.text.isNotEmpty) {
+                  return IconButton(
+                    onPressed: _clearSearch,
+                    icon: Icon(
+                      Icons.clear,
+                      size: isDense ? 16 : 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  );
+                }
+                return SizedBox(width: isDense ? 6 : 8);
+              },
+            ),
           ],
         ),
       ),

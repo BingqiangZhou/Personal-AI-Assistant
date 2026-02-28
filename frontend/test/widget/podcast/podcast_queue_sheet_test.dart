@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
+import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_queue_sheet.dart';
@@ -103,7 +104,11 @@ void main() {
       (tester) async {
         final controller = TestPodcastQueueController(_queue());
         final audioNotifier = TestAudioPlayerNotifier(
-          const AudioPlayerState(position: 65000),
+          AudioPlayerState(
+            currentEpisode: _episode(id: 1),
+            position: 65000,
+            duration: 3600000,
+          ),
         );
 
         await tester.pumpWidget(
@@ -112,6 +117,37 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Podcast A · 01:05 / 1:00:00'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'progress updates only change current item subtitle while others stay stable',
+      (tester) async {
+        final controller = TestPodcastQueueController(_queue());
+        final audioNotifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _episode(id: 1),
+            position: 10000,
+            duration: 3600000,
+          ),
+        );
+
+        await tester.pumpWidget(
+          _createWidget(controller, audioNotifier: audioNotifier),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Podcast A · 00:10 / 1:00:00'), findsOneWidget);
+        expect(find.text('Podcast B · 02:05 / 40:00'), findsOneWidget);
+        expect(find.text('Podcast C · 01:30 / --:--'), findsOneWidget);
+
+        audioNotifier.setPlaybackPosition(20000);
+        await tester.pump();
+
+        expect(find.text('Podcast A · 00:20 / 1:00:00'), findsOneWidget);
+        expect(find.text('Podcast A · 00:10 / 1:00:00'), findsNothing);
+        expect(find.text('Podcast B · 02:05 / 40:00'), findsOneWidget);
+        expect(find.text('Podcast C · 01:30 / --:--'), findsOneWidget);
       },
     );
 
@@ -222,6 +258,10 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
   AudioPlayerState build() {
     return _initialState;
   }
+
+  void setPlaybackPosition(int positionMs) {
+    state = state.copyWith(position: positionMs);
+  }
 }
 
 class TestPodcastQueueController extends PodcastQueueController {
@@ -265,4 +305,16 @@ class TestPodcastQueueController extends PodcastQueueController {
   Future<PodcastQueueModel> activateEpisode(int episodeId) async {
     return state.value ?? initialQueue;
   }
+}
+
+PodcastEpisodeModel _episode({required int id}) {
+  return PodcastEpisodeModel(
+    id: id,
+    subscriptionId: 10,
+    title: 'Episode $id',
+    audioUrl: 'https://example.com/$id.mp3',
+    audioDuration: 3600,
+    publishedAt: DateTime(2026, 2, 14),
+    createdAt: DateTime(2026, 2, 14),
+  );
 }

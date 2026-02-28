@@ -165,7 +165,7 @@ void main() {
       expect(find.text('Episode Detail Page'), findsOneWidget);
     });
 
-    testWidgets('expanded header removes close and keeps top playlist', (
+    testWidgets('expanded header removes close and keeps top sleep button', (
       tester,
     ) async {
       final notifier = TestAudioPlayerNotifier(
@@ -184,12 +184,12 @@ void main() {
 
       expect(find.byIcon(Icons.close), findsNothing);
       expect(
-        find.byKey(const Key('podcast_bottom_player_playlist')),
+        find.byKey(const Key('podcast_bottom_player_sleep')),
         findsOneWidget,
       );
     });
 
-    testWidgets('expanded top playlist button opens queue sheet', (
+    testWidgets('expanded lower playlist button opens queue sheet', (
       tester,
     ) async {
       final notifier = TestAudioPlayerNotifier(
@@ -212,6 +212,33 @@ void main() {
       expect(find.byType(PodcastQueueSheet), findsOneWidget);
       expect(queueController.refreshQueueInBackgroundCalls, 1);
       await _closeQueueSheet(tester);
+    });
+
+    testWidgets('expanded layout places sleep button above playlist button', (
+      tester,
+    ) async {
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          duration: 180000,
+          isExpanded: true,
+        ),
+      );
+      final queueController = TestPodcastQueueController();
+
+      await tester.pumpWidget(
+        _createWidget(notifier: notifier, queueController: queueController),
+      );
+      await tester.pumpAndSettle();
+
+      final sleepCenter = tester.getCenter(
+        find.byKey(const Key('podcast_bottom_player_sleep')),
+      );
+      final playlistCenter = tester.getCenter(
+        find.byKey(const Key('podcast_bottom_player_playlist')),
+      );
+
+      expect(sleepCenter.dy, lessThan(playlistCenter.dy));
     });
 
     testWidgets(

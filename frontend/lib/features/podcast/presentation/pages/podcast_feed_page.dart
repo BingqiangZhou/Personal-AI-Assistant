@@ -10,7 +10,7 @@ import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_state_models.dart';
 import '../navigation/podcast_navigation.dart';
 import '../providers/podcast_providers.dart';
-import '../widgets/podcast_image_widget.dart';
+import '../widgets/podcast_feed_episode_card.dart';
 
 class PodcastFeedPage extends ConsumerStatefulWidget {
   const PodcastFeedPage({super.key});
@@ -399,21 +399,8 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
 
   /// Build mobile feed card.
   Widget _buildMobileCard(BuildContext context, PodcastEpisodeModel episode) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final subscriptionBadgeBackgroundColor = theme.colorScheme.onSurfaceVariant;
-    final subscriptionBadgeTextColor = theme.colorScheme.surface;
-    final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
-    // Feed cards display sanitized plain-text descriptions.
     final displayDescription = _getFeedCardDescription(episode.description);
-    final titleStyle = theme.textTheme.titleMedium?.copyWith(
-      fontWeight: FontWeight.w600,
-      fontSize: 13,
-    );
-    final titleFontSize = titleStyle?.fontSize ?? 13;
-    final titleLineHeightFactor = titleStyle?.height ?? 1.0;
-    final coverSize = 2 * (titleFontSize * titleLineHeightFactor);
-    final coverIconSize = (coverSize * 0.58).clamp(14.0, 28.0).toDouble();
+    final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
 
     void playAndOpenDetail() {
       ref.read(audioPlayerProvider.notifier).playEpisode(episode);
@@ -425,238 +412,30 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       );
     }
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        onTap: () {
-          PodcastNavigation.goToEpisodeDetail(
-            context,
-            episodeId: episode.id,
-            subscriptionId: episode.subscriptionId,
-            episodeTitle: episode.title,
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                key: const Key('podcast_feed_mobile_header_row'),
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: playAndOpenDetail,
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        key: const Key('podcast_feed_mobile_cover'),
-                        width: coverSize,
-                        height: coverSize,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: PodcastImageWidget(
-                            imageUrl:
-                                episode.imageUrl ??
-                                episode.subscriptionImageUrl,
-                            width: coverSize,
-                            height: coverSize,
-                            iconSize: coverIconSize,
-                            iconColor: theme.colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: SizedBox(
-                      height: coverSize,
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          episode.title,
-                          style: titleStyle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (displayDescription.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  key: const Key('podcast_feed_mobile_description'),
-                  displayDescription,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-              ] else ...[
-                const SizedBox(height: 4),
-              ],
-              Row(
-                key: const Key('podcast_feed_mobile_meta_action_row'),
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          key: const Key('podcast_feed_mobile_metadata'),
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 112),
-                              child: Container(
-                                key: const Key(
-                                  'podcast_feed_mobile_subscription_badge',
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: subscriptionBadgeBackgroundColor,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  episode.subscriptionTitle ??
-                                      l10n.podcast_default_podcast,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: subscriptionBadgeTextColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.calendar_today_outlined,
-                                  size: 13,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  _formatDate(episode.publishedAt),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 8),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.schedule,
-                                  size: 13,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 3),
-                                Text(
-                                  episode.formattedDuration,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  IconButton(
-                    key: const Key('podcast_feed_mobile_add_to_queue'),
-                    tooltip: isAddingToQueue
-                        ? l10n.podcast_adding
-                        : l10n.podcast_add_to_queue,
-                    onPressed: isAddingToQueue
-                        ? null
-                        : () => _addToQueue(episode),
-                    style: IconButton.styleFrom(
-                      minimumSize: const Size(28, 28),
-                      maximumSize: const Size(28, 28),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      foregroundColor: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    icon: isAddingToQueue
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.playlist_add, size: 18),
-                  ),
-                  const SizedBox(width: 10),
-                  IconButton(
-                    key: const Key('podcast_feed_mobile_play'),
-                    tooltip: l10n.podcast_play,
-                    onPressed: playAndOpenDetail,
-                    style: IconButton.styleFrom(
-                      minimumSize: const Size(28, 28),
-                      maximumSize: const Size(28, 28),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      foregroundColor: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    icon: const Icon(Icons.play_circle_outline, size: 22),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+    return PodcastFeedEpisodeCard(
+      episode: episode,
+      compact: true,
+      isAddingToQueue: isAddingToQueue,
+      displayDescription: displayDescription,
+      onOpenDetail: () {
+        PodcastNavigation.goToEpisodeDetail(
+          context,
+          episodeId: episode.id,
+          subscriptionId: episode.subscriptionId,
+          episodeTitle: episode.title,
+        );
+      },
+      onPlayAndOpenDetail: playAndOpenDetail,
+      onAddToQueue: () {
+        _addToQueue(episode);
+      },
     );
   }
 
   /// Build desktop feed card.
   Widget _buildDesktopCard(BuildContext context, PodcastEpisodeModel episode) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final subscriptionBadgeBackgroundColor = theme.colorScheme.onSurfaceVariant;
-    final subscriptionBadgeTextColor = theme.colorScheme.surface;
-    final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
     final displayDescription = _getFeedCardDescription(episode.description);
-    final titleStyle = theme.textTheme.titleMedium?.copyWith(
-      fontWeight: FontWeight.w600,
-      fontSize: 13,
-    );
-    final titleFontSize = titleStyle?.fontSize ?? 13;
-    final titleLineHeightFactor = titleStyle?.height ?? 1.0;
-    final coverSize = 2 * (titleFontSize * titleLineHeightFactor);
-    final coverIconSize = (coverSize * 0.58).clamp(14.0, 28.0).toDouble();
+    final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
 
     void playAndOpenDetail() {
       ref.read(audioPlayerProvider.notifier).playEpisode(episode);
@@ -668,222 +447,25 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       );
     }
 
-    return Card(
-      child: InkWell(
-        onTap: () {
-          PodcastNavigation.goToEpisodeDetail(
-            context,
-            episodeId: episode.id,
-            subscriptionId: episode.subscriptionId,
-            episodeTitle: episode.title,
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                key: const Key('podcast_feed_desktop_header_row'),
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: coverSize,
-                    height: coverSize,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: PodcastImageWidget(
-                        imageUrl:
-                            episode.imageUrl ?? episode.subscriptionImageUrl,
-                        width: coverSize,
-                        height: coverSize,
-                        iconSize: coverIconSize,
-                        iconColor: theme.colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: SizedBox(
-                      height: coverSize,
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          episode.title,
-                          style: titleStyle,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (displayDescription.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  key: const Key('podcast_feed_desktop_description'),
-                  displayDescription,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 4,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-              ] else ...[
-                const SizedBox(height: 4),
-              ],
-              Row(
-                key: const Key('podcast_feed_desktop_meta_action_row'),
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          key: const Key('podcast_feed_desktop_metadata'),
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            ConstrainedBox(
-                              constraints: const BoxConstraints(maxWidth: 140),
-                              child: Container(
-                                key: const Key(
-                                  'podcast_feed_desktop_subscription_badge',
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: subscriptionBadgeBackgroundColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  episode.subscriptionTitle ??
-                                      l10n.podcast_default_podcast,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: subscriptionBadgeTextColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.calendar_today_outlined,
-                                  size: 13,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  _formatDate(episode.publishedAt),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 8),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.schedule,
-                                  size: 13,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  episode.formattedDuration,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  IconButton(
-                    key: const Key('podcast_feed_desktop_add_to_queue'),
-                    tooltip: isAddingToQueue
-                        ? l10n.podcast_adding
-                        : l10n.podcast_add_to_queue,
-                    onPressed: isAddingToQueue
-                        ? null
-                        : () => _addToQueue(episode),
-                    style: IconButton.styleFrom(
-                      minimumSize: const Size(28, 28),
-                      maximumSize: const Size(28, 28),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      foregroundColor: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    icon: isAddingToQueue
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.playlist_add, size: 18),
-                  ),
-                  const SizedBox(width: 10),
-                  IconButton(
-                    key: const Key('podcast_feed_desktop_play'),
-                    tooltip: l10n.podcast_play,
-                    onPressed: playAndOpenDetail,
-                    style: IconButton.styleFrom(
-                      minimumSize: const Size(28, 28),
-                      maximumSize: const Size(28, 28),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      padding: EdgeInsets.zero,
-                      foregroundColor: theme.colorScheme.onSurfaceVariant,
-                      shape: const CircleBorder(),
-                      side: BorderSide(
-                        color: theme.colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.65,
-                        ),
-                        width: 1,
-                      ),
-                    ),
-                    icon: const Icon(Icons.play_arrow, size: 18),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
+    return PodcastFeedEpisodeCard(
+      episode: episode,
+      compact: false,
+      isAddingToQueue: isAddingToQueue,
+      displayDescription: displayDescription,
+      onOpenDetail: () {
+        PodcastNavigation.goToEpisodeDetail(
+          context,
+          episodeId: episode.id,
+          subscriptionId: episode.subscriptionId,
+          episodeTitle: episode.title,
+        );
+      },
+      onPlayAndOpenDetail: playAndOpenDetail,
+      onAddToQueue: () {
+        _addToQueue(episode);
+      },
     );
   }
-}
-
-String _formatDate(DateTime date) {
-  final localDate = date.isUtc ? date.toLocal() : date;
-  return '${localDate.year}-${localDate.month.toString().padLeft(2, '0')}-${localDate.day.toString().padLeft(2, '0')}';
 }
 
 String _getFeedCardDescription(String? description) {

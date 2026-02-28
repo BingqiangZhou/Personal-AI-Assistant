@@ -169,18 +169,15 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
                     if (episode.audioDuration != null)
                       Consumer(
                         builder: (context, ref, _) {
-                          final audioPlayerState = ref.watch(
-                            audioPlayerProvider,
+                          final activeDuration = ref.watch(
+                            audioDurationForEpisodeProvider(episode.id as int),
                           );
                           // Use audio player duration if available (more accurate), otherwise fall back to episode duration
                           // CRITICAL: episode.audioDuration is in SECONDS, convert to MILLISECONDS
                           final displayDuration =
-                              (audioPlayerState.currentEpisode?.id ==
-                                      episode.id &&
-                                  audioPlayerState.duration > 0)
-                              ? audioPlayerState.duration
-                              : (episode.audioDuration! *
-                                    1000); // Convert seconds to milliseconds
+                              activeDuration ??
+                              (episode.audioDuration! *
+                                  1000); // Convert seconds to milliseconds
                           final duration = Duration(
                             milliseconds: displayDuration,
                           );
@@ -616,12 +613,11 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
   Widget _buildDurationChip(dynamic episode) {
     return Consumer(
       builder: (context, ref, _) {
-        final audioPlayerState = ref.watch(audioPlayerProvider);
+        final activeDuration = ref.watch(
+          audioDurationForEpisodeProvider(episode.id as int),
+        );
         final displayDuration =
-            (audioPlayerState.currentEpisode?.id == episode.id &&
-                audioPlayerState.duration > 0)
-            ? audioPlayerState.duration
-            : (episode.audioDuration! * 1000);
+            activeDuration ?? (episode.audioDuration! * 1000);
         final duration = Duration(milliseconds: displayDuration);
         final hours = duration.inHours;
         final minutes = duration.inMinutes.remainder(60);

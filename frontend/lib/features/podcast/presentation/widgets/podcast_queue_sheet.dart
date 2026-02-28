@@ -161,9 +161,7 @@ class _QueueScaffold extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -184,10 +182,7 @@ class _QueueScaffold extends StatelessWidget {
         ),
         const Divider(height: 1),
         Expanded(
-          child: RefreshIndicator(
-            onRefresh: onRefresh,
-            child: child,
-          ),
+          child: RefreshIndicator(onRefresh: onRefresh, child: child),
         ),
       ],
     );
@@ -202,7 +197,6 @@ class _QueueList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifier = ref.read(podcastQueueControllerProvider.notifier);
-    final audioPlayerState = ref.watch(audioPlayerProvider);
     final currentEpisodeId = queue.currentEpisodeId;
 
     return ReorderableListView.builder(
@@ -265,8 +259,9 @@ class _QueueList extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: isCurrent
                     ? theme.colorScheme.primaryContainer.withValues(alpha: 0.28)
-                    : theme.colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.35),
+                    : theme.colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.35,
+                      ),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Padding(
@@ -303,17 +298,16 @@ class _QueueList extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            _formatSubtitle(
-                              item,
-                              isCurrent: isCurrent,
-                              currentPositionMs: audioPlayerState.position,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
+                          _QueueSubtitle(
+                            item: item,
+                            isCurrent: isCurrent,
+                            style:
+                                theme.textTheme.bodyMedium?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ) ??
+                                TextStyle(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
                           ),
                         ],
                       ),
@@ -336,8 +330,9 @@ class _QueueList extends ConsumerWidget {
                             showTopFloatingNotice(
                               context,
                               message:
-                                  l10n
-                                      ?.failed_to_remove_item(error.toString()) ??
+                                  l10n?.failed_to_remove_item(
+                                    error.toString(),
+                                  ) ??
                                   'Failed to remove item: $error',
                               isError: true,
                             );
@@ -355,52 +350,86 @@ class _QueueList extends ConsumerWidget {
       },
     );
   }
+}
 
-  String _formatSubtitle(
-    PodcastQueueItemModel item, {
-    required bool isCurrent,
-    required int currentPositionMs,
-  }) {
-    final title = item.subscriptionTitle;
-    final durationSec = item.duration;
-    var playedSec = isCurrent
-        ? (currentPositionMs / 1000).round()
-        : (item.playbackPosition ?? 0);
-    if (playedSec < 0) {
-      playedSec = 0;
-    }
+class _QueueSubtitle extends ConsumerWidget {
+  const _QueueSubtitle({
+    required this.item,
+    required this.isCurrent,
+    required this.style,
+  });
 
-    final progressText = _formatProgress(
-      playedSec: playedSec,
-      durationSec: durationSec,
+  final PodcastQueueItemModel item;
+  final bool isCurrent;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentPositionMs = ref.watch(
+      audioQueuePositionProvider(item.episodeId),
     );
-    if (title == null || title.isEmpty) {
-      return progressText;
-    }
-    return '$title · $progressText';
+    final subtitle = _queueFormatSubtitle(
+      item,
+      isCurrent: isCurrent,
+      currentPositionMs:
+          currentPositionMs ?? ((item.playbackPosition ?? 0) * 1000),
+    );
+    return Text(
+      subtitle,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
+  }
+}
+
+String _queueFormatSubtitle(
+  PodcastQueueItemModel item, {
+  required bool isCurrent,
+  required int currentPositionMs,
+}) {
+  final title = item.subscriptionTitle;
+  final durationSec = item.duration;
+  var playedSec = isCurrent
+      ? (currentPositionMs / 1000).round()
+      : (item.playbackPosition ?? 0);
+  if (playedSec < 0) {
+    playedSec = 0;
   }
 
-  String _formatProgress({required int playedSec, required int? durationSec}) {
-    if (durationSec == null || durationSec <= 0) {
-      return '${_formatClock(playedSec)} / --:--';
-    }
+  final progressText = _queueFormatProgress(
+    playedSec: playedSec,
+    durationSec: durationSec,
+  );
+  if (title == null || title.isEmpty) {
+    return progressText;
+  }
+  return '$title · $progressText';
+}
 
-    final clampedPlayed = playedSec > durationSec ? durationSec : playedSec;
-    return '${_formatClock(clampedPlayed)} / ${_formatClock(durationSec)}';
+String _queueFormatProgress({
+  required int playedSec,
+  required int? durationSec,
+}) {
+  if (durationSec == null || durationSec <= 0) {
+    return '${_queueFormatClock(playedSec)} / --:--';
   }
 
-  String _formatClock(int seconds) {
-    final safeSeconds = seconds < 0 ? 0 : seconds;
-    final duration = Duration(seconds: safeSeconds);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes.remainder(60);
-    final remainingSeconds = duration.inSeconds.remainder(60);
+  final clampedPlayed = playedSec > durationSec ? durationSec : playedSec;
+  return '${_queueFormatClock(clampedPlayed)} / ${_queueFormatClock(durationSec)}';
+}
 
-    if (hours > 0) {
-      return '$hours:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
-    }
-    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+String _queueFormatClock(int seconds) {
+  final safeSeconds = seconds < 0 ? 0 : seconds;
+  final duration = Duration(seconds: safeSeconds);
+  final hours = duration.inHours;
+  final minutes = duration.inMinutes.remainder(60);
+  final remainingSeconds = duration.inSeconds.remainder(60);
+
+  if (hours > 0) {
+    return '$hours:${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
+  return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
 }
 
 class _QueueItemCover extends StatelessWidget {
