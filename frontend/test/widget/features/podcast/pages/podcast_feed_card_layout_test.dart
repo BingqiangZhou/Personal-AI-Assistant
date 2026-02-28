@@ -186,17 +186,226 @@ void main() {
         final addButtonRect = tester.getRect(addButtonFinder);
         final playButtonRect = tester.getRect(playButtonFinder);
         final metaActionRowRect = tester.getRect(metaActionRowFinder);
+        final playButtonWidget = tester.widget<IconButton>(playButtonFinder);
+        final playButtonColor = playButtonWidget.style?.foregroundColor
+            ?.resolve(<WidgetState>{});
+        final scheme = Theme.of(tester.element(playButtonFinder)).colorScheme;
 
         expect(metadataRect.top, greaterThanOrEqualTo(descriptionRect.bottom));
         expect(addButtonRect.center.dx, greaterThan(metadataRect.center.dx));
         expect(playButtonRect.center.dx, greaterThan(addButtonRect.center.dx));
         expect(addButtonRect.height, lessThanOrEqualTo(32));
         expect(playButtonRect.height, lessThanOrEqualTo(32));
+        expect(playButtonColor, equals(scheme.onSurfaceVariant));
         final descriptionToMetaGap =
             metaActionRowRect.top - descriptionRect.bottom;
         expect(descriptionToMetaGap, lessThanOrEqualTo(12));
       },
     );
+
+    testWidgets('mobile podcast badge uses menu icon color in dark mode', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastFeedProvider.overrideWith(
+            () => _MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: [_buildEpisode()],
+                isLoading: false,
+                hasMore: false,
+                total: 1,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: ThemeData.light(useMaterial3: true),
+            darkTheme: ThemeData.dark(useMaterial3: true),
+            themeMode: ThemeMode.dark,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastFeedPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final badgeFinder = find.byKey(
+        const Key('podcast_feed_mobile_subscription_badge'),
+      );
+      expect(badgeFinder, findsOneWidget);
+
+      final badge = tester.widget<Container>(badgeFinder);
+      final badgeDecoration = badge.decoration! as BoxDecoration;
+      final context = tester.element(badgeFinder);
+      final scheme = Theme.of(context).colorScheme;
+      expect(badgeDecoration.color, equals(scheme.onSurfaceVariant));
+    });
+
+    testWidgets('desktop podcast badge uses menu icon color in dark mode', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastFeedProvider.overrideWith(
+            () => _MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: [_buildEpisode()],
+                isLoading: false,
+                hasMore: false,
+                total: 1,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: ThemeData.light(useMaterial3: true),
+            darkTheme: ThemeData.dark(useMaterial3: true),
+            themeMode: ThemeMode.dark,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastFeedPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final badgeFinder = find.byKey(
+        const Key('podcast_feed_desktop_subscription_badge'),
+      );
+      expect(badgeFinder, findsOneWidget);
+
+      final badge = tester.widget<Container>(badgeFinder);
+      final badgeDecoration = badge.decoration! as BoxDecoration;
+      final context = tester.element(badgeFinder);
+      final scheme = Theme.of(context).colorScheme;
+      expect(badgeDecoration.color, equals(scheme.onSurfaceVariant));
+    });
+
+    testWidgets('mobile podcast badge uses menu icon color in light mode', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastFeedProvider.overrideWith(
+            () => _MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: [_buildEpisode()],
+                isLoading: false,
+                hasMore: false,
+                total: 1,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: ThemeData.light(useMaterial3: true),
+            darkTheme: ThemeData.dark(useMaterial3: true),
+            themeMode: ThemeMode.light,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastFeedPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final badgeFinder = find.byKey(
+        const Key('podcast_feed_mobile_subscription_badge'),
+      );
+      expect(badgeFinder, findsOneWidget);
+
+      final badge = tester.widget<Container>(badgeFinder);
+      final badgeDecoration = badge.decoration! as BoxDecoration;
+      final context = tester.element(badgeFinder);
+      final scheme = Theme.of(context).colorScheme;
+      expect(badgeDecoration.color, equals(scheme.onSurfaceVariant));
+    });
+
+    testWidgets('desktop podcast badge uses menu icon color in light mode', (
+      WidgetTester tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          podcastFeedProvider.overrideWith(
+            () => _MockPodcastFeedNotifier(
+              PodcastFeedState(
+                episodes: [_buildEpisode()],
+                isLoading: false,
+                hasMore: false,
+                total: 1,
+              ),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: ThemeData.light(useMaterial3: true),
+            darkTheme: ThemeData.dark(useMaterial3: true),
+            themeMode: ThemeMode.light,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastFeedPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final badgeFinder = find.byKey(
+        const Key('podcast_feed_desktop_subscription_badge'),
+      );
+      expect(badgeFinder, findsOneWidget);
+
+      final badge = tester.widget<Container>(badgeFinder);
+      final badgeDecoration = badge.decoration! as BoxDecoration;
+      final context = tester.element(badgeFinder);
+      final scheme = Theme.of(context).colorScheme;
+      expect(badgeDecoration.color, equals(scheme.onSurfaceVariant));
+    });
 
     testWidgets('mobile card strips html tags in description', (
       WidgetTester tester,

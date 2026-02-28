@@ -437,7 +437,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Theme.of(context).colorScheme.onPrimary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             )
                           : Text(l10n.auth_create_account),

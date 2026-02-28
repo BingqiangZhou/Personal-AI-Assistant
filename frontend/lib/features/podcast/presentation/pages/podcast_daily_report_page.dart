@@ -201,7 +201,7 @@ class _PodcastDailyReportPageState
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: theme.colorScheme.primary,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -566,7 +566,7 @@ class _PodcastDailyReportPageState
                 height: 14,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: theme.colorScheme.primary,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(width: 8),

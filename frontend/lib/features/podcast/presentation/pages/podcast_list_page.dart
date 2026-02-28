@@ -1026,6 +1026,9 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     required ValueChanged<bool> onSelected,
     required String keyValue,
   }) {
+    final selectedBackgroundColor = theme.colorScheme.onSurfaceVariant;
+    final selectedLabelColor = theme.colorScheme.surface;
+
     return ChoiceChip(
       key: Key(
         'podcast_discover_category_chip_${_normalizeCategoryKey(keyValue)}',
@@ -1037,17 +1040,17 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       visualDensity: const VisualDensity(horizontal: -1, vertical: -2),
       side: BorderSide(
         color: selected
-            ? theme.colorScheme.primary
+            ? selectedBackgroundColor
             : theme.colorScheme.outlineVariant,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       labelStyle: theme.textTheme.labelLarge?.copyWith(
         fontWeight: FontWeight.w600,
         color: selected
-            ? theme.colorScheme.onPrimary
+            ? selectedLabelColor
             : theme.colorScheme.onSurfaceVariant,
       ),
-      selectedColor: theme.colorScheme.primary,
+      selectedColor: selectedBackgroundColor,
       backgroundColor: theme.colorScheme.surfaceContainerHighest,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
     );

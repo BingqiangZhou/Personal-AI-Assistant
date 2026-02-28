@@ -370,7 +370,9 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Theme.of(context).colorScheme.primary,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           )
                         : Icon(Icons.refresh),

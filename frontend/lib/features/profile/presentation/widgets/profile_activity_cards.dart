@@ -201,7 +201,7 @@ class ProfileActivityCards extends ConsumerWidget {
     Key? chevronKey,
     Key? cardKey,
   }) {
-    final effectiveIconColor = _ensureIconContrast(context, color);
+    final effectiveIconColor = _resolveActivityIconColor(context);
     return Card(
       key: cardKey,
       margin: _cardMargin(context),
@@ -248,15 +248,8 @@ class ProfileActivityCards extends ConsumerWidget {
     );
   }
 
-  Color _ensureIconContrast(BuildContext context, Color proposed) {
-    final scheme = Theme.of(context).colorScheme;
-    final cardColor = Theme.of(context).cardTheme.color ?? scheme.surface;
-    final diff = (proposed.computeLuminance() - cardColor.computeLuminance())
-        .abs();
-    if (diff < 0.25) {
-      return scheme.onSurfaceVariant;
-    }
-    return proposed;
+  Color _resolveActivityIconColor(BuildContext context) {
+    return Theme.of(context).colorScheme.onSurfaceVariant;
   }
 
   String _formatDateOnly(DateTime value) {

@@ -276,7 +276,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Theme.of(context).colorScheme.onPrimary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             )
                           : Text(l10n.auth_login),

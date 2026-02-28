@@ -318,7 +318,7 @@ class _ProfileSubscriptionsPageState
         padding: const EdgeInsets.all(16),
         child: Center(
           child: CircularProgressIndicator(
-            color: Theme.of(context).colorScheme.tertiary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
       );

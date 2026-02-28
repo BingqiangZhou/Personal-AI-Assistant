@@ -98,6 +98,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final l10n = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState.user;
+    final theme = Theme.of(context);
 
     return ResponsiveContainer(
       child: SingleChildScrollView(
@@ -222,7 +223,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     ],
                     child: CircleAvatar(
                       radius: 20,
-                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      backgroundColor: theme.colorScheme.onSurfaceVariant,
                       child: Text(
                         (user?.displayName ?? l10n.profile_guest_user)
                             .characters
@@ -231,9 +232,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.black
-                              : Colors.white,
+                          color: theme.colorScheme.surface,
                         ),
                       ),
                     ),
@@ -254,6 +253,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget _buildSettingsContent(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isMobile = _isMobile(context);
+    final theme = Theme.of(context);
 
     final accountItems = <_SettingsItemConfig>[
       _SettingsItemConfig(
@@ -267,7 +267,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         title: l10n.profile_notifications,
         subtitle: l10n.profile_notifications_subtitle,
         trailing: Switch(
+          key: const Key('profile_notifications_switch'),
           value: _notificationsEnabled,
+          activeColor: theme.colorScheme.surface,
+          inactiveThumbColor: theme.colorScheme.surface,
+          activeTrackColor: theme.colorScheme.onSurfaceVariant,
+          inactiveTrackColor: theme.colorScheme.onSurfaceVariant.withValues(
+            alpha: 0.30,
+          ),
           onChanged: (value) {
             setState(() {
               _notificationsEnabled = value;

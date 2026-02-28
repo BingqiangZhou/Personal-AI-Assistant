@@ -419,6 +419,134 @@ void main() {
     },
   );
 
+  testWidgets(
+    'uses menu icon color tokens for profile icons, avatar, and switch in dark mode',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(_TestAuthNotifier.new),
+            profileStatsProvider.overrideWith(
+              () => _FixedProfileStatsNotifier(_profileStatsWithDailyReport),
+            ),
+            podcastSubscriptionProvider.overrideWith(
+              _TestPodcastSubscriptionNotifier.new,
+            ),
+            dailyReportDatesProvider.overrideWith(
+              () => _FixedDailyReportDatesNotifier(
+                _buildDailyReportDatesResponse([DateTime(2026, 2, 20)]),
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            theme: ThemeData.light(useMaterial3: true),
+            darkTheme: ThemeData.dark(useMaterial3: true),
+            themeMode: ThemeMode.dark,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: ProfilePage()),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(ProfilePage));
+      final scheme = Theme.of(context).colorScheme;
+
+      final subscriptionsIcon = tester.widget<Icon>(
+        find.byIcon(Icons.subscriptions_outlined).first,
+      );
+      expect(subscriptionsIcon.color, equals(scheme.onSurfaceVariant));
+
+      final avatar = tester.widget<CircleAvatar>(
+        find.descendant(
+          of: find.byKey(const Key('profile_user_menu_button')),
+          matching: find.byType(CircleAvatar),
+        ),
+      );
+      expect(avatar.backgroundColor, equals(scheme.onSurfaceVariant));
+
+      final notificationsSwitch = tester.widget<Switch>(
+        find.byKey(const Key('profile_notifications_switch')),
+      );
+      expect(
+        notificationsSwitch.activeTrackColor,
+        equals(scheme.onSurfaceVariant),
+      );
+      expect(
+        notificationsSwitch.inactiveTrackColor,
+        equals(scheme.onSurfaceVariant.withValues(alpha: 0.30)),
+      );
+      expect(notificationsSwitch.activeColor, equals(scheme.surface));
+      expect(notificationsSwitch.inactiveThumbColor, equals(scheme.surface));
+    },
+  );
+
+  testWidgets(
+    'uses menu icon color tokens for profile icons, avatar, and switch in light mode',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authProvider.overrideWith(_TestAuthNotifier.new),
+            profileStatsProvider.overrideWith(
+              () => _FixedProfileStatsNotifier(_profileStatsWithDailyReport),
+            ),
+            podcastSubscriptionProvider.overrideWith(
+              _TestPodcastSubscriptionNotifier.new,
+            ),
+            dailyReportDatesProvider.overrideWith(
+              () => _FixedDailyReportDatesNotifier(
+                _buildDailyReportDatesResponse([DateTime(2026, 2, 20)]),
+              ),
+            ),
+          ],
+          child: MaterialApp(
+            theme: ThemeData.light(useMaterial3: true),
+            darkTheme: ThemeData.dark(useMaterial3: true),
+            themeMode: ThemeMode.light,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: ProfilePage()),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(ProfilePage));
+      final scheme = Theme.of(context).colorScheme;
+
+      final subscriptionsIcon = tester.widget<Icon>(
+        find.byIcon(Icons.subscriptions_outlined).first,
+      );
+      expect(subscriptionsIcon.color, equals(scheme.onSurfaceVariant));
+
+      final avatar = tester.widget<CircleAvatar>(
+        find.descendant(
+          of: find.byKey(const Key('profile_user_menu_button')),
+          matching: find.byType(CircleAvatar),
+        ),
+      );
+      expect(avatar.backgroundColor, equals(scheme.onSurfaceVariant));
+
+      final notificationsSwitch = tester.widget<Switch>(
+        find.byKey(const Key('profile_notifications_switch')),
+      );
+      expect(
+        notificationsSwitch.activeTrackColor,
+        equals(scheme.onSurfaceVariant),
+      );
+      expect(
+        notificationsSwitch.inactiveTrackColor,
+        equals(scheme.onSurfaceVariant.withValues(alpha: 0.30)),
+      );
+      expect(notificationsSwitch.activeColor, equals(scheme.surface));
+      expect(notificationsSwitch.inactiveThumbColor, equals(scheme.surface));
+    },
+  );
+
   testWidgets('daily report card shows -- when no report date exists', (
     WidgetTester tester,
   ) async {

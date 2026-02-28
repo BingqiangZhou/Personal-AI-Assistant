@@ -1118,7 +1118,7 @@ class ConversationChatWidgetState
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Theme.of(context).colorScheme.onPrimary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     )
                   : const Icon(Icons.send),

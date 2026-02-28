@@ -423,8 +423,49 @@ void main() {
         progressFinder,
       );
       final expectedColor =
-          MindriverTheme.darkTheme.textTheme.titleSmall?.color ??
-          MindriverTheme.darkTheme.colorScheme.onSurface;
+          MindriverTheme.darkTheme.colorScheme.onSurfaceVariant;
+      expect(progressWidget.color, expectedColor);
+    });
+
+    testWidgets('mini progress uses onSurfaceVariant in light theme', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          position: 45000,
+          duration: 180000,
+          isExpanded: false,
+        ),
+      );
+      final queueController = TestPodcastQueueController();
+
+      await tester.pumpWidget(
+        _createWidget(
+          notifier: notifier,
+          queueController: queueController,
+          theme: MindriverTheme.lightTheme,
+          darkTheme: MindriverTheme.darkTheme,
+          themeMode: ThemeMode.light,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final progressFinder = find.byKey(
+        const Key('podcast_bottom_player_mini_progress'),
+      );
+      expect(progressFinder, findsOneWidget);
+
+      final progressWidget = tester.widget<LinearProgressIndicator>(
+        progressFinder,
+      );
+      final expectedColor =
+          MindriverTheme.lightTheme.colorScheme.onSurfaceVariant;
       expect(progressWidget.color, expectedColor);
     });
   });

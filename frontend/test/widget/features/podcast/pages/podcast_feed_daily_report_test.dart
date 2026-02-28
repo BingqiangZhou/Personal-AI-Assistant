@@ -65,6 +65,96 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('daily-route'), findsOneWidget);
     });
+
+    testWidgets('uses menu icon color for daily report icon in dark mode', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            podcastFeedProvider.overrideWith(
+              () => _TestPodcastFeedNotifier(_feedState()),
+            ),
+          ],
+          child: MaterialApp(
+            theme: ThemeData.light(useMaterial3: true),
+            darkTheme: ThemeData.dark(useMaterial3: true),
+            themeMode: ThemeMode.dark,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastFeedPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final entryFinder = find.byKey(
+        const Key('library_daily_report_entry_tile'),
+      );
+      expect(entryFinder, findsOneWidget);
+
+      final icon = tester.widget<Icon>(
+        find.descendant(
+          of: entryFinder,
+          matching: find.byIcon(Icons.summarize_outlined),
+        ),
+      );
+      final context = tester.element(entryFinder);
+      expect(
+        icon.color,
+        equals(Theme.of(context).colorScheme.onSurfaceVariant),
+      );
+    });
+
+    testWidgets('uses menu icon color for daily report icon in light mode', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            podcastFeedProvider.overrideWith(
+              () => _TestPodcastFeedNotifier(_feedState()),
+            ),
+          ],
+          child: MaterialApp(
+            theme: ThemeData.light(useMaterial3: true),
+            darkTheme: ThemeData.dark(useMaterial3: true),
+            themeMode: ThemeMode.light,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastFeedPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final entryFinder = find.byKey(
+        const Key('library_daily_report_entry_tile'),
+      );
+      expect(entryFinder, findsOneWidget);
+
+      final icon = tester.widget<Icon>(
+        find.descendant(
+          of: entryFinder,
+          matching: find.byIcon(Icons.summarize_outlined),
+        ),
+      );
+      final context = tester.element(entryFinder);
+      expect(
+        icon.color,
+        equals(Theme.of(context).colorScheme.onSurfaceVariant),
+      );
+    });
   });
 
   group('PodcastDailyReportPage', () {

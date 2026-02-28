@@ -85,9 +85,7 @@ class MindriverTheme {
         color: AppColors.lightSurface,
         elevation: 0,
         shadowColor: Colors.black.withValues(alpha: 0.05),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.all(8),
       ),
 
@@ -99,9 +97,7 @@ class MindriverTheme {
         iconColor: AppColors.lightTextSecondary,
         selectedColor: AppColors.primary,
         textColor: AppColors.lightTextPrimary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
       // Elevated Button Theme / 凸起按钮主题
@@ -127,9 +123,7 @@ class MindriverTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           textStyle: const TextStyle(
             fontSize: 13,
@@ -180,11 +174,11 @@ class MindriverTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        hintStyle: TextStyle(
-          color: AppColors.lightTextTertiary,
-          fontSize: 14,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
         ),
+        hintStyle: TextStyle(color: AppColors.lightTextTertiary, fontSize: 14),
         labelStyle: const TextStyle(
           color: AppColors.lightTextSecondary,
           fontSize: 12,
@@ -244,9 +238,7 @@ class MindriverTheme {
           color: AppColors.darkTextPrimary,
           fontSize: 12,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         behavior: SnackBarBehavior.floating,
         elevation: 8,
       ),
@@ -256,13 +248,18 @@ class MindriverTheme {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.lightTextSecondary,
       ),
 
       // Text Theme / 文字主题
-      textTheme: _buildTextTheme(AppColors.lightTextPrimary, AppColors.lightTextSecondary, AppColors.lightTextTertiary),
+      textTheme: _buildTextTheme(
+        AppColors.lightTextPrimary,
+        AppColors.lightTextSecondary,
+        AppColors.lightTextTertiary,
+      ),
 
       // Icon Theme / 图标主题
       iconTheme: const IconThemeData(
@@ -350,9 +347,7 @@ class MindriverTheme {
         color: AppColors.darkSurfaceVariant,
         elevation: 0,
         shadowColor: Colors.black.withValues(alpha: 0.3),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: const EdgeInsets.all(8),
       ),
 
@@ -364,9 +359,7 @@ class MindriverTheme {
         iconColor: AppColors.darkTextSecondary,
         selectedColor: AppColors.darkTextPrimary,
         textColor: AppColors.darkTextPrimary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
 
       // Elevated Button Theme / 凸起按钮主题
@@ -392,9 +385,7 @@ class MindriverTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.darkTextPrimary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           textStyle: const TextStyle(
             fontSize: 13,
@@ -427,11 +418,15 @@ class MindriverTheme {
         fillColor: AppColors.darkSurfaceVariant.withValues(alpha: 0.5),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.darkOutline.withValues(alpha: 0.5)),
+          borderSide: BorderSide(
+            color: AppColors.darkOutline.withValues(alpha: 0.5),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.darkOutline.withValues(alpha: 0.5)),
+          borderSide: BorderSide(
+            color: AppColors.darkOutline.withValues(alpha: 0.5),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -445,11 +440,11 @@ class MindriverTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFFC8181), width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        hintStyle: TextStyle(
-          color: AppColors.darkTextTertiary,
-          fontSize: 14,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
         ),
+        hintStyle: TextStyle(color: AppColors.darkTextTertiary, fontSize: 14),
         labelStyle: const TextStyle(
           color: AppColors.darkTextSecondary,
           fontSize: 12,
@@ -509,9 +504,7 @@ class MindriverTheme {
           color: AppColors.darkTextPrimary,
           fontSize: 12,
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         behavior: SnackBarBehavior.floating,
         elevation: 8,
       ),
@@ -521,13 +514,18 @@ class MindriverTheme {
         backgroundColor: const Color(0xFF2A2A2A),
         foregroundColor: AppColors.darkTextPrimary,
         elevation: 4,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.darkTextSecondary,
       ),
 
       // Text Theme / 文字主题
-      textTheme: _buildTextTheme(AppColors.darkTextPrimary, AppColors.darkTextSecondary, AppColors.darkTextTertiary),
+      textTheme: _buildTextTheme(
+        AppColors.darkTextPrimary,
+        AppColors.darkTextSecondary,
+        AppColors.darkTextTertiary,
+      ),
 
       // Icon Theme / 图标主题
       iconTheme: const IconThemeData(
@@ -536,9 +534,7 @@ class MindriverTheme {
       ),
 
       // Extensions / 扩展
-      extensions: const <ThemeExtension<dynamic>>[
-        MindriverThemeExtension.dark,
-      ],
+      extensions: const <ThemeExtension<dynamic>>[MindriverThemeExtension.dark],
     );
   }
 
@@ -546,7 +542,11 @@ class MindriverTheme {
   // TEXT THEME BUILDER / 文字主题构建器
   // ============================================================
 
-  static TextTheme _buildTextTheme(Color primary, Color secondary, Color tertiary) {
+  static TextTheme _buildTextTheme(
+    Color primary,
+    Color secondary,
+    Color tertiary,
+  ) {
     return TextTheme(
       // Display styles - Largest text on screen
       displayLarge: TextStyle(

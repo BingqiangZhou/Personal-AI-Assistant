@@ -155,7 +155,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                                   strokeWidth: 2,
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.onPrimary,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                               )
                             : Text(l10n.auth_send_reset_link),

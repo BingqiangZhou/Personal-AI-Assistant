@@ -1135,7 +1135,7 @@ class _BulkImportDialogState extends State<BulkImportDialog>
                                     strokeWidth: 2,
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.onPrimary,
+                                    ).colorScheme.onSurfaceVariant,
                                   ),
                                 )
                               : Text(_getImportButtonText()),

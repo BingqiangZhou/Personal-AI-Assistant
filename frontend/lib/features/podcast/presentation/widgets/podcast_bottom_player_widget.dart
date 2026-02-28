@@ -67,12 +67,9 @@ class _MiniBottomPlayer extends ConsumerWidget {
     final isWideLayout = screenWidth >= 600;
     final isMobileLayout = !isWideLayout;
     final horizontalInset = isMobileLayout ? _mobileHorizontalInset : 0.0;
-    final isDark = theme.brightness == Brightness.dark;
-    final titleColor = theme.textTheme.titleSmall?.color ?? theme.colorScheme.onSurface;
-    final progressColor =
-        isDark ? titleColor : theme.colorScheme.primary;
+    final progressColor = theme.colorScheme.onSurfaceVariant;
     final progressTrackColor = theme.colorScheme.onSurfaceVariant.withValues(
-      alpha: isDark ? 0.35 : 0.25,
+      alpha: 0.25,
     );
 
     return Padding(
@@ -223,12 +220,9 @@ class _ExpandedBottomPlayer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final titleColor = theme.textTheme.titleSmall?.color ?? theme.colorScheme.onSurface;
-    final sliderActiveColor =
-        isDark ? titleColor : theme.colorScheme.primary;
+    final sliderActiveColor = theme.colorScheme.onSurfaceVariant;
     final sliderInactiveColor = theme.colorScheme.onSurfaceVariant.withValues(
-      alpha: isDark ? 0.35 : 0.25,
+      alpha: 0.25,
     );
     final maxSlider = state.duration > 0 ? state.duration.toDouble() : 1.0;
     final sliderValue = state.position.toDouble().clamp(0.0, maxSlider);

@@ -348,7 +348,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Theme.of(context).colorScheme.onPrimary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             )
                           : Text(l10n.auth_reset_password),

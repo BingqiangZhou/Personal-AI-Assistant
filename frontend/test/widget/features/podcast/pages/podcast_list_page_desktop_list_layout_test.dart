@@ -85,6 +85,116 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets(
+      'uses menu icon color as selected category background in dark mode',
+      (tester) async {
+        tester.view.physicalSize = const Size(1280, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final container = ProviderContainer(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(
+              _MockLocalStorageService(),
+            ),
+            applePodcastRssServiceProvider.overrideWithValue(
+              _FakeApplePodcastRssService(),
+            ),
+            podcastSubscriptionProvider.overrideWith(
+              () => _TestPodcastSubscriptionNotifier(),
+            ),
+            search.podcastSearchProvider.overrideWith(
+              () =>
+                  _TestPodcastSearchNotifier(const search.PodcastSearchState()),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              theme: ThemeData.light(useMaterial3: true),
+              darkTheme: ThemeData.dark(useMaterial3: true),
+              themeMode: ThemeMode.dark,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PodcastListPage(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final allChipFinder = find.byKey(
+          const Key('podcast_discover_category_chip_all'),
+        );
+        expect(allChipFinder, findsOneWidget);
+        final allChip = tester.widget<ChoiceChip>(allChipFinder);
+        final context = tester.element(allChipFinder);
+        final scheme = Theme.of(context).colorScheme;
+
+        expect(allChip.selected, isTrue);
+        expect(allChip.selectedColor, equals(scheme.onSurfaceVariant));
+      },
+    );
+
+    testWidgets(
+      'uses menu icon color as selected category background in light mode',
+      (tester) async {
+        tester.view.physicalSize = const Size(1280, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final container = ProviderContainer(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(
+              _MockLocalStorageService(),
+            ),
+            applePodcastRssServiceProvider.overrideWithValue(
+              _FakeApplePodcastRssService(),
+            ),
+            podcastSubscriptionProvider.overrideWith(
+              () => _TestPodcastSubscriptionNotifier(),
+            ),
+            search.podcastSearchProvider.overrideWith(
+              () =>
+                  _TestPodcastSearchNotifier(const search.PodcastSearchState()),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              theme: ThemeData.light(useMaterial3: true),
+              darkTheme: ThemeData.dark(useMaterial3: true),
+              themeMode: ThemeMode.light,
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PodcastListPage(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final allChipFinder = find.byKey(
+          const Key('podcast_discover_category_chip_all'),
+        );
+        expect(allChipFinder, findsOneWidget);
+        final allChip = tester.widget<ChoiceChip>(allChipFinder);
+        final context = tester.element(allChipFinder);
+        final scheme = Theme.of(context).colorScheme;
+
+        expect(allChip.selected, isTrue);
+        expect(allChip.selectedColor, equals(scheme.onSurfaceVariant));
+      },
+    );
   });
 }
 

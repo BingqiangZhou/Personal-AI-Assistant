@@ -156,6 +156,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final menuIconColor = theme.colorScheme.onSurfaceVariant;
 
     return Semantics(
       button: true,
@@ -182,10 +183,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.summarize_outlined,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(Icons.summarize_outlined, color: menuIconColor),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -403,6 +401,8 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   Widget _buildMobileCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final subscriptionBadgeBackgroundColor = theme.colorScheme.onSurfaceVariant;
+    final subscriptionBadgeTextColor = theme.colorScheme.surface;
     final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
     // Feed cards display sanitized plain-text descriptions.
     final displayDescription = _getFeedCardDescription(episode.description);
@@ -525,12 +525,15 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 112),
                               child: Container(
+                                key: const Key(
+                                  'podcast_feed_mobile_subscription_badge',
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary,
+                                  color: subscriptionBadgeBackgroundColor,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Text(
@@ -539,7 +542,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onPrimary,
+                                    color: subscriptionBadgeTextColor,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 10,
                                   ),
@@ -642,6 +645,8 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   Widget _buildDesktopCard(BuildContext context, PodcastEpisodeModel episode) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final subscriptionBadgeBackgroundColor = theme.colorScheme.onSurfaceVariant;
+    final subscriptionBadgeTextColor = theme.colorScheme.surface;
     final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
     final displayDescription = _getFeedCardDescription(episode.description);
     final titleStyle = theme.textTheme.titleMedium?.copyWith(
@@ -752,12 +757,15 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                             ConstrainedBox(
                               constraints: const BoxConstraints(maxWidth: 140),
                               child: Container(
+                                key: const Key(
+                                  'podcast_feed_desktop_subscription_badge',
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 10,
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary,
+                                  color: subscriptionBadgeBackgroundColor,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -766,7 +774,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onPrimary,
+                                    color: subscriptionBadgeTextColor,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 11,
                                   ),
@@ -852,10 +860,10 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       visualDensity: VisualDensity.compact,
                       padding: EdgeInsets.zero,
-                      foregroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onSurfaceVariant,
                       shape: const CircleBorder(),
                       side: BorderSide(
-                        color: theme.colorScheme.primary.withValues(
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
                           alpha: 0.65,
                         ),
                         width: 1,

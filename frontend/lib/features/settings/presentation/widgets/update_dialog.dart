@@ -141,7 +141,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: accentOnColor,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   )
                 : const Icon(Icons.download, size: 18),
@@ -192,7 +192,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: accentOnColor,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   )
                 : const Icon(Icons.download, size: 18),
@@ -647,7 +647,7 @@ class _ManualUpdateCheckDialogState
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircularProgressIndicator(color: accentColor),
+          CircularProgressIndicator(color: theme.colorScheme.onSurfaceVariant),
           const SizedBox(height: 16),
           Text(l10n.update_checking),
         ],
