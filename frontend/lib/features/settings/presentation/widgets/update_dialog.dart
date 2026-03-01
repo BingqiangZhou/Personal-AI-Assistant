@@ -8,12 +8,53 @@ import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/providers/app_update_provider.dart';
 
-Color _updateAccentColor(ThemeData theme) {
-  return theme.colorScheme.primary;
+class _UpdateDialogPalette {
+  const _UpdateDialogPalette({
+    required this.accent,
+    required this.accentOn,
+    required this.stateSecondaryText,
+    required this.loadingIndicator,
+    required this.errorIcon,
+  });
+
+  final Color accent;
+  final Color accentOn;
+  final Color stateSecondaryText;
+  final Color loadingIndicator;
+  final Color errorIcon;
+
+  static _UpdateDialogPalette of(ThemeData theme) {
+    final scheme = theme.colorScheme;
+    return _UpdateDialogPalette(
+      accent: scheme.primary,
+      accentOn: scheme.onPrimary,
+      stateSecondaryText: scheme.onSurfaceVariant,
+      loadingIndicator: scheme.onSurfaceVariant,
+      errorIcon: scheme.error,
+    );
+  }
 }
 
-Color _updateAccentOnColor(ThemeData theme) {
-  return theme.colorScheme.onPrimary;
+class _UpdateStatusMark extends StatelessWidget {
+  const _UpdateStatusMark({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      key: const Key('manual_update_uptodate_mark'),
+      width: 84,
+      height: 84,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: color, width: 5),
+        ),
+        child: Icon(Icons.check, size: 44, color: color),
+      ),
+    );
+  }
 }
 
 /// App Update Dialog / 应用更新对话框
@@ -55,7 +96,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final accentColor = _updateAccentColor(theme);
+    final palette = _UpdateDialogPalette.of(theme);
     final isMobile = MediaQuery.of(context).size.width < 600;
     final screenWidth = MediaQuery.of(context).size.width;
     final dialogWidth = screenWidth < 600 ? screenWidth - 32 : 500.0;
@@ -64,7 +105,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
       insetPadding: isMobile ? const EdgeInsets.all(16) : null,
       title: Row(
         children: [
-          Icon(Icons.system_update_alt, color: accentColor, size: 28),
+          Icon(Icons.system_update_alt, color: palette.accent, size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -75,7 +116,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                 Text(
                   '${widget.currentVersion} → ${widget.release.version}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: accentColor,
+                    color: palette.accent,
                   ),
                 ),
               ],
@@ -109,8 +150,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   /// Desktop actions layout
   List<Widget> _buildDesktopActions(BuildContext context, ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
-    final accentColor = _updateAccentColor(theme);
-    final accentOnColor = _updateAccentOnColor(theme);
+    final palette = _UpdateDialogPalette.of(theme);
     return [
       // Use Row to control alignment
       Row(
@@ -141,14 +181,14 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: palette.loadingIndicator,
                     ),
                   )
                 : const Icon(Icons.download, size: 18),
             label: Text(l10n.update_download),
             style: FilledButton.styleFrom(
-              backgroundColor: accentColor,
-              foregroundColor: accentOnColor,
+              backgroundColor: palette.accent,
+              foregroundColor: palette.accentOn,
             ),
           ),
         ],
@@ -159,8 +199,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   /// Mobile actions layout
   List<Widget> _buildMobileActions(BuildContext context, ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
-    final accentColor = _updateAccentColor(theme);
-    final accentOnColor = _updateAccentOnColor(theme);
+    final palette = _UpdateDialogPalette.of(theme);
     return [
       // Skip this version (top row, right aligned)
       Align(
@@ -192,14 +231,14 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: palette.loadingIndicator,
                     ),
                   )
                 : const Icon(Icons.download, size: 18),
             label: Text(l10n.update_download),
             style: FilledButton.styleFrom(
-              backgroundColor: accentColor,
-              foregroundColor: accentOnColor,
+              backgroundColor: palette.accent,
+              foregroundColor: palette.accentOn,
             ),
           ),
         ],
@@ -210,7 +249,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   Widget _buildReleaseInfo(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final accentColor = _updateAccentColor(theme);
+    final palette = _UpdateDialogPalette.of(theme);
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     return Container(
@@ -225,7 +264,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           // Version row
           Row(
             children: [
-              Icon(Icons.info_outline, size: 18, color: accentColor),
+              Icon(Icons.info_outline, size: 18, color: palette.accent),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -238,7 +277,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
               Text(
                 'v${widget.release.version}',
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: accentColor,
+                  color: palette.accent,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -334,7 +373,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   Widget _buildReleaseNotes(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final accentColor = _updateAccentColor(theme);
+    final palette = _UpdateDialogPalette.of(theme);
     final releaseNotes = widget.release.body.trim();
 
     return Column(
@@ -342,7 +381,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
       children: [
         Row(
           children: [
-            Icon(Icons.description, size: 18, color: accentColor),
+            Icon(Icons.description, size: 18, color: palette.accent),
             const SizedBox(width: 8),
             Text(l10n.update_release_notes, style: theme.textTheme.labelMedium),
           ],
@@ -404,7 +443,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                         color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
                         border: Border(
-                          left: BorderSide(color: accentColor, width: 3),
+                          left: BorderSide(color: palette.accent, width: 3),
                         ),
                       ),
                       horizontalRuleDecoration: BoxDecoration(
@@ -415,7 +454,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                         ),
                       ),
                       a: theme.textTheme.bodySmall?.copyWith(
-                        color: accentColor,
+                        color: palette.accent,
                         decoration: TextDecoration.underline,
                       ),
                     ),
@@ -641,15 +680,22 @@ class _ManualUpdateCheckDialogState
   Widget _buildContent(BuildContext context, AppUpdateState state) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final accentColor = _updateAccentColor(theme);
+    final palette = _UpdateDialogPalette.of(theme);
 
     if (state.isLoading) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          CircularProgressIndicator(color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(height: 16),
-          Text(l10n.update_checking),
+          SizedBox(
+            width: 52,
+            height: 52,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              color: palette.loadingIndicator,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(l10n.update_checking, style: theme.textTheme.bodyLarge),
         ],
       );
     }
@@ -658,14 +704,14 @@ class _ManualUpdateCheckDialogState
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
-          const SizedBox(height: 16),
+          Icon(Icons.error_outline, size: 56, color: palette.errorIcon),
+          const SizedBox(height: 18),
           Text(l10n.update_check_failed, style: theme.textTheme.titleMedium),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           Text(
             state.error!,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+              color: palette.stateSecondaryText,
             ),
             textAlign: TextAlign.center,
           ),
@@ -681,17 +727,21 @@ class _ManualUpdateCheckDialogState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.check_circle_outline, size: 48, color: accentColor),
-        const SizedBox(height: 16),
+        _UpdateStatusMark(color: palette.stateSecondaryText),
+        const SizedBox(height: 18),
         Text(
+          key: const Key('manual_update_uptodate_text'),
           l10n.update_up_to_date,
-          style: theme.textTheme.titleMedium?.copyWith(color: accentColor),
+          style: theme.textTheme.headlineSmall?.copyWith(
+            color: palette.stateSecondaryText,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Text(
           'v${state.currentVersion}',
           style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+            color: palette.stateSecondaryText,
           ),
         ),
       ],
@@ -700,6 +750,7 @@ class _ManualUpdateCheckDialogState
 
   List<Widget> _buildActions(BuildContext context, AppUpdateState state) {
     final l10n = AppLocalizations.of(context)!;
+    final palette = _UpdateDialogPalette.of(Theme.of(context));
 
     if (state.isLoading) {
       return [];
@@ -708,10 +759,12 @@ class _ManualUpdateCheckDialogState
     if (state.error != null) {
       return [
         TextButton(
+          style: TextButton.styleFrom(foregroundColor: palette.accent),
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.close),
         ),
         TextButton(
+          style: TextButton.styleFrom(foregroundColor: palette.accent),
           onPressed: () {
             ref.read(manualUpdateCheckProvider.notifier).check();
           },
@@ -726,6 +779,9 @@ class _ManualUpdateCheckDialogState
 
     return [
       TextButton(
+        style: TextButton.styleFrom(
+          foregroundColor: palette.stateSecondaryText,
+        ),
         onPressed: () => Navigator.of(context).pop(),
         child: Text(l10n.ok),
       ),

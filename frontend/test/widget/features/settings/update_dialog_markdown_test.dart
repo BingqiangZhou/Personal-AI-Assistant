@@ -137,6 +137,19 @@ This is an **important** update.
         );
       },
     );
+
+    testWidgets('uses shared primary accent for update header icon', (
+      tester,
+    ) async {
+      final release = _buildRelease('## Notes');
+      await tester.pumpWidget(_buildTestApp(release));
+      await tester.pumpAndSettle();
+
+      final headerIcon = tester.widget<Icon>(
+        find.byIcon(Icons.system_update_alt),
+      );
+      expect(headerIcon.color, AppTheme.lightTheme.colorScheme.primary);
+    });
   });
 }
 

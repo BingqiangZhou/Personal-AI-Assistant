@@ -78,6 +78,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   EdgeInsets _dialogInsetPadding(BuildContext context) =>
       const EdgeInsets.all(16);
 
+  Color _dialogIconColor(BuildContext context) =>
+      Theme.of(context).colorScheme.onSurfaceVariant;
+
+  ButtonStyle _dialogActionButtonStyle(BuildContext context) =>
+      TextButton.styleFrom(foregroundColor: _dialogIconColor(context));
+
+  ButtonStyle _dialogSegmentedButtonStyle(BuildContext context) =>
+      SegmentedButton.styleFrom(
+        selectedForegroundColor: _dialogIconColor(context),
+      );
+
   EdgeInsetsGeometry _profileCardMargin(BuildContext context) =>
       _isMobile(context)
       ? const EdgeInsets.symmetric(horizontal: 4)
@@ -577,6 +588,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     _showConstrainedDialog<void>(
       context,
       builder: (dialogContext) {
+        final iconColor = _dialogIconColor(dialogContext);
         return AlertDialog(
           insetPadding: _dialogInsetPadding(dialogContext),
           title: Text(l10n.profile_security),
@@ -586,25 +598,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.password),
+                  leading: Icon(Icons.password, color: iconColor),
                   title: Text(l10n.profile_change_password),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: Icon(Icons.chevron_right, color: iconColor),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.fingerprint),
+                  leading: Icon(Icons.fingerprint, color: iconColor),
                   title: Text(l10n.profile_biometric_auth),
                   trailing: Switch(value: true, onChanged: null),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.phone_android),
+                  leading: Icon(Icons.phone_android, color: iconColor),
                   title: Text(l10n.profile_two_factor_auth),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: Icon(Icons.chevron_right, color: iconColor),
                 ),
               ],
             ),
           ),
           actions: [
             TextButton(
+              style: _dialogActionButtonStyle(dialogContext),
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(l10n.close),
             ),
@@ -622,6 +635,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           builder: (dialogContext, ref, _) {
             final currentCode = ref.watch(localeCodeProvider);
             final l10n = AppLocalizations.of(dialogContext)!;
+            final iconColor = _dialogIconColor(dialogContext);
 
             return AlertDialog(
               insetPadding: _dialogInsetPadding(dialogContext),
@@ -630,6 +644,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SegmentedButton<String>(
+                    key: const Key('profile_language_segmented_button'),
+                    style: _dialogSegmentedButtonStyle(dialogContext),
                     segments: [
                       ButtonSegment(
                         value: kLanguageSystem,
@@ -661,17 +677,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   const SizedBox(height: 16),
                   Text(
                     l10n.languageFollowSystem,
-                    style: Theme.of(dialogContext).textTheme.bodySmall
-                        ?.copyWith(
-                          color: Theme.of(
-                            dialogContext,
-                          ).colorScheme.onSurfaceVariant,
-                        ),
+                    style: Theme.of(
+                      dialogContext,
+                    ).textTheme.bodySmall?.copyWith(color: iconColor),
                   ),
                 ],
               ),
               actions: [
                 TextButton(
+                  style: _dialogActionButtonStyle(dialogContext),
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: Text(l10n.close),
                 ),
@@ -691,6 +705,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           builder: (dialogContext, ref, _) {
             final currentCode = ref.watch(themeModeCodeProvider);
             final l10n = AppLocalizations.of(dialogContext)!;
+            final iconColor = _dialogIconColor(dialogContext);
 
             return AlertDialog(
               insetPadding: _dialogInsetPadding(dialogContext),
@@ -699,6 +714,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SegmentedButton<String>(
+                    key: const Key('profile_theme_segmented_button'),
+                    style: _dialogSegmentedButtonStyle(dialogContext),
                     segments: [
                       ButtonSegment(
                         value: kThemeModeSystem,
@@ -748,17 +765,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   const SizedBox(height: 16),
                   Text(
                     l10n.theme_mode_subtitle,
-                    style: Theme.of(dialogContext).textTheme.bodySmall
-                        ?.copyWith(
-                          color: Theme.of(
-                            dialogContext,
-                          ).colorScheme.onSurfaceVariant,
-                        ),
+                    style: Theme.of(
+                      dialogContext,
+                    ).textTheme.bodySmall?.copyWith(color: iconColor),
                   ),
                 ],
               ),
               actions: [
                 TextButton(
+                  style: _dialogActionButtonStyle(dialogContext),
                   onPressed: () => Navigator.of(dialogContext).pop(),
                   child: Text(l10n.close),
                 ),
@@ -775,6 +790,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     _showConstrainedDialog<void>(
       context,
       builder: (dialogContext) {
+        final iconColor = _dialogIconColor(dialogContext);
         return AlertDialog(
           insetPadding: _dialogInsetPadding(dialogContext),
           title: Text(l10n.profile_help_center),
@@ -784,17 +800,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  leading: const Icon(Icons.book),
+                  leading: Icon(Icons.book, color: iconColor),
                   title: Text(l10n.profile_user_guide),
                   subtitle: Text(l10n.profile_user_guide_subtitle),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.video_library),
+                  leading: Icon(Icons.video_library, color: iconColor),
                   title: Text(l10n.profile_video_tutorials),
                   subtitle: Text(l10n.profile_video_tutorials_subtitle),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.contact_support),
+                  leading: Icon(Icons.contact_support, color: iconColor),
                   title: Text(l10n.profile_contact_support),
                   subtitle: Text(l10n.profile_contact_support_subtitle),
                 ),
@@ -803,6 +819,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
           actions: [
             TextButton(
+              style: _dialogActionButtonStyle(dialogContext),
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(l10n.close),
             ),
@@ -820,11 +837,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     _showConstrainedDialog<void>(
       context,
       builder: (dialogContext) {
+        final iconColor = _dialogIconColor(dialogContext);
         return AlertDialog(
           insetPadding: _dialogInsetPadding(dialogContext),
           title: Row(
             children: [
-              const Icon(Icons.psychology, size: 48),
+              Icon(Icons.psychology, size: 48, color: iconColor),
               const SizedBox(width: 12),
               Expanded(child: Text(l10n.appTitle)),
             ],
@@ -835,16 +853,32 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.version_label(packageInfo.version)),
+                Text(
+                  l10n.version_label(packageInfo.version),
+                  style: Theme.of(
+                    dialogContext,
+                  ).textTheme.bodyLarge?.copyWith(color: iconColor),
+                ),
                 const SizedBox(height: 4),
-                Text(l10n.build_label(packageInfo.buildNumber)),
+                Text(
+                  l10n.build_label(packageInfo.buildNumber),
+                  style: Theme.of(
+                    dialogContext,
+                  ).textTheme.bodyLarge?.copyWith(color: iconColor),
+                ),
                 const SizedBox(height: 8),
-                Text(l10n.profile_about_subtitle),
+                Text(
+                  l10n.profile_about_subtitle,
+                  style: Theme.of(
+                    dialogContext,
+                  ).textTheme.bodyLarge?.copyWith(color: iconColor),
+                ),
               ],
             ),
           ),
           actions: [
             TextButton(
+              style: _dialogActionButtonStyle(dialogContext),
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(l10n.ok),
             ),

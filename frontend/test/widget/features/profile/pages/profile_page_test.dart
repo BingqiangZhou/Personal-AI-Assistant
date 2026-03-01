@@ -909,6 +909,9 @@ void main() {
     await tester.pumpAndSettle();
     final context = tester.element(find.byType(ProfilePage));
     final l10n = AppLocalizations.of(context)!;
+    final expectedDialogActionColor = Theme.of(
+      context,
+    ).colorScheme.onSurfaceVariant;
 
     final securityTile = tester.widget<ListTile>(
       find.widgetWithText(ListTile, l10n.profile_security),
@@ -943,6 +946,49 @@ void main() {
     await tester.tap(languageTile);
     await tester.pumpAndSettle();
     final languageDialogWidth = tester.getSize(find.byType(AlertDialog)).width;
+    final dynamic languageSegmented = tester.widget(
+      find.byKey(const Key('profile_language_segmented_button')),
+    );
+    final languageStyle = languageSegmented.style as ButtonStyle?;
+    final languageSelectedColor = languageStyle?.foregroundColor?.resolve(
+      <WidgetState>{WidgetState.selected},
+    );
+    expect(languageSelectedColor, expectedDialogActionColor);
+    final languageCloseButton = tester.widget<TextButton>(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(TextButton, l10n.close),
+      ),
+    );
+    final languageCloseColor = languageCloseButton.style?.foregroundColor
+        ?.resolve(<WidgetState>{});
+    expect(languageCloseColor, expectedDialogActionColor);
+    await tester.tap(find.text(l10n.close));
+    await tester.pumpAndSettle();
+
+    final themeModeTile = find.widgetWithText(ListTile, l10n.theme_mode);
+    await tester.ensureVisible(themeModeTile);
+    await tester.tap(themeModeTile);
+    await tester.pumpAndSettle();
+    final themeDialogWidth = tester.getSize(find.byType(AlertDialog)).width;
+    final dynamic themeSegmented = tester.widget(
+      find.byKey(const Key('profile_theme_segmented_button')),
+    );
+    final themeStyle = themeSegmented.style as ButtonStyle?;
+    final themeSelectedColor = themeStyle?.foregroundColor?.resolve(
+      <WidgetState>{WidgetState.selected},
+    );
+    expect(themeSelectedColor, expectedDialogActionColor);
+    final themeCloseButton = tester.widget<TextButton>(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(TextButton, l10n.close),
+      ),
+    );
+    final themeCloseColor = themeCloseButton.style?.foregroundColor?.resolve(
+      <WidgetState>{},
+    );
+    expect(themeCloseColor, expectedDialogActionColor);
     await tester.tap(find.text(l10n.close));
     await tester.pumpAndSettle();
 
@@ -954,6 +1000,15 @@ void main() {
     await tester.tap(securityTileFinder);
     await tester.pumpAndSettle();
     final securityDialogWidth = tester.getSize(find.byType(AlertDialog)).width;
+    final securityCloseButton = tester.widget<TextButton>(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(TextButton, l10n.close),
+      ),
+    );
+    final securityCloseColor = securityCloseButton.style?.foregroundColor
+        ?.resolve(<WidgetState>{});
+    expect(securityCloseColor, expectedDialogActionColor);
     await tester.tap(find.text(l10n.close));
     await tester.pumpAndSettle();
 
@@ -962,6 +1017,16 @@ void main() {
     await tester.tap(helpTile);
     await tester.pumpAndSettle();
     final helpDialogWidth = tester.getSize(find.byType(AlertDialog)).width;
+    final helpCloseButton = tester.widget<TextButton>(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(TextButton, l10n.close),
+      ),
+    );
+    final helpCloseColor = helpCloseButton.style?.foregroundColor?.resolve(
+      <WidgetState>{},
+    );
+    expect(helpCloseColor, expectedDialogActionColor);
     await tester.tap(find.text(l10n.close));
     await tester.pumpAndSettle();
 
@@ -971,10 +1036,21 @@ void main() {
     await tester.pump(const Duration(milliseconds: 1300));
     await tester.pumpAndSettle();
     final aboutDialogWidth = tester.getSize(find.byType(AlertDialog)).width;
+    final aboutOkButton = tester.widget<TextButton>(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.widgetWithText(TextButton, l10n.ok),
+      ),
+    );
+    final aboutOkColor = aboutOkButton.style?.foregroundColor?.resolve(
+      <WidgetState>{},
+    );
+    expect(aboutOkColor, expectedDialogActionColor);
     await tester.tap(find.text(l10n.ok));
     await tester.pumpAndSettle();
 
     expect(editDialogWidth, closeTo(languageDialogWidth, 0.01));
+    expect(themeDialogWidth, closeTo(languageDialogWidth, 0.01));
     expect(securityDialogWidth, closeTo(languageDialogWidth, 0.01));
     expect(helpDialogWidth, closeTo(languageDialogWidth, 0.01));
     expect(aboutDialogWidth, closeTo(languageDialogWidth, 0.01));

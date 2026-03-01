@@ -37,6 +37,37 @@ class _MediaCacheStats {
   });
 }
 
+class _CachePagePalette {
+  const _CachePagePalette({
+    required this.images,
+    required this.audio,
+    required this.other,
+    required this.emptySegment,
+    required this.deepCleanBackground,
+    required this.deepCleanForeground,
+  });
+
+  final Color images;
+  final Color audio;
+  final Color other;
+  final Color emptySegment;
+  final Color deepCleanBackground;
+  final Color deepCleanForeground;
+
+  static _CachePagePalette of(ThemeData theme) {
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    return _CachePagePalette(
+      images: isDark ? const Color(0xFFD7DCE5) : const Color(0xFF4B5563),
+      audio: scheme.tertiary,
+      other: isDark ? const Color(0xFF727987) : const Color(0xFF8A94A3),
+      emptySegment: scheme.surfaceContainerHighest,
+      deepCleanBackground: isDark ? scheme.onSurface : scheme.primary,
+      deepCleanForeground: isDark ? scheme.surface : scheme.onPrimary,
+    );
+  }
+}
+
 class ProfileCacheManagementPage extends ConsumerStatefulWidget {
   const ProfileCacheManagementPage({super.key});
 
@@ -313,20 +344,21 @@ class _ProfileCacheManagementPageState
     }
   }
 
-  Widget _buildLegendDot(Color color) {
+  Widget _buildLegendDot(Color color, {Key? key}) {
     return Container(
+      key: key,
       width: 8,
       height: 8,
       decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
 
-  Widget _buildLegendItem(Color color, String label) {
+  Widget _buildLegendItem(Color color, String label, {Key? dotKey}) {
     final theme = Theme.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _buildLegendDot(color),
+        _buildLegendDot(color, key: dotKey),
         const SizedBox(width: 6),
         Text(
           label,
@@ -342,12 +374,9 @@ class _ProfileCacheManagementPageState
     required int imagesBytes,
     required int audioBytes,
     required int otherBytes,
+    required _CachePagePalette palette,
   }) {
-    final theme = Theme.of(context);
     final total = (imagesBytes + audioBytes + otherBytes).clamp(0, 1 << 62);
-    final imagesColor = theme.colorScheme.primary;
-    final audioColor = theme.colorScheme.tertiary;
-    final otherColor = theme.colorScheme.secondary;
 
     int flexFor(int bytes) {
       if (total <= 0) return 1;
@@ -370,24 +399,31 @@ class _ProfileCacheManagementPageState
             if (imagesFlex > 0)
               Expanded(
                 flex: imagesFlex,
-                child: Container(color: imagesColor),
+                child: Container(
+                  key: const Key('cache_segment_images'),
+                  color: palette.images,
+                ),
               ),
             if (audioFlex > 0)
               Expanded(
                 flex: audioFlex,
-                child: Container(color: audioColor),
+                child: Container(
+                  key: const Key('cache_segment_audio'),
+                  color: palette.audio,
+                ),
               ),
             if (otherFlex > 0)
               Expanded(
                 flex: otherFlex,
-                child: Container(color: otherColor),
+                child: Container(
+                  key: const Key('cache_segment_other'),
+                  color: palette.other,
+                ),
               ),
             if (emptyFlex > 0)
               Expanded(
                 flex: emptyFlex,
-                child: Container(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                ),
+                child: Container(color: palette.emptySegment),
               ),
           ],
         ),
@@ -497,9 +533,10 @@ class _ProfileCacheManagementPageState
           final stats = snapshot.data ?? emptyStats;
 
           final theme = Theme.of(context);
-          final imagesColor = theme.colorScheme.primary;
-          final audioColor = theme.colorScheme.tertiary;
-          final otherColor = theme.colorScheme.secondary;
+          final palette = _CachePagePalette.of(theme);
+          final imagesColor = palette.images;
+          final audioColor = palette.audio;
+          final otherColor = palette.other;
 
           return RefreshIndicator(
             onRefresh: _refresh,
@@ -560,6 +597,7 @@ class _ProfileCacheManagementPageState
                           imagesBytes: stats.images.bytes,
                           audioBytes: stats.audio.bytes,
                           otherBytes: stats.other.bytes,
+                          palette: palette,
                         ),
                         const SizedBox(height: 10),
                         Row(
@@ -567,16 +605,19 @@ class _ProfileCacheManagementPageState
                             _buildLegendItem(
                               imagesColor,
                               l10n.profile_cache_manage_images,
+                              dotKey: const Key('cache_legend_images'),
                             ),
                             const SizedBox(width: 16),
                             _buildLegendItem(
                               audioColor,
                               l10n.profile_cache_manage_audio,
+                              dotKey: const Key('cache_legend_audio'),
                             ),
                             const SizedBox(width: 16),
                             _buildLegendItem(
                               otherColor,
                               l10n.profile_cache_manage_other,
+                              dotKey: const Key('cache_legend_other'),
                             ),
                           ],
                         ),
@@ -664,6 +705,8 @@ class _ProfileCacheManagementPageState
                       ),
                     ),
                     style: FilledButton.styleFrom(
+                      backgroundColor: palette.deepCleanBackground,
+                      foregroundColor: palette.deepCleanForeground,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       textStyle: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,

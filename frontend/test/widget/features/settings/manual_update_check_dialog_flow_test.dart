@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/services/app_update_service.dart';
+import 'package:personal_ai_assistant/core/theme/app_theme.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/providers/app_update_provider.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
@@ -70,6 +71,68 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text("You're up to date"), findsOneWidget);
+      expect(
+        find.byKey(const Key('manual_update_uptodate_mark')),
+        findsOneWidget,
+      );
+      final markIcon = tester.widget<Icon>(
+        find.descendant(
+          of: find.byKey(const Key('manual_update_uptodate_mark')),
+          matching: find.byIcon(Icons.check),
+        ),
+      );
+      expect(markIcon.color, AppTheme.lightTheme.colorScheme.onSurfaceVariant);
+
+      final upToDateText = tester.widget<Text>(
+        find.byKey(const Key('manual_update_uptodate_text')),
+      );
+      expect(
+        upToDateText.style?.color,
+        AppTheme.lightTheme.colorScheme.onSurfaceVariant,
+      );
+      final okButton = tester.widget<TextButton>(
+        find.widgetWithText(TextButton, 'OK'),
+      );
+      final okColor = okButton.style?.foregroundColor?.resolve(<WidgetState>{});
+      expect(okColor, AppTheme.lightTheme.colorScheme.onSurfaceVariant);
+
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('uses themed colors for up-to-date state in dark mode', (
+      tester,
+    ) async {
+      final service = _FakeAppUpdateService(release: null);
+
+      await tester.pumpWidget(
+        _buildHost(service: service, themeMode: ThemeMode.dark),
+      );
+
+      await tester.tap(find.text('Open Check Dialog'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final markIcon = tester.widget<Icon>(
+        find.descendant(
+          of: find.byKey(const Key('manual_update_uptodate_mark')),
+          matching: find.byIcon(Icons.check),
+        ),
+      );
+      expect(markIcon.color, AppTheme.darkTheme.colorScheme.onSurfaceVariant);
+
+      final upToDateText = tester.widget<Text>(
+        find.byKey(const Key('manual_update_uptodate_text')),
+      );
+      expect(
+        upToDateText.style?.color,
+        AppTheme.darkTheme.colorScheme.onSurfaceVariant,
+      );
+      final okButton = tester.widget<TextButton>(
+        find.widgetWithText(TextButton, 'OK'),
+      );
+      final okColor = okButton.style?.foregroundColor?.resolve(<WidgetState>{});
+      expect(okColor, AppTheme.darkTheme.colorScheme.onSurfaceVariant);
 
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
@@ -120,10 +183,16 @@ void main() {
   });
 }
 
-Widget _buildHost({required AppUpdateService service}) {
+Widget _buildHost({
+  required AppUpdateService service,
+  ThemeMode themeMode = ThemeMode.light,
+}) {
   return ProviderScope(
     overrides: [appUpdateServiceProvider.overrideWith((ref) => service)],
     child: MaterialApp(
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
