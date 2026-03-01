@@ -60,7 +60,7 @@ void main() {
       final otherSegment = tester.widget<Container>(
         find.byKey(const Key('cache_segment_other')),
       );
-      expect(otherSegment.color, const Color(0xFF8A94A3));
+      expect(otherSegment.color, AppTheme.lightTheme.colorScheme.outline);
       expect(
         otherSegment.color,
         isNot(AppTheme.lightTheme.colorScheme.secondary),
@@ -73,6 +73,32 @@ void main() {
       expect(
         audioLegendDecoration.color,
         AppTheme.lightTheme.colorScheme.tertiary,
+      );
+
+      final cleanButton = tester.widget<ButtonStyleButton>(
+        find.byKey(const Key('cache_manage_clean_images')),
+      );
+      final cleanForeground = cleanButton.style?.foregroundColor?.resolve(
+        <WidgetState>{},
+      );
+      expect(cleanForeground, AppTheme.lightTheme.colorScheme.onSurfaceVariant);
+
+      final noticeBox = tester.widget<Container>(
+        find.byKey(const Key('cache_manage_notice_box')),
+      );
+      final noticeDecoration = noticeBox.decoration as BoxDecoration;
+      expect(
+        noticeDecoration.color,
+        AppTheme.lightTheme.colorScheme.onSurfaceVariant.withValues(
+          alpha: 0.16,
+        ),
+      );
+      final noticeIcon = tester.widget<Icon>(
+        find.byKey(const Key('cache_manage_notice_icon')),
+      );
+      expect(
+        noticeIcon.color,
+        AppTheme.lightTheme.colorScheme.onSurfaceVariant,
       );
     });
 
@@ -101,8 +127,8 @@ void main() {
       final resolvedForeground = deepCleanButton.style?.foregroundColor
           ?.resolve(<WidgetState>{});
 
-      expect(resolvedBackground, AppTheme.darkTheme.colorScheme.onSurface);
-      expect(resolvedForeground, AppTheme.darkTheme.colorScheme.surface);
+      expect(resolvedBackground, AppTheme.darkTheme.colorScheme.surface);
+      expect(resolvedForeground, AppTheme.darkTheme.colorScheme.onSurface);
     });
 
     testWidgets('stays stable in zero-data state', (tester) async {
@@ -110,6 +136,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ProfileCacheManagementPage), findsOneWidget);
+      final noticeBox = tester.widget<Container>(
+        find.byKey(const Key('cache_manage_notice_box')),
+      );
+      final noticeDecoration = noticeBox.decoration as BoxDecoration;
+      expect(
+        noticeDecoration.color,
+        AppTheme.darkTheme.colorScheme.onSurfaceVariant.withValues(alpha: 0.24),
+      );
       expect(find.textContaining('0'), findsWidgets);
       expect(tester.takeException(), isNull);
     });

@@ -43,6 +43,8 @@ class _CachePagePalette {
     required this.audio,
     required this.other,
     required this.emptySegment,
+    required this.cleanButtonBackground,
+    required this.cleanButtonForeground,
     required this.deepCleanBackground,
     required this.deepCleanForeground,
   });
@@ -51,6 +53,8 @@ class _CachePagePalette {
   final Color audio;
   final Color other;
   final Color emptySegment;
+  final Color cleanButtonBackground;
+  final Color cleanButtonForeground;
   final Color deepCleanBackground;
   final Color deepCleanForeground;
 
@@ -58,12 +62,18 @@ class _CachePagePalette {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     return _CachePagePalette(
-      images: isDark ? const Color(0xFFD7DCE5) : const Color(0xFF4B5563),
+      images: scheme.onSurfaceVariant,
       audio: scheme.tertiary,
-      other: isDark ? const Color(0xFF727987) : const Color(0xFF8A94A3),
+      other: scheme.outline,
       emptySegment: scheme.surfaceContainerHighest,
-      deepCleanBackground: isDark ? scheme.onSurface : scheme.primary,
-      deepCleanForeground: isDark ? scheme.surface : scheme.onPrimary,
+      cleanButtonBackground: isDark
+          ? scheme.surfaceContainerHigh
+          : scheme.surfaceContainerHighest,
+      cleanButtonForeground: isDark
+          ? scheme.onSurfaceVariant
+          : scheme.onSurfaceVariant,
+      deepCleanBackground: isDark ? scheme.surface : scheme.onSurfaceVariant,
+      deepCleanForeground: isDark ? scheme.onSurface : scheme.surface,
     );
   }
 }
@@ -435,6 +445,7 @@ class _ProfileCacheManagementPageState
     required _CacheCategory category,
     required IconData icon,
     required Color color,
+    required _CachePagePalette palette,
     required String title,
     required _CategoryStats stats,
     required VoidCallback onClean,
@@ -495,6 +506,10 @@ class _ProfileCacheManagementPageState
             FilledButton.tonal(
               key: Key('cache_manage_clean_${category.name}'),
               onPressed: stats.count == 0 ? null : onClean,
+              style: FilledButton.styleFrom(
+                backgroundColor: palette.cleanButtonBackground,
+                foregroundColor: palette.cleanButtonForeground,
+              ),
               child: Text(l10n.profile_cache_manage_clean),
             ),
           ],
@@ -642,6 +657,7 @@ class _ProfileCacheManagementPageState
                   category: _CacheCategory.images,
                   icon: Icons.image_outlined,
                   color: imagesColor,
+                  palette: palette,
                   title: l10n.profile_cache_manage_images,
                   stats: stats.images,
                   onClean: () => _deleteCategory(stats, _CacheCategory.images),
@@ -650,6 +666,7 @@ class _ProfileCacheManagementPageState
                   category: _CacheCategory.audio,
                   icon: Icons.headphones,
                   color: audioColor,
+                  palette: palette,
                   title: l10n.profile_cache_manage_audio,
                   stats: stats.audio,
                   onClean: () => _deleteCategory(stats, _CacheCategory.audio),
@@ -658,6 +675,7 @@ class _ProfileCacheManagementPageState
                   category: _CacheCategory.other,
                   icon: Icons.folder_outlined,
                   color: otherColor,
+                  palette: palette,
                   title: l10n.profile_cache_manage_other,
                   stats: stats.other,
                   onClean: () => _deleteCategory(stats, _CacheCategory.other),
@@ -666,10 +684,13 @@ class _ProfileCacheManagementPageState
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Container(
+                    key: const Key('cache_manage_notice_box'),
                     padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primaryContainer.withValues(
-                        alpha: 0.3,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(
+                        alpha: theme.brightness == Brightness.dark
+                            ? 0.24
+                            : 0.16,
                       ),
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -677,7 +698,8 @@ class _ProfileCacheManagementPageState
                       children: [
                         Icon(
                           Icons.info_outline,
-                          color: theme.colorScheme.primary,
+                          key: const Key('cache_manage_notice_icon'),
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
