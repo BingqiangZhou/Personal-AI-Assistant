@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.13.5](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.13.4...v0.13.5) - 2026-03-01 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.13.5))
+
+### 🎨 Styling
+
+- *(profile, settings)* Standardize dialog colors using onSurfaceVariant token ([83d035b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/83d035bb3a47ec1f35c993e17c95b36459cd8522))
+- *(profile)* Further refine cache management page colors with Material 3 tokens ([994abc3](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/994abc3dad2c20828b6342be8dd39fc9d03bbfb0))
+
+### 🚜 Refactor
+
+- *(podcast)* Extract shared utilities and optimize repository queries ([8e73515](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8e73515ac46dd8cc34e71f9dbc42c4583c372950))
+- *(podcast)* Use window function for playback history total count and remove unused batch method ([6adf195](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6adf195842df891485c4a92123e5773e81cd6965))
+
+
+
 ## [0.13.4](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.13.3...v0.13.4) - 2026-02-28 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.13.4))
 
 ### 🎨 Styling
