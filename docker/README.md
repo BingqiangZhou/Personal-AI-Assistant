@@ -332,3 +332,20 @@ cat .env.dev | grep -v "SECRET_KEY"
 ---
 
 **祝部署顺利！🎉**
+
+---
+
+## Celery Runtime Checklist (2026-03)
+
+For hourly feed refresh + backlog transcription + summary compensation, ensure all three services are running:
+
+- `celery_worker_core` (queues: `subscription_sync,ai_generation,maintenance`)
+- `celery_worker_transcription` (queue: `transcription`)
+- `celery_beat`
+
+Quick verification:
+
+```bash
+cd docker
+docker-compose ps
+```

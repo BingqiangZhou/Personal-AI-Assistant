@@ -158,6 +158,9 @@ class Settings(BaseSettings):
     # Transcription Concurrency Control
     TRANSCRIPTION_MAX_THREADS: int = 4  # Maximum concurrent transcription requests
     TRANSCRIPTION_QUEUE_SIZE: int = 100  # Maximum queue size for pending tasks
+    TRANSCRIPTION_BACKLOG_ENABLED: bool = True
+    TRANSCRIPTION_BACKLOG_BATCH_SIZE: int = 20
+    TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE: int = 5
 
     # Admin Panel 2FA Configuration
     ADMIN_2FA_ENABLED: bool = True  # Admin panel 2FA toggle (default: enabled)
@@ -218,6 +221,22 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ("true", "1", "yes", "on")
         return bool(v)
+
+    @field_validator("TRANSCRIPTION_BACKLOG_BATCH_SIZE")
+    @classmethod
+    def validate_transcription_backlog_batch_size(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("TRANSCRIPTION_BACKLOG_BATCH_SIZE must be >= 1")
+        return v
+
+    @field_validator("TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE")
+    @classmethod
+    def validate_transcription_backlog_schedule_minute(cls, v: int) -> int:
+        if v < 0 or v > 59:
+            raise ValueError(
+                "TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE must be between 0 and 59"
+            )
+        return v
 
 
 @lru_cache

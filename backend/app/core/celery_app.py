@@ -12,6 +12,40 @@ celery_app = Celery(
     backend=settings.CELERY_RESULT_BACKEND,
 )
 
+beat_schedule = {
+    "log-task-statistics": {
+        "task": "app.domains.podcast.tasks.maintenance.log_periodic_task_statistics",
+        "schedule": 600.0,
+        "options": {"queue": "maintenance"},
+    },
+    "refresh-podcast-feeds": {
+        "task": "app.domains.podcast.tasks.subscription_sync.refresh_all_podcast_feeds",
+        "schedule": crontab(minute=0),
+        "options": {"queue": "subscription_sync"},
+    },
+    "generate-pending-summaries": {
+        "task": "app.domains.podcast.tasks.summary_generation.generate_pending_summaries",
+        "schedule": 1800.0,
+        "options": {"queue": "ai_generation"},
+    },
+    "auto-cleanup-cache": {
+        "task": "app.domains.podcast.tasks.maintenance.auto_cleanup_cache_files",
+        "schedule": crontab(hour=4, minute=0),
+        "options": {"queue": "maintenance"},
+    },
+    "generate-daily-podcast-reports": {
+        "task": "app.domains.podcast.tasks.daily_report.generate_daily_podcast_reports",
+        "schedule": crontab(hour=19, minute=30),
+        "options": {"queue": "ai_generation"},
+    },
+}
+if settings.TRANSCRIPTION_BACKLOG_ENABLED:
+    beat_schedule["process-pending-transcriptions"] = {
+        "task": "app.domains.podcast.tasks.pending_transcription.process_pending_transcriptions",
+        "schedule": crontab(minute=settings.TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE),
+        "options": {"queue": "transcription"},
+    }
+
 celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
@@ -39,6 +73,9 @@ celery_app.conf.update(
         "app.domains.podcast.tasks.transcription.process_podcast_episode_with_transcription": {
             "queue": "transcription"
         },
+        "app.domains.podcast.tasks.pending_transcription.process_pending_transcriptions": {
+            "queue": "transcription"
+        },
         "app.domains.podcast.tasks.maintenance.cleanup_old_playback_states": {
             "queue": "maintenance"
         },
@@ -55,33 +92,7 @@ celery_app.conf.update(
             "queue": "ai_generation"
         },
     },
-    beat_schedule={
-        "log-task-statistics": {
-            "task": "app.domains.podcast.tasks.maintenance.log_periodic_task_statistics",
-            "schedule": 600.0,
-            "options": {"queue": "maintenance"},
-        },
-        "refresh-podcast-feeds": {
-            "task": "app.domains.podcast.tasks.subscription_sync.refresh_all_podcast_feeds",
-            "schedule": crontab(minute=0),
-            "options": {"queue": "subscription_sync"},
-        },
-        "generate-pending-summaries": {
-            "task": "app.domains.podcast.tasks.summary_generation.generate_pending_summaries",
-            "schedule": 1800.0,
-            "options": {"queue": "ai_generation"},
-        },
-        "auto-cleanup-cache": {
-            "task": "app.domains.podcast.tasks.maintenance.auto_cleanup_cache_files",
-            "schedule": crontab(hour=4, minute=0),
-            "options": {"queue": "maintenance"},
-        },
-        "generate-daily-podcast-reports": {
-            "task": "app.domains.podcast.tasks.daily_report.generate_daily_podcast_reports",
-            "schedule": crontab(hour=19, minute=30),
-            "options": {"queue": "ai_generation"},
-        },
-    },
+    beat_schedule=beat_schedule,
 )
 
 

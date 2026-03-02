@@ -374,6 +374,7 @@ uv run python test_transcription_manual.py
 
 - Summary generation now has a single backend implementation: `DatabaseBackedAISummaryService`.
 - Automatic summary triggering remains `immediate-after-transcription`, with periodic `generate_pending_summaries` as compensating fallback.
+- Transcription backlog dispatch now has an hourly compensating task: `process_pending_transcriptions` (default minute `05`), which scans eligible historical episodes without transcripts and dispatches them to the `transcription` queue.
 - Summary generation uses a Redis episode-level lock (`summary:{episode_id}`) to avoid duplicate generation across concurrent triggers.
 - Transcription dedupe/reuse decisions are centralized in `DatabaseBackedTranscriptionService.start_transcription()`.
 - The single-episode summary Celery task `generate_summary_for_episode` has been removed.

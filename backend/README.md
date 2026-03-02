@@ -31,10 +31,14 @@ Run API locally:
 uv run uvicorn app.main:app --reload
 ```
 
-Run Celery worker:
+Run Celery workers (recommended split queues):
 
 ```bash
-uv run celery -A app.core.celery_app:celery_app worker --loglevel=info
+# Core queues (subscription_sync, ai_generation, maintenance)
+uv run celery -A app.core.celery_app:celery_app worker --loglevel=info -Q subscription_sync,ai_generation,maintenance
+
+# Transcription queue
+uv run celery -A app.core.celery_app:celery_app worker --loglevel=info -Q transcription
 ```
 
 Run Celery beat:
@@ -69,8 +73,15 @@ uv run pytest
 ```bash
 cd docker
 docker-compose up -d
+docker-compose ps
 curl http://localhost:8000/api/v1/health
 ```
+
+Verify Celery services are running in Docker:
+
+- `celery_worker_core` (queues: `subscription_sync,ai_generation,maintenance`)
+- `celery_worker_transcription` (queue: `transcription`)
+- `celery_beat`
 
 ## Project Layout
 
