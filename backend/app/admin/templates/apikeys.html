@@ -1033,6 +1033,7 @@ async function submitEdit() {
 }
 
 async function testApiKeyBeforeEdit() {
+    const key_id = document.getElementById('edit-id').value;
     const name = document.getElementById('edit-name').value.trim();
     const api_url = document.getElementById('edit-api_url').value.trim();
     const api_key = document.getElementById('edit-api_key').value.trim();
@@ -1041,12 +1042,6 @@ async function testApiKeyBeforeEdit() {
     // Validate required fields (api_key is optional for edit)
     if (!name || !api_url || !model_type) {
         showEditTestResult(false, '请填写所有必填字段（名称、API URL、模型类型）');
-        return;
-    }
-
-    // If no API key provided, warn user
-    if (!api_key) {
-        showEditTestResult(false, '请输入API Key进行测试（测试不会保存密钥）');
         return;
     }
 
@@ -1070,6 +1065,7 @@ async function testApiKeyBeforeEdit() {
                 api_url: api_url,
                 api_key: api_key,
                 model_type: model_type,
+                key_id: key_id ? parseInt(key_id, 10) : null,
             }),
         });
 

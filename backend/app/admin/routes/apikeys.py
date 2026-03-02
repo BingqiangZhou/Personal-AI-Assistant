@@ -127,9 +127,10 @@ async def apikeys_page(
 async def test_apikey(
     request: Request,
     api_url: str = Body(...),
-    api_key: str = Body(...),
+    api_key: str | None = Body(None),
     model_type: str = Body(...),
     name: str | None = Body(None),
+    key_id: int | None = Body(None),
     user: User = Depends(admin_required),
     db: AsyncSession = Depends(get_db_session),
 ):
@@ -149,10 +150,76 @@ async def test_apikey(
                 status_code=status.HTTP_400_BAD_REQUEST
             )
 
+        resolved_from_db = False
+        effective_api_key = (api_key or "").strip()
+        if not effective_api_key:
+            if not key_id:
+                return JSONResponse(
+                    content={
+                        "success": False,
+                        "message": "API key is required when key_id is not provided.",
+                    },
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
+
+            result = await db.execute(
+                select(AIModelConfig).where(AIModelConfig.id == key_id)
+            )
+            model_config = result.scalar_one_or_none()
+            if not model_config:
+                return JSONResponse(
+                    content={
+                        "success": False,
+                        "message": f"Model config {key_id} not found.",
+                    },
+                    status_code=status.HTTP_404_NOT_FOUND,
+                )
+
+            stored_key = (model_config.api_key or "").strip()
+            if not stored_key:
+                return JSONResponse(
+                    content={
+                        "success": False,
+                        "message": "Stored API key is empty. Please enter and save a new API key.",
+                    },
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
+
+            if model_config.api_key_encrypted:
+                try:
+                    effective_api_key = decrypt_data(stored_key).strip()
+                except Exception as exc:
+                    logger.warning(
+                        "Failed to decrypt API key for config %s (%s): %s",
+                        model_config.id,
+                        model_config.name,
+                        exc,
+                    )
+                    return JSONResponse(
+                        content={
+                            "success": False,
+                            "message": "Failed to decrypt stored API key. Please re-enter and save a new API key.",
+                        },
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                    )
+            else:
+                effective_api_key = stored_key
+
+            if not effective_api_key:
+                return JSONResponse(
+                    content={
+                        "success": False,
+                        "message": "Stored API key is invalid. Please enter and save a new API key.",
+                    },
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                )
+
+            resolved_from_db = True
+
         # Validate the API key
         validation_result = await service.validate_api_key(
             api_url=api_url,
-            api_key=api_key,
+            api_key=effective_api_key,
             model_id=name,
             model_type=model_type_enum
         )
@@ -163,7 +230,8 @@ async def test_apikey(
                 "success": True,
                 "message": "API密钥测试成功",
                 "test_result": validation_result.test_result,
-                "response_time_ms": validation_result.response_time_ms
+                "response_time_ms": validation_result.response_time_ms,
+                "used_stored_key": resolved_from_db
             })
         else:
             logger.warning(f"API key test failed for model type {model_type} by user {user.username}: {validation_result.error_message}")
