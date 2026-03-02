@@ -51,66 +51,41 @@ class TranscriptionScheduler:
         episode = await self._get_episode(episode_id)
         if not episode:
             raise ValidationError(f"Episode {episode_id} not found")
-
-        existing_task = await self._get_existing_transcription_task(episode_id)
-        if existing_task:
-            status_value = self._status_value(existing_task.status)
-
-            if status_value == TranscriptionStatus.COMPLETED.value:
-                if not force:
-                    return {
-                        "status": "skipped",
-                        "message": "Transcription already exists",
-                        "task_id": existing_task.id,
-                        "transcript_content": (
-                            existing_task.transcript_content[:100] + "..."
-                            if existing_task.transcript_content
-                            else None
-                        ),
-                        "reason": "Already transcribed, use force=true to regenerate",
-                    }
-                await self.db.delete(existing_task)
-                await self.db.flush()
-                await self.db.commit()
-                logger.info(
-                    "Deleted completed task %s for force regeneration",
-                    existing_task.id,
-                )
-
-            elif status_value in {
-                TranscriptionStatus.PENDING.value,
-                TranscriptionStatus.IN_PROGRESS.value,
-            }:
-                return {
-                    "status": "processing",
-                    "message": "Transcription task already in progress",
-                    "task_id": existing_task.id,
-                    "progress": existing_task.progress_percentage,
-                    "current_status": status_value,
-                }
-
-            elif status_value in {
-                TranscriptionStatus.FAILED.value,
-                TranscriptionStatus.CANCELLED.value,
-            }:
-                if not force:
-                    return {
-                        "status": "failed",
-                        "message": "Previous transcription failed, use force=true to retry",
-                        "task_id": existing_task.id,
-                        "error": existing_task.error_message,
-                        "reason": "Previous run failed, use force=true to retry",
-                    }
-                await self.db.delete(existing_task)
-                await self.db.flush()
-                await self.db.commit()
-                logger.info("Deleted failed task %s for retry", existing_task.id)
-
-        task = await self.transcription_service.start_transcription(
+        start_result = await self.transcription_service.start_transcription(
             episode_id, force=force
         )
+        task = start_result["task"]
+        action = start_result["action"]
+
+        if action == "reused_completed":
+            return {
+                "status": "skipped",
+                "message": "Transcription already exists",
+                "task_id": task.id,
+                "transcript_content": (
+                    task.transcript_content[:100] + "..."
+                    if task.transcript_content
+                    else None
+                ),
+                "reason": "Already transcribed, use force=true to regenerate",
+                "action": action,
+            }
+
+        if action in {"reused_in_progress", "reused_pending", "locked_by_other_task"}:
+            return {
+                "status": "processing",
+                "message": "Transcription task already in progress",
+                "task_id": task.id,
+                "progress": task.progress_percentage,
+                "current_status": self._status_value(task.status),
+                "action": action,
+            }
+
         logger.info(
-            "Scheduled transcription for episode %s task %s", episode_id, task.id
+            "Scheduled transcription for episode %s task %s (action=%s)",
+            episode_id,
+            task.id,
+            action,
         )
         return {
             "status": "scheduled",
@@ -118,6 +93,7 @@ class TranscriptionScheduler:
             "task_id": task.id,
             "episode_id": episode_id,
             "scheduled_at": datetime.now(timezone.utc),
+            "action": action,
         }
 
     async def batch_schedule_transcription(
@@ -143,28 +119,21 @@ class TranscriptionScheduler:
         results: list[dict[str, Any]] = []
         for episode in episodes:
             try:
-                existing = await self._get_existing_transcription_task(episode.id)
-                if (
-                    skip_existing
-                    and existing
-                    and self._status_value(existing.status)
-                    == TranscriptionStatus.COMPLETED.value
-                ):
-                    results.append(
-                        {
-                            "episode_id": episode.id,
-                            "episode_title": episode.title,
-                            "status": "skipped",
-                            "reason": "Already transcribed",
-                        }
-                    )
-                    continue
-
                 schedule_result = await self.schedule_transcription(
                     episode_id=episode.id,
                     frequency=frequency,
                     force=False,
                 )
+                if (
+                    not skip_existing
+                    and schedule_result.get("status") == "skipped"
+                    and schedule_result.get("action") == "reused_completed"
+                ):
+                    schedule_result = await self.schedule_transcription(
+                        episode_id=episode.id,
+                        frequency=frequency,
+                        force=True,
+                    )
                 schedule_result["episode_id"] = episode.id
                 schedule_result["episode_title"] = episode.title
                 results.append(schedule_result)

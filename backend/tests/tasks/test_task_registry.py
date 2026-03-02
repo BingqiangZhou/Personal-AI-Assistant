@@ -8,7 +8,6 @@ def test_registered_task_names_snapshot() -> None:
     expected_names = {
         "app.domains.podcast.tasks.subscription_sync.refresh_all_podcast_feeds",
         "app.domains.podcast.tasks.summary_generation.generate_pending_summaries",
-        "app.domains.podcast.tasks.summary_generation.generate_summary_for_episode",
         "app.domains.podcast.tasks.transcription.process_audio_transcription",
         "app.domains.podcast.tasks.transcription.process_podcast_episode_with_transcription",
         "app.domains.podcast.tasks.maintenance.cleanup_old_playback_states",

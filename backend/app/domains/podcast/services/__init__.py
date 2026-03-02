@@ -8,7 +8,6 @@ from .schedule_service import PodcastScheduleService
 from .search_service import PodcastSearchService
 from .stats_service import PodcastStatsService
 from .subscription_service import PodcastSubscriptionService
-from .summary_service import PodcastSummaryService
 from .sync_service import PodcastSyncService
 
 
@@ -21,6 +20,5 @@ __all__ = [
     "PodcastSearchService",
     "PodcastStatsService",
     "PodcastSubscriptionService",
-    "PodcastSummaryService",
     "PodcastSyncService",
 ]

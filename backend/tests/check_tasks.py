@@ -14,7 +14,6 @@ def main():
         "app.domains.podcast.tasks.transcription.process_audio_transcription",
         "app.domains.podcast.tasks.transcription.process_podcast_episode_with_transcription",
         "app.domains.podcast.tasks.summary_generation.generate_pending_summaries",
-        "app.domains.podcast.tasks.summary_generation.generate_summary_for_episode",
     }
 
     registered = set(celery_app.tasks.keys())

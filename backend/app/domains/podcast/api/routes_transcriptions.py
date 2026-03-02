@@ -3,7 +3,6 @@
 
 import logging
 from datetime import datetime, timezone
-from typing import Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,61 +55,6 @@ async def _validate_episode_and_permission(
     return episode
 
 
-async def _check_redis_cached_task(
-    episode_id: int,
-    state_manager,
-    transcription_service: DatabaseBackedTranscriptionService,
-    episode: PodcastEpisode,
-) -> Optional[PodcastTranscriptionResponse]:
-    """Return in-progress task from cache when available."""
-    redis_task_id = await state_manager.get_episode_task(episode_id)
-    if not redis_task_id:
-        return None
-
-    cached_progress = await state_manager.get_task_progress(redis_task_id)
-    if cached_progress and cached_progress.get("status") not in ["completed", "failed"]:
-        logger.info(
-            "[REDIS] Returning cached in-progress task %s for episode %s",
-            redis_task_id,
-            episode_id,
-        )
-        task = await transcription_service.get_transcription_status(redis_task_id)
-        if task:
-            return _build_transcription_response(task, episode)
-    return None
-
-
-async def _check_existing_db_task(
-    episode_id: int,
-    force_regenerate: bool,
-    transcription_service: DatabaseBackedTranscriptionService,
-    episode: PodcastEpisode,
-) -> Optional[PodcastTranscriptionResponse]:
-    """Return existing DB task when it can be reused."""
-    existing_task = await transcription_service.get_episode_transcription(episode_id)
-    if not existing_task:
-        return None
-
-    existing_status = _status_value(existing_task.status)
-    if existing_status == "completed" and not force_regenerate:
-        logger.info(
-            "[DB] Returning existing completed task %s for episode %s",
-            existing_task.id,
-            episode_id,
-        )
-        return _build_transcription_response(existing_task, episode)
-
-    if existing_status == "in_progress" and not force_regenerate:
-        state_manager = await get_transcription_state_manager()
-        await state_manager.set_episode_task(episode_id, existing_task.id)
-        logger.info(
-            "[DB] Returning existing in-progress task %s for episode %s",
-            existing_task.id,
-            episode_id,
-        )
-        return _build_transcription_response(existing_task, episode)
-
-    return None
 
 
 @router.post(
@@ -128,7 +72,7 @@ async def start_transcription(
         get_transcription_service
     ),
 ):
-    """Start transcription task with lock and dedupe behavior."""
+    """Start transcription task via centralized service dedupe."""
     state_manager = await get_transcription_state_manager()
 
     try:
@@ -136,43 +80,35 @@ async def start_transcription(
             episode_id,
             episode_service,
         )
-
-        cached_response = await _check_redis_cached_task(
+        start_result = await transcription_service.start_transcription(
             episode_id,
-            state_manager,
-            transcription_service,
-            episode,
-        )
-        if cached_response:
-            return cached_response
-
-        db_response = await _check_existing_db_task(
-            episode_id,
+            transcription_request.transcription_model,
             transcription_request.force_regenerate,
-            transcription_service,
-            episode,
         )
-        if db_response:
-            return db_response
+        task = start_result["task"]
+        action = start_result["action"]
 
-        if transcription_request.force_regenerate:
-            existing_task = await transcription_service.get_episode_transcription(
-                episode_id
+        await state_manager.set_episode_task(episode_id, task.id)
+        if action in {
+            "created",
+            "redispatched_pending",
+            "redispatched_failed_with_temp",
+        }:
+            await state_manager.set_task_progress(
+                task.id,
+                TranscriptionStatus.PENDING.value,
+                task.progress_percentage or 0,
+                "Transcription task queued",
             )
-            if existing_task:
-                logger.info(
-                    "[FORCE] Deleting existing task %s for regeneration",
-                    existing_task.id,
-                )
-                await transcription_service.delete_episode_transcription(episode_id)
+        elif action == "reused_in_progress":
+            await state_manager.set_task_progress(
+                task.id,
+                TranscriptionStatus.IN_PROGRESS.value,
+                task.progress_percentage or 0,
+                "Transcription task already in progress",
+            )
 
-        return await _handle_lock_and_create_task(
-            episode_id,
-            episode,
-            transcription_request,
-            state_manager,
-            transcription_service,
-        )
+        return _build_transcription_response(task, episode)
 
     except HTTPException:
         raise
@@ -183,120 +119,6 @@ async def start_transcription(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to start transcription: {exc}",
-        )
-
-
-async def _handle_lock_and_create_task(
-    episode_id: int,
-    episode: PodcastEpisode,
-    transcription_request: PodcastTranscriptionRequest,
-    state_manager,
-    transcription_service: DatabaseBackedTranscriptionService,
-) -> PodcastTranscriptionResponse:
-    """Acquire lock and create a new transcription task."""
-    lock_acquired = await state_manager.acquire_task_lock(episode_id, 0)
-
-    if not lock_acquired and not transcription_request.force_regenerate:
-        return await _handle_locked_episode(
-            episode_id,
-            episode,
-            state_manager,
-            transcription_service,
-        )
-
-    task = None
-    try:
-        task = await transcription_service.start_transcription(
-            episode_id,
-            transcription_request.transcription_model,
-        )
-    finally:
-        await state_manager.release_task_lock(episode_id, 0)
-
-    if task is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create transcription task for episode {episode_id}",
-        )
-
-    await state_manager.acquire_task_lock(episode_id, task.id)
-    await state_manager.set_episode_task(episode_id, task.id)
-
-    await state_manager.set_task_progress(
-        task.id,
-        TranscriptionStatus.PENDING.value,
-        0,
-        "Transcription task created, waiting for worker to start...",
-    )
-
-    logger.info(
-        "[CREATED] New transcription task %s for episode %s", task.id, episode_id
-    )
-    return _build_transcription_response(task, episode)
-
-
-async def _handle_locked_episode(
-    episode_id: int,
-    episode: PodcastEpisode,
-    state_manager,
-    transcription_service: DatabaseBackedTranscriptionService,
-) -> PodcastTranscriptionResponse:
-    """Handle a currently locked episode."""
-    locked_task_id = await state_manager.is_episode_locked(episode_id)
-
-    if locked_task_id:
-        logger.info(
-            "[LOCK] Episode %s already locked by task %s", episode_id, locked_task_id
-        )
-        try:
-            existing_task = await transcription_service.get_transcription_status(
-                locked_task_id
-            )
-            if existing_task:
-                logger.info(
-                    "[LOCK] Returning existing task %s (status: %s)",
-                    existing_task.id,
-                    _status_value(existing_task.status),
-                )
-                return _build_transcription_response(existing_task, episode)
-
-            logger.warning(
-                "[LOCK] Locked task %s not found in DB, cleaning stale lock",
-                locked_task_id,
-            )
-            await _cleanup_stale_lock(state_manager, episode_id, locked_task_id)
-        except Exception as exc:
-            logger.error(
-                "[LOCK] Error fetching locked task %s: %s", locked_task_id, exc
-            )
-            await _cleanup_stale_lock(state_manager, episode_id, locked_task_id)
-    else:
-        logger.warning(
-            "[LOCK] Episode %s is locked but no task_id found, cleaning up",
-            episode_id,
-        )
-        await _cleanup_stale_lock(state_manager, episode_id, None)
-
-    raise HTTPException(
-        status_code=status.HTTP_409_CONFLICT,
-        detail=f"Episode {episode_id} is currently being processed by another task",
-    )
-
-
-async def _cleanup_stale_lock(
-    state_manager, episode_id: int, task_id: Optional[int]
-) -> None:
-    """Safely clean stale lock data."""
-    try:
-        if task_id:
-            await state_manager.release_task_lock(episode_id, task_id)
-        await state_manager.clear_episode_task(episode_id)
-        logger.info("[LOCK] Cleaned stale lock for episode %s", episode_id)
-    except Exception as cleanup_error:
-        logger.error(
-            "[LOCK] Failed to clean stale lock for episode %s: %s",
-            episode_id,
-            cleanup_error,
         )
 
 
@@ -608,7 +430,6 @@ async def schedule_episode_transcription_endpoint(
     frequency: str = Body("manual", description="hourly, daily, weekly, manual"),
     episode_service: PodcastEpisodeService = Depends(get_episode_service),
     scheduler: TranscriptionScheduler = Depends(get_scheduler),
-    db: AsyncSession = Depends(get_db_session),
 ):
     """Schedule episode transcription with dedupe behavior."""
     try:
@@ -618,19 +439,6 @@ async def schedule_episode_transcription_endpoint(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Episode {episode_id} not found",
             )
-
-        existing_transcript = await get_episode_transcript(db, episode_id)
-        if existing_transcript and not force:
-            return {
-                "status": "skipped",
-                "message": "Transcription already exists. Use force=true to re-transcribe.",
-                "episode_id": episode_id,
-                "transcript_preview": (
-                    existing_transcript[:100] + "..."
-                    if len(existing_transcript) > 100
-                    else existing_transcript
-                ),
-            }
 
         result = await scheduler.schedule_transcription(
             episode_id=episode_id,

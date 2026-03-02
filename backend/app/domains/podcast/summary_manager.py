@@ -13,6 +13,7 @@ import aiohttp
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import HTTPException, ValidationError
+from app.core.redis import PodcastRedis
 from app.core.utils import filter_thinking_content
 from app.domains.ai.models import ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
@@ -478,6 +479,10 @@ class DatabaseBackedAISummaryService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.model_manager = SummaryModelManager(db)
+        self.redis = PodcastRedis()
+        self.summary_lock_ttl_seconds = 1800
+        self.summary_wait_retries = 6
+        self.summary_wait_interval_seconds = 1.0
 
     async def generate_summary(
         self,
@@ -486,42 +491,75 @@ class DatabaseBackedAISummaryService:
         custom_prompt: str | None = None,
     ) -> dict[str, Any]:
         """为播客单集生成AI摘要"""
-        # 获取播客单集信息
-        from sqlalchemy import select
+        lock_name = f"summary:{episode_id}"
+        lock_acquired = await self.redis.acquire_lock(
+            lock_name, expire=self.summary_lock_ttl_seconds
+        )
+        if not lock_acquired:
+            return await self._wait_for_existing_summary(episode_id)
 
-        stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
-        result = await self.db.execute(stmt)
-        episode = result.scalar_one_or_none()
+        try:
+            # 获取播客单集信息
+            from sqlalchemy import select
 
-        if not episode:
-            raise ValidationError(f"Episode {episode_id} not found")
+            stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
+            result = await self.db.execute(stmt)
+            episode = result.scalar_one_or_none()
 
-        # 获取转录内容
-        transcript_content = episode.transcript_content
-        if not transcript_content:
-            raise ValidationError(
-                f"No transcript content available for episode {episode_id}"
+            if not episode:
+                raise ValidationError(f"Episode {episode_id} not found")
+
+            # 获取转录内容
+            transcript_content = episode.transcript_content
+            if not transcript_content:
+                raise ValidationError(
+                    f"No transcript content available for episode {episode_id}"
+                )
+
+            # 构建播客信息
+            episode_info = {
+                "title": episode.title,
+                "description": episode.description,
+                "duration": episode.audio_duration,
+            }
+
+            # 生成摘要
+            summary_result = await self.model_manager.generate_summary(
+                transcript=transcript_content,
+                episode_info=episode_info,
+                model_name=model_name,
+                custom_prompt=custom_prompt,
             )
 
-        # 构建播客信息
-        episode_info = {
-            "title": episode.title,
-            "description": episode.description,
-            "duration": episode.audio_duration,
-        }
+            # 更新数据库中的摘要信息
+            await self._update_episode_summary(episode_id, summary_result)
 
-        # 生成摘要
-        summary_result = await self.model_manager.generate_summary(
-            transcript=transcript_content,
-            episode_info=episode_info,
-            model_name=model_name,
-            custom_prompt=custom_prompt,
+            return summary_result
+        finally:
+            await self.redis.release_lock(lock_name)
+
+    async def _wait_for_existing_summary(self, episode_id: int) -> dict[str, Any]:
+        """Wait for an in-flight generation and reuse persisted summary when ready."""
+        from sqlalchemy import select
+
+        for _ in range(self.summary_wait_retries):
+            stmt = select(PodcastEpisode.ai_summary).where(PodcastEpisode.id == episode_id)
+            result = await self.db.execute(stmt)
+            summary_content = result.scalar_one_or_none() or ""
+            if summary_content.strip():
+                return {
+                    "summary_content": filter_thinking_content(summary_content),
+                    "model_name": None,
+                    "model_id": None,
+                    "processing_time": 0.0,
+                    "tokens_used": 0,
+                    "reused_existing": True,
+                }
+            await asyncio.sleep(self.summary_wait_interval_seconds)
+
+        raise ValidationError(
+            f"Summary generation already in progress for episode {episode_id}"
         )
-
-        # 更新数据库中的摘要信息
-        await self._update_episode_summary(episode_id, summary_result)
-
-        return summary_result
 
     async def _update_episode_summary(
         self, episode_id: int, summary_result: dict[str, Any]

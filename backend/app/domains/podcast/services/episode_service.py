@@ -267,19 +267,9 @@ class PodcastEpisodeService:
         Returns:
             Episode details dict or None
         """
-        # Import here to avoid circular dependency
-        from app.domains.podcast.services.summary_service import PodcastSummaryService
-
         episode = await self.repo.get_episode_by_id(episode_id, self.user_id)
         if not episode:
             return None
-
-        # Trigger background summary if pending
-        if not episode.ai_summary and episode.status == "pending_summary":
-            summary_service = PodcastSummaryService(self.db, self.user_id)
-            import asyncio
-
-            asyncio.create_task(summary_service._generate_summary_task(episode))
 
         playback = await self.repo.get_playback_state(self.user_id, episode_id)
         cleaned_summary = filter_thinking_content(episode.ai_summary)

@@ -14,11 +14,12 @@ from app.core.config import settings
 from app.core.etag import build_conditional_etag_response
 from app.domains.podcast.api.dependencies import (
     get_episode_service,
+    get_current_user_id,
     get_playback_service,
     get_search_service,
-    get_summary_domain_service,
     get_summary_service,
 )
+from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.schemas import (
     PlaybackRateApplyRequest,
     PlaybackRateEffectiveResponse,
@@ -40,7 +41,6 @@ from app.domains.podcast.schemas import (
 from app.domains.podcast.services.episode_service import PodcastEpisodeService
 from app.domains.podcast.services.playback_service import PodcastPlaybackService
 from app.domains.podcast.services.search_service import PodcastSearchService
-from app.domains.podcast.services.summary_service import PodcastSummaryService
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
 
@@ -553,9 +553,12 @@ async def apply_playback_rate_preference(
     summary="List pending summaries",
 )
 async def get_pending_summaries(
-    service: PodcastSummaryService = Depends(get_summary_domain_service),
+    user_id: int = Depends(get_current_user_id),
+    ai_summary_service: DatabaseBackedAISummaryService = Depends(get_summary_service),
 ):
-    pending = await service.get_pending_summaries()
+    pending = await PodcastRepository(ai_summary_service.db).get_pending_summaries_for_user(
+        user_id
+    )
     return PodcastSummaryPendingResponse(count=len(pending), episodes=pending)
 
 

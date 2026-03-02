@@ -50,10 +50,9 @@ def test_specialized_service_contracts() -> None:
     from app.domains.podcast.services.subscription_service import (
         PodcastSubscriptionService,
     )
-    from app.domains.podcast.services.summary_service import PodcastSummaryService
+    from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
     assert hasattr(PodcastSubscriptionService, "add_subscription")
     assert hasattr(PodcastEpisodeService, "get_episode_with_summary")
     assert hasattr(PodcastPlaybackService, "update_playback_progress")
-    assert hasattr(PodcastSummaryService, "regenerate_summary")
-
+    assert hasattr(DatabaseBackedAISummaryService, "regenerate_summary")

@@ -14,6 +14,14 @@ from app.domains.podcast.services.search_service import PodcastSearchService
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
 
+class _ScalarResult:
+    def __init__(self, value):
+        self._value = value
+
+    def scalar_one_or_none(self):
+        return self._value
+
+
 def _make_episode(*, ai_summary: str) -> SimpleNamespace:
     subscription = SimpleNamespace(
         id=11,
@@ -103,6 +111,30 @@ async def test_update_episode_summary_filters_thinking_and_does_not_truncate() -
     assert len(summary_result["summary_content"]) == len(visible)
     assert db.execute.await_count == 2
     db.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_generate_summary_reuses_existing_when_lock_contended() -> None:
+    db = AsyncMock()
+    db.execute.return_value = _ScalarResult("<think>hidden</think>existing summary")
+
+    service = DatabaseBackedAISummaryService(db=db)
+    service.model_manager = AsyncMock()
+
+    class _FakeRedis:
+        async def acquire_lock(self, *_args, **_kwargs):
+            return False
+
+        async def release_lock(self, *_args, **_kwargs):
+            raise AssertionError("release_lock should not be called when lock not acquired")
+
+    service.redis = _FakeRedis()
+
+    result = await service.generate_summary(episode_id=1)
+
+    assert result["reused_existing"] is True
+    assert result["summary_content"] == "existing summary"
+    service.model_manager.generate_summary.assert_not_called()
 
 
 @pytest.mark.asyncio

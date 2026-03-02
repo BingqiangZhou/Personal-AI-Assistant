@@ -8,7 +8,6 @@ from app.core.exceptions import ValidationError
 from app.domains.podcast.tasks import summary_generation
 from app.domains.podcast.tasks.handlers_summary import (
     generate_pending_summaries_handler,
-    generate_summary_for_episode_handler,
 )
 
 
@@ -274,6 +273,49 @@ async def test_generate_pending_summaries_non_validation_error_marks_failed(
     assert "boom" in marked[0][1]
 
 
+@pytest.mark.asyncio
+async def test_generate_pending_summaries_in_progress_validation_does_not_mark_failed(
+    monkeypatch,
+):
+    fake_episode = SimpleNamespace(
+        id=11, subscription_id=22, transcript_content="ready"
+    )
+    marked = []
+
+    class _FakeRepo:
+        def __init__(self, _session):
+            pass
+
+        async def get_unsummarized_episodes(self, *args, **kwargs):
+            return [fake_episode]
+
+        async def mark_summary_failed(self, episode_id, error):
+            marked.append((episode_id, error))
+
+    class _FakeSummaryService:
+        def __init__(self, _session):
+            pass
+
+        async def generate_summary(self, _episode_id):
+            raise ValidationError("Summary generation already in progress for episode 11")
+
+    session = _FakeSession([[]])
+    monkeypatch.setattr(
+        "app.domains.podcast.tasks.handlers_summary.PodcastRepository",
+        _FakeRepo,
+    )
+    monkeypatch.setattr(
+        "app.domains.podcast.tasks.handlers_summary.DatabaseBackedAISummaryService",
+        _FakeSummaryService,
+    )
+
+    result = await generate_pending_summaries_handler(session)
+    assert result["status"] == "success"
+    assert result["processed"] == 0
+    assert result["failed"] == 0
+    assert marked == []
+
+
 def test_generate_pending_summaries_retries_on_failure(monkeypatch):
     class _RetryError(Exception):
         pass
@@ -301,30 +343,3 @@ def test_generate_pending_summaries_retries_on_failure(monkeypatch):
 
     assert logs
     assert logs[-1]["status"] == "failed"
-
-
-@pytest.mark.asyncio
-async def test_generate_summary_for_episode_handler_uses_db_backed_service(monkeypatch):
-    fake_episode = SimpleNamespace(id=99)
-    session = _FakeSession([fake_episode])
-
-    class _FakeSummaryService:
-        def __init__(self, _session):
-            pass
-
-        async def generate_summary(self, episode_id):
-            return {"summary_content": f"summary-{episode_id}"}
-
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.DatabaseBackedAISummaryService",
-        _FakeSummaryService,
-    )
-
-    result = await generate_summary_for_episode_handler(
-        session=session,
-        episode_id=99,
-        user_id=7,
-    )
-    assert result["status"] == "success"
-    assert result["episode_id"] == 99
-    assert result["summary"] == "summary-99"

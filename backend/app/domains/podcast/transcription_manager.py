@@ -169,16 +169,14 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
 
     async def start_transcription(
         self, episode_id: int, model_name: str | None = None, force: bool = False
-    ):
-        """启动转录任务，支持指定模型和强制模式"""
+    ) -> dict[str, Any]:
+        """启动或复用转录任务，并返回内部动作元数据。"""
+        from app.domains.podcast.models import TranscriptionTask
+        from app.domains.podcast.tasks import process_audio_transcription
+
         # 获取模型信息（验证模型是否存在）
         if model_name:
             await self.model_manager.get_active_transcription_model(model_name)
-
-        # 检查是否有失败的任务可以重试（增量恢复）
-        from sqlalchemy import select
-
-        from app.domains.podcast.models import TranscriptionTask
 
         stmt = (
             select(TranscriptionTask)
@@ -189,137 +187,88 @@ class DatabaseBackedTranscriptionService(PodcastTranscriptionService):
         result = await self.db.execute(stmt)
         existing_task = result.scalar_one_or_none()
 
-        # 如果有 PENDING 状态的任务，重新发送到 Celery
-        if (
-            existing_task and existing_task.status == "pending" and not force
-        ):  # Use string comparison
-            # Check if this task already owns the lock before re-dispatching
-            state_manager = await get_transcription_state_manager()
-            locked_task_id = await state_manager.is_episode_locked(episode_id)
-
-            if locked_task_id == existing_task.id:
-                # Task already owns lock and is being processed, don't re-dispatch
-                logger.info(
-                    f"🔄 [TRANSCRIPTION] PENDING task {existing_task.id} already owns lock, skipping re-dispatch"
-                )
-                return existing_task
-            elif locked_task_id is not None:
-                # Different task owns the lock
-                logger.warning(
-                    f"⚠️ [TRANSCRIPTION] Episode {episode_id} locked by different task {locked_task_id}, cannot re-dispatch task {existing_task.id}"
-                )
-                return existing_task
-
-            # No lock exists, safe to dispatch
-            logger.info(
-                f"🔄 [TRANSCRIPTION] Re-sending existing PENDING task {existing_task.id} to Celery"
-            )
-            # 提交到 Celery 队列
-            from app.domains.podcast.tasks import process_audio_transcription
-
-            # 获取模型配置 ID（按优先级）
-            ai_repo = AIModelConfigRepository(self.db)
-            model_config = None
-            if model_name:
-                model_config = await ai_repo.get_by_name(model_name)
-            if not model_config:
-                active_models = await ai_repo.get_active_models_by_priority(
-                    ModelType.TRANSCRIPTION
-                )
-                model_config = active_models[0] if active_models else None
-            config_db_id = model_config.id if model_config else None
-
-            process_audio_transcription.delay(existing_task.id, config_db_id)
-            logger.info(
-                f"🚀 [TRANSCRIPTION] Re-dispatched PENDING task {existing_task.id} to Celery"
+        state_manager = await get_transcription_state_manager()
+        if existing_task and not force:
+            status_value = (
+                existing_task.status.value
+                if hasattr(existing_task.status, "value")
+                else str(existing_task.status)
             )
 
-            return existing_task
+            if status_value == "completed":
+                return {"task": existing_task, "action": "reused_completed"}
 
-        # 如果有失败的任务且不是 force 模式，尝试重用它
-        if (
-            existing_task
-            and existing_task.status in ["failed", "cancelled"]
-            and not force
-        ):  # Use string comparison
-            # 检查临时文件是否存在
-            import os
+            if status_value == "in_progress":
+                await state_manager.set_episode_task(episode_id, existing_task.id)
+                return {"task": existing_task, "action": "reused_in_progress"}
 
-            temp_episode_dir = os.path.join(self.temp_dir, f"episode_{episode_id}")
-
-            # 检查是否有可用的临时文件
-            has_temp_files = False
-            if os.path.exists(temp_episode_dir):
-                # 检查是否有 downloaded 或 converted 文件
-                for _, _, files in os.walk(temp_episode_dir):
-                    if files:
-                        has_temp_files = True
-                        break
-
-            if has_temp_files:
-                # Check if episode is locked before re-dispatching
-                state_manager = await get_transcription_state_manager()
+            if status_value == "pending":
                 locked_task_id = await state_manager.is_episode_locked(episode_id)
-
+                if locked_task_id == existing_task.id:
+                    await state_manager.set_episode_task(episode_id, existing_task.id)
+                    return {"task": existing_task, "action": "reused_pending"}
                 if locked_task_id is not None:
-                    # Episode is locked by another task
-                    logger.warning(
-                        f"⚠️ [TRANSCRIPTION] Episode {episode_id} locked by task {locked_task_id}, cannot re-dispatch failed task {existing_task.id}"
-                    )
-                    return existing_task
+                    return {"task": existing_task, "action": "locked_by_other_task"}
 
-                # 重用现有任务，重置状态为 PENDING
-                logger.info(
-                    f"🔄 [TRANSCRIPTION] Reusing existing failed task {existing_task.id} with temp files for incremental recovery"
-                )
-                existing_task.status = "pending"  # Use string value
-                existing_task.error_message = None
-                existing_task.started_at = None
-                existing_task.completed_at = None
-                existing_task.progress_percentage = 0
-                existing_task.current_step = "not_started"
-                await self.db.commit()
-                await self.db.refresh(existing_task)
-
-                # 提交到 Celery 队列
-                from app.domains.podcast.tasks import process_audio_transcription
-
-                # 获取模型配置 ID（按优先级）
-                ai_repo = AIModelConfigRepository(self.db)
-                model_config = None
-                if model_name:
-                    model_config = await ai_repo.get_by_name(model_name)
-                if not model_config:
-                    active_models = await ai_repo.get_active_models_by_priority(
-                        ModelType.TRANSCRIPTION
-                    )
-                    model_config = active_models[0] if active_models else None
-                config_db_id = model_config.id if model_config else None
-
+                config_db_id = await self._resolve_transcription_config_db_id(model_name)
                 process_audio_transcription.delay(existing_task.id, config_db_id)
-                logger.info(
-                    f"🚀 [TRANSCRIPTION] Re-dispatched existing task {existing_task.id} for incremental recovery"
-                )
+                return {"task": existing_task, "action": "redispatched_pending"}
 
-                return existing_task
+            if status_value in {"failed", "cancelled"}:
+                import os
+
+                temp_episode_dir = os.path.join(self.temp_dir, f"episode_{episode_id}")
+                has_temp_files = False
+                if os.path.exists(temp_episode_dir):
+                    for _, _, files in os.walk(temp_episode_dir):
+                        if files:
+                            has_temp_files = True
+                            break
+
+                if has_temp_files:
+                    locked_task_id = await state_manager.is_episode_locked(episode_id)
+                    if locked_task_id is None:
+                        existing_task.status = "pending"
+                        existing_task.error_message = None
+                        existing_task.started_at = None
+                        existing_task.completed_at = None
+                        existing_task.progress_percentage = 0
+                        existing_task.current_step = "not_started"
+                        await self.db.commit()
+                        await self.db.refresh(existing_task)
+
+                        config_db_id = await self._resolve_transcription_config_db_id(
+                            model_name
+                        )
+                        process_audio_transcription.delay(existing_task.id, config_db_id)
+                        return {
+                            "task": existing_task,
+                            "action": "redispatched_failed_with_temp",
+                        }
+                    return {"task": existing_task, "action": "locked_by_other_task"}
 
         # 没有可重用的任务，创建新任务
         task, config_db_id = await super().create_transcription_task_record(
             episode_id, model_name, force
         )
 
-        # 提交到 Celery 队列
-        from app.domains.podcast.tasks import process_audio_transcription
-
-        # 使用 delay() 异步发送任务
-        # task.id 是数据库主键，config_db_id 是相关模型配置ID
         process_audio_transcription.delay(task.id, config_db_id)
+        return {"task": task, "action": "created"}
 
-        logger.info(
-            f"🚀 [TRANSCRIPTION] Dispatched Celery task for transcription task {task.id} (config_id={config_db_id})"
-        )
-
-        return task
+    async def _resolve_transcription_config_db_id(
+        self, model_name: str | None
+    ) -> int | None:
+        """Resolve model config id for dispatch metadata."""
+        ai_repo = AIModelConfigRepository(self.db)
+        model_config = None
+        if model_name:
+            model_config = await ai_repo.get_by_name(model_name)
+        if not model_config:
+            active_models = await ai_repo.get_active_models_by_priority(
+                ModelType.TRANSCRIPTION
+            )
+            model_config = active_models[0] if active_models else None
+        return model_config.id if model_config else None
 
     async def get_transcription_models(self):
         """获取可用的转录模型列表"""

@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from sqlalchemy import select
 
 from app.core.exceptions import ValidationError
-from app.domains.podcast.models import PodcastEpisode, TranscriptionTask
+from app.domains.podcast.models import TranscriptionTask
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
@@ -19,6 +19,11 @@ logger = logging.getLogger(__name__)
 def _is_missing_transcript_validation_error(exc: ValidationError) -> bool:
     """Return True when summary generation fails due to transcript unavailability."""
     return "No transcript content available for episode" in str(exc)
+
+
+def _is_summary_in_progress_validation_error(exc: ValidationError) -> bool:
+    """Return True when another worker is already generating summary."""
+    return "Summary generation already in progress for episode" in str(exc)
 
 
 async def generate_pending_summaries_handler(session) -> dict:
@@ -75,11 +80,14 @@ async def generate_pending_summaries_handler(session) -> dict:
             await summary_service.generate_summary(episode.id)
             processed_count += 1
         except ValidationError as exc:
-            if _is_missing_transcript_validation_error(exc):
+            if _is_missing_transcript_validation_error(
+                exc
+            ) or _is_summary_in_progress_validation_error(exc):
                 skipped_no_transcript_count += 1
                 logger.warning(
-                    "Skipping summary for episode %s because transcript is not available yet",
+                    "Skipping summary for episode %s due to unmet generation precondition: %s",
                     episode.id,
+                    exc,
                 )
                 continue
 
@@ -105,33 +113,5 @@ async def generate_pending_summaries_handler(session) -> dict:
         "status": "success",
         "processed": processed_count,
         "failed": failed_count,
-        "processed_at": datetime.now(timezone.utc).isoformat(),
-    }
-
-
-async def generate_summary_for_episode_handler(
-    session,
-    episode_id: int,
-    user_id: int,
-) -> dict:
-    """Generate summary for a single episode."""
-    episode_stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
-    episode_result = await session.execute(episode_stmt)
-    episode = episode_result.scalar_one_or_none()
-    if episode is None:
-        return {
-            "status": "error",
-            "message": "Episode not found",
-            "episode_id": episode_id,
-        }
-
-    summary_service = DatabaseBackedAISummaryService(session)
-    summary_result = await summary_service.generate_summary(episode_id)
-    summary = summary_result["summary_content"]
-
-    return {
-        "status": "success",
-        "episode_id": episode_id,
-        "summary": summary,
         "processed_at": datetime.now(timezone.utc).isoformat(),
     }

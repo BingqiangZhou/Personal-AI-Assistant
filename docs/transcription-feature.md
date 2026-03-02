@@ -370,4 +370,10 @@ uv run python test_transcription_manual.py
    - WebSocket实时进度推送
    - 转录质量评分
    - 关键词提取和摘要
-   - 转录结果导出功能
+   - 转录结果导出功能## Orchestration Notes (2026-03)
+
+- Summary generation now has a single backend implementation: `DatabaseBackedAISummaryService`.
+- Automatic summary triggering remains `immediate-after-transcription`, with periodic `generate_pending_summaries` as compensating fallback.
+- Summary generation uses a Redis episode-level lock (`summary:{episode_id}`) to avoid duplicate generation across concurrent triggers.
+- Transcription dedupe/reuse decisions are centralized in `DatabaseBackedTranscriptionService.start_transcription()`.
+- The single-episode summary Celery task `generate_summary_for_episode` has been removed.

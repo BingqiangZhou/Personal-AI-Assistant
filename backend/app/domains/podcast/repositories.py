@@ -430,6 +430,37 @@ class PodcastRepository:
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
+    async def get_pending_summaries_for_user(self, user_id: int) -> list[dict[str, Any]]:
+        """Get pending-summary payloads scoped to one user."""
+        stmt = (
+            select(PodcastEpisode, Subscription.title)
+            .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
+            .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
+            .where(
+                and_(
+                    *self._active_user_subscription_filters(user_id),
+                    self._podcast_source_type_filter(),
+                    PodcastEpisode.ai_summary.is_(None),
+                    PodcastEpisode.status.in_(["pending_summary", "summary_failed"]),
+                )
+            )
+            .order_by(PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc())
+        )
+        rows = (await self.db.execute(stmt)).all()
+        results: list[dict[str, Any]] = []
+        for episode, subscription_title in rows:
+            description = episode.description or ""
+            transcript = episode.transcript_content or ""
+            results.append(
+                {
+                    "episode_id": episode.id,
+                    "subscription_title": subscription_title,
+                    "episode_title": episode.title,
+                    "size_estimate": len(description) + len(transcript),
+                }
+            )
+        return results
+
     async def get_subscription_episodes(
         self, subscription_id: int, limit: int = 20
     ) -> list[PodcastEpisode]:
