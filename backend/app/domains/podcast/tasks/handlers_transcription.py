@@ -78,8 +78,11 @@ async def process_audio_transcription_handler(
     if not lock_acquired:
         locked_task_id = await state_manager.is_episode_locked(episode_id)
         await _clear_dispatched(task_id)
+        lock_owner = (
+            str(locked_task_id) if locked_task_id is not None else "unknown_owner"
+        )
         raise RuntimeError(
-            f"Episode {episode_id} is locked by task {locked_task_id}, retry later"
+            f"Episode {episode_id} is locked by task {lock_owner}, retry later"
         )
 
     service = DatabaseBackedTranscriptionService(session)

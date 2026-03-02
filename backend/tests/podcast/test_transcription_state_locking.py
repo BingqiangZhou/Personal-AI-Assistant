@@ -1,0 +1,138 @@
+from __future__ import annotations
+
+import fnmatch
+
+import pytest
+
+from app.domains.podcast.transcription_state import TranscriptionStateManager
+
+
+class _FakeRedisClient:
+    def __init__(self) -> None:
+        self.store: dict[str, str] = {}
+        self.ttl_map: dict[str, int] = {}
+        self.deleted_calls: list[tuple[str, ...]] = []
+
+    async def get(self, key: str) -> str | None:
+        return self.store.get(key)
+
+    async def delete(self, *keys: str) -> int:
+        self.deleted_calls.append(tuple(keys))
+        deleted = 0
+        for key in keys:
+            if key in self.store:
+                deleted += 1
+                del self.store[key]
+            self.ttl_map.pop(key, None)
+        return deleted
+
+    async def scan_iter(self, match: str):
+        keys = [key for key in self.store if fnmatch.fnmatch(key, match)]
+        for key in keys:
+            yield key
+
+    async def ttl(self, key: str) -> int:
+        return self.ttl_map.get(key, -2)
+
+
+class _FakePodcastRedis:
+    def __init__(self, client: _FakeRedisClient) -> None:
+        self.client = client
+        self.acquire_lock_calls: list[tuple[str, int, str]] = []
+        self.acquire_lock_results: list[bool] = []
+
+    async def _get_client(self) -> _FakeRedisClient:
+        return self.client
+
+    async def acquire_lock(
+        self, lock_name: str, expire: int = 300, value: str = "1"
+    ) -> bool:
+        self.acquire_lock_calls.append((lock_name, expire, value))
+        key = f"podcast:lock:{lock_name}"
+
+        if self.acquire_lock_results:
+            result = self.acquire_lock_results.pop(0)
+            if result:
+                self.client.store[key] = value
+                self.client.ttl_map[key] = expire
+            return result
+
+        if key in self.client.store:
+            return False
+
+        self.client.store[key] = value
+        self.client.ttl_map[key] = expire
+        return True
+
+
+def _build_state_manager() -> tuple[TranscriptionStateManager, _FakePodcastRedis]:
+    manager = TranscriptionStateManager()
+    client = _FakeRedisClient()
+    fake_redis = _FakePodcastRedis(client)
+    manager.redis = fake_redis
+    return manager, fake_redis
+
+
+@pytest.mark.asyncio
+async def test_is_episode_locked_reads_new_owner_format() -> None:
+    manager, fake_redis = _build_state_manager()
+    fake_redis.client.store["podcast:lock:transcription:episode:60329"] = "task:42"
+
+    locked_task_id = await manager.is_episode_locked(60329)
+
+    assert locked_task_id == 42
+
+
+@pytest.mark.asyncio
+async def test_is_episode_locked_falls_back_to_legacy_lock_value() -> None:
+    manager, fake_redis = _build_state_manager()
+    fake_redis.client.store["podcast:lock:transcription:episode:60329"] = "1"
+    fake_redis.client.store["podcast:transcription:lock_value:60329"] = "77"
+
+    locked_task_id = await manager.is_episode_locked(60329)
+
+    assert locked_task_id == 77
+
+
+@pytest.mark.asyncio
+async def test_acquire_task_lock_reclaims_unknown_owner_and_retries_once() -> None:
+    manager, fake_redis = _build_state_manager()
+    lock_key = "podcast:lock:transcription:episode:60329"
+    fake_redis.client.store[lock_key] = "1"
+    fake_redis.client.ttl_map[lock_key] = 60
+    fake_redis.acquire_lock_results = [False, True]
+
+    acquired = await manager.acquire_task_lock(60329, 88, expire_seconds=120)
+
+    assert acquired is True
+    assert fake_redis.client.store[lock_key] == "task:88"
+    assert fake_redis.acquire_lock_calls == [
+        ("transcription:episode:60329", 120, "task:88"),
+        ("transcription:episode:60329", 120, "task:88"),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_release_task_lock_rejects_foreign_owner() -> None:
+    manager, fake_redis = _build_state_manager()
+    fake_redis.client.store["podcast:lock:transcription:episode:60329"] = "task:99"
+
+    released = await manager.release_task_lock(60329, 100)
+
+    assert released is False
+    assert (
+        "podcast:lock:transcription:episode:60329" in fake_redis.client.store
+    )
+
+
+@pytest.mark.asyncio
+async def test_release_task_lock_cleans_legacy_key_for_matching_owner() -> None:
+    manager, fake_redis = _build_state_manager()
+    fake_redis.client.store["podcast:lock:transcription:episode:60329"] = "task:11"
+    fake_redis.client.store["podcast:transcription:lock_value:60329"] = "11"
+
+    released = await manager.release_task_lock(60329, 11)
+
+    assert released is True
+    assert "podcast:lock:transcription:episode:60329" not in fake_redis.client.store
+    assert "podcast:transcription:lock_value:60329" not in fake_redis.client.store

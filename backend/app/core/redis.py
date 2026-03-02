@@ -20,8 +20,10 @@ Recommended naming conventions:
 - podcast:search:{query_hash} - Search results
 """
 
+import asyncio
 import hashlib
 import json
+from contextlib import suppress
 from datetime import datetime
 from time import perf_counter
 from typing import Any
@@ -62,7 +64,15 @@ class PodcastRedis:
 
     def __init__(self):
         self._client = None
+        self._client_loop_token: int | None = None
         self._last_health_check_at = 0.0
+
+    @staticmethod
+    def _current_loop_token() -> int | None:
+        try:
+            return id(asyncio.get_running_loop())
+        except RuntimeError:
+            return None
 
     @staticmethod
     def _cache_namespace(key: str) -> str:
@@ -214,9 +224,25 @@ class PodcastRedis:
 
     async def _get_client(self) -> aioredis.Redis:
         """Get Redis client instance"""
+        current_loop_token = self._current_loop_token()
+
+        # Celery prefork workers call asyncio.run() per task. When loop changes,
+        # redis-py async clients bound to old loops must be discarded.
+        if (
+            self._client is not None
+            and self._client_loop_token != current_loop_token
+        ):
+            old_client = self._client
+            self._client = None
+            self._client_loop_token = None
+            self._last_health_check_at = 0.0
+            with suppress(Exception):
+                await old_client.close()
+
         if self._client is None:
             self._client = self._build_client()
             await self._ping_client(self._client)
+            self._client_loop_token = current_loop_token
             self._last_health_check_at = perf_counter()
             return self._client
 
@@ -231,6 +257,7 @@ class PodcastRedis:
             # Reconnect if health check fails
             self._client = self._build_client()
             await self._ping_client(self._client)
+            self._client_loop_token = current_loop_token
             self._last_health_check_at = perf_counter()
         return self._client
 
@@ -525,7 +552,9 @@ class PodcastRedis:
 
     # === Lock Operations ===
 
-    async def acquire_lock(self, lock_name: str, expire: int = 300) -> bool:
+    async def acquire_lock(
+        self, lock_name: str, expire: int = 300, value: str = "1"
+    ) -> bool:
         """
         Acquire distributed lock
         Returns True if lock acquired
@@ -533,9 +562,9 @@ class PodcastRedis:
         client = await self._get_client()
         key = f"podcast:lock:{lock_name}"
         started = perf_counter()
-        result = await client.set(key, "1", ex=expire, nx=True)
+        result = await client.set(key, value, ex=expire, nx=True)
         self._record_command_timing("SET", (perf_counter() - started) * 1000)
-        return result
+        return bool(result)
 
     async def release_lock(self, lock_name: str) -> None:
         """Release distributed lock"""
@@ -577,7 +606,12 @@ class PodcastRedis:
     async def close(self):
         """Close Redis connection"""
         if self._client:
-            await self._client.close()
+            try:
+                await self._client.close()
+            finally:
+                self._client = None
+                self._client_loop_token = None
+                self._last_health_check_at = 0.0
 
 
 # Global singleton instance

@@ -13,6 +13,8 @@ class _FakeRedisClient:
         self.hgetall_data = hgetall_data or {}
         self.ping_calls = 0
         self.get_calls = 0
+        self.close_calls = 0
+        self.set_calls: list[tuple[str, str, int, bool]] = []
         self.hgetall_calls: list[str] = []
         self.hget_calls: list[tuple[str, str]] = []
 
@@ -25,6 +27,10 @@ class _FakeRedisClient:
         self.get_calls += 1
         return "cached-value"
 
+    async def set(self, key: str, value: str, ex: int, nx: bool) -> bool:
+        self.set_calls.append((key, value, ex, nx))
+        return True
+
     async def hgetall(self, key: str) -> dict[str, str]:
         self.hgetall_calls.append(key)
         return self.hgetall_data
@@ -32,6 +38,9 @@ class _FakeRedisClient:
     async def hget(self, key: str, field: str) -> str | None:
         self.hget_calls.append((key, field))
         return None
+
+    async def close(self) -> None:
+        self.close_calls += 1
 
 
 @pytest.mark.asyncio
@@ -86,3 +95,34 @@ async def test_get_episode_metadata_reads_hash_with_hgetall():
     assert metadata == {"id": "7", "title": "hello"}
     assert client.hgetall_calls == ["podcast:meta:7"]
     assert client.hget_calls == []
+
+
+@pytest.mark.asyncio
+async def test_get_client_rebuilds_client_when_event_loop_token_changes(monkeypatch):
+    redis = PodcastRedis()
+    first_client = _FakeRedisClient()
+    second_client = _FakeRedisClient()
+    built_clients = iter([first_client, second_client])
+    loop_tokens = iter([100, 200])
+
+    monkeypatch.setattr(redis, "_build_client", lambda: next(built_clients))
+    monkeypatch.setattr(redis, "_current_loop_token", lambda: next(loop_tokens))
+
+    assert await redis._get_client() is first_client
+    assert await redis._get_client() is second_client
+    assert first_client.close_calls == 1
+    assert second_client.ping_calls == 1
+
+
+@pytest.mark.asyncio
+async def test_acquire_lock_accepts_custom_value():
+    redis = PodcastRedis()
+    client = _FakeRedisClient()
+    redis._get_client = AsyncMock(return_value=client)
+
+    acquired = await redis.acquire_lock("transcription:episode:42", expire=60, value="task:77")
+
+    assert acquired is True
+    assert client.set_calls == [
+        ("podcast:lock:transcription:episode:42", "task:77", 60, True)
+    ]

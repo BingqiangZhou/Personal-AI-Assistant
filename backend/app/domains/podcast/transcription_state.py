@@ -14,52 +14,36 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.core.redis import PodcastRedis
-from app.domains.podcast.models import TranscriptionStatus
 
 
 logger = logging.getLogger(__name__)
 
 
 class ProgressLogThrottle:
-    """节流器，减少频繁的进度日志输出"""
+    """Throttle progress logs to reduce noisy output."""
 
     def __init__(self, min_interval_seconds: int = 5):
-        """
-        Args:
-            min_interval_seconds: 最小日志间隔时间（秒）
-        """
+        """Create a throttle with a minimum log interval."""
         self.min_interval = min_interval_seconds
         self._last_log_time: dict[str, float] = {}
         self._last_log_progress: dict[str, float] = {}
 
     def should_log(self, task_id: int, status: str, progress: float) -> bool:
-        """
-        判断是否应该记录日志
-
-        Args:
-            task_id: 任务ID
-            status: 任务状态
-            progress: 进度百分比
-
-        Returns:
-            True 如果应该记录日志
-        """
+        """Return True when a progress update should be logged."""
         key = f"{task_id}_{status}"
         current_time = time.time()
 
-        # 获取上次日志记录的时间和进度
+        # Compare against the previous logged timestamp and progress value.
         last_time = self._last_log_time.get(key, 0)
         last_progress = self._last_log_progress.get(key, -1)
 
-        # 检查时间间隔（默认5秒）
         time_elapsed = current_time - last_time
         if time_elapsed < self.min_interval:
             return False
 
-        # 检查进度变化（至少5%）
         progress_changed = abs(progress - last_progress) >= 5.0
 
-        # 特殊进度点（0%, 50%, 100%）总是记录
+        # Always log key milestones.
         milestone = (progress < 1) or (49 <= progress <= 51) or (progress >= 99)
 
         if progress_changed or milestone:
@@ -70,7 +54,7 @@ class ProgressLogThrottle:
         return False
 
 
-# 全节气流器实例
+# Global progress throttle instance.
 _progress_throttle = ProgressLogThrottle(min_interval_seconds=5)
 
 
@@ -78,7 +62,9 @@ class TranscriptionStateKeys:
     """Redis key patterns for transcription state"""
 
     # Task lock: prevents duplicate processing for same episode
-    TASK_LOCK = "podcast:transcription:lock:episode:{episode_id}"
+    TASK_LOCK_NAME = "transcription:episode:{episode_id}"
+    TASK_LOCK = "podcast:lock:transcription:episode:{episode_id}"
+    LEGACY_TASK_LOCK_VALUE = "podcast:transcription:lock_value:{episode_id}"
 
     # Task progress: cached progress for fast polling (1 hour TTL)
     TASK_PROGRESS = "podcast:transcription:progress:{task_id}"
@@ -129,13 +115,61 @@ class TranscriptionStateManager:
         """
         await self.redis.cache_set(key, value, ttl=ttl)
 
+    @staticmethod
+    def _build_lock_owner_value(task_id: int) -> str:
+        return f"task:{task_id}"
+
+    @staticmethod
+    def _parse_lock_owner_task_id(value: str | None) -> int | None:
+        if not value or not value.startswith("task:"):
+            return None
+        task_id_str = value.split(":", 1)[1]
+        return int(task_id_str) if task_id_str.isdigit() else None
+
+    @staticmethod
+    def _parse_legacy_owner_task_id(value: str | None) -> int | None:
+        if not value:
+            return None
+        return int(value) if value.isdigit() else None
+
+    @staticmethod
+    def _task_lock_name(episode_id: int) -> str:
+        return TranscriptionStateKeys.TASK_LOCK_NAME.format(episode_id=episode_id)
+
+    @staticmethod
+    def _task_lock_key(episode_id: int) -> str:
+        return TranscriptionStateKeys.TASK_LOCK.format(episode_id=episode_id)
+
+    @staticmethod
+    def _legacy_task_lock_value_key(episode_id: int) -> str:
+        return TranscriptionStateKeys.LEGACY_TASK_LOCK_VALUE.format(
+            episode_id=episode_id
+        )
+
+    async def _resolve_lock_owner(
+        self, client, episode_id: int
+    ) -> tuple[int | None, str | None, str | None]:
+        lock_key = self._task_lock_key(episode_id)
+        lock_value = await client.get(lock_key)
+        owner_task_id = self._parse_lock_owner_task_id(lock_value)
+        if owner_task_id is not None:
+            return owner_task_id, "task_lock", lock_value
+
+        legacy_key = self._legacy_task_lock_value_key(episode_id)
+        legacy_value = await client.get(legacy_key)
+        legacy_owner = self._parse_legacy_owner_task_id(legacy_value)
+        if legacy_owner is not None:
+            return legacy_owner, "legacy_lock_value", lock_value
+
+        return None, None, lock_value
+
     # === Lock Operations ===
 
     async def acquire_task_lock(
         self,
         episode_id: int,
         task_id: int,
-        expire_seconds: int = 3600
+        expire_seconds: int = 3600,
     ) -> bool:
         """
         Acquire a lock for processing an episode
@@ -148,29 +182,86 @@ class TranscriptionStateManager:
         Returns:
             True if lock acquired, False if already locked
         """
-        lock_value = str(task_id)
+        lock_value = self._build_lock_owner_value(task_id)
+        lock_name = self._task_lock_name(episode_id)
+        lock_key = self._task_lock_key(episode_id)
+        legacy_key = self._legacy_task_lock_value_key(episode_id)
 
         try:
             acquired = await self.redis.acquire_lock(
-                f"transcription:episode:{episode_id}",
-                expire=expire_seconds
+                lock_name,
+                expire=expire_seconds,
+                value=lock_value,
             )
-
             if acquired:
-                # Store the task_id with the lock for verification
                 client = await self.redis._get_client()
-                await client.set(f"podcast:transcription:lock_value:{episode_id}", lock_value, ex=expire_seconds)
-                logger.info(f"🔒 [LOCK] Acquired lock for episode {episode_id}, task {task_id}")
-            else:
-                # Check if our task already owns the lock
-                client = await self.redis._get_client()
-                existing = await client.get(f"podcast:transcription:lock_value:{episode_id}")
-                if existing == lock_value:
-                    logger.info(f"🔒 [LOCK] Task {task_id} already owns lock for episode {episode_id}")
-                    return True
-                logger.warning(f"🔒 [LOCK] Episode {episode_id} already locked by task {existing}")
+                await client.delete(legacy_key)
+                logger.info(
+                    "[LOCK] Acquired lock for episode %s, task %s",
+                    episode_id,
+                    task_id,
+                )
+                return True
 
-            return acquired
+            client = await self.redis._get_client()
+            owner_task_id, owner_source, raw_lock_value = await self._resolve_lock_owner(
+                client, episode_id
+            )
+            if owner_task_id == task_id:
+                logger.info(
+                    "[LOCK] Task %s already owns lock for episode %s",
+                    task_id,
+                    episode_id,
+                )
+                return True
+
+            if owner_task_id is not None:
+                logger.warning(
+                    "[LOCK] Episode %s already locked [owned_by_task=%s source=%s]",
+                    episode_id,
+                    owner_task_id,
+                    owner_source,
+                )
+                return False
+
+            if raw_lock_value is None:
+                logger.warning(
+                    "[LOCK] Episode %s lock conflict with no lock key present [owner_unknown_retry_failed]",
+                    episode_id,
+                )
+                return False
+
+            await client.delete(lock_key, legacy_key)
+            logger.warning(
+                "[LOCK] Episode %s lock had unknown owner metadata, reclaimed and retrying once [owner_unknown_reclaimed]",
+                episode_id,
+            )
+            retry_acquired = await self.redis.acquire_lock(
+                lock_name,
+                expire=expire_seconds,
+                value=lock_value,
+            )
+            if retry_acquired:
+                logger.info(
+                    "[LOCK] Re-acquired reclaimed lock for episode %s, task %s",
+                    episode_id,
+                    task_id,
+                )
+                return True
+
+            owner_after_retry = await self.is_episode_locked(episode_id)
+            if owner_after_retry is not None:
+                logger.warning(
+                    "[LOCK] Episode %s still locked after reclaim retry [owner_unknown_retry_failed owned_by_task=%s]",
+                    episode_id,
+                    owner_after_retry,
+                )
+            else:
+                logger.warning(
+                    "[LOCK] Episode %s lock retry failed and owner remains unknown [owner_unknown_retry_failed]",
+                    episode_id,
+                )
+            return False
 
         except Exception as e:
             logger.error(f"Failed to acquire lock for episode {episode_id}: {e}")
@@ -188,18 +279,31 @@ class TranscriptionStateManager:
             True if lock was released, False otherwise
         """
         try:
-            # Verify we own the lock before releasing
-            key = f"podcast:transcription:lock_value:{episode_id}"
             client = await self.redis._get_client()
-            existing = await client.get(key)
+            lock_key = self._task_lock_key(episode_id)
+            legacy_key = self._legacy_task_lock_value_key(episode_id)
+            owner_task_id, owner_source, raw_lock_value = await self._resolve_lock_owner(
+                client, episode_id
+            )
 
-            if existing and int(existing) != task_id:
-                logger.warning(f"Cannot release lock for episode {episode_id}: owned by task {existing}, not {task_id}")
+            if owner_task_id is not None and owner_task_id != task_id:
+                logger.warning(
+                    "Cannot release lock for episode %s: owned by task %s (%s), not %s",
+                    episode_id,
+                    owner_task_id,
+                    owner_source,
+                    task_id,
+                )
                 return False
 
-            await self.redis.release_lock(f"transcription:episode:{episode_id}")
-            await client.delete(key)
-            logger.info(f"🔓 [LOCK] Released lock for episode {episode_id}, task {task_id}")
+            if owner_task_id is None and raw_lock_value is not None:
+                logger.warning(
+                    "Releasing lock for episode %s with unknown owner metadata [owner_unknown_reclaimed]",
+                    episode_id,
+                )
+
+            await client.delete(lock_key, legacy_key)
+            logger.info("[LOCK] Released lock for episode %s, task %s", episode_id, task_id)
             return True
 
         except Exception as e:
@@ -217,10 +321,9 @@ class TranscriptionStateManager:
             Task ID if locked, None if not locked
         """
         try:
-            key = f"podcast:transcription:lock_value:{episode_id}"
             client = await self.redis._get_client()
-            task_id_str = await client.get(key)
-            return int(task_id_str) if task_id_str else None
+            owner_task_id, _, _ = await self._resolve_lock_owner(client, episode_id)
+            return owner_task_id
         except Exception:
             return None
 
@@ -312,7 +415,7 @@ class TranscriptionStateManager:
 
         # Use throttle to reduce log frequency (log every 5% or every 5 seconds, whichever is longer)
         if _progress_throttle.should_log(task_id, status, progress):
-            logger.info(f"📊 [PROGRESS] Task {task_id}: {progress:.1f}% - {message}")
+            logger.info(f"濡絽鍟幆?[PROGRESS] Task {task_id}: {progress:.1f}% - {message}")
 
     async def get_task_progress(self, task_id: int) -> dict[str, Any] | None:
         """
@@ -427,7 +530,7 @@ class TranscriptionStateManager:
             dispatched_key = f"podcast:transcription:dispatched:{task_id}"
             await client.delete(dispatched_key)
 
-            logger.info(f"🧹 [STATE] Cleared Redis state for task {task_id}, episode {episode_id}")
+            logger.info(f"[STATE] Cleared Redis state for task {task_id}, episode {episode_id}")
 
         except Exception as e:
             logger.error(f"Failed to clear state for task {task_id}: {e}")
@@ -449,7 +552,7 @@ class TranscriptionStateManager:
         # Update progress to failed state (short TTL)
         await self.set_task_progress(
             task_id,
-            TranscriptionStatus.FAILED.value,
+            "failed",
             0,
             error_message,
             ttl_seconds=300  # 5 minutes
@@ -464,7 +567,7 @@ class TranscriptionStateManager:
         await client.delete(dispatched_key)
         logger.debug(f"Cleared dispatched flag for failed task {task_id}")
 
-        logger.error(f"❌ [STATE] Task {task_id} failed: {error_message}")
+        logger.error(f"[STATE] Task {task_id} failed: {error_message}")
 
     # === Batch Operations ===
 
@@ -500,6 +603,12 @@ class TranscriptionStateManager:
             lock_keys = [
                 key
                 async for key in client.scan_iter(
+                    match="podcast:lock:transcription:episode:*"
+                )
+            ]
+            legacy_lock_keys = [
+                key
+                async for key in client.scan_iter(
                     match="podcast:transcription:lock_value:*"
                 )
             ]
@@ -507,23 +616,31 @@ class TranscriptionStateManager:
             cleaned = 0
             for key in lock_keys:
                 ttl = await client.ttl(key)
-                if ttl == -1:  # No expiration set - stale lock
-                    await client.delete(key)
+                if ttl not in (-2,) and (ttl == -1 or ttl > max_age_seconds):
+                    episode_id_str = key.rsplit(":", 1)[-1]
+                    if episode_id_str.isdigit():
+                        await client.delete(
+                            key,
+                            self._legacy_task_lock_value_key(int(episode_id_str)),
+                        )
+                    else:
+                        await client.delete(key)
                     cleaned += 1
-                elif ttl > max_age_seconds:
-                    # Lock has too long expiration, reset it
+
+            for key in legacy_lock_keys:
+                ttl = await client.ttl(key)
+                if ttl not in (-2,) and (ttl == -1 or ttl > max_age_seconds):
                     await client.delete(key)
                     cleaned += 1
 
             if cleaned > 0:
-                logger.info(f"🧹 [STATE] Cleaned up {cleaned} stale locks")
+                logger.info(f"[STATE] Cleaned up {cleaned} stale locks")
 
             return cleaned
 
         except Exception as e:
             logger.error(f"Failed to cleanup stale locks: {e}")
             return 0
-
 
 # Singleton instance
 _state_manager = None
