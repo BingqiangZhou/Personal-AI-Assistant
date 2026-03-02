@@ -16,6 +16,7 @@ INVALID_API_KEYS = {
     "null",
     "your-ope************here",
 }
+INVALID_API_KEYS_LOWER = {placeholder.lower() for placeholder in INVALID_API_KEYS}
 
 
 def is_invalid_api_key(key: str | None) -> bool:
@@ -23,11 +24,11 @@ def is_invalid_api_key(key: str | None) -> bool:
     if not key:
         return True
     key_lower = key.lower().strip()
-    for placeholder in INVALID_API_KEYS:
-        placeholder_lower = placeholder.lower()
-        if key_lower == placeholder_lower or placeholder_lower in key_lower:
-            return True
-    return bool("your-" in key_lower and ("key" in key_lower or "api" in key_lower))
+    if not key_lower:
+        return True
+    # Keep the check conservative: only exact placeholder matches are invalid.
+    # Some providers may issue real keys containing tokens like "api" or "key".
+    return key_lower in INVALID_API_KEYS_LOWER
 
 
 def _validate_provider_prefix(
