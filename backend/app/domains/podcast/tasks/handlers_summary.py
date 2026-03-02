@@ -7,12 +7,18 @@ from datetime import datetime, timezone
 
 from sqlalchemy import and_, or_, select
 
+from app.core.exceptions import ValidationError
 from app.domains.podcast.models import PodcastEpisode, TranscriptionTask
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
 
 logger = logging.getLogger(__name__)
+
+
+def _is_missing_transcript_validation_error(exc: ValidationError) -> bool:
+    """Return True when summary generation fails due to transcript unavailability."""
+    return "No transcript content available for episode" in str(exc)
 
 
 async def generate_pending_summaries_handler(session) -> dict:
@@ -22,18 +28,28 @@ async def generate_pending_summaries_handler(session) -> dict:
     pending_episodes = await repo.get_unsummarized_episodes()
 
     max_episodes_per_run = 10
-    episodes_to_process = pending_episodes[:max_episodes_per_run]
     if len(pending_episodes) > max_episodes_per_run:
         logger.info(
-            "Found %s pending summaries, processing %s this run",
+            "Found %s pending summaries, attempting up to %s eligible episodes this run",
             len(pending_episodes),
             max_episodes_per_run,
         )
 
     processed_count = 0
     failed_count = 0
+    skipped_running_count = 0
+    skipped_no_transcript_count = 0
+    eligible_attempt_count = 0
 
-    for episode in episodes_to_process:
+    for episode in pending_episodes:
+        if eligible_attempt_count >= max_episodes_per_run:
+            break
+
+        transcript_content = episode.transcript_content or ""
+        if not transcript_content.strip():
+            skipped_no_transcript_count += 1
+            continue
+
         try:
             trans_stmt = select(TranscriptionTask).where(
                 and_(
@@ -47,14 +63,38 @@ async def generate_pending_summaries_handler(session) -> dict:
             trans_result = await session.execute(trans_stmt)
             running_task = trans_result.scalar_one_or_none()
             if running_task:
+                skipped_running_count += 1
                 continue
 
+            eligible_attempt_count += 1
             await summary_service.generate_summary(episode.id)
             processed_count += 1
+        except ValidationError as exc:
+            if _is_missing_transcript_validation_error(exc):
+                skipped_no_transcript_count += 1
+                logger.warning(
+                    "Skipping summary for episode %s because transcript is not available yet",
+                    episode.id,
+                )
+                continue
+
+            failed_count += 1
+            logger.exception("Failed to generate summary for episode %s", episode.id)
+            await repo.mark_summary_failed(episode.id, str(exc))
         except Exception as exc:
             failed_count += 1
             logger.exception("Failed to generate summary for episode %s", episode.id)
             await repo.mark_summary_failed(episode.id, str(exc))
+
+    logger.info(
+        "Pending summary run completed: processed=%s failed=%s skipped_no_transcript=%s skipped_running=%s attempted=%s total_pending=%s",
+        processed_count,
+        failed_count,
+        skipped_no_transcript_count,
+        skipped_running_count,
+        eligible_attempt_count,
+        len(pending_episodes),
+    )
 
     return {
         "status": "success",
