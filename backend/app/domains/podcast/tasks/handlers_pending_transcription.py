@@ -56,7 +56,7 @@ async def _fetch_pending_episode_ids(session, batch_size: int) -> tuple[int, lis
         return 0, []
 
     id_stmt = (
-        select(PodcastEpisode.id)
+        select(PodcastEpisode.id, PodcastEpisode.published_at)
         .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
         .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
         .outerjoin(TranscriptionTask, TranscriptionTask.episode_id == PodcastEpisode.id)
@@ -66,7 +66,7 @@ async def _fetch_pending_episode_ids(session, batch_size: int) -> tuple[int, lis
         .limit(batch_size)
     )
     rows = await session.execute(id_stmt)
-    return total_candidates, list(rows.scalars().all())
+    return total_candidates, [row[0] for row in rows.all()]
 
 
 async def process_pending_transcriptions_handler(session) -> dict:
