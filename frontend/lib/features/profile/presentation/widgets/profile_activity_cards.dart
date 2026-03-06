@@ -83,6 +83,7 @@ class ProfileActivityCards extends ConsumerWidget {
             color: Theme.of(context).colorScheme.primary,
             onTap: () => context.push('/profile/subscriptions'),
             showChevron: true,
+            cardKey: const Key('profile_subscriptions_card'),
           ),
           const SizedBox(height: 12),
           _buildActivityCard(
@@ -142,6 +143,7 @@ class ProfileActivityCards extends ConsumerWidget {
             color: Theme.of(context).colorScheme.primary,
             onTap: () => context.push('/profile/subscriptions'),
             showChevron: true,
+            cardKey: const Key('profile_subscriptions_card'),
           ),
           _buildActivityCard(
             context,
@@ -204,9 +206,9 @@ class ProfileActivityCards extends ConsumerWidget {
   }) {
     final effectiveIconColor = _resolveActivityIconColor(context);
     return Padding(
+      key: cardKey,
       padding: _cardMargin(context),
       child: InkWell(
-        key: cardKey,
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: GlassPanel(

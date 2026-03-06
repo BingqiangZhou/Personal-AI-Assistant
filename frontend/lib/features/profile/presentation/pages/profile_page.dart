@@ -119,7 +119,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         children: [
           const AppPageBackdrop(),
           ResponsiveContainer(
-            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(bottom: 24),
               child: Column(
@@ -203,7 +203,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 12),
                   const ProfileActivityCards(),
                   const SizedBox(height: 8),
                   _buildSettingsContent(context),

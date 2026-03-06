@@ -1201,6 +1201,50 @@ void main() {
     }
   });
 
+  testWidgets('mobile profile header stays above subscriptions card', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: ProfilePage()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    final headerRect = tester.getRect(
+      find.byKey(const Key('profile_hero_header')).last,
+    );
+    final subscriptionsRect = tester.getRect(
+      find.byKey(const Key('profile_subscriptions_card')),
+    );
+
+    expect(headerRect.bottom, lessThanOrEqualTo(subscriptionsRect.top));
+  });
+
   testWidgets('keeps desktop profile cards unchanged', (
     WidgetTester tester,
   ) async {

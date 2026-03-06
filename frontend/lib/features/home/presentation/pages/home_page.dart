@@ -42,11 +42,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
       _restoreMiniPlayerOnHomeEnter();
       _prefetchLibraryFeedOnHomeEnter();
-
-      final audioState = ref.read(audioPlayerProvider);
-      if (!_isPodcastTab(_currentIndex) && audioState.isExpanded) {
-        ref.read(audioPlayerProvider.notifier).setExpanded(false);
-      }
     });
   }
 
@@ -81,8 +76,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       ref.read(podcastFeedProvider.notifier).loadInitialFeed(background: true),
     );
   }
-
-  bool _isPodcastTab(int index) => index == 0 || index == 1;
 
   List<NavigationDestination> _buildDestinations(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -144,11 +137,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget? _buildBottomAccessory(bool hasCurrentEpisode) {
-    final isPodcastTab = _isPodcastTab(_currentIndex);
-    if (!isPodcastTab) {
-      return null;
-    }
-
     if (!hasCurrentEpisode) {
       return null;
     }
@@ -157,8 +145,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   double _bottomAccessoryBodyPadding({required bool hasCurrentEpisode}) {
-    final isPodcastTab = _isPodcastTab(_currentIndex);
-    if (!isPodcastTab || !hasCurrentEpisode) {
+    if (!hasCurrentEpisode) {
       return 0;
     }
 
@@ -168,10 +155,6 @@ class _HomePageState extends ConsumerState<HomePage> {
   void _handleNavigation(int index) {
     if (_currentIndex != index) {
       _visitedTabs.add(index);
-    }
-
-    if (!_isPodcastTab(index) && ref.read(audioPlayerProvider).isExpanded) {
-      ref.read(audioPlayerProvider.notifier).setExpanded(false);
     }
 
     if (_currentIndex != index) {
@@ -189,7 +172,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         content,
         Positioned.fill(
           child: PodcastPlayerModalBarrier(
-            visible: isExpanded && _isPodcastTab(_currentIndex),
+            visible: isExpanded,
             onDismiss: () {
               ref.read(audioPlayerProvider.notifier).setExpanded(false);
             },

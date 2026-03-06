@@ -96,7 +96,44 @@ void main() {
       expect(feedNotifier.loadInitialFeedCallCount, 2);
     });
 
-    testWidgets('initial profile tab auto-collapses expanded player', (
+    testWidgets('profile tab shows mini player when current episode exists', (
+      tester,
+    ) async {
+      final audioNotifier = TestAudioPlayerNotifier(
+        AudioPlayerState(currentEpisode: _testEpisode(), isExpanded: false),
+      );
+
+      await _pumpHomePage(tester, audioNotifier: audioNotifier, initialTab: 2);
+
+      expect(find.byType(ProfilePage), findsOneWidget);
+      expect(
+        find.byKey(const Key('podcast_bottom_player_mini')),
+        findsOneWidget,
+      );
+      expect(audioNotifier.state.isExpanded, isFalse);
+    });
+
+    testWidgets('profile tab mini player expands on tap', (tester) async {
+      final audioNotifier = TestAudioPlayerNotifier(
+        AudioPlayerState(currentEpisode: _testEpisode(), isExpanded: false),
+      );
+
+      await _pumpHomePage(tester, audioNotifier: audioNotifier, initialTab: 2);
+
+      await tester.tap(
+        find.byKey(const Key('podcast_bottom_player_mini_info')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ProfilePage), findsOneWidget);
+      expect(audioNotifier.state.isExpanded, isTrue);
+      expect(
+        find.byKey(const Key('podcast_bottom_player_expanded')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('profile tab barrier tap collapses expanded player', (
       tester,
     ) async {
       final audioNotifier = TestAudioPlayerNotifier(
@@ -105,33 +142,26 @@ void main() {
 
       await _pumpHomePage(tester, audioNotifier: audioNotifier, initialTab: 2);
 
-      expect(audioNotifier.state.isExpanded, isFalse);
-      expect(audioNotifier.setExpandedCalls, greaterThanOrEqualTo(1));
-    });
-
-    testWidgets('navigating from feed to profile collapses expanded player', (
-      tester,
-    ) async {
-      final audioNotifier = TestAudioPlayerNotifier(
-        AudioPlayerState(currentEpisode: _testEpisode(), isExpanded: true),
+      expect(
+        find.byKey(const Key('podcast_bottom_player_expanded')),
+        findsOneWidget,
       );
 
-      await _pumpHomePage(tester, audioNotifier: audioNotifier, initialTab: 1);
-
-      expect(audioNotifier.state.isExpanded, isTrue);
-
-      await tester.tap(find.byIcon(Icons.person_outline));
+      await tester.tapAt(const Offset(195, 120));
       await tester.pumpAndSettle();
 
-      expect(find.byType(ProfilePage), findsOneWidget);
       expect(audioNotifier.state.isExpanded, isFalse);
+      expect(
+        find.byKey(const Key('podcast_bottom_player_mini')),
+        findsOneWidget,
+      );
     });
 
     testWidgets(
-      'profile remains scrollable when player was previously expanded',
+      'profile viewport stays above mini player and remains scrollable',
       (tester) async {
         final audioNotifier = TestAudioPlayerNotifier(
-          AudioPlayerState(currentEpisode: _testEpisode(), isExpanded: true),
+          AudioPlayerState(currentEpisode: _testEpisode(), isExpanded: false),
         );
 
         await _pumpHomePage(
@@ -139,8 +169,6 @@ void main() {
           audioNotifier: audioNotifier,
           initialTab: 2,
         );
-
-        expect(audioNotifier.state.isExpanded, isFalse);
 
         final profileScrollView = find.descendant(
           of: find.byType(ProfilePage),
@@ -153,6 +181,12 @@ void main() {
 
         expect(profileScrollView, findsOneWidget);
         expect(profileScrollable, findsWidgets);
+
+        final profileRect = tester.getRect(profileScrollView);
+        final miniPlayerRect = tester.getRect(
+          find.byKey(const Key('podcast_bottom_player_mini_wrapper')),
+        );
+        expect(profileRect.bottom, lessThanOrEqualTo(miniPlayerRect.top + 0.1));
 
         final before = tester
             .state<ScrollableState>(profileScrollable.first)

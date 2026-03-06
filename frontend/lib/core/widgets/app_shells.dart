@@ -255,76 +255,79 @@ class HeroHeader extends StatelessWidget {
     final hasSubtitle = subtitle.trim().isNotEmpty;
     final compactHeader = !hasEyebrow && !hasSubtitle && badges.isEmpty;
 
-    return GlassPanel(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      borderRadius: tokens.panelRadius,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: compactHeader ? 72 : null,
-            child: Row(
-              crossAxisAlignment: compactHeader
-                  ? CrossAxisAlignment.center
-                  : CrossAxisAlignment.start,
-              children: [
-                if (leading != null) ...[leading!, const SizedBox(width: 10)],
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: compactHeader
-                        ? MainAxisAlignment.center
-                        : MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (hasEyebrow) ...[
-                        Text(
-                          eyebrow!,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w700,
+    return SizedBox(
+      key: key,
+      child: GlassPanel(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        borderRadius: tokens.panelRadius,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: compactHeader ? 72 : null,
+              child: Row(
+                crossAxisAlignment: compactHeader
+                    ? CrossAxisAlignment.center
+                    : CrossAxisAlignment.start,
+                children: [
+                  if (leading != null) ...[leading!, const SizedBox(width: 10)],
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: compactHeader
+                          ? MainAxisAlignment.center
+                          : MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (hasEyebrow) ...[
+                          Text(
+                            eyebrow!,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                      ],
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: compactHeader
-                            ? theme.textTheme.headlineMedium
-                            : theme.textTheme.headlineSmall,
-                      ),
-                      if (hasSubtitle) ...[
-                        const SizedBox(height: 2),
+                          const SizedBox(height: 4),
+                        ],
                         Text(
-                          subtitle,
+                          title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                          style: compactHeader
+                              ? theme.textTheme.headlineMedium
+                              : theme.textTheme.headlineSmall,
                         ),
+                        if (hasSubtitle) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            subtitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                if (trailing != null) ...[
-                  const SizedBox(width: 10),
-                  Align(
-                    alignment: compactHeader
-                        ? Alignment.center
-                        : Alignment.topCenter,
-                    child: trailing!,
-                  ),
+                  if (trailing != null) ...[
+                    const SizedBox(width: 10),
+                    Align(
+                      alignment: compactHeader
+                          ? Alignment.center
+                          : Alignment.topCenter,
+                      child: trailing!,
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          if (badges.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Wrap(spacing: 5, runSpacing: 5, children: badges),
+            if (badges.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Wrap(spacing: 5, runSpacing: 5, children: badges),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -468,7 +471,9 @@ class ProfileShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
     final showSummary = summary is! SizedBox;
+    final topSectionSpacing = isMobile ? 20.0 : 12.0;
     return Material(
       color: Colors.transparent,
       child: Stack(
@@ -482,16 +487,18 @@ class ProfileShell extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   HeroHeader(
+                    key: const Key('profile_hero_header'),
                     title: title,
                     subtitle: subtitle,
                     trailing: trailing,
                     badges: badges,
                   ),
                   if (showSummary) ...[
-                    const SizedBox(height: 12),
+                    SizedBox(height: topSectionSpacing),
                     summary,
                     const SizedBox(height: 12),
                   ],
+                  if (!showSummary) SizedBox(height: topSectionSpacing),
                   child,
                 ],
               ),
