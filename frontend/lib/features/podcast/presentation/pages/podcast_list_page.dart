@@ -32,7 +32,10 @@ class PodcastListPage extends ConsumerStatefulWidget {
 }
 
 class _PodcastListPageState extends ConsumerState<PodcastListPage> {
+  static const double _kDiscoverLoadMoreExtentThreshold = 320;
+
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _discoverListScrollController = ScrollController();
   final FocusNode _searchFocusNode = FocusNode();
   final Set<int> _subscribingShowIds = <int>{};
   final Set<int> _subscribedShowIds = <int>{};
@@ -40,6 +43,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   @override
   void initState() {
     super.initState();
+    _discoverListScrollController.addListener(_onDiscoverListScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref.read(podcastSubscriptionProvider.notifier).loadSubscriptions();
@@ -49,6 +53,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
 
   @override
   void dispose() {
+    _discoverListScrollController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -64,6 +69,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             child: CountrySelectorDropdown(
               onCountryChanged: (country) {
+                _resetDiscoverListScroll();
                 ref
                     .read(podcastDiscoverProvider.notifier)
                     .onCountryChanged(country);
@@ -94,6 +100,44 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       return;
     }
     notifier.searchPodcasts(query);
+  }
+
+  void _onDiscoverListScroll() {
+    if (!_discoverListScrollController.hasClients) {
+      return;
+    }
+
+    final position = _discoverListScrollController.position;
+    if (position.extentAfter > _kDiscoverLoadMoreExtentThreshold) {
+      return;
+    }
+
+    ref.read(podcastDiscoverProvider.notifier).loadMoreCurrentTab();
+  }
+
+  void _resetDiscoverListScroll() {
+    if (!_discoverListScrollController.hasClients) {
+      return;
+    }
+
+    _discoverListScrollController.jumpTo(0);
+  }
+
+  void _handleDiscoverTabSelected(search.PodcastSearchMode mode) {
+    ref.read(search.podcastSearchProvider.notifier).setSearchMode(mode);
+    ref
+        .read(podcastDiscoverProvider.notifier)
+        .setTab(
+          mode == search.PodcastSearchMode.podcasts
+              ? PodcastDiscoverTab.podcasts
+              : PodcastDiscoverTab.episodes,
+        );
+    _resetDiscoverListScroll();
+  }
+
+  void _handleDiscoverCategorySelected(String category) {
+    ref.read(podcastDiscoverProvider.notifier).selectCategory(category);
+    _resetDiscoverListScroll();
   }
 
   void _clearSearch() {
@@ -603,30 +647,23 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () => ref.read(podcastDiscoverProvider.notifier).refresh(),
-      child: NotificationListener<ScrollNotification>(
-        onNotification: (notification) {
-          if (discoverState.canSeeAll &&
-              !discoverState.isCurrentTabExpanded &&
-              notification is ScrollUpdateNotification &&
-              notification.scrollDelta != null &&
-              notification.scrollDelta! > 0 &&
-              notification.metrics.pixels > 80) {
-            ref
-                .read(podcastDiscoverProvider.notifier)
-                .expandCurrentTabIfNeeded();
-          }
-          return false;
-        },
-        child: ListView(
-          key: const Key('podcast_discover_list'),
-          children: [
-            _buildTopChartsSection(context, discoverState, isDense: isDense),
-            SizedBox(height: isDense ? 12 : 16),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTopChartsSection(context, discoverState, isDense: isDense),
+        SizedBox(height: isDense ? 10 : 14),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () =>
+                ref.read(podcastDiscoverProvider.notifier).refresh(),
+            child: _buildDiscoverChartsList(
+              context,
+              discoverState,
+              isDense: isDense,
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -656,14 +693,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               icon: Icons.headphones_outlined,
               selected: searchMode == search.PodcastSearchMode.episodes,
               isDense: isDense,
-              onTap: () {
-                ref
-                    .read(search.podcastSearchProvider.notifier)
-                    .setSearchMode(search.PodcastSearchMode.episodes);
-                ref
-                    .read(podcastDiscoverProvider.notifier)
-                    .setTab(PodcastDiscoverTab.episodes);
-              },
+              onTap: () =>
+                  _handleDiscoverTabSelected(search.PodcastSearchMode.episodes),
             ),
           ),
           const SizedBox(width: 6),
@@ -675,14 +706,8 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
               icon: Icons.podcasts,
               selected: searchMode == search.PodcastSearchMode.podcasts,
               isDense: isDense,
-              onTap: () {
-                ref
-                    .read(search.podcastSearchProvider.notifier)
-                    .setSearchMode(search.PodcastSearchMode.podcasts);
-                ref
-                    .read(podcastDiscoverProvider.notifier)
-                    .setTab(PodcastDiscoverTab.podcasts);
-              },
+              onTap: () =>
+                  _handleDiscoverTabSelected(search.PodcastSearchMode.podcasts),
             ),
           ),
         ],
@@ -862,19 +887,55 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
         ),
         SizedBox(height: isDense ? 6 : 10),
         _buildCategorySection(context, state),
-        SizedBox(height: isDense ? 10 : 14),
-        if (state.visibleItems.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(l10n.podcast_discover_no_chart_data),
-          )
-        else
-          ...state.visibleItems.asMap().entries.map((entry) {
-            final rank = entry.key + 1;
-            final item = entry.value;
-            return _buildChartRow(context, rank, item, isDense: isDense);
-          }),
       ],
+    );
+  }
+
+  Widget _buildDiscoverChartsList(
+    BuildContext context,
+    PodcastDiscoverState state, {
+    required bool isDense,
+  }) {
+    final l10n = AppLocalizations.of(context)!;
+    final visibleItems = state.visibleItems;
+
+    return ListView.builder(
+      key: const Key('podcast_discover_list'),
+      controller: _discoverListScrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.only(bottom: isDense ? 12 : 16),
+      itemCount: switch ((
+        visibleItems.isEmpty,
+        state.isCurrentTabLoadingMore,
+      )) {
+        (true, _) => 1,
+        (false, true) => visibleItems.length + 1,
+        (false, false) => visibleItems.length,
+      },
+      itemBuilder: (context, index) {
+        if (visibleItems.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: Text(l10n.podcast_discover_no_chart_data)),
+          );
+        }
+
+        if (index >= visibleItems.length) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 12),
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        }
+
+        final item = visibleItems[index];
+        return _buildChartRow(context, index + 1, item, isDense: isDense);
+      },
     );
   }
 
@@ -1036,7 +1097,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     PodcastDiscoverState state,
   ) {
     final l10n = AppLocalizations.of(context)!;
-    final notifier = ref.read(podcastDiscoverProvider.notifier);
     final categories = state.categories;
     final theme = Theme.of(context);
     final selected = state.selectedCategory;
@@ -1069,7 +1129,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 selected: rawValue == PodcastDiscoverState.allCategoryValue
                     ? selected == PodcastDiscoverState.allCategoryValue
                     : selected.toLowerCase() == rawValue.toLowerCase(),
-                onSelected: (_) => notifier.selectCategory(rawValue),
+                onSelected: (_) => _handleDiscoverCategorySelected(rawValue),
                 keyValue: uniqueKey,
               );
             }(),

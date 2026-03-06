@@ -10,122 +10,93 @@ void main() {
   group('podcastDiscoverProvider', () {
     test('loads initial top shows and episodes', () async {
       final fakeService = _FakeApplePodcastRssService();
-      final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(
-            _MockLocalStorageService(),
-          ),
-          applePodcastRssServiceProvider.overrideWithValue(fakeService),
-        ],
-      );
+      final container = _createContainer(fakeService);
       addTearDown(container.dispose);
 
       await container.read(podcastDiscoverProvider.notifier).loadInitialData();
       final state = container.read(podcastDiscoverProvider);
 
-      expect(state.topShows, isNotEmpty);
-      expect(state.topEpisodes, isNotEmpty);
+      expect(state.topShows, hasLength(25));
+      expect(state.topEpisodes, hasLength(25));
       expect(state.selectedTab, PodcastDiscoverTab.episodes);
       expect(state.selectedCategory, PodcastDiscoverState.allCategoryValue);
+      expect(state.currentTabLoadedCount, 25);
+      expect(state.currentTabHasMore, isTrue);
+    });
+
+    test('supports tab switching and category filtering', () async {
+      final fakeService = _FakeApplePodcastRssService();
+      final container = _createContainer(fakeService);
+      addTearDown(container.dispose);
+
+      await container.read(podcastDiscoverProvider.notifier).loadInitialData();
+      final notifier = container.read(podcastDiscoverProvider.notifier);
+
+      notifier.setTab(PodcastDiscoverTab.episodes);
+      notifier.selectCategory('News');
+      final state = container.read(podcastDiscoverProvider);
+
+      expect(state.selectedTab, PodcastDiscoverTab.episodes);
+      expect(state.selectedCategory, 'News');
+      expect(
+        state.filteredActiveItems.every((item) => item.hasGenre('News')),
+        isTrue,
+      );
     });
 
     test(
-      'supports tab switching, category filtering, and see-all toggle',
+      'loads more current tab from top 25 to top 100 incrementally',
       () async {
         final fakeService = _FakeApplePodcastRssService();
-        final container = ProviderContainer(
-          overrides: [
-            localStorageServiceProvider.overrideWithValue(
-              _MockLocalStorageService(),
-            ),
-            applePodcastRssServiceProvider.overrideWithValue(fakeService),
-          ],
-        );
+        final container = _createContainer(fakeService);
         addTearDown(container.dispose);
 
-        await container
-            .read(podcastDiscoverProvider.notifier)
-            .loadInitialData();
         final notifier = container.read(podcastDiscoverProvider.notifier);
+        await notifier.loadInitialData();
 
-        notifier.setTab(PodcastDiscoverTab.episodes);
-        notifier.selectCategory('News');
-        var state = container.read(podcastDiscoverProvider);
-
-        expect(state.selectedTab, PodcastDiscoverTab.episodes);
-        expect(state.selectedCategory, 'News');
         expect(
-          state.filteredActiveItems.every((item) => item.hasGenre('News')),
-          isTrue,
+          container.read(podcastDiscoverProvider).topEpisodes,
+          hasLength(25),
         );
 
-        expect(state.isCurrentTabExpanded, isTrue);
-        notifier.toggleSeeAll();
-        state = container.read(podcastDiscoverProvider);
-        expect(state.isCurrentTabExpanded, isFalse);
+        await notifier.loadMoreCurrentTab();
+        expect(
+          container.read(podcastDiscoverProvider).topEpisodes,
+          hasLength(50),
+        );
+
+        await notifier.loadMoreCurrentTab();
+        expect(
+          container.read(podcastDiscoverProvider).topEpisodes,
+          hasLength(75),
+        );
+
+        await notifier.loadMoreCurrentTab();
+        final state = container.read(podcastDiscoverProvider);
+        expect(state.topEpisodes, hasLength(100));
+        expect(state.currentTabHasMore, isFalse);
+        expect(
+          fakeService.episodeLimits,
+          containsAllInOrder([25, 50, 75, 100]),
+        );
+
+        notifier.setTab(PodcastDiscoverTab.podcasts);
+        expect(container.read(podcastDiscoverProvider).topShows, hasLength(25));
+
+        await notifier.loadMoreCurrentTab();
+        await notifier.loadMoreCurrentTab();
+        await notifier.loadMoreCurrentTab();
+
+        final podcastsState = container.read(podcastDiscoverProvider);
+        expect(podcastsState.topShows, hasLength(100));
+        expect(podcastsState.currentTabLoadedCount, 100);
+        expect(fakeService.showsLimits, containsAllInOrder([25, 50, 75, 100]));
       },
     );
 
-    test('hydrates expanded tab from top 25 to top 100', () async {
-      final fakeService = _FakeApplePodcastRssService();
-      final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(
-            _MockLocalStorageService(),
-          ),
-          applePodcastRssServiceProvider.overrideWithValue(fakeService),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      Future<void> waitFor(bool Function() condition) async {
-        for (var attempt = 0; attempt < 200; attempt++) {
-          if (condition()) {
-            return;
-          }
-          await Future<void>.delayed(const Duration(milliseconds: 10));
-        }
-        fail('Timed out waiting for discover hydration');
-      }
-
-      await container.read(podcastDiscoverProvider.notifier).loadInitialData();
-      var state = container.read(podcastDiscoverProvider);
-      expect(state.topShows.length, 25);
-      expect(state.topEpisodes.length, 25);
-
-      await waitFor(
-        () => container.read(podcastDiscoverProvider).topEpisodes.length == 100,
-      );
-      state = container.read(podcastDiscoverProvider);
-      expect(state.episodesExpanded, isTrue);
-      expect(state.topEpisodes.length, 100);
-      expect(
-        fakeService.episodeLimits,
-        containsAllInOrder([25, 50, 75, 100]),
-      );
-
-      container
-          .read(podcastDiscoverProvider.notifier)
-          .setTab(PodcastDiscoverTab.podcasts);
-      await waitFor(
-        () => container.read(podcastDiscoverProvider).topShows.length == 100,
-      );
-      state = container.read(podcastDiscoverProvider);
-      expect(state.showsExpanded, isTrue);
-      expect(state.topShows.length, 100);
-      expect(fakeService.showsLimits, containsAllInOrder([25, 50, 75, 100]));
-    });
-
     test('reloads on country change', () async {
       final fakeService = _FakeApplePodcastRssService();
-      final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(
-            _MockLocalStorageService(),
-          ),
-          applePodcastRssServiceProvider.overrideWithValue(fakeService),
-        ],
-      );
+      final container = _createContainer(fakeService);
       addTearDown(container.dispose);
 
       await container.read(podcastDiscoverProvider.notifier).loadInitialData();
@@ -137,19 +108,13 @@ void main() {
 
       final state = container.read(podcastDiscoverProvider);
       expect(state.country, PodcastCountry.japan);
+      expect(state.topShows, hasLength(25));
       expect(fakeService.showsCalls, greaterThan(initialCalls));
     });
 
     test('uses latest country when a load is already in flight', () async {
       final fakeService = _DelayedApplePodcastRssService();
-      final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(
-            _MockLocalStorageService(),
-          ),
-          applePodcastRssServiceProvider.overrideWithValue(fakeService),
-        ],
-      );
+      final container = _createContainer(fakeService);
       addTearDown(container.dispose);
 
       final notifier = container.read(podcastDiscoverProvider.notifier);
@@ -166,15 +131,8 @@ void main() {
     });
 
     test('skips repeated load when discover data is fresh', () async {
-      final fakeService = _MaxApplePodcastRssService();
-      final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(
-            _MockLocalStorageService(),
-          ),
-          applePodcastRssServiceProvider.overrideWithValue(fakeService),
-        ],
-      );
+      final fakeService = _FakeApplePodcastRssService();
+      final container = _createContainer(fakeService);
       addTearDown(container.dispose);
 
       await container.read(podcastDiscoverProvider.notifier).loadInitialData();
@@ -189,14 +147,7 @@ void main() {
 
     test('loads selected tab results first before the other tab', () async {
       final fakeService = _DelayedApplePodcastRssService();
-      final container = ProviderContainer(
-        overrides: [
-          localStorageServiceProvider.overrideWithValue(
-            _MockLocalStorageService(),
-          ),
-          applePodcastRssServiceProvider.overrideWithValue(fakeService),
-        ],
-      );
+      final container = _createContainer(fakeService);
       addTearDown(container.dispose);
 
       container
@@ -219,18 +170,47 @@ void main() {
       expect(finalState.topShows, isNotEmpty);
     });
 
+    test('switching tabs does not auto-hydrate to top 100', () async {
+      final fakeService = _FakeApplePodcastRssService();
+      final container = _createContainer(fakeService);
+      addTearDown(container.dispose);
+
+      final notifier = container.read(podcastDiscoverProvider.notifier);
+      await notifier.loadInitialData();
+
+      notifier.setTab(PodcastDiscoverTab.podcasts);
+
+      final state = container.read(podcastDiscoverProvider);
+      expect(state.topShows, hasLength(25));
+      expect(fakeService.showsLimits, equals([25]));
+    });
+
+    test(
+      'suppresses concurrent load-more requests for the current tab',
+      () async {
+        final fakeService = _DelayedApplePodcastRssService();
+        final container = _createContainer(fakeService);
+        addTearDown(container.dispose);
+
+        final notifier = container.read(podcastDiscoverProvider.notifier);
+        await notifier.loadInitialData();
+
+        await Future.wait([
+          notifier.loadMoreCurrentTab(),
+          notifier.loadMoreCurrentTab(),
+        ]);
+
+        final state = container.read(podcastDiscoverProvider);
+        expect(state.topEpisodes, hasLength(50));
+        expect(fakeService.episodeLimits, equals([25, 50]));
+      },
+    );
+
     test(
       'clearRuntimeCache clears discover state and triggers refetch',
       () async {
         final fakeService = _FakeApplePodcastRssService();
-        final container = ProviderContainer(
-          overrides: [
-            localStorageServiceProvider.overrideWithValue(
-              _MockLocalStorageService(),
-            ),
-            applePodcastRssServiceProvider.overrideWithValue(fakeService),
-          ],
-        );
+        final container = _createContainer(fakeService);
         addTearDown(container.dispose);
 
         await container
@@ -251,6 +231,15 @@ void main() {
       },
     );
   });
+}
+
+ProviderContainer _createContainer(ApplePodcastRssService service) {
+  return ProviderContainer(
+    overrides: [
+      localStorageServiceProvider.overrideWithValue(_MockLocalStorageService()),
+      applePodcastRssServiceProvider.overrideWithValue(service),
+    ],
+  );
 }
 
 class _FakeApplePodcastRssService extends ApplePodcastRssService {
@@ -321,34 +310,6 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
         updated: '2026-02-14T00:00:00Z',
         results: items,
       ),
-    );
-  }
-}
-
-class _MaxApplePodcastRssService extends _FakeApplePodcastRssService {
-  @override
-  Future<ApplePodcastChartResponse> fetchTopShows({
-    required PodcastCountry country,
-    int limit = 25,
-    ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
-  }) async {
-    showsCalls += 1;
-    showsLimits.add(limit);
-    return _responseFor(kind: 'podcasts', country: country.code, count: 100);
-  }
-
-  @override
-  Future<ApplePodcastChartResponse> fetchTopEpisodes({
-    required PodcastCountry country,
-    int limit = 25,
-    ApplePodcastRssFormat format = ApplePodcastRssFormat.json,
-  }) async {
-    episodeCalls += 1;
-    episodeLimits.add(limit);
-    return _responseFor(
-      kind: 'podcast-episodes',
-      country: country.code,
-      count: 100,
     );
   }
 }

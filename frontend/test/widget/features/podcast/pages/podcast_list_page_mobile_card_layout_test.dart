@@ -16,8 +16,72 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 
 void main() {
   group('PodcastListPage mobile discover list', () {
+    testWidgets('keeps top charts header fixed while chart rows scroll', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            _MockLocalStorageService(),
+          ),
+          applePodcastRssServiceProvider.overrideWithValue(
+            _FakeApplePodcastRssService(),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            () => _TestPodcastSubscriptionNotifier(),
+          ),
+          search.podcastSearchProvider.overrideWithValue(
+            const search.PodcastSearchState(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastListPage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final headerFinder = find.byKey(const Key('podcast_discover_top_charts'));
+      final chipsFinder = find.byKey(
+        const Key('podcast_discover_category_chips'),
+      );
+      final listFinder = find.byKey(const Key('podcast_discover_list'));
+      final scrollableFinder = find.descendant(
+        of: listFinder,
+        matching: find.byType(Scrollable),
+      );
+
+      final headerTopBefore = tester.getTopLeft(headerFinder).dy;
+      final chipsTopBefore = tester.getTopLeft(chipsFinder).dy;
+      final scrollPositionBefore =
+          tester.state<ScrollableState>(scrollableFinder).position.pixels;
+
+      await tester.fling(listFinder, const Offset(0, -80), 3000);
+      await tester.pumpAndSettle();
+
+      expect(tester.getTopLeft(headerFinder).dy, equals(headerTopBefore));
+      expect(tester.getTopLeft(chipsFinder).dy, equals(chipsTopBefore));
+      expect(
+        tester.state<ScrollableState>(scrollableFinder).position.pixels,
+        greaterThan(scrollPositionBefore),
+      );
+    });
+
     testWidgets(
-      'shows rows, filters by category chip, and keeps loading while scrolling',
+      'shows rows, filters by category chip, and paginates to 100 while scrolling',
       (tester) async {
         tester.view.physicalSize = const Size(390, 600);
         tester.view.devicePixelRatio = 1.0;
@@ -59,11 +123,7 @@ void main() {
           findsOneWidget,
         );
         expect(
-          find.byKey(const Key('podcast_discover_chart_row_1004')),
-          findsOneWidget,
-        );
-        expect(
-          find.byKey(const Key('podcast_discover_chart_row_1006')),
+          find.byKey(const Key('podcast_discover_chart_row_1000')),
           findsOneWidget,
         );
 
@@ -77,7 +137,7 @@ void main() {
           findsNothing,
         );
         expect(
-          find.byKey(const Key('podcast_discover_chart_row_1006')),
+          find.byKey(const Key('podcast_discover_chart_row_1000')),
           findsOneWidget,
         );
 
@@ -87,23 +147,19 @@ void main() {
         await tester.pumpAndSettle();
 
         final listFinder = find.byKey(const Key('podcast_discover_list'));
-        await tester.fling(listFinder, const Offset(0, -1200), 3000);
-        await tester.pumpAndSettle();
-        await tester.fling(listFinder, const Offset(0, -1200), 3000);
-        await tester.pumpAndSettle();
-
-        expect(
-          find.byKey(const Key('podcast_discover_chart_row_1006')),
-          findsOneWidget,
-        );
+        for (var index = 0; index < 4; index++) {
+          await tester.fling(listFinder, const Offset(0, -1200), 3000);
+          await tester.pumpAndSettle();
+        }
 
         expect(
           find.byKey(const Key('podcast_discover_chart_row_1099')),
           findsOneWidget,
         );
 
-        final rankTextFinder =
-            find.byKey(const Key('podcast_discover_chart_rank_text_1099'));
+        final rankTextFinder = find.byKey(
+          const Key('podcast_discover_chart_rank_text_1099'),
+        );
         expect(rankTextFinder, findsOneWidget);
         expect(tester.widget<Text>(rankTextFinder).data, equals('100'));
 
