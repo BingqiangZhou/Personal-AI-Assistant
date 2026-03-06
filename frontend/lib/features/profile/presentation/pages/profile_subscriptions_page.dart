@@ -124,31 +124,18 @@ class _ProfileSubscriptionsPageState
 
   Widget _buildHeaderPanel(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
-
-    return GlassPanel(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-      borderRadius: tokens.panelRadius,
-      child: Row(
+    return CompactHeaderPanel(
+      title: l10n.profile_subscriptions,
+      leading: Tooltip(
+        message: MaterialLocalizations.of(context).backButtonTooltip,
+        child: IconButton.filledTonal(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Tooltip(
-            message: MaterialLocalizations.of(context).backButtonTooltip,
-            child: IconButton.filledTonal(
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back_rounded),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              l10n.profile_subscriptions,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.headlineMedium,
-            ),
-          ),
-          const SizedBox(width: 8),
           _buildActionButton(
             context,
             key: const Key('profile_subscriptions_action_add'),
@@ -192,13 +179,11 @@ class _ProfileSubscriptionsPageState
     required IconData icon,
     required VoidCallback onPressed,
   }) {
-    return Tooltip(
-      message: tooltip,
-      child: IconButton.filledTonal(
-        key: key,
-        onPressed: onPressed,
-        icon: Icon(icon),
-      ),
+    return HeaderCapsuleActionButton(
+      key: key,
+      tooltip: tooltip,
+      onPressed: onPressed,
+      icon: icon,
     );
   }
 

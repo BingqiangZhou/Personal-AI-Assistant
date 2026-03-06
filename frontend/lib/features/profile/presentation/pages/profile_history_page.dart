@@ -208,31 +208,14 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
   }
 
   Widget _buildHeaderPanel(BuildContext context, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
-
-    return GlassPanel(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
-      borderRadius: tokens.panelRadius,
-      child: Row(
-        children: [
-          Tooltip(
-            message: MaterialLocalizations.of(context).backButtonTooltip,
-            child: IconButton.filledTonal(
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back_rounded),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              l10n.profile_viewed_title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.headlineMedium,
-            ),
-          ),
-        ],
+    return CompactHeaderPanel(
+      title: l10n.profile_viewed_title,
+      leading: Tooltip(
+        message: MaterialLocalizations.of(context).backButtonTooltip,
+        child: IconButton.filledTonal(
+          onPressed: () => context.pop(),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
       ),
     );
   }

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/theme/app_theme.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_daily_report_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
@@ -61,6 +62,7 @@ void main() {
         const Key('library_daily_report_entry_tile'),
       );
       expect(entryFinder, findsOneWidget);
+      expect(tester.widget<HeaderCapsuleActionButton>(entryFinder), isNotNull);
 
       await tester.tap(entryFinder);
       await tester.pumpAndSettle();
@@ -218,6 +220,12 @@ void main() {
       expect(
         find.byKey(const Key('daily_report_calendar_menu_button')),
         findsOneWidget,
+      );
+      expect(
+        tester.widget<HeaderCapsuleActionButton>(
+          find.byKey(const Key('daily_report_calendar_menu_button')),
+        ),
+        isNotNull,
       );
       expect(find.byKey(const Key('daily_report_calendar')), findsNothing);
       expect(find.text('Daily Report'), findsOneWidget);

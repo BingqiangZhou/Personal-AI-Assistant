@@ -109,37 +109,10 @@ class _PodcastDailyReportPageState
 
   Widget _buildHeaderPanel(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
-
-    return GlassPanel(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      borderRadius: tokens.panelRadius,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildBackButton(context),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    l10n.podcast_daily_report_title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.headlineMedium,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              _buildCalendarButton(context),
-            ],
-          ),
-        ],
-      ),
+    return CompactHeaderPanel(
+      title: l10n.podcast_daily_report_title,
+      leading: _buildBackButton(context),
+      trailing: _buildCalendarButton(context),
     );
   }
 
@@ -160,15 +133,13 @@ class _PodcastDailyReportPageState
 
   Widget _buildCalendarButton(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Tooltip(
-      message: l10n.podcast_daily_report_dates,
-      child: IconButton.filledTonal(
-        key: const Key('daily_report_calendar_menu_button'),
-        onPressed: () {
-          unawaited(_showCalendarPanel());
-        },
-        icon: const Icon(Icons.calendar_month_outlined),
-      ),
+    return HeaderCapsuleActionButton(
+      key: const Key('daily_report_calendar_menu_button'),
+      tooltip: l10n.podcast_daily_report_dates,
+      onPressed: () {
+        unawaited(_showCalendarPanel());
+      },
+      icon: Icons.calendar_month_outlined,
     );
   }
 

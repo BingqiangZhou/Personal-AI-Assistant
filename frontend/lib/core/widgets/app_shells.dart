@@ -229,6 +229,161 @@ class AppSectionHeader extends StatelessWidget {
   }
 }
 
+const double kCompactHeaderContentHeight = 40;
+const double kCompactHeaderItemGap = 12;
+const EdgeInsets kCompactHeaderPanelPadding = EdgeInsets.fromLTRB(
+  18,
+  18,
+  18,
+  16,
+);
+
+class HeaderCapsuleActionButton extends StatelessWidget {
+  const HeaderCapsuleActionButton({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+    this.label,
+    this.trailingIcon,
+    this.padding,
+  });
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final String? tooltip;
+  final Widget? label;
+  final IconData? trailingIcon;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final hasLabel = label != null;
+    final button = Material(
+      color: theme.colorScheme.primary.withValues(
+        alpha: onPressed == null ? 0.05 : 0.09,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(999),
+        side: BorderSide(
+          color: theme.colorScheme.primary.withValues(
+            alpha: onPressed == null ? 0.14 : 0.22,
+          ),
+        ),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(999),
+        onTap: onPressed,
+        child: Padding(
+          padding:
+              padding ??
+              EdgeInsets.symmetric(
+                horizontal: hasLabel ? 10 : 12,
+                vertical: hasLabel ? 8 : 10,
+              ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: onPressed == null ? 0.6 : 1,
+                ),
+              ),
+              if (hasLabel) ...[
+                const SizedBox(width: 5),
+                DefaultTextStyle(
+                  style: theme.textTheme.labelMedium!.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface.withValues(
+                      alpha: onPressed == null ? 0.6 : 1,
+                    ),
+                  ),
+                  child: label!,
+                ),
+              ],
+              if (trailingIcon != null) ...[
+                SizedBox(width: hasLabel ? 4 : 0),
+                Icon(
+                  trailingIcon,
+                  size: 16,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: onPressed == null ? 0.6 : 1,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final semanticsLabel = tooltip;
+    final wrapped = Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: semanticsLabel,
+      child: button,
+    );
+
+    if (tooltip == null || tooltip!.trim().isEmpty) {
+      return wrapped;
+    }
+
+    return Tooltip(message: tooltip!, child: wrapped);
+  }
+}
+
+class CompactHeaderPanel extends StatelessWidget {
+  const CompactHeaderPanel({
+    super.key,
+    required this.title,
+    this.leading,
+    this.trailing,
+  });
+
+  final String title;
+  final Widget? leading;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = mindriverThemeOf(context);
+
+    return GlassPanel(
+      key: key,
+      padding: kCompactHeaderPanelPadding,
+      borderRadius: tokens.panelRadius,
+      child: SizedBox(
+        height: kCompactHeaderContentHeight,
+        child: Row(
+          children: [
+            if (leading != null) ...[
+              leading!,
+              const SizedBox(width: kCompactHeaderItemGap),
+            ],
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.headlineMedium,
+              ),
+            ),
+            if (trailing != null) ...[
+              const SizedBox(width: kCompactHeaderItemGap),
+              trailing!,
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class HeroHeader extends StatelessWidget {
   const HeroHeader({
     super.key,
@@ -250,10 +405,20 @@ class HeroHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tokens = mindriverThemeOf(context);
     final hasEyebrow = eyebrow != null && eyebrow!.trim().isNotEmpty;
     final hasSubtitle = subtitle.trim().isNotEmpty;
     final compactHeader = !hasEyebrow && !hasSubtitle && badges.isEmpty;
+
+    if (compactHeader) {
+      return CompactHeaderPanel(
+        key: key,
+        title: title,
+        leading: leading,
+        trailing: trailing,
+      );
+    }
+
+    final tokens = mindriverThemeOf(context);
 
     return SizedBox(
       key: key,
@@ -263,64 +428,49 @@ class HeroHeader extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: compactHeader ? 72 : null,
-              child: Row(
-                crossAxisAlignment: compactHeader
-                    ? CrossAxisAlignment.center
-                    : CrossAxisAlignment.start,
-                children: [
-                  if (leading != null) ...[leading!, const SizedBox(width: 10)],
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: compactHeader
-                          ? MainAxisAlignment.center
-                          : MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (hasEyebrow) ...[
-                          Text(
-                            eyebrow!,
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                        ],
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (leading != null) ...[leading!, const SizedBox(width: 10)],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (hasEyebrow) ...[
                         Text(
-                          title,
+                          eyebrow!,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.headlineSmall,
+                      ),
+                      if (hasSubtitle) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: compactHeader
-                              ? theme.textTheme.headlineMedium
-                              : theme.textTheme.headlineSmall,
-                        ),
-                        if (hasSubtitle) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            subtitle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                        ],
+                        ),
                       ],
-                    ),
+                    ],
                   ),
-                  if (trailing != null) ...[
-                    const SizedBox(width: 10),
-                    Align(
-                      alignment: compactHeader
-                          ? Alignment.center
-                          : Alignment.topCenter,
-                      child: trailing!,
-                    ),
-                  ],
+                ),
+                if (trailing != null) ...[
+                  const SizedBox(width: 10),
+                  Align(alignment: Alignment.topCenter, child: trailing!),
                 ],
-              ),
+              ],
             ),
             if (badges.isNotEmpty) ...[
               const SizedBox(height: 6),

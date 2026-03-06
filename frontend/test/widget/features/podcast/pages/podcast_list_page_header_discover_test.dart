@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
@@ -13,6 +14,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/po
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_search_provider.dart'
     as search;
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/country_selector_dropdown.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_image_widget.dart';
 
 void main() {
@@ -62,6 +64,7 @@ void main() {
         find.byKey(const Key('podcast_discover_country_button')),
         findsOneWidget,
       );
+      expect(find.byType(HeaderCapsuleActionButton), findsOneWidget);
       expect(
         find.descendant(
           of: find.byKey(const Key('podcast_discover_country_button')),
@@ -69,6 +72,13 @@ void main() {
         ),
         findsOneWidget,
       );
+      await tester.tap(
+        find.byKey(const Key('podcast_discover_country_button')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(CountrySelectorDropdown), findsOneWidget);
+      Navigator.of(tester.element(find.byType(CountrySelectorDropdown))).pop();
+      await tester.pumpAndSettle();
       expect(
         find.byKey(const Key('podcast_discover_search_bar')),
         findsOneWidget,

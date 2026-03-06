@@ -464,7 +464,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
     final hasSearched = ref.watch(
       search.podcastSearchProvider.select((state) => state.hasSearched),
     );
@@ -512,18 +511,13 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           headerSpacing: headerSpacing,
           roundedViewport: true,
           badges: const [],
-          trailing: FilledButton.tonalIcon(
+          trailing: HeaderCapsuleActionButton(
             key: const Key('podcast_discover_country_button'),
+            tooltip: l10n.podcast_country_label,
             onPressed: () => _openCountrySelector(context),
-            icon: const Icon(Icons.flag_outlined, size: 18),
+            icon: Icons.flag_outlined,
             label: Text(selectedCountry.code.toUpperCase()),
-            style: FilledButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              textStyle: theme.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            trailingIcon: Icons.keyboard_arrow_down_rounded,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

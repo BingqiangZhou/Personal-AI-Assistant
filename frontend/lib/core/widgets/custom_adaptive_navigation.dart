@@ -285,28 +285,12 @@ class CustomAdaptiveNavigation extends StatelessWidget {
   }
 
   Widget _buildBrandLogoBadge(BuildContext context) {
-    final tokens = _tokens(context);
-
-    return Container(
+    return SizedBox(
       width: 38,
       height: 38,
-      decoration: BoxDecoration(
-        gradient: tokens.riverGradient as LinearGradient,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: tokens.heroGlow.withValues(alpha: 0.28),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(4),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Image.asset('assets/icons/Logo3.png', fit: BoxFit.cover),
-        ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.asset('assets/icons/Logo3.png', fit: BoxFit.contain),
       ),
     );
   }

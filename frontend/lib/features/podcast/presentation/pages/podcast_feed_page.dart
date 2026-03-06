@@ -141,64 +141,21 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     bool heroStyle = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final menuIconColor = theme.colorScheme.onSurfaceVariant;
-    final borderRadius = heroStyle ? 18.0 : 12.0;
 
     if (heroStyle) {
-      return Semantics(
-        button: true,
-        label: l10n.podcast_daily_report_open,
-        child: Tooltip(
-          message: l10n.podcast_daily_report_open,
-          child: Material(
-            key: const Key('library_daily_report_entry_tile'),
-            color: theme.colorScheme.primary.withValues(alpha: 0.09),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(999),
-              side: BorderSide(
-                color: theme.colorScheme.primary.withValues(alpha: 0.22),
-              ),
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(999),
-              onTap: () =>
-                  PodcastNavigation.goToDailyReport(context, source: 'library'),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.summarize_outlined,
-                      size: 15,
-                      color: menuIconColor,
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      'Report',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.chevron_right,
-                      size: 14,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
+      return HeaderCapsuleActionButton(
+        key: const Key('library_daily_report_entry_tile'),
+        tooltip: l10n.podcast_daily_report_open,
+        icon: Icons.summarize_outlined,
+        label: const Text('Report'),
+        trailingIcon: Icons.chevron_right,
+        onPressed: () =>
+            PodcastNavigation.goToDailyReport(context, source: 'library'),
       );
     }
+
+    final theme = Theme.of(context);
+    final borderRadius = compact ? 12.0 : 16.0;
 
     return Semantics(
       button: true,
@@ -226,7 +183,10 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  Icon(Icons.summarize_outlined, color: menuIconColor),
+                  Icon(
+                    Icons.summarize_outlined,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 12),
                   Flexible(
                     child: Column(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
@@ -143,8 +144,20 @@ void main() {
       findsOneWidget,
     );
     expect(
+      tester.widget<HeaderCapsuleActionButton>(
+        find.byKey(const Key('profile_subscriptions_action_add')),
+      ),
+      isNotNull,
+    );
+    expect(
       find.byKey(const Key('profile_subscriptions_action_bulk_import')),
       findsOneWidget,
+    );
+    expect(
+      tester.widget<HeaderCapsuleActionButton>(
+        find.byKey(const Key('profile_subscriptions_action_bulk_import')),
+      ),
+      isNotNull,
     );
 
     await tester.tap(find.byKey(const Key('profile_subscriptions_action_add')));
