@@ -1,215 +1,170 @@
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter/material.dart';
 
-/// Mindriver Brand Color Tokens / Mindriver 品牌色彩标记
-///
-/// Complete color system for Light and Dark themes
-/// 完整的亮色/暗色主题色彩系统
 class AppColors {
   AppColors._();
 
-  // ============================================================
-  // BRAND COLORS / 品牌色
-  // ============================================================
+  static const Color primary = Color(0xFF5CB8FF);
+  static const Color riverAccent = Color(0xFF86F0FF);
+  static const Color aqua = Color(0xFF8EE6FF);
+  static const Color indigo = Color(0xFF7A8DFF);
 
-  /// Primary CTA color (Light theme) / 主要交互色（亮色主题）
-  static const Color primary = Color(0xFF0070D0);
+  static const Color sunGlow = Color(0xFFFFD8A8);
+  static const Color sunRay = Color(0xFFFF8A6B);
+  static const Color leaf = Color(0xFF6EE7B7);
+  static const Color mint = Color(0xFFB6F5D8);
 
-  /// River accent color / 河流强调色
-  static const Color riverAccent = Color(0xFF43B5EC);
-
-  /// Aqua color / 水绿色
-  static const Color aqua = Color(0xFF77D8C5);
-
-  /// Indigo color / 靛蓝色
-  static const Color indigo = Color(0xFF5071B1);
-
-  // ============================================================
-  // ACCENT COLORS / 强调色
-  // ============================================================
-
-  /// Sun glow color / 阳光金色
-  static const Color sunGlow = Color(0xFFF2E19E);
-
-  /// Sun ray color / 阳光橙色
-  static const Color sunRay = Color(0xFFE6A475);
-
-  /// Leaf green color / 叶绿色
-  static const Color leaf = Color(0xFF67B53D);
-
-  /// Mint green color / 薄荷绿色
-  static const Color mint = Color(0xFF74D597);
-
-  // ============================================================
-  // LIGHT THEME COLORS / 亮色主题颜色
-  // ============================================================
-
-  /// Light theme background / 亮色主题背景
-  static const Color lightBackground = Color(0xFFF8F8F8);
-
-  /// Light theme surface / 亮色主题表面
+  static const Color lightBackground = Color(0xFFF2F6FB);
   static const Color lightSurface = Color(0xFFFFFFFF);
+  static const Color lightSurfaceVariant = Color(0xFFF8FBFF);
+  static const Color lightOutline = Color(0xFFD6E3F2);
+  static const Color lightTextPrimary = Color(0xFF0C1726);
+  static const Color lightTextSecondary = Color(0xFF4B5C70);
+  static const Color lightTextTertiary = Color(0xFF75859A);
 
-  /// Light theme surface variant / 亮色主题表面变体
-  static const Color lightSurfaceVariant = Color(0xFFF0F0F8);
+  static const Color darkBackground = Color(0xFF06111D);
+  static const Color darkSurface = Color(0xFF0D1927);
+  static const Color darkSurfaceVariant = Color(0xFF132233);
+  static const Color darkOutline = Color(0xFF2A3D54);
+  static const Color darkTextPrimary = Color(0xFFF3F8FF);
+  static const Color darkTextSecondary = Color(0xFFB8C8DA);
+  static const Color darkTextTertiary = Color(0xFF8195AB);
 
-  /// Light theme outline / 亮色主题边框
-  static const Color lightOutline = Color(0xFFD8E0F0);
+  static const Color error = Color(0xFFFF6B72);
+  static const Color success = Color(0xFF59D49A);
+  static const Color warning = Color(0xFFFFB84D);
+  static const Color info = primary;
 
-  /// Light theme primary text / 亮色主题主要文字
-  static const Color lightTextPrimary = Color(0xFF0B1A2A);
-
-  /// Light theme secondary text / 亮色主题次要文字
-  static const Color lightTextSecondary = Color(0xFF3A5268);
-
-  /// Light theme tertiary text / 亮色主题第三级文字
-  static const Color lightTextTertiary = Color(0xFF6B8094);
-
-  // ============================================================
-  // DARK THEME COLORS / 暗色主题颜色
-  // ============================================================
-
-  /// Dark theme background / 暗色主题背景
-  static const Color darkBackground = Color(0xFF000000);
-
-  /// Dark theme surface / 暗色主题表面
-  static const Color darkSurface = Color(0xFF0B0B0B);
-
-  /// Dark theme surface variant / 暗色主题表面变体
-  static const Color darkSurfaceVariant = Color(0xFF141414);
-
-  /// Dark theme outline / 暗色主题边框
-  static const Color darkOutline = Color(0xFF2A2A2A);
-
-  /// Dark theme primary text / 暗色主题主要文字
-  static const Color darkTextPrimary = Color(0xFFEAF2FF);
-
-  /// Dark theme secondary text / 暗色主题次要文字
-  static const Color darkTextSecondary = Color(0xFFB6C6DA);
-
-  /// Dark theme tertiary text / 暗色主题第三级文字
-  static const Color darkTextTertiary = Color(0xFF7C8DA6);
-
-  // ============================================================
-  // SEMANTIC COLORS / 语义色
-  // ============================================================
-
-  /// Error color / 错误色
-  static const Color error = Color(0xFFDC2626);
-
-  /// Success color / 成功色 (using leaf)
-  static const Color success = Color(0xFF67B53D);
-
-  /// Warning color / 警告色
-  static const Color warning = Color(0xFFF59E0B);
-
-  /// Info color / 信息色
-  static const Color info = Color(0xFF0070D0);
-
-  // ============================================================
-  // GRADIENTS / 渐变
-  // ============================================================
-
-  /// Main Mindriver brand gradient / Mindriver 品牌渐变
   static const LinearGradient mindriverGradient = LinearGradient(
-    colors: [sunGlow, aqua, riverAccent, primary],
+    colors: [Color(0xFFF6FBFF), Color(0xFFE5F3FF), Color(0xFFD7EDFF)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Soft background gradient for light theme / 亮色主题柔和背景渐变
   static const LinearGradient softBackgroundGradient = LinearGradient(
-    colors: [lightBackground, lightSurfaceVariant],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
+    colors: [Color(0xFFF7FBFF), Color(0xFFEEF4FB), Color(0xFFE7EFF8)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 
-  /// River gradient for accents / 河流强调渐变
   static const LinearGradient riverGradient = LinearGradient(
-    colors: [aqua, riverAccent, primary],
-    begin: Alignment(-1, -1),
-    end: Alignment(1, 1),
+    colors: [Color(0xFF9BE8FF), Color(0xFF5CB8FF), Color(0xFF7A8DFF)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 
-  /// Sunset gradient / 日落渐变
   static const LinearGradient sunsetGradient = LinearGradient(
-    colors: [sunGlow, sunRay],
+    colors: [Color(0xFFFFD6A5), Color(0xFFFF9A76)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  /// Nature gradient / 自然渐变
   static const LinearGradient natureGradient = LinearGradient(
-    colors: [mint, leaf],
+    colors: [Color(0xFFC8F7E4), Color(0xFF6EE7B7)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  // ============================================================
-  // DARK THEME GRADIENTS / 暗色主题渐变
-  // ============================================================
-
-  /// Dark theme subtle gradient / 暗色主题微妙渐变
   static const LinearGradient darkSubtleGradient = LinearGradient(
-    colors: [darkBackground, darkSurfaceVariant],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
+    colors: [Color(0xFF08111C), Color(0xFF0A1523), Color(0xFF102033)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 
-  /// Dark theme brand gradient / 暗色主题品牌渐变
   static const LinearGradient darkBrandGradient = LinearGradient(
-    colors: [Color(0xFF1A1A1A), Color(0xFF000000)],
+    colors: [Color(0xFF0D1927), Color(0xFF10253A), Color(0xFF15314E)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 }
 
-/// Mindriver Theme Extension for additional custom tokens
-/// Mindriver 主题扩展，用于额外的自定义标记
 @immutable
 class MindriverThemeExtension extends ThemeExtension<MindriverThemeExtension> {
   const MindriverThemeExtension({
     required this.brandGradient,
     required this.riverGradient,
-    required this.sunsetGradient,
-    required this.natureGradient,
+    required this.heroGradient,
+    required this.shellGradient,
+    required this.glassSurface,
+    required this.glassSurfaceStrong,
+    required this.glassBorder,
+    required this.glassHighlight,
+    required this.glassShadow,
+    required this.heroGlow,
     required this.sunGlow,
     required this.sunRay,
     required this.leaf,
     required this.mint,
+    required this.contentMaxWidth,
+    required this.sectionGap,
+    required this.cardRadius,
+    required this.panelRadius,
+    required this.navBackdropOpacity,
   });
 
-  /// Brand gradient / 品牌渐变
   final Gradient brandGradient;
   final Gradient riverGradient;
-  final Gradient sunsetGradient;
-  final Gradient natureGradient;
-
-  /// Accent colors / 强调色
+  final Gradient heroGradient;
+  final Gradient shellGradient;
+  final Color glassSurface;
+  final Color glassSurfaceStrong;
+  final Color glassBorder;
+  final Color glassHighlight;
+  final Color glassShadow;
+  final Color heroGlow;
   final Color sunGlow;
   final Color sunRay;
   final Color leaf;
   final Color mint;
+  final double contentMaxWidth;
+  final double sectionGap;
+  final double cardRadius;
+  final double panelRadius;
+  final double navBackdropOpacity;
 
   @override
   MindriverThemeExtension copyWith({
     Gradient? brandGradient,
     Gradient? riverGradient,
-    Gradient? sunsetGradient,
-    Gradient? natureGradient,
+    Gradient? heroGradient,
+    Gradient? shellGradient,
+    Color? glassSurface,
+    Color? glassSurfaceStrong,
+    Color? glassBorder,
+    Color? glassHighlight,
+    Color? glassShadow,
+    Color? heroGlow,
     Color? sunGlow,
     Color? sunRay,
     Color? leaf,
     Color? mint,
+    double? contentMaxWidth,
+    double? sectionGap,
+    double? cardRadius,
+    double? panelRadius,
+    double? navBackdropOpacity,
   }) {
     return MindriverThemeExtension(
       brandGradient: brandGradient ?? this.brandGradient,
       riverGradient: riverGradient ?? this.riverGradient,
-      sunsetGradient: sunsetGradient ?? this.sunsetGradient,
-      natureGradient: natureGradient ?? this.natureGradient,
+      heroGradient: heroGradient ?? this.heroGradient,
+      shellGradient: shellGradient ?? this.shellGradient,
+      glassSurface: glassSurface ?? this.glassSurface,
+      glassSurfaceStrong: glassSurfaceStrong ?? this.glassSurfaceStrong,
+      glassBorder: glassBorder ?? this.glassBorder,
+      glassHighlight: glassHighlight ?? this.glassHighlight,
+      glassShadow: glassShadow ?? this.glassShadow,
+      heroGlow: heroGlow ?? this.heroGlow,
       sunGlow: sunGlow ?? this.sunGlow,
       sunRay: sunRay ?? this.sunRay,
       leaf: leaf ?? this.leaf,
       mint: mint ?? this.mint,
+      contentMaxWidth: contentMaxWidth ?? this.contentMaxWidth,
+      sectionGap: sectionGap ?? this.sectionGap,
+      cardRadius: cardRadius ?? this.cardRadius,
+      panelRadius: panelRadius ?? this.panelRadius,
+      navBackdropOpacity: navBackdropOpacity ?? this.navBackdropOpacity,
     );
   }
 
@@ -221,39 +176,87 @@ class MindriverThemeExtension extends ThemeExtension<MindriverThemeExtension> {
     if (other is! MindriverThemeExtension) {
       return this;
     }
+
     return MindriverThemeExtension(
       brandGradient: Gradient.lerp(brandGradient, other.brandGradient, t)!,
       riverGradient: Gradient.lerp(riverGradient, other.riverGradient, t)!,
-      sunsetGradient: Gradient.lerp(sunsetGradient, other.sunsetGradient, t)!,
-      natureGradient: Gradient.lerp(natureGradient, other.natureGradient, t)!,
+      heroGradient: Gradient.lerp(heroGradient, other.heroGradient, t)!,
+      shellGradient: Gradient.lerp(shellGradient, other.shellGradient, t)!,
+      glassSurface: Color.lerp(glassSurface, other.glassSurface, t)!,
+      glassSurfaceStrong: Color.lerp(
+        glassSurfaceStrong,
+        other.glassSurfaceStrong,
+        t,
+      )!,
+      glassBorder: Color.lerp(glassBorder, other.glassBorder, t)!,
+      glassHighlight: Color.lerp(glassHighlight, other.glassHighlight, t)!,
+      glassShadow: Color.lerp(glassShadow, other.glassShadow, t)!,
+      heroGlow: Color.lerp(heroGlow, other.heroGlow, t)!,
       sunGlow: Color.lerp(sunGlow, other.sunGlow, t)!,
       sunRay: Color.lerp(sunRay, other.sunRay, t)!,
       leaf: Color.lerp(leaf, other.leaf, t)!,
       mint: Color.lerp(mint, other.mint, t)!,
+      contentMaxWidth: lerpDouble(contentMaxWidth, other.contentMaxWidth, t)!,
+      sectionGap: lerpDouble(sectionGap, other.sectionGap, t)!,
+      cardRadius: lerpDouble(cardRadius, other.cardRadius, t)!,
+      panelRadius: lerpDouble(panelRadius, other.panelRadius, t)!,
+      navBackdropOpacity: lerpDouble(
+        navBackdropOpacity,
+        other.navBackdropOpacity,
+        t,
+      )!,
     );
   }
 
-  /// Light theme extension / 亮色主题扩展
   static const light = MindriverThemeExtension(
     brandGradient: AppColors.mindriverGradient,
     riverGradient: AppColors.riverGradient,
-    sunsetGradient: AppColors.sunsetGradient,
-    natureGradient: AppColors.natureGradient,
+    heroGradient: LinearGradient(
+      colors: [Color(0xFFEFF8FF), Color(0xFFE5F3FF), Color(0xFFF8FBFF)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    shellGradient: AppColors.softBackgroundGradient,
+    glassSurface: Color(0xCCFFFFFF),
+    glassSurfaceStrong: Color(0xE6FFFFFF),
+    glassBorder: Color(0x80D5E4F5),
+    glassHighlight: Color(0xFFFFFFFF),
+    glassShadow: Color(0x140C1726),
+    heroGlow: Color(0x665CB8FF),
     sunGlow: AppColors.sunGlow,
     sunRay: AppColors.sunRay,
     leaf: AppColors.leaf,
     mint: AppColors.mint,
+    contentMaxWidth: 1240,
+    sectionGap: 20,
+    cardRadius: 24,
+    panelRadius: 28,
+    navBackdropOpacity: 0.74,
   );
 
-  /// Dark theme extension / 暗色主题扩展
   static const dark = MindriverThemeExtension(
     brandGradient: AppColors.darkBrandGradient,
     riverGradient: AppColors.riverGradient,
-    sunsetGradient: AppColors.sunsetGradient,
-    natureGradient: AppColors.natureGradient,
+    heroGradient: LinearGradient(
+      colors: [Color(0xFF10253A), Color(0xFF0B1B2E), Color(0xFF12283F)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    shellGradient: AppColors.darkSubtleGradient,
+    glassSurface: Color(0xAA132233),
+    glassSurfaceStrong: Color(0xCC102033),
+    glassBorder: Color(0x66345068),
+    glassHighlight: Color(0x33FFFFFF),
+    glassShadow: Color(0x52000000),
+    heroGlow: Color(0x445CB8FF),
     sunGlow: AppColors.sunGlow,
     sunRay: AppColors.sunRay,
     leaf: AppColors.leaf,
     mint: AppColors.mint,
+    contentMaxWidth: 1240,
+    sectionGap: 20,
+    cardRadius: 24,
+    panelRadius: 28,
+    navBackdropOpacity: 0.68,
   );
 }

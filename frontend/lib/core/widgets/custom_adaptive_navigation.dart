@@ -1,13 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
-import '../../core/localization/app_localizations.dart';
+import '../localization/app_localizations.dart';
+import '../theme/app_colors.dart';
 
-const Duration _kBottomAccessoryPaddingTransition = Duration(milliseconds: 180);
+const Duration _kBottomAccessoryPaddingTransition = Duration(milliseconds: 220);
 
-/// Material Design 3自定义自适应导航组件
-///
-/// 完全绕过NavigationRail，使用自定义的Drawer和Column组合
-/// 确保在所有平台上都不会出现断言错误
 class CustomAdaptiveNavigation extends StatelessWidget {
   const CustomAdaptiveNavigation({
     super.key,
@@ -18,7 +17,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
     this.floatingActionButton,
     this.appBar,
     this.bottomAccessory,
-    this.bottomAccessoryBodyPadding = 60.0,
+    this.bottomAccessoryBodyPadding = 60,
     this.desktopNavExpanded = true,
     this.onDesktopNavToggle,
   });
@@ -38,155 +37,164 @@ class CustomAdaptiveNavigation extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-
-        if (screenWidth < 600) {
-          // 移动端 - 使用底部导航栏
-          return _buildMobileLayout(context);
-        } else if (screenWidth < 840) {
-          // 平板端 - 使用紧凑的抽屉导航
-          return _buildTabletLayout(context);
-        } else {
-          // 桌面端 - 使用永久的侧边栏导航
-          return _buildDesktopLayout(context, expanded: desktopNavExpanded);
+        final width = constraints.maxWidth;
+        if (width < 600) {
+          return _buildMobileLayout(context, width);
         }
+        if (width < 840) {
+          return _buildTabletLayout(context);
+        }
+        return _buildDesktopLayout(context, expanded: desktopNavExpanded);
       },
     );
   }
 
-  /// 移动端布局
-  Widget _buildMobileLayout(BuildContext context) {
-    final navigationBar = NavigationBar(
-      selectedIndex: selectedIndex,
-      onDestinationSelected: onDestinationSelected,
-      destinations: destinations,
-      height: 65,
-    );
-
+  Widget _buildMobileLayout(BuildContext context, double width) {
+    const dockReserve = 92.0;
     return Scaffold(
+      extendBody: true,
+      backgroundColor: Colors.transparent,
       appBar: appBar,
       body: Stack(
         children: [
-          // Body content with padding for bottom accessory (Mini Player height approx)
-          AnimatedPadding(
-            duration: _kBottomAccessoryPaddingTransition,
-            curve: Curves.easeOutCubic,
-            padding: EdgeInsets.only(
-              bottom: bottomAccessory != null ? bottomAccessoryBodyPadding : 0,
-            ),
-            child: body ?? const SizedBox.shrink(),
+          Stack(
+            children: [
+              RepaintBoundary(
+                child: AnimatedPadding(
+                  duration: _kBottomAccessoryPaddingTransition,
+                  curve: Curves.easeOutCubic,
+                  padding: EdgeInsets.only(
+                    bottom:
+                        (bottomAccessory != null
+                            ? bottomAccessoryBodyPadding
+                            : 0) +
+                        dockReserve,
+                  ),
+                  child: body ?? const SizedBox.shrink(),
+                ),
+              ),
+              if (floatingActionButton != null)
+                Positioned(
+                  right: 20,
+                  bottom:
+                      (bottomAccessory != null
+                          ? bottomAccessoryBodyPadding
+                          : 0) +
+                      108,
+                  child: floatingActionButton!,
+                ),
+              if (bottomAccessory != null)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: dockReserve,
+                  child: bottomAccessory!,
+                ),
+            ],
           ),
-          // Floating Action Button
-          if (floatingActionButton != null)
-            Positioned(
-              right: 16,
-              bottom: (bottomAccessory != null ? 76.0 : 16.0),
-              child: floatingActionButton!,
-            ),
-          // Bottom Accessory (Player) Overlay
-          if (bottomAccessory != null)
-            Positioned(left: 0, right: 0, bottom: 0, child: bottomAccessory!),
-        ],
-      ),
-      bottomNavigationBar: navigationBar,
-    );
-  }
-
-  /// 平板端布局 - 使用抽屉导航
-  Widget _buildTabletLayout(BuildContext context) {
-    return Scaffold(
-      appBar: appBar,
-      body: Row(
-        children: [
-          // 紧凑的抽屉式导航
-          SizedBox(
-            width: 80,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                border: Border(
-                  right: BorderSide(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outline.withValues(alpha: 0.2),
-                    width: 1,
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              minimum: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Align(
+                child: _GlassDock(
+                  width: width < 420 ? width - 24 : 396,
+                  child: NavigationBar(
+                    selectedIndex: selectedIndex,
+                    onDestinationSelected: onDestinationSelected,
+                    destinations: destinations,
                   ),
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabletLayout(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      appBar: appBar,
+      body: Row(
+        children: [
+          SizedBox(
+            width: 86,
+            child: _GlassSidebar(
+              compact: true,
               child: Column(
                 children: [
-                  const SizedBox(height: 16),
-                  // 应用标题或图标
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    child: _buildBrandLogoBadge(context),
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 18),
+                  _buildBrandLogoBadge(context),
+                  const SizedBox(height: 18),
                   ..._buildNavigationItems(context, compact: true),
                   const Spacer(),
-                  // Profile按钮单独在底部
                   if (destinations.isNotEmpty)
                     _buildProfileNavigationItem(context, compact: true),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                 ],
               ),
             ),
           ),
-          const VerticalDivider(thickness: 1, width: 1),
+          const SizedBox(width: 12),
           Expanded(
-            child: _buildRightPaneNavigator(
-              pageKey: const ValueKey('right_pane_root_tablet'),
+            child: _buildContentStack(
+              bottomPadding: bottomAccessory != null
+                  ? bottomAccessoryBodyPadding
+                  : 0,
+              fabBottom:
+                  (bottomAccessory != null ? bottomAccessoryBodyPadding : 0) +
+                  28,
             ),
           ),
+          const SizedBox(width: 12),
         ],
       ),
     );
   }
 
-  /// 桌面端布局 - 使用永久的侧边栏
   Widget _buildDesktopLayout(BuildContext context, {required bool expanded}) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: appBar,
       body: Row(
         children: [
-          // 永久的侧边栏导航
           TweenAnimationBuilder<double>(
             tween: Tween<double>(end: expanded ? 280 : 80),
-            duration: const Duration(milliseconds: 180),
+            duration: const Duration(milliseconds: 220),
             curve: Curves.easeOutCubic,
-            builder: (context, width, child) {
-              final showCompact = width < 200;
+            builder: (context, animatedWidth, child) {
+              final showCompact = animatedWidth < 196;
               return SizedBox(
                 key: const ValueKey('desktop_navigation_sidebar'),
-                width: width,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.3),
-                    border: Border(
-                      right: BorderSide(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.outline.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                    ),
+                width: animatedWidth,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                  child: _GlassSidebar(
+                    compact: showCompact,
+                    child: showCompact
+                        ? _buildDesktopCollapsedSidebar(context)
+                        : _buildDesktopExpandedSidebar(context),
                   ),
-                  child: showCompact
-                      ? _buildDesktopCollapsedSidebar(context)
-                      : _buildDesktopExpandedSidebar(context),
                 ),
               );
             },
           ),
-          const VerticalDivider(thickness: 1, width: 1),
           Expanded(
-            child: _buildRightPaneNavigator(
-              pageKey: const ValueKey('right_pane_root_desktop'),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
+              child: _buildContentStack(
+                bottomPadding: bottomAccessory != null
+                    ? bottomAccessoryBodyPadding
+                    : 0,
+                fabBottom:
+                    (bottomAccessory != null ? bottomAccessoryBodyPadding : 0) +
+                    28,
+              ),
             ),
           ),
         ],
@@ -194,150 +202,110 @@ class CustomAdaptiveNavigation extends StatelessWidget {
     );
   }
 
-  Widget _buildRightPaneNavigator({required ValueKey<String> pageKey}) {
-    return ClipRect(
-      child: Navigator(
-        pages: [MaterialPage(key: pageKey, child: _buildRightPaneContent())],
-        onDidRemovePage: (page) {},
-      ),
-    );
-  }
-
-  Widget _buildRightPaneContent() {
+  Widget _buildContentStack({
+    required double bottomPadding,
+    required double fabBottom,
+  }) {
     return Stack(
       children: [
         RepaintBoundary(
           child: AnimatedPadding(
             duration: _kBottomAccessoryPaddingTransition,
             curve: Curves.easeOutCubic,
-            padding: EdgeInsets.only(
-              bottom: bottomAccessory != null ? bottomAccessoryBodyPadding : 0,
-            ),
+            padding: EdgeInsets.only(bottom: bottomPadding),
             child: body ?? const SizedBox.shrink(),
           ),
         ),
         if (floatingActionButton != null)
           Positioned(
-            right: 24,
-            bottom: (bottomAccessory != null ? 84.0 : 24.0),
+            right: 20,
+            bottom: fabBottom,
             child: floatingActionButton!,
           ),
         if (bottomAccessory != null)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: RepaintBoundary(child: bottomAccessory!),
-          ),
+          Positioned(left: 0, right: 0, bottom: 0, child: bottomAccessory!),
       ],
     );
   }
 
   Widget _buildDesktopExpandedSidebar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
           child: Row(
             children: [
               _buildBrandLogoBadge(context),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  AppLocalizations.of(context)!.sidebarAppTitle,
+                  l10n.sidebarAppTitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
               IconButton(
                 onPressed: onDesktopNavToggle,
-                tooltip: AppLocalizations.of(context)!.sidebarCollapseMenu,
-                style: IconButton.styleFrom(
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  minimumSize: const Size(32, 32),
-                  padding: EdgeInsets.zero,
-                ),
+                tooltip: l10n.sidebarCollapseMenu,
                 icon: const Icon(Icons.chevron_left),
               ),
             ],
           ),
         ),
-        const Divider(),
         const SizedBox(height: 8),
         ..._buildNavigationItems(context, compact: false),
         const Spacer(),
         if (destinations.isNotEmpty)
           _buildProfileNavigationItem(context, compact: false),
-        const SizedBox(height: 8),
       ],
     );
   }
 
   Widget _buildDesktopCollapsedSidebar(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
-        Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildBrandLogoBadge(context),
-              IconButton(
-                onPressed: onDesktopNavToggle,
-                tooltip: AppLocalizations.of(context)!.sidebarExpandMenu,
-                style: IconButton.styleFrom(
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  minimumSize: const Size(28, 28),
-                  padding: EdgeInsets.zero,
-                ),
-                iconSize: 20,
-                icon: const Icon(Icons.chevron_right),
-              ),
-            ],
-          ),
+        const SizedBox(height: 10),
+        _buildBrandLogoBadge(context),
+        IconButton(
+          onPressed: onDesktopNavToggle,
+          tooltip: l10n.sidebarExpandMenu,
+          icon: const Icon(Icons.chevron_right),
         ),
-        const Divider(),
         const SizedBox(height: 8),
         ..._buildNavigationItems(context, compact: true),
         const Spacer(),
         if (destinations.isNotEmpty)
           _buildProfileNavigationItem(context, compact: true),
-        const SizedBox(height: 8),
       ],
     );
   }
 
   Widget _buildBrandLogoBadge(BuildContext context) {
+    final tokens = _tokens(context);
+
     return Container(
-      width: 32,
-      height: 32,
+      width: 38,
+      height: 38,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(8),
+        gradient: tokens.riverGradient as LinearGradient,
+        borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(
-              context,
-            ).colorScheme.secondary.withValues(alpha: 0.3),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: tokens.heroGlow.withValues(alpha: 0.28),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset(
-          'assets/icons/Logo3.png',
-          width: 32,
-          height: 32,
-          fit: BoxFit.cover,
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.asset('assets/icons/Logo3.png', fit: BoxFit.cover),
         ),
       ),
     );
@@ -396,96 +364,108 @@ class CustomAdaptiveNavigation extends StatelessWidget {
           );
   }
 
-  /// 构建紧凑的导航项（平板端）
   Widget _buildCompactNavItem(
     BuildContext context,
     NavigationDestination destination,
     bool isSelected,
     VoidCallback onTap,
   ) {
+    final scheme = Theme.of(context).colorScheme;
     return Tooltip(
       message: destination.label,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: 56,
-          height: 56,
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? Theme.of(context).colorScheme.secondaryContainer
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? scheme.primary.withValues(alpha: 0.14)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Center(
+              child: isSelected
+                  ? (destination.selectedIcon ?? destination.icon)
+                  : destination.icon,
+            ),
           ),
-          child: isSelected
-              ? (destination.selectedIcon ?? destination.icon)
-              : destination.icon,
         ),
       ),
     );
   }
 
-  /// 构建展开的导航项（桌面端）
   Widget _buildExpandedNavItem(
     BuildContext context,
     NavigationDestination destination,
     bool isSelected,
     VoidCallback onTap,
   ) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: double.infinity,
-        height: 56,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Theme.of(context).colorScheme.secondaryContainer
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const SizedBox(width: 16),
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: isSelected
-                  ? (destination.selectedIcon ?? destination.icon)
-                  : destination.icon,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                destination.label,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.onSecondaryContainer
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ),
-            if (isSelected)
-              Container(
-                width: 3,
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? scheme.primary.withValues(alpha: 0.14)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 24,
                 height: 24,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary,
-                  borderRadius: BorderRadius.circular(2),
+                child: isSelected
+                    ? (destination.selectedIcon ?? destination.icon)
+                    : destination.icon,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  destination.label,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: isSelected
+                        ? scheme.onSurface
+                        : scheme.onSurfaceVariant,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  ),
                 ),
               ),
-            const SizedBox(width: 8),
-          ],
+              if (isSelected)
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  MindriverThemeExtension _tokens(BuildContext context) {
+    return Theme.of(context).extension<MindriverThemeExtension>() ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? MindriverThemeExtension.dark
+            : MindriverThemeExtension.light);
+  }
 }
 
-/// 简化的响应式容器组件
 class ResponsiveContainer extends StatelessWidget {
   const ResponsiveContainer({
     super.key,
@@ -502,85 +482,121 @@ class ResponsiveContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final width = MediaQuery.of(context).size.width;
+    final tokens =
+        Theme.of(context).extension<MindriverThemeExtension>() ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? MindriverThemeExtension.dark
+            : MindriverThemeExtension.light);
 
-    // 计算安全的最大宽度
-    final safeMaxWidth =
-        maxWidth ??
-        (screenWidth < 600
-            ? screenWidth
-            : screenWidth < 1200
-            ? 1000
-            : 1200);
-
-    // 计算安全的内边距
-    final safePadding =
+    final resolvedPadding =
         padding ??
-        EdgeInsets.only(
-          left: screenWidth < 600 ? 16.0 : 24.0,
-          right: screenWidth < 600 ? 16.0 : 24.0,
-          top: 0.0, // 移除顶部padding,让页面标题与"Personal AI"对齐
-          bottom: 0.0,
+        EdgeInsets.fromLTRB(
+          width < 600 ? 16 : 24,
+          width < 600 ? 12 : 20,
+          width < 600 ? 16 : 24,
+          0,
         );
+    final resolvedMaxWidth =
+        maxWidth ??
+        (width < 600
+            ? width
+            : width < 900
+            ? 920
+            : tokens.contentMaxWidth);
 
-    // 移动端添加SafeArea，解决顶部标题栏被状态栏遮挡的问题
-    Widget content = ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: safeMaxWidth, minHeight: 0),
-      child: child,
-    );
-
-    if (screenWidth < 600) {
-      content = SafeArea(top: true, bottom: false, child: content);
-    }
-
-    return Container(
-      alignment: alignment,
-      padding: safePadding,
-      child: content,
+    return Align(
+      alignment: alignment ?? Alignment.topCenter,
+      child: Padding(
+        padding: resolvedPadding,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: resolvedMaxWidth),
+          child: child,
+        ),
+      ),
     );
   }
 }
 
-/// 安全的响应式网格组件
-class ResponsiveGrid extends StatelessWidget {
-  const ResponsiveGrid({
-    super.key,
-    required this.children,
-    this.crossAxisSpacing = 16.0,
-    this.mainAxisSpacing = 16.0,
-    this.childAspectRatio = 1.0,
-  });
+class _GlassSidebar extends StatelessWidget {
+  const _GlassSidebar({required this.child, required this.compact});
 
-  final List<Widget> children;
-  final double crossAxisSpacing;
-  final double mainAxisSpacing;
-  final double childAspectRatio;
+  final Widget child;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final theme = Theme.of(context);
+    final tokens =
+        theme.extension<MindriverThemeExtension>() ??
+        (theme.brightness == Brightness.dark
+            ? MindriverThemeExtension.dark
+            : MindriverThemeExtension.light);
 
-    // 简化的列数计算
-    int crossAxisCount;
-    if (screenWidth < 600) {
-      crossAxisCount = 1;
-    } else if (screenWidth < 900) {
-      crossAxisCount = 2;
-    } else if (screenWidth < 1200) {
-      crossAxisCount = 3;
-    } else {
-      crossAxisCount = 4;
-    }
-
-    return GridView.builder(
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: crossAxisSpacing,
-        mainAxisSpacing: mainAxisSpacing,
-        childAspectRatio: childAspectRatio,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(compact ? 28 : 32),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: tokens.glassSurfaceStrong.withValues(
+              alpha: tokens.navBackdropOpacity,
+            ),
+            borderRadius: BorderRadius.circular(compact ? 28 : 32),
+            border: Border.all(color: tokens.glassBorder),
+            boxShadow: [
+              BoxShadow(
+                color: tokens.glassShadow,
+                blurRadius: 30,
+                offset: const Offset(0, 16),
+              ),
+            ],
+          ),
+          child: child,
+        ),
       ),
-      itemCount: children.length,
-      itemBuilder: (context, index) => children[index],
+    );
+  }
+}
+
+class _GlassDock extends StatelessWidget {
+  const _GlassDock({required this.child, required this.width});
+
+  final Widget child;
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens =
+        theme.extension<MindriverThemeExtension>() ??
+        (theme.brightness == Brightness.dark
+            ? MindriverThemeExtension.dark
+            : MindriverThemeExtension.light);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          width: width,
+          decoration: BoxDecoration(
+            color: tokens.glassSurfaceStrong.withValues(
+              alpha: tokens.navBackdropOpacity,
+            ),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: tokens.glassBorder),
+            boxShadow: [
+              BoxShadow(
+                color: tokens.glassShadow,
+                blurRadius: 32,
+                offset: const Offset(0, 18),
+              ),
+            ],
+          ),
+          child: child,
+        ),
+      ),
     );
   }
 }

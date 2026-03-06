@@ -21,6 +21,7 @@ import '../../features/profile/presentation/pages/profile_history_page.dart';
 import '../../features/profile/presentation/pages/profile_cache_management_page.dart';
 import '../../features/profile/presentation/pages/profile_subscriptions_page.dart';
 import '../../core/localization/app_localizations.dart';
+import '../../core/widgets/app_shells.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -262,36 +263,21 @@ class ErrorPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.error)),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: colorScheme.error),
-            const SizedBox(height: 16),
-            Text(
-              l10n.unknown_error,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error?.toString() ?? l10n.unknown_error,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const AppPageBackdrop(),
+          AppEmptyState(
+            icon: Icons.error_outline,
+            title: l10n.unknown_error,
+            subtitle: error?.toString() ?? l10n.unknown_error,
+            action: FilledButton(
               onPressed: () => context.go('/splash'),
               child: Text(l10n.home),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

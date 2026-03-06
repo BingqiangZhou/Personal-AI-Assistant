@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/features/podcast/core/utils/episode_description_helper.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_subscription_model.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/constants/podcast_ui_constants.dart';
@@ -72,52 +73,62 @@ class _ProfileSubscriptionsPageState
     );
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.profile_subscriptions),
-        actions: [
-          IconButton(
-            key: const Key('profile_subscriptions_action_add'),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => const AddPodcastDialog(),
-              );
-            },
-            icon: const Icon(Icons.add),
-            tooltip: l10n.podcast_add_podcast,
+      body: ContentShell(
+        eyebrow: 'Subscription library',
+        title: l10n.profile_subscriptions,
+        subtitle:
+            'Manage subscribed shows, bulk import sources, and browse updates.',
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              key: const Key('profile_subscriptions_action_add'),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const AddPodcastDialog(),
+                );
+              },
+              icon: const Icon(Icons.add),
+              tooltip: l10n.podcast_add_podcast,
+            ),
+            IconButton(
+              key: const Key('profile_subscriptions_action_bulk_import'),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => BulkImportDialog(
+                    onImport: (urls) async {
+                      await ref
+                          .read(podcastSubscriptionProvider.notifier)
+                          .addSubscriptionsBatch(feedUrls: urls);
+                    },
+                  ),
+                );
+              },
+              icon: const Icon(Icons.playlist_add_outlined),
+              tooltip: l10n.podcast_bulk_import,
+            ),
+          ],
+        ),
+        child: RefreshIndicator(
+          onRefresh: () => ref
+              .read(podcastSubscriptionProvider.notifier)
+              .refreshSubscriptions(),
+          child: _buildBody(
+            context,
+            l10n,
+            subscriptions: state.subscriptions,
+            hasMore: state.hasMore,
+            isLoading: state.isLoading,
+            isLoadingMore: state.isLoadingMore,
+            total: state.total,
+            error: state.error,
           ),
-          IconButton(
-            key: const Key('profile_subscriptions_action_bulk_import'),
-            onPressed: () {
-              showDialog(
-                context: context,
-                builder: (context) => BulkImportDialog(
-                  onImport: (urls) async {
-                    await ref
-                        .read(podcastSubscriptionProvider.notifier)
-                        .addSubscriptionsBatch(feedUrls: urls);
-                  },
-                ),
-              );
-            },
-            icon: const Icon(Icons.playlist_add_outlined),
-            tooltip: l10n.podcast_bulk_import,
-          ),
-        ],
-      ),
-      body: RefreshIndicator(
-        onRefresh: () => ref
-            .read(podcastSubscriptionProvider.notifier)
-            .refreshSubscriptions(),
-        child: _buildBody(
-          context,
-          l10n,
-          subscriptions: state.subscriptions,
-          hasMore: state.hasMore,
-          isLoading: state.isLoading,
-          isLoadingMore: state.isLoadingMore,
-          total: state.total,
-          error: state.error,
         ),
       ),
     );

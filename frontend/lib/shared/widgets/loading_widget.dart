@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+import '../../core/widgets/app_shells.dart';
+
 class LoadingWidget extends StatelessWidget {
   final double? size;
   final Color? color;
@@ -44,15 +46,10 @@ class LoadingOverlay extends StatelessWidget {
           Container(
             color: scheme.scrim.withValues(alpha: 0.5),
             child: Center(
-              child: Container(
+              child: GlassPanel(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
-                ),
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: scheme.outlineVariant),
+                  horizontal: 24,
+                  vertical: 20,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

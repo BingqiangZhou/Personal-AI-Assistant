@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/app_shells.dart';
 import '../../../podcast/presentation/navigation/podcast_navigation.dart';
 import '../../../podcast/presentation/providers/podcast_providers.dart';
 
@@ -202,15 +203,15 @@ class ProfileActivityCards extends ConsumerWidget {
     Key? cardKey,
   }) {
     final effectiveIconColor = _resolveActivityIconColor(context);
-    return Card(
-      key: cardKey,
-      margin: _cardMargin(context),
-      shape: _cardShape(context),
+    return Padding(
+      padding: _cardMargin(context),
       child: InkWell(
+        key: cardKey,
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
+        borderRadius: BorderRadius.circular(20),
+        child: GlassPanel(
+          borderRadius: 20,
+          showHighlight: false,
           child: Row(
             children: [
               Icon(icon, color: effectiveIconColor, size: 24),

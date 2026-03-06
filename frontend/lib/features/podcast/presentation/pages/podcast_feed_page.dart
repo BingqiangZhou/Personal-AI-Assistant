@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../core/utils/episode_description_helper.dart';
@@ -67,46 +68,29 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return ResponsiveContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return ContentShell(
+      title: l10n.podcast_feed_page_title,
+      subtitle: '',
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Header row
-          SizedBox(
-            height: 56,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.podcast_feed_page_title,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    context.push('/profile/subscriptions');
-                  },
-                  icon: const Icon(Icons.subscriptions_outlined),
-                  tooltip: l10n.profile_subscriptions,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          // Feed content fills remaining space with Expanded.
-          Expanded(
-            child: Consumer(
-              builder: (context, localRef, child) {
-                final feedState = localRef.watch(podcastFeedProvider);
-                return _buildFeedContent(context, localRef, feedState);
-              },
-            ),
+          _buildDailyReportEntryTile(context, compact: false, heroStyle: true),
+          const SizedBox(width: 8),
+          IconButton(
+            onPressed: () {
+              context.push('/profile/subscriptions');
+            },
+            icon: const Icon(Icons.subscriptions_outlined),
+            tooltip: l10n.profile_subscriptions,
           ),
         ],
+      ),
+      badges: const [],
+      child: Consumer(
+        builder: (context, localRef, child) {
+          final feedState = localRef.watch(podcastFeedProvider);
+          return _buildFeedContent(context, localRef, feedState);
+        },
       ),
     );
   }
@@ -153,10 +137,67 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
   Widget _buildDailyReportEntryTile(
     BuildContext context, {
     required bool compact,
+    bool heroStyle = false,
   }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final menuIconColor = theme.colorScheme.onSurfaceVariant;
+    final borderRadius = heroStyle ? 18.0 : 12.0;
+
+    if (heroStyle) {
+      return Semantics(
+        button: true,
+        label: l10n.podcast_daily_report_open,
+        child: Tooltip(
+          message: l10n.podcast_daily_report_open,
+          child: Material(
+            key: const Key('library_daily_report_entry_tile'),
+            color: theme.colorScheme.primary.withValues(alpha: 0.09),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(999),
+              side: BorderSide(
+                color: theme.colorScheme.primary.withValues(alpha: 0.22),
+              ),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(999),
+              onTap: () =>
+                  PodcastNavigation.goToDailyReport(context, source: 'library'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.summarize_outlined,
+                      size: 15,
+                      color: menuIconColor,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      'Report',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Semantics(
       button: true,
@@ -167,13 +208,13 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
           key: const Key('library_daily_report_entry_tile'),
           color: theme.colorScheme.surfaceContainerLow,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(borderRadius),
             side: BorderSide(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
             ),
           ),
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(borderRadius),
             onTap: () =>
                 PodcastNavigation.goToDailyReport(context, source: 'library'),
             child: Padding(
@@ -182,11 +223,13 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
                 vertical: compact ? 10 : 12,
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.max,
                 children: [
                   Icon(Icons.summarize_outlined, color: menuIconColor),
                   const SizedBox(width: 12),
-                  Expanded(
+                  Flexible(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -238,8 +281,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       child: ListView(
         padding: const EdgeInsets.symmetric(vertical: 4),
         children: [
-          _buildDailyReportEntryTile(context, compact: mobile),
-          const SizedBox(height: 28),
+          const SizedBox(height: 36),
           Center(
             child: Column(
               children: [
@@ -277,25 +319,15 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     }
 
     if (feedState.error != null && feedState.episodes.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text('${l10n.podcast_failed_to_load_feed}: ${feedState.error}'),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () {
-                localRef.read(podcastFeedProvider.notifier).loadInitialFeed();
-              },
-              child: Text(l10n.podcast_retry),
-            ),
-          ],
+      return AppEmptyState(
+        icon: Icons.error_outline,
+        title: l10n.podcast_failed_to_load_feed,
+        subtitle: feedState.error,
+        action: FilledButton(
+          onPressed: () {
+            localRef.read(podcastFeedProvider.notifier).loadInitialFeed();
+          },
+          child: Text(l10n.podcast_retry),
         ),
       );
     }
@@ -330,8 +362,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     required double screenWidth,
   }) {
     final isMobile = screenWidth < 600;
-    final itemCount =
-        feedState.episodes.length + (feedState.hasMore ? 1 : 0) + 1;
+    final itemCount = feedState.episodes.length + (feedState.hasMore ? 1 : 0);
 
     if (isMobile) {
       return ListView.builder(
@@ -371,12 +402,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     int index, {
     required bool compact,
   }) {
-    if (index == 0) {
-      return _buildDailyReportEntryTile(context, compact: compact);
-    }
-
-    final episodeIndex = index - 1;
-    if (episodeIndex >= feedState.episodes.length) {
+    if (index >= feedState.episodes.length) {
       if (!feedState.isLoadingMore) {
         return const SizedBox.shrink();
       }
@@ -391,7 +417,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
       return Center(child: loader);
     }
 
-    final episode = feedState.episodes[episodeIndex];
+    final episode = feedState.episodes[index];
     return compact
         ? _buildMobileCard(context, episode)
         : _buildDesktopCard(context, episode);

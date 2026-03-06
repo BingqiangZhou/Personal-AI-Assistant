@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/app/config/app_config.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/core_providers.dart';
+import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../../../shared/widgets/loading_widget.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
@@ -123,193 +124,164 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
 
     return Scaffold(
-      body: SafeArea(
-        child: LoadingOverlay(
-          isLoading: isLoading,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 60),
-
-                  // Logo and title
-                  Center(
-                    child: Column(
-                      children: [
-                        Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onLongPress: _showServerConfigDialog,
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.asset(
-                              'assets/icons/Logo3.png',
-                              width: 80,
-                              height: 80,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.auth_welcome_back,
-                          style: Theme.of(context).textTheme.headlineLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.auth_sign_in_subtitle,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.7),
-                              ),
+      body: LoadingOverlay(
+        isLoading: isLoading,
+        child: AuthShell(
+          title: l10n.auth_welcome_back,
+          subtitle: l10n.auth_sign_in_subtitle,
+          header: Column(
+            children: [
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onLongPress: _showServerConfigDialog,
+                  borderRadius: BorderRadius.circular(28),
+                  child: Container(
+                    width: 96,
+                    height: 96,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient:
+                          mindriverThemeOf(context).riverGradient
+                              as LinearGradient,
+                      borderRadius: BorderRadius.circular(28),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withValues(alpha: 0.22),
+                          blurRadius: 28,
+                          offset: const Offset(0, 16),
                         ),
                       ],
                     ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: Image.asset('assets/icons/Logo3.png'),
+                    ),
                   ),
-
-                  const SizedBox(height: 48),
-
-                  // Email field
-                  CustomTextField(
-                    controller: _emailController,
-                    label: l10n.auth_email,
-                    keyboardType: TextInputType.emailAddress,
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.auth_enter_email;
-                      }
-                      if (!value.contains('@')) {
-                        return l10n.auth_enter_valid_email;
-                      }
-                      return null;
+                ),
+              ),
+              const SizedBox(height: 14),
+              const StatusBadge(
+                label: 'Personal AI Workspace',
+                icon: Icons.auto_awesome,
+              ),
+            ],
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                CustomTextField(
+                  controller: _emailController,
+                  label: l10n.auth_email,
+                  keyboardType: TextInputType.emailAddress,
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return l10n.auth_enter_email;
+                    }
+                    if (!value.contains('@')) {
+                      return l10n.auth_enter_valid_email;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: _passwordController,
+                  label: l10n.auth_password,
+                  obscureText: _obscurePassword,
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
                     },
                   ),
-
-                  const SizedBox(height: 16),
-
-                  // Password field
-                  CustomTextField(
-                    controller: _passwordController,
-                    label: l10n.auth_password,
-                    obscureText: _obscurePassword,
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return l10n.auth_enter_password;
+                    }
+                    if (value.length < 6) {
+                      return l10n.auth_password_too_short;
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _rememberMe,
+                      onChanged: (value) async {
                         setState(() {
-                          _obscurePassword = !_obscurePassword;
+                          _rememberMe = value ?? false;
                         });
+                        if (!_rememberMe) {
+                          await _secureStorage.delete(
+                            key: AppConstants.savedUsernameKey,
+                          );
+                          await _secureStorage.delete(
+                            key: AppConstants.savedPasswordKey,
+                          );
+                        }
                       },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return l10n.auth_enter_password;
-                      }
-                      if (value.length < 6) {
-                        return l10n.auth_password_too_short;
-                      }
-                      return null;
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Remember me and Forgot password
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: _rememberMe,
-                        onChanged: (value) async {
-                          setState(() {
-                            _rememberMe = value ?? false;
-                          });
-                          if (!_rememberMe) {
-                            await _secureStorage.delete(
-                              key: AppConstants.savedUsernameKey,
-                            );
-                            await _secureStorage.delete(
-                              key: AppConstants.savedPasswordKey,
-                            );
-                          }
-                        },
-                      ),
-                      Text(l10n.auth_remember_me),
-                      const Spacer(),
-                      TextButton(
-                        onPressed: () {
-                          context.go('/forgot-password');
-                        },
-                        child: Text(
-                          l10n.auth_forgot_password,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Login button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: FilledButton(
-                      key: const Key('login_button'),
-                      onPressed: isLoading ? null : _login,
-                      child: isLoading
-                          ? SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                            )
-                          : Text(l10n.auth_login),
+                    Flexible(child: Text(l10n.auth_remember_me)),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () {
+                        context.go('/forgot-password');
+                      },
+                      child: Text(l10n.auth_forgot_password),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: FilledButton(
+                    key: const Key('login_button'),
+                    onPressed: isLoading ? null : _login,
+                    child: isLoading
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          )
+                        : Text(l10n.auth_login),
                   ),
-
-                  const SizedBox(height: 32),
-
-                  // Sign up link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: Text(
                         l10n.auth_no_account,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                      GestureDetector(
-                        onTap: () => context.go('/register'),
-                        child: Text(
-                          l10n.auth_sign_up,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.go('/register'),
+                      child: Text(l10n.auth_sign_up),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),

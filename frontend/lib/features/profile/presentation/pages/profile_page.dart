@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/locale_provider.dart';
 import 'package:personal_ai_assistant/core/theme/theme_provider.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/widgets/update_dialog.dart';
 
@@ -110,153 +111,217 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final authState = ref.watch(authProvider);
     final user = authState.user;
     final theme = Theme.of(context);
+    final compactProfileLayout = MediaQuery.of(context).size.height < 700;
 
-    return ResponsiveContainer(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 56,
-              child: Row(
+    if (compactProfileLayout) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          const AppPageBackdrop(),
+          ResponsiveContainer(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      l10n.profile,
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  PopupMenuButton<String>(
-                    key: const Key('profile_user_menu_button'),
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        _showEditProfileDialog(context);
-                      } else if (value == 'logout') {
-                        _showLogoutDialog(context);
-                      }
-                    },
-                    offset: const Offset(0, 48),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    itemBuilder: (context) => [
-                      PopupMenuItem<String>(
-                        enabled: false,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.person_outline,
-                              size: 20,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                user?.displayName ?? l10n.profile_guest_user,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.profile,
+                          style: theme.textTheme.headlineSmall,
                         ),
                       ),
-                      PopupMenuItem<String>(
-                        enabled: false,
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.email_outlined,
-                              size: 20,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                user?.email ?? l10n.profile_please_login,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                      PopupMenuButton<String>(
+                        key: const Key('profile_user_menu_button'),
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            _showEditProfileDialog(context);
+                          } else if (value == 'logout') {
+                            _showLogoutDialog(context);
+                          }
+                        },
+                        offset: const Offset(0, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      ),
-                      const PopupMenuDivider(),
-                      PopupMenuItem<String>(
-                        value: 'edit',
-                        key: const Key('profile_user_menu_item_edit'),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.edit_note, size: 20),
-                            const SizedBox(width: 8),
-                            Text(l10n.profile_edit_profile),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem<String>(
-                        value: 'logout',
-                        key: const Key('profile_user_menu_item_logout'),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.logout,
-                              size: 20,
-                              color: Theme.of(context).colorScheme.error,
+                        itemBuilder: (context) => [
+                          PopupMenuItem<String>(
+                            enabled: false,
+                            child: Text(
+                              user?.displayName ?? l10n.profile_guest_user,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              l10n.logout,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'edit',
+                            key: const Key('profile_user_menu_item_edit'),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.edit_note, size: 20),
+                                const SizedBox(width: 8),
+                                Text(l10n.profile_edit_profile),
+                              ],
                             ),
-                          ],
+                          ),
+                          PopupMenuItem<String>(
+                            value: 'logout',
+                            key: const Key('profile_user_menu_item_logout'),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.logout,
+                                  size: 20,
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  l10n.logout,
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        child: CircleAvatar(
+                          radius: 22,
+                          backgroundColor: theme.colorScheme.onSurfaceVariant,
+                          child: Text(
+                            (user?.displayName ?? l10n.profile_guest_user)
+                                .characters
+                                .first
+                                .toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.surface,
+                            ),
+                          ),
                         ),
                       ),
                     ],
-                    child: CircleAvatar(
-                      radius: 20,
-                      backgroundColor: theme.colorScheme.onSurfaceVariant,
-                      child: Text(
-                        (user?.displayName ?? l10n.profile_guest_user)
-                            .characters
-                            .first
-                            .toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.surface,
-                        ),
-                      ),
-                    ),
                   ),
+                  const SizedBox(height: 6),
+                  const ProfileActivityCards(),
+                  const SizedBox(height: 8),
+                  _buildSettingsContent(context),
                 ],
               ),
             ),
-            const SizedBox(height: 8),
-            const ProfileActivityCards(),
-            const SizedBox(height: 8),
-            _buildSettingsContent(context),
-          ],
+          ),
+        ],
+      );
+    }
+
+    return ProfileShell(
+      title: l10n.profile,
+      subtitle: '',
+      badges: const [],
+      trailing: PopupMenuButton<String>(
+        key: const Key('profile_user_menu_button'),
+        onSelected: (value) {
+          if (value == 'edit') {
+            _showEditProfileDialog(context);
+          } else if (value == 'logout') {
+            _showLogoutDialog(context);
+          }
+        },
+        offset: const Offset(0, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        itemBuilder: (context) => [
+          PopupMenuItem<String>(
+            enabled: false,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.person_outline,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    user?.displayName ?? l10n.profile_guest_user,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            enabled: false,
+            child: Row(
+              children: [
+                Icon(
+                  Icons.email_outlined,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    user?.email ?? l10n.profile_please_login,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const PopupMenuDivider(),
+          PopupMenuItem<String>(
+            value: 'edit',
+            key: const Key('profile_user_menu_item_edit'),
+            child: Row(
+              children: [
+                const Icon(Icons.edit_note, size: 20),
+                const SizedBox(width: 8),
+                Text(l10n.profile_edit_profile),
+              ],
+            ),
+          ),
+          PopupMenuItem<String>(
+            value: 'logout',
+            key: const Key('profile_user_menu_item_logout'),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.logout,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.logout,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
+            ),
+          ),
+        ],
+        child: CircleAvatar(
+          radius: 22,
+          backgroundColor: theme.colorScheme.onSurfaceVariant,
+          child: Text(
+            (user?.displayName ?? l10n.profile_guest_user).characters.first
+                .toUpperCase(),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.surface,
+            ),
+          ),
         ),
+      ),
+      summary: const SizedBox.shrink(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ProfileActivityCards(),
+          const SizedBox(height: 12),
+          _buildSettingsContent(context),
+        ],
       ),
     );
   }

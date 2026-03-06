@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
+import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/adaptive_sheet_helper.dart';
 import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
@@ -454,59 +455,115 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             },
           );
 
-    return ResponsiveContainer(
-      child: Material(
-        color: Colors.transparent,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 56,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      l10n.podcast_discover_title,
-                      key: const Key('podcast_discover_header_title'),
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenHeight = MediaQuery.of(context).size.height;
+        final useCompactShell =
+            constraints.maxHeight < 540 || screenHeight < 720;
+        if (useCompactShell) {
+          return ResponsiveContainer(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.podcast_discover_title,
+                        key: const Key('podcast_discover_header_title'),
+                        style: theme.textTheme.headlineSmall,
                       ),
                     ),
-                  ),
-                  FilledButton.tonalIcon(
-                    key: const Key('podcast_discover_country_button'),
-                    onPressed: () => _openCountrySelector(context),
-                    icon: const Icon(Icons.flag_outlined, size: 18),
-                    label: Text(selectedCountry.code.toUpperCase()),
-                    style: FilledButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      textStyle: theme.textTheme.labelLarge?.copyWith(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
+                    FilledButton.tonalIcon(
+                      key: const Key('podcast_discover_country_button'),
+                      onPressed: () => _openCountrySelector(context),
+                      icon: const Icon(Icons.flag_outlined, size: 18),
+                      label: Text(selectedCountry.code.toUpperCase()),
+                      style: FilledButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+                const SizedBox(height: 8),
+                _buildSearchModeSelector(context, searchMode, isDense: isDense),
+                const SizedBox(height: 8),
+                _buildDiscoverSearchInput(
+                  context,
+                  l10n,
+                  searchMode: searchMode,
+                  isDense: isDense,
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Material(color: Colors.transparent, child: content),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ContentShell(
+          title: l10n.podcast_discover_title,
+          subtitle: '',
+          badges: const [],
+          trailing: FilledButton.tonalIcon(
+            key: const Key('podcast_discover_country_button'),
+            onPressed: () => _openCountrySelector(context),
+            icon: const Icon(Icons.flag_outlined, size: 18),
+            label: Text(selectedCountry.code.toUpperCase()),
+            style: FilledButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              textStyle: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 6),
-            _buildSearchModeSelector(context, searchMode, isDense: isDense),
-            const SizedBox(height: 6),
-            _buildDiscoverSearchInput(
-              context,
-              l10n,
-              searchMode: searchMode,
-              isDense: isDense,
-            ),
-            const SizedBox(height: 8),
-            Expanded(child: content),
-          ],
-        ),
-      ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GlassPanel(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppSectionHeader(
+                      title: hasSearched
+                          ? 'Refine query'
+                          : 'Start with a search',
+                      subtitle: hasSearched
+                          ? 'Update query or switch modes.'
+                          : 'Find a show or browse charts.',
+                    ),
+                    const SizedBox(height: 8),
+                    _buildSearchModeSelector(
+                      context,
+                      searchMode,
+                      isDense: isDense,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildDiscoverSearchInput(
+                      context,
+                      l10n,
+                      searchMode: searchMode,
+                      isDense: isDense,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: Material(color: Colors.transparent, child: content),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

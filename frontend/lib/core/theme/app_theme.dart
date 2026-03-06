@@ -65,7 +65,9 @@ class AppTheme {
   }
 
   /// 响应式水平边距助手
-  static EdgeInsetsGeometry getResponsiveHorizontalPadding(BuildContext context) {
+  static EdgeInsetsGeometry getResponsiveHorizontalPadding(
+    BuildContext context,
+  ) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     if (screenWidth < AppBreakpoints.medium) {

@@ -12,6 +12,7 @@ import '../router/app_router.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_colors.dart';
 import '../theme/theme_provider.dart';
+import '../widgets/app_shells.dart';
 import '../utils/app_logger.dart' as logger;
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/settings/presentation/providers/app_update_provider.dart';
@@ -25,81 +26,59 @@ class _SplashScreenWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: isDark
-              ? AppColors.darkSubtleGradient
-              : AppColors.softBackgroundGradient,
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // App logo with shadow
-              Container(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: isDark
-                          ? AppColors.riverAccent.withValues(alpha: 0.3)
-                          : AppColors.primary.withValues(alpha: 0.2),
-                      blurRadius: 30,
-                      offset: const Offset(0, 10),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const AppPageBackdrop(),
+          Center(
+            child: GlassPanel(
+              padding: const EdgeInsets.fromLTRB(32, 32, 32, 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 112,
+                    height: 112,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient:
+                          mindriverThemeOf(context).riverGradient
+                              as LinearGradient,
+                      borderRadius: BorderRadius.circular(32),
                     ),
-                  ],
-                ),
-                child: Image.asset(
-                  'assets/icons/Logo3.png',
-                  width: 120,
-                  height: 120,
-                  fit: BoxFit.contain,
-                ),
-              ),
-              const SizedBox(height: 32),
-              // App name
-              Text(
-                l10n?.appTitle ?? 'Stella',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w600,
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Tagline
-              Text(
-                l10n?.appSlogan ?? 'Dawn\'s near. Let\'s begin.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  height: 1.5,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
-                ),
-              ),
-              const SizedBox(height: 48),
-              // Loading indicator
-              SizedBox(
-                width: 32,
-                height: 32,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    isDark ? AppColors.riverAccent : AppColors.primary,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.asset(
+                        'assets/icons/Logo3.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  Text(
+                    l10n?.appTitle ?? 'Stella',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    l10n?.appSlogan ?? 'Dawn\'s near. Let\'s begin.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 24),
+                  const SizedBox(
+                    width: 30,
+                    height: 30,
+                    child: CircularProgressIndicator(strokeWidth: 3),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

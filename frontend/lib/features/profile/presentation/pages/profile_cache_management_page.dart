@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/providers/core_providers.dart';
+import '../../../../core/widgets/app_shells.dart';
+import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../../podcast/presentation/providers/podcast_discover_provider.dart';
 import '../../../podcast/presentation/providers/podcast_providers.dart';
@@ -523,223 +525,299 @@ class _ProfileCacheManagementPageState
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.profile_cache_manage_title),
-        actions: [
-          IconButton(
-            tooltip: l10n.refresh,
-            onPressed: _refresh,
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      body: FutureBuilder<_MediaCacheStats>(
-        future: _statsFuture,
-        builder: (context, snapshot) {
-          const emptyStats = _MediaCacheStats(
-            images: _CategoryStats(count: 0, bytes: 0),
-            audio: _CategoryStats(count: 0, bytes: 0),
-            other: _CategoryStats(count: 0, bytes: 0),
-            totalCount: 0,
-            totalBytes: 0,
-            objects: <CacheObject>[],
-          );
-          final isLoading = snapshot.connectionState != ConnectionState.done;
-          final stats = snapshot.data ?? emptyStats;
-
-          final theme = Theme.of(context);
-          final palette = _CachePagePalette.of(theme);
-          final imagesColor = palette.images;
-          final audioColor = palette.audio;
-          final otherColor = palette.other;
-
-          return RefreshIndicator(
-            onRefresh: _refresh,
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          const AppPageBackdrop(),
+          ResponsiveContainer(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (isLoading) const LinearProgressIndicator(minHeight: 2),
-                const SizedBox(height: 12),
-                Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.profile_cache_manage_total_used,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        l10n.profile_cache_manage_title,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: l10n.refresh,
+                      onPressed: _refresh,
+                      icon: const Icon(Icons.refresh),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: FutureBuilder<_MediaCacheStats>(
+                    future: _statsFuture,
+                    builder: (context, snapshot) {
+                      const emptyStats = _MediaCacheStats(
+                        images: _CategoryStats(count: 0, bytes: 0),
+                        audio: _CategoryStats(count: 0, bytes: 0),
+                        other: _CategoryStats(count: 0, bytes: 0),
+                        totalCount: 0,
+                        totalBytes: 0,
+                        objects: <CacheObject>[],
+                      );
+                      final isLoading =
+                          snapshot.connectionState != ConnectionState.done;
+                      final stats = snapshot.data ?? emptyStats;
+
+                      final theme = Theme.of(context);
+                      final palette = _CachePagePalette.of(theme);
+                      final imagesColor = palette.images;
+                      final audioColor = palette.audio;
+                      final otherColor = palette.other;
+
+                      return RefreshIndicator(
+                        onRefresh: _refresh,
+                        child: ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           children: [
-                            Text(
-                              _formatMB(stats.totalBytes).replaceAll(' MB', ''),
-                              style: theme.textTheme.displaySmall?.copyWith(
-                                fontWeight: FontWeight.w900,
+                            if (isLoading)
+                              const LinearProgressIndicator(minHeight: 2),
+                            const SizedBox(height: 12),
+                            Card(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  16,
+                                  16,
+                                  16,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.profile_cache_manage_total_used,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          _formatMB(
+                                            stats.totalBytes,
+                                          ).replaceAll(' MB', ''),
+                                          style: theme.textTheme.displaySmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w900,
+                                              ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            bottom: 6,
+                                          ),
+                                          child: Text(
+                                            'MB',
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                                  color: theme
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      l10n.profile_cache_manage_item_count(
+                                        stats.totalCount,
+                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _buildSegmentBar(
+                                      imagesBytes: stats.images.bytes,
+                                      audioBytes: stats.audio.bytes,
+                                      otherBytes: stats.other.bytes,
+                                      palette: palette,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        _buildLegendItem(
+                                          imagesColor,
+                                          l10n.profile_cache_manage_images,
+                                          dotKey: const Key(
+                                            'cache_legend_images',
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        _buildLegendItem(
+                                          audioColor,
+                                          l10n.profile_cache_manage_audio,
+                                          dotKey: const Key(
+                                            'cache_legend_audio',
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        _buildLegendItem(
+                                          otherColor,
+                                          l10n.profile_cache_manage_other,
+                                          dotKey: const Key(
+                                            'cache_legend_other',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(height: 16),
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               child: Text(
-                                'MB',
-                                style: theme.textTheme.titleMedium?.copyWith(
+                                l10n.profile_cache_manage_details,
+                                style: theme.textTheme.titleSmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w700,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            _buildDetailRow(
+                              category: _CacheCategory.images,
+                              icon: Icons.image_outlined,
+                              color: imagesColor,
+                              palette: palette,
+                              title: l10n.profile_cache_manage_images,
+                              stats: stats.images,
+                              onClean: () =>
+                                  _deleteCategory(stats, _CacheCategory.images),
+                            ),
+                            _buildDetailRow(
+                              category: _CacheCategory.audio,
+                              icon: Icons.headphones,
+                              color: audioColor,
+                              palette: palette,
+                              title: l10n.profile_cache_manage_audio,
+                              stats: stats.audio,
+                              onClean: () =>
+                                  _deleteCategory(stats, _CacheCategory.audio),
+                            ),
+                            _buildDetailRow(
+                              category: _CacheCategory.other,
+                              icon: Icons.folder_outlined,
+                              color: otherColor,
+                              palette: palette,
+                              title: l10n.profile_cache_manage_other,
+                              stats: stats.other,
+                              onClean: () =>
+                                  _deleteCategory(stats, _CacheCategory.other),
+                            ),
+                            const SizedBox(height: 14),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Container(
+                                key: const Key('cache_manage_notice_box'),
+                                padding: const EdgeInsets.fromLTRB(
+                                  12,
+                                  12,
+                                  12,
+                                  12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.onSurfaceVariant
+                                      .withValues(
+                                        alpha:
+                                            theme.brightness == Brightness.dark
+                                            ? 0.24
+                                            : 0.16,
+                                      ),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline,
+                                      key: const Key(
+                                        'cache_manage_notice_icon',
+                                      ),
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        l10n.profile_cache_manage_notice,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 18),
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                              child: FilledButton.icon(
+                                key: const Key('cache_manage_deep_clean_all'),
+                                onPressed: _clearAll,
+                                icon: const Icon(Icons.cleaning_services),
+                                label: Text(
+                                  l10n.profile_cache_manage_deep_clean_all(
+                                    _formatBytes(stats.totalBytes),
+                                  ),
+                                ),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: palette.deepCleanBackground,
+                                  foregroundColor: palette.deepCleanForeground,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  textStyle: theme.textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w800),
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          l10n.profile_cache_manage_item_count(
-                            stats.totalCount,
-                          ),
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildSegmentBar(
-                          imagesBytes: stats.images.bytes,
-                          audioBytes: stats.audio.bytes,
-                          otherBytes: stats.other.bytes,
-                          palette: palette,
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            _buildLegendItem(
-                              imagesColor,
-                              l10n.profile_cache_manage_images,
-                              dotKey: const Key('cache_legend_images'),
-                            ),
-                            const SizedBox(width: 16),
-                            _buildLegendItem(
-                              audioColor,
-                              l10n.profile_cache_manage_audio,
-                              dotKey: const Key('cache_legend_audio'),
-                            ),
-                            const SizedBox(width: 16),
-                            _buildLegendItem(
-                              otherColor,
-                              l10n.profile_cache_manage_other,
-                              dotKey: const Key('cache_legend_other'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    l10n.profile_cache_manage_details,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _buildDetailRow(
-                  category: _CacheCategory.images,
-                  icon: Icons.image_outlined,
-                  color: imagesColor,
-                  palette: palette,
-                  title: l10n.profile_cache_manage_images,
-                  stats: stats.images,
-                  onClean: () => _deleteCategory(stats, _CacheCategory.images),
-                ),
-                _buildDetailRow(
-                  category: _CacheCategory.audio,
-                  icon: Icons.headphones,
-                  color: audioColor,
-                  palette: palette,
-                  title: l10n.profile_cache_manage_audio,
-                  stats: stats.audio,
-                  onClean: () => _deleteCategory(stats, _CacheCategory.audio),
-                ),
-                _buildDetailRow(
-                  category: _CacheCategory.other,
-                  icon: Icons.folder_outlined,
-                  color: otherColor,
-                  palette: palette,
-                  title: l10n.profile_cache_manage_other,
-                  stats: stats.other,
-                  onClean: () => _deleteCategory(stats, _CacheCategory.other),
-                ),
-                const SizedBox(height: 14),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    key: const Key('cache_manage_notice_box'),
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurfaceVariant.withValues(
-                        alpha: theme.brightness == Brightness.dark
-                            ? 0.24
-                            : 0.16,
-                      ),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline,
-                          key: const Key('cache_manage_notice_icon'),
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            l10n.profile_cache_manage_notice,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  child: FilledButton.icon(
-                    key: const Key('cache_manage_deep_clean_all'),
-                    onPressed: _clearAll,
-                    icon: const Icon(Icons.cleaning_services),
-                    label: Text(
-                      l10n.profile_cache_manage_deep_clean_all(
-                        _formatBytes(stats.totalBytes),
-                      ),
-                    ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: palette.deepCleanBackground,
-                      foregroundColor: palette.deepCleanForeground,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      textStyle: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                      );
+                    },
                   ),
                 ),
               ],
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
