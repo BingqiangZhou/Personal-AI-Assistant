@@ -432,9 +432,9 @@ class _PodcastDailyReportPageState
                     Expanded(
                       child: Text(
                         _sanitizeOneLineSummary(item.oneLineSummary),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          height: 1.35,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface,
+                          height: 1.45,
                         ),
                       ),
                     ),
