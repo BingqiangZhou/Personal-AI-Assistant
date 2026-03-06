@@ -71,6 +71,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     return ContentShell(
       title: l10n.podcast_feed_page_title,
       subtitle: '',
+      roundedViewport: true,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

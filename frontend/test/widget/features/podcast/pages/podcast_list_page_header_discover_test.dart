@@ -54,10 +54,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('podcast_discover_header_title')),
-        findsOneWidget,
-      );
+      expect(find.text('Discover'), findsOneWidget);
+      expect(find.text('Start with a search'), findsNothing);
+      expect(find.text('Refine query'), findsNothing);
+      expect(find.text('Update query or switch modes.'), findsNothing);
       expect(
         find.byKey(const Key('podcast_discover_country_button')),
         findsOneWidget,
@@ -77,6 +77,7 @@ void main() {
         find.byKey(const Key('podcast_discover_search_input')),
         findsOneWidget,
       );
+      expect(find.text('Find a show or browse charts.'), findsNothing);
       final searchInputWidget = tester.widget<TextField>(
         find.byKey(const Key('podcast_discover_search_input')),
       );

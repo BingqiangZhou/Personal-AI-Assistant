@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
@@ -24,9 +25,15 @@ void main() {
 
     final container = ProviderContainer(
       overrides: [
-        localStorageServiceProvider.overrideWithValue(_MockLocalStorageService()),
-        applePodcastRssServiceProvider.overrideWithValue(_FakeApplePodcastRssService()),
-        podcastSubscriptionProvider.overrideWith(() => _DelayedSubscriptionNotifier()),
+        localStorageServiceProvider.overrideWithValue(
+          _MockLocalStorageService(),
+        ),
+        applePodcastRssServiceProvider.overrideWithValue(
+          _FakeApplePodcastRssService(),
+        ),
+        podcastSubscriptionProvider.overrideWith(
+          () => _DelayedSubscriptionNotifier(),
+        ),
         search.podcastSearchProvider.overrideWithValue(
           const search.PodcastSearchState(),
         ),
@@ -57,6 +64,106 @@ void main() {
     expect(tester.getSize(tabSelector).height, 40);
     expect(tester.getSize(searchBar).height, 44);
   });
+
+  testWidgets('Discover uses shared shell and backdrop on short screens', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final container = ProviderContainer(
+      overrides: [
+        localStorageServiceProvider.overrideWithValue(
+          _MockLocalStorageService(),
+        ),
+        applePodcastRssServiceProvider.overrideWithValue(
+          _FakeApplePodcastRssService(),
+        ),
+        podcastSubscriptionProvider.overrideWith(
+          () => _DelayedSubscriptionNotifier(),
+        ),
+        search.podcastSearchProvider.overrideWithValue(
+          const search.PodcastSearchState(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const PodcastListPage(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppPageBackdrop), findsOneWidget);
+    expect(find.byType(HeroHeader), findsOneWidget);
+    expect(find.text('Discover'), findsOneWidget);
+    expect(
+      find.byKey(const Key('podcast_discover_country_button')),
+      findsOneWidget,
+    );
+    final viewportClip = tester.widget<ClipRRect>(
+      find.byKey(const Key('content_shell_viewport_clip')),
+    );
+    expect(viewportClip.borderRadius, BorderRadius.circular(28));
+  });
+
+  testWidgets(
+    'Discover uses profile-style mobile spacing below the hero card',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 640);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final container = ProviderContainer(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            _MockLocalStorageService(),
+          ),
+          applePodcastRssServiceProvider.overrideWithValue(
+            _FakeApplePodcastRssService(),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            () => _DelayedSubscriptionNotifier(),
+          ),
+          search.podcastSearchProvider.overrideWithValue(
+            const search.PodcastSearchState(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const PodcastListPage(),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final heroRect = tester.getRect(find.byType(HeroHeader));
+      final searchPanelRect = tester.getRect(
+        find.byKey(const Key('podcast_discover_search_panel')),
+      );
+
+      expect(searchPanelRect.top - heroRect.bottom, 20);
+    },
+  );
 }
 
 class _DelayedSubscriptionNotifier extends PodcastSubscriptionNotifier {
@@ -105,7 +212,11 @@ class _FakeApplePodcastRssService extends ApplePodcastRssService {
     return _buildResponse('podcast-episodes', country.code, limit);
   }
 
-  ApplePodcastChartResponse _buildResponse(String kind, String country, int limit) {
+  ApplePodcastChartResponse _buildResponse(
+    String kind,
+    String country,
+    int limit,
+  ) {
     final items = List.generate(
       limit,
       (index) => ApplePodcastChartEntry.fromJson({
@@ -135,7 +246,8 @@ class _MockLocalStorageService implements LocalStorageService {
   final Map<String, dynamic> _storage = {};
 
   @override
-  Future<void> saveString(String key, String value) async => _storage[key] = value;
+  Future<void> saveString(String key, String value) async =>
+      _storage[key] = value;
 
   @override
   Future<String?> getString(String key) async => _storage[key] as String?;
@@ -153,7 +265,8 @@ class _MockLocalStorageService implements LocalStorageService {
   Future<int?> getInt(String key) async => _storage[key] as int?;
 
   @override
-  Future<void> saveDouble(String key, double value) async => _storage[key] = value;
+  Future<void> saveDouble(String key, double value) async =>
+      _storage[key] = value;
 
   @override
   Future<double?> getDouble(String key) async => _storage[key] as double?;
@@ -182,7 +295,11 @@ class _MockLocalStorageService implements LocalStorageService {
   Future<bool> containsKey(String key) async => _storage.containsKey(key);
 
   @override
-  Future<void> cacheData(String key, dynamic data, {Duration? expiration}) async {
+  Future<void> cacheData(
+    String key,
+    dynamic data, {
+    Duration? expiration,
+  }) async {
     _storage[key] = data;
   }
 
@@ -193,7 +310,8 @@ class _MockLocalStorageService implements LocalStorageService {
   Future<void> clearExpiredCache() async {}
 
   @override
-  Future<void> saveApiBaseUrl(String url) async => _storage['api_base_url'] = url;
+  Future<void> saveApiBaseUrl(String url) async =>
+      _storage['api_base_url'] = url;
 
   @override
   Future<String?> getApiBaseUrl() async => _storage['api_base_url'] as String?;
@@ -203,5 +321,6 @@ class _MockLocalStorageService implements LocalStorageService {
       _storage['server_base_url'] = url;
 
   @override
-  Future<String?> getServerBaseUrl() async => _storage['server_base_url'] as String?;
+  Future<String?> getServerBaseUrl() async =>
+      _storage['server_base_url'] as String?;
 }

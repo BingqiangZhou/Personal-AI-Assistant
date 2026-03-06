@@ -13,6 +13,7 @@ import 'package:personal_ai_assistant/core/network/dio_client.dart';
 import 'package:personal_ai_assistant/core/providers/core_providers.dart';
 import 'package:personal_ai_assistant/core/services/app_cache_service.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/features/auth/domain/models/user.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_daily_report_model.dart';
@@ -1243,6 +1244,50 @@ void main() {
     );
 
     expect(headerRect.bottom, lessThanOrEqualTo(subscriptionsRect.top));
+  });
+
+  testWidgets('short profile screens keep shared shell header and backdrop', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authProvider.overrideWith(_TestAuthNotifier.new),
+          profileStatsProvider.overrideWith(
+            () => _FixedProfileStatsNotifier(_defaultProfileStats),
+          ),
+          podcastSubscriptionProvider.overrideWith(
+            _TestPodcastSubscriptionNotifier.new,
+          ),
+          dailyReportDatesProvider.overrideWith(
+            () => _FixedDailyReportDatesNotifier(
+              _buildDailyReportDatesResponse(const []),
+            ),
+          ),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: ProfilePage()),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AppPageBackdrop), findsOneWidget);
+    expect(find.byKey(const Key('profile_hero_header')).last, findsOneWidget);
+    expect(find.byKey(const Key('profile_user_menu_button')), findsOneWidget);
+    expect(find.byType(SingleChildScrollView), findsWidgets);
+    final viewportClip = tester.widget<ClipRRect>(
+      find.byKey(const Key('profile_shell_viewport_clip')),
+    );
+    expect(viewportClip.borderRadius, BorderRadius.circular(28));
   });
 
   testWidgets('keeps desktop profile cards unchanged', (

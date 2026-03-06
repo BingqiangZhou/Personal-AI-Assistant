@@ -405,6 +405,7 @@ class ContentShell extends StatelessWidget {
     this.badges = const <Widget>[],
     this.headerSpacing = 8,
     this.maxWidth,
+    this.roundedViewport = false,
   });
 
   final String title;
@@ -416,6 +417,7 @@ class ContentShell extends StatelessWidget {
   final List<Widget> badges;
   final double headerSpacing;
   final double? maxWidth;
+  final bool roundedViewport;
 
   @override
   Widget build(BuildContext context) {
@@ -423,29 +425,34 @@ class ContentShell extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          const AppPageBackdrop(),
-          ResponsiveContainer(
-            maxWidth: maxWidth ?? tokens.contentMaxWidth,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                HeroHeader(
-                  eyebrow: eyebrow,
-                  title: title,
-                  subtitle: subtitle,
-                  leading: leading,
-                  trailing: trailing,
-                  badges: badges,
-                ),
-                SizedBox(height: headerSpacing),
-                Expanded(child: child),
-              ],
+      child: _ShellViewport(
+        enabled: roundedViewport,
+        clipKey: const Key('content_shell_viewport_clip'),
+        borderRadius: tokens.panelRadius,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const AppPageBackdrop(),
+            ResponsiveContainer(
+              maxWidth: maxWidth ?? tokens.contentMaxWidth,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  HeroHeader(
+                    eyebrow: eyebrow,
+                    title: title,
+                    subtitle: subtitle,
+                    leading: leading,
+                    trailing: trailing,
+                    badges: badges,
+                  ),
+                  SizedBox(height: headerSpacing),
+                  Expanded(child: child),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -460,6 +467,7 @@ class ProfileShell extends StatelessWidget {
     required this.child,
     this.trailing,
     this.badges = const <Widget>[],
+    this.roundedViewport = false,
   });
 
   final String title;
@@ -468,44 +476,78 @@ class ProfileShell extends StatelessWidget {
   final Widget child;
   final Widget? trailing;
   final List<Widget> badges;
+  final bool roundedViewport;
 
   @override
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 600;
     final showSummary = summary is! SizedBox;
     final topSectionSpacing = isMobile ? 20.0 : 12.0;
+    final tokens = mindriverThemeOf(context);
     return Material(
       color: Colors.transparent,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          const AppPageBackdrop(),
-          ResponsiveContainer(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  HeroHeader(
-                    key: const Key('profile_hero_header'),
-                    title: title,
-                    subtitle: subtitle,
-                    trailing: trailing,
-                    badges: badges,
-                  ),
-                  if (showSummary) ...[
-                    SizedBox(height: topSectionSpacing),
-                    summary,
-                    const SizedBox(height: 12),
+      child: _ShellViewport(
+        enabled: roundedViewport,
+        clipKey: const Key('profile_shell_viewport_clip'),
+        borderRadius: tokens.panelRadius,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const AppPageBackdrop(),
+            ResponsiveContainer(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HeroHeader(
+                      key: const Key('profile_hero_header'),
+                      title: title,
+                      subtitle: subtitle,
+                      trailing: trailing,
+                      badges: badges,
+                    ),
+                    if (showSummary) ...[
+                      SizedBox(height: topSectionSpacing),
+                      summary,
+                      const SizedBox(height: 12),
+                    ],
+                    if (!showSummary) SizedBox(height: topSectionSpacing),
+                    child,
                   ],
-                  if (!showSummary) SizedBox(height: topSectionSpacing),
-                  child,
-                ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _ShellViewport extends StatelessWidget {
+  const _ShellViewport({
+    required this.child,
+    required this.enabled,
+    required this.borderRadius,
+    this.clipKey,
+  });
+
+  final Widget child;
+  final bool enabled;
+  final double borderRadius;
+  final Key? clipKey;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!enabled) {
+      return child;
+    }
+
+    return ClipRRect(
+      key: clipKey,
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: child,
     );
   }
 }

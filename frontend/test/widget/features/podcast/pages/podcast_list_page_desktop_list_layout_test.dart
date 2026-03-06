@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/core/widgets/app_shells.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_discover_chart_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_search_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_state_models.dart';
@@ -193,6 +194,65 @@ void main() {
 
         expect(allChip.selected, isTrue);
         expect(allChip.selectedColor, equals(scheme.onSurfaceVariant));
+      },
+    );
+
+    testWidgets(
+      'uses desktop hero spacing and keeps trending label inset from the right edge',
+      (tester) async {
+        tester.view.physicalSize = const Size(1280, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final container = ProviderContainer(
+          overrides: [
+            localStorageServiceProvider.overrideWithValue(
+              _MockLocalStorageService(),
+            ),
+            applePodcastRssServiceProvider.overrideWithValue(
+              _FakeApplePodcastRssService(),
+            ),
+            podcastSubscriptionProvider.overrideWith(
+              () => _TestPodcastSubscriptionNotifier(),
+            ),
+            search.podcastSearchProvider.overrideWith(
+              () =>
+                  _TestPodcastSearchNotifier(const search.PodcastSearchState()),
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: const PodcastListPage(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final heroRect = tester.getRect(find.byType(HeroHeader));
+        final searchPanelRect = tester.getRect(
+          find.byKey(const Key('podcast_discover_search_panel')),
+        );
+        final topChartsRect = tester.getRect(
+          find.byKey(const Key('podcast_discover_top_charts')),
+        );
+        final trendingFinder = find.byKey(
+          const Key('podcast_discover_trending_label'),
+        );
+        final trendingRect = tester.getRect(trendingFinder);
+        final trendingText = tester.widget<Text>(trendingFinder);
+
+        expect(searchPanelRect.top - heroRect.bottom, 12);
+        expect(topChartsRect.right - trendingRect.right, 12);
+        expect(trendingText.maxLines, 1);
+        expect(trendingText.overflow, TextOverflow.ellipsis);
       },
     );
   });

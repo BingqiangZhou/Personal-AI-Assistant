@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/adaptive_sheet_helper.dart';
-import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 import '../../data/models/podcast_discover_chart_model.dart';
 import '../../data/models/itunes_episode_lookup_model.dart';
@@ -502,58 +501,16 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenHeight = MediaQuery.of(context).size.height;
+        final screenWidth = MediaQuery.of(context).size.width;
         final useCompactShell =
             constraints.maxHeight < 540 || screenHeight < 720;
-        if (useCompactShell) {
-          return ResponsiveContainer(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.podcast_discover_title,
-                        key: const Key('podcast_discover_header_title'),
-                        style: theme.textTheme.headlineSmall,
-                      ),
-                    ),
-                    FilledButton.tonalIcon(
-                      key: const Key('podcast_discover_country_button'),
-                      onPressed: () => _openCountrySelector(context),
-                      icon: const Icon(Icons.flag_outlined, size: 18),
-                      label: Text(selectedCountry.code.toUpperCase()),
-                      style: FilledButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                _buildSearchModeSelector(context, searchMode, isDense: isDense),
-                const SizedBox(height: 8),
-                _buildDiscoverSearchInput(
-                  context,
-                  l10n,
-                  searchMode: searchMode,
-                  isDense: isDense,
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: Material(color: Colors.transparent, child: content),
-                ),
-              ],
-            ),
-          );
-        }
+        final headerSpacing = screenWidth < 600 ? 20.0 : 12.0;
 
         return ContentShell(
           title: l10n.podcast_discover_title,
           subtitle: '',
+          headerSpacing: headerSpacing,
+          roundedViewport: true,
           badges: const [],
           trailing: FilledButton.tonalIcon(
             key: const Key('podcast_discover_country_button'),
@@ -572,25 +529,17 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GlassPanel(
-                padding: const EdgeInsets.all(12),
+                key: const Key('podcast_discover_search_panel'),
+                padding: EdgeInsets.all(useCompactShell ? 10 : 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    AppSectionHeader(
-                      title: hasSearched
-                          ? 'Refine query'
-                          : 'Start with a search',
-                      subtitle: hasSearched
-                          ? 'Update query or switch modes.'
-                          : 'Find a show or browse charts.',
-                    ),
-                    const SizedBox(height: 8),
                     _buildSearchModeSelector(
                       context,
                       searchMode,
                       isDense: isDense,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: useCompactShell ? 6 : 8),
                     _buildDiscoverSearchInput(
                       context,
                       l10n,
@@ -600,7 +549,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: useCompactShell ? 10 : 12),
               Expanded(
                 child: Material(color: Colors.transparent, child: content),
               ),
@@ -870,15 +819,19 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  l10n.podcast_discover_trending_in(countryName),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: subtitleColor,
-                    fontWeight: FontWeight.w600,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    l10n.podcast_discover_trending_in(countryName),
+                    key: const Key('podcast_discover_trending_label'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: subtitleColor,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

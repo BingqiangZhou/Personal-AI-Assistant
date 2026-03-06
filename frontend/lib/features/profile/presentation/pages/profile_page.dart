@@ -113,111 +113,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final theme = Theme.of(context);
     final compactProfileLayout = MediaQuery.of(context).size.height < 700;
 
-    if (compactProfileLayout) {
-      return Stack(
-        fit: StackFit.expand,
-        children: [
-          const AppPageBackdrop(),
-          ResponsiveContainer(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          l10n.profile,
-                          style: theme.textTheme.headlineSmall,
-                        ),
-                      ),
-                      PopupMenuButton<String>(
-                        key: const Key('profile_user_menu_button'),
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            _showEditProfileDialog(context);
-                          } else if (value == 'logout') {
-                            _showLogoutDialog(context);
-                          }
-                        },
-                        offset: const Offset(0, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        itemBuilder: (context) => [
-                          PopupMenuItem<String>(
-                            enabled: false,
-                            child: Text(
-                              user?.displayName ?? l10n.profile_guest_user,
-                            ),
-                          ),
-                          PopupMenuItem<String>(
-                            value: 'edit',
-                            key: const Key('profile_user_menu_item_edit'),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.edit_note, size: 20),
-                                const SizedBox(width: 8),
-                                Text(l10n.profile_edit_profile),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem<String>(
-                            value: 'logout',
-                            key: const Key('profile_user_menu_item_logout'),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.logout,
-                                  size: 20,
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  l10n.logout,
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.error,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                        child: CircleAvatar(
-                          radius: 22,
-                          backgroundColor: theme.colorScheme.onSurfaceVariant,
-                          child: Text(
-                            (user?.displayName ?? l10n.profile_guest_user)
-                                .characters
-                                .first
-                                .toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.surface,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const ProfileActivityCards(),
-                  const SizedBox(height: 8),
-                  _buildSettingsContent(context),
-                ],
-              ),
-            ),
-          ),
-        ],
-      );
-    }
-
     return ProfileShell(
       title: l10n.profile,
       subtitle: '',
+      roundedViewport: true,
       badges: const [],
       trailing: PopupMenuButton<String>(
         key: const Key('profile_user_menu_button'),
@@ -319,7 +218,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const ProfileActivityCards(),
-          const SizedBox(height: 12),
+          SizedBox(height: compactProfileLayout ? 8 : 12),
           _buildSettingsContent(context),
         ],
       ),
