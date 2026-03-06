@@ -116,19 +116,47 @@ class GitHubRelease {
     }
   }
 
-  /// Get the download URL for the current platform
-  String? getDownloadUrlForPlatform(String platform) {
+  /// Get the matching asset for a specific platform.
+  ///
+  /// Uses strict matching rules: the asset file name must contain the platform
+  /// keyword AND end with the expected extension for that platform.
+  /// Returns `null` if no asset matches — never falls back to an unrelated asset.
+  ///
+  /// Matching rules:
+  /// | Platform  | Keyword    | Extension  |
+  /// |-----------|------------|------------|
+  /// | android   | android    | .apk       |
+  /// | windows   | windows    | .zip       |
+  /// | linux     | linux      | .tar.gz    |
+  /// | macos     | macos      | .dmg       |
+  /// | ios       | ios        | .ipa       |
+  GitHubAsset? getAssetForPlatform(String platform) {
+    final p = platform.toLowerCase();
+    final expectedExtension = switch (p) {
+      'android' => '.apk',
+      'windows' => '.zip',
+      'linux' => '.tar.gz',
+      'macos' => '.dmg',
+      'ios' => '.ipa',
+      _ => null,
+    };
+    if (expectedExtension == null) return null;
+
     for (final asset in assets) {
-      if (asset.name.toLowerCase().contains(platform.toLowerCase())) {
-        return asset.downloadUrl;
+      final name = asset.name.toLowerCase();
+      if (name.contains(p) && name.endsWith(expectedExtension)) {
+        return asset;
       }
     }
-    // Return first asset if no platform match
-    return assets.isNotEmpty ? assets.first.downloadUrl : null;
+    return null;
   }
 
-  /// Get the primary download URL
-  String? get primaryDownloadUrl => assets.isNotEmpty ? assets.first.downloadUrl : null;
+  /// Get the download URL for the current platform.
+  ///
+  /// Returns `null` if no asset matches the given platform.
+  String? getDownloadUrlForPlatform(String platform) {
+    return getAssetForPlatform(platform)?.downloadUrl;
+  }
 
   /// Format published date for display
   String get formattedPublishedDate {

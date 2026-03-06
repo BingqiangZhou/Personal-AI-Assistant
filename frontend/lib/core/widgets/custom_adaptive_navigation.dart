@@ -50,12 +50,14 @@ class CustomAdaptiveNavigation extends StatelessWidget {
   }
 
   Widget _buildMobileLayout(BuildContext context, double width) {
-    const dockReserve = 92.0;
     final safeAreaBottom = MediaQuery.viewPaddingOf(context).bottom;
+    final double dockBottomPadding = safeAreaBottom > 0.0 ? safeAreaBottom : 12.0;
+    // NavigationBar custom height is 60. We add an extra 4 pixels gap between the player and the navigation bar dock.
+    final double dockReserve = dockBottomPadding + 60.0 + 4.0;
+    
     final bottomBackdropHeight =
         dockReserve +
         (bottomAccessory != null ? bottomAccessoryBodyPadding : 0) +
-        safeAreaBottom +
         36;
     return Scaffold(
       extendBody: true,
@@ -117,11 +119,7 @@ class CustomAdaptiveNavigation extends StatelessWidget {
               child: Align(
                 child: _GlassDock(
                   width: width < 420 ? width - 24 : 396,
-                  child: NavigationBar(
-                    selectedIndex: selectedIndex,
-                    onDestinationSelected: onDestinationSelected,
-                    destinations: destinations,
-                  ),
+                  child: _buildMobileNavBar(context),
                 ),
               ),
             ),
@@ -457,6 +455,78 @@ class CustomAdaptiveNavigation extends StatelessWidget {
     );
   }
 
+  Widget _buildMobileNavBar(BuildContext context) {
+    return SizedBox(
+      height: 60,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(destinations.length, (index) {
+          final destination = destinations[index];
+          final isSelected = index == selectedIndex;
+          return Expanded(
+            child: _buildMobileNavItem(
+              context,
+              destination,
+              isSelected,
+              () => onDestinationSelected?.call(index),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildMobileNavItem(
+    BuildContext context,
+    NavigationDestination destination,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? scheme.primary.withValues(alpha: 0.14)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: isSelected
+                    ? (destination.selectedIcon ?? destination.icon)
+                    : destination.icon,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                destination.label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected
+                      ? scheme.onSurface
+                      : scheme.onSurfaceVariant,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   MindriverThemeExtension _tokens(BuildContext context) {
     return Theme.of(context).extension<MindriverThemeExtension>() ??
         (Theme.of(context).brightness == Brightness.dark
@@ -488,11 +558,12 @@ class ResponsiveContainer extends StatelessWidget {
             ? MindriverThemeExtension.dark
             : MindriverThemeExtension.light);
 
+    final topPadding = MediaQuery.viewPaddingOf(context).top;
     final resolvedPadding =
         padding ??
         EdgeInsets.fromLTRB(
           width < 600 ? 16 : 24,
-          width < 600 ? 12 : 20,
+          (width < 600 ? 12 : 20) + topPadding,
           width < 600 ? 16 : 24,
           0,
         );

@@ -225,11 +225,19 @@ class _PersonalAIAssistantAppState
 
       // Show update dialog if update is available
       if (updateState.hasUpdate && updateState.latestRelease != null) {
-        // Show SnackBar first (less intrusive)
-        showUpdateAvailableSnackBar(
-          context: context,
-          release: updateState.latestRelease!,
-        );
+        // Use the GoRouter's navigator context which is inside MaterialApp
+        // (the state's own context is above MaterialApp, so AppLocalizations
+        // and ScaffoldMessenger would not be found from it).
+        final router = ref.read(appRouterProvider);
+        final navContext =
+            router.routerDelegate.navigatorKey.currentContext;
+        if (navContext != null && navContext.mounted) {
+          AppUpdateDialog.show(
+            context: navContext,
+            release: updateState.latestRelease!,
+            currentVersion: updateState.currentVersion,
+          );
+        }
       }
     } catch (e) {
       // Silently fail on auto-check errors

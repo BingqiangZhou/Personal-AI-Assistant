@@ -7,6 +7,7 @@ import 'package:personal_ai_assistant/core/services/app_update_service.dart';
 import 'package:personal_ai_assistant/core/widgets/top_floating_notice.dart';
 import 'package:personal_ai_assistant/shared/models/github_release.dart';
 import 'package:personal_ai_assistant/features/settings/presentation/providers/app_update_provider.dart';
+import 'dart:io';
 
 class _UpdateDialogPalette {
   const _UpdateDialogPalette({
@@ -92,6 +93,12 @@ class AppUpdateDialog extends ConsumerStatefulWidget {
 class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
   bool _isDownloading = false;
 
+  /// The matched asset for the current platform, resolved once.
+  GitHubAsset? get _platformAsset =>
+      widget.release.getAssetForPlatform(AppUpdateService.getCurrentPlatform());
+
+  bool get _hasPlatformAsset => _platformAsset != null;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -172,23 +179,32 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
 
           const SizedBox(width: 8),
 
-          // Download button (primary action)
-          FilledButton.icon(
-            onPressed: _isDownloading ? null : () => _handleDownload(context),
-            icon: _isDownloading
-                ? SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: palette.loadingIndicator,
-                    ),
-                  )
-                : const Icon(Icons.download, size: 18),
-            label: Text(l10n.update_download),
-            style: FilledButton.styleFrom(
-              backgroundColor: palette.accent,
-              foregroundColor: palette.accentOn,
+          // Download button (primary action) — disabled when no platform asset
+          Flexible(
+            child: FilledButton.icon(
+              onPressed: _isDownloading || !_hasPlatformAsset
+                  ? null
+                  : () => _handleDownload(context),
+              icon: _isDownloading
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: palette.loadingIndicator,
+                      ),
+                    )
+                  : const Icon(Icons.download, size: 18),
+              label: Text(
+                _hasPlatformAsset
+                    ? l10n.update_download
+                    : l10n.update_platform_no_asset,
+                overflow: TextOverflow.ellipsis,
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: palette.accent,
+                foregroundColor: palette.accentOn,
+              ),
             ),
           ),
         ],
@@ -201,47 +217,65 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     final l10n = AppLocalizations.of(context)!;
     final palette = _UpdateDialogPalette.of(theme);
     return [
-      // Skip this version (top row, right aligned)
-      Align(
-        alignment: Alignment.centerRight,
-        child: TextButton.icon(
-          onPressed: () => _handleSkip(context),
-          icon: const Icon(Icons.skip_next, size: 18),
-          label: Text(l10n.update_skip_this_version),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          ),
-        ),
-      ),
-
-      // Bottom row: Later (left) + Download (right)
-      Row(
-        children: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.update_later),
-          ),
-          const Spacer(),
-          // Download button (primary action)
-          FilledButton.icon(
-            onPressed: _isDownloading ? null : () => _handleDownload(context),
-            icon: _isDownloading
-                ? SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: palette.loadingIndicator,
-                    ),
-                  )
-                : const Icon(Icons.download, size: 18),
-            label: Text(l10n.update_download),
-            style: FilledButton.styleFrom(
-              backgroundColor: palette.accent,
-              foregroundColor: palette.accentOn,
+      SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FilledButton.icon(
+              onPressed: _isDownloading || !_hasPlatformAsset
+                  ? null
+                  : () => _handleDownload(context),
+              icon: _isDownloading
+                  ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: palette.loadingIndicator,
+                      ),
+                    )
+                  : const Icon(Icons.download, size: 18),
+              label: Text(
+                _hasPlatformAsset
+                    ? l10n.update_download
+                    : l10n.update_platform_no_asset,
+                overflow: TextOverflow.ellipsis,
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: palette.accent,
+                foregroundColor: palette.accentOn,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: () => _handleSkip(context),
+                    icon: const Icon(Icons.skip_next, size: 18),
+                    label: Text(
+                      l10n.update_skip_this_version,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(l10n.update_later),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     ];
   }
@@ -251,6 +285,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     final theme = Theme.of(context);
     final palette = _UpdateDialogPalette.of(theme);
     final isMobile = MediaQuery.of(context).size.width < 600;
+    final asset = _platformAsset;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -308,7 +343,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     ),
                   ],
                 ),
-                if (widget.release.assets.isNotEmpty) ...[
+                if (asset != null) ...[
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -320,7 +355,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '${l10n.update_file_size}: ${widget.release.assets.first.formattedSize}',
+                          '${l10n.update_file_size}: ${asset.formattedSize}',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -347,7 +382,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                if (widget.release.assets.isNotEmpty) ...[
+                if (asset != null) ...[
                   const SizedBox(width: 16),
                   Icon(
                     Icons.file_download,
@@ -356,7 +391,7 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '${l10n.update_file_size}: ${widget.release.assets.first.formattedSize}',
+                    '${l10n.update_file_size}: ${asset.formattedSize}',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -388,7 +423,12 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
         ),
         const SizedBox(height: 8),
         Container(
-          constraints: const BoxConstraints(maxHeight: 200),
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: releaseNotes.isEmpty
               ? Text(
                   l10n.no_data,
@@ -396,67 +436,65 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 )
-              : SingleChildScrollView(
-                  child: MarkdownBody(
-                    data: releaseNotes,
-                    onTapLink: (text, href, title) {
-                      _handleReleaseNotesLinkTap(href);
-                    },
-                    styleSheet: MarkdownStyleSheet(
-                      p: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+              : MarkdownBody(
+                  data: releaseNotes,
+                  onTapLink: (text, href, title) {
+                    _handleReleaseNotesLinkTap(href);
+                  },
+                  styleSheet: MarkdownStyleSheet(
+                    p: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    h1: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    h2: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    h3: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    listBullet: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    strong: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    code: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
+                    ),
+                    codeblockPadding: const EdgeInsets.all(12),
+                    codeblockDecoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant,
                       ),
-                      h1: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
+                    ),
+                    blockquotePadding: const EdgeInsets.all(12),
+                    blockquoteDecoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border(
+                        left: BorderSide(color: palette.accent, width: 3),
                       ),
-                      h2: theme.textTheme.titleSmall?.copyWith(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      h3: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      listBullet: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      strong: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      code: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface,
-                        backgroundColor:
-                            theme.colorScheme.surfaceContainerHighest,
-                      ),
-                      codeblockPadding: const EdgeInsets.all(12),
-                      codeblockDecoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
+                    ),
+                    horizontalRuleDecoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
                           color: theme.colorScheme.outlineVariant,
                         ),
                       ),
-                      blockquotePadding: const EdgeInsets.all(12),
-                      blockquoteDecoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border(
-                          left: BorderSide(color: palette.accent, width: 3),
-                        ),
-                      ),
-                      horizontalRuleDecoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(
-                            color: theme.colorScheme.outlineVariant,
-                          ),
-                        ),
-                      ),
-                      a: theme.textTheme.bodySmall?.copyWith(
-                        color: palette.accent,
-                        decoration: TextDecoration.underline,
-                      ),
+                    ),
+                    a: theme.textTheme.bodySmall?.copyWith(
+                      color: palette.accent,
+                      decoration: TextDecoration.underline,
                     ),
                   ),
                 ),
@@ -506,20 +544,21 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
     });
 
     try {
-      final downloadUrl = widget.release.primaryDownloadUrl;
+      final asset = _platformAsset;
 
-      if (downloadUrl == null) {
-        // No download URL available, open in browser
+      if (asset == null) {
+        // No platform asset available, open release page in browser
         final uri = Uri.parse(widget.release.htmlUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         }
-      } else if (AppUpdateService.supportsBackgroundDownload) {
+      } else if (Platform.isAndroid &&
+          AppUpdateService.supportsBackgroundDownload) {
         // Use native background download on Android
         final service = ref.read(appUpdateServiceProvider);
         final success = await service.startBackgroundDownload(
-          downloadUrl: downloadUrl,
-          fileName: _extractFileName(downloadUrl),
+          downloadUrl: asset.downloadUrl,
+          fileName: _extractFileName(asset.downloadUrl),
         );
 
         if (!success && context.mounted) {
@@ -540,8 +579,8 @@ class _AppUpdateDialogState extends ConsumerState<AppUpdateDialog> {
           Navigator.of(context).pop();
         }
       } else {
-        // Fallback to browser for other platforms
-        final uri = Uri.parse(downloadUrl);
+        // Other platforms: open the matched asset URL externally
+        final uri = Uri.parse(asset.downloadUrl);
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         } else {

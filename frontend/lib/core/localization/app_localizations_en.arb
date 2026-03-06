@@ -901,6 +901,10 @@
     "@update_try_again":  {
                               "description":  "Try again button label"
                           },
+    "update_platform_no_asset":  "No installer available for your platform",
+    "@update_platform_no_asset":  {
+                                      "description":  "Message when no download asset is available for the current platform"
+                                  },
     "back_button":  "Back",
     "@back_button":  {
                          "description":  "Back button tooltip label"

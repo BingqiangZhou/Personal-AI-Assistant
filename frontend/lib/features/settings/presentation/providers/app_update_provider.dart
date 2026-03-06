@@ -21,12 +21,19 @@ class AppUpdateState {
   /// Current app version
   final String currentVersion;
 
+  /// The matched asset for the current platform (null if no match)
+  final GitHubAsset? platformAsset;
+
+  /// Whether the current platform has a downloadable asset
+  bool get hasPlatformAsset => platformAsset != null;
+
   const AppUpdateState({
     this.isLoading = false,
     this.latestRelease,
     this.hasUpdate = false,
     this.error,
     this.currentVersion = '0.0.0',
+    this.platformAsset,
   });
 
   AppUpdateState copyWith({
@@ -35,6 +42,8 @@ class AppUpdateState {
     bool? hasUpdate,
     String? error,
     String? currentVersion,
+    GitHubAsset? platformAsset,
+    bool clearPlatformAsset = false,
   }) {
     return AppUpdateState(
       isLoading: isLoading ?? this.isLoading,
@@ -42,6 +51,9 @@ class AppUpdateState {
       hasUpdate: hasUpdate ?? this.hasUpdate,
       error: error,
       currentVersion: currentVersion ?? this.currentVersion,
+      platformAsset: clearPlatformAsset
+          ? null
+          : (platformAsset ?? this.platformAsset),
     );
   }
 }
@@ -65,6 +77,7 @@ class AppUpdate extends _$AppUpdate {
 
   Future<void> _loadActualVersion() async {
     final actualVersion = await AppUpdateService.getCurrentVersion();
+    if (!ref.mounted) return;
     state = state.copyWith(currentVersion: actualVersion);
   }
 
@@ -83,13 +96,17 @@ class AppUpdate extends _$AppUpdate {
         forceRefresh: forceRefresh,
         includePrerelease: includePrerelease,
       );
+      if (!ref.mounted) return;
 
       if (release != null) {
+        final asset = _updateService.getAssetForCurrentPlatform(release);
         state = state.copyWith(
           isLoading: false,
           latestRelease: release,
           hasUpdate: true,
           error: null,
+          platformAsset: asset,
+          clearPlatformAsset: asset == null,
         );
       } else {
         state = state.copyWith(
@@ -99,6 +116,7 @@ class AppUpdate extends _$AppUpdate {
         );
       }
     } catch (e) {
+      if (!ref.mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -110,6 +128,7 @@ class AppUpdate extends _$AppUpdate {
   Future<void> skipVersion() async {
     if (state.latestRelease != null) {
       await _updateService.skipVersion(state.latestRelease!.version);
+      if (!ref.mounted) return;
       state = state.copyWith(
         hasUpdate: false,
         latestRelease: null,
@@ -168,11 +187,15 @@ Future<AppUpdateState> autoUpdateCheck(Ref ref) async {
     includePrerelease: false,
   );
 
+  final asset =
+      release != null ? service.getAssetForCurrentPlatform(release) : null;
+
   return AppUpdateState(
     isLoading: false,
     latestRelease: release,
     hasUpdate: release != null,
     currentVersion: currentVersion,
+    platformAsset: asset,
   );
 }
 
@@ -202,6 +225,7 @@ class ManualUpdateCheck extends _$ManualUpdateCheck {
 
   Future<void> _loadActualVersion() async {
     final actualVersion = await AppUpdateService.getCurrentVersion();
+    if (!ref.mounted) return;
     state = state.copyWith(currentVersion: actualVersion);
   }
 
@@ -216,13 +240,17 @@ class ManualUpdateCheck extends _$ManualUpdateCheck {
         forceRefresh: true, // Always force refresh on manual check
         includePrerelease: false,
       );
+      if (!ref.mounted) return;
 
       if (release != null) {
+        final asset = _updateService.getAssetForCurrentPlatform(release);
         state = state.copyWith(
           isLoading: false,
           latestRelease: release,
           hasUpdate: true,
           error: null,
+          platformAsset: asset,
+          clearPlatformAsset: asset == null,
         );
       } else {
         state = state.copyWith(
@@ -232,6 +260,7 @@ class ManualUpdateCheck extends _$ManualUpdateCheck {
         );
       }
     } catch (e) {
+      if (!ref.mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -242,6 +271,7 @@ class ManualUpdateCheck extends _$ManualUpdateCheck {
   Future<void> skipVersion() async {
     if (state.latestRelease != null) {
       await _updateService.skipVersion(state.latestRelease!.version);
+      if (!ref.mounted) return;
       state = state.copyWith(
         hasUpdate: false,
         latestRelease: null,

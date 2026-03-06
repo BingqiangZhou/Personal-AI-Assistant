@@ -671,6 +671,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get update_try_again => '重试';
 
   @override
+  String get update_platform_no_asset => '当前平台暂无可用安装包';
+
+  @override
   String get back_button => '返回';
 
   @override

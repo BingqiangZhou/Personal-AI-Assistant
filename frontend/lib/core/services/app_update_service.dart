@@ -166,12 +166,19 @@ class AppUpdateService {
           '[UPDATE CHECK] - Assets count: ${release.assets.length}',
         );
         if (release.assets.isNotEmpty) {
+          final platform = getCurrentPlatform();
+          final matchedAsset = release.getAssetForPlatform(platform);
           logger.AppLogger.debug(
-            '[UPDATE CHECK] - First asset: ${release.assets.first.name}',
+            '[UPDATE CHECK] - Assets: ${release.assets.map((a) => a.name).join(', ')}',
           );
           logger.AppLogger.debug(
-            '[UPDATE CHECK] - Download URL: ${release.assets.first.downloadUrl}',
+            '[UPDATE CHECK] - Platform asset ($platform): ${matchedAsset?.name ?? 'None'}',
           );
+          if (matchedAsset != null) {
+            logger.AppLogger.debug(
+              '[UPDATE CHECK] - Download URL: ${matchedAsset.downloadUrl}',
+            );
+          }
         }
         logger.AppLogger.debug(
           '[UPDATE CHECK] ----------------------------------------',
@@ -246,10 +253,17 @@ class AppUpdateService {
     await GitHubReleaseCache.clearSkippedVersion();
   }
 
+  /// Get the matching asset for the current platform.
+  ///
+  /// Returns `null` when the release has no installer for this platform.
+  GitHubAsset? getAssetForCurrentPlatform(GitHubRelease release) {
+    final platform = getCurrentPlatform();
+    return release.getAssetForPlatform(platform);
+  }
+
   /// Get download URL for current platform
   String? getDownloadUrl(GitHubRelease release) {
-    final platform = getCurrentPlatform();
-    return release.getDownloadUrlForPlatform(platform);
+    return getAssetForCurrentPlatform(release)?.downloadUrl;
   }
 
   /// Get available platforms from release assets
@@ -304,6 +318,14 @@ class AppUpdateService {
     if (!Platform.isAndroid) {
       logger.AppLogger.debug(
         '[DOWNLOAD] Background download is only supported on Android',
+      );
+      return false;
+    }
+
+    // Guard: only allow APK downloads on Android
+    if (!downloadUrl.toLowerCase().endsWith('.apk')) {
+      logger.AppLogger.debug(
+        '[DOWNLOAD] Rejected non-APK URL for Android download: $downloadUrl',
       );
       return false;
     }

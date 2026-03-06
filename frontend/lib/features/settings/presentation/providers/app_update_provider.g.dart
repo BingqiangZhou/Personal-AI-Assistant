@@ -44,7 +44,7 @@ final class AppUpdateProvider
   }
 }
 
-String _$appUpdateHash() => r'e47501ae789fc69b0fb4d89f4177349bce0910df';
+String _$appUpdateHash() => r'e08cd61fa40ecd99fbf14813e0d0ec6e07a23b4a';
 
 /// App Update Notifier / 应用更新通知器
 
@@ -183,7 +183,7 @@ final class AutoUpdateCheckProvider
   }
 }
 
-String _$autoUpdateCheckHash() => r'cabba2eb4f24c1d4966fa1b8e82cc74e9db7f7fe';
+String _$autoUpdateCheckHash() => r'3c6c6f0d938390180cd10e5f15c286416d3803ae';
 
 /// Provider for manual update checking with loading state
 ///
@@ -242,7 +242,7 @@ final class ManualUpdateCheckProvider
   }
 }
 
-String _$manualUpdateCheckHash() => r'03709523835819b70a5732a3f81e7f70584dfd92';
+String _$manualUpdateCheckHash() => r'ab0cdeab72516d44b253a3ac51ad6f42406735ca';
 
 /// Provider for manual update checking with loading state
 ///

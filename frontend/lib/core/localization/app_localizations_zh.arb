@@ -902,6 +902,10 @@
     "@update_try_again":  {
                               "description":  "重试按钮标签"
                           },
+    "update_platform_no_asset":  "当前平台暂无可用安装包",
+    "@update_platform_no_asset":  {
+                                      "description":  "当前平台没有可下载资源时的提示"
+                                  },
     "back_button":  "返回",
     "@back_button":  {
                          "description":  "返回按钮工具提示标签"

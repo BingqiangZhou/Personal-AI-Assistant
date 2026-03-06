@@ -1388,6 +1388,12 @@ abstract class AppLocalizations {
   /// **'Try Again'**
   String get update_try_again;
 
+  /// Message when no download asset is available for the current platform
+  ///
+  /// In en, this message translates to:
+  /// **'No installer available for your platform'**
+  String get update_platform_no_asset;
+
   /// Back button tooltip label
   ///
   /// In en, this message translates to:

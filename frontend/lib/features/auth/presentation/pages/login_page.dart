@@ -136,29 +136,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 child: InkWell(
                   onLongPress: _showServerConfigDialog,
                   borderRadius: BorderRadius.circular(28),
-                  child: Container(
+                  child: SizedBox(
                     width: 96,
                     height: 96,
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient:
-                          mindriverThemeOf(context).riverGradient
-                              as LinearGradient,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.22),
-                          blurRadius: 28,
-                          offset: const Offset(0, 16),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(18),
-                      child: Image.asset('assets/icons/Logo3.png'),
-                    ),
+                    child: Image.asset('assets/icons/Logo3.png'),
                   ),
                 ),
               ),

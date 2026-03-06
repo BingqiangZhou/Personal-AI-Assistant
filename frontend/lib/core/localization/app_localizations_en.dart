@@ -685,6 +685,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get update_try_again => 'Try Again';
 
   @override
+  String get update_platform_no_asset =>
+      'No installer available for your platform';
+
+  @override
   String get back_button => 'Back';
 
   @override
