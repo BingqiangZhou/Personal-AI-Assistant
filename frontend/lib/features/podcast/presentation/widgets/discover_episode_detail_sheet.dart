@@ -88,19 +88,19 @@ class DiscoverEpisodeDetailSheet extends StatelessWidget {
                           const SizedBox(width: 6),
                           Align(
                             alignment: Alignment.center,
-                            child: SizedBox.square(
-                              dimension: 36,
-                              child: IconButton.filled(
-                                key: const Key('discover_episode_detail_play_button'),
-                                onPressed: onPlay,
-                                icon: const Icon(Icons.play_arrow),
-                                iconSize: 18,
-                                style: IconButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                tooltip: l10n.podcast_play,
+                            child: IconButton(
+                              key: const Key('discover_episode_detail_play_button'),
+                              tooltip: l10n.podcast_play,
+                              onPressed: onPlay,
+                              style: IconButton.styleFrom(
+                                minimumSize: const Size(36, 36),
+                                maximumSize: const Size(36, 36),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: VisualDensity.compact,
+                                padding: EdgeInsets.zero,
+                                foregroundColor: theme.colorScheme.onSurfaceVariant,
                               ),
+                              icon: const Icon(Icons.play_circle_outline, size: 32),
                             ),
                           ),
                         ],
