@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.14.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.14.1...v0.14.2) - 2026-03-06 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.14.2))
+
+### 🎨 Styling
+
+- *(podcast)* Redesign play button in discover episode detail sheet ([5a63ed1](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5a63ed19abb2cd1f8e02c058b705ac78851a2831))
+
+### 🚀 Features
+
+- *(podcast)* Add episode actions and consistent card design to discover sheet ([1c20ed1](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1c20ed1447ce239139a25844c7f5bc6a1b0d3084))
+
+
+
 ## [0.14.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.14.0...v0.14.1) - 2026-03-06 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.14.1))
 
 ### 🎨 Styling
