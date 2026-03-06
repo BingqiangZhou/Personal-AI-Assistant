@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
 import 'package:personal_ai_assistant/core/storage/local_storage_service.dart';
+import 'package:personal_ai_assistant/core/widgets/custom_adaptive_navigation.dart';
 import 'package:personal_ai_assistant/features/auth/domain/models/user.dart';
 import 'package:personal_ai_assistant/features/auth/presentation/providers/auth_provider.dart';
 import 'package:personal_ai_assistant/features/home/presentation/pages/home_page.dart';
@@ -330,6 +331,61 @@ void main() {
         final feedRect = tester.getRect(feedListFinder);
         final miniPlayerRect = tester.getRect(miniPlayerFinder);
         expect(feedRect.bottom, lessThanOrEqualTo(miniPlayerRect.top + 0.1));
+      },
+    );
+
+    testWidgets(
+      'light theme keeps backdrop behind mini player and bottom dock',
+      (tester) async {
+        final audioNotifier = TestAudioPlayerNotifier(
+          AudioPlayerState(currentEpisode: _testEpisode(), isExpanded: false),
+        );
+
+        await _pumpHomePage(
+          tester,
+          audioNotifier: audioNotifier,
+          initialTab: 2,
+        );
+
+        final backdropFinder = find.byKey(
+          const Key('custom_adaptive_navigation_bottom_backdrop'),
+        );
+        final miniPlayerFinder = find.byKey(
+          const Key('podcast_bottom_player_mini_wrapper'),
+        );
+        final navFinder = find.byType(NavigationBar);
+
+        expect(backdropFinder, findsOneWidget);
+        expect(miniPlayerFinder, findsOneWidget);
+        expect(navFinder, findsOneWidget);
+
+        final backdropRect = tester.getRect(backdropFinder);
+        final miniPlayerRect = tester.getRect(miniPlayerFinder);
+        final navRect = tester.getRect(navFinder);
+
+        expect(miniPlayerRect.bottom, lessThanOrEqualTo(navRect.top + 1));
+        expect(backdropRect.top, lessThan(miniPlayerRect.top));
+        expect(backdropRect.bottom, greaterThanOrEqualTo(navRect.bottom));
+
+        final mobileStack = tester
+            .widgetList<Stack>(find.byType(Stack))
+            .firstWhere(
+              (stack) => stack.children.any(
+                (child) =>
+                    child is Positioned &&
+                    child.child?.key ==
+                        const Key('custom_adaptive_navigation_bottom_backdrop'),
+              ),
+            );
+        expect(
+          mobileStack.children.first,
+          isA<Positioned>().having(
+            (positioned) => positioned.child?.key,
+            'child key',
+            const Key('custom_adaptive_navigation_bottom_backdrop'),
+          ),
+        );
+        expect(find.byType(CustomAdaptiveNavigation), findsOneWidget);
       },
     );
   });

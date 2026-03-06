@@ -135,9 +135,24 @@ void main() {
       find.text('Your personal assistant for everything you follow.'),
       findsOneWidget,
     );
+    expect(find.byKey(const Key('app_init_logo')), findsOneWidget);
     expect(find.byKey(const Key('app_init_loading_indicator')), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.byType(GlassPanel), findsNothing);
+    expect(
+      find.ancestor(
+        of: find.byKey(const Key('app_init_logo')),
+        matching: find.byWidgetPredicate((widget) {
+          if (widget is! DecoratedBox || widget.decoration is! BoxDecoration) {
+            return false;
+          }
+
+          final decoration = widget.decoration as BoxDecoration;
+          return decoration.gradient != null || decoration.color != null;
+        }),
+      ),
+      findsNothing,
+    );
 
     await tester.pump(const Duration(seconds: 2));
     await tester.pump();

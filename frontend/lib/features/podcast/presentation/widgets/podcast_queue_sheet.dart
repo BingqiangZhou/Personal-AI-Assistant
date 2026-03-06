@@ -942,24 +942,30 @@ class _EqualizerBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Theme.of(context).colorScheme.onSecondary;
     const bars = <double>[5, 9, 6];
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: bars
-          .map(
-            (height) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 0.6),
-              child: Container(
-                width: 2.1,
-                height: height,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(999),
+    return Center(
+      child: SizedBox(
+        width: 12,
+        height: 10,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: bars
+              .map(
+                (height) => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 0.6),
+                  child: Container(
+                    width: 2.1,
+                    height: height,
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          )
-          .toList(),
+              )
+              .toList(),
+        ),
+      ),
     );
   }
 }

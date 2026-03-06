@@ -61,6 +61,72 @@ void main() {
       expect(accessoryRect.top, lessThan(navRect.top));
       expect(accessoryRect.bottom, lessThanOrEqualTo(navRect.top + 1));
     });
+
+    testWidgets('mobile: bottom backdrop sits beneath accessory and dock', (
+      tester,
+    ) async {
+      await _pumpWithSize(
+        tester: tester,
+        size: const Size(390, 844),
+        child: _buildNavigation(),
+      );
+
+      final backdropFinder = find.byKey(
+        const Key('custom_adaptive_navigation_bottom_backdrop'),
+      );
+      expect(backdropFinder, findsOneWidget);
+
+      final backdropRect = tester.getRect(backdropFinder);
+      final accessoryRect = tester.getRect(
+        find.byKey(const Key('test_bottom_accessory')),
+      );
+      final navRect = tester.getRect(find.byType(NavigationBar));
+
+      expect(backdropRect.bottom, closeTo(844, 0.1));
+      expect(backdropRect.top, lessThan(accessoryRect.top));
+      expect(backdropRect.top, lessThan(navRect.top));
+
+      final mobileStack = tester
+          .widgetList<Stack>(find.byType(Stack))
+          .firstWhere(
+            (stack) => stack.children.any(
+              (child) =>
+                  child is Positioned &&
+                  child.child?.key ==
+                      const Key('custom_adaptive_navigation_bottom_backdrop'),
+            ),
+          );
+      expect(
+        mobileStack.children.first,
+        isA<Positioned>().having(
+          (positioned) => positioned.child?.key,
+          'child key',
+          const Key('custom_adaptive_navigation_bottom_backdrop'),
+        ),
+      );
+    });
+
+    testWidgets('mobile: bottom backdrop still renders without accessory', (
+      tester,
+    ) async {
+      await _pumpWithSize(
+        tester: tester,
+        size: const Size(390, 844),
+        child: _buildNavigation(includeAccessory: false),
+      );
+
+      final backdropFinder = find.byKey(
+        const Key('custom_adaptive_navigation_bottom_backdrop'),
+      );
+      expect(backdropFinder, findsOneWidget);
+      expect(find.byKey(const Key('test_bottom_accessory')), findsNothing);
+
+      final backdropRect = tester.getRect(backdropFinder);
+      final navRect = tester.getRect(find.byType(NavigationBar));
+
+      expect(backdropRect.bottom, closeTo(844, 0.1));
+      expect(backdropRect.top, lessThan(navRect.top));
+    });
   });
 
   group('CustomAdaptiveNavigation desktop sidebar toggle', () {
@@ -114,7 +180,10 @@ Future<void> _pumpWithSize({
   await tester.pumpAndSettle();
 }
 
-Widget _buildNavigation({bool desktopNavExpanded = true}) {
+Widget _buildNavigation({
+  bool desktopNavExpanded = true,
+  bool includeAccessory = true,
+}) {
   return MaterialApp(
     locale: const Locale('en'),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -141,11 +210,13 @@ Widget _buildNavigation({bool desktopNavExpanded = true}) {
       desktopNavExpanded: desktopNavExpanded,
       onDesktopNavToggle: () {},
       body: const SizedBox.expand(child: ColoredBox(color: Colors.white)),
-      bottomAccessory: Container(
-        key: const Key('test_bottom_accessory'),
-        height: 60,
-        color: Colors.blue,
-      ),
+      bottomAccessory: includeAccessory
+          ? Container(
+              key: const Key('test_bottom_accessory'),
+              height: 60,
+              color: Colors.blue,
+            )
+          : null,
     ),
   );
 }

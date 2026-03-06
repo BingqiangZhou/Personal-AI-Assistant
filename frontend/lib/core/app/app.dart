@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:personal_ai_assistant/core/localization/app_localizations.dart';
@@ -39,22 +40,13 @@ class _SplashScreenWidget extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
+                  SizedBox(
                     width: 112,
                     height: 112,
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      gradient:
-                          mindriverThemeOf(context).riverGradient
-                              as LinearGradient,
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: Image.asset(
-                        'assets/icons/Logo3.png',
-                        fit: BoxFit.contain,
-                      ),
+                    child: Image.asset(
+                      'assets/icons/Logo3.png',
+                      key: const Key('app_init_logo'),
+                      fit: BoxFit.contain,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -82,6 +74,34 @@ class _SplashScreenWidget extends StatelessWidget {
       ),
     );
   }
+}
+
+Widget _wrapAppChild(BuildContext context, Widget child) {
+  final theme = Theme.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final navigationBarColor = Color.alphaBlend(
+    theme.colorScheme.surface.withValues(alpha: isDark ? 0.16 : 0.24),
+    theme.scaffoldBackgroundColor,
+  );
+
+  return AnnotatedRegion<SystemUiOverlayStyle>(
+    value: SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor: navigationBarColor,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarIconBrightness: isDark
+          ? Brightness.light
+          : Brightness.dark,
+      systemNavigationBarContrastEnforced: false,
+    ),
+    child: MediaQuery.withClampedTextScaling(
+      minScaleFactor: 0.8,
+      maxScaleFactor: 1.2,
+      child: child,
+    ),
+  );
 }
 
 class PersonalAIAssistantApp extends ConsumerStatefulWidget {
@@ -254,6 +274,8 @@ class _PersonalAIAssistantAppState
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: const [Locale('en'), Locale('zh')],
+        builder: (context, child) =>
+            _wrapAppChild(context, child ?? const SizedBox.shrink()),
         home: const _SplashScreenWidget(),
       );
     }
@@ -281,14 +303,8 @@ class _PersonalAIAssistantAppState
       ],
       supportedLocales: const [Locale('en'), Locale('zh')],
 
-      // Simple builder without flash prevention
-      builder: (context, child) {
-        return MediaQuery.withClampedTextScaling(
-          minScaleFactor: 0.8,
-          maxScaleFactor: 1.2,
-          child: child!,
-        );
-      },
+      builder: (context, child) =>
+          _wrapAppChild(context, child ?? const SizedBox.shrink()),
     );
   }
 }

@@ -51,12 +51,27 @@ class CustomAdaptiveNavigation extends StatelessWidget {
 
   Widget _buildMobileLayout(BuildContext context, double width) {
     const dockReserve = 92.0;
+    final safeAreaBottom = MediaQuery.viewPaddingOf(context).bottom;
+    final bottomBackdropHeight =
+        dockReserve +
+        (bottomAccessory != null ? bottomAccessoryBodyPadding : 0) +
+        safeAreaBottom +
+        36;
     return Scaffold(
       extendBody: true,
       backgroundColor: Colors.transparent,
       appBar: appBar,
       body: Stack(
         children: [
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _BottomBackdrop(
+              key: const Key('custom_adaptive_navigation_bottom_backdrop'),
+              height: bottomBackdropHeight,
+            ),
+          ),
           Stack(
             children: [
               RepaintBoundary(
@@ -579,6 +594,58 @@ class _GlassDock extends StatelessWidget {
             ],
           ),
           child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _BottomBackdrop extends StatelessWidget {
+  const _BottomBackdrop({super.key, required this.height});
+
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens =
+        theme.extension<MindriverThemeExtension>() ??
+        (theme.brightness == Brightness.dark
+            ? MindriverThemeExtension.dark
+            : MindriverThemeExtension.light);
+    final baseColor = Color.alphaBlend(
+      theme.colorScheme.surface.withValues(
+        alpha: theme.brightness == Brightness.dark ? 0.16 : 0.24,
+      ),
+      theme.scaffoldBackgroundColor,
+    );
+
+    return IgnorePointer(
+      child: SizedBox(
+        height: height,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: baseColor,
+                gradient: tokens.shellGradient,
+              ),
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    baseColor.withValues(alpha: 0),
+                    baseColor.withValues(alpha: 0.58),
+                    baseColor,
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
