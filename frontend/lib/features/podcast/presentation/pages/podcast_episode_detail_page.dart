@@ -92,8 +92,6 @@ class _PodcastEpisodeDetailPageState
     // Don't auto-play episode when page loads - user must click play button
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadTranscriptionStatus();
-      // Auto-expand the bottom player when entering the detail page
-      ref.read(audioPlayerProvider.notifier).setExpanded(true);
     });
   }
 
@@ -299,9 +297,10 @@ class _PodcastEpisodeDetailPageState
     final isChatTab = _selectedTabIndex == 3;
     final isTranscriptOrSummaryTab =
         _selectedTabIndex == 1 || _selectedTabIndex == 2;
-    final isPlayerCollapsed = !ref.watch(
+    final isExpanded = ref.watch(
       audioPlayerProvider.select((state) => state.isExpanded),
     );
+    final isPlayerCollapsed = !isExpanded;
     final shouldHideOnTranscriptOrSummary =
         isTranscriptOrSummaryTab &&
         isPlayerCollapsed &&
@@ -350,25 +349,38 @@ class _PodcastEpisodeDetailPageState
                   hideBottomPlayer: hideBottomPlayer,
                   isMobileLayout: isMobileLayout,
                 ),
-          body: episodeDetailAsync.when(
-            data: (episodeDetail) {
-              if (episodeDetail == null) {
-                final l10n =
-                    (AppLocalizations.of(context) ?? AppLocalizationsEn());
-                return _buildErrorState(
-                  context,
-                  l10n.podcast_episode_not_found,
-                );
-              }
-              _trackEpisodeViewOnce(episodeDetail);
-              return _buildNewLayout(
-                context,
-                episodeDetail,
-                hideBottomPlayer: hideBottomPlayer,
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => _buildErrorState(context, error),
+          body: Stack(
+            children: [
+              episodeDetailAsync.when(
+                data: (episodeDetail) {
+                  if (episodeDetail == null) {
+                    final l10n =
+                        (AppLocalizations.of(context) ?? AppLocalizationsEn());
+                    return _buildErrorState(
+                      context,
+                      l10n.podcast_episode_not_found,
+                    );
+                  }
+                  _trackEpisodeViewOnce(episodeDetail);
+                  return _buildNewLayout(
+                    context,
+                    episodeDetail,
+                    hideBottomPlayer: hideBottomPlayer,
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => _buildErrorState(context, error),
+              ),
+              Positioned.fill(
+                child: PodcastPlayerModalBarrier(
+                  visible: isExpanded && !hideBottomPlayer,
+                  interactive: false,
+                  onDismiss: () {
+                    ref.read(audioPlayerProvider.notifier).setExpanded(false);
+                  },
+                ),
+              ),
+            ],
           ),
         );
       },

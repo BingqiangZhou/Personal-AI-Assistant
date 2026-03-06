@@ -184,30 +184,19 @@ class _HomePageState extends ConsumerState<HomePage> {
   Widget _buildTabContent(bool isExpanded) {
     final content = _buildIndexedTabContent();
 
-    // If expanded, wrap content with a barrier to detect outside taps
-    if (isExpanded && _isPodcastTab(_currentIndex)) {
-      return Stack(
-        children: [
-          content,
-          // Transparent barrier that covers the content behind the player
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () {
-                ref.read(audioPlayerProvider.notifier).setExpanded(false);
-              },
-              behavior: HitTestBehavior.opaque, // Opaque to catch all touches
-              child: Container(
-                color: Colors.black.withValues(
-                  alpha: 0.01,
-                ), // Almost transparent but touchable
-              ),
-            ),
+    return Stack(
+      children: [
+        content,
+        Positioned.fill(
+          child: PodcastPlayerModalBarrier(
+            visible: isExpanded && _isPodcastTab(_currentIndex),
+            onDismiss: () {
+              ref.read(audioPlayerProvider.notifier).setExpanded(false);
+            },
           ),
-        ],
-      );
-    }
-
-    return content;
+        ),
+      ],
+    );
   }
 
   Widget _buildIndexedTabContent() {

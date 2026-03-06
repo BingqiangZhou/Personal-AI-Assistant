@@ -7,6 +7,8 @@ import 'package:personal_ai_assistant/core/theme/mindriver_theme.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/audio_player_state_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_episode_model.dart';
 import 'package:personal_ai_assistant/features/podcast/data/models/podcast_queue_model.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/navigation/podcast_navigation.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/pages/podcast_player_page.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_bottom_player_widget.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_queue_sheet.dart';
@@ -297,6 +299,73 @@ void main() {
       );
       expect(playCenter.dx, closeTo(390 / 2, 1));
     });
+
+    testWidgets(
+      'slider scrubbing previews position and seeks only on release',
+      (tester) async {
+        final notifier = TestAudioPlayerNotifier(
+          AudioPlayerState(
+            currentEpisode: _testEpisode(),
+            position: 45000,
+            duration: 180000,
+            isExpanded: true,
+          ),
+        );
+        final queueController = TestPodcastQueueController();
+
+        await tester.pumpWidget(
+          _createWidget(notifier: notifier, queueController: queueController),
+        );
+        await tester.pumpAndSettle();
+
+        final slider = tester.widget<Slider>(
+          find.byKey(const Key('podcast_bottom_player_progress_slider')),
+        );
+
+        slider.onChangeStart?.call(60000);
+        slider.onChanged?.call(60000);
+        await tester.pump();
+
+        expect(notifier.seekToPositions, isEmpty);
+        expect(find.text('01:00'), findsOneWidget);
+
+        slider.onChangeEnd?.call(60000);
+        await tester.pumpAndSettle();
+
+        expect(notifier.seekToPositions, <int>[60000]);
+        expect(find.text('01:00'), findsOneWidget);
+      },
+    );
+
+    testWidgets('dragging handle downward collapses expanded player', (
+      tester,
+    ) async {
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          duration: 180000,
+          isExpanded: true,
+        ),
+      );
+      final queueController = TestPodcastQueueController();
+
+      await tester.pumpWidget(
+        _createWidget(notifier: notifier, queueController: queueController),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.drag(
+        find.byKey(const Key('podcast_bottom_player_drag_handle')),
+        const Offset(0, 80),
+      );
+      await tester.pumpAndSettle();
+
+      expect(notifier.state.isExpanded, isFalse);
+      expect(
+        find.byKey(const Key('podcast_bottom_player_expanded')),
+        findsNothing,
+      );
+    });
   });
 
   group('PodcastBottomPlayerWidget mini styling', () {
@@ -496,6 +565,66 @@ void main() {
       expect(progressWidget.color, expectedColor);
     });
   });
+
+  group('Podcast player modal overlay', () {
+    testWidgets('tapping scrim collapses expanded player', (tester) async {
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          duration: 180000,
+          isExpanded: true,
+        ),
+      );
+      final queueController = TestPodcastQueueController();
+
+      await tester.pumpWidget(
+        _createOverlayHarness(
+          notifier: notifier,
+          queueController: queueController,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('podcast_player_modal_barrier')));
+      await tester.pumpAndSettle();
+
+      expect(notifier.state.isExpanded, isFalse);
+    });
+  });
+
+  group('PodcastPlayerPage', () {
+    testWidgets('full-screen route reuses shared playback state', (
+      tester,
+    ) async {
+      final notifier = TestAudioPlayerNotifier(
+        AudioPlayerState(
+          currentEpisode: _testEpisode(),
+          position: 45000,
+          duration: 180000,
+          isExpanded: false,
+          playbackRate: 1.5,
+        ),
+      );
+      final queueController = TestPodcastQueueController();
+
+      await tester.pumpWidget(
+        _createPlayerRouteWidget(
+          notifier: notifier,
+          queueController: queueController,
+          initialLocation: '/podcast/player/1?subscriptionId=1',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('podcast_fullscreen_player_panel')),
+        findsOne,
+      );
+      expect(find.text('Test Episode'), findsOneWidget);
+      expect(find.text('1.5x'), findsOneWidget);
+      expect(find.text('00:45'), findsOneWidget);
+    });
+  });
 }
 
 Widget _createWidget({
@@ -565,6 +694,78 @@ Widget _createRouterWidget({
   );
 }
 
+Widget _createOverlayHarness({
+  required TestAudioPlayerNotifier notifier,
+  required TestPodcastQueueController queueController,
+}) {
+  return ProviderScope(
+    overrides: [
+      audioPlayerProvider.overrideWith(() => notifier),
+      podcastQueueControllerProvider.overrideWith(() => queueController),
+    ],
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Consumer(
+        builder: (context, ref, _) {
+          final isExpanded = ref.watch(
+            audioPlayerProvider.select((state) => state.isExpanded),
+          );
+          return Scaffold(
+            body: Stack(
+              children: [
+                const Align(
+                  alignment: Alignment.bottomCenter,
+                  child: PodcastBottomPlayerWidget(applySafeArea: false),
+                ),
+                Positioned.fill(
+                  child: PodcastPlayerModalBarrier(
+                    visible: isExpanded,
+                    onDismiss: () {
+                      ref.read(audioPlayerProvider.notifier).setExpanded(false);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    ),
+  );
+}
+
+Widget _createPlayerRouteWidget({
+  required TestAudioPlayerNotifier notifier,
+  required TestPodcastQueueController queueController,
+  required String initialLocation,
+}) {
+  final router = GoRouter(
+    initialLocation: initialLocation,
+    routes: [
+      GoRoute(
+        path: '/podcast/player/:episodeId',
+        builder: (context, state) {
+          final args = PodcastPlayerPageArgs.extractFromState(state);
+          return PodcastPlayerPage(args: args);
+        },
+      ),
+    ],
+  );
+
+  return ProviderScope(
+    overrides: [
+      audioPlayerProvider.overrideWith(() => notifier),
+      podcastQueueControllerProvider.overrideWith(() => queueController),
+    ],
+    child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      routerConfig: router,
+    ),
+  );
+}
+
 PodcastEpisodeModel _testEpisode() {
   final now = DateTime.now();
   return PodcastEpisodeModel(
@@ -582,6 +783,9 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
   TestAudioPlayerNotifier(this._initialState);
 
   final AudioPlayerState _initialState;
+  final List<int> seekToPositions = <int>[];
+  int pauseCalls = 0;
+  int resumeCalls = 0;
 
   @override
   AudioPlayerState build() {
@@ -591,6 +795,24 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
   @override
   void setExpanded(bool expanded) {
     state = state.copyWith(isExpanded: expanded);
+  }
+
+  @override
+  Future<void> seekTo(int position) async {
+    seekToPositions.add(position);
+    state = state.copyWith(position: position);
+  }
+
+  @override
+  Future<void> pause() async {
+    pauseCalls += 1;
+    state = state.copyWith(isPlaying: false);
+  }
+
+  @override
+  Future<void> resume() async {
+    resumeCalls += 1;
+    state = state.copyWith(isPlaying: true);
   }
 }
 

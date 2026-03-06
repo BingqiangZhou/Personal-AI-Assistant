@@ -1,112 +1,90 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../../core/localization/app_localizations.dart';
 import '../navigation/podcast_navigation.dart';
+import '../providers/podcast_providers.dart';
+import '../widgets/podcast_bottom_player_widget.dart';
 
-class PodcastPlayerPage extends StatelessWidget {
+class PodcastPlayerPage extends ConsumerWidget {
+  const PodcastPlayerPage({super.key, this.args});
+
   final PodcastPlayerPageArgs? args;
 
-  const PodcastPlayerPage({
-    super.key,
-    this.args,
-  });
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final currentEpisode = ref.watch(audioCurrentEpisodeProvider);
+
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.podcast_player_now_playing)),
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            key: const Key('podcast_fullscreen_player_panel'),
+            constraints: const BoxConstraints(maxWidth: 720),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: currentEpisode == null
+                  ? _EmptyPlayerState(args: args)
+                  : PodcastExpandedPlayerPanel(
+                      episode: currentEpisode,
+                      fullScreen: true,
+                      elevation: 0,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyPlayerState extends StatelessWidget {
+  const _EmptyPlayerState({required this.args});
+
+  final PodcastPlayerPageArgs? args;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final episodeTitle = args?.episodeTitle ?? l10n.podcast_player_unknown_episode;
-    final audioUrl = args?.audioUrl ?? l10n.podcast_player_no_audio;
+    final theme = Theme.of(context);
+    final episodeTitle =
+        args?.episodeTitle ?? l10n.podcast_player_unknown_episode;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
-          child: Text(
-            episodeTitle,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.6),
         ),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        elevation: 2,
       ),
-      body: Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.audiotrack,
-                size: 80,
-                color: Colors.grey.shade400,
-              ),
+            Icon(
+              Icons.podcasts_rounded,
+              size: 56,
+              color: theme.colorScheme.primary,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             Text(
               episodeTitle,
-              style: Theme.of(context).textTheme.headlineSmall,
               textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
-              audioUrl,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey.shade600,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    // TODO: Rewind
-                  },
-                  icon: const Icon(Icons.replay_30),
-                  iconSize: 32,
-                ),
-                const SizedBox(width: 16),
-                IconButton.filled(
-                  onPressed: () {
-                    // TODO: Play/Pause
-                  },
-                  icon: const Icon(Icons.play_arrow),
-                  iconSize: 48,
-                ),
-                const SizedBox(width: 16),
-                IconButton(
-                  onPressed: () {
-                    // TODO: Fast forward
-                  },
-                  icon: const Icon(Icons.forward_30),
-                  iconSize: 32,
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            Text(
               l10n.podcast_coming_soon,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.orange,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
