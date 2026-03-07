@@ -3,6 +3,14 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.admin.services import (
+    AdminApiKeysService,
+    AdminDashboardService,
+    AdminSettingsService,
+    AdminSetupAuthService,
+    AdminSubscriptionsService,
+    AdminUsersAuditService,
+)
 from app.core.config import Settings, get_settings
 from app.core.database import get_db_session
 from app.core.dependencies import get_current_active_user
@@ -18,12 +26,12 @@ from app.domains.podcast.services.search_service import PodcastSearchService
 from app.domains.podcast.services.stats_service import PodcastStatsService
 from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
 from app.domains.podcast.services.summary_workflow_service import SummaryWorkflowService
+from app.domains.podcast.services.task_orchestration_service import (
+    PodcastTaskOrchestrationService,
+)
 from app.domains.podcast.services.transcription_workflow_service import (
     TranscriptionWorkflowService,
 )
-from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
-from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
-from app.domains.podcast.transcription_scheduler import TranscriptionScheduler
 from app.domains.subscription.services import SubscriptionService
 from app.domains.user.models import User
 from app.domains.user.services import AuthenticationService
@@ -125,32 +133,11 @@ def get_daily_report_service(
     return DailyReportService(db, user_id)
 
 
-def get_transcription_service(
-    db: AsyncSession = Depends(get_db_session),
-) -> DatabaseBackedTranscriptionService:
-    """Provide request-scoped transcription service."""
-    return DatabaseBackedTranscriptionService(db)
-
-
-def get_summary_service(
-    db: AsyncSession = Depends(get_db_session),
-) -> DatabaseBackedAISummaryService:
-    """Provide request-scoped summary service."""
-    return DatabaseBackedAISummaryService(db)
-
-
 def get_summary_workflow_service(
     db: AsyncSession = Depends(get_db_session),
 ) -> SummaryWorkflowService:
     """Provide request-scoped summary orchestration service."""
     return SummaryWorkflowService(db)
-
-
-def get_transcription_scheduler(
-    db: AsyncSession = Depends(get_db_session),
-) -> TranscriptionScheduler:
-    """Provide request-scoped transcription scheduler."""
-    return TranscriptionScheduler(db)
 
 
 def get_transcription_workflow_service(
@@ -160,8 +147,57 @@ def get_transcription_workflow_service(
     return TranscriptionWorkflowService(db)
 
 
+def get_podcast_task_orchestration_service(
+    db: AsyncSession = Depends(get_db_session),
+) -> PodcastTaskOrchestrationService:
+    """Provide request-scoped background-task orchestration service."""
+    return PodcastTaskOrchestrationService(db)
+
+
 def get_conversation_service(
     db: AsyncSession = Depends(get_db_session),
 ) -> ConversationService:
     """Provide request-scoped conversation service."""
     return ConversationService(db)
+
+
+def get_admin_dashboard_service(
+    db: AsyncSession = Depends(get_db_session),
+) -> AdminDashboardService:
+    """Provide request-scoped admin dashboard service."""
+    return AdminDashboardService(db)
+
+
+def get_admin_apikeys_service(
+    db: AsyncSession = Depends(get_db_session),
+) -> AdminApiKeysService:
+    """Provide request-scoped admin API-keys service."""
+    return AdminApiKeysService(db)
+
+
+def get_admin_subscriptions_service(
+    db: AsyncSession = Depends(get_db_session),
+) -> AdminSubscriptionsService:
+    """Provide request-scoped admin subscriptions service."""
+    return AdminSubscriptionsService(db)
+
+
+def get_admin_settings_service(
+    db: AsyncSession = Depends(get_db_session),
+) -> AdminSettingsService:
+    """Provide request-scoped admin settings service."""
+    return AdminSettingsService(db)
+
+
+def get_admin_setup_auth_service(
+    db: AsyncSession = Depends(get_db_session),
+) -> AdminSetupAuthService:
+    """Provide request-scoped admin setup/auth service."""
+    return AdminSetupAuthService(db)
+
+
+def get_admin_users_audit_service(
+    db: AsyncSession = Depends(get_db_session),
+) -> AdminUsersAuditService:
+    """Provide request-scoped admin users/audit service."""
+    return AdminUsersAuditService(db)

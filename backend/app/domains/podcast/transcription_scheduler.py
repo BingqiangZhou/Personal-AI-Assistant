@@ -13,8 +13,8 @@ from app.domains.podcast.models import (
     TranscriptionStatus,
     TranscriptionTask,
 )
-from app.domains.podcast.transcription_types import ScheduleFrequency
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+from app.domains.podcast.transcription_types import ScheduleFrequency
 
 
 logger = logging.getLogger(__name__)

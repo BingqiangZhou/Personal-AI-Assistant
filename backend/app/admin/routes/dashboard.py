@@ -4,13 +4,11 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.admin.dependencies import admin_required, get_admin_db_session
+from app.admin.auth import admin_required
 from app.admin.routes._shared import get_templates
-from app.domains.ai.models import AIModelConfig
-from app.domains.subscription.models import Subscription
+from app.admin.services.dashboard_service import AdminDashboardService
+from app.core.providers import get_admin_dashboard_service
 from app.domains.user.models import User
 
 
@@ -24,34 +22,18 @@ templates = get_templates()
 async def dashboard(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    service: AdminDashboardService = Depends(get_admin_dashboard_service),
 ):
     """Display admin dashboard."""
     try:
-        # Get statistics
-        # Count API keys (AI Model Configs)
-        apikey_count_query = select(func.count()).select_from(AIModelConfig)
-        apikey_count_result = await db.execute(apikey_count_query)
-        apikey_count = apikey_count_result.scalar() or 0
-
-        # Count subscriptions
-        subscription_count_query = select(func.count()).select_from(Subscription)
-        subscription_count_result = await db.execute(subscription_count_query)
-        subscription_count = subscription_count_result.scalar() or 0
-
-        # Count users
-        user_count_query = select(func.count()).select_from(User)
-        user_count_result = await db.execute(user_count_query)
-        user_count = user_count_result.scalar() or 0
+        context = await service.get_dashboard_context()
 
         return templates.TemplateResponse(
             "dashboard.html",
             {
                 "request": request,
                 "user": user,
-                "apikey_count": apikey_count,
-                "subscription_count": subscription_count,
-                "user_count": user_count,
+                **context,
                 "messages": [],
             },
         )

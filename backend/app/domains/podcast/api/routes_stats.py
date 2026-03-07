@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Request
 
 from app.core.etag import build_conditional_etag_response
-from app.domains.podcast.api.dependencies import get_stats_service
+from app.core.providers import get_podcast_stats_service
 from app.domains.podcast.schemas import (
     PodcastProfileStatsResponse,
     PodcastStatsResponse,
@@ -21,7 +21,7 @@ router = APIRouter(prefix="")
 )
 async def get_podcast_stats(
     request: Request,
-    service: PodcastStatsService = Depends(get_stats_service),
+    service: PodcastStatsService = Depends(get_podcast_stats_service),
 ):
     """获取用户的播客收听统计。"""
     stats = await service.get_user_stats()
@@ -43,7 +43,7 @@ async def get_podcast_stats(
 )
 async def get_profile_stats(
     request: Request,
-    service: PodcastStatsService = Depends(get_stats_service),
+    service: PodcastStatsService = Depends(get_podcast_stats_service),
 ):
     """Get lightweight profile statistics for profile cards."""
     stats = await service.get_profile_stats()

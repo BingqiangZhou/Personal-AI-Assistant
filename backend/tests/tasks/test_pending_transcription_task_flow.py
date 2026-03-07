@@ -1,8 +1,13 @@
 """Pending-transcription backlog task flow tests."""
 
+from unittest.mock import AsyncMock
+
 import pytest
 
 from app.core.config import settings
+from app.domains.podcast.services.task_orchestration_service import (
+    PodcastTaskOrchestrationService,
+)
 from app.domains.podcast.tasks import pending_transcription
 from app.domains.podcast.tasks.handlers_pending_transcription import (
     process_pending_transcriptions_handler,
@@ -11,30 +16,19 @@ from app.domains.podcast.tasks.handlers_pending_transcription import (
 
 @pytest.mark.asyncio
 async def test_backlog_handler_dispatches_candidates(monkeypatch):
-    async def _fetch(_session, _batch_size: int):
-        return 37, [101, 102, 103]
-
-    class _FakeWorkflow:
-        def __init__(self, _session):
-            pass
-
-        async def dispatch_pending_transcriptions(self, episode_ids):
-            assert episode_ids == [101, 102, 103]
-            return {
-                "checked": 3,
-                "dispatched": 3,
-                "skipped": 0,
-                "failed": 0,
-                "skipped_reasons": {},
-            }
-
+    expected = {
+        "status": "success",
+        "total_candidates": 37,
+        "checked": 3,
+        "dispatched": 3,
+        "skipped": 0,
+        "failed": 0,
+        "skipped_reasons": {},
+    }
     monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_pending_transcription._fetch_pending_episode_ids",
-        _fetch,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_pending_transcription.TranscriptionWorkflowService",
-        _FakeWorkflow,
+        PodcastTaskOrchestrationService,
+        "process_pending_transcriptions",
+        AsyncMock(return_value=expected),
     )
 
     result = await process_pending_transcriptions_handler(session=object())
@@ -48,16 +42,13 @@ async def test_backlog_handler_dispatches_candidates(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_backlog_handler_skips_reused_actions(monkeypatch):
-    async def _fetch(_session, _batch_size: int):
-        return 2, [1, 2]
-
-    class _FakeWorkflow:
-        def __init__(self, _session):
-            pass
-
-        async def dispatch_pending_transcriptions(self, episode_ids):
-            assert episode_ids == [1, 2]
-            return {
+    monkeypatch.setattr(
+        PodcastTaskOrchestrationService,
+        "process_pending_transcriptions",
+        AsyncMock(
+            return_value={
+                "status": "success",
+                "total_candidates": 2,
                 "checked": 2,
                 "dispatched": 0,
                 "skipped": 2,
@@ -67,14 +58,7 @@ async def test_backlog_handler_skips_reused_actions(monkeypatch):
                     "reused_in_progress": 1,
                 },
             }
-
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_pending_transcription._fetch_pending_episode_ids",
-        _fetch,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_pending_transcription.TranscriptionWorkflowService",
-        _FakeWorkflow,
+        ),
     )
 
     result = await process_pending_transcriptions_handler(session=object())
@@ -90,30 +74,20 @@ async def test_backlog_handler_skips_reused_actions(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_backlog_handler_counts_failures(monkeypatch):
-    async def _fetch(_session, _batch_size: int):
-        return 2, [1, 2]
-
-    class _FakeWorkflow:
-        def __init__(self, _session):
-            pass
-
-        async def dispatch_pending_transcriptions(self, episode_ids):
-            assert episode_ids == [1, 2]
-            return {
+    monkeypatch.setattr(
+        PodcastTaskOrchestrationService,
+        "process_pending_transcriptions",
+        AsyncMock(
+            return_value={
+                "status": "success",
+                "total_candidates": 2,
                 "checked": 2,
                 "dispatched": 1,
                 "skipped": 0,
                 "failed": 1,
                 "skipped_reasons": {},
             }
-
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_pending_transcription._fetch_pending_episode_ids",
-        _fetch,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_pending_transcription.TranscriptionWorkflowService",
-        _FakeWorkflow,
+        ),
     )
 
     result = await process_pending_transcriptions_handler(session=object())

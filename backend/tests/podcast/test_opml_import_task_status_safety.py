@@ -6,6 +6,9 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from app.domains.podcast.models import PodcastEpisode
+from app.domains.podcast.services.task_orchestration_service import (
+    PodcastTaskOrchestrationService,
+)
 from app.domains.podcast.tasks.handlers_opml_import import (
     process_opml_subscription_episodes_handler,
 )
@@ -54,15 +57,16 @@ async def test_opml_background_handler_does_not_mutate_existing_episode_status()
     mock_parser = AsyncMock()
     mock_parser.fetch_and_parse_feed.return_value = (True, mock_feed, None)
 
+    service = PodcastTaskOrchestrationService(session=AsyncMock())
+
     with patch(
-        "app.domains.podcast.tasks.handlers_opml_import.PodcastSubscriptionRepository",
+        "app.domains.podcast.services.task_orchestration_service.PodcastSubscriptionRepository",
         return_value=mock_repo,
     ), patch(
-        "app.domains.podcast.tasks.handlers_opml_import.SecureRSSParser",
+        "app.domains.podcast.services.task_orchestration_service.SecureRSSParser",
         return_value=mock_parser,
     ):
-        result = await process_opml_subscription_episodes_handler(
-            session=AsyncMock(),
+        result = await service.process_opml_subscription_episodes(
             subscription_id=1,
             user_id=1,
             source_url="https://example.com/feed.xml",
@@ -71,3 +75,15 @@ async def test_opml_background_handler_does_not_mutate_existing_episode_status()
     assert result["status"] == "success"
     assert existing_episode.status == "summarized"
     mock_repo.create_or_update_episodes_batch.assert_awaited_once()
+    with patch.object(
+        PodcastTaskOrchestrationService,
+        "process_opml_subscription_episodes",
+        new=AsyncMock(return_value=result),
+    ):
+        delegated_result = await process_opml_subscription_episodes_handler(
+            session=AsyncMock(),
+            subscription_id=1,
+            user_id=1,
+            source_url="https://example.com/feed.xml",
+        )
+    assert delegated_result == result

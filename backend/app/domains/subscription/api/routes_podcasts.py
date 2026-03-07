@@ -8,10 +8,10 @@ All endpoints here are mounted under:
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 
 from app.core.etag import build_conditional_etag_response
-from app.domains.podcast.api.dependencies import (
-    get_current_user_id,
-    get_schedule_service,
-    get_subscription_service,
+from app.core.providers import (
+    get_podcast_schedule_service,
+    get_podcast_subscription_service,
+    get_token_user_id,
 )
 from app.domains.podcast.schemas import (
     PodcastSearchFilter,
@@ -39,8 +39,8 @@ router = APIRouter(prefix="/podcasts")
 )
 async def add_subscription(
     subscription_data: PodcastSubscriptionCreate,
-    service: PodcastSubscriptionService = Depends(get_subscription_service),
-    user_id: int = Depends(get_current_user_id),
+    service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
+    user_id: int = Depends(get_token_user_id),
 ):
     try:
         subscription, new_episodes = await service.add_subscription(
@@ -90,7 +90,7 @@ async def add_subscription(
 )
 async def create_subscriptions_batch(
     subscriptions_data: list[PodcastSubscriptionCreate],
-    service: PodcastSubscriptionService = Depends(get_subscription_service),
+    service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
 ):
     results = await service.add_subscriptions_batch(subscriptions_data)
 
@@ -118,7 +118,7 @@ async def list_subscriptions(
     size: int = Query(20, ge=1, le=100, description="Page size"),
     category_id: int | None = Query(None, description="Category filter"),
     status_filter: str | None = Query(None, alias="status", description="Status filter"),
-    service: PodcastSubscriptionService = Depends(get_subscription_service),
+    service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
 ):
     filters = PodcastSearchFilter(category_id=category_id, status=status_filter)
     subscriptions, total = await service.list_subscriptions(
@@ -151,7 +151,7 @@ async def list_subscriptions(
 )
 async def delete_subscriptions_bulk(
     request: PodcastSubscriptionBulkDelete,
-    service: PodcastSubscriptionService = Depends(get_subscription_service),
+    service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
 ):
     result = await service.remove_subscriptions_bulk(request.subscription_ids)
     return PodcastSubscriptionBulkDeleteResponse(
@@ -170,7 +170,7 @@ async def delete_subscriptions_bulk(
 async def get_subscription(
     request: Request,
     subscription_id: int,
-    service: PodcastSubscriptionService = Depends(get_subscription_service),
+    service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
 ):
     details = await service.get_subscription_details(subscription_id)
     if not details:
@@ -191,7 +191,7 @@ async def get_subscription(
 )
 async def delete_subscription(
     subscription_id: int,
-    service: PodcastSubscriptionService = Depends(get_subscription_service),
+    service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
 ):
     success = await service.remove_subscription(subscription_id)
     if not success:
@@ -205,7 +205,7 @@ async def delete_subscription(
 )
 async def refresh_subscription(
     subscription_id: int,
-    service: PodcastSubscriptionService = Depends(get_subscription_service),
+    service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
 ):
     try:
         new_episodes = await service.refresh_subscription(subscription_id)
@@ -227,7 +227,7 @@ async def refresh_subscription(
 async def reparse_subscription(
     subscription_id: int,
     force_all: bool = False,
-    service: PodcastSubscriptionService = Depends(get_subscription_service),
+    service: PodcastSubscriptionService = Depends(get_podcast_subscription_service),
 ):
     try:
         result = await service.reparse_subscription(subscription_id, force_all=force_all)
@@ -245,7 +245,7 @@ async def reparse_subscription(
 )
 async def get_subscription_schedule(
     subscription_id: int,
-    service: PodcastScheduleService = Depends(get_schedule_service),
+    service: PodcastScheduleService = Depends(get_podcast_schedule_service),
 ):
     schedule = await service.get_subscription_schedule(subscription_id)
     if not schedule:
@@ -261,7 +261,7 @@ async def get_subscription_schedule(
 async def update_subscription_schedule(
     subscription_id: int,
     schedule_data: ScheduleConfigUpdate,
-    service: PodcastScheduleService = Depends(get_schedule_service),
+    service: PodcastScheduleService = Depends(get_podcast_schedule_service),
 ):
     schedule = await service.update_subscription_schedule(
         subscription_id=subscription_id,
@@ -281,7 +281,7 @@ async def update_subscription_schedule(
     summary="Get all podcast subscription schedules",
 )
 async def get_all_subscription_schedules(
-    service: PodcastScheduleService = Depends(get_schedule_service),
+    service: PodcastScheduleService = Depends(get_podcast_schedule_service),
 ):
     rows = await service.get_all_subscription_schedules()
     return [ScheduleConfigResponse(**row) for row in rows]
@@ -295,7 +295,7 @@ async def get_all_subscription_schedules(
 async def batch_update_subscription_schedules(
     subscription_ids: list[int] = Body(..., embed=True),
     schedule_data: ScheduleConfigUpdate = Body(...),
-    service: PodcastScheduleService = Depends(get_schedule_service),
+    service: PodcastScheduleService = Depends(get_podcast_schedule_service),
 ):
     rows = await service.batch_update_subscription_schedules(
         subscription_ids=subscription_ids,

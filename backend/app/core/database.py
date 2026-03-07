@@ -120,11 +120,6 @@ def get_async_session_factory() -> async_sessionmaker[AsyncSession]:
     return _session_factory
 
 
-def async_session_factory() -> AsyncSession:
-    """Compatibility shim returning a session from the lazy session factory."""
-    return get_async_session_factory()()
-
-
 def create_isolated_session_factory(
     application_name: str,
 ) -> tuple[async_sessionmaker[AsyncSession], AsyncEngine]:

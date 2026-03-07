@@ -1,6 +1,0 @@
-"""Dependency compatibility shims for AI model API routes."""
-
-from app.core.providers import get_ai_model_config_service
-
-
-__all__ = ["get_ai_model_config_service"]

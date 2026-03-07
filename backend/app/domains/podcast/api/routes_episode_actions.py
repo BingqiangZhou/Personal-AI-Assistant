@@ -4,12 +4,12 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.domains.podcast.api.dependencies import (
-    get_current_user_id,
-    get_episode_service,
-    get_playback_service,
-    get_search_service,
+from app.core.providers import (
+    get_podcast_episode_service,
+    get_podcast_playback_service,
+    get_podcast_search_service,
     get_summary_workflow_service,
+    get_token_user_id,
 )
 from app.domains.podcast.schemas import (
     PlaybackRateApplyRequest,
@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 async def generate_summary(
     episode_id: int,
     request: PodcastSummaryRequest,
-    service: PodcastEpisodeService = Depends(get_episode_service),
+    service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     summary_workflow: SummaryWorkflowService = Depends(
         get_summary_workflow_service
     ),
@@ -87,7 +87,7 @@ async def generate_summary(
 async def update_playback_progress(
     episode_id: int,
     playback_data: PodcastPlaybackUpdate,
-    service: PodcastPlaybackService = Depends(get_playback_service),
+    service: PodcastPlaybackService = Depends(get_podcast_playback_service),
 ):
     try:
         result = await service.update_playback_progress(
@@ -133,7 +133,7 @@ async def update_playback_progress(
 )
 async def get_playback_state(
     episode_id: int,
-    service: PodcastPlaybackService = Depends(get_playback_service),
+    service: PodcastPlaybackService = Depends(get_podcast_playback_service),
 ):
     try:
         playback = await service.get_playback_state(episode_id)
@@ -155,7 +155,7 @@ async def get_effective_playback_rate(
         ge=1,
         description="Subscription ID (optional)",
     ),
-    service: PodcastPlaybackService = Depends(get_playback_service),
+    service: PodcastPlaybackService = Depends(get_podcast_playback_service),
 ):
     result = await service.get_effective_playback_rate(subscription_id=subscription_id)
     return PlaybackRateEffectiveResponse(**result)
@@ -168,7 +168,7 @@ async def get_effective_playback_rate(
 )
 async def apply_playback_rate_preference(
     request: PlaybackRateApplyRequest,
-    service: PodcastPlaybackService = Depends(get_playback_service),
+    service: PodcastPlaybackService = Depends(get_podcast_playback_service),
 ):
     try:
         result = await service.apply_playback_rate_preference(
@@ -217,7 +217,7 @@ async def apply_playback_rate_preference(
     summary="List pending summaries",
 )
 async def get_pending_summaries(
-    user_id: int = Depends(get_current_user_id),
+    user_id: int = Depends(get_token_user_id),
     summary_workflow: SummaryWorkflowService = Depends(get_summary_workflow_service),
 ):
     pending = await summary_workflow.list_pending_summaries_for_user(user_id)
@@ -263,7 +263,7 @@ async def search_podcasts(
     ),
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
-    service: PodcastSearchService = Depends(get_search_service),
+    service: PodcastSearchService = Depends(get_podcast_search_service),
 ):
     keyword = (q or "").strip()
     if not keyword:
@@ -296,6 +296,6 @@ async def search_podcasts(
 )
 async def get_recommendations(
     limit: int = Query(10, ge=1, le=50, description="Recommendation count"),
-    service: PodcastSearchService = Depends(get_search_service),
+    service: PodcastSearchService = Depends(get_podcast_search_service),
 ):
     return await service.get_recommendations(limit=limit)

@@ -6,8 +6,8 @@ AI模型配置管理API路由
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.core.exceptions import DatabaseError, ValidationError
+from app.core.providers import get_ai_model_config_service
 from app.core.security import get_token_from_request
-from app.domains.ai.api.dependencies import get_ai_model_config_service
 from app.domains.ai.models import ModelType
 from app.domains.ai.schemas import (
     AIModelConfigCreate,

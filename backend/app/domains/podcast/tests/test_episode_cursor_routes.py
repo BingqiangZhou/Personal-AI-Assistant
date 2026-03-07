@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
-from app.domains.podcast.api.episode_route_common import encode_keyset_cursor
 from app.domains.podcast.api.dependencies import get_episode_service, get_search_service
+from app.domains.podcast.api.episode_route_common import encode_keyset_cursor
 from app.main import app
 
 

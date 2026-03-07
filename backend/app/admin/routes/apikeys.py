@@ -17,9 +17,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.audit import log_admin_action
-from app.admin.dependencies import admin_required, get_admin_db_session
+from app.admin.auth import admin_required
 from app.admin.routes._shared import get_templates
 from app.admin.services import AdminApiKeysService
+from app.core.database import get_db_session
 from app.core.security import (
     decrypt_data,
     decrypt_data_with_password,
@@ -44,7 +45,7 @@ templates = get_templates()
 async def apikeys_page(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    db: AsyncSession = Depends(get_db_session),
     model_type_filter: str | None = None,
     page: int = 1,
     per_page: int = 10,
@@ -82,7 +83,7 @@ async def test_apikey(
     name: str | None = Body(None),
     key_id: int | None = Body(None),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Test API key connection before creating a new model config."""
     try:
@@ -213,7 +214,7 @@ async def create_apikey(
     description: str | None = Form(None),
     priority: int = Form(default=1),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Create a new AI Model Config with API key."""
     try:
@@ -284,7 +285,7 @@ async def toggle_apikey(
     key_id: int,
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Toggle AI Model Config active status."""
     try:
@@ -339,7 +340,7 @@ async def edit_apikey(
     description: str | None = Body(None),
     priority: int | None = Body(None),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Edit an AI Model Config."""
     try:
@@ -430,7 +431,7 @@ async def delete_apikey(
     key_id: int,
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Delete an AI Model Config."""
     try:
@@ -481,7 +482,7 @@ class ExportRequest(BaseModel):
 async def export_apikeys_json(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    db: AsyncSession = Depends(get_db_session),
     export_req: ExportRequest = Body(default=ExportRequest()),
 ):
     """Export all API keys to JSON format.
@@ -630,7 +631,7 @@ async def export_apikeys_json(
 async def import_apikeys_json(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    db: AsyncSession = Depends(get_db_session),
 ):
     """Import API keys from JSON format.
 

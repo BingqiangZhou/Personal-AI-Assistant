@@ -1,4 +1,5 @@
-"""Admin authentication dependencies and utilities."""
+"""Admin authentication helpers and dependencies."""
+
 import logging
 from datetime import datetime, timezone
 
@@ -14,8 +15,7 @@ from app.domains.user.repositories import UserRepository
 
 logger = logging.getLogger(__name__)
 
-# Session timeout (30 minutes)
-SESSION_TIMEOUT = 30 * 60  # seconds
+SESSION_TIMEOUT = 30 * 60
 
 
 def _get_serializer() -> URLSafeTimedSerializer:
@@ -23,23 +23,10 @@ def _get_serializer() -> URLSafeTimedSerializer:
     return URLSafeTimedSerializer(get_settings().get_secret_key())
 
 
-async def get_admin_db_session(
-    db: AsyncSession = Depends(get_db_session),
-) -> AsyncSession:
-    """Centralized admin DB-session provider."""
-    return db
-
-
 class AdminAuthRequired:
     """Dependency to require admin authentication."""
 
     def __init__(self, require_2fa: bool = True):
-        """
-        Initialize admin auth dependency.
-
-        Args:
-            require_2fa: If True, require 2FA to be enabled. If False, allow access without 2FA.
-        """
         self.require_2fa = require_2fa
 
     async def __call__(
@@ -48,7 +35,6 @@ class AdminAuthRequired:
         admin_session: str | None = Cookie(None),
         db: AsyncSession = Depends(get_db_session),
     ) -> User:
-        """Verify admin session and return user."""
         if not admin_session:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -56,38 +42,26 @@ class AdminAuthRequired:
             )
 
         try:
-            # Verify session token
             data = _get_serializer().loads(admin_session, max_age=SESSION_TIMEOUT)
             user_id = data.get("user_id")
-
             if not user_id:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid session",
                 )
 
-            # Get user from database
             user_repo = UserRepository(db)
             user = await user_repo.get_by_id(user_id)
-
             if not user or not user.is_active:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="User not found or inactive",
                 )
 
-            # Check if 2FA is required and not enabled
-            # 检查是否需要2FA但用户未启用
-            # If global 2FA is disabled, don't require 2FA even if require_2fa is True
-            # 如果全局2FA被禁用，即使 require_2fa 为 True 也不要求2FA
-            # Priority: database setting > environment variable
-            # 优先级：数据库设置 > 环境变量
             from app.admin.security_settings import get_admin_2fa_enabled
-            admin_2fa_enabled, _ = await get_admin_2fa_enabled(db)
 
+            admin_2fa_enabled, _ = await get_admin_2fa_enabled(db)
             if self.require_2fa and admin_2fa_enabled and not user.is_2fa_enabled:
-                # Redirect to 2FA setup page
-                # Note: This will raise an exception that should be caught by the route handler
                 raise HTTPException(
                     status_code=status.HTTP_307_TEMPORARY_REDIRECT,
                     detail="2FA setup required",
@@ -95,7 +69,6 @@ class AdminAuthRequired:
                 )
 
             return user
-
         except SignatureExpired as err:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -106,14 +79,13 @@ class AdminAuthRequired:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid session",
             ) from err
-        except Exception as e:
-            # Re-raise HTTP exceptions
-            if isinstance(e, HTTPException):
-                raise
+        except HTTPException:
+            raise
+        except Exception as err:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Authentication error: {str(e)}",
-            ) from e
+                detail=f"Authentication error: {err}",
+            ) from err
 
 
 def create_admin_session(user_id: int) -> str:
@@ -122,6 +94,5 @@ def create_admin_session(user_id: int) -> str:
     return _get_serializer().dumps(data)
 
 
-# Dependency instances
-admin_required = AdminAuthRequired(require_2fa=True)  # Requires 2FA
-admin_required_no_2fa = AdminAuthRequired(require_2fa=False)  # Does not require 2FA
+admin_required = AdminAuthRequired(require_2fa=True)
+admin_required_no_2fa = AdminAuthRequired(require_2fa=False)

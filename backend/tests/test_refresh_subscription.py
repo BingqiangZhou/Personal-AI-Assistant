@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from sqlalchemy import select, update
 
-from app.core.database import async_session_factory, init_db
+from app.core.database import get_async_session_factory, init_db
 from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 from app.domains.podcast.repositories import PodcastRepository
 from app.domains.subscription.models import Subscription
@@ -25,7 +25,7 @@ async def main():
     # Initialize database
     await init_db()
 
-    async with async_session_factory() as db:
+    async with get_async_session_factory()() as db:
         PodcastRepository(db)
 
         # Get first subscription

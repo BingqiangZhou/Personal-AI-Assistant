@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +20,7 @@ from app.domains.podcast.tasks._runlog import _insert_run_async
 
 # Ensure model metadata is registered before worker sessions execute ORM operations.
 register_orm_models()
+
 
 def _new_session_factory(application_name: str):
     """Compatibility wrapper around the centralized worker-session runtime."""

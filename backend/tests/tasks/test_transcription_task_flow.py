@@ -1,9 +1,13 @@
 """Transcription task flow tests."""
 
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
+from app.domains.podcast.services.task_orchestration_service import (
+    PodcastTaskOrchestrationService,
+)
 from app.domains.podcast.services.transcription_workflow_service import (
     TranscriptionWorkflowService,
 )
@@ -61,34 +65,14 @@ class _FakeStateManager:
 
 @pytest.mark.asyncio
 async def test_transcription_handler_lock_conflict(monkeypatch):
-    fake_task = SimpleNamespace(id=10, episode_id=20)
-    session = _FakeSession([fake_task])
-    state = _FakeStateManager(lock_ok=False)
-
-    async def _claim(_session, _task_id: int) -> bool:
-        return True
-
-    async def _clear(_task_id: int) -> None:
-        return None
-
-    async def _get_state():
-        return state
-
     monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_transcription._claim_dispatched",
-        _claim,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_transcription._clear_dispatched",
-        _clear,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_transcription.get_transcription_state_manager",
-        _get_state,
+        PodcastTaskOrchestrationService,
+        "process_audio_transcription_task",
+        AsyncMock(side_effect=RuntimeError("locked")),
     )
 
     with pytest.raises(RuntimeError, match="locked"):
-        await process_audio_transcription_handler(session=session, task_id=10)
+        await process_audio_transcription_handler(session=object(), task_id=10)
 
 
 @pytest.mark.asyncio

@@ -4,7 +4,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from app.core.config import settings
-from app.domains.podcast.api.dependencies import get_episode_service
+from app.core.providers import get_podcast_episode_service
 from app.domains.podcast.api.episode_route_common import (
     decode_cursor,
     encode_keyset_cursor,
@@ -42,7 +42,7 @@ async def get_podcast_feed(
         le=50,
         description="Optional alias for page_size",
     ),
-    service: PodcastEpisodeService = Depends(get_episode_service),
+    service: PodcastEpisodeService = Depends(get_podcast_episode_service),
 ):
     """Return all subscribed episodes ordered by publish date desc."""
     resolved_size = size or page_size
@@ -116,7 +116,7 @@ async def list_episodes(
     size: int = Query(20, ge=1, le=100, description="Page size"),
     has_summary: bool | None = Query(None, description="Has AI summary"),
     is_played: bool | None = Query(None, description="Played status"),
-    service: PodcastEpisodeService = Depends(get_episode_service),
+    service: PodcastEpisodeService = Depends(get_podcast_episode_service),
 ):
     filters = PodcastEpisodeFilter(
         subscription_id=subscription_id,
@@ -145,7 +145,7 @@ async def list_playback_history(
     page: int = Query(1, ge=1, description="Page number"),
     cursor: str | None = Query(None, description="Cursor token for pagination"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
-    service: PodcastEpisodeService = Depends(get_episode_service),
+    service: PodcastEpisodeService = Depends(get_podcast_episode_service),
 ):
     decoded_cursor = decode_cursor(cursor) if cursor else None
 
@@ -198,7 +198,7 @@ async def list_playback_history(
 async def list_playback_history_lite(
     page: int = Query(1, ge=1, description="Page number"),
     size: int = Query(20, ge=1, le=100, description="Page size"),
-    service: PodcastEpisodeService = Depends(get_episode_service),
+    service: PodcastEpisodeService = Depends(get_podcast_episode_service),
 ):
     episodes, total = await service.list_playback_history_lite(page=page, size=size)
     return PodcastPlaybackHistoryListResponse(
@@ -218,7 +218,7 @@ async def list_playback_history_lite(
 async def get_episode(
     request: Request,
     episode_id: int,
-    service: PodcastEpisodeService = Depends(get_episode_service),
+    service: PodcastEpisodeService = Depends(get_podcast_episode_service),
 ):
     episode = await service.get_episode_with_summary(episode_id)
     if not episode:

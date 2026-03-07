@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, status
 
-from app.domains.podcast.api.dependencies import get_queue_service
+from app.core.providers import get_podcast_queue_service
 from app.domains.podcast.schemas import (
     PodcastQueueActivateRequest,
     PodcastQueueCurrentCompleteRequest,
@@ -20,7 +20,7 @@ router = APIRouter(prefix="")
 
 @router.get("/queue", response_model=PodcastQueueResponse, summary="Get playback queue")
 async def get_queue(
-    service: PodcastQueueService = Depends(get_queue_service),
+    service: PodcastQueueService = Depends(get_podcast_queue_service),
 ):
     return await service.get_queue()
 
@@ -32,7 +32,7 @@ async def get_queue(
 )
 async def add_queue_item(
     request: PodcastQueueItemAddRequest,
-    service: PodcastQueueService = Depends(get_queue_service),
+    service: PodcastQueueService = Depends(get_podcast_queue_service),
 ):
     try:
         return await service.add_to_queue(request.episode_id)
@@ -63,7 +63,7 @@ async def add_queue_item(
 )
 async def remove_queue_item(
     episode_id: int,
-    service: PodcastQueueService = Depends(get_queue_service),
+    service: PodcastQueueService = Depends(get_podcast_queue_service),
 ):
     return await service.remove_from_queue(episode_id)
 
@@ -75,7 +75,7 @@ async def remove_queue_item(
 )
 async def reorder_queue_items(
     request: PodcastQueueReorderRequest,
-    service: PodcastQueueService = Depends(get_queue_service),
+    service: PodcastQueueService = Depends(get_podcast_queue_service),
     ):
     try:
         return await service.reorder_queue(request.episode_ids)
@@ -100,7 +100,7 @@ async def reorder_queue_items(
 )
 async def set_queue_current(
     request: PodcastQueueSetCurrentRequest,
-    service: PodcastQueueService = Depends(get_queue_service),
+    service: PodcastQueueService = Depends(get_podcast_queue_service),
     ):
     try:
         return await service.set_current(request.episode_id)
@@ -125,7 +125,7 @@ async def set_queue_current(
 )
 async def activate_queue_episode(
     request: PodcastQueueActivateRequest,
-    service: PodcastQueueService = Depends(get_queue_service),
+    service: PodcastQueueService = Depends(get_podcast_queue_service),
     ):
     try:
         return await service.activate_episode(request.episode_id)
@@ -156,6 +156,6 @@ async def activate_queue_episode(
 )
 async def complete_queue_current(
     _request: PodcastQueueCurrentCompleteRequest,
-    service: PodcastQueueService = Depends(get_queue_service),
+    service: PodcastQueueService = Depends(get_podcast_queue_service),
 ):
     return await service.complete_current()

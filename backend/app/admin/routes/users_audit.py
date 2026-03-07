@@ -6,19 +6,16 @@ This module contains all routes related to:
 """
 
 import logging
-import secrets
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.audit import log_admin_action
-from app.admin.dependencies import admin_required, get_admin_db_session
-from app.admin.models import AdminAuditLog
+from app.admin.auth import admin_required
 from app.admin.routes._shared import get_templates
-from app.core.security import get_password_hash
-from app.domains.user.models import User, UserStatus
+from app.admin.services.users_audit_service import AdminUsersAuditService
+from app.core.providers import get_admin_users_audit_service
+from app.domains.user.models import User
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +31,7 @@ templates = get_templates()
 async def audit_logs_page(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    service: AdminUsersAuditService = Depends(get_admin_users_audit_service),
     page: int = 1,
     per_page: int = 10,
     action: str | None = None,
@@ -42,48 +39,19 @@ async def audit_logs_page(
 ):
     """Display audit logs page with filtering and pagination."""
     try:
-        # Build query
-        query = select(AdminAuditLog).order_by(AdminAuditLog.created_at.desc())
-
-        # Apply filters
-        if action:
-            query = query.where(AdminAuditLog.action == action)
-        if resource_type:
-            query = query.where(AdminAuditLog.resource_type == resource_type)
-
-        # Get total count
-        count_query = select(func.count()).select_from(AdminAuditLog)
-        if action:
-            count_query = count_query.where(AdminAuditLog.action == action)
-        if resource_type:
-            count_query = count_query.where(AdminAuditLog.resource_type == resource_type)
-
-        total_result = await db.execute(count_query)
-        total_count = total_result.scalar() or 0
-
-        # Apply pagination
-        offset = (page - 1) * per_page
-        query = query.limit(per_page).offset(offset)
-
-        # Execute query
-        result = await db.execute(query)
-        audit_logs = result.scalars().all()
-
-        # Calculate pagination info
-        total_pages = (total_count + per_page - 1) // per_page
+        context = await service.get_audit_logs_context(
+            page=page,
+            per_page=per_page,
+            action=action,
+            resource_type=resource_type,
+        )
 
         return templates.TemplateResponse(
             "audit_logs.html",
             {
                 "request": request,
                 "user": user,
-                "audit_logs": audit_logs,
-                "page": page,
-                "per_page": per_page,
-                "total_count": total_count,
-                "total_pages": total_pages,
-                "action_filter": action,
-                "resource_type_filter": resource_type,
+                **context,
                 "messages": [],
             },
         )
@@ -102,39 +70,20 @@ async def audit_logs_page(
 async def users_page(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    service: AdminUsersAuditService = Depends(get_admin_users_audit_service),
     page: int = 1,
     per_page: int = 10,
 ):
     """Display users management page with pagination."""
     try:
-        # Get total count
-        count_result = await db.execute(select(func.count()).select_from(User))
-        total_count = count_result.scalar() or 0
-
-        # Calculate pagination
-        total_pages = (total_count + per_page - 1) // per_page
-        offset = (page - 1) * per_page
-
-        # Get paginated users
-        result = await db.execute(
-            select(User)
-            .order_by(User.created_at.desc())
-            .limit(per_page)
-            .offset(offset)
-        )
-        users = result.scalars().all()
+        context = await service.get_users_context(page=page, per_page=per_page)
 
         return templates.TemplateResponse(
             "users.html",
             {
                 "request": request,
                 "user": user,
-                "users": users,
-                "page": page,
-                "per_page": per_page,
-                "total_count": total_count,
-                "total_pages": total_pages,
+                **context,
                 "messages": [],
             },
         )
@@ -151,37 +100,23 @@ async def toggle_user(
     user_id: int,
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    service: AdminUsersAuditService = Depends(get_admin_users_audit_service),
 ):
     """Toggle user active status."""
     try:
-        result = await db.execute(
-            select(User).where(User.id == user_id)
+        target_user = await service.toggle_user_status(
+            target_user_id=user_id,
+            acting_user_id=user.id,
         )
-        target_user = result.scalar_one_or_none()
-
         if not target_user:
             raise HTTPException(status_code=404, detail="User not found")
-
-        # Prevent disabling self
-        if target_user.id == user.id:
-            raise HTTPException(status_code=400, detail="Cannot disable your own account")
-
-        # Toggle status
-        if target_user.status == UserStatus.ACTIVE:
-            target_user.status = UserStatus.INACTIVE
-        else:
-            target_user.status = UserStatus.ACTIVE
-
-        await db.commit()
-        await db.refresh(target_user)
 
         logger.info(
             f"User {user_id} toggled to {target_user.status} by user {user.username}"
         )
 
         await log_admin_action(
-            db=db,
+            db=service.db,
             user_id=user.id,
             username=user.username,
             action="toggle",
@@ -208,31 +143,22 @@ async def reset_user_password(
     user_id: int,
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_admin_db_session),
+    service: AdminUsersAuditService = Depends(get_admin_users_audit_service),
 ):
     """Reset user password to a random value."""
     try:
-        result = await db.execute(
-            select(User).where(User.id == user_id)
+        target_user, new_password = await service.reset_user_password(
+            target_user_id=user_id
         )
-        target_user = result.scalar_one_or_none()
-
         if not target_user:
             raise HTTPException(status_code=404, detail="User not found")
-
-        # Generate random password
-        new_password = secrets.token_urlsafe(16)
-        target_user.hashed_password = get_password_hash(new_password)
-
-        await db.commit()
-        await db.refresh(target_user)
 
         logger.info(
             f"User {user_id} password reset by user {user.username}"
         )
 
         await log_admin_action(
-            db=db,
+            db=service.db,
             user_id=user.id,
             username=user.username,
             action="reset_password",

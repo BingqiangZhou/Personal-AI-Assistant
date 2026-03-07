@@ -4,7 +4,7 @@ from datetime import date
 
 from fastapi import APIRouter, Depends, Query
 
-from app.domains.podcast.api.dependencies import get_daily_report_service
+from app.core.providers import get_daily_report_service
 from app.domains.podcast.schemas import (
     PodcastDailyReportDatesResponse,
     PodcastDailyReportResponse,

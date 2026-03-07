@@ -5,10 +5,10 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.domains.podcast.api.dependencies import (
+from app.core.providers import (
     get_conversation_service,
-    get_current_user_id,
-    get_episode_service,
+    get_podcast_episode_service,
+    get_token_user_id,
 )
 from app.domains.podcast.conversation_service import ConversationService
 from app.domains.podcast.schemas import (
@@ -39,8 +39,8 @@ logger = logging.getLogger(__name__)
 )
 async def list_conversation_sessions(
     episode_id: int,
-    episode_service: PodcastEpisodeService = Depends(get_episode_service),
-    user_id: int = Depends(get_current_user_id),
+    episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
+    user_id: int = Depends(get_token_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
@@ -80,8 +80,8 @@ async def list_conversation_sessions(
 async def create_conversation_session(
     episode_id: int,
     request: ConversationSessionCreateRequest,
-    episode_service: PodcastEpisodeService = Depends(get_episode_service),
-    user_id: int = Depends(get_current_user_id),
+    episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
+    user_id: int = Depends(get_token_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
@@ -118,7 +118,7 @@ async def create_conversation_session(
 async def delete_conversation_session(
     episode_id: int,
     session_id: int,
-    user_id: int = Depends(get_current_user_id),
+    user_id: int = Depends(get_token_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
@@ -155,8 +155,8 @@ async def get_conversation_history(
     episode_id: int,
     session_id: int | None = Query(None, description="Session ID to filter by"),
     limit: int = Query(50, ge=1, le=200, description="Number of messages"),
-    episode_service: PodcastEpisodeService = Depends(get_episode_service),
-    user_id: int = Depends(get_current_user_id),
+    episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
+    user_id: int = Depends(get_token_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
@@ -205,8 +205,8 @@ async def get_conversation_history(
 async def send_conversation_message(
     episode_id: int,
     request: PodcastConversationSendRequest,
-    episode_service: PodcastEpisodeService = Depends(get_episode_service),
-    user_id: int = Depends(get_current_user_id),
+    episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
+    user_id: int = Depends(get_token_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:
@@ -247,8 +247,8 @@ async def send_conversation_message(
 async def clear_conversation_history(
     episode_id: int,
     session_id: int | None = Query(None, description="Session ID to clear"),
-    episode_service: PodcastEpisodeService = Depends(get_episode_service),
-    user_id: int = Depends(get_current_user_id),
+    episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
+    user_id: int = Depends(get_token_user_id),
     conversation_service: ConversationService = Depends(get_conversation_service),
 ):
     try:

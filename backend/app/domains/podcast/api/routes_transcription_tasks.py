@@ -4,8 +4,8 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.domains.podcast.api.dependencies import (
-    get_episode_service,
+from app.core.providers import (
+    get_podcast_episode_service,
     get_transcription_workflow_service,
 )
 from app.domains.podcast.api.transcription_route_common import (
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 async def start_transcription(
     episode_id: int,
     transcription_request: PodcastTranscriptionRequest,
-    episode_service: PodcastEpisodeService = Depends(get_episode_service),
+    episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
         get_transcription_workflow_service
     ),
@@ -80,7 +80,7 @@ async def get_transcription(
         True,
         description="Whether to include full transcript",
     ),
-    episode_service: PodcastEpisodeService = Depends(get_episode_service),
+    episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
         get_transcription_workflow_service
     ),
@@ -181,7 +181,7 @@ async def get_transcription(
 )
 async def delete_transcription(
     episode_id: int,
-    episode_service: PodcastEpisodeService = Depends(get_episode_service),
+    episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
         get_transcription_workflow_service
     ),
@@ -217,7 +217,7 @@ async def delete_transcription(
 )
 async def get_transcription_status(
     task_id: int,
-    episode_service: PodcastEpisodeService = Depends(get_episode_service),
+    episode_service: PodcastEpisodeService = Depends(get_podcast_episode_service),
     transcription_workflow: TranscriptionWorkflowService = Depends(
         get_transcription_workflow_service
     ),

@@ -2,28 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
-from sqlalchemy import select
-
-from app.domains.podcast.services.search_service import PodcastSearchService
-from app.domains.user.models import User, UserStatus
+from app.domains.podcast.services.task_orchestration_service import (
+    PodcastTaskOrchestrationService,
+)
 
 
 async def generate_podcast_recommendations_handler(session) -> dict:
     """Generate recommendations for all active users."""
-    stmt = select(User).where(User.status == UserStatus.ACTIVE)
-    result = await session.execute(stmt)
-    users = list(result.scalars().all())
-
-    recommendations_generated = 0
-    for user in users:
-        service = PodcastSearchService(session, user.id)
-        recommendations = await service.get_recommendations(limit=20)
-        recommendations_generated += len(recommendations)
-
-    return {
-        "status": "success",
-        "recommendations_generated": recommendations_generated,
-        "processed_at": datetime.now(timezone.utc).isoformat(),
-    }
+    return await PodcastTaskOrchestrationService(
+        session
+    ).generate_podcast_recommendations()

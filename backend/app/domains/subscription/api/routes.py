@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from app.domains.subscription.api.dependencies import get_subscription_service
+from app.core.providers import get_subscription_service
 from app.domains.subscription.api.routes_podcasts import router as podcast_router
 from app.domains.subscription.services import SubscriptionService
 from app.shared.schemas import (

@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
 
-from app.admin.dependencies import admin_required
+from app.admin.auth import admin_required
 from app.admin.monitoring import SystemMonitorService
 from app.admin.routes._shared import get_templates
 from app.core.config import settings
@@ -110,4 +110,3 @@ async def get_network_metrics(
     _: User = Depends(admin_required),
 ):
     return monitor_service.get_network_metrics()
-
