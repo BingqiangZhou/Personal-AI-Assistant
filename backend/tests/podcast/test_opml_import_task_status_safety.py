@@ -55,7 +55,7 @@ async def test_opml_background_handler_does_not_mutate_existing_episode_status()
     mock_parser.fetch_and_parse_feed.return_value = (True, mock_feed, None)
 
     with patch(
-        "app.domains.podcast.tasks.handlers_opml_import.PodcastRepository",
+        "app.domains.podcast.tasks.handlers_opml_import.PodcastSubscriptionRepository",
         return_value=mock_repo,
     ), patch(
         "app.domains.podcast.tasks.handlers_opml_import.SecureRSSParser",
@@ -71,4 +71,3 @@ async def test_opml_background_handler_does_not_mutate_existing_episode_status()
     assert result["status"] == "success"
     assert existing_episode.status == "summarized"
     mock_repo.create_or_update_episodes_batch.assert_awaited_once()
-

@@ -14,7 +14,7 @@ from app.core.config import settings
 from app.core.redis import PodcastRedis
 from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 from app.domains.podcast.models import PodcastEpisode
-from app.domains.podcast.repositories import PodcastRepository
+from app.domains.podcast.repositories import PodcastSubscriptionRepository
 from app.domains.podcast.schemas import PodcastSubscriptionCreate
 from app.domains.podcast.services.cache_utils import (
     safe_cache_get,
@@ -52,7 +52,7 @@ class PodcastSubscriptionService:
         """
         self.db = db
         self.user_id = user_id
-        self.repo = PodcastRepository(db)
+        self.repo = PodcastSubscriptionRepository(db)
         self.redis = PodcastRedis()
         self.parser = SecureRSSParser(user_id)
 

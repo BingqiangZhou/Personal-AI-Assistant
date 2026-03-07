@@ -6,7 +6,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.podcast.repositories import PodcastRepository
+from app.domains.podcast.repositories import PodcastQueueRepository
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class PodcastQueueService:
     def __init__(self, db: AsyncSession, user_id: int):
         self.db = db
         self.user_id = user_id
-        self.repo = PodcastRepository(db)
+        self.repo = PodcastQueueRepository(db)
 
     async def get_queue(self) -> dict[str, Any]:
         queue = await self.repo.get_queue_with_items(self.user_id)

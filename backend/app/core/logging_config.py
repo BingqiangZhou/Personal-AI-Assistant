@@ -259,5 +259,3 @@ def create_logger(module_name: str) -> logging.Logger:
 
 
 # 模块初始化时自动设置日志 (从环境变量)
-if not logging.getLogger().handlers:
-    setup_logging_from_env()

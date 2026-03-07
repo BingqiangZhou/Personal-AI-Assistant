@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import PodcastRedis
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
-from app.domains.podcast.repositories import PodcastRepository
+from app.domains.podcast.repositories import PodcastPlaybackRepository
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class PodcastPlaybackService:
         """
         self.db = db
         self.user_id = user_id
-        self.repo = PodcastRepository(db)
+        self.repo = PodcastPlaybackRepository(db)
         self.redis = PodcastRedis()
 
     async def update_playback_progress(

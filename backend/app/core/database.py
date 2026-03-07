@@ -9,6 +9,7 @@ engine with dialect-specific settings.
 import asyncio
 import logging
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from importlib import import_module
 from typing import Any
 
@@ -21,6 +22,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 from sqlalchemy.orm import declarative_base
+from sqlalchemy.pool import NullPool
 
 from app.core.config import get_settings
 
@@ -116,6 +118,53 @@ def get_async_session_factory() -> async_sessionmaker[AsyncSession]:
             expire_on_commit=False,
         )
     return _session_factory
+
+
+def async_session_factory() -> AsyncSession:
+    """Compatibility shim returning a session from the lazy session factory."""
+    return get_async_session_factory()()
+
+
+def create_isolated_session_factory(
+    application_name: str,
+) -> tuple[async_sessionmaker[AsyncSession], AsyncEngine]:
+    """Create a short-lived session factory for worker contexts."""
+    settings = get_settings()
+    database_url = settings.require_database_url()
+    engine_kwargs = _build_engine_kwargs(database_url)
+    engine_kwargs["poolclass"] = NullPool
+    engine_kwargs["pool_pre_ping"] = False
+
+    connect_args = dict(engine_kwargs.get("connect_args") or {})
+    if database_url.startswith("postgresql+asyncpg://"):
+        connect_args["server_settings"] = {
+            "application_name": application_name,
+            "client_encoding": "utf8",
+        }
+        connect_args["timeout"] = settings.DATABASE_CONNECT_TIMEOUT
+    elif database_url.startswith("sqlite+aiosqlite://"):
+        connect_args["timeout"] = settings.DATABASE_CONNECT_TIMEOUT
+    if connect_args:
+        engine_kwargs["connect_args"] = connect_args
+
+    engine = create_async_engine(database_url, **engine_kwargs)
+    session_factory = async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    return session_factory, engine
+
+
+@asynccontextmanager
+async def worker_db_session(application_name: str):
+    """Yield an isolated worker session and dispose its engine afterwards."""
+    session_factory, engine = create_isolated_session_factory(application_name)
+    try:
+        async with session_factory() as session:
+            yield session
+    finally:
+        await engine.dispose()
 
 
 def register_orm_models() -> None:

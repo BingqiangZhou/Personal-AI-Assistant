@@ -9,7 +9,9 @@ from sqlalchemy import and_, func, or_, select
 
 from app.core.config import settings
 from app.domains.podcast.models import PodcastEpisode, TranscriptionTask
-from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+from app.domains.podcast.services.transcription_workflow_service import (
+    TranscriptionWorkflowService,
+)
 from app.domains.subscription.models import (
     Subscription,
     SubscriptionStatus,
@@ -18,8 +20,6 @@ from app.domains.subscription.models import (
 
 
 logger = logging.getLogger(__name__)
-
-_DISPATCHED_ACTIONS = {"created", "redispatched_pending", "redispatched_failed_with_temp"}
 
 
 def _eligible_episode_filters() -> list:
@@ -93,46 +93,22 @@ async def process_pending_transcriptions_handler(session) -> dict:
             "processed_at": datetime.now(timezone.utc).isoformat(),
         }
 
-    transcription_service = DatabaseBackedTranscriptionService(session)
-    dispatched_count = 0
-    skipped_count = 0
-    failed_count = 0
-    skipped_reasons: dict[str, int] = {}
-
-    for episode_id in episode_ids:
-        try:
-            result = await transcription_service.start_transcription(episode_id, force=False)
-            action = result.get("action", "unknown")
-            if action in _DISPATCHED_ACTIONS:
-                dispatched_count += 1
-                continue
-
-            skipped_count += 1
-            skipped_reasons[action] = skipped_reasons.get(action, 0) + 1
-        except Exception:
-            failed_count += 1
-            logger.exception(
-                "Failed to dispatch backlog transcription for episode %s",
-                episode_id,
-            )
+    workflow = TranscriptionWorkflowService(session)
+    dispatch_result = await workflow.dispatch_pending_transcriptions(episode_ids)
 
     logger.info(
         "Backlog transcription run completed: total_candidates=%s checked=%s dispatched=%s skipped=%s failed=%s skipped_reasons=%s",
         total_candidates,
-        len(episode_ids),
-        dispatched_count,
-        skipped_count,
-        failed_count,
-        skipped_reasons,
+        dispatch_result["checked"],
+        dispatch_result["dispatched"],
+        dispatch_result["skipped"],
+        dispatch_result["failed"],
+        dispatch_result["skipped_reasons"],
     )
 
     return {
         "status": "success",
         "total_candidates": total_candidates,
-        "checked": len(episode_ids),
-        "dispatched": dispatched_count,
-        "skipped": skipped_count,
-        "failed": failed_count,
-        "skipped_reasons": skipped_reasons,
+        **dispatch_result,
         "processed_at": datetime.now(timezone.utc).isoformat(),
     }

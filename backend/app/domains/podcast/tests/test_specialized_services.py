@@ -29,7 +29,7 @@ class TestPodcastSubscriptionService:
     @pytest.fixture
     def mock_repo(self):
         with patch(
-            "app.domains.podcast.services.subscription_service.PodcastRepository"
+            "app.domains.podcast.services.subscription_service.PodcastSubscriptionRepository"
         ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
@@ -123,7 +123,7 @@ class TestPodcastEpisodeService:
     @pytest.fixture
     def mock_repo(self):
         with patch(
-            "app.domains.podcast.services.episode_service.PodcastRepository"
+            "app.domains.podcast.services.episode_service.PodcastEpisodeRepository"
         ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
@@ -290,7 +290,7 @@ class TestPodcastPlaybackService:
     @pytest.fixture
     def mock_repo(self):
         with patch(
-            "app.domains.podcast.services.playback_service.PodcastRepository"
+            "app.domains.podcast.services.playback_service.PodcastPlaybackRepository"
         ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
@@ -328,7 +328,7 @@ class TestPodcastSearchService:
     @pytest.fixture
     def mock_repo(self):
         with patch(
-            "app.domains.podcast.services.search_service.PodcastRepository"
+            "app.domains.podcast.services.search_service.PodcastSearchRepository"
         ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
@@ -383,16 +383,16 @@ class TestPodcastSyncService:
         return AsyncMock()
 
     @pytest.fixture
-    def mock_repo(self):
+    def mock_transcription_service(self):
         with patch(
-            "app.domains.podcast.services.sync_service.PodcastRepository"
+            "app.domains.podcast.transcription_manager.DatabaseBackedTranscriptionService"
         ) as mock:
-            repo_instance = AsyncMock()
-            mock.return_value = repo_instance
-            yield repo_instance
+            service_instance = AsyncMock()
+            mock.return_value = service_instance
+            yield service_instance
 
     @pytest.fixture
-    def service(self, mock_db, mock_repo):
+    def service(self, mock_db, mock_transcription_service):
         return PodcastSyncService(mock_db, user_id=1)
 
     @pytest.mark.asyncio
@@ -400,7 +400,7 @@ class TestPodcastSyncService:
         """测试服务初始化"""
         assert service.user_id == 1
         assert service.db is not None
-        assert service.repo is not None
+        assert service.transcription_service is not None
 
 
 def _build_mock_episode(

@@ -16,13 +16,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.admin.csrf import generate_csrf_token, validate_csrf_token
 from app.admin.dependencies import (
     admin_required,
+    get_admin_db_session,
     admin_required_no_2fa,
     create_admin_session,
 )
 from app.admin.first_run import check_admin_exists
 from app.admin.routes._shared import get_templates
 from app.admin.twofa import generate_qr_code, generate_totp_secret, verify_totp_token
-from app.core.database import get_db_session
 from app.core.security import get_password_hash
 from app.domains.user.models import User, UserStatus
 
@@ -75,7 +75,7 @@ async def setup_admin(
     password_confirm: str = Form(...),
     account_name: str | None = Form(None),
     csrf_token: str = Form(...),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Create initial admin user."""
     try:
@@ -255,7 +255,7 @@ async def login(
     username: str = Form(...),
     password: str = Form(...),
     csrf_token: str = Form(...),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Handle login."""
     try:
@@ -419,7 +419,7 @@ async def verify_2fa_login(
     username: str = Form(...),
     token: str = Form(...),
     csrf_token: str = Form(...),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Verify 2FA token during login."""
     try:
@@ -512,7 +512,7 @@ async def verify_2fa_login(
 async def setup_2fa_page(
     request: Request,
     user: User = Depends(admin_required_no_2fa),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Display 2FA setup page."""
     try:
@@ -568,7 +568,7 @@ async def verify_2fa_setup(
     token: str = Form(...),
     csrf_token: str = Form(...),
     user: User = Depends(admin_required_no_2fa),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Verify and enable 2FA."""
     try:
@@ -633,7 +633,7 @@ async def disable_2fa(
     password: str = Form(...),
     csrf_token: str = Form(...),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Disable 2FA for the current user."""
     try:

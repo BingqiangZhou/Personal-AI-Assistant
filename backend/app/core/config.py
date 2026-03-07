@@ -82,7 +82,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Personal AI Assistant"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
-    SECRET_KEY: str | None = None  # Will be loaded dynamically
+    SECRET_KEY: str | None = None
     ENVIRONMENT: str = "development"
 
     # Database - Pool sizing adjusted for podcast-heavy workloads
@@ -247,6 +247,13 @@ class Settings(BaseSettings):
             "before starting the application."
         )
 
+    def get_secret_key(self) -> str:
+        """Resolve the effective secret key lazily."""
+        if self.SECRET_KEY:
+            return self.SECRET_KEY
+        self.SECRET_KEY = get_or_generate_secret_key()
+        return self.SECRET_KEY
+
 
 @lru_cache
 def get_settings() -> Settings:
@@ -259,8 +266,14 @@ def get_required_database_url() -> str:
     return get_settings().require_database_url()
 
 
-settings = get_settings()
+class _LazySettingsProxy:
+    """Attribute proxy that resolves the cached settings instance on demand."""
 
-# Ensure SECRET_KEY is loaded on import
-if settings.SECRET_KEY is None:
-    settings.SECRET_KEY = get_or_generate_secret_key()
+    def __getattr__(self, name: str):
+        settings_obj = get_settings()
+        if name == "SECRET_KEY":
+            return settings_obj.get_secret_key()
+        return getattr(settings_obj, name)
+
+
+settings = _LazySettingsProxy()

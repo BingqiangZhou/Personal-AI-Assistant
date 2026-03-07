@@ -14,7 +14,7 @@ from app.domains.podcast.services.subscription_service import PodcastSubscriptio
 from app.domains.podcast.services.transcription_workflow_service import (
     TranscriptionWorkflowService,
 )
-from app.domains.podcast.transcription_scheduler import ScheduleFrequency
+from app.domains.podcast.transcription_types import ScheduleFrequency
 
 
 router = APIRouter(prefix="")

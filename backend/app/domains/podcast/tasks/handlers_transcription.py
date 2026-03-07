@@ -12,7 +12,6 @@ from app.domains.podcast.services.sync_service import PodcastSyncService
 from app.domains.podcast.services.transcription_workflow_service import (
     TranscriptionWorkflowService,
 )
-from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
 from app.domains.podcast.transcription_state import get_transcription_state_manager
 
 
@@ -53,7 +52,6 @@ async def process_audio_transcription_handler(
     """Execute transcription with lock + redis state updates."""
     workflow = TranscriptionWorkflowService(
         session,
-        transcription_service_factory=DatabaseBackedTranscriptionService,
         sync_service_factory=PodcastSyncService,
         state_manager_factory=get_transcription_state_manager,
         claim_dispatched=_claim_dispatched,
@@ -73,7 +71,6 @@ async def process_podcast_episode_with_transcription_handler(
     """Dispatch the transcription pipeline and return immediately."""
     workflow = TranscriptionWorkflowService(
         session,
-        transcription_service_factory=DatabaseBackedTranscriptionService,
         sync_service_factory=PodcastSyncService,
         state_manager_factory=get_transcription_state_manager,
         claim_dispatched=_claim_dispatched,

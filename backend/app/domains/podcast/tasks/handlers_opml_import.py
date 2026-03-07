@@ -6,7 +6,7 @@ import logging
 from datetime import datetime, timezone
 
 from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
-from app.domains.podcast.repositories import PodcastRepository
+from app.domains.podcast.repositories import PodcastSubscriptionRepository
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ async def process_opml_subscription_episodes_handler(
     - This handler must not mutate existing ``podcast_episodes.status``.
     - New rows are initialized to ``pending_summary`` by repository layer.
     """
-    repo = PodcastRepository(session)
+    repo = PodcastSubscriptionRepository(session)
     parser = SecureRSSParser(user_id)
 
     success, feed, error = await parser.fetch_and_parse_feed(source_url)
@@ -89,4 +89,3 @@ async def process_opml_subscription_episodes_handler(
         "processed_episodes": len(episodes_payload),
         "new_episodes": len(new_episodes),
     }
-

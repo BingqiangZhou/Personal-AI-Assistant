@@ -2,7 +2,6 @@
 
 import logging
 from datetime import datetime, timedelta, timezone
-from enum import Enum
 from typing import Any
 
 from sqlalchemy import and_, or_, select
@@ -14,20 +13,11 @@ from app.domains.podcast.models import (
     TranscriptionStatus,
     TranscriptionTask,
 )
+from app.domains.podcast.transcription_types import ScheduleFrequency
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
 
 
 logger = logging.getLogger(__name__)
-
-
-class ScheduleFrequency(str, Enum):
-    """Task scheduling frequency."""
-
-    HOURLY = "hourly"
-    DAILY = "daily"
-    WEEKLY = "weekly"
-    MANUAL = "manual"
-
 
 class TranscriptionScheduler:
     """Scheduler facade for podcast transcription tasks."""

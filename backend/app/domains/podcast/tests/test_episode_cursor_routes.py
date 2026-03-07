@@ -5,10 +5,8 @@ from unittest.mock import AsyncMock
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
+from app.domains.podcast.api.episode_route_common import encode_keyset_cursor
 from app.domains.podcast.api.dependencies import get_episode_service, get_search_service
-from app.domains.podcast.api.routes_episodes import (
-    _encode_keyset_cursor,
-)
 from app.main import app
 
 
@@ -106,7 +104,7 @@ def test_feed_keyset_cursor_path():
         True,
         (now, 1),
     )
-    keyset_cursor = _encode_keyset_cursor("feed", now, 999)
+    keyset_cursor = encode_keyset_cursor("feed", now, 999)
 
     response = client.get(
         f"/api/v1/podcasts/episodes/feed?cursor={keyset_cursor}&page_size=10"
@@ -133,7 +131,7 @@ def test_history_keyset_cursor_path():
         True,
         (now, 1),
     )
-    keyset_cursor = _encode_keyset_cursor("history", now, 888)
+    keyset_cursor = encode_keyset_cursor("history", now, 888)
 
     response = client.get(
         f"/api/v1/podcasts/episodes/history?cursor={keyset_cursor}&size=10"

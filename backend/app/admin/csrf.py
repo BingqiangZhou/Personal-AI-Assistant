@@ -4,7 +4,7 @@ import secrets
 from fastapi import Form, HTTPException, Request, status
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
-from app.core.config import settings
+from app.core.config import get_settings
 
 
 class CSRFException(HTTPException):
@@ -35,23 +35,25 @@ class CSRFException(HTTPException):
         self.error_type = error_type
         self.user_message = user_message or detail
 
-# CSRF token serializer
-csrf_serializer = URLSafeTimedSerializer(settings.SECRET_KEY, salt="csrf")
-
 # CSRF token timeout (1 hour)
 CSRF_TOKEN_TIMEOUT = 3600
+
+
+def _get_csrf_serializer() -> URLSafeTimedSerializer:
+    """Build the CSRF serializer lazily."""
+    return URLSafeTimedSerializer(get_settings().get_secret_key(), salt="csrf")
 
 
 def generate_csrf_token() -> str:
     """Generate a new CSRF token."""
     random_string = secrets.token_urlsafe(32)
-    return csrf_serializer.dumps(random_string)
+    return _get_csrf_serializer().dumps(random_string)
 
 
 def verify_csrf_token(token: str) -> bool:
     """Verify a CSRF token."""
     try:
-        csrf_serializer.loads(token, max_age=CSRF_TOKEN_TIMEOUT)
+        _get_csrf_serializer().loads(token, max_age=CSRF_TOKEN_TIMEOUT)
         return True
     except (SignatureExpired, BadSignature):
         return False

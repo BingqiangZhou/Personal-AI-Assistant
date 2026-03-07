@@ -14,21 +14,27 @@ async def test_backlog_handler_dispatches_candidates(monkeypatch):
     async def _fetch(_session, _batch_size: int):
         return 37, [101, 102, 103]
 
-    class _FakeService:
+    class _FakeWorkflow:
         def __init__(self, _session):
             pass
 
-        async def start_transcription(self, _episode_id, force=False):
-            assert force is False
-            return {"action": "created"}
+        async def dispatch_pending_transcriptions(self, episode_ids):
+            assert episode_ids == [101, 102, 103]
+            return {
+                "checked": 3,
+                "dispatched": 3,
+                "skipped": 0,
+                "failed": 0,
+                "skipped_reasons": {},
+            }
 
     monkeypatch.setattr(
         "app.domains.podcast.tasks.handlers_pending_transcription._fetch_pending_episode_ids",
         _fetch,
     )
     monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_pending_transcription.DatabaseBackedTranscriptionService",
-        _FakeService,
+        "app.domains.podcast.tasks.handlers_pending_transcription.TranscriptionWorkflowService",
+        _FakeWorkflow,
     )
 
     result = await process_pending_transcriptions_handler(session=object())
@@ -45,23 +51,30 @@ async def test_backlog_handler_skips_reused_actions(monkeypatch):
     async def _fetch(_session, _batch_size: int):
         return 2, [1, 2]
 
-    actions = iter(["reused_pending", "reused_in_progress"])
-
-    class _FakeService:
+    class _FakeWorkflow:
         def __init__(self, _session):
             pass
 
-        async def start_transcription(self, _episode_id, force=False):
-            assert force is False
-            return {"action": next(actions)}
+        async def dispatch_pending_transcriptions(self, episode_ids):
+            assert episode_ids == [1, 2]
+            return {
+                "checked": 2,
+                "dispatched": 0,
+                "skipped": 2,
+                "failed": 0,
+                "skipped_reasons": {
+                    "reused_pending": 1,
+                    "reused_in_progress": 1,
+                },
+            }
 
     monkeypatch.setattr(
         "app.domains.podcast.tasks.handlers_pending_transcription._fetch_pending_episode_ids",
         _fetch,
     )
     monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_pending_transcription.DatabaseBackedTranscriptionService",
-        _FakeService,
+        "app.domains.podcast.tasks.handlers_pending_transcription.TranscriptionWorkflowService",
+        _FakeWorkflow,
     )
 
     result = await process_pending_transcriptions_handler(session=object())
@@ -80,23 +93,27 @@ async def test_backlog_handler_counts_failures(monkeypatch):
     async def _fetch(_session, _batch_size: int):
         return 2, [1, 2]
 
-    class _FakeService:
+    class _FakeWorkflow:
         def __init__(self, _session):
             pass
 
-        async def start_transcription(self, episode_id, force=False):
-            assert force is False
-            if episode_id == 1:
-                raise RuntimeError("dispatch failed")
-            return {"action": "redispatched_failed_with_temp"}
+        async def dispatch_pending_transcriptions(self, episode_ids):
+            assert episode_ids == [1, 2]
+            return {
+                "checked": 2,
+                "dispatched": 1,
+                "skipped": 0,
+                "failed": 1,
+                "skipped_reasons": {},
+            }
 
     monkeypatch.setattr(
         "app.domains.podcast.tasks.handlers_pending_transcription._fetch_pending_episode_ids",
         _fetch,
     )
     monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_pending_transcription.DatabaseBackedTranscriptionService",
-        _FakeService,
+        "app.domains.podcast.tasks.handlers_pending_transcription.TranscriptionWorkflowService",
+        _FakeWorkflow,
     )
 
     result = await process_pending_transcriptions_handler(session=object())

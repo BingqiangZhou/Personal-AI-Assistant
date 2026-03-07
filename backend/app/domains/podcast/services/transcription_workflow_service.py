@@ -19,12 +19,12 @@ from app.domains.podcast.models import (
 from app.domains.podcast.services.sync_service import PodcastSyncService
 from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
 from app.domains.podcast.transcription_scheduler import (
-    ScheduleFrequency,
     TranscriptionScheduler,
     batch_transcribe_subscription,
     get_episode_transcript,
 )
 from app.domains.podcast.transcription_state import get_transcription_state_manager
+from app.domains.podcast.transcription_types import ScheduleFrequency
 
 
 logger = logging.getLogger(__name__)
@@ -100,6 +100,49 @@ class TranscriptionWorkflowService:
             )
 
         return {"task": task, "action": action, "episode": episode}
+
+    async def dispatch_pending_transcriptions(
+        self,
+        episode_ids: list[int],
+    ) -> dict[str, Any]:
+        """Start backlog transcriptions through the shared service entrypoint."""
+        transcription_service = self.transcription_service_factory(self.db)
+        dispatched_count = 0
+        skipped_count = 0
+        failed_count = 0
+        skipped_reasons: dict[str, int] = {}
+
+        for episode_id in episode_ids:
+            try:
+                result = await transcription_service.start_transcription(
+                    episode_id,
+                    force=False,
+                )
+                action = result.get("action", "unknown")
+                if action in {
+                    "created",
+                    "redispatched_pending",
+                    "redispatched_failed_with_temp",
+                }:
+                    dispatched_count += 1
+                    continue
+
+                skipped_count += 1
+                skipped_reasons[action] = skipped_reasons.get(action, 0) + 1
+            except Exception:
+                failed_count += 1
+                logger.exception(
+                    "Failed to dispatch backlog transcription for episode %s",
+                    episode_id,
+                )
+
+        return {
+            "checked": len(episode_ids),
+            "dispatched": dispatched_count,
+            "skipped": skipped_count,
+            "failed": failed_count,
+            "skipped_reasons": skipped_reasons,
+        }
 
     async def delete_episode_transcription(
         self,
@@ -305,6 +348,16 @@ class TranscriptionWorkflowService:
             if episode:
                 user_tasks.append(task)
         return {"total": len(user_tasks), "tasks": user_tasks}
+
+    async def cleanup_old_temp_files(self, *, days: int = 7) -> dict[str, Any]:
+        """Cleanup stale transcription temporary files via the shared service."""
+        transcription_service = self.transcription_service_factory(self.db)
+        return await transcription_service.cleanup_old_temp_files(days=days)
+
+    async def reset_stale_tasks(self) -> None:
+        """Reset stale in-progress tasks at application startup."""
+        transcription_service = self.transcription_service_factory(self.db)
+        await transcription_service.reset_stale_tasks()
 
     async def execute_transcription_task(
         self,

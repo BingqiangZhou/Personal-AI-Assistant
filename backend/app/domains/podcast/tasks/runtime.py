@@ -6,54 +6,30 @@ import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any
 
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
-from app.core.database import register_orm_models
+from app.core.database import (
+    create_isolated_session_factory,
+    register_orm_models,
+    worker_db_session,
+)
 from app.domains.podcast.tasks._runlog import _insert_run_async
 
 
 # Ensure model metadata is registered before worker sessions execute ORM operations.
 register_orm_models()
 
-
-def _new_session_factory(
-    application_name: str,
-) -> tuple[async_sessionmaker[AsyncSession], Any]:
-    # Use NullPool to avoid event loop conflicts when asyncio.run() is called
-    # multiple times in Celery workers. Connection pools retain connections
-    # bound to a specific event loop, which causes "Future attached to a
-    # different loop" errors when a new loop is created.
-    engine = create_async_engine(
-        settings.DATABASE_URL,
-        poolclass=NullPool,  # No pooling - fresh connection each time
-        pool_pre_ping=False,  # CRITICAL: Disable ping to avoid event loop conflicts in Celery workers
-        connect_args={
-            "server_settings": {
-                "application_name": application_name,
-                "client_encoding": "utf8",
-            },
-            "timeout": settings.DATABASE_CONNECT_TIMEOUT,
-        },
-    )
-    return (
-        async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False),
-        engine,
-    )
+def _new_session_factory(application_name: str):
+    """Compatibility wrapper around the centralized worker-session runtime."""
+    return create_isolated_session_factory(application_name)
 
 
 @asynccontextmanager
 async def worker_session(application_name: str) -> AsyncIterator[AsyncSession]:
     """Create an isolated worker DB session and always dispose its engine."""
-    session_factory, engine = _new_session_factory(application_name)
-    try:
-        async with session_factory() as session:
-            yield session
-    finally:
-        await engine.dispose()
+    async with worker_db_session(application_name) as session:
+        yield session
 
 
 def run_async(coro):

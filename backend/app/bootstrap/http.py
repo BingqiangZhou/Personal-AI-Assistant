@@ -27,7 +27,7 @@ def configure_middlewares(app: FastAPI) -> None:
 
     app.state.performance_metrics_store = get_performance_middleware(app)
     app.add_middleware(PerformanceMonitoringMiddleware)
-    logger.info("Performance monitoring middleware enabled")
+    logger.debug("Performance monitoring middleware enabled")
 
     app.add_middleware(
         CORSMiddleware,

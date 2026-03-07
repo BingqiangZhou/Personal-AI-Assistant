@@ -22,11 +22,10 @@ from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.audit import log_admin_action
-from app.admin.dependencies import admin_required
+from app.admin.dependencies import admin_required, get_admin_db_session
 from app.admin.models import SystemSettings
 from app.admin.routes._shared import get_templates
 from app.admin.services import AdminSubscriptionsService
-from app.core.database import get_db_session
 from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
 from app.domains.subscription.models import (
     Subscription,
@@ -52,7 +51,7 @@ templates = get_templates()
 async def subscriptions_page(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
     page: int = 1,
     per_page: int = 10,
     status_filter: str | None = None,
@@ -92,7 +91,7 @@ async def update_subscription_frequency(
     update_time: str | None = Body(None),
     update_day: int | None = Body(None),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Update update frequency settings for all RSS subscriptions."""
     try:
@@ -212,7 +211,7 @@ async def edit_subscription(
     title: str | None = Body(None),
     source_url: str | None = Body(None),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Edit a subscription and re-test connection."""
     try:
@@ -370,7 +369,7 @@ async def test_subscription_url(
 async def test_all_subscriptions(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Test all RSS subscriptions and disable failed ones."""
     try:
@@ -559,7 +558,7 @@ async def delete_subscription(
     sub_id: int,
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Delete a subscription (with proper handling of podcast-related data)."""
     try:
@@ -655,7 +654,7 @@ async def refresh_subscription(
     sub_id: int,
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Manually refresh a subscription."""
     try:
@@ -702,7 +701,7 @@ async def refresh_subscription(
 async def batch_refresh_subscriptions(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Batch refresh subscriptions."""
     try:
@@ -753,7 +752,7 @@ async def batch_refresh_subscriptions(
 async def batch_toggle_subscriptions(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Batch toggle subscription status."""
     try:
@@ -804,7 +803,7 @@ async def batch_toggle_subscriptions(
 async def batch_delete_subscriptions(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Batch delete subscriptions."""
     try:
@@ -914,7 +913,7 @@ async def batch_delete_subscriptions(
 async def export_subscriptions_opml(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """
     Export all RSS subscriptions to OPML format.
@@ -963,7 +962,7 @@ async def import_subscriptions_opml(
     request: Request,
     opml_content: str = Body(..., embed=True, description="OPML file content"),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """
     Import RSS subscriptions from OPML.

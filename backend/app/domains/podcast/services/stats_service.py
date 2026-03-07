@@ -9,7 +9,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import PodcastRedis
-from app.domains.podcast.repositories import PodcastRepository
+from app.domains.podcast.repositories import PodcastStatsRepository
 from app.domains.podcast.services.cache_utils import (
     safe_cache_get,
     safe_cache_invalidate,
@@ -27,7 +27,7 @@ class PodcastStatsService:
     def __init__(self, db: AsyncSession, user_id: int):
         self.db = db
         self.user_id = user_id
-        self.repo = PodcastRepository(db)
+        self.repo = PodcastStatsRepository(db)
         self.playback_service = PodcastPlaybackService(db, user_id)
         self.redis = PodcastRedis()
 

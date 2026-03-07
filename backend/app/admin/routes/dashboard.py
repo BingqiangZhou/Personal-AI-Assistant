@@ -7,9 +7,8 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.admin.dependencies import admin_required
+from app.admin.dependencies import admin_required, get_admin_db_session
 from app.admin.routes._shared import get_templates
-from app.core.database import get_db_session
 from app.domains.ai.models import AIModelConfig
 from app.domains.subscription.models import Subscription
 from app.domains.user.models import User
@@ -25,7 +24,7 @@ templates = get_templates()
 async def dashboard(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Display admin dashboard."""
     try:

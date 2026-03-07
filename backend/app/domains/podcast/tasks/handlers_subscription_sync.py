@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from sqlalchemy import and_, select
 
 from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
-from app.domains.podcast.repositories import PodcastRepository
+from app.domains.podcast.repositories import PodcastSubscriptionRepository
 from app.domains.podcast.services.sync_service import PodcastSyncService
 from app.domains.subscription.models import (
     Subscription,
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 async def refresh_all_podcast_feeds_handler(session) -> dict:
     """Refresh all active podcast-rss subscriptions due by user schedule."""
-    repo = PodcastRepository(session)
+    repo = PodcastSubscriptionRepository(session)
 
     sub_stmt = select(Subscription).where(
         and_(

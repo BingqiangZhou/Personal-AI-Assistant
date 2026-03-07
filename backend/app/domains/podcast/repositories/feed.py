@@ -108,23 +108,20 @@ class PodcastFeedRepositoryMixin:
                         )
                     )
 
+        total_result = await self.db.execute(
+            select(func.count()).select_from(base_query.subquery())
+        )
+        total = int(total_result.scalar() or 0)
+
         query = (
-            base_query.add_columns(func.count(PodcastEpisode.id).over())
-            .order_by(PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc())
+            base_query.order_by(PodcastEpisode.published_at.desc(), PodcastEpisode.id.desc())
             .offset(skip)
             .limit(size)
         )
 
         result = await self.db.execute(query)
-        rows = list(result.unique().all())
-        total = await self._resolve_window_total(
-            rows,
-            total_index=1,
-            fallback_count_query=select(func.count()).select_from(
-                base_query.subquery()
-            ),
-        )
-        return [row[0] for row in rows], total
+        rows = list(result.unique().scalars().all())
+        return rows, total
 
     @staticmethod
     def _feed_count_cache_key(user_id: int) -> str:

@@ -4,6 +4,9 @@ from types import SimpleNamespace
 
 import pytest
 
+from app.domains.podcast.services.transcription_workflow_service import (
+    TranscriptionWorkflowService,
+)
 from app.domains.podcast.tasks import transcription
 from app.domains.podcast.tasks.handlers_transcription import (
     process_audio_transcription_handler,
@@ -89,7 +92,7 @@ async def test_transcription_handler_lock_conflict(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_transcription_handler_updates_status_and_releases_lock(monkeypatch):
+async def test_transcription_workflow_updates_status_and_releases_lock():
     fake_task = SimpleNamespace(id=1, episode_id=2)
     session = _FakeSession([fake_task])
     state = _FakeStateManager(lock_ok=True)
@@ -119,31 +122,17 @@ async def test_transcription_handler_updates_status_and_releases_lock(monkeypatc
     async def _get_state():
         return state
 
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_transcription._claim_dispatched",
-        _claim,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_transcription._clear_dispatched",
-        _clear,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_transcription.get_transcription_state_manager",
-        _get_state,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_transcription.DatabaseBackedTranscriptionService",
-        _FakeService,
+    workflow = TranscriptionWorkflowService(
+        session,
+        transcription_service_factory=_FakeService,
+        state_manager_factory=_get_state,
+        claim_dispatched=_claim,
+        clear_dispatched=_clear,
     )
 
-    result = await process_audio_transcription_handler(session=session, task_id=1)
+    result = await workflow.execute_transcription_task(task_id=1, config_db_id=None)
     assert result["status"] == "success"
-    assert (
-        1,
-        "pending",
-        0,
-        "Worker starting transcription process...",
-    ) in state.progress_updates
+    assert (1, "pending", 0, "Worker starting transcription process...") in state.progress_updates
     assert (1, "in_progress", 50, "halfway") in state.progress_updates
     assert state.cleared == [(1, 2)]
     assert state.released == [(2, 1)]
@@ -179,7 +168,7 @@ def test_transcription_task_retries_on_failure(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_transcription_handler_raises_when_execution_fails(monkeypatch):
+async def test_transcription_workflow_raises_when_execution_fails():
     fake_task = SimpleNamespace(id=33, episode_id=44)
     session = _FakeSession([fake_task])
     state = _FakeStateManager(lock_ok=True)
@@ -203,25 +192,16 @@ async def test_transcription_handler_raises_when_execution_fails(monkeypatch):
     async def _get_state():
         return state
 
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_transcription._claim_dispatched",
-        _claim,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_transcription._clear_dispatched",
-        _clear,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_transcription.get_transcription_state_manager",
-        _get_state,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_transcription.DatabaseBackedTranscriptionService",
-        _FailingService,
+    workflow = TranscriptionWorkflowService(
+        session,
+        transcription_service_factory=_FailingService,
+        state_manager_factory=_get_state,
+        claim_dispatched=_claim,
+        clear_dispatched=_clear,
     )
 
     with pytest.raises(RuntimeError, match="transcription boom"):
-        await process_audio_transcription_handler(session=session, task_id=33)
+        await workflow.execute_transcription_task(task_id=33, config_db_id=None)
 
     assert state.failed
     assert state.failed[-1][0] == 33

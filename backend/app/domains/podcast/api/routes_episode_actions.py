@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.domains.podcast.api.dependencies import (
     get_current_user_id,
+    get_episode_service,
     get_playback_service,
     get_search_service,
     get_summary_workflow_service,
@@ -23,6 +24,7 @@ from app.domains.podcast.schemas import (
     SummaryModelInfo,
     SummaryModelsResponse,
 )
+from app.domains.podcast.services.episode_service import PodcastEpisodeService
 from app.domains.podcast.services.playback_service import PodcastPlaybackService
 from app.domains.podcast.services.search_service import PodcastSearchService
 from app.domains.podcast.services.summary_workflow_service import SummaryWorkflowService
@@ -41,9 +43,19 @@ logger = logging.getLogger(__name__)
 async def generate_summary(
     episode_id: int,
     request: PodcastSummaryRequest,
-    summary_workflow: SummaryWorkflowService = Depends(get_summary_workflow_service),
+    service: PodcastEpisodeService = Depends(get_episode_service),
+    summary_workflow: SummaryWorkflowService = Depends(
+        get_summary_workflow_service
+    ),
 ):
     try:
+        episode = await service.get_episode_by_id(episode_id)
+        if not episode:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Episode {episode_id} not found",
+            )
+
         summary_result = await summary_workflow.generate_episode_summary(
             episode_id,
             summary_model=request.summary_model,

@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ValidationError
 from app.domains.podcast.models import TranscriptionTask
-from app.domains.podcast.repositories import PodcastRepository
+from app.domains.podcast.repositories import PodcastSummaryRepository
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
 
@@ -26,7 +26,9 @@ class SummaryWorkflowService:
         self,
         db: AsyncSession,
         *,
-        repo_factory: Callable[[AsyncSession], PodcastRepository] = PodcastRepository,
+        repo_factory: Callable[[AsyncSession], PodcastSummaryRepository] = (
+            PodcastSummaryRepository
+        ),
         summary_service_factory: Callable[
             [AsyncSession], DatabaseBackedAISummaryService
         ] = DatabaseBackedAISummaryService,

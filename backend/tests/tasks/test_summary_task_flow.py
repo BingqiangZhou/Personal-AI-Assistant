@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.core.exceptions import ValidationError
+from app.domains.podcast.services.summary_workflow_service import SummaryWorkflowService
 from app.domains.podcast.tasks import summary_generation
 from app.domains.podcast.tasks.handlers_summary import (
     generate_pending_summaries_handler,
@@ -43,11 +44,18 @@ class _FakeSession:
         return _ScalarResult(next(self._values))
 
 
-@pytest.mark.asyncio
-async def test_generate_pending_summaries_success(monkeypatch):
-    fake_episode = SimpleNamespace(
-        id=11, subscription_id=22, transcript_content="hello"
+async def _run_workflow(session, repo_factory, summary_factory):
+    workflow = SummaryWorkflowService(
+        session,
+        repo_factory=repo_factory,
+        summary_service_factory=summary_factory,
     )
+    return await workflow.generate_pending_summaries_run()
+
+
+@pytest.mark.asyncio
+async def test_generate_pending_summaries_success():
+    fake_episode = SimpleNamespace(id=11, subscription_id=22, transcript_content="hello")
     marked = []
     generated = []
 
@@ -69,17 +77,8 @@ async def test_generate_pending_summaries_success(monkeypatch):
             generated.append(episode_id)
             return {"summary_content": "ok"}
 
-    session = _FakeSession([[]])  # No running transcription task
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.PodcastRepository",
-        _FakeRepo,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.DatabaseBackedAISummaryService",
-        _FakeSummaryService,
-    )
-
-    result = await generate_pending_summaries_handler(session)
+    session = _FakeSession([[]])
+    result = await _run_workflow(session, _FakeRepo, _FakeSummaryService)
     assert result["status"] == "success"
     assert result["processed"] == 1
     assert result["failed"] == 0
@@ -88,9 +87,7 @@ async def test_generate_pending_summaries_success(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_generate_pending_summaries_skips_missing_transcript_without_failure(
-    monkeypatch,
-):
+async def test_generate_pending_summaries_skips_missing_transcript_without_failure():
     fake_episode = SimpleNamespace(id=11, subscription_id=22, transcript_content="   ")
     marked = []
     generated = []
@@ -114,16 +111,7 @@ async def test_generate_pending_summaries_skips_missing_transcript_without_failu
             return {"summary_content": "ok"}
 
     session = _FakeSession([])
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.PodcastRepository",
-        _FakeRepo,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.DatabaseBackedAISummaryService",
-        _FakeSummaryService,
-    )
-
-    result = await generate_pending_summaries_handler(session)
+    result = await _run_workflow(session, _FakeRepo, _FakeSummaryService)
     assert result["status"] == "success"
     assert result["processed"] == 0
     assert result["failed"] == 0
@@ -133,7 +121,7 @@ async def test_generate_pending_summaries_skips_missing_transcript_without_failu
 
 
 @pytest.mark.asyncio
-async def test_generate_pending_summaries_filters_before_limit(monkeypatch):
+async def test_generate_pending_summaries_filters_before_limit():
     episodes = []
     for episode_id in range(1, 15):
         transcript = None if episode_id <= 3 else f"transcript-{episode_id}"
@@ -167,16 +155,7 @@ async def test_generate_pending_summaries_filters_before_limit(monkeypatch):
             return {"summary_content": "ok"}
 
     session = _FakeSession([[]])
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.PodcastRepository",
-        _FakeRepo,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.DatabaseBackedAISummaryService",
-        _FakeSummaryService,
-    )
-
-    result = await generate_pending_summaries_handler(session)
+    result = await _run_workflow(session, _FakeRepo, _FakeSummaryService)
     assert result["status"] == "success"
     assert result["processed"] == 10
     assert result["failed"] == 0
@@ -186,12 +165,8 @@ async def test_generate_pending_summaries_filters_before_limit(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_generate_pending_summaries_no_transcript_validation_does_not_mark_failed(
-    monkeypatch,
-):
-    fake_episode = SimpleNamespace(
-        id=11, subscription_id=22, transcript_content="ready"
-    )
+async def test_generate_pending_summaries_no_transcript_validation_does_not_mark_failed():
+    fake_episode = SimpleNamespace(id=11, subscription_id=22, transcript_content="ready")
     marked = []
 
     class _FakeRepo:
@@ -212,16 +187,7 @@ async def test_generate_pending_summaries_no_transcript_validation_does_not_mark
             raise ValidationError("No transcript content available for episode 11")
 
     session = _FakeSession([[]])
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.PodcastRepository",
-        _FakeRepo,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.DatabaseBackedAISummaryService",
-        _FakeSummaryService,
-    )
-
-    result = await generate_pending_summaries_handler(session)
+    result = await _run_workflow(session, _FakeRepo, _FakeSummaryService)
     assert result["status"] == "success"
     assert result["processed"] == 0
     assert result["failed"] == 0
@@ -229,12 +195,8 @@ async def test_generate_pending_summaries_no_transcript_validation_does_not_mark
 
 
 @pytest.mark.asyncio
-async def test_generate_pending_summaries_non_validation_error_marks_failed(
-    monkeypatch,
-):
-    fake_episode = SimpleNamespace(
-        id=11, subscription_id=22, transcript_content="ready"
-    )
+async def test_generate_pending_summaries_non_validation_error_marks_failed():
+    fake_episode = SimpleNamespace(id=11, subscription_id=22, transcript_content="ready")
     marked = []
 
     class _FakeRepo:
@@ -255,16 +217,7 @@ async def test_generate_pending_summaries_non_validation_error_marks_failed(
             raise RuntimeError("boom")
 
     session = _FakeSession([[]])
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.PodcastRepository",
-        _FakeRepo,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.DatabaseBackedAISummaryService",
-        _FakeSummaryService,
-    )
-
-    result = await generate_pending_summaries_handler(session)
+    result = await _run_workflow(session, _FakeRepo, _FakeSummaryService)
     assert result["status"] == "success"
     assert result["processed"] == 0
     assert result["failed"] == 1
@@ -274,12 +227,8 @@ async def test_generate_pending_summaries_non_validation_error_marks_failed(
 
 
 @pytest.mark.asyncio
-async def test_generate_pending_summaries_in_progress_validation_does_not_mark_failed(
-    monkeypatch,
-):
-    fake_episode = SimpleNamespace(
-        id=11, subscription_id=22, transcript_content="ready"
-    )
+async def test_generate_pending_summaries_in_progress_validation_does_not_mark_failed():
+    fake_episode = SimpleNamespace(id=11, subscription_id=22, transcript_content="ready")
     marked = []
 
     class _FakeRepo:
@@ -300,20 +249,29 @@ async def test_generate_pending_summaries_in_progress_validation_does_not_mark_f
             raise ValidationError("Summary generation already in progress for episode 11")
 
     session = _FakeSession([[]])
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.PodcastRepository",
-        _FakeRepo,
-    )
-    monkeypatch.setattr(
-        "app.domains.podcast.tasks.handlers_summary.DatabaseBackedAISummaryService",
-        _FakeSummaryService,
-    )
-
-    result = await generate_pending_summaries_handler(session)
+    result = await _run_workflow(session, _FakeRepo, _FakeSummaryService)
     assert result["status"] == "success"
     assert result["processed"] == 0
     assert result["failed"] == 0
     assert marked == []
+
+
+@pytest.mark.asyncio
+async def test_handler_delegates_to_summary_workflow(monkeypatch):
+    class _FakeWorkflow:
+        def __init__(self, session):
+            self.session = session
+
+        async def generate_pending_summaries_run(self):
+            return {"status": "success", "processed": 1, "failed": 0}
+
+    monkeypatch.setattr(
+        "app.domains.podcast.tasks.handlers_summary.SummaryWorkflowService",
+        _FakeWorkflow,
+    )
+
+    result = await generate_pending_summaries_handler(object())
+    assert result == {"status": "success", "processed": 1, "failed": 0}
 
 
 def test_generate_pending_summaries_retries_on_failure(monkeypatch):

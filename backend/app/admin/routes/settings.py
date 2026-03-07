@@ -16,11 +16,10 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.audit import log_admin_action
-from app.admin.dependencies import admin_required
+from app.admin.dependencies import admin_required, get_admin_db_session
 from app.admin.models import SystemSettings
 from app.admin.routes._shared import get_templates
 from app.admin.services import AdminSettingsService
-from app.core.database import get_db_session
 from app.domains.subscription.models import (
     Subscription,
     UpdateFrequency,
@@ -42,7 +41,7 @@ templates = get_templates()
 async def settings_page(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Display system settings page."""
     try:
@@ -67,7 +66,7 @@ async def settings_page(
 @router.get("/settings/api/audio")
 async def get_audio_settings(
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Get audio processing settings as JSON."""
     try:
@@ -86,7 +85,7 @@ async def update_audio_settings(
     chunk_size_mb: int = Body(..., embed=True),
     max_concurrent_threads: int = Body(..., embed=True),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Update audio processing settings."""
     try:
@@ -144,7 +143,7 @@ async def update_audio_settings(
 async def get_frequency_settings(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Get RSS subscription update frequency settings."""
     try:
@@ -211,7 +210,7 @@ async def update_frequency_settings(
     update_time: str | None = Body(None, embed=True),
     update_day: int | None = Body(None, embed=True),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Update RSS subscription update frequency settings."""
     try:
@@ -317,7 +316,7 @@ async def update_frequency_settings(
 @router.get("/settings/api/security")
 async def get_security_settings(
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Get security settings as JSON."""
     try:
@@ -343,7 +342,7 @@ async def update_security_settings(
     request: Request,
     admin_2fa_enabled: bool = Body(..., embed=True),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Update security settings."""
     try:
@@ -388,7 +387,7 @@ async def update_security_settings(
 @router.get("/settings/api/storage/info")
 async def get_storage_info(
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Get storage information as JSON."""
     try:
@@ -409,7 +408,7 @@ async def get_storage_info(
 @router.get("/settings/api/storage/cleanup/config")
 async def get_cleanup_config(
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Get auto cleanup configuration as JSON."""
     try:
@@ -432,7 +431,7 @@ async def update_cleanup_config(
     request: Request,
     enabled: bool = Body(..., embed=True),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Update auto cleanup configuration."""
     try:
@@ -474,7 +473,7 @@ async def execute_cleanup(
     request: Request,
     keep_days: int = Body(1, embed=True),
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Execute manual cleanup (deletes files from yesterday and earlier, keeps only today's files)."""
     try:

@@ -14,7 +14,7 @@ from app.core.config import settings
 from app.core.redis import PodcastRedis
 from app.core.utils import filter_thinking_content
 from app.domains.podcast.models import PodcastEpisode
-from app.domains.podcast.repositories import PodcastRepository
+from app.domains.podcast.repositories import PodcastEpisodeRepository
 from app.domains.podcast.services.daily_report_summary_extractor import (
     extract_one_line_summary,
 )
@@ -44,7 +44,7 @@ class PodcastEpisodeService:
         """
         self.db = db
         self.user_id = user_id
-        self.repo = PodcastRepository(db)
+        self.repo = PodcastEpisodeRepository(db)
         self.redis = PodcastRedis()
         self._feed_description_max_length = 320
 

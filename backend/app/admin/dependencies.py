@@ -20,7 +20,14 @@ SESSION_TIMEOUT = 30 * 60  # seconds
 
 def _get_serializer() -> URLSafeTimedSerializer:
     """Build the admin session serializer lazily."""
-    return URLSafeTimedSerializer(get_settings().SECRET_KEY)
+    return URLSafeTimedSerializer(get_settings().get_secret_key())
+
+
+async def get_admin_db_session(
+    db: AsyncSession = Depends(get_db_session),
+) -> AsyncSession:
+    """Centralized admin DB-session provider."""
+    return db
 
 
 class AdminAuthRequired:

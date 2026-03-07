@@ -13,10 +13,10 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.admin.dependencies import admin_required
+from app.admin.audit import log_admin_action
+from app.admin.dependencies import admin_required, get_admin_db_session
 from app.admin.models import AdminAuditLog
 from app.admin.routes._shared import get_templates
-from app.core.database import get_db_session
 from app.core.security import get_password_hash
 from app.domains.user.models import User, UserStatus
 
@@ -34,7 +34,7 @@ templates = get_templates()
 async def audit_logs_page(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
     page: int = 1,
     per_page: int = 10,
     action: str | None = None,
@@ -102,7 +102,7 @@ async def audit_logs_page(
 async def users_page(
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
     page: int = 1,
     per_page: int = 10,
 ):
@@ -151,7 +151,7 @@ async def toggle_user(
     user_id: int,
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Toggle user active status."""
     try:
@@ -179,9 +179,6 @@ async def toggle_user(
         logger.info(
             f"User {user_id} toggled to {target_user.status} by user {user.username}"
         )
-
-        # Log audit action
-        from app.admin.helpers import log_admin_action
 
         await log_admin_action(
             db=db,
@@ -211,7 +208,7 @@ async def reset_user_password(
     user_id: int,
     request: Request,
     user: User = Depends(admin_required),
-    db: AsyncSession = Depends(get_db_session),
+    db: AsyncSession = Depends(get_admin_db_session),
 ):
     """Reset user password to a random value."""
     try:
@@ -233,9 +230,6 @@ async def reset_user_password(
         logger.info(
             f"User {user_id} password reset by user {user.username}"
         )
-
-        # Log audit action
-        from app.admin.helpers import log_admin_action
 
         await log_admin_action(
             db=db,

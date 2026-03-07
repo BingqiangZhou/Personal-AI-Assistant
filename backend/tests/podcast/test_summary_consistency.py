@@ -11,6 +11,7 @@ from app.domains.podcast.api.routes_episodes import generate_summary
 from app.domains.podcast.schemas import PodcastSummaryRequest
 from app.domains.podcast.services.episode_service import PodcastEpisodeService
 from app.domains.podcast.services.search_service import PodcastSearchService
+from app.domains.podcast.services.summary_workflow_service import SummaryWorkflowService
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
 
 
@@ -67,13 +68,11 @@ def _make_episode(*, ai_summary: str) -> SimpleNamespace:
 async def test_generate_summary_response_uses_persisted_episode_summary() -> None:
     service = AsyncMock()
     service.get_episode_by_id.return_value = SimpleNamespace(id=1)
-    service.get_episode_with_summary.return_value = {
-        "ai_summary": "final summary from db",
-        "summary_version": "1.0",
-    }
-    ai_summary_service = AsyncMock()
-    ai_summary_service.generate_summary.return_value = {
-        "summary_content": "intermediate summary",
+    summary_workflow = AsyncMock(spec=SummaryWorkflowService)
+    summary_workflow.generate_episode_summary.return_value = {
+        "summary": "final summary from db",
+        "version": "1.0",
+        "generated_at": datetime.now(timezone.utc),
         "model_name": "test-model",
         "processing_time": 1.23,
     }
@@ -82,7 +81,7 @@ async def test_generate_summary_response_uses_persisted_episode_summary() -> Non
         episode_id=1,
         request=PodcastSummaryRequest(),
         service=service,
-        ai_summary_service=ai_summary_service,
+        summary_workflow=summary_workflow,
     )
 
     assert response.summary == "final summary from db"

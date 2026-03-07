@@ -9,7 +9,9 @@ from sqlalchemy import delete, func, select
 
 from app.admin.storage_service import StorageCleanupService
 from app.domains.podcast.models import PodcastPlaybackState, TranscriptionTask
-from app.domains.podcast.transcription_manager import DatabaseBackedTranscriptionService
+from app.domains.podcast.services.transcription_workflow_service import (
+    TranscriptionWorkflowService,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -72,8 +74,8 @@ async def cleanup_old_playback_states_handler(session) -> dict:
 
 async def cleanup_old_transcription_temp_files_handler(session, days: int = 7) -> dict:
     """Clean stale transcription temporary files."""
-    service = DatabaseBackedTranscriptionService(session)
-    result = await service.cleanup_old_temp_files(days=days)
+    workflow = TranscriptionWorkflowService(session)
+    result = await workflow.cleanup_old_temp_files(days=days)
     return {"status": "success", **result, "processed_at": datetime.now(timezone.utc).isoformat()}
 
 

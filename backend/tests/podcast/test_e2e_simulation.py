@@ -24,7 +24,7 @@ async def test_security_and_service_layers_mocked() -> None:
     assert "[EMAIL_REDACTED]" in sanitized
     assert "[PHONE_REDACTED]" in sanitized
 
-    with patch("app.domains.podcast.services.search_service.PodcastRepository") as mock_repo_cls:
+    with patch("app.domains.podcast.services.search_service.PodcastSearchRepository") as mock_repo_cls:
         repo = AsyncMock()
         episode_one = MagicMock()
         episode_one.id = 1
@@ -64,7 +64,7 @@ async def test_subscription_service_mocked_add_subscription() -> None:
         PodcastSubscriptionService,
     )
 
-    with patch("app.domains.podcast.services.subscription_service.PodcastRepository") as mock_repo_cls, patch(
+    with patch("app.domains.podcast.services.subscription_service.PodcastSubscriptionRepository") as mock_repo_cls, patch(
         "app.domains.podcast.services.subscription_service.SecureRSSParser"
     ) as mock_parser_cls:
         repo = AsyncMock()
@@ -95,4 +95,3 @@ async def test_subscription_service_mocked_add_subscription() -> None:
         subscription, episodes = await service.add_subscription("https://example.com/feed.xml")
         assert subscription.id == 1
         assert episodes == []
-

@@ -7,6 +7,10 @@ from fastapi import FastAPI
 
 from app.core.config import get_settings
 from app.core.database import close_db, get_async_session_factory, init_db
+from app.core.logging_config import setup_logging_from_env
+from app.domains.podcast.services.transcription_workflow_service import (
+    TranscriptionWorkflowService,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -15,6 +19,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def application_lifespan(app: FastAPI):
     """Manage startup and shutdown lifecycle hooks."""
+    setup_logging_from_env()
     settings = get_settings()
 
     logger.info(
@@ -26,14 +31,10 @@ async def application_lifespan(app: FastAPI):
     await init_db()
 
     try:
-        from app.domains.podcast.transcription_manager import (
-            DatabaseBackedTranscriptionService,
-        )
-
         session_factory = get_async_session_factory()
         async with session_factory() as session:
-            service = DatabaseBackedTranscriptionService(session)
-            await service.reset_stale_tasks()
+            workflow = TranscriptionWorkflowService(session)
+            await workflow.reset_stale_tasks()
             logger.info("Reset stale transcription tasks during startup")
     except Exception as exc:
         logger.error("Failed to reset stale tasks during startup: %s", exc)
