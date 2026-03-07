@@ -33,7 +33,7 @@ class PodcastSyncService:
         self.user_id = user_id
 
         # Import transcription service
-        from app.domains.podcast.transcription_manager import (
+        from app.domains.podcast.services.transcription_runtime_service import (
             DatabaseBackedTranscriptionService,
         )
         self.transcription_service = DatabaseBackedTranscriptionService(db)

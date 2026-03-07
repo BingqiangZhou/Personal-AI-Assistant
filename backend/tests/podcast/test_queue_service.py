@@ -68,14 +68,14 @@ async def test_get_queue_serializes_snapshot(service, mock_repo):
 
     result = await service.get_queue()
 
-    assert result["current_episode_id"] == 10
-    assert result["revision"] == 3
-    assert len(result["items"]) == 2
-    assert result["items"][0]["episode_id"] == 10
-    assert result["items"][0]["title"] == "Episode 10"
-    assert result["items"][0]["playback_position"] == 321
-    assert result["items"][1]["episode_id"] == 11
-    assert result["items"][1]["playback_position"] is None
+    assert result.current_episode_id == 10
+    assert result.revision == 3
+    assert len(result.items) == 2
+    assert result.items[0].episode_id == 10
+    assert result.items[0].title == "Episode 10"
+    assert result.items[0].playback_position == 321
+    assert result.items[1].episode_id == 11
+    assert result.items[1].playback_position is None
     mock_repo.get_playback_states_batch.assert_called_once_with(1, [10, 11])
 
 

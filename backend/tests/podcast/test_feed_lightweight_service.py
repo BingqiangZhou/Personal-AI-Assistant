@@ -63,10 +63,10 @@ async def test_list_feed_by_cursor_lightweight_normalizes_payload(monkeypatch):
     assert has_more is False
     assert next_cursor is None
     assert len(items) == 1
-    assert len(items[0]["description"]) <= 320
-    assert "  " not in items[0]["description"]
-    assert items[0]["transcript_content"] is None
-    assert items[0]["ai_summary"] is None
+    assert len(items[0].description) <= 320
+    assert "  " not in items[0].description
+    assert items[0].transcript_content is None
+    assert items[0].ai_summary is None
     service.repo.get_feed_lightweight_cursor_paginated.assert_awaited_once_with(
         42,
         size=20,

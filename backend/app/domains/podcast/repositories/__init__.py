@@ -15,15 +15,10 @@ from app.domains.podcast.repositories.subscription_feed import (
 from app.domains.podcast.repositories.transcription import PodcastSummaryRepository
 
 
-class PodcastRepository(PodcastEpisodeRepository):
-    """Backward-compatible aggregate repository for legacy paths and tests."""
-
-
 __all__ = [
     "BasePodcastRepository",
     "PodcastDailyReportRepository",
     "PodcastEpisodeRepository",
-    "PodcastRepository",
     "PodcastPlaybackRepository",
     "PodcastQueueRepository",
     "PodcastSearchRepository",

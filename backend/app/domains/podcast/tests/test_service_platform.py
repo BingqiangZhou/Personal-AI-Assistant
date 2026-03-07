@@ -22,7 +22,9 @@ class TestPodcastSubscriptionPlatform:
     @pytest.fixture
     def mock_repo(self):
         """Mock repository"""
-        with patch("app.domains.podcast.repositories.PodcastRepository") as mock:
+        with patch(
+            "app.domains.podcast.services.subscription_service.PodcastSubscriptionRepository"
+        ) as mock:
             repo_instance = AsyncMock()
             mock.return_value = repo_instance
             yield repo_instance

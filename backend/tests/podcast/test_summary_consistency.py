@@ -151,7 +151,7 @@ async def test_episode_service_filters_summary_on_detail_response() -> None:
     result = await service.get_episode_with_summary(episode_id=episode.id)
 
     assert result is not None
-    assert result["ai_summary"] == "clean summary"
+    assert result.ai_summary == "clean summary"
 
 
 def test_search_service_filters_summary_in_list_response() -> None:
@@ -160,7 +160,7 @@ def test_search_service_filters_summary_in_list_response() -> None:
 
     result = service._build_episode_response([episode], playback_states={})
 
-    assert result[0]["ai_summary"] == "search summary"
+    assert result[0].ai_summary == "search summary"
 
 
 def test_rule_based_summary_fallback_not_truncated() -> None:

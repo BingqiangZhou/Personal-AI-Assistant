@@ -477,7 +477,7 @@ class TestPodcastSyncService:
     @pytest.fixture
     def mock_transcription_service(self):
         with patch(
-            "app.domains.podcast.transcription_manager.DatabaseBackedTranscriptionService"
+            "app.domains.podcast.services.transcription_runtime_service.DatabaseBackedTranscriptionService"
         ) as mock:
             service_instance = AsyncMock()
             mock.return_value = service_instance
