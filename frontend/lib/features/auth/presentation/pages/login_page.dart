@@ -201,23 +201,44 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    Checkbox(
-                      value: _rememberMe,
-                      onChanged: (value) async {
-                        setState(() {
-                          _rememberMe = value ?? false;
-                        });
-                        if (!_rememberMe) {
-                          await _secureStorage.delete(
-                            key: AppConstants.savedUsernameKey,
-                          );
-                          await _secureStorage.delete(
-                            key: AppConstants.savedPasswordKey,
-                          );
-                        }
-                      },
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: _rememberMe,
+                        activeColor: Theme.of(context).colorScheme.primary,
+                        checkColor: Colors.white,
+                        side: BorderSide(
+                          color: _rememberMe
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          width: 2,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        onChanged: (value) async {
+                          setState(() {
+                            _rememberMe = value ?? false;
+                          });
+                          if (!_rememberMe) {
+                            await _secureStorage.delete(
+                              key: AppConstants.savedUsernameKey,
+                            );
+                            await _secureStorage.delete(
+                              key: AppConstants.savedPasswordKey,
+                            );
+                          }
+                        },
+                      ),
                     ),
-                    Flexible(child: Text(l10n.auth_remember_me)),
+                    const SizedBox(width: 8),
+                    Text(
+                      l10n.auth_remember_me,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const Spacer(),
                     TextButton(
                       onPressed: () {
