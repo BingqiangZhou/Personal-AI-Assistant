@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.15.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.14.3...v0.15.0) - 2026-03-07 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.15.0))
+
+### 🎨 Styling
+
+- *(podcast)* Simplify border radius configuration for expanded player panel ([48f505c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/48f505c4ca3be4d6219f3c561876d2005f9be4d2))
+- *(auth)* Improve remember me checkbox styling with Material 3 design ([7a145be](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7a145be5b7bb973e3b87682b6b06f73e05291d69))
+
+### 🚜 Refactor
+
+- *(podcast)* Redesign discover page header and search layout for compact UI ([b8f9f3e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b8f9f3efe279354c9de7d9d973399b3f6d092173))
+- *(podcast)* Move play button to header row in episode cards ([5520f79](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5520f79bda6fe09077459a9988f2dd75ab2b076d))
+
+
+
 ## [0.14.3](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.14.2...v0.14.3) - 2026-03-07 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.14.3))
 
 ### ⚙️ Miscellaneous Tasks
