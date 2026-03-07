@@ -592,7 +592,9 @@ class _QueueListState extends ConsumerState<_QueueList> {
                 ? null
                 : () async {
                     try {
-                      await notifier.removeFromQueue(item.episodeId);
+                      await notifier.removeFromQueueAndResolvePlayback(
+                        item.episodeId,
+                      );
                     } catch (error) {
                       if (!context.mounted) {
                         return;

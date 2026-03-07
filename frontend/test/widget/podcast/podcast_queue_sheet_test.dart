@@ -361,6 +361,14 @@ class TestPodcastQueueController extends PodcastQueueController {
   }
 
   @override
+  Future<PodcastQueueModel> removeFromQueueAndResolvePlayback(
+    int episodeId,
+  ) async {
+    removedEpisodeId = episodeId;
+    return state.value ?? initialQueue;
+  }
+
+  @override
   Future<PodcastQueueModel> reorderQueue(List<int> episodeIds) async {
     reorderedEpisodeIds = List<int>.from(episodeIds);
     return state.value ?? initialQueue;

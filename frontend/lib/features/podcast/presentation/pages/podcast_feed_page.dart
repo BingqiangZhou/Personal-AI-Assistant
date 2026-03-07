@@ -391,7 +391,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
 
     void playAndOpenDetail() {
-      ref.read(audioPlayerProvider.notifier).playEpisode(episode);
+      ref.read(audioPlayerProvider.notifier).playManagedEpisode(episode);
       PodcastNavigation.goToEpisodeDetail(
         context,
         episodeId: episode.id,
@@ -426,7 +426,7 @@ class _PodcastFeedPageState extends ConsumerState<PodcastFeedPage> {
     final isAddingToQueue = _addingEpisodeIds.contains(episode.id);
 
     void playAndOpenDetail() {
-      ref.read(audioPlayerProvider.notifier).playEpisode(episode);
+      ref.read(audioPlayerProvider.notifier).playManagedEpisode(episode);
       PodcastNavigation.goToEpisodeDetail(
         context,
         episodeId: episode.id,

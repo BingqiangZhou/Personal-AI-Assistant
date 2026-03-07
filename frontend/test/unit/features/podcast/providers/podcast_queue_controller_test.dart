@@ -175,6 +175,116 @@ void main() {
     });
   });
 
+  group('PodcastQueueController.removeFromQueueAndResolvePlayback', () {
+    test(
+      'auto-plays backend-selected next item when removing current item',
+      () async {
+        final repository = _FakePodcastRepository(
+          removeQueueResult: _queueWithIds(
+            [2, 3],
+            revision: 12,
+            currentEpisodeId: 2,
+          ),
+        );
+        final audioNotifier = _FakeAudioPlayerNotifier(
+          initialState: AudioPlayerState(
+            isPlaying: true,
+            playSource: PlaySource.queue,
+            currentEpisode: _episode(1),
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            podcastRepositoryProvider.overrideWithValue(repository),
+            audioPlayerProvider.overrideWith(() => audioNotifier),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final controller = container.read(
+          podcastQueueControllerProvider.notifier,
+        );
+        final queue = await controller.removeFromQueueAndResolvePlayback(1);
+
+        expect(_episodeIds(queue), <int>[2, 3]);
+        expect(audioNotifier.playEpisodeCalls, 1);
+        expect(audioNotifier.lastPlaySource, PlaySource.queue);
+        expect(audioNotifier.lastQueueEpisodeId, 2);
+        expect(audioNotifier.stopCalls, 0);
+      },
+    );
+
+    test(
+      'stops playback when removing current item leaves queue empty',
+      () async {
+        final repository = _FakePodcastRepository(
+          removeQueueResult: const PodcastQueueModel(
+            currentEpisodeId: null,
+            revision: 15,
+            items: <PodcastQueueItemModel>[],
+          ),
+        );
+        final audioNotifier = _FakeAudioPlayerNotifier(
+          initialState: AudioPlayerState(
+            isPlaying: true,
+            playSource: PlaySource.queue,
+            currentEpisode: _episode(1),
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            podcastRepositoryProvider.overrideWithValue(repository),
+            audioPlayerProvider.overrideWith(() => audioNotifier),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final controller = container.read(
+          podcastQueueControllerProvider.notifier,
+        );
+        await controller.removeFromQueueAndResolvePlayback(1);
+
+        expect(audioNotifier.playEpisodeCalls, 0);
+        expect(audioNotifier.stopCalls, 1);
+      },
+    );
+
+    test(
+      'does not interrupt playback when removing a non-current queue item',
+      () async {
+        final repository = _FakePodcastRepository(
+          removeQueueResult: _queueWithIds(
+            [1, 3],
+            revision: 18,
+            currentEpisodeId: 1,
+          ),
+        );
+        final audioNotifier = _FakeAudioPlayerNotifier(
+          initialState: AudioPlayerState(
+            isPlaying: true,
+            playSource: PlaySource.queue,
+            currentEpisode: _episode(1),
+          ),
+        );
+        final container = ProviderContainer(
+          overrides: [
+            podcastRepositoryProvider.overrideWithValue(repository),
+            audioPlayerProvider.overrideWith(() => audioNotifier),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final controller = container.read(
+          podcastQueueControllerProvider.notifier,
+        );
+        await controller.removeFromQueueAndResolvePlayback(2);
+
+        expect(audioNotifier.playEpisodeCalls, 0);
+        expect(audioNotifier.stopCalls, 0);
+      },
+    );
+  });
+
   group('PodcastQueueController queueSyncing', () {
     test('stays true until all in-flight queue operations complete', () async {
       final repository = _FakePodcastRepository();
@@ -427,6 +537,7 @@ class _FakePodcastRepository extends PodcastRepository {
     List<PodcastQueueModel>? queuedAddQueueResponses,
     PodcastQueueModel? reorderQueueResult,
     PodcastQueueModel? activateQueueResult,
+    PodcastQueueModel? removeQueueResult,
   }) : _queuedGetQueueResponses = List<PodcastQueueModel>.from(
          queuedGetQueueResponses ??
              <PodcastQueueModel>[const PodcastQueueModel()],
@@ -451,6 +562,8 @@ class _FakePodcastRepository extends PodcastRepository {
                ),
              ],
            ),
+       _removeQueueResult =
+           removeQueueResult ?? const PodcastQueueModel(revision: 10),
        super(_NoopPodcastApiService());
 
   final Duration addDelay;
@@ -458,6 +571,7 @@ class _FakePodcastRepository extends PodcastRepository {
   final List<PodcastQueueModel> _queuedAddQueueResponses;
   final PodcastQueueModel _reorderQueueResult;
   final PodcastQueueModel _activateQueueResult;
+  final PodcastQueueModel _removeQueueResult;
 
   int addQueueItemCallCount = 0;
   int activateQueueEpisodeCallCount = 0;
@@ -512,7 +626,7 @@ class _FakePodcastRepository extends PodcastRepository {
     if (error != null) {
       throw error;
     }
-    return const PodcastQueueModel(revision: 10);
+    return _removeQueueResult;
   }
 
   @override
@@ -547,6 +661,7 @@ class _FakeAudioPlayerNotifier extends AudioPlayerNotifier {
   final AudioPlayerState initialState;
 
   int playEpisodeCalls = 0;
+  int stopCalls = 0;
   PlaySource? lastPlaySource;
   int? lastQueueEpisodeId;
 
@@ -564,5 +679,17 @@ class _FakeAudioPlayerNotifier extends AudioPlayerNotifier {
     playEpisodeCalls += 1;
     lastPlaySource = source;
     lastQueueEpisodeId = queueEpisodeId;
+  }
+
+  @override
+  Future<void> stop() async {
+    stopCalls += 1;
+    state = state.copyWith(
+      clearCurrentEpisode: true,
+      isPlaying: false,
+      position: 0,
+      playSource: PlaySource.direct,
+      clearCurrentQueueEpisodeId: true,
+    );
   }
 }

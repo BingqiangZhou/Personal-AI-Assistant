@@ -483,7 +483,7 @@ class _PodcastEpisodesPageState extends ConsumerState<PodcastEpisodesPage> {
   }
 
   Future<void> _playAndOpenEpisodeDetail(PodcastEpisodeModel episode) async {
-    await ref.read(audioPlayerProvider.notifier).playEpisode(episode);
+    await ref.read(audioPlayerProvider.notifier).playManagedEpisode(episode);
     if (!mounted) return;
     context.push('/podcast/episode/detail/${episode.id}');
   }

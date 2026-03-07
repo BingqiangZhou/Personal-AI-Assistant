@@ -429,6 +429,39 @@ class PodcastQueueController extends AsyncNotifier<PodcastQueueModel> {
     }
   }
 
+  Future<PodcastQueueModel> removeFromQueueAndResolvePlayback(
+    int episodeId,
+  ) async {
+    final playerSnapshot = ref.read(audioPlayerProvider);
+    final isRemovingCurrentQueueEpisode =
+        playerSnapshot.playSource == PlaySource.queue &&
+        playerSnapshot.currentEpisode?.id == episodeId;
+
+    final queue = await removeFromQueue(episodeId);
+    if (!isRemovingCurrentQueueEpisode) {
+      return queue;
+    }
+
+    final playerNotifier = ref.read(audioPlayerProvider.notifier);
+    final next = queue.currentItem;
+    if (next == null) {
+      await playerNotifier.stop();
+      return queue;
+    }
+
+    if (!playerSnapshot.isPlaying) {
+      await playerNotifier.stop();
+      return queue;
+    }
+
+    await playerNotifier.playEpisode(
+      next.toEpisodeModel(),
+      source: PlaySource.queue,
+      queueEpisodeId: next.episodeId,
+    );
+    return queue;
+  }
+
   Future<PodcastQueueModel> reorderQueue(List<int> episodeIds) async {
     final previousQueue = state.value;
     if (previousQueue != null) {

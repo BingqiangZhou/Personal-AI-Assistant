@@ -287,6 +287,16 @@ class _MockAudioPlayerNotifier extends AudioPlayerNotifier {
   AudioPlayerState build() {
     return const AudioPlayerState();
   }
+
+  @override
+  Future<void> playEpisode(
+    PodcastEpisodeModel episode, {
+    PlaySource source = PlaySource.direct,
+    int? queueEpisodeId,
+  }) async {}
+
+  @override
+  Future<void> playManagedEpisode(PodcastEpisodeModel episode) async {}
 }
 
 class _NoopTranscriptionNotifier extends TranscriptionNotifier {

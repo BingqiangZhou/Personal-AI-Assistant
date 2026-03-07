@@ -421,8 +421,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     }
     state = state.copyWith(
       queue: queue,
-      currentQueueEpisodeId:
-          queue.currentEpisodeId ?? state.currentQueueEpisodeId,
+      currentQueueEpisodeId: queue.currentEpisodeId,
+      clearCurrentQueueEpisodeId:
+          queue.currentEpisodeId == null && queue.items.isEmpty,
     );
   }
 
@@ -669,6 +670,26 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     return resolved;
   }
 
+  Future<void> playManagedEpisode(PodcastEpisodeModel episode) async {
+    if (isDiscoverPreviewEpisode(episode)) {
+      await playEpisode(episode);
+      return;
+    }
+
+    final preparedQueue = await _prepareManualPlayQueue(episode.id);
+    final currentQueueItem = preparedQueue?.currentItem;
+    if (currentQueueItem != null) {
+      await playEpisode(
+        currentQueueItem.toEpisodeModel(),
+        source: PlaySource.queue,
+        queueEpisodeId: currentQueueItem.episodeId,
+      );
+      return;
+    }
+
+    await playEpisode(episode);
+  }
+
   Future<void> playEpisode(
     PodcastEpisodeModel episode, {
     PlaySource source = PlaySource.direct,
@@ -684,6 +705,13 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     final isSameEpisode = state.currentEpisode?.id == episode.id;
     final isCompleted = state.processingState == ProcessingState.completed;
     if (isSameEpisode && !isCompleted) {
+      state = state.copyWith(
+        playSource: source,
+        currentQueueEpisodeId: source == PlaySource.queue
+            ? (queueEpisodeId ?? episode.id)
+            : null,
+        clearCurrentQueueEpisodeId: source != PlaySource.queue,
+      );
       if (state.isPlaying) {
         logger.AppLogger.debug(
           '[Warn] Same episode already playing, skip reloading source',
@@ -710,18 +738,6 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         return;
       }
 
-      var effectiveSource = source;
-      var effectiveQueueEpisodeId = queueEpisodeId;
-
-      if (!skipServerSync && source == PlaySource.direct) {
-        final preparedQueue = await _prepareManualPlayQueue(
-          episodeForPlayback.id,
-        );
-        if (preparedQueue != null) {
-          effectiveSource = PlaySource.queue;
-          effectiveQueueEpisodeId = episodeForPlayback.id;
-        }
-      }
       logger.AppLogger.debug('[Playback] ===== playEpisode called =====');
       logger.AppLogger.debug('[Playback] Episode ID: ${episodeForPlayback.id}');
       logger.AppLogger.debug(
@@ -769,9 +785,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         playbackRate: targetPlaybackRate,
         queue: queueSnapshot,
         queueSyncing: queueSyncing,
-        playSource: effectiveSource,
-        currentQueueEpisodeId: effectiveSource == PlaySource.queue
-            ? (effectiveQueueEpisodeId ?? episodeForPlayback.id)
+        playSource: source,
+        currentQueueEpisodeId: source == PlaySource.queue
+            ? (queueEpisodeId ?? episodeForPlayback.id)
             : null,
       );
 

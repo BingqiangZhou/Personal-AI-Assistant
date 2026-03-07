@@ -418,7 +418,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
       return;
     }
 
-    await notifier.playEpisode(episodeModel);
+    await notifier.playManagedEpisode(episodeModel);
   }
 
   Future<void> _addCurrentEpisodeToQueue() async {

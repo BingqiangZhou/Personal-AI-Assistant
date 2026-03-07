@@ -199,7 +199,9 @@ class _PodcastEpisodeDetailPageState
         logger.AppLogger.debug(
           '[Playback] Auto-playing episode: ${episodeModel.title}',
         );
-        await ref.read(audioPlayerProvider.notifier).playEpisode(episodeModel);
+        await ref
+            .read(audioPlayerProvider.notifier)
+            .playManagedEpisode(episodeModel);
       }
     } catch (error) {
       logger.AppLogger.debug('[Error] Failed to auto-play episode: $error');

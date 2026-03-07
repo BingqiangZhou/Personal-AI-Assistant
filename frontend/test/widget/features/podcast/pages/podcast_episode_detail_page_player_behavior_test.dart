@@ -987,6 +987,11 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
   }
 
   @override
+  Future<void> playManagedEpisode(PodcastEpisodeModel episode) async {
+    await playEpisode(episode);
+  }
+
+  @override
   Future<void> seekTo(int position) async {
     state = state.copyWith(position: position);
   }
