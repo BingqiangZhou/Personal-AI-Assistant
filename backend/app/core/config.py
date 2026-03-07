@@ -87,7 +87,7 @@ class Settings(BaseSettings):
 
     # Database - Pool sizing adjusted for podcast-heavy workloads
     # Base calculation: 5 domains × 6 concurrent/domain × 2 buffer = 60 connections
-    DATABASE_URL: str
+    DATABASE_URL: str | None = None
     DATABASE_POOL_SIZE: int = 20  # Increased from 10 - critical for RSS polling
     DATABASE_MAX_OVERFLOW: int = (
         40  # Increased from 20 - total 60 connections available
@@ -238,11 +238,25 @@ class Settings(BaseSettings):
             )
         return v
 
+    def require_database_url(self) -> str:
+        """Return DATABASE_URL or raise a runtime error when not configured."""
+        if self.DATABASE_URL:
+            return self.DATABASE_URL
+        raise RuntimeError(
+            "DATABASE_URL is not configured. Set backend/.env or environment variables "
+            "before starting the application."
+        )
+
 
 @lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
     return Settings()
+
+
+def get_required_database_url() -> str:
+    """Get DATABASE_URL and fail only when the runtime actually needs it."""
+    return get_settings().require_database_url()
 
 
 settings = get_settings()

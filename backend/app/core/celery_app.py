@@ -3,8 +3,10 @@
 from celery import Celery
 from celery.schedules import crontab
 
-from app.core.config import settings
+from app.core.config import get_settings
 
+
+settings = get_settings()
 
 celery_app = Celery(
     "personal_ai_tasks",

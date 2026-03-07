@@ -11,7 +11,6 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from app.core.config import settings
-from app.core.etag import build_conditional_etag_response
 from app.domains.podcast.api.dependencies import (
     get_episode_service,
     get_current_user_id,
@@ -42,21 +41,12 @@ from app.domains.podcast.services.episode_service import PodcastEpisodeService
 from app.domains.podcast.services.playback_service import PodcastPlaybackService
 from app.domains.podcast.services.search_service import PodcastSearchService
 from app.domains.podcast.summary_manager import DatabaseBackedAISummaryService
+from app.http.errors import bilingual_http_exception
+from app.http.responses import build_etag_response
 
 
 router = APIRouter(prefix="")
 logger = logging.getLogger(__name__)
-
-
-def _bilingual_error(
-    message_en: str,
-    message_zh: str,
-    status_code: int,
-) -> HTTPException:
-    return HTTPException(
-        status_code=status_code,
-        detail={"message_en": message_en, "message_zh": message_zh},
-    )
 
 
 def _encode_keyset_cursor(
@@ -83,7 +73,7 @@ def _decode_cursor(cursor: str) -> dict[str, Any]:
     try:
         decoded = base64.urlsafe_b64decode(f"{cursor}{padding}").decode("utf-8")
     except (ValueError, binascii.Error) as exc:
-        raise _bilingual_error(
+        raise bilingual_http_exception(
             "Invalid cursor",
             "游标参数无效",
             status.HTTP_400_BAD_REQUEST,
@@ -114,7 +104,7 @@ def _decode_cursor(cursor: str) -> dict[str, Any]:
             "id": episode_id,
         }
     except (ValueError, TypeError, json.JSONDecodeError) as exc:
-        raise _bilingual_error(
+        raise bilingual_http_exception(
             "Invalid cursor",
             "游标参数无效",
             status.HTTP_400_BAD_REQUEST,
@@ -161,7 +151,7 @@ async def get_podcast_feed(
         )
     elif decoded_cursor:
         if decoded_cursor["type"] != "feed":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "Cursor is not valid for this endpoint",
                 "该游标不适用于当前接口",
                 status.HTTP_400_BAD_REQUEST,
@@ -201,7 +191,7 @@ async def get_podcast_feed(
         next_cursor=next_cursor,
         total=total,
     )
-    return build_conditional_etag_response(
+    return build_etag_response(
         request=request,
         content=response_data,
         max_age=30 if settings.PODCAST_FEED_LIGHTWEIGHT_ENABLED else 600,
@@ -262,7 +252,7 @@ async def list_playback_history(
 
     if decoded_cursor:
         if decoded_cursor["type"] != "history":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "Cursor is not valid for this endpoint",
                 "该游标不适用于当前接口",
                 status.HTTP_400_BAD_REQUEST,
@@ -305,7 +295,7 @@ async def list_playback_history(
         subscription_id=0,
         next_cursor=next_cursor,
     )
-    return build_conditional_etag_response(
+    return build_etag_response(
         request=request,
         content=response_data,
         max_age=300,
@@ -353,7 +343,7 @@ async def get_episode(
         )
 
     response_data = PodcastEpisodeDetailResponse(**episode)
-    return build_conditional_etag_response(
+    return build_etag_response(
         request=request,
         content=response_data,
         max_age=1800,
@@ -443,18 +433,18 @@ async def update_playback_progress(
         )
     except ValueError as exc:
         if str(exc) == "Episode not found":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "Episode not found",
                 "未找到该单集",
                 status.HTTP_404_NOT_FOUND,
             ) from exc
-        raise _bilingual_error(
+        raise bilingual_http_exception(
             "Failed to update playback progress",
             "更新播放进度失败",
             status.HTTP_400_BAD_REQUEST,
         ) from exc
     except Exception as exc:
-        raise _bilingual_error(
+        raise bilingual_http_exception(
             "Failed to update playback progress",
             "更新播放进度失败",
             status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -516,31 +506,31 @@ async def apply_playback_rate_preference(
     except ValueError as exc:
         code = str(exc)
         if code == "SUBSCRIPTION_ID_REQUIRED":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "subscription_id is required when apply_to_subscription is true",
                 "subscription_id is required",
                 status.HTTP_400_BAD_REQUEST,
             ) from exc
         if code == "SUBSCRIPTION_NOT_FOUND":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "Subscription not found",
                 "未找到该订阅",
                 status.HTTP_404_NOT_FOUND,
             ) from exc
         if code == "USER_NOT_FOUND":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "User not found",
                 "User not found",
                 status.HTTP_404_NOT_FOUND,
             ) from exc
-        raise _bilingual_error(
+        raise bilingual_http_exception(
             "Failed to apply playback preference",
             "应用播放偏好失败",
             status.HTTP_400_BAD_REQUEST,
         ) from exc
     except Exception as exc:
         logger.error("Failed to apply playback rate preference: %s", exc)
-        raise _bilingual_error(
+        raise bilingual_http_exception(
             "Failed to apply playback preference",
             "应用播放偏好失败",
             status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -607,7 +597,7 @@ async def search_podcasts(
 ):
     keyword = (q or "").strip()
     if not keyword:
-        raise _bilingual_error(
+        raise bilingual_http_exception(
             "q is required",
             "必须提供 q 参数",
             status.HTTP_422_UNPROCESSABLE_ENTITY,

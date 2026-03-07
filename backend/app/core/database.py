@@ -1,67 +1,121 @@
 """
 Database configuration and session management.
 
-This module provides production-ready PostgreSQL configuration for the Personal AI Assistant.
-
-**Optimizations applied:**
-- Connection pool health checks (pool_pre_ping) for container environments
-- Automatic connection recycling to prevent stale sockets
-- Optimized isolation level for read-heavy workload
-- Fast failure detection (connect_timeout=10s)
-- Application-level connection tagging for monitoring
-
-**Connection Usage:**
-- Typical: ~20-30 active connections for 5 domains
-- High-load: Can overflow to ~60-80 connections
-- Each domain should reuse sessions efficiently
+The runtime is intentionally lazy so importing the app for tests, snapshots, or
+scripts does not require a production database URL or eagerly construct an
+engine with dialect-specific settings.
 """
 
+import asyncio
 import logging
 from collections.abc import AsyncGenerator
+from importlib import import_module
 from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError, ProgrammingError
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import declarative_base
 
-from app.core.config import settings
+from app.core.config import get_settings
 
 
 logger = logging.getLogger(__name__)
-_orm_models_registered = False
-
-# Create async engine with production-ready configuration
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    # Core pool settings - optimized for podcast workloads
-    pool_size=settings.DATABASE_POOL_SIZE,
-    max_overflow=settings.DATABASE_MAX_OVERFLOW,
-    # Health check and connection validation (CRITICAL for long-running containers)
-    pool_pre_ping=True,  # heartbeat connection before each borrow
-    pool_recycle=settings.DATABASE_RECYCLE,  # recycle connections after configurable period
-    # Performance optimizations
-    echo=False,  # Disable SQL query logging to reduce noise
-    future=True,  # SQLAlchemy 2.0 style
-    isolation_level="READ COMMITTED",  # Optimized for read-heavy workload
-    # Connection timeout settings - faster failure detection
-    pool_timeout=settings.DATABASE_POOL_TIMEOUT,
-    connect_args={
-        "server_settings": {
-            "application_name": "personal-ai-assistant",
-            "client_encoding": "utf8",
-        },
-        "timeout": settings.DATABASE_CONNECT_TIMEOUT,
-    },
-)
-
-# Create session factory
-async_session_factory = async_sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
-)
-
-# Create declarative base
 Base = declarative_base()
+
+_orm_models_registered = False
+_engine: AsyncEngine | None = None
+_session_factory: async_sessionmaker[AsyncSession] | None = None
+_engine_url: str | None = None
+
+
+def _pool_metric(pool: Any, attr: str, default: int = 0) -> int:
+    """Safely read optional pool metrics across different SQLAlchemy pool types."""
+    metric = getattr(pool, attr, None)
+    if callable(metric):
+        try:
+            value = metric()
+            return int(value) if value is not None else default
+        except Exception:
+            return default
+    if metric is None:
+        return default
+    try:
+        return int(metric)
+    except Exception:
+        return default
+
+
+def _build_engine_kwargs(database_url: str) -> dict[str, Any]:
+    settings = get_settings()
+    common: dict[str, Any] = {
+        "echo": False,
+        "future": True,
+        "pool_pre_ping": True,
+    }
+
+    if database_url.startswith("postgresql+asyncpg://"):
+        common.update(
+            {
+                "pool_size": settings.DATABASE_POOL_SIZE,
+                "max_overflow": settings.DATABASE_MAX_OVERFLOW,
+                "pool_recycle": settings.DATABASE_RECYCLE,
+                "pool_timeout": settings.DATABASE_POOL_TIMEOUT,
+                "isolation_level": "READ COMMITTED",
+                "connect_args": {
+                    "server_settings": {
+                        "application_name": "personal-ai-assistant",
+                        "client_encoding": "utf8",
+                    },
+                    "timeout": settings.DATABASE_CONNECT_TIMEOUT,
+                },
+            }
+        )
+        return common
+
+    if database_url.startswith("sqlite+aiosqlite://"):
+        common["connect_args"] = {"timeout": settings.DATABASE_CONNECT_TIMEOUT}
+        return common
+
+    common["pool_recycle"] = settings.DATABASE_RECYCLE
+    return common
+
+
+def is_database_configured() -> bool:
+    """Return whether DATABASE_URL is available for runtime use."""
+    return bool(get_settings().DATABASE_URL)
+
+
+def get_engine() -> AsyncEngine:
+    """Get or create the async SQLAlchemy engine lazily."""
+    global _engine, _engine_url
+
+    database_url = get_settings().require_database_url()
+    if _engine is not None and _engine_url == database_url:
+        return _engine
+
+    _engine = create_async_engine(database_url, **_build_engine_kwargs(database_url))
+    _engine_url = database_url
+    return _engine
+
+
+def get_async_session_factory() -> async_sessionmaker[AsyncSession]:
+    """Get or create the async session factory lazily."""
+    global _session_factory
+
+    engine = get_engine()
+    if _session_factory is None:
+        _session_factory = async_sessionmaker(
+            engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+        )
+    return _session_factory
 
 
 def register_orm_models() -> None:
@@ -69,8 +123,6 @@ def register_orm_models() -> None:
     global _orm_models_registered
     if _orm_models_registered:
         return
-
-    from importlib import import_module
 
     for module in (
         "app.admin.models",
@@ -85,8 +137,9 @@ def register_orm_models() -> None:
 
 
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
-    """Get database session."""
-    async with async_session_factory() as session:
+    """Yield a request-scoped database session."""
+    session_factory = get_async_session_factory()
+    async with session_factory() as session:
         try:
             yield session
         finally:
@@ -94,32 +147,26 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db(run_metadata_sync: bool = False) -> None:
-    """Initialize database tables.
-
-    Note: PostgreSQL ENUM types may already exist from previous deployments.
-    We handle this by creating them manually first with existence checks.
-    """
+    """Initialize database connectivity and optionally sync metadata."""
     register_orm_models()
+    engine = get_engine()
 
-    # Schema is managed by Alembic migrations - no manual ENUM creation needed
     async with engine.begin() as conn:
         if not run_metadata_sync:
             logger.info(
-                "Database connectivity verified; "
-                "schema is managed by Alembic migrations."
+                "Database connectivity verified; schema is managed by Alembic migrations."
             )
             return
 
-        # Optional compatibility path for environments that still need metadata sync.
         try:
             await conn.run_sync(Base.metadata.create_all, checkfirst=True)
             logger.info("Database tables initialized successfully via metadata sync")
-        except (IntegrityError, ProgrammingError) as e:
-            error_msg = str(e).lower()
+        except (IntegrityError, ProgrammingError) as exc:
+            error_msg = str(exc).lower()
             if "duplicate key" in error_msg and (
                 "enum" in error_msg or "pg_type" in error_msg or "typname" in error_msg
             ):
-                logger.warning(f"ENUM type conflict detected (non-critical): {e}")
+                logger.warning("ENUM type conflict detected (non-critical): %s", exc)
                 try:
                     result = await conn.execute(
                         text(
@@ -128,45 +175,63 @@ async def init_db(run_metadata_sync: bool = False) -> None:
                     )
                     if result.first():
                         logger.info(
-                            "Database tables verified to exist "
-                            "(ignoring ENUM duplicate error)"
+                            "Database tables verified to exist (ignoring ENUM duplicate error)"
                         )
                     else:
-                        raise ValueError("Tables do not exist after ENUM error") from e
+                        raise ValueError("Tables do not exist after ENUM error") from exc
                 except Exception as verify_error:
                     logger.error(
-                        f"Could not verify tables after ENUM error: {verify_error}"
+                        "Could not verify tables after ENUM error: %s",
+                        verify_error,
                     )
-                    raise e from verify_error
+                    raise exc from verify_error
             else:
-                logger.error(f"Failed to initialize database: {e}")
+                logger.error("Failed to initialize database: %s", exc)
                 raise
 
 
 async def close_db() -> None:
-    """Close database connections."""
-    await engine.dispose()
-    # Tiny delay to allow asyncpg/sqlalchemy background tasks to settle
-    import asyncio
+    """Dispose the lazily-created engine if it exists."""
+    global _engine, _session_factory, _engine_url
+
+    if _engine is None:
+        return
+
+    await _engine.dispose()
+    _engine = None
+    _session_factory = None
+    _engine_url = None
 
     await asyncio.sleep(0.1)
 
 
 async def check_db_health() -> dict[str, Any]:
-    """
-    Check database connection health and performance metrics.
-    Returns runtime health status for monitoring.
-    """
+    """Return runtime DB health metrics."""
+    if not is_database_configured():
+        return {
+            "status": "not_configured",
+            "connection_url": None,
+            "pool_size": 0,
+            "checked_out": 0,
+            "overflow": 0,
+        }
+
     import time
 
+    engine = get_engine()
+    password = engine.url.password
+    connection_url = str(engine.url)
+    if password:
+        connection_url = connection_url.replace(password, "***")
+    pool = engine.pool
+
     health_info = {
-        "pool_size": engine.pool.size(),
-        "checked_out": engine.pool.checkedout(),
-        "overflow": engine.pool.overflow(),
-        "connection_url": str(engine.url).replace(engine.url.password, "***"),
+        "pool_size": _pool_metric(pool, "size"),
+        "checked_out": _pool_metric(pool, "checkedout"),
+        "overflow": _pool_metric(pool, "overflow"),
+        "connection_url": connection_url,
     }
 
-    # Test minimal query
     start_time = time.time()
     try:
         async with engine.connect() as conn:
@@ -174,19 +239,31 @@ async def check_db_health() -> dict[str, Any]:
             health_info["connect_time_ms"] = round((time.time() - start_time) * 1000, 2)
             health_info["status"] = "healthy"
             health_info["query_result"] = result.scalar()
-    except Exception as e:
-        logger.error(f"Database health check failed: {e}")
+    except Exception as exc:
+        logger.error("Database health check failed: %s", exc)
         health_info["status"] = "unhealthy"
-        health_info["error"] = str(e)
+        health_info["error"] = str(exc)
 
     return health_info
 
 
 def get_db_pool_snapshot() -> dict[str, Any]:
-    """Return lightweight DB pool occupancy metrics without extra SQL queries."""
-    pool_size = engine.pool.size()
-    checked_out = engine.pool.checkedout()
-    overflow = engine.pool.overflow()
+    """Return lightweight DB pool metrics without forcing startup failure."""
+    if not is_database_configured():
+        return {
+            "pool_size": 0,
+            "checked_out": 0,
+            "overflow": 0,
+            "capacity": 0,
+            "occupancy_ratio": 0.0,
+            "status": "not_configured",
+        }
+
+    engine = get_engine()
+    pool = engine.pool
+    pool_size = _pool_metric(pool, "size")
+    checked_out = _pool_metric(pool, "checkedout")
+    overflow = _pool_metric(pool, "overflow")
     capacity = max(pool_size + overflow, 1)
 
     return {
@@ -195,4 +272,5 @@ def get_db_pool_snapshot() -> dict[str, Any]:
         "overflow": overflow,
         "capacity": capacity,
         "occupancy_ratio": checked_out / capacity,
+        "status": "configured",
     }

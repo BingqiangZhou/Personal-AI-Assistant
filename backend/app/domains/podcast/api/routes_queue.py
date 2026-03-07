@@ -1,6 +1,6 @@
 """Podcast queue routes."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 
 from app.domains.podcast.api.dependencies import get_queue_service
 from app.domains.podcast.schemas import (
@@ -12,20 +12,10 @@ from app.domains.podcast.schemas import (
     PodcastQueueSetCurrentRequest,
 )
 from app.domains.podcast.services.queue_service import PodcastQueueService
+from app.http.errors import bilingual_http_exception
 
 
 router = APIRouter(prefix="")
-
-
-def _bilingual_error(
-    message_en: str,
-    message_zh: str,
-    status_code: int,
-) -> HTTPException:
-    return HTTPException(
-        status_code=status_code,
-        detail={"message_en": message_en, "message_zh": message_zh},
-    )
 
 
 @router.get("/queue", response_model=PodcastQueueResponse, summary="Get playback queue")
@@ -48,18 +38,18 @@ async def add_queue_item(
         return await service.add_to_queue(request.episode_id)
     except ValueError as exc:
         if str(exc) == "EPISODE_NOT_FOUND":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "Episode not found",
                 "\u672a\u627e\u5230\u8be5\u5355\u96c6",
                 status.HTTP_404_NOT_FOUND,
             ) from exc
         if str(exc) == "QUEUE_LIMIT_EXCEEDED":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "Queue has reached its limit",
                 "\u64ad\u653e\u961f\u5217\u5df2\u8fbe\u5230\u4e0a\u9650",
                 status.HTTP_400_BAD_REQUEST,
             ) from exc
-        raise _bilingual_error(
+        raise bilingual_http_exception(
             "Failed to add episode",
             "\u52a0\u5165\u961f\u5217\u5931\u8d25",
             status.HTTP_400_BAD_REQUEST,
@@ -86,17 +76,17 @@ async def remove_queue_item(
 async def reorder_queue_items(
     request: PodcastQueueReorderRequest,
     service: PodcastQueueService = Depends(get_queue_service),
-):
+    ):
     try:
         return await service.reorder_queue(request.episode_ids)
     except ValueError as exc:
         if str(exc) == "INVALID_REORDER_PAYLOAD":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "Invalid reorder payload",
                 "\u91cd\u6392\u53c2\u6570\u65e0\u6548",
                 status.HTTP_400_BAD_REQUEST,
             ) from exc
-        raise _bilingual_error(
+        raise bilingual_http_exception(
             "Failed to reorder queue",
             "\u91cd\u6392\u961f\u5217\u5931\u8d25",
             status.HTTP_400_BAD_REQUEST,
@@ -111,17 +101,17 @@ async def reorder_queue_items(
 async def set_queue_current(
     request: PodcastQueueSetCurrentRequest,
     service: PodcastQueueService = Depends(get_queue_service),
-):
+    ):
     try:
         return await service.set_current(request.episode_id)
     except ValueError as exc:
         if str(exc) == "EPISODE_NOT_IN_QUEUE":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "Episode not in queue",
                 "\u8be5\u5355\u96c6\u4e0d\u5728\u961f\u5217\u4e2d",
                 status.HTTP_400_BAD_REQUEST,
             ) from exc
-        raise _bilingual_error(
+        raise bilingual_http_exception(
             "Failed to set current",
             "\u8bbe\u7f6e\u5f53\u524d\u64ad\u653e\u5931\u8d25",
             status.HTTP_400_BAD_REQUEST,
@@ -136,23 +126,23 @@ async def set_queue_current(
 async def activate_queue_episode(
     request: PodcastQueueActivateRequest,
     service: PodcastQueueService = Depends(get_queue_service),
-):
+    ):
     try:
         return await service.activate_episode(request.episode_id)
     except ValueError as exc:
         if str(exc) == "EPISODE_NOT_FOUND":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "Episode not found",
                 "\u672a\u627e\u5230\u8be5\u5355\u96c6",
                 status.HTTP_404_NOT_FOUND,
             ) from exc
         if str(exc) == "QUEUE_LIMIT_EXCEEDED":
-            raise _bilingual_error(
+            raise bilingual_http_exception(
                 "Queue has reached its limit",
                 "\u64ad\u653e\u961f\u5217\u5df2\u8fbe\u5230\u4e0a\u9650",
                 status.HTTP_400_BAD_REQUEST,
             ) from exc
-        raise _bilingual_error(
+        raise bilingual_http_exception(
             "Failed to activate episode",
             "\u6fc0\u6d3b\u64ad\u653e\u961f\u5217\u5931\u8d25",
             status.HTTP_400_BAD_REQUEST,

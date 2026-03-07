@@ -4,11 +4,10 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field, model_validator
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db_session
 from app.core.dependencies import get_current_user
 from app.core.exceptions import BaseCustomError, UnauthorizedError
+from app.core.providers import get_authentication_service
 from app.domains.user.services import AuthenticationService
 from app.shared.schemas import (
     ForgotPasswordRequest,
@@ -64,12 +63,10 @@ class RegisterRequest(BaseModel):
 async def register(
     register_data: RegisterRequest,
     request: Request,
-    db: AsyncSession = Depends(get_db_session)
+    auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Register a new user - returns tokens on success."""
     try:
-        auth_service = AuthenticationService(db)
-
         # Extract device info from request
         device_info = {
             "user_agent": request.headers.get("user-agent"),
@@ -112,12 +109,10 @@ async def register(
 async def login(
     login_data: LoginRequest,
     request: Request,
-    db: AsyncSession = Depends(get_db_session)
+    auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Login with email/username and password."""
     try:
-        auth_service = AuthenticationService(db)
-
         # Determine which field to use (username takes priority if both provided)
         identifier = login_data.username or login_data.email_or_username
 
@@ -165,12 +160,10 @@ async def login(
 @router.post("/refresh", response_model=Token)
 async def refresh_token(
     refresh_data: RefreshTokenRequest,
-    db: AsyncSession = Depends(get_db_session)
+    auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Refresh access token using refresh token with sliding session."""
     try:
-        auth_service = AuthenticationService(db)
-
         token_data = await auth_service.refresh_access_token(
             refresh_token=refresh_data.refresh_token
         )
@@ -196,12 +189,10 @@ async def refresh_token(
 async def logout(
     logout_data: LogoutRequest,
     current_user: Any = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_session)
+    auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Logout current user."""
     try:
-        auth_service = AuthenticationService(db)
-
         if logout_data.refresh_token:
             # Logout specific session
             await auth_service.logout_user(logout_data.refresh_token)
@@ -241,11 +232,10 @@ async def get_current_user_info(
 @router.post("/logout-all", status_code=status.HTTP_200_OK)
 async def logout_all(
     current_user: Any = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db_session)
+    auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Logout from all devices."""
     try:
-        auth_service = AuthenticationService(db)
         await auth_service.logout_all_sessions(current_user.id)
         return {"message": "Successfully logged out from all devices"}
     except Exception as e:
@@ -258,12 +248,10 @@ async def logout_all(
 @router.post("/forgot-password", response_model=PasswordResetResponse)
 async def forgot_password(
     request_data: ForgotPasswordRequest,
-    db: AsyncSession = Depends(get_db_session)
+    auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Request a password reset link via email."""
     try:
-        auth_service = AuthenticationService(db)
-
         # Create password reset token
         result = await auth_service.create_password_reset_token(
             email=request_data.email
@@ -287,12 +275,10 @@ async def forgot_password(
 @router.post("/reset-password", response_model=PasswordResetResponse)
 async def reset_password(
     request_data: ResetPasswordRequest,
-    db: AsyncSession = Depends(get_db_session)
+    auth_service: AuthenticationService = Depends(get_authentication_service),
 ) -> Any:
     """Reset password using a valid reset token."""
     try:
-        auth_service = AuthenticationService(db)
-
         # Reset password
         result = await auth_service.reset_password(
             token=request_data.token,

@@ -6,7 +6,7 @@ from fastapi import Cookie, Depends, HTTPException, Request, status
 from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
+from app.core.config import get_settings
 from app.core.database import get_db_session
 from app.domains.user.models import User
 from app.domains.user.repositories import UserRepository
@@ -14,11 +14,13 @@ from app.domains.user.repositories import UserRepository
 
 logger = logging.getLogger(__name__)
 
-# Session serializer for secure cookies
-serializer = URLSafeTimedSerializer(settings.SECRET_KEY)
-
 # Session timeout (30 minutes)
 SESSION_TIMEOUT = 30 * 60  # seconds
+
+
+def _get_serializer() -> URLSafeTimedSerializer:
+    """Build the admin session serializer lazily."""
+    return URLSafeTimedSerializer(get_settings().SECRET_KEY)
 
 
 class AdminAuthRequired:
@@ -48,7 +50,7 @@ class AdminAuthRequired:
 
         try:
             # Verify session token
-            data = serializer.loads(admin_session, max_age=SESSION_TIMEOUT)
+            data = _get_serializer().loads(admin_session, max_age=SESSION_TIMEOUT)
             user_id = data.get("user_id")
 
             if not user_id:
@@ -110,10 +112,9 @@ class AdminAuthRequired:
 def create_admin_session(user_id: int) -> str:
     """Create a secure session token for admin user."""
     data = {"user_id": user_id, "created_at": datetime.now(timezone.utc).isoformat()}
-    return serializer.dumps(data)
+    return _get_serializer().dumps(data)
 
 
 # Dependency instances
 admin_required = AdminAuthRequired(require_2fa=True)  # Requires 2FA
 admin_required_no_2fa = AdminAuthRequired(require_2fa=False)  # Does not require 2FA
-

@@ -6,7 +6,7 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 
-from app.core.database import async_session_factory
+from app.core.database import get_async_session_factory
 from app.domains.user.models import User
 
 
@@ -21,7 +21,8 @@ async def check_admin_exists() -> bool:
         True if at least one superuser exists, False otherwise
     """
     try:
-        async with async_session_factory() as db:
+        session_factory = get_async_session_factory()
+        async with session_factory() as db:
             result = await db.execute(
                 select(User).where(User.is_superuser).limit(1)
             )
