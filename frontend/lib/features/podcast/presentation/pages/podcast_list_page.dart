@@ -482,9 +482,6 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     final searchMode = ref.watch(
       search.podcastSearchProvider.select((state) => state.searchMode),
     );
-    final selectedCountry = ref.watch(
-      countrySelectorProvider.select((state) => state.selectedCountry),
-    );
     const isDense = true;
     final content = hasSearched
         ? Consumer(
@@ -523,37 +520,19 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
           headerSpacing: headerSpacing,
           roundedViewport: true,
           badges: const [],
-          trailing: HeaderCapsuleActionButton(
-            key: const Key('podcast_discover_country_button'),
-            tooltip: l10n.podcast_country_label,
-            onPressed: () => _openCountrySelector(context),
-            icon: Icons.flag_outlined,
-            label: Text(selectedCountry.code.toUpperCase()),
-            trailingIcon: Icons.keyboard_arrow_down_rounded,
+          trailing: _buildSearchModeToggle(
+            context,
+            searchMode,
+            isDense: isDense,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GlassPanel(
-                key: const Key('podcast_discover_search_panel'),
-                padding: EdgeInsets.all(useCompactShell ? 10 : 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSearchModeSelector(
-                      context,
-                      searchMode,
-                      isDense: isDense,
-                    ),
-                    SizedBox(height: useCompactShell ? 6 : 8),
-                    _buildDiscoverSearchInput(
-                      context,
-                      l10n,
-                      searchMode: searchMode,
-                      isDense: isDense,
-                    ),
-                  ],
-                ),
+              _buildDiscoverSearchInput(
+                context,
+                l10n,
+                searchMode: searchMode,
+                isDense: isDense,
               ),
               SizedBox(height: useCompactShell ? 10 : 12),
               Expanded(
@@ -622,48 +601,48 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     );
   }
 
-  Widget _buildSearchModeSelector(
+  Widget _buildSearchModeToggle(
     BuildContext context,
     search.PodcastSearchMode searchMode, {
     required bool isDense,
   }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final toggleHeight = isDense ? 30.0 : 32.0;
 
     return Container(
       key: const Key('podcast_discover_tab_selector'),
-      height: isDense ? 40 : 44,
-      padding: EdgeInsets.all(isDense ? 3 : 4),
+      height: toggleHeight,
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
+        borderRadius: BorderRadius.circular(toggleHeight / 2),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: _buildTabItem(
-              context: context,
-              key: const Key('podcast_discover_tab_episodes'),
-              label: l10n.podcast_episodes,
-              icon: Icons.headphones_outlined,
-              selected: searchMode == search.PodcastSearchMode.episodes,
-              isDense: isDense,
-              onTap: () =>
-                  _handleDiscoverTabSelected(search.PodcastSearchMode.episodes),
-            ),
+          _buildCompactTabPill(
+            context: context,
+            key: const Key('podcast_discover_tab_episodes'),
+            label: l10n.podcast_episodes,
+            icon: Icons.headphones_outlined,
+            selected: searchMode == search.PodcastSearchMode.episodes,
+            isDense: isDense,
+            height: toggleHeight - 4,
+            onTap: () =>
+                _handleDiscoverTabSelected(search.PodcastSearchMode.episodes),
           ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: _buildTabItem(
-              context: context,
-              key: const Key('podcast_discover_tab_podcasts'),
-              label: l10n.podcast_title,
-              icon: Icons.podcasts,
-              selected: searchMode == search.PodcastSearchMode.podcasts,
-              isDense: isDense,
-              onTap: () =>
-                  _handleDiscoverTabSelected(search.PodcastSearchMode.podcasts),
-            ),
+          const SizedBox(width: 2),
+          _buildCompactTabPill(
+            context: context,
+            key: const Key('podcast_discover_tab_podcasts'),
+            label: l10n.podcast_title,
+            icon: Icons.podcasts,
+            selected: searchMode == search.PodcastSearchMode.podcasts,
+            isDense: isDense,
+            height: toggleHeight - 4,
+            onTap: () =>
+                _handleDiscoverTabSelected(search.PodcastSearchMode.podcasts),
           ),
         ],
       ),
@@ -711,6 +690,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                 controller: _searchController,
                 focusNode: _searchFocusNode,
                 textInputAction: TextInputAction.search,
+                style: theme.textTheme.bodyMedium,
                 decoration: InputDecoration(
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
@@ -723,7 +703,7 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                   hintText: hintText,
                   isDense: true,
                   contentPadding: EdgeInsets.zero,
-                  hintStyle: theme.textTheme.bodyLarge?.copyWith(
+                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -745,8 +725,12 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
                     ),
                   );
                 }
-                return SizedBox(width: isDense ? 6 : 8);
+                return const SizedBox.shrink();
               },
+            ),
+            Padding(
+              padding: EdgeInsets.only(right: isDense ? 6 : 7),
+              child: _buildCountryButton(context, isDense: isDense),
             ),
           ],
         ),
@@ -754,45 +738,98 @@ class _PodcastListPageState extends ConsumerState<PodcastListPage> {
     );
   }
 
-  Widget _buildTabItem({
+  Widget _buildCountryButton(
+    BuildContext context, {
+    required bool isDense,
+  }) {
+    final theme = Theme.of(context);
+    final selectedCountry = ref.watch(
+      countrySelectorProvider.select((state) => state.selectedCountry),
+    );
+    final height = isDense ? 30.0 : 32.0;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        key: const Key('podcast_discover_country_button'),
+        borderRadius: BorderRadius.circular(height / 2),
+        onTap: () => _openCountrySelector(context),
+        child: Container(
+          height: height,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(height / 2),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.flag_outlined,
+                size: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                selectedCountry.code.toUpperCase(),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 2),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactTabPill({
     required BuildContext context,
     required Key key,
     required String label,
     required IconData icon,
     required bool selected,
     required VoidCallback onTap,
+    required double height,
     bool isDense = false,
   }) {
     final theme = Theme.of(context);
     final foregroundColor = selected
         ? theme.colorScheme.onSurface
         : theme.colorScheme.onSurfaceVariant;
-    final labelStyle =
-        (isDense ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)
-            ?.copyWith(
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
-              color: foregroundColor,
-            );
+    final labelStyle = theme.textTheme.labelSmall?.copyWith(
+      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+      color: foregroundColor,
+    );
 
     return AnimatedContainer(
       key: key,
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
+      height: height,
       decoration: BoxDecoration(
         color: selected ? theme.colorScheme.surface : Colors.transparent,
-        borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
+        borderRadius: BorderRadius.circular(height / 2),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(kPodcastMiniCornerRadius),
+          borderRadius: BorderRadius.circular(height / 2),
           onTap: onTap,
-          child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: isDense ? 16 : 18, color: foregroundColor),
-                SizedBox(width: isDense ? 4 : 6),
+                Icon(icon, size: 13, color: foregroundColor),
+                const SizedBox(width: 3),
                 Text(label, style: labelStyle),
               ],
             ),
