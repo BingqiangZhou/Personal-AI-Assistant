@@ -3,11 +3,16 @@
 import logging
 
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel
 
 from app.admin.auth import admin_required
-from app.admin.routes._shared import get_templates
+from app.admin.routes._shared import (
+    get_templates,
+    json_payload,
+    render_admin_template,
+    require_payload,
+)
 from app.admin.services import AdminApiKeysService
 from app.core.providers import get_admin_apikeys_service
 from app.domains.user.models import User
@@ -42,14 +47,13 @@ async def apikeys_page(
             page=page,
             per_page=per_page,
         )
-        return templates.TemplateResponse(
-            "apikeys.html",
-            {
-                "request": request,
-                "user": user,
-                "messages": [],
-                **context,
-            },
+        return render_admin_template(
+            templates=templates,
+            template_name="apikeys.html",
+            request=request,
+            user=user,
+            messages=[],
+            **context,
         )
     except Exception as exc:
         logger.error("API keys page error: %s", exc)
@@ -80,11 +84,11 @@ async def test_apikey(
             key_id=key_id,
             username=user.username,
         )
-        return JSONResponse(content=payload, status_code=status_code)
+        return json_payload(payload, status_code=status_code)
     except Exception as exc:
         logger.error("API key test error: %s", exc)
-        return JSONResponse(
-            content={"success": False, "message": f"娴嬭瘯澶辫触: {exc}"},
+        return json_payload(
+            {"success": False, "message": f"娴嬭瘯澶辫触: {exc}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -117,7 +121,7 @@ async def create_apikey(
             description=description,
             priority=priority,
         )
-        return JSONResponse(content=payload)
+        return json_payload(payload)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -145,9 +149,9 @@ async def toggle_apikey(
             user=user,
             key_id=key_id,
         )
-        if payload is None:
-            raise HTTPException(status_code=404, detail="API key not found")
-        return JSONResponse(content=payload)
+        return json_payload(
+            require_payload(payload, detail="API key not found")
+        )
     except HTTPException:
         raise
     except Exception as exc:
@@ -188,9 +192,9 @@ async def edit_apikey(
             description=description,
             priority=priority,
         )
-        if payload is None:
-            raise HTTPException(status_code=404, detail="API key not found")
-        return JSONResponse(content=payload)
+        return json_payload(
+            require_payload(payload, detail="API key not found")
+        )
     except HTTPException:
         raise
     except ValueError as exc:
@@ -220,9 +224,9 @@ async def delete_apikey(
             user=user,
             key_id=key_id,
         )
-        if payload is None:
-            raise HTTPException(status_code=404, detail="API key not found")
-        return JSONResponse(content=payload)
+        return json_payload(
+            require_payload(payload, detail="API key not found")
+        )
     except HTTPException:
         raise
     except Exception as exc:
@@ -250,7 +254,7 @@ async def export_apikeys_json(
         )
         if isinstance(result[0], dict):
             payload, status_code = result
-            return JSONResponse(content=payload, status_code=status_code)
+            return json_payload(payload, status_code=status_code)
 
         content, filename = result
         return Response(
@@ -280,10 +284,10 @@ async def import_apikeys_json(
             user=user,
             raw_body=raw_body,
         )
-        return JSONResponse(content=payload, status_code=status_code)
+        return json_payload(payload, status_code=status_code)
     except Exception as exc:
         logger.error("JSON import error: %s", exc)
-        return JSONResponse(
-            content={"success": False, "message": f"Import failed: {exc}"},
+        return json_payload(
+            {"success": False, "message": f"Import failed: {exc}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

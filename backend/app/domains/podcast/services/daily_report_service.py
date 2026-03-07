@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime, time, timedelta, timezone
+from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import and_, delete, func, or_, select
@@ -20,6 +21,11 @@ from app.domains.podcast.services.daily_report_summary_extractor import (
 )
 from app.domains.subscription.models import Subscription, UserSubscription
 
+if TYPE_CHECKING:
+    from app.domains.podcast.services.task_orchestration_service import (
+        PodcastTaskOrchestrationService,
+    )
+
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +36,25 @@ class DailyReportService:
     REPORT_TIMEZONE = "Asia/Shanghai"
     REPORT_SCHEDULE_TIME = "03:30"
 
-    def __init__(self, db: AsyncSession, user_id: int):
+    def __init__(
+        self,
+        db: AsyncSession,
+        user_id: int,
+        task_orchestration_service_factory=None,
+    ):
         self.db = db
         self.user_id = user_id
+        self._task_orchestration_service_factory = task_orchestration_service_factory
+
+    def _task_orchestration_service(self):
+        factory = self._task_orchestration_service_factory
+        if factory is None:
+            from app.domains.podcast.services.task_orchestration_service import (
+                PodcastTaskOrchestrationService,
+            )
+
+            factory = PodcastTaskOrchestrationService
+        return factory(self.db)
 
     async def generate_daily_report(
         self,
@@ -351,11 +373,10 @@ class DailyReportService:
 
     async def _trigger_episode_processing(self, episode_id: int) -> None:
         try:
-            from app.domains.podcast.tasks import (
-                process_podcast_episode_with_transcription,
+            self._task_orchestration_service().enqueue_episode_processing(
+                episode_id=episode_id,
+                user_id=self.user_id,
             )
-
-            process_podcast_episode_with_transcription.delay(episode_id, self.user_id)
         except Exception as exc:
             logger.warning(
                 "Failed to dispatch transcription/summary pipeline for episode=%s user=%s: %s",

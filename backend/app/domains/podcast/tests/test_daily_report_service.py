@@ -29,6 +29,17 @@ class _ScalarsAllResult:
         return self._values
 
 
+class _FakeTaskOrchestrationService:
+    def __init__(self, db):
+        self.db = db
+        self.episode_processing_calls = []
+
+    def enqueue_episode_processing(self, *, episode_id: int, user_id: int):
+        self.episode_processing_calls.append(
+            {"episode_id": episode_id, "user_id": user_id}
+        )
+
+
 @pytest.mark.asyncio
 async def test_compute_window_utc_for_shanghai_day():
     service = DailyReportService(db=AsyncMock(), user_id=1)
@@ -122,6 +133,23 @@ async def test_generate_daily_report_triggers_async_processing_for_unsummarized(
     assert result == {"available": True}
     service._trigger_episode_processing.assert_awaited_once_with(101)
     db.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_trigger_episode_processing_uses_task_orchestration_service():
+    db = AsyncMock()
+    fake_task_service = _FakeTaskOrchestrationService(db)
+    service = DailyReportService(
+        db=db,
+        user_id=7,
+        task_orchestration_service_factory=lambda session: fake_task_service,
+    )
+
+    await service._trigger_episode_processing(episode_id=123)
+
+    assert fake_task_service.episode_processing_calls == [
+        {"episode_id": 123, "user_id": 7}
+    ]
 
 
 @pytest.mark.asyncio

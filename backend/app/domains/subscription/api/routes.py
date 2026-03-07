@@ -5,7 +5,13 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from app.core.providers import get_subscription_service
+from app.domains.subscription.api.dependencies import get_subscription_service
+from app.domains.subscription.api.response_assemblers import (
+    assemble_category_payload,
+    assemble_item_payload,
+    assemble_paginated_subscription_response,
+    assemble_subscription_response,
+)
 from app.domains.subscription.api.routes_podcasts import router as podcast_router
 from app.domains.subscription.services import SubscriptionService
 from app.shared.schemas import (
@@ -72,11 +78,14 @@ async def list_subscriptions(
     service: SubscriptionService = Depends(get_subscription_service)
 ):
     """List user's subscriptions."""
-    return await service.list_subscriptions(
+    items, total, item_counts = await service.list_subscriptions(
         page=pagination.page,
         size=pagination.size,
         status=status,
-        source_type=source_type
+        source_type=source_type,
+    )
+    return assemble_paginated_subscription_response(
+        items, total, item_counts, pagination.page, pagination.size
     )
 
 
@@ -96,7 +105,8 @@ async def create_subscription(
     # Duplicate detection is now handled at service layer with many-to-many support
     # No duplicate found - create subscription
     try:
-        return await service.create_subscription(subscription_data)
+        sub = await service.create_subscription(subscription_data)
+        return assemble_subscription_response(sub)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
 
@@ -136,7 +146,8 @@ async def get_subscription(
     result = await service.get_subscription(subscription_id)
     if not result:
         raise HTTPException(status_code=404, detail="Subscription not found")
-    return result
+    sub, item_count = result
+    return assemble_subscription_response(sub, item_count=item_count)
 
 
 @router.put("/{subscription_id}", response_model=SubscriptionResponse)
@@ -149,7 +160,8 @@ async def update_subscription(
     result = await service.update_subscription(subscription_id, subscription_data)
     if not result:
         raise HTTPException(status_code=404, detail="Subscription not found")
-    return result
+    sub, item_count = result
+    return assemble_subscription_response(sub, item_count=item_count)
 
 
 @router.delete("/{subscription_id}")
@@ -198,12 +210,18 @@ async def get_subscription_items(
     service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Get items from a subscription."""
-    return await service.get_subscription_items(
+    items, total = await service.get_subscription_items(
         subscription_id,
         page=pagination.page,
         size=pagination.size,
         unread_only=unread_only,
-        bookmarked_only=bookmarked_only
+        bookmarked_only=bookmarked_only,
+    )
+    return PaginatedResponse.create(
+        items=[assemble_item_payload(item) for item in items],
+        total=total,
+        page=pagination.page,
+        size=pagination.size,
     )
 
 
@@ -215,11 +233,17 @@ async def get_all_items(
     service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Get all items from all subscriptions."""
-    return await service.get_all_items(
+    items, total = await service.get_all_items(
         page=pagination.page,
         size=pagination.size,
         unread_only=unread_only,
-        bookmarked_only=bookmarked_only
+        bookmarked_only=bookmarked_only,
+    )
+    return PaginatedResponse.create(
+        items=[assemble_item_payload(item) for item in items],
+        total=total,
+        page=pagination.page,
+        size=pagination.size,
     )
 
 
@@ -286,7 +310,8 @@ async def list_categories(
     service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Get all user's categories."""
-    return await service.list_categories()
+    categories = await service.list_categories()
+    return [assemble_category_payload(c) for c in categories]
 
 
 @router.post("/categories/", response_model=CategoryResponse)
@@ -295,11 +320,12 @@ async def create_category(
     service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Create a new category."""
-    return await service.create_category(
+    category = await service.create_category(
         name=category_data.name,
         description=category_data.description,
-        color=category_data.color
+        color=category_data.color,
     )
+    return assemble_category_payload(category)
 
 
 @router.put("/categories/{category_id}", response_model=CategoryResponse)
@@ -310,10 +336,10 @@ async def update_category(
 ):
     """Update category."""
     update_data = category_data.model_dump(exclude_unset=True)
-    result = await service.update_category(category_id, **update_data)
-    if not result:
+    category = await service.update_category(category_id, **update_data)
+    if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    return result
+    return assemble_category_payload(category, include_created_at=False)
 
 
 @router.delete("/categories/{category_id}")

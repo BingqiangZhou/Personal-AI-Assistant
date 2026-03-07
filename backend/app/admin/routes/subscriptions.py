@@ -3,10 +3,17 @@
 import logging
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import HTMLResponse
 
 from app.admin.auth import admin_required
-from app.admin.routes._shared import get_templates
+from app.admin.routes._shared import (
+    empty_response,
+    get_templates,
+    json_payload,
+    render_admin_template,
+    require_payload,
+    xml_download_response,
+)
 from app.admin.services import AdminSubscriptionsService
 from app.core.providers import get_admin_subscriptions_service
 from app.domains.user.models import User
@@ -38,14 +45,13 @@ async def subscriptions_page(
             search_query=search_query,
             user_filter=user_filter,
         )
-        return templates.TemplateResponse(
-            "subscriptions.html",
-            {
-                "request": request,
-                "user": user,
-                "messages": [],
-                **context,
-            },
+        return render_admin_template(
+            templates=templates,
+            template_name="subscriptions.html",
+            request=request,
+            user=user,
+            messages=[],
+            **context,
         )
     except Exception as exc:
         logger.error("Subscriptions page error: %s", exc)
@@ -70,7 +76,7 @@ async def update_subscription_frequency(
             update_time=update_time,
             update_day=update_day,
         )
-        return JSONResponse(content=payload)
+        return json_payload(payload)
     except HTTPException:
         raise
     except Exception as exc:
@@ -96,9 +102,9 @@ async def edit_subscription(
             title=title,
             source_url=source_url,
         )
-        if payload is None:
-            raise HTTPException(status_code=404, detail="Subscription not found")
-        return JSONResponse(content=payload)
+        return json_payload(
+            require_payload(payload, detail="Subscription not found")
+        )
     except HTTPException:
         raise
     except Exception as exc:
@@ -120,11 +126,11 @@ async def test_subscription_url(
             source_url=source_url,
             username=user.username,
         )
-        return JSONResponse(content=payload, status_code=status_code)
+        return json_payload(payload, status_code=status_code)
     except Exception as exc:
         logger.error("RSS feed test error: %s", exc)
-        return JSONResponse(
-            content={"success": False, "message": f"Test failed: {exc}"},
+        return json_payload(
+            {"success": False, "message": f"Test failed: {exc}"},
             status_code=500,
         )
 
@@ -138,7 +144,7 @@ async def test_all_subscriptions(
     """Test all RSS subscriptions and disable failed ones."""
     try:
         payload = await service.test_all_subscriptions(request=request, user=user)
-        return JSONResponse(content=payload)
+        return json_payload(payload)
     except Exception as exc:
         logger.error("Test all subscriptions error: %s", exc)
         raise HTTPException(status_code=500, detail=f"Failed to test subscriptions: {exc}") from exc
@@ -154,9 +160,9 @@ async def delete_subscription(
     """Delete a subscription (with proper handling of podcast-related data)."""
     try:
         payload = await service.delete_subscription(request=request, user=user, sub_id=sub_id)
-        if payload is None:
-            raise HTTPException(status_code=404, detail="Subscription not found")
-        return JSONResponse(content=payload)
+        return json_payload(
+            require_payload(payload, detail="Subscription not found")
+        )
     except HTTPException:
         raise
     except Exception as exc:
@@ -174,9 +180,9 @@ async def refresh_subscription(
     """Manually refresh a subscription."""
     try:
         payload = await service.refresh_subscription(request=request, user=user, sub_id=sub_id)
-        if payload is None:
-            raise HTTPException(status_code=404, detail="Subscription not found")
-        return JSONResponse(content=payload)
+        return json_payload(
+            require_payload(payload, detail="Subscription not found")
+        )
     except HTTPException:
         raise
     except Exception as exc:
@@ -193,7 +199,7 @@ async def batch_refresh_subscriptions(
     """Batch refresh subscriptions."""
     try:
         await service.batch_refresh_subscriptions(request=request, user=user)
-        return Response(status_code=200)
+        return empty_response()
     except Exception as exc:
         logger.error("Batch refresh error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to batch refresh subscriptions") from exc
@@ -208,7 +214,7 @@ async def batch_toggle_subscriptions(
     """Batch toggle subscription status."""
     try:
         await service.batch_toggle_subscriptions(request=request, user=user)
-        return Response(status_code=200)
+        return empty_response()
     except Exception as exc:
         logger.error("Batch toggle error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to batch toggle subscriptions") from exc
@@ -223,7 +229,7 @@ async def batch_delete_subscriptions(
     """Batch delete subscriptions."""
     try:
         await service.batch_delete_subscriptions(request=request, user=user)
-        return Response(status_code=200)
+        return empty_response()
     except HTTPException:
         raise
     except Exception as exc:
@@ -249,11 +255,7 @@ async def export_subscriptions_opml(
             request=request,
             user=user,
         )
-        return Response(
-            content=opml_content,
-            media_type="application/xml; charset=utf-8",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-        )
+        return xml_download_response(content=opml_content, filename=filename)
     except Exception as exc:
         logger.error("OPML export error: %s", exc)
         raise HTTPException(status_code=500, detail=f"Failed to export OPML: {exc}") from exc
@@ -273,10 +275,10 @@ async def import_subscriptions_opml(
             user=user,
             opml_content=opml_content,
         )
-        return JSONResponse(content=payload, status_code=status_code)
+        return json_payload(payload, status_code=status_code)
     except Exception as exc:
         logger.error("OPML import error: %s", exc)
-        return JSONResponse(
+        return json_payload(
             status_code=500,
-            content={"success": False, "message": f"Import failed: {exc}"},
+            payload={"success": False, "message": f"Import failed: {exc}"},
         )

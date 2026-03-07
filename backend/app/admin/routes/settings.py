@@ -3,11 +3,10 @@
 import logging
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 
-from app.admin.audit import log_admin_action
 from app.admin.auth import admin_required
-from app.admin.routes._shared import get_templates
+from app.admin.routes._shared import get_templates, json_payload, render_admin_template
 from app.admin.services import AdminSettingsService
 from app.core.providers import get_admin_settings_service
 from app.domains.user.models import User
@@ -26,13 +25,12 @@ async def settings_page(
 ):
     """Display system settings page."""
     try:
-        return templates.TemplateResponse(
-            "settings.html",
-            {
-                "request": request,
-                "user": user,
-                "messages": [],
-            },
+        return render_admin_template(
+            templates=templates,
+            template_name="settings.html",
+            request=request,
+            user=user,
+            messages=[],
         )
     except Exception as exc:
         logger.error("Settings page error: %s", exc)
@@ -46,7 +44,7 @@ async def get_audio_settings(
 ):
     """Get audio processing settings as JSON."""
     try:
-        return JSONResponse(content=await service.get_audio_settings())
+        return json_payload(await service.get_audio_settings())
     except Exception as exc:
         logger.error("Get audio settings error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to get audio settings") from exc
@@ -62,32 +60,14 @@ async def update_audio_settings(
 ):
     """Update audio processing settings."""
     try:
-        if not (5 <= chunk_size_mb <= 25):
-            raise HTTPException(status_code=400, detail="chunk_size_mb must be between 5 and 25")
-        if not (1 <= max_concurrent_threads <= 16):
-            raise HTTPException(
-                status_code=400,
-                detail="max_concurrent_threads must be between 1 and 16",
+        return json_payload(
+            await service.save_audio_settings(
+                request=request,
+                user=user,
+                chunk_size_mb=chunk_size_mb,
+                max_concurrent_threads=max_concurrent_threads,
             )
-
-        await service.update_audio_settings(
-            chunk_size_mb=chunk_size_mb,
-            max_concurrent_threads=max_concurrent_threads,
         )
-        await log_admin_action(
-            db=service.db,
-            user_id=user.id,
-            username=user.username,
-            action="update",
-            resource_type="system_settings",
-            resource_name="Audio processing settings",
-            details={
-                "chunk_size_mb": chunk_size_mb,
-                "max_concurrent_threads": max_concurrent_threads,
-            },
-            request=request,
-        )
-        return JSONResponse(content={"success": True, "message": "Settings saved"})
     except HTTPException:
         raise
     except Exception as exc:
@@ -103,7 +83,7 @@ async def get_frequency_settings(
 ):
     """Get RSS subscription update frequency settings."""
     try:
-        return JSONResponse(content=await service.get_frequency_settings())
+        return json_payload(await service.get_frequency_settings())
     except Exception as exc:
         logger.error("Get frequency settings error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to get frequency settings") from exc
@@ -120,45 +100,14 @@ async def update_frequency_settings(
 ):
     """Update RSS subscription update frequency settings."""
     try:
-        valid_frequencies = ["HOURLY", "DAILY", "WEEKLY"]
-        if update_frequency not in valid_frequencies:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid frequency. Must be one of: {valid_frequencies}",
+        return json_payload(
+            await service.save_frequency_settings(
+                request=request,
+                user=user,
+                update_frequency=update_frequency,
+                update_time=update_time,
+                update_day=update_day,
             )
-        if update_frequency in ["DAILY", "WEEKLY"] and not update_time:
-            raise HTTPException(
-                status_code=400,
-                detail="update_time is required for DAILY and WEEKLY frequencies",
-            )
-        if update_frequency == "WEEKLY" and not update_day:
-            raise HTTPException(
-                status_code=400,
-                detail="update_day is required for WEEKLY frequency",
-            )
-        if update_day is not None and not (1 <= update_day <= 7):
-            raise HTTPException(status_code=400, detail="update_day must be between 1 and 7")
-
-        settings_data, total_count = await service.update_frequency_settings(
-            update_frequency=update_frequency,
-            update_time=update_time,
-            update_day=update_day,
-        )
-        await log_admin_action(
-            db=service.db,
-            user_id=user.id,
-            username=user.username,
-            action="update",
-            resource_type="subscription_frequency",
-            resource_name=f"All user subscriptions (affected {total_count})",
-            details=settings_data,
-            request=request,
-        )
-        return JSONResponse(
-            content={
-                "success": True,
-                "message": f"RSS settings saved (updated {total_count} user-subscription mappings)",
-            }
         )
     except HTTPException:
         raise
@@ -174,7 +123,7 @@ async def get_security_settings(
 ):
     """Get security settings as JSON."""
     try:
-        return JSONResponse(content=await service.get_security_settings())
+        return json_payload(await service.get_security_settings())
     except Exception as exc:
         logger.error("Get security settings error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to get security settings") from exc
@@ -189,18 +138,13 @@ async def update_security_settings(
 ):
     """Update security settings."""
     try:
-        await service.update_security_settings(admin_2fa_enabled=admin_2fa_enabled)
-        await log_admin_action(
-            db=service.db,
-            user_id=user.id,
-            username=user.username,
-            action="update",
-            resource_type="security_settings",
-            resource_name="Admin 2FA Settings",
-            details={"admin_2fa_enabled": admin_2fa_enabled},
-            request=request,
+        return json_payload(
+            await service.save_security_settings(
+                request=request,
+                user=user,
+                admin_2fa_enabled=admin_2fa_enabled,
+            )
         )
-        return JSONResponse(content={"success": True, "message": "Security settings saved"})
     except HTTPException:
         raise
     except Exception as exc:
@@ -215,7 +159,7 @@ async def get_storage_info(
 ):
     """Get storage information as JSON."""
     try:
-        return JSONResponse(content=await service.get_storage_info())
+        return json_payload(await service.get_storage_info())
     except Exception as exc:
         logger.error("Get storage info error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to get storage information") from exc
@@ -228,7 +172,7 @@ async def get_cleanup_config(
 ):
     """Get auto cleanup configuration as JSON."""
     try:
-        return JSONResponse(content=await service.get_cleanup_config())
+        return json_payload(await service.get_cleanup_config())
     except Exception as exc:
         logger.error("Get cleanup config error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to get cleanup configuration") from exc
@@ -243,19 +187,13 @@ async def update_cleanup_config(
 ):
     """Update auto cleanup configuration."""
     try:
-        result = await service.update_cleanup_config(enabled)
-        if result.get("success"):
-            await log_admin_action(
-                db=service.db,
-                user_id=user.id,
-                username=user.username,
-                action="update",
-                resource_type="storage_settings",
-                resource_name="Auto Cleanup Settings",
-                details={"enabled": enabled},
+        return json_payload(
+            await service.save_cleanup_config(
                 request=request,
+                user=user,
+                enabled=enabled,
             )
-        return JSONResponse(content=result)
+        )
     except HTTPException:
         raise
     except Exception as exc:
@@ -272,22 +210,13 @@ async def execute_cleanup(
 ):
     """Execute manual cleanup."""
     try:
-        result = await service.execute_cleanup(keep_days)
-        await log_admin_action(
-            db=service.db,
-            user_id=user.id,
-            username=user.username,
-            action="execute",
-            resource_type="storage_cleanup",
-            resource_name="Manual Cache Cleanup",
-            details={
-                "keep_days": keep_days,
-                "deleted_count": result.get("total", {}).get("deleted_count", 0),
-                "freed_space": result.get("total", {}).get("freed_space_human", "0 B"),
-            },
-            request=request,
+        return json_payload(
+            await service.run_cleanup(
+                request=request,
+                user=user,
+                keep_days=keep_days,
+            )
         )
-        return JSONResponse(content=result)
     except HTTPException:
         raise
     except Exception as exc:

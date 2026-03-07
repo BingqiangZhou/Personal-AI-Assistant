@@ -6,8 +6,13 @@ AI模型配置管理API路由
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.core.exceptions import DatabaseError, ValidationError
-from app.core.providers import get_ai_model_config_service
 from app.core.security import get_token_from_request
+from app.domains.ai.api.dependencies import get_ai_model_config_service
+from app.domains.ai.api.response_mapper import (
+    build_ai_model_config_list_response,
+    build_ai_model_config_response,
+    build_ai_model_config_responses,
+)
 from app.domains.ai.models import ModelType
 from app.domains.ai.schemas import (
     AIModelConfigCreate,
@@ -24,47 +29,6 @@ from app.domains.ai.services import AIModelConfigService
 
 
 router = APIRouter()
-
-
-def _create_model_response(model) -> AIModelConfigResponse:
-    """安全地创建AI模型配置响应对象"""
-    # 计算成功率
-    success_rate = 0.0
-    if model.usage_count > 0:
-        success_rate = (model.success_count / model.usage_count) * 100
-
-    return AIModelConfigResponse(
-        id=model.id,
-        name=model.name,
-        display_name=model.display_name,
-        description=model.description,
-        model_type=model.model_type,
-        api_url=model.api_url,
-        api_key=model.api_key,
-        api_key_encrypted=model.api_key_encrypted,
-        model_id=model.model_id,
-        provider=model.provider,
-        max_tokens=model.max_tokens,
-        temperature=model.temperature,
-        timeout_seconds=model.timeout_seconds,
-        max_retries=model.max_retries,
-        max_concurrent_requests=model.max_concurrent_requests,
-        rate_limit_per_minute=model.rate_limit_per_minute,
-        cost_per_input_token=model.cost_per_input_token,
-        cost_per_output_token=model.cost_per_output_token,
-        extra_config=model.extra_config,
-        is_active=model.is_active,
-        is_default=model.is_default,
-        is_system=model.is_system,
-        usage_count=model.usage_count,
-        success_count=model.success_count,
-        error_count=model.error_count,
-        total_tokens_used=model.total_tokens_used,
-        success_rate=success_rate,
-        created_at=model.created_at,
-        updated_at=model.updated_at,
-        last_used_at=model.last_used_at,
-    )
 
 
 @router.post(
@@ -98,7 +62,7 @@ async def create_model(
     """
     try:
         model = await service.create_model(model_data)
-        return _create_model_response(model)
+        return build_ai_model_config_response(model)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except DatabaseError as e:
@@ -149,15 +113,11 @@ async def get_models(
                 size=size
             )
 
-        model_responses = [_create_model_response(model) for model in models]
-
-        pages = (total + size - 1) // size
-        return AIModelConfigList(
-            models=model_responses,
+        return build_ai_model_config_list_response(
+            models=models,
             total=total,
             page=page,
             size=size,
-            pages=pages
         )
     except DatabaseError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
@@ -187,7 +147,7 @@ async def get_model(
         # Decrypt API key if requested
         if decrypt_key and model.api_key_encrypted:
             try:
-                decrypted_key = await service._get_decrypted_api_key(model)
+                decrypted_key = await service.get_decrypted_api_key(model)
                 model.api_key = decrypted_key
                 model.api_key_encrypted = False
             except Exception:
@@ -197,7 +157,7 @@ async def get_model(
                 # But let's keep robust.
                 pass
 
-        return _create_model_response(model)
+        return build_ai_model_config_response(model)
     except HTTPException:
         raise
     except DatabaseError as e:
@@ -225,7 +185,7 @@ async def update_model(
                 detail=f"Model config {model_id} not found"
             )
 
-        return _create_model_response(model)
+        return build_ai_model_config_response(model)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except HTTPException:
@@ -288,7 +248,7 @@ async def set_default_model(
                 detail=f"Model config {model_id} not found or type mismatch"
             )
 
-        return _create_model_response(model)
+        return build_ai_model_config_response(model)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except HTTPException:
@@ -317,7 +277,7 @@ async def get_default_model(
                 detail=f"No default model found for type: {model_type}"
             )
 
-        return _create_model_response(model)
+        return build_ai_model_config_response(model)
     except DatabaseError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
@@ -336,7 +296,7 @@ async def get_active_models(
     try:
         models = await service.get_active_models(model_type)
 
-        return [_create_model_response(model) for model in models]
+        return build_ai_model_config_responses(models)
     except DatabaseError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)) from e
 
@@ -430,7 +390,7 @@ async def init_default_models(
     try:
         models = await service.init_default_models()
 
-        return [_create_model_response(model) for model in models]
+        return build_ai_model_config_responses(models)
     except ValidationError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except DatabaseError as e:

@@ -2,9 +2,11 @@
 
 import secrets
 
+from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.admin.audit import log_admin_action
 from app.admin.models import AdminAuditLog
 from app.core.security import get_password_hash
 from app.domains.user.models import User, UserStatus
@@ -96,6 +98,34 @@ class AdminUsersAuditService:
         await self.db.refresh(target_user)
         return target_user
 
+    async def toggle_user(
+        self,
+        *,
+        request,
+        user,
+        target_user_id: int,
+    ) -> dict:
+        """Toggle a user's status and write the admin audit log."""
+        target_user = await self.toggle_user_status(
+            target_user_id=target_user_id,
+            acting_user_id=user.id,
+        )
+        if not target_user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+        await log_admin_action(
+            db=self.db,
+            user_id=user.id,
+            username=user.username,
+            action="toggle",
+            resource_type="user",
+            resource_id=target_user_id,
+            resource_name=target_user.username,
+            details={"status": target_user.status},
+            request=request,
+        )
+        return {"success": True, "status": target_user.status}
+
     async def reset_user_password(self, *, target_user_id: int) -> tuple[User | None, str]:
         result = await self.db.execute(select(User).where(User.id == target_user_id))
         target_user = result.scalar_one_or_none()
@@ -107,3 +137,33 @@ class AdminUsersAuditService:
         await self.db.commit()
         await self.db.refresh(target_user)
         return target_user, new_password
+
+    async def reset_user_password_action(
+        self,
+        *,
+        request,
+        user,
+        target_user_id: int,
+    ) -> dict:
+        """Reset a user's password and write the admin audit log."""
+        target_user, new_password = await self.reset_user_password(
+            target_user_id=target_user_id
+        )
+        if not target_user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+        await log_admin_action(
+            db=self.db,
+            user_id=user.id,
+            username=user.username,
+            action="reset_password",
+            resource_type="user",
+            resource_id=target_user_id,
+            resource_name=target_user.username,
+            request=request,
+        )
+        return {
+            "success": True,
+            "new_password": new_password,
+            "message": f"Password reset successful. New password: {new_password}",
+        }

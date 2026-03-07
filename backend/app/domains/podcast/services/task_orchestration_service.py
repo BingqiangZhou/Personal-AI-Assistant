@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
@@ -57,6 +59,36 @@ class PodcastTaskOrchestrationService:
 
     async def process_opml_subscription_episodes(self, **kwargs):
         return await self._feed_sync().process_opml_subscription_episodes(**kwargs)
+
+    def enqueue_opml_subscription_episodes(self, **kwargs) -> Any:
+        """Queue OPML episode parsing without exposing Celery task imports."""
+        from app.domains.podcast.tasks.opml_import import (
+            process_opml_subscription_episodes,
+        )
+
+        return process_opml_subscription_episodes.delay(**kwargs)
+
+    def enqueue_audio_transcription(
+        self,
+        task_id: int,
+        config_db_id: int | None = None,
+    ) -> Any:
+        """Queue a transcription worker task without exposing Celery imports."""
+        from app.domains.podcast.tasks.transcription import process_audio_transcription
+
+        return process_audio_transcription.delay(task_id, config_db_id)
+
+    def enqueue_episode_processing(
+        self,
+        episode_id: int,
+        user_id: int,
+    ) -> Any:
+        """Queue the episode transcription/summary pipeline."""
+        from app.domains.podcast.tasks.transcription import (
+            process_podcast_episode_with_transcription,
+        )
+
+        return process_podcast_episode_with_transcription.delay(episode_id, user_id)
 
     async def generate_daily_reports(self, **kwargs):
         return await self._reporting().generate_daily_reports(**kwargs)

@@ -69,6 +69,11 @@ def get_redis_client() -> PodcastRedis:
     return PodcastRedis()
 
 
+async def get_token_user_id(user=Depends(get_token_from_request)) -> int:
+    """Resolve the authenticated user id for podcast routes."""
+    return int(user["sub"])
+
+
 def get_user_repository(
     db: AsyncSession = Depends(get_db_session_dependency),
 ) -> UserRepository:
@@ -136,11 +141,6 @@ async def get_current_superuser(
     return current_user
 
 
-async def get_token_user_id(user=Depends(get_token_from_request)) -> int:
-    """Get current authenticated user id from token payload."""
-    return int(user["sub"])
-
-
 def get_authentication_service(
     db: AsyncSession = Depends(get_db_session_dependency),
 ) -> AuthenticationService:
@@ -168,6 +168,60 @@ def get_subscription_repository(
 ) -> SubscriptionRepository:
     """Provide the generic subscription repository."""
     return SubscriptionRepository(db)
+
+
+def get_admin_dashboard_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+) -> object:
+    """Provide request-scoped admin dashboard service."""
+    from app.admin.services.dashboard_service import AdminDashboardService
+
+    return AdminDashboardService(db)
+
+
+def get_admin_apikeys_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+) -> object:
+    """Provide request-scoped admin API-keys service."""
+    from app.admin.services.apikeys_service import AdminApiKeysService
+
+    return AdminApiKeysService(db)
+
+
+def get_admin_subscriptions_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+) -> object:
+    """Provide request-scoped admin subscriptions service."""
+    from app.admin.services.subscriptions_service import AdminSubscriptionsService
+
+    return AdminSubscriptionsService(db)
+
+
+def get_admin_settings_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+) -> object:
+    """Provide request-scoped admin settings service."""
+    from app.admin.services.settings_service import AdminSettingsService
+
+    return AdminSettingsService(db)
+
+
+def get_admin_setup_auth_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+) -> object:
+    """Provide request-scoped admin setup/auth service."""
+    from app.admin.services.setup_auth_service import AdminSetupAuthService
+
+    return AdminSetupAuthService(db)
+
+
+def get_admin_users_audit_service(
+    db: AsyncSession = Depends(get_db_session_dependency),
+) -> object:
+    """Provide request-scoped admin users/audit service."""
+    from app.admin.services.users_audit_service import AdminUsersAuditService
+
+    return AdminUsersAuditService(db)
 
 
 def get_podcast_subscription_repository(
@@ -343,60 +397,6 @@ def get_conversation_service(
 ) -> ConversationService:
     """Provide request-scoped conversation service."""
     return ConversationService(db)
-
-
-def get_admin_dashboard_service(
-    db: AsyncSession = Depends(get_db_session_dependency),
-) -> object:
-    """Provide request-scoped admin dashboard service."""
-    from app.admin.services import AdminDashboardService
-
-    return AdminDashboardService(db)
-
-
-def get_admin_apikeys_service(
-    db: AsyncSession = Depends(get_db_session_dependency),
-) -> object:
-    """Provide request-scoped admin API-keys service."""
-    from app.admin.services import AdminApiKeysService
-
-    return AdminApiKeysService(db)
-
-
-def get_admin_subscriptions_service(
-    db: AsyncSession = Depends(get_db_session_dependency),
-) -> object:
-    """Provide request-scoped admin subscriptions service."""
-    from app.admin.services import AdminSubscriptionsService
-
-    return AdminSubscriptionsService(db)
-
-
-def get_admin_settings_service(
-    db: AsyncSession = Depends(get_db_session_dependency),
-) -> object:
-    """Provide request-scoped admin settings service."""
-    from app.admin.services import AdminSettingsService
-
-    return AdminSettingsService(db)
-
-
-def get_admin_setup_auth_service(
-    db: AsyncSession = Depends(get_db_session_dependency),
-) -> object:
-    """Provide request-scoped admin setup/auth service."""
-    from app.admin.services import AdminSetupAuthService
-
-    return AdminSetupAuthService(db)
-
-
-def get_admin_users_audit_service(
-    db: AsyncSession = Depends(get_db_session_dependency),
-) -> object:
-    """Provide request-scoped admin users/audit service."""
-    from app.admin.services import AdminUsersAuditService
-
-    return AdminUsersAuditService(db)
 
 
 __all__ = [

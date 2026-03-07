@@ -154,6 +154,7 @@ def test_update_playback_progress_response_contains_rate_and_last_updated_at(
 ):
     now = datetime.now(timezone.utc)
     mock_service.update_playback_progress.return_value = {
+        "episode_id": 99,
         "progress": 321,
         "is_playing": True,
         "playback_rate": 3.0,

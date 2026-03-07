@@ -1,8 +1,10 @@
 """Admin service helpers for system settings."""
 
+from fastapi import HTTPException, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.admin.audit import log_admin_action
 from app.admin.models import SystemSettings
 from app.admin.storage_service import StorageCleanupService
 from app.domains.subscription.models import (
@@ -17,6 +19,67 @@ class AdminSettingsService:
 
     def __init__(self, db: AsyncSession):
         self.db = db
+
+    @staticmethod
+    def validate_audio_settings(
+        *,
+        chunk_size_mb: int,
+        max_concurrent_threads: int,
+    ) -> None:
+        """Validate audio-processing admin settings input."""
+        if not (5 <= chunk_size_mb <= 25):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="chunk_size_mb must be between 5 and 25",
+            )
+        if not (1 <= max_concurrent_threads <= 16):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="max_concurrent_threads must be between 1 and 16",
+            )
+
+    @staticmethod
+    def validate_frequency_settings(
+        *,
+        update_frequency: str,
+        update_time: str | None,
+        update_day: int | None,
+    ) -> None:
+        """Validate RSS frequency admin settings input."""
+        valid_frequencies = ["HOURLY", "DAILY", "WEEKLY"]
+        if update_frequency not in valid_frequencies:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid frequency. Must be one of: {valid_frequencies}",
+            )
+        if update_frequency in ["DAILY", "WEEKLY"] and not update_time:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="update_time is required for DAILY and WEEKLY frequencies",
+            )
+        if update_time:
+            try:
+                hour, minute = map(int, update_time.split(":"))
+            except (AttributeError, ValueError) as err:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="update_time must use HH:MM format",
+                ) from err
+            if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="update_time must use HH:MM format",
+                )
+        if update_frequency == "WEEKLY" and not update_day:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="update_day is required for WEEKLY frequency",
+            )
+        if update_day is not None and not (1 <= update_day <= 7):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="update_day must be between 1 and 7",
+            )
 
     async def get_audio_settings(self) -> dict[str, int]:
         """Return persisted audio-processing settings with defaults."""
@@ -74,6 +137,38 @@ class AdminSettingsService:
             )
 
         await self.db.commit()
+
+    async def save_audio_settings(
+        self,
+        *,
+        request,
+        user,
+        chunk_size_mb: int,
+        max_concurrent_threads: int,
+    ) -> dict[str, object]:
+        """Validate, persist, and audit audio-processing settings."""
+        self.validate_audio_settings(
+            chunk_size_mb=chunk_size_mb,
+            max_concurrent_threads=max_concurrent_threads,
+        )
+        await self.update_audio_settings(
+            chunk_size_mb=chunk_size_mb,
+            max_concurrent_threads=max_concurrent_threads,
+        )
+        await log_admin_action(
+            db=self.db,
+            user_id=user.id,
+            username=user.username,
+            action="update",
+            resource_type="system_settings",
+            resource_name="Audio processing settings",
+            details={
+                "chunk_size_mb": chunk_size_mb,
+                "max_concurrent_threads": max_concurrent_threads,
+            },
+            request=request,
+        )
+        return {"success": True, "message": "Settings saved"}
 
     async def get_frequency_settings(self) -> dict[str, object]:
         """Return RSS subscription frequency settings with fallback source."""
@@ -165,6 +260,41 @@ class AdminSettingsService:
         await self.db.commit()
         return settings_data, total_count
 
+    async def save_frequency_settings(
+        self,
+        *,
+        request,
+        user,
+        update_frequency: str,
+        update_time: str | None,
+        update_day: int | None,
+    ) -> dict[str, object]:
+        """Validate, persist, and audit RSS frequency settings."""
+        self.validate_frequency_settings(
+            update_frequency=update_frequency,
+            update_time=update_time,
+            update_day=update_day,
+        )
+        settings_data, total_count = await self.update_frequency_settings(
+            update_frequency=update_frequency,
+            update_time=update_time,
+            update_day=update_day,
+        )
+        await log_admin_action(
+            db=self.db,
+            user_id=user.id,
+            username=user.username,
+            action="update",
+            resource_type="subscription_frequency",
+            resource_name=f"All user subscriptions (affected {total_count})",
+            details=settings_data,
+            request=request,
+        )
+        return {
+            "success": True,
+            "message": f"RSS settings saved (updated {total_count} user-subscription mappings)",
+        }
+
     async def get_security_settings(self) -> dict[str, object]:
         """Return current admin 2FA setting and source."""
         from app.admin.security_settings import get_admin_2fa_enabled
@@ -181,6 +311,27 @@ class AdminSettingsService:
 
         await set_admin_2fa_enabled(self.db, admin_2fa_enabled)
 
+    async def save_security_settings(
+        self,
+        *,
+        request,
+        user,
+        admin_2fa_enabled: bool,
+    ) -> dict[str, object]:
+        """Persist and audit admin security settings."""
+        await self.update_security_settings(admin_2fa_enabled=admin_2fa_enabled)
+        await log_admin_action(
+            db=self.db,
+            user_id=user.id,
+            username=user.username,
+            action="update",
+            resource_type="security_settings",
+            resource_name="Admin 2FA Settings",
+            details={"admin_2fa_enabled": admin_2fa_enabled},
+            request=request,
+        )
+        return {"success": True, "message": "Security settings saved"}
+
     async def get_storage_info(self) -> dict:
         """Return storage usage information."""
         return await StorageCleanupService(self.db).get_storage_info()
@@ -193,9 +344,56 @@ class AdminSettingsService:
         """Persist automatic cleanup configuration."""
         return await StorageCleanupService(self.db).update_cleanup_config(enabled)
 
+    async def save_cleanup_config(
+        self,
+        *,
+        request,
+        user,
+        enabled: bool,
+    ) -> dict:
+        """Persist and audit automatic cleanup configuration."""
+        result = await self.update_cleanup_config(enabled)
+        if result.get("success"):
+            await log_admin_action(
+                db=self.db,
+                user_id=user.id,
+                username=user.username,
+                action="update",
+                resource_type="storage_settings",
+                resource_name="Auto Cleanup Settings",
+                details={"enabled": enabled},
+                request=request,
+            )
+        return result
+
     async def execute_cleanup(self, keep_days: int) -> dict:
         """Execute storage cleanup immediately."""
         return await StorageCleanupService(self.db).execute_cleanup(keep_days)
+
+    async def run_cleanup(
+        self,
+        *,
+        request,
+        user,
+        keep_days: int,
+    ) -> dict:
+        """Execute cleanup and record the admin audit event."""
+        result = await self.execute_cleanup(keep_days)
+        await log_admin_action(
+            db=self.db,
+            user_id=user.id,
+            username=user.username,
+            action="execute",
+            resource_type="storage_cleanup",
+            resource_name="Manual Cache Cleanup",
+            details={
+                "keep_days": keep_days,
+                "deleted_count": result.get("total", {}).get("deleted_count", 0),
+                "freed_space": result.get("total", {}).get("freed_space_human", "0 B"),
+            },
+            request=request,
+        )
+        return result
 
     async def _get_setting(self, key: str) -> SystemSettings | None:
         result = await self.db.execute(

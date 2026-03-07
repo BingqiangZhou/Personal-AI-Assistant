@@ -12,6 +12,9 @@ from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.audit import log_admin_action
+from app.domains.podcast.services.task_orchestration_service import (
+    PodcastTaskOrchestrationService,
+)
 from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
 from app.domains.subscription.models import Subscription
 from app.domains.subscription.services import SubscriptionService
@@ -21,8 +24,16 @@ from app.shared.schemas import SubscriptionCreate
 class AdminSubscriptionsOpmlService:
     """Handle OPML import/export without owning route concerns."""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(
+        self,
+        db: AsyncSession,
+        task_orchestration_service_factory: type[PodcastTaskOrchestrationService] = PodcastTaskOrchestrationService,
+    ):
         self.db = db
+        self._task_orchestration_service_factory = task_orchestration_service_factory
+
+    def _task_orchestration_service(self) -> PodcastTaskOrchestrationService:
+        return self._task_orchestration_service_factory(self.db)
 
     async def export_subscriptions_opml(self, *, request, user) -> tuple[str, str]:
         service = SubscriptionService(self.db, user_id=user.id)
@@ -45,10 +56,6 @@ class AdminSubscriptionsOpmlService:
         user,
         opml_content: str,
     ) -> tuple[dict, int]:
-        from app.domains.podcast.tasks.opml_import import (
-            process_opml_subscription_episodes,
-        )
-
         subscriptions_data = await self._parse_opml(opml_content)
         subscriptions_data = self._dedupe_subscriptions(subscriptions_data)
 
@@ -109,7 +116,7 @@ class AdminSubscriptionsOpmlService:
                     },
                 )
 
-                task = process_opml_subscription_episodes.delay(
+                task = self._task_orchestration_service().enqueue_opml_subscription_episodes(
                     subscription_id=subscription.id,
                     user_id=user.id,
                     source_url=sub_data.source_url,

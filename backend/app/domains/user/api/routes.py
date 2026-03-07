@@ -5,9 +5,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field, model_validator
 
-from app.core.dependencies import get_current_user
 from app.core.exceptions import BaseCustomError, UnauthorizedError
-from app.core.providers import get_authentication_service
+from app.domains.user.api.dependencies import (
+    get_authentication_service,
+    get_current_user,
+)
 from app.domains.user.services import AuthenticationService
 from app.shared.schemas import (
     ForgotPasswordRequest,

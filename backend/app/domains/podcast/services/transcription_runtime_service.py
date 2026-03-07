@@ -4,7 +4,7 @@ Database-backed transcription runtime services.
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,6 +18,11 @@ from app.domains.podcast.transcription import (
     SiliconFlowTranscriber,
 )
 from app.domains.podcast.transcription_state import get_transcription_state_manager
+
+if TYPE_CHECKING:
+    from app.domains.podcast.services.task_orchestration_service import (
+        PodcastTaskOrchestrationService,
+    )
 
 
 logger = logging.getLogger(__name__)
@@ -120,15 +125,29 @@ class TranscriptionModelManager:
 class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
     """Transcription runtime that resolves models from DB configuration."""
 
-    def __init__(self, db: AsyncSession):
+    def __init__(
+        self,
+        db: AsyncSession,
+        task_orchestration_service_factory=None,
+    ):
         super().__init__(db)
         self.model_manager = TranscriptionModelManager(db)
+        self._task_orchestration_service_factory = task_orchestration_service_factory
+
+    def _task_orchestration_service(self):
+        factory = self._task_orchestration_service_factory
+        if factory is None:
+            from app.domains.podcast.services.task_orchestration_service import (
+                PodcastTaskOrchestrationService,
+            )
+
+            factory = PodcastTaskOrchestrationService
+        return factory(self.db)
 
     async def start_transcription(
         self, episode_id: int, model_name: str | None = None, force: bool = False
     ) -> dict[str, Any]:
         from app.domains.podcast.models import TranscriptionTask
-        from app.domains.podcast.tasks import process_audio_transcription
 
         if model_name:
             await self.model_manager.get_active_transcription_model(model_name)
@@ -165,7 +184,10 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
                     return {"task": existing_task, "action": "locked_by_other_task"}
 
                 config_db_id = await self._resolve_transcription_config_db_id(model_name)
-                process_audio_transcription.delay(existing_task.id, config_db_id)
+                self._task_orchestration_service().enqueue_audio_transcription(
+                    task_id=existing_task.id,
+                    config_db_id=config_db_id,
+                )
                 return {"task": existing_task, "action": "redispatched_pending"}
 
             if status_value in {"failed", "cancelled"}:
@@ -194,7 +216,10 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
                         config_db_id = await self._resolve_transcription_config_db_id(
                             model_name
                         )
-                        process_audio_transcription.delay(existing_task.id, config_db_id)
+                        self._task_orchestration_service().enqueue_audio_transcription(
+                            task_id=existing_task.id,
+                            config_db_id=config_db_id,
+                        )
                         return {
                             "task": existing_task,
                             "action": "redispatched_failed_with_temp",
@@ -204,7 +229,10 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
         task, config_db_id = await super().create_transcription_task_record(
             episode_id, model_name, force
         )
-        process_audio_transcription.delay(task.id, config_db_id)
+        self._task_orchestration_service().enqueue_audio_transcription(
+            task_id=task.id,
+            config_db_id=config_db_id,
+        )
         return {"task": task, "action": "created"}
 
     async def _resolve_transcription_config_db_id(

@@ -2,6 +2,8 @@
 
 from datetime import datetime, timezone
 
+from fastapi import HTTPException
+from fastapi.responses import JSONResponse, Response
 from fastapi.templating import Jinja2Templates
 
 
@@ -25,6 +27,51 @@ def get_templates() -> Jinja2Templates:
         _templates.env.filters['format_bytes'] = format_bytes
         _templates.env.filters['format_number'] = format_number
     return _templates
+
+
+def render_admin_template(
+    *,
+    templates: Jinja2Templates,
+    template_name: str,
+    request,
+    status_code: int = 200,
+    **context,
+):
+    """Render an admin template with the request injected."""
+    return templates.TemplateResponse(
+        template_name,
+        {
+            "request": request,
+            **context,
+        },
+        status_code=status_code,
+    )
+
+
+def json_payload(payload: dict | list, status_code: int = 200) -> JSONResponse:
+    """Return a JSON response for admin action payloads."""
+    return JSONResponse(content=payload, status_code=status_code)
+
+
+def empty_response(status_code: int = 200) -> Response:
+    """Return an empty HTTP response for admin actions."""
+    return Response(status_code=status_code)
+
+
+def xml_download_response(*, content: str, filename: str) -> Response:
+    """Return an OPML/XML download response."""
+    return Response(
+        content=content,
+        media_type="application/xml; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+def require_payload(payload, *, detail: str):
+    """Raise a 404 when a service intentionally returns no payload."""
+    if payload is None:
+        raise HTTPException(status_code=404, detail=detail)
+    return payload
 
 
 # Custom filter to convert UTC datetime to local timezone (Asia/Shanghai, UTC+8)

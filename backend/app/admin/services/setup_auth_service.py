@@ -130,11 +130,92 @@ class AdminSetupAuthService:
         )
         return response
 
+    def build_2fa_challenge_response(
+        self,
+        *,
+        templates,
+        request: Request,
+        user_id: int,
+        username: str,
+        csrf_token: str,
+    ):
+        """Render the 2FA challenge page and persist the pending user id."""
+        response = self.build_template_response(
+            templates=templates,
+            template_name="2fa_verify.html",
+            request=request,
+            user=None,
+            username=username,
+            csrf_token=csrf_token,
+        )
+        response.set_cookie(
+            key="2fa_user_id",
+            value=str(user_id),
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            max_age=5 * 60,
+        )
+        return response
+
     @staticmethod
     def build_csrf_cookie_response(response):
         response.set_cookie(
             key="csrf_token",
             value=generate_csrf_token(),
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            max_age=3600,
+        )
+        return response
+
+    @staticmethod
+    def build_template_response(
+        *,
+        templates,
+        template_name: str,
+        request: Request,
+        messages: list[dict] | None = None,
+        status_code: int = status.HTTP_200_OK,
+        **context,
+    ):
+        """Render a template response without mutating CSRF cookies."""
+        return templates.TemplateResponse(
+            template_name,
+            {
+                "request": request,
+                "messages": messages or [],
+                **context,
+            },
+            status_code=status_code,
+        )
+
+    @staticmethod
+    def build_csrf_template_response(
+        *,
+        templates,
+        template_name: str,
+        request: Request,
+        messages: list[dict] | None = None,
+        status_code: int = status.HTTP_200_OK,
+        **context,
+    ):
+        """Render a template with a fresh CSRF token and matching cookie."""
+        csrf_token = generate_csrf_token()
+        response = templates.TemplateResponse(
+            template_name,
+            {
+                "request": request,
+                "csrf_token": csrf_token,
+                "messages": messages or [],
+                **context,
+            },
+            status_code=status_code,
+        )
+        response.set_cookie(
+            key="csrf_token",
+            value=csrf_token,
             httponly=True,
             secure=True,
             samesite="lax",

@@ -12,7 +12,6 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app.admin.auth import admin_required, admin_required_no_2fa
-from app.admin.csrf import generate_csrf_token
 from app.admin.routes._shared import get_templates
 from app.admin.services import AdminSetupAuthService
 from app.core.providers import get_admin_setup_auth_service
@@ -40,25 +39,11 @@ async def setup_page(
         # Admin already exists, redirect to login
         return RedirectResponse(url="/super/login", status_code=303)
 
-    # Generate CSRF token
-    csrf_token = generate_csrf_token()
-
-    response = templates.TemplateResponse(
-        "setup.html",
-        {"request": request, "csrf_token": csrf_token, "messages": []},
+    return service.build_csrf_template_response(
+        templates=templates,
+        template_name="setup.html",
+        request=request,
     )
-
-    # Set CSRF token in cookie
-    response.set_cookie(
-        key="csrf_token",
-        value=csrf_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=3600,
-    )
-
-    return response
 
 
 @router.post("/setup")
@@ -84,70 +69,32 @@ async def setup_admin(
 
         # Validate passwords match
         if password != password_confirm:
-            csrf_token_new = generate_csrf_token()
-            response = templates.TemplateResponse(
-                "setup.html",
-                {
-                    "request": request,
-                    "csrf_token": csrf_token_new,
-                    "messages": [{"type": "error", "text": "两次输入的密码不一致"}],
-                },
+            return service.build_csrf_template_response(
+                templates=templates,
+                template_name="setup.html",
+                request=request,
+                messages=[{"type": "error", "text": "两次输入的密码不一致"}],
             )
-            response.set_cookie(
-                key="csrf_token",
-                value=csrf_token_new,
-                httponly=True,
-                secure=True,
-                samesite="lax",
-                max_age=3600,
-            )
-            return response
 
         # Validate password length
         if len(password) < 8:
-            csrf_token_new = generate_csrf_token()
-            response = templates.TemplateResponse(
-                "setup.html",
-                {
-                    "request": request,
-                    "csrf_token": csrf_token_new,
-                    "messages": [{"type": "error", "text": "密码长度至少为8个字符"}],
-                },
+            return service.build_csrf_template_response(
+                templates=templates,
+                template_name="setup.html",
+                request=request,
+                messages=[{"type": "error", "text": "密码长度至少为8个字符"}],
             )
-            response.set_cookie(
-                key="csrf_token",
-                value=csrf_token_new,
-                httponly=True,
-                secure=True,
-                samesite="lax",
-                max_age=3600,
-            )
-            return response
 
         # Check if username or email already exists
         existing_user = await service.get_existing_admin_user(username, email)
 
         if existing_user:
-            csrf_token_new = generate_csrf_token()
-            response = templates.TemplateResponse(
-                "setup.html",
-                {
-                    "request": request,
-                    "csrf_token": csrf_token_new,
-                    "messages": [
-                        {"type": "error", "text": "用户名或邮箱已存在"}
-                    ],
-                },
+            return service.build_csrf_template_response(
+                templates=templates,
+                template_name="setup.html",
+                request=request,
+                messages=[{"type": "error", "text": "用户名或邮箱已存在"}],
             )
-            response.set_cookie(
-                key="csrf_token",
-                value=csrf_token_new,
-                httponly=True,
-                secure=True,
-                samesite="lax",
-                max_age=3600,
-            )
-            return response
 
         # Create admin user
         admin_user = await service.create_initial_admin(
@@ -160,25 +107,13 @@ async def setup_admin(
 
     except Exception as e:
         logger.error(f"Setup error: {e}")
-        csrf_token_new = generate_csrf_token()
-        response = templates.TemplateResponse(
-            "setup.html",
-            {
-                "request": request,
-                "csrf_token": csrf_token_new,
-                "messages": [{"type": "error", "text": "创建管理员失败，请稍后重试"}],
-            },
+        return service.build_csrf_template_response(
+            templates=templates,
+            template_name="setup.html",
+            request=request,
+            messages=[{"type": "error", "text": "创建管理员失败，请稍后重试"}],
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-        response.set_cookie(
-            key="csrf_token",
-            value=csrf_token_new,
-            httponly=True,
-            secure=True,
-            samesite="lax",
-            max_age=3600,
-        )
-        return response
 
 
 # ==================== Login & Logout ====================
@@ -187,28 +122,14 @@ async def setup_admin(
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, error: str = None):
     """Display login page."""
-    # Generate CSRF token
-    csrf_token = generate_csrf_token()
-
     # Convert error string to messages list format
     messages = [{"type": "error", "text": error}] if error else []
-
-    response = templates.TemplateResponse(
-        "login.html",
-        {"request": request, "csrf_token": csrf_token, "messages": messages},
+    return AdminSetupAuthService.build_csrf_template_response(
+        templates=templates,
+        template_name="login.html",
+        request=request,
+        messages=messages,
     )
-
-    # Set CSRF token in cookie
-    response.set_cookie(
-        key="csrf_token",
-        value=csrf_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=3600,
-    )
-
-    return response
 
 
 @router.post("/login")
@@ -228,48 +149,24 @@ async def login(
         user = await service.get_user_by_username(username)
 
         if not user:
-            csrf_token_new = generate_csrf_token()
-            response = templates.TemplateResponse(
-                "login.html",
-                {
-                    "request": request,
-                    "csrf_token": csrf_token_new,
-                    "messages": [{"type": "error", "text": "用户名或密码错误"}],
-                },
+            return service.build_csrf_template_response(
+                templates=templates,
+                template_name="login.html",
+                request=request,
+                messages=[{"type": "error", "text": "用户名或密码错误"}],
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
-            response.set_cookie(
-                key="csrf_token",
-                value=csrf_token_new,
-                httponly=True,
-                secure=True,
-                samesite="lax",
-                max_age=3600,
-            )
-            return response
 
         # Verify password
         from app.core.security import verify_password
         if not verify_password(password, user.hashed_password):
-            csrf_token_new = generate_csrf_token()
-            response = templates.TemplateResponse(
-                "login.html",
-                {
-                    "request": request,
-                    "csrf_token": csrf_token_new,
-                    "messages": [{"type": "error", "text": "用户名或密码错误"}],
-                },
+            return service.build_csrf_template_response(
+                templates=templates,
+                template_name="login.html",
+                request=request,
+                messages=[{"type": "error", "text": "用户名或密码错误"}],
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
-            response.set_cookie(
-                key="csrf_token",
-                value=csrf_token_new,
-                httponly=True,
-                secure=True,
-                samesite="lax",
-                max_age=3600,
-            )
-            return response
 
         # Check if user has 2FA enabled AND global 2FA is enabled
         # 检查用户是否启用2FA 且 全局2FA已启用
@@ -278,23 +175,12 @@ async def login(
         if user.is_2fa_enabled and admin_2fa_enabled:
             # User has 2FA enabled, require verification
             # 用户已启用2FA，要求验证
-            response = templates.TemplateResponse(
-                "2fa_verify.html",
-                {
-                    "request": request,
-                    "user": None,
-                    "username": username,
-                    "csrf_token": csrf_token,
-                    "messages": [],
-                },
-            )
-            response.set_cookie(
-                key="2fa_user_id",
-                value=str(user.id),
-                httponly=True,
-                secure=True,
-                samesite="lax",
-                max_age=5 * 60,  # 5 minutes
+            response = service.build_2fa_challenge_response(
+                templates=templates,
+                request=request,
+                user_id=user.id,
+                username=username,
+                csrf_token=csrf_token,
             )
             return response
         else:
@@ -320,25 +206,13 @@ async def login(
 
     except Exception as e:
         logger.error(f"Login error: {e}")
-        csrf_token_new = generate_csrf_token()
-        response = templates.TemplateResponse(
-            "login.html",
-            {
-                "request": request,
-                "csrf_token": csrf_token_new,
-                "messages": [{"type": "error", "text": "登录失败，请稍后重试"}],
-            },
+        return service.build_csrf_template_response(
+            templates=templates,
+            template_name="login.html",
+            request=request,
+            messages=[{"type": "error", "text": "登录失败，请稍后重试"}],
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
-        response.set_cookie(
-            key="csrf_token",
-            value=csrf_token_new,
-            httponly=True,
-            secure=True,
-            samesite="lax",
-            max_age=3600,
-        )
-        return response
 
 
 @router.post("/logout")
@@ -368,15 +242,14 @@ async def verify_2fa_login(
         # Get user_id from cookie
         user_id_str = request.cookies.get("2fa_user_id")
         if not user_id_str:
-            return templates.TemplateResponse(
-                "2fa_verify.html",
-                {
-                    "request": request,
-                    "user": None,
-                    "username": username,
-                    "csrf_token": csrf_token,
-                    "messages": [{"type": "error", "text": "会话已过期，请重新登录"}],
-                },
+            return service.build_template_response(
+                templates=templates,
+                template_name="2fa_verify.html",
+                request=request,
+                user=None,
+                username=username,
+                csrf_token=csrf_token,
+                messages=[{"type": "error", "text": "会话已过期，请重新登录"}],
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
 
@@ -386,29 +259,27 @@ async def verify_2fa_login(
         user = await service.get_user_by_id(user_id)
 
         if not user or not user.totp_secret:
-            return templates.TemplateResponse(
-                "2fa_verify.html",
-                {
-                    "request": request,
-                    "user": None,
-                    "username": username,
-                    "csrf_token": csrf_token,
-                    "messages": [{"type": "error", "text": "用户未找到或未启用2FA"}],
-                },
+            return service.build_template_response(
+                templates=templates,
+                template_name="2fa_verify.html",
+                request=request,
+                user=None,
+                username=username,
+                csrf_token=csrf_token,
+                messages=[{"type": "error", "text": "用户未找到或未启用2FA"}],
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
 
         # Verify TOTP token
         if not service.verify_totp(user.totp_secret, token):
-            return templates.TemplateResponse(
-                "2fa_verify.html",
-                {
-                    "request": request,
-                    "user": None,
-                    "username": username,
-                    "csrf_token": csrf_token,
-                    "messages": [{"type": "error", "text": "验证码错误，请重试"}],
-                },
+            return service.build_template_response(
+                templates=templates,
+                template_name="2fa_verify.html",
+                request=request,
+                user=None,
+                username=username,
+                csrf_token=csrf_token,
+                messages=[{"type": "error", "text": "验证码错误，请重试"}],
                 status_code=status.HTTP_401_UNAUTHORIZED,
             )
 
@@ -421,15 +292,14 @@ async def verify_2fa_login(
 
     except Exception as e:
         logger.error(f"2FA verification error: {e}")
-        return templates.TemplateResponse(
-            "2fa_verify.html",
-            {
-                "request": request,
-                "user": None,
-                "username": username,
-                "csrf_token": csrf_token,
-                "messages": [{"type": "error", "text": "验证失败，请稍后重试"}],
-            },
+        return service.build_template_response(
+            templates=templates,
+            template_name="2fa_verify.html",
+            request=request,
+            user=None,
+            username=username,
+            csrf_token=csrf_token,
+            messages=[{"type": "error", "text": "验证失败，请稍后重试"}],
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
@@ -445,32 +315,14 @@ async def setup_2fa_page(
         # Generate new TOTP secret if not exists
         secret = await service.ensure_totp_secret(user)
         qr_payload = service.build_2fa_qr_payload(user, secret)
-
-        # Generate CSRF token
-        csrf_token = generate_csrf_token()
-
-        response = templates.TemplateResponse(
-            "2fa_setup.html",
-            {
-                "request": request,
-                "user": user,
-                "qr_code": qr_payload["qr_code"],
-                "secret": qr_payload["secret"],
-                "csrf_token": csrf_token,
-                "messages": [],
-            },
+        return service.build_csrf_template_response(
+            templates=templates,
+            template_name="2fa_setup.html",
+            request=request,
+            user=user,
+            qr_code=qr_payload["qr_code"],
+            secret=qr_payload["secret"],
         )
-
-        response.set_cookie(
-            key="csrf_token",
-            value=csrf_token,
-            httponly=True,
-            secure=True,
-            samesite="lax",
-            max_age=3600,
-        )
-
-        return response
 
     except Exception as e:
         logger.error(f"2FA setup page error: {e}")
@@ -501,30 +353,16 @@ async def verify_2fa_setup(
 
         # Verify token
         if not service.verify_totp(user.totp_secret, token):
-            # Generate new CSRF token
-            new_csrf_token = generate_csrf_token()
             qr_payload = service.build_2fa_qr_payload(user, user.totp_secret)
-
-            response = templates.TemplateResponse(
-                "2fa_setup.html",
-                {
-                    "request": request,
-                    "user": user,
-                    "qr_code": qr_payload["qr_code"],
-                    "secret": user.totp_secret,
-                    "csrf_token": new_csrf_token,
-                    "messages": [{"type": "error", "text": "验证码错误，请重试"}],
-                },
+            return service.build_csrf_template_response(
+                templates=templates,
+                template_name="2fa_setup.html",
+                request=request,
+                user=user,
+                qr_code=qr_payload["qr_code"],
+                secret=user.totp_secret,
+                messages=[{"type": "error", "text": "验证码错误，请重试"}],
             )
-            response.set_cookie(
-                key="csrf_token",
-                value=new_csrf_token,
-                httponly=True,
-                secure=True,
-                samesite="lax",
-                max_age=3600,
-            )
-            return response
 
         # Enable 2FA
         await service.enable_2fa(user=user)
