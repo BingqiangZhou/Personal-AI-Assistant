@@ -13,10 +13,34 @@ from app.core.config import settings
 from app.domains.podcast.services import (
     PodcastEpisodeService,
     PodcastPlaybackService,
+    PodcastQueueService,
     PodcastSearchService,
     PodcastSubscriptionService,
     PodcastSyncService,
 )
+
+
+def _build_lightweight_feed_row(
+    *,
+    now: datetime,
+    description: str,
+    ai_summary: str | None,
+    transcript_content: str | None,
+) -> dict:
+    return {
+        "id": 1,
+        "subscription_id": 1,
+        "title": "Episode title",
+        "description": description,
+        "audio_url": "https://example.com/audio.mp3",
+        "audio_duration": 1200,
+        "published_at": now,
+        "status": "published",
+        "created_at": now,
+        "updated_at": now,
+        "ai_summary": ai_summary,
+        "transcript_content": transcript_content,
+    }
 
 
 class TestPodcastSubscriptionService:
@@ -165,19 +189,20 @@ class TestPodcastEpisodeService:
         self, service, mock_repo, monkeypatch
     ):
         monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
+        now = datetime.now(timezone.utc)
         mock_repo.get_feed_lightweight_page_paginated.return_value = (
             [
-                {
-                    "id": 1,
-                    "description": "fallback description",
-                    "ai_summary": (
+                _build_lightweight_feed_row(
+                    now=now,
+                    description="fallback description",
+                    ai_summary=(
                         "## Executive Summary\n"
                         "A concise summary sentence.\n\n"
                         "## Key Insights\n"
                         "More details."
                     ),
-                    "transcript_content": "transcript",
-                }
+                    transcript_content="transcript",
+                )
             ],
             1,
         )
@@ -185,24 +210,25 @@ class TestPodcastEpisodeService:
         results, total = await service.list_feed_by_page(page=1, size=20)
 
         assert total == 1
-        assert results[0]["description"] == "A concise summary sentence."
-        assert results[0]["ai_summary"] is None
-        assert results[0]["transcript_content"] is None
+        assert results[0].description == "A concise summary sentence."
+        assert results[0].ai_summary is None
+        assert results[0].transcript_content is None
 
     @pytest.mark.asyncio
     async def test_feed_cursor_lightweight_falls_back_to_collapsed_description(
         self, service, mock_repo, monkeypatch
     ):
         monkeypatch.setattr(settings, "PODCAST_FEED_LIGHTWEIGHT_ENABLED", True)
+        now = datetime.now(timezone.utc)
         raw_description = "   Fallback   text \n with   extra   spaces   "
         mock_repo.get_feed_lightweight_cursor_paginated.return_value = (
             [
-                {
-                    "id": 1,
-                    "description": raw_description,
-                    "ai_summary": None,
-                    "transcript_content": "transcript",
-                }
+                _build_lightweight_feed_row(
+                    now=now,
+                    description=raw_description,
+                    ai_summary=None,
+                    transcript_content="transcript",
+                )
             ],
             1,
             False,
@@ -216,9 +242,9 @@ class TestPodcastEpisodeService:
         assert total == 1
         assert has_more is False
         assert next_cursor is None
-        assert results[0]["description"] == "Fallback text with extra spaces"
-        assert results[0]["ai_summary"] is None
-        assert results[0]["transcript_content"] is None
+        assert results[0].description == "Fallback text with extra spaces"
+        assert results[0].ai_summary is None
+        assert results[0].transcript_content is None
 
     @pytest.mark.asyncio
     async def test_feed_page_non_lightweight_rewrites_description_only_for_feed(
@@ -243,8 +269,8 @@ class TestPodcastEpisodeService:
         results, total = await service.list_feed_by_page(page=1, size=20)
 
         assert total == 1
-        assert results[0]["description"] == "Feed summary line."
-        assert "Executive Summary" in (results[0]["ai_summary"] or "")
+        assert results[0].description == "Feed summary line."
+        assert "Executive Summary" in (results[0].ai_summary or "")
 
     @pytest.mark.asyncio
     async def test_list_episodes_keeps_original_description(self, service, mock_repo):
@@ -266,7 +292,7 @@ class TestPodcastEpisodeService:
         results, total = await service.list_episodes(page=1, size=20)
 
         assert total == 1
-        assert results[0]["description"] == "Original episode description"
+        assert results[0].description == "Original episode description"
 
     def test_resolve_feed_description_truncates_fallback(self, service):
         long_description = "a" * 500
@@ -316,6 +342,72 @@ class TestPodcastPlaybackService:
         result = await service.get_playback_state(1)
 
         assert result is None
+
+    @pytest.mark.asyncio
+    async def test_update_playback_progress_returns_projection(self, service, mock_repo):
+        episode = Mock(audio_duration=200)
+        playback = Mock(
+            current_position=50,
+            is_playing=True,
+            playback_rate=1.25,
+            play_count=3,
+            last_updated_at=datetime.now(timezone.utc),
+        )
+        mock_repo.get_episode_by_id.return_value = episode
+        mock_repo.update_playback_progress.return_value = playback
+        service.redis.invalidate_user_stats = AsyncMock()
+        service.redis.invalidate_profile_stats = AsyncMock()
+
+        result = await service.update_playback_progress(1, 50, True, 1.25)
+
+        assert result.current_position == 50
+        assert result.progress_percentage == 25.0
+
+
+class TestPodcastQueueService:
+    """测试播客队列服务"""
+
+    @pytest.fixture
+    def mock_db(self):
+        return AsyncMock()
+
+    @pytest.fixture
+    def mock_repo(self):
+        with patch(
+            "app.domains.podcast.services.queue_service.PodcastQueueRepository"
+        ) as mock:
+            repo_instance = AsyncMock()
+            mock.return_value = repo_instance
+            yield repo_instance
+
+    @pytest.fixture
+    def service(self, mock_db, mock_repo):
+        return PodcastQueueService(mock_db, user_id=1)
+
+    @pytest.mark.asyncio
+    async def test_get_queue_returns_projection(self, service, mock_repo):
+        now = datetime.now(timezone.utc)
+        subscription = Mock(title="Podcast", config={"image_url": "https://example.com/sub.jpg"})
+        episode = Mock(
+            title="Episode 1",
+            subscription_id=10,
+            audio_url="https://example.com/audio.mp3",
+            audio_duration=120,
+            published_at=now,
+            image_url="https://example.com/ep.jpg",
+            subscription=subscription,
+        )
+        queue_item = Mock(id=1, episode_id=5, position=0, episode=episode)
+        queue = Mock(current_episode_id=5, revision=2, updated_at=now, items=[queue_item])
+        playback_state = Mock(current_position=30)
+        mock_repo.get_queue_with_items.return_value = queue
+        mock_repo.get_playback_states_batch.return_value = {5: playback_state}
+
+        result = await service.get_queue()
+
+        assert result.current_episode_id == 5
+        assert result.items[0].episode_id == 5
+        assert result.items[0].playback_position == 30
 
 
 class TestPodcastSearchService:

@@ -95,7 +95,6 @@ async def update_playback_progress(
             playback_data.playback_rate,
         )
         return build_playback_state_response(
-            episode_id=episode_id,
             payload=result,
         )
     except ValueError as exc:

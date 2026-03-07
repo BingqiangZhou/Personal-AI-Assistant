@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends, status
 
 from app.core.providers import get_podcast_queue_service
+from app.domains.podcast.api.response_assemblers import build_queue_response
 from app.domains.podcast.schemas import (
     PodcastQueueActivateRequest,
     PodcastQueueCurrentCompleteRequest,
@@ -22,7 +23,7 @@ router = APIRouter(prefix="")
 async def get_queue(
     service: PodcastQueueService = Depends(get_podcast_queue_service),
 ):
-    return await service.get_queue()
+    return build_queue_response(await service.get_queue())
 
 
 @router.post(
@@ -35,7 +36,7 @@ async def add_queue_item(
     service: PodcastQueueService = Depends(get_podcast_queue_service),
 ):
     try:
-        return await service.add_to_queue(request.episode_id)
+        return build_queue_response(await service.add_to_queue(request.episode_id))
     except ValueError as exc:
         if str(exc) == "EPISODE_NOT_FOUND":
             raise bilingual_http_exception(
@@ -65,7 +66,7 @@ async def remove_queue_item(
     episode_id: int,
     service: PodcastQueueService = Depends(get_podcast_queue_service),
 ):
-    return await service.remove_from_queue(episode_id)
+    return build_queue_response(await service.remove_from_queue(episode_id))
 
 
 @router.put(
@@ -78,7 +79,7 @@ async def reorder_queue_items(
     service: PodcastQueueService = Depends(get_podcast_queue_service),
     ):
     try:
-        return await service.reorder_queue(request.episode_ids)
+        return build_queue_response(await service.reorder_queue(request.episode_ids))
     except ValueError as exc:
         if str(exc) == "INVALID_REORDER_PAYLOAD":
             raise bilingual_http_exception(
@@ -103,7 +104,7 @@ async def set_queue_current(
     service: PodcastQueueService = Depends(get_podcast_queue_service),
     ):
     try:
-        return await service.set_current(request.episode_id)
+        return build_queue_response(await service.set_current(request.episode_id))
     except ValueError as exc:
         if str(exc) == "EPISODE_NOT_IN_QUEUE":
             raise bilingual_http_exception(
@@ -128,7 +129,7 @@ async def activate_queue_episode(
     service: PodcastQueueService = Depends(get_podcast_queue_service),
     ):
     try:
-        return await service.activate_episode(request.episode_id)
+        return build_queue_response(await service.activate_episode(request.episode_id))
     except ValueError as exc:
         if str(exc) == "EPISODE_NOT_FOUND":
             raise bilingual_http_exception(
@@ -158,4 +159,4 @@ async def complete_queue_current(
     _request: PodcastQueueCurrentCompleteRequest,
     service: PodcastQueueService = Depends(get_podcast_queue_service),
 ):
-    return await service.complete_current()
+    return build_queue_response(await service.complete_current())

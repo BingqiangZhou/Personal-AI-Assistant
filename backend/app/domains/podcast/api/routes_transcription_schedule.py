@@ -9,6 +9,24 @@ from app.core.providers import (
     get_podcast_subscription_service,
     get_transcription_workflow_service,
 )
+from app.domains.podcast.api.response_assemblers import (
+    build_batch_transcription_response,
+    build_check_new_episodes_response,
+    build_episode_transcript_response,
+    build_pending_transcriptions_response,
+    build_transcription_cancel_response,
+    build_transcription_schedule_response,
+    build_transcription_schedule_status_response,
+)
+from app.domains.podcast.schemas import (
+    PodcastBatchTranscriptionResponse,
+    PodcastCheckNewEpisodesResponse,
+    PodcastEpisodeTranscriptResponse,
+    PodcastPendingTranscriptionsResponse,
+    PodcastTranscriptionCancelResponse,
+    PodcastTranscriptionScheduleResponse,
+    PodcastTranscriptionScheduleStatusResponse,
+)
 from app.domains.podcast.services.episode_service import PodcastEpisodeService
 from app.domains.podcast.services.subscription_service import PodcastSubscriptionService
 from app.domains.podcast.services.transcription_workflow_service import (
@@ -24,6 +42,7 @@ logger = logging.getLogger(__name__)
 @router.post(
     "/episodes/{episode_id}/transcribe/schedule",
     status_code=201,
+    response_model=PodcastTranscriptionScheduleResponse,
     summary="Schedule episode transcription",
     description="Schedule transcription task with frequency settings",
 )
@@ -37,12 +56,13 @@ async def schedule_episode_transcription_endpoint(
     ),
 ):
     try:
-        return await transcription_workflow.schedule_episode_transcription(
-            episode_id,
+        result = await transcription_workflow.schedule_episode_transcription(
+            episode_id=episode_id,
             frequency=ScheduleFrequency(frequency),
             force=force,
             episode_lookup=episode_service.get_episode_by_id,
         )
+        return build_transcription_schedule_response(result)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except HTTPException:
@@ -57,6 +77,7 @@ async def schedule_episode_transcription_endpoint(
 
 @router.get(
     "/episodes/{episode_id}/transcript",
+    response_model=PodcastEpisodeTranscriptResponse,
     summary="Get existing transcript",
     description="Return transcript if already available",
 )
@@ -68,10 +89,11 @@ async def get_episode_transcript_endpoint(
     ),
 ):
     try:
-        return await transcription_workflow.get_episode_transcript_payload(
-            episode_id,
+        result = await transcription_workflow.get_episode_transcript_payload(
+            episode_id=episode_id,
             episode_lookup=episode_service.get_episode_by_id,
         )
+        return build_episode_transcript_response(result)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except LookupError as exc:
@@ -84,6 +106,7 @@ async def get_episode_transcript_endpoint(
 @router.post(
     "/subscriptions/{subscription_id}/transcribe/batch",
     status_code=201,
+    response_model=PodcastBatchTranscriptionResponse,
     summary="Batch transcribe subscription episodes",
     description="Schedule transcription for all episodes in a subscription",
 )
@@ -96,11 +119,12 @@ async def batch_transcribe_subscription_endpoint(
     ),
 ):
     try:
-        return await transcription_workflow.batch_transcribe_subscription(
-            subscription_id,
+        result = await transcription_workflow.batch_transcribe_subscription(
+            subscription_id=subscription_id,
             skip_existing=skip_existing,
             subscription_lookup=subscription_service.get_subscription_details,
         )
+        return build_batch_transcription_response(result)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
@@ -110,6 +134,7 @@ async def batch_transcribe_subscription_endpoint(
 
 @router.get(
     "/episodes/{episode_id}/transcription/schedule-status",
+    response_model=PodcastTranscriptionScheduleStatusResponse,
     summary="Get transcription schedule status",
     description="Get scheduling status for an episode",
 )
@@ -121,10 +146,11 @@ async def get_transcription_schedule_status(
     ),
 ):
     try:
-        return await transcription_workflow.get_schedule_status(
-            episode_id,
+        result = await transcription_workflow.get_schedule_status(
+            episode_id=episode_id,
             episode_lookup=episode_service.get_episode_by_id,
         )
+        return build_transcription_schedule_status_response(result)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
@@ -139,6 +165,7 @@ async def get_transcription_schedule_status(
 
 @router.post(
     "/episodes/{episode_id}/transcription/cancel",
+    response_model=PodcastTranscriptionCancelResponse,
     summary="Cancel transcription task",
     description="Cancel active transcription task for an episode",
 )
@@ -150,10 +177,11 @@ async def cancel_transcription_endpoint(
     ),
 ):
     try:
-        return await transcription_workflow.cancel_episode_transcription(
-            episode_id,
+        result = await transcription_workflow.cancel_episode_transcription(
+            episode_id=episode_id,
             episode_lookup=episode_service.get_episode_by_id,
         )
+        return build_transcription_cancel_response(result)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
@@ -163,6 +191,7 @@ async def cancel_transcription_endpoint(
 
 @router.post(
     "/subscriptions/{subscription_id}/check-new-episodes",
+    response_model=PodcastCheckNewEpisodesResponse,
     summary="Check and transcribe new episodes",
     description="Check recently published episodes and schedule transcription",
 )
@@ -175,11 +204,12 @@ async def check_and_transcribe_new_episodes(
     ),
 ):
     try:
-        return await transcription_workflow.check_and_transcribe_new_episodes(
-            subscription_id,
+        result = await transcription_workflow.check_and_transcribe_new_episodes(
+            subscription_id=subscription_id,
             hours_since_published=hours_since_published,
             subscription_lookup=subscription_service.get_subscription_details,
         )
+        return build_check_new_episodes_response(result)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
@@ -189,6 +219,7 @@ async def check_and_transcribe_new_episodes(
 
 @router.get(
     "/transcriptions/pending",
+    response_model=PodcastPendingTranscriptionsResponse,
     summary="Get pending transcription tasks",
     description="Get all pending tasks for current user",
 )
@@ -199,9 +230,10 @@ async def get_pending_transcriptions(
     ),
 ):
     try:
-        return await transcription_workflow.list_pending_transcriptions(
+        result = await transcription_workflow.list_pending_transcriptions(
             episode_lookup=episode_service.get_episode_by_id,
         )
+        return build_pending_transcriptions_response(result)
     except Exception as exc:
         logger.error("Failed to get pending transcriptions: %s", exc)
         raise HTTPException(

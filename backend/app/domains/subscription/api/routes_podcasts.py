@@ -13,6 +13,10 @@ from app.core.providers import (
     get_podcast_subscription_service,
     get_token_user_id,
 )
+from app.domains.podcast.api.response_assemblers import (
+    build_schedule_config_list_response,
+    build_schedule_config_response,
+)
 from app.domains.podcast.schemas import (
     PodcastSearchFilter,
     PodcastSubscriptionBatchResponse,
@@ -250,7 +254,7 @@ async def get_subscription_schedule(
     schedule = await service.get_subscription_schedule(subscription_id)
     if not schedule:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found")
-    return ScheduleConfigResponse(**schedule)
+    return build_schedule_config_response(schedule)
 
 
 @router.patch(
@@ -272,7 +276,7 @@ async def update_subscription_schedule(
     )
     if not schedule:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found")
-    return ScheduleConfigResponse(**schedule)
+    return build_schedule_config_response(schedule)
 
 
 @router.get(
@@ -284,7 +288,7 @@ async def get_all_subscription_schedules(
     service: PodcastScheduleService = Depends(get_podcast_schedule_service),
 ):
     rows = await service.get_all_subscription_schedules()
-    return [ScheduleConfigResponse(**row) for row in rows]
+    return build_schedule_config_list_response(rows)
 
 
 @router.post(
@@ -304,4 +308,4 @@ async def batch_update_subscription_schedules(
         update_day_of_week=schedule_data.update_day_of_week,
         fetch_interval=schedule_data.fetch_interval,
     )
-    return [ScheduleConfigResponse(**row) for row in rows]
+    return build_schedule_config_list_response(rows)

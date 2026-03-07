@@ -1,10 +1,11 @@
-"""Shared episode response mapping helpers for podcast services."""
+"""Shared episode projection mapping helpers for podcast services."""
 
 from __future__ import annotations
 
 from typing import Any
 
 from app.core.utils import filter_thinking_content
+from app.domains.podcast.episode_projections import PodcastEpisodeProjection
 from app.domains.podcast.models import PodcastEpisode
 
 
@@ -29,8 +30,8 @@ def build_episode_response(
     playback: Any,
     *,
     include_extended_fields: bool,
-) -> dict[str, Any]:
-    """Build one episode response payload with optional extended fields."""
+) -> PodcastEpisodeProjection:
+    """Build one typed episode projection with optional extended fields."""
     subscription_image_url = _subscription_image_url(episode)
     image_url = episode.image_url or subscription_image_url
     cleaned_summary = filter_thinking_content(episode.ai_summary)
@@ -50,10 +51,13 @@ def build_episode_response(
         "image_url": image_url,
         "ai_summary": cleaned_summary,
         "is_played": _is_played(playback, episode.audio_duration),
+        "status": episode.status,
+        "created_at": episode.created_at,
+        "updated_at": episode.updated_at,
     }
 
     if not include_extended_fields:
-        return payload
+        return PodcastEpisodeProjection.model_validate(payload)
 
     payload.update(
         {
@@ -75,11 +79,9 @@ def build_episode_response(
             "playback_position": playback.current_position if playback else None,
             "is_playing": playback.is_playing if playback else False,
             "playback_rate": playback.playback_rate if playback else 1.0,
-            "created_at": episode.created_at,
-            "updated_at": episode.updated_at,
         }
     )
-    return payload
+    return PodcastEpisodeProjection.model_validate(payload)
 
 
 def build_episode_responses(
@@ -87,8 +89,8 @@ def build_episode_responses(
     playback_states: dict[int, Any],
     *,
     include_extended_fields: bool,
-) -> list[dict[str, Any]]:
-    """Build episode response payloads for one page result."""
+) -> list[PodcastEpisodeProjection]:
+    """Build typed episode projections for one page result."""
     return [
         build_episode_response(
             episode=episode,

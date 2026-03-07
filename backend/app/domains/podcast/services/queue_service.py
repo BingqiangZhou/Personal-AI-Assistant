@@ -2,10 +2,13 @@
 
 import logging
 from time import perf_counter
-from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domains.podcast.playback_queue_projections import (
+    PodcastQueueItemProjection,
+    PodcastQueueProjection,
+)
 from app.domains.podcast.repositories import PodcastQueueRepository
 
 
@@ -13,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class PodcastQueueService:
-    """Service for queue operations and queue response serialization."""
+    """Service for queue operations and queue snapshot projections."""
 
     MAX_QUEUE_ITEMS = 500
 
@@ -28,11 +31,11 @@ class PodcastQueueService:
         self.user_id = user_id
         self.repo = repo or PodcastQueueRepository(db)
 
-    async def get_queue(self) -> dict[str, Any]:
+    async def get_queue(self) -> PodcastQueueProjection:
         queue = await self.repo.get_queue_with_items(self.user_id)
-        return await self._serialize_queue(queue)
+        return await self._build_queue_projection(queue)
 
-    async def add_to_queue(self, episode_id: int) -> dict[str, Any]:
+    async def add_to_queue(self, episode_id: int) -> PodcastQueueProjection:
         started_at = perf_counter()
         episode = await self.repo.get_episode_by_id(episode_id, self.user_id)
         if not episode:
@@ -43,29 +46,29 @@ class PodcastQueueService:
             episode_id=episode_id,
             max_items=self.MAX_QUEUE_ITEMS,
         )
-        result = await self._serialize_queue(queue)
+        result = await self._build_queue_projection(queue)
         logger.debug(
             "[Queue] add_to_queue user_id=%s episode_id=%s items=%s elapsed_ms=%.2f",
             self.user_id,
             episode_id,
-            len(result["items"]),
+            len(result.items),
             (perf_counter() - started_at) * 1000,
         )
         return result
 
-    async def remove_from_queue(self, episode_id: int) -> dict[str, Any]:
+    async def remove_from_queue(self, episode_id: int) -> PodcastQueueProjection:
         queue = await self.repo.remove_item(self.user_id, episode_id)
-        return await self._serialize_queue(queue)
+        return await self._build_queue_projection(queue)
 
-    async def reorder_queue(self, episode_ids: list[int]) -> dict[str, Any]:
+    async def reorder_queue(self, episode_ids: list[int]) -> PodcastQueueProjection:
         queue = await self.repo.reorder_items(self.user_id, episode_ids)
-        return await self._serialize_queue(queue)
+        return await self._build_queue_projection(queue)
 
-    async def set_current(self, episode_id: int) -> dict[str, Any]:
+    async def set_current(self, episode_id: int) -> PodcastQueueProjection:
         queue = await self.repo.set_current(self.user_id, episode_id)
-        return await self._serialize_queue(queue)
+        return await self._build_queue_projection(queue)
 
-    async def activate_episode(self, episode_id: int) -> dict[str, Any]:
+    async def activate_episode(self, episode_id: int) -> PodcastQueueProjection:
         started_at = perf_counter()
         episode = await self.repo.get_episode_by_id(episode_id, self.user_id)
         if not episode:
@@ -76,21 +79,21 @@ class PodcastQueueService:
             episode_id=episode_id,
             max_items=self.MAX_QUEUE_ITEMS,
         )
-        result = await self._serialize_queue(queue)
+        result = await self._build_queue_projection(queue)
         logger.debug(
             "[Queue] activate_episode user_id=%s episode_id=%s items=%s elapsed_ms=%.2f",
             self.user_id,
             episode_id,
-            len(result["items"]),
+            len(result.items),
             (perf_counter() - started_at) * 1000,
         )
         return result
 
-    async def complete_current(self) -> dict[str, Any]:
+    async def complete_current(self) -> PodcastQueueProjection:
         queue = await self.repo.complete_current(self.user_id)
-        return await self._serialize_queue(queue)
+        return await self._build_queue_projection(queue)
 
-    async def _serialize_queue(self, queue) -> dict[str, Any]:
+    async def _build_queue_projection(self, queue) -> PodcastQueueProjection:
         items = []
         ordered_items = sorted(queue.items, key=lambda item: (item.position, item.id))
         episode_ids = [item.episode_id for item in ordered_items]
@@ -109,26 +112,26 @@ class PodcastQueueService:
             playback_state = playback_states.get(item.episode_id)
 
             items.append(
-                {
-                    "episode_id": item.episode_id,
-                    "position": item.position,
-                    "playback_position": (
+                PodcastQueueItemProjection(
+                    episode_id=item.episode_id,
+                    position=item.position,
+                    playback_position=(
                         playback_state.current_position if playback_state else None
                     ),
-                    "title": episode.title if episode else "",
-                    "podcast_id": episode.subscription_id if episode else 0,
-                    "audio_url": episode.audio_url if episode else "",
-                    "duration": episode.audio_duration if episode else None,
-                    "published_at": episode.published_at if episode else None,
-                    "image_url": episode.image_url if episode else None,
-                    "subscription_title": subscription.title if subscription else None,
-                    "subscription_image_url": subscription_image,
-                }
+                    title=episode.title if episode else "",
+                    podcast_id=episode.subscription_id if episode else 0,
+                    audio_url=episode.audio_url if episode else "",
+                    duration=episode.audio_duration if episode else None,
+                    published_at=episode.published_at if episode else None,
+                    image_url=episode.image_url if episode else None,
+                    subscription_title=subscription.title if subscription else None,
+                    subscription_image_url=subscription_image,
+                )
             )
 
-        return {
-            "current_episode_id": queue.current_episode_id,
-            "revision": queue.revision or 0,
-            "updated_at": queue.updated_at,
-            "items": items,
-        }
+        return PodcastQueueProjection(
+            current_episode_id=queue.current_episode_id,
+            revision=queue.revision or 0,
+            updated_at=queue.updated_at,
+            items=items,
+        )

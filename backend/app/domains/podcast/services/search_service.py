@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.redis import PodcastRedis
+from app.domains.podcast.episode_projections import PodcastEpisodeProjection
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastSearchRepository
 from app.domains.podcast.services.cache_utils import safe_cache_get, safe_cache_write
@@ -50,7 +51,7 @@ class PodcastSearchService:
 
     async def search_podcasts(
         self, query: str, search_in: str = "all", page: int = 1, size: int = 20
-    ) -> tuple[list[dict], int]:
+    ) -> tuple[list[PodcastEpisodeProjection], int]:
         """
         Search podcast content.
 
@@ -75,7 +76,10 @@ class PodcastSearchService:
 
         if cached:
             logger.info(f"Cache HIT for search: {query}")
-            return cached["results"], cached["total"]
+            return (
+                [PodcastEpisodeProjection.from_payload(item) for item in cached["results"]],
+                cached["total"],
+            )
 
         logger.info(f"Cache MISS for search: {query}, querying database")
 
@@ -94,7 +98,7 @@ class PodcastSearchService:
 
         # Add relevance scores
         for i, ep in enumerate(episodes):
-            results[i]["relevance_score"] = getattr(ep, "relevance_score", 1.0)
+            results[i].relevance_score = getattr(ep, "relevance_score", 1.0)
 
         # Cache results
         await safe_cache_write(
@@ -104,7 +108,7 @@ class PodcastSearchService:
                 page,
                 size,
                 {
-                    "results": results,
+                    "results": [item.to_response_payload() for item in results],
                     "total": total,
                 },
             ),
@@ -154,8 +158,8 @@ class PodcastSearchService:
 
     def _build_episode_response(
         self, episodes: list[PodcastEpisode], playback_states: dict[int, Any]
-    ) -> list[dict]:
-        """Build episode response list with playback states."""
+    ) -> list[PodcastEpisodeProjection]:
+        """Build typed episode projections with playback states."""
         return build_episode_responses(
             episodes=episodes,
             playback_states=playback_states,

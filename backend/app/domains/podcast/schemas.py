@@ -581,6 +581,124 @@ class PodcastTranscriptionStatusResponse(PodcastBaseSchema):
         return str(v) if v else None
 
 
+class PodcastTranscriptionScheduleResponse(PodcastBaseSchema):
+    """单集转录调度响应"""
+
+    status: str
+    message: str
+    task_id: int | None = None
+    transcript_content: str | None = None
+    reason: str | None = None
+    action: str | None = None
+    progress: float | None = None
+    current_status: str | None = None
+    episode_id: int | None = None
+    scheduled_at: datetime | None = None
+
+
+class PodcastEpisodeTranscriptResponse(PodcastBaseSchema):
+    """已存在转录文本响应"""
+
+    episode_id: int
+    episode_title: str
+    transcript_length: int
+    transcript: str
+    status: str
+
+
+class PodcastBatchTranscriptionDetailResponse(PodcastBaseSchema):
+    """批量转录明细响应"""
+
+    episode_id: int
+    episode_title: str | None = None
+    status: str
+    message: str | None = None
+    task_id: int | None = None
+    transcript_content: str | None = None
+    reason: str | None = None
+    action: str | None = None
+    progress: float | None = None
+    current_status: str | None = None
+    error: str | None = None
+    scheduled_at: datetime | None = None
+
+
+class PodcastBatchTranscriptionResponse(PodcastBaseSchema):
+    """批量转录响应"""
+
+    subscription_id: int
+    total: int
+    scheduled: int
+    skipped: int
+    errors: int
+    details: list[PodcastBatchTranscriptionDetailResponse] = Field(default_factory=list)
+
+
+class PodcastTranscriptionScheduleStatusResponse(PodcastBaseSchema):
+    """转录调度状态响应"""
+
+    episode_id: int
+    episode_title: str
+    status: str
+    has_transcript: bool
+    transcript_preview: str | None = None
+    task_id: int | None = None
+    progress: float | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    completed_at: datetime | None = None
+    transcript_word_count: int | None = None
+    has_summary: bool | None = None
+    summary_word_count: int | None = None
+    error_message: str | None = None
+
+
+class PodcastTranscriptionCancelResponse(PodcastBaseSchema):
+    """取消转录响应"""
+
+    success: bool
+    message: str
+
+
+class PodcastCheckNewEpisodesDetailResponse(PodcastBaseSchema):
+    """检查新节目明细响应"""
+
+    episode_id: int
+    status: str
+    task_id: int | None = None
+    error: str | None = None
+
+
+class PodcastCheckNewEpisodesResponse(PodcastBaseSchema):
+    """检查新节目并调度转录响应"""
+
+    status: str
+    message: str
+    processed: int
+    skipped: int | None = None
+    scheduled: int | None = None
+    errors: int | None = None
+    details: list[PodcastCheckNewEpisodesDetailResponse] = Field(default_factory=list)
+
+
+class PodcastPendingTranscriptionTaskResponse(PodcastBaseSchema):
+    """待处理转录任务响应"""
+
+    task_id: int
+    episode_id: int
+    status: str
+    progress: float
+    created_at: datetime
+    updated_at: datetime | None = None
+
+
+class PodcastPendingTranscriptionsResponse(PodcastBaseSchema):
+    """待处理转录任务列表响应"""
+
+    total: int
+    tasks: list[PodcastPendingTranscriptionTaskResponse] = Field(default_factory=list)
+
+
 # === Conversation相关 ===
 
 

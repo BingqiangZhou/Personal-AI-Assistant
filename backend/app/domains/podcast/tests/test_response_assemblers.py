@@ -11,6 +11,9 @@ from app.domains.podcast.api.response_assemblers import (
     build_episode_detail_response,
     build_episode_list_response,
     build_feed_response,
+    build_queue_response,
+    build_schedule_config_list_response,
+    build_schedule_config_response,
     build_existing_playback_state_response,
     build_pending_summaries_response,
     build_playback_history_list_response,
@@ -20,6 +23,11 @@ from app.domains.podcast.api.response_assemblers import (
     build_summary_models_response,
     build_summary_response,
 )
+from app.domains.podcast.playback_queue_projections import (
+    PodcastPlaybackStateProjection,
+    PodcastQueueProjection,
+)
+from app.domains.podcast.schedule_projections import ScheduleConfigProjection
 
 
 def _episode_payload(now: datetime) -> dict:
@@ -302,6 +310,51 @@ def test_build_summary_and_playback_responses():
     assert effective_rate.source == "subscription"
 
 
+def test_build_playback_and_queue_responses_from_projections():
+    now = datetime.now(timezone.utc)
+
+    playback = build_playback_state_response(
+        payload=PodcastPlaybackStateProjection(
+            episode_id=7,
+            current_position=80,
+            is_playing=False,
+            playback_rate=1.0,
+            play_count=2,
+            last_updated_at=now,
+            progress_percentage=50.0,
+            remaining_time=80,
+        )
+    )
+    queue = build_queue_response(
+        PodcastQueueProjection.model_validate(
+            {
+                "current_episode_id": 7,
+                "revision": 3,
+                "updated_at": now,
+                "items": [
+                    {
+                        "episode_id": 7,
+                        "position": 0,
+                        "playback_position": 80,
+                        "title": "Episode 7",
+                        "podcast_id": 4,
+                        "audio_url": "https://example.com/audio.mp3",
+                        "duration": 160,
+                        "published_at": now,
+                        "image_url": None,
+                        "subscription_title": "Podcast",
+                        "subscription_image_url": None,
+                    }
+                ],
+            }
+        )
+    )
+
+    assert playback.episode_id == 7
+    assert queue.revision == 3
+    assert queue.items[0].episode_id == 7
+
+
 def test_build_pending_and_model_responses():
     pending = build_pending_summaries_response([
         {"id": 1, "title": "Episode 1"},
@@ -323,3 +376,24 @@ def test_build_pending_and_model_responses():
     assert pending.count == 2
     assert models.total == 1
     assert models.models[0].name == "default"
+
+
+def test_build_schedule_config_responses_from_projections():
+    now = datetime.now(timezone.utc)
+    projection = ScheduleConfigProjection(
+        id=5,
+        title="Podcast 5",
+        update_frequency="DAILY",
+        update_time="08:30",
+        update_day_of_week=None,
+        fetch_interval=3600,
+        next_update_at=now,
+        last_updated_at=now,
+    )
+
+    single = build_schedule_config_response(projection)
+    listing = build_schedule_config_list_response([projection])
+
+    assert single.id == 5
+    assert single.update_time == "08:30"
+    assert listing[0].title == "Podcast 5"
