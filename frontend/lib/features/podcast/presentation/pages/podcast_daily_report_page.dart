@@ -109,9 +109,10 @@ class _PodcastDailyReportPageState
 
   Widget _buildHeaderPanel(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isMobile = MediaQuery.of(context).size.width < 600;
     return CompactHeaderPanel(
       title: l10n.podcast_daily_report_title,
-      leading: _buildBackButton(context),
+      leading: isMobile ? null : _buildBackButton(context),
       trailing: _buildCalendarButton(context),
     );
   }

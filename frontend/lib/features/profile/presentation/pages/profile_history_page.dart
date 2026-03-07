@@ -208,15 +208,18 @@ class _ProfileHistoryPageState extends ConsumerState<ProfileHistoryPage> {
   }
 
   Widget _buildHeaderPanel(BuildContext context, AppLocalizations l10n) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
     return CompactHeaderPanel(
       title: l10n.profile_viewed_title,
-      leading: Tooltip(
-        message: MaterialLocalizations.of(context).backButtonTooltip,
-        child: IconButton.filledTonal(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
-      ),
+      leading: isMobile
+          ? null
+          : Tooltip(
+              message: MaterialLocalizations.of(context).backButtonTooltip,
+              child: IconButton.filledTonal(
+                onPressed: () => context.pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
+              ),
+            ),
     );
   }
 

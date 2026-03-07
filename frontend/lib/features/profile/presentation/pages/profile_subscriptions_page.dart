@@ -124,15 +124,18 @@ class _ProfileSubscriptionsPageState
 
   Widget _buildHeaderPanel(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isMobile = MediaQuery.of(context).size.width < 600;
     return CompactHeaderPanel(
       title: l10n.profile_subscriptions,
-      leading: Tooltip(
-        message: MaterialLocalizations.of(context).backButtonTooltip,
-        child: IconButton.filledTonal(
-          onPressed: () => context.pop(),
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
-      ),
+      leading: isMobile
+          ? null
+          : Tooltip(
+              message: MaterialLocalizations.of(context).backButtonTooltip,
+              child: IconButton.filledTonal(
+                onPressed: () => context.pop(),
+                icon: const Icon(Icons.arrow_back_rounded),
+              ),
+            ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
