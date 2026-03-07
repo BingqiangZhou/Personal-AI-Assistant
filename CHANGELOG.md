@@ -4,6 +4,32 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.15.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.15.0...v0.15.1) - 2026-03-07 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.15.1))
+
+### 🐛 Bug Fixes
+
+- *(core)* Fix UTF-8 encoding issues and improve encoding handling ([a04ccc5](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/a04ccc548f272da8beda8608fedc149d27572344))
+
+### 🚜 Refactor
+
+- *(podcast)* Redesign queue mutation logic and improve playback resolution ([787e288](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/787e28833c1fa70c4131b411ecbac9fe4eee07d6))
+- *(core)* Implement lazy evaluation and centralized provider pattern ([d719033](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d7190335367553e98447fad074cafcaa3575096b))
+- *(backend)* Extract service layer and split podcast routes into focused modules ([ec0b7aa](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ec0b7aa9773a2b5e8b9fdd98ed545292dddd42b4))
+- *(backend)* Extract workflow services and reorganize podcast repositories ([18bfa0c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/18bfa0c9d4e9a1d9d18f606fe51cee8868377b23))
+- *(admin, podcast)* Centralize admin dependencies and reorganize podcast repositories ([c6060fb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c6060fbfec9f50e7b6aaa0ee43962a452a2909d2))
+- *(backend)* Finalize dependency centralization and extract services from routes ([b30cf8c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/b30cf8c06ea7067044e8a9cf069859c183a5d639))
+- *(backend)* Convert single-file modules to packages and split podcast transcription services ([7daaee9](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7daaee9d01178e8d06c03807e560a69ca8602c12))
+- *(admin)* Move API keys and subscriptions business logic to service layer ([2153604](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/2153604a5ba64aaa2e785c9dbb38270e97809c43))
+- *(core)* Centralize dependency providers and split podcast repositories into modules ([eb5db2a](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/eb5db2a482c858be059b634375cee4fc9648a6a1))
+- *(services)* Split large service classes into focused single-responsibility modules ([5363ad3](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5363ad3434d51c71246244cbcad41d17b56c002a))
+- *(podcast)* Extract response assembly logic into dedicated module ([92ae85e](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/92ae85e75afd976d751ce9569a11bb9377d8a206))
+- *(podcast)* Introduce projection pattern layer for service outputs ([e245792](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/e2457926cc9cfb4e87b1b3ee0cba1891c796ddce))
+- *(podcast)* Remove backward compatibility shims and update tests ([7ae8c82](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/7ae8c82973543613533ff7a394b2ffe32bd32218))
+- *(core)* Split large service classes into focused single-responsibility modules ([308ab4c](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/308ab4c2c06515872ae8920382cf89911dfc7ccc))
+- *(podcast,subscription)* Consolidate split services and routes into unified modules ([921f265](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/921f265ee343ac7c0a0c88e130002add9a796211))
+
+
+
 ## [0.15.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.14.3...v0.15.0) - 2026-03-07 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.15.0))
 
 ### 🎨 Styling
