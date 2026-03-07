@@ -28,6 +28,7 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final compact = this.compact;
     final subscriptionBadgeBackgroundColor = theme.colorScheme.onSurfaceVariant;
     final subscriptionBadgeTextColor = theme.colorScheme.surface;
     final titleStyle = theme.textTheme.titleMedium?.copyWith(
@@ -54,7 +55,7 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeaderRow(theme, titleStyle, coverSize, coverIconSize),
+              _buildHeaderRow(l10n, theme, titleStyle, coverSize, coverIconSize),
               if (displayDescription.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -91,6 +92,7 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
   }
 
   Widget _buildHeaderRow(
+    AppLocalizations l10n,
     ThemeData theme,
     TextStyle? titleStyle,
     double coverSize,
@@ -99,6 +101,9 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
     final rowKey = compact
         ? const Key('podcast_feed_mobile_header_row')
         : const Key('podcast_feed_desktop_header_row');
+    final playKey = compact
+        ? const Key('podcast_feed_mobile_play')
+        : const Key('podcast_feed_desktop_play');
     return Row(
       key: rowKey,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -132,6 +137,32 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
               ),
             ),
           ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          key: playKey,
+          tooltip: l10n.podcast_play,
+          onPressed: onPlayAndOpenDetail,
+          style: IconButton.styleFrom(
+            minimumSize: const Size(28, 28),
+            maximumSize: const Size(28, 28),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            foregroundColor: theme.colorScheme.onSurfaceVariant,
+            shape: compact ? null : const CircleBorder(),
+            side: compact
+                ? null
+                : BorderSide(
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.65,
+                    ),
+                    width: 1,
+                  ),
+          ),
+          icon: compact
+              ? const Icon(Icons.play_circle_outline, size: 22)
+              : const Icon(Icons.play_arrow, size: 18),
         ),
       ],
     );
@@ -183,9 +214,6 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
     final addQueueKey = compact
         ? const Key('podcast_feed_mobile_add_to_queue')
         : const Key('podcast_feed_desktop_add_to_queue');
-    final playKey = compact
-        ? const Key('podcast_feed_mobile_play')
-        : const Key('podcast_feed_desktop_play');
 
     return Row(
       key: rowKey,
@@ -203,7 +231,7 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: compact ? 112 : 140),
+                    constraints: BoxConstraints(maxWidth: compact ? 140 : 170),
                     child: Container(
                       key: badgeKey,
                       padding: EdgeInsets.symmetric(
@@ -292,32 +320,6 @@ class PodcastFeedEpisodeCard extends StatelessWidget {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.playlist_add, size: 18),
-        ),
-        const SizedBox(width: 10),
-        IconButton(
-          key: playKey,
-          tooltip: l10n.podcast_play,
-          onPressed: onPlayAndOpenDetail,
-          style: IconButton.styleFrom(
-            minimumSize: const Size(28, 28),
-            maximumSize: const Size(28, 28),
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-            padding: EdgeInsets.zero,
-            foregroundColor: theme.colorScheme.onSurfaceVariant,
-            shape: compact ? null : const CircleBorder(),
-            side: compact
-                ? null
-                : BorderSide(
-                    color: theme.colorScheme.onSurfaceVariant.withValues(
-                      alpha: 0.65,
-                    ),
-                    width: 1,
-                  ),
-          ),
-          icon: compact
-              ? const Icon(Icons.play_circle_outline, size: 22)
-              : const Icon(Icons.play_arrow, size: 18),
         ),
       ],
     );
