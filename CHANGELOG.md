@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.15.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.15.1...v0.15.2) - 2026-03-08 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.15.2))
+
+### 🐛 Bug Fixes
+
+- *(podcast)* Fix revision tracking and callback signature issues ([c6a0876](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/c6a087623f219fd56125f3a2719435173e1d4500))
+
+### 🚜 Refactor
+
+- *(podcast)* Restructure queue header layout to vertical orientation ([cbeca80](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/cbeca8017891cebe7206e5f73aaeb60f2c25ad41))
+- *(podcast)* Restructure queue header layout to improve spacing and fix state update timing ([62519ba](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/62519bab3074dd943da607052dd082f4cd021bf8))
+- *(podcast)* Restructure queue header layout with vertical title and info/actions row ([92658f7](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/92658f75f51b7da2a056d26f19ef81546700588f))
+
+
+
 ## [0.15.1](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.15.0...v0.15.1) - 2026-03-07 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.15.1))
 
 ### 🐛 Bug Fixes
