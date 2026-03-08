@@ -19,7 +19,7 @@ class TranscriptionDispatchGuard:
         db: AsyncSession,
         *,
         redis_factory: Callable[[], PodcastRedis],
-        claim_dispatched: Callable[[AsyncSession, int], Awaitable[bool]] | None = None,
+        claim_dispatched: Callable[[int], Awaitable[bool]] | None = None,
         clear_dispatched: Callable[[int], Awaitable[None]] | None = None,
     ):
         self.db = db
@@ -29,7 +29,7 @@ class TranscriptionDispatchGuard:
 
     async def claim(self, task_id: int) -> bool:
         if self.claim_dispatched_callback is not None:
-            return await self.claim_dispatched_callback(self.db, task_id)
+            return await self.claim_dispatched_callback(task_id)
 
         redis = self.redis_factory()
         key = f"podcast:transcription:dispatched:{task_id}"

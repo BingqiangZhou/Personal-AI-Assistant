@@ -426,7 +426,7 @@ class PodcastPlaybackQueueRepositoryMixin:
             user_id=user_id,
             queue_size=len(self._sorted_queue_items(queue)),
             revision_before=revision_before,
-            revision_after=queue.revision or revision_before,
+            revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
         return await self.get_queue_with_items(user_id)
@@ -469,7 +469,7 @@ class PodcastPlaybackQueueRepositoryMixin:
             user_id=user_id,
             queue_size=len(ordered_items),
             revision_before=revision_before,
-            revision_after=queue.revision or revision_before,
+            revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
         return await self.get_queue_with_items(user_id)
@@ -530,7 +530,7 @@ class PodcastPlaybackQueueRepositoryMixin:
             user_id=user_id,
             queue_size=len(self._sorted_queue_items(queue)),
             revision_before=revision_before,
-            revision_after=queue.revision or revision_before,
+            revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
         return await self.get_queue_with_items(user_id)
@@ -578,7 +578,7 @@ class PodcastPlaybackQueueRepositoryMixin:
             user_id=user_id,
             queue_size=len(current_ids),
             revision_before=revision_before,
-            revision_after=queue.revision or revision_before,
+            revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
         return await self.get_queue_with_items(user_id)
@@ -617,7 +617,7 @@ class PodcastPlaybackQueueRepositoryMixin:
             user_id=user_id,
             queue_size=len(ordered_items),
             revision_before=revision_before,
-            revision_after=queue.revision or revision_before,
+            revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
         return await self.get_queue_with_items(user_id)
@@ -666,7 +666,7 @@ class PodcastPlaybackQueueRepositoryMixin:
             user_id=user_id,
             queue_size=len(ordered_items),
             revision_before=revision_before,
-            revision_after=queue.revision or revision_before,
+            revision_after=(revision_before + 1) if changed else revision_before,
             elapsed_ms=(perf_counter() - started_at) * 1000,
         )
         return await self.get_queue_with_items(user_id)
