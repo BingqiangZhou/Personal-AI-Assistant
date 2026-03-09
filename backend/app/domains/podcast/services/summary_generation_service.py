@@ -216,10 +216,22 @@ class SummaryModelManager:
     def _build_default_prompt(
         self, episode_info: dict[str, Any], transcript: str
     ) -> str:
-        title = episode_info.get("title", "Untitled Episode")
-        description = strip_html_tags(episode_info.get("description", ""))
-        return f"""# Role
-You are a senior podcast content analyst. Your task is to transform a long-form audio transcript into a detailed, well-structured, and easy-to-read research-style summary.
+        """构建默认的摘要提示词"""
+        title = episode_info.get("title", "未知标题")
+        raw_description = episode_info.get("description", "")
+
+        # 剥离HTML标签，确保AI只看到纯文本内容
+        description = strip_html_tags(raw_description)
+
+        prompt = f"""# Role
+你是一位追求极致完整性的资深播客内容分析师。你的目标是将冗长的音频转录文本转化为一份详尽、结构化且**极易阅读**的深度研报。
+
+# Task
+请根据提供的元数据和转录文本生成总结。
+**核心原则**：
+1. **完整性**：内容完整性高于篇幅限制，不要受限于固定的段落数量。
+2. **可读性**：**严禁使用大段落纯文本（Wall of Text）**。所有信息必须通过"标题 + 列表"的形式呈现，确保用户可以快速扫描核心信息。
+
 # Input Data
 <podcast_info>
 Title: {title}
@@ -229,7 +241,59 @@ Shownotes: {description}
 <transcript>
 {transcript}
 </transcript>
+
+# Analysis Constraints
+1. **全面覆盖**：不要遗漏任何一个主要话题。如果播客讨论了 10 个不同的话题，请生成 10 个对应的小节。
+2. **事实来源严格分级**：
+    - **最高优先级**：<transcript>。所有的观点、数据、结论必须严格源自实际的对话转录。
+    - **辅助参考**：<podcast_info> (Shownotes)。仅用于提取正确的人名拼写、专业术语。
+    - **冲突处理**：如果 Shownotes 内容在 Transcript 中未出现，**坚决不写入总结**。
+3. **视觉层级**：这是为了解决"阅读不便"的问题。
+    - **多用列表**：主要内容必须使用无序列表（- ）或有序列表（1. ）呈现。
+    - **加粗关键**：对人名、工具名、核心数据、关键结论进行**加粗**处理。
+
+# Output Structure (Strictly Follow)
+
+## 1. 一句话摘要 (Executive Summary)
+用精炼的语言（50-100字）概括整期播客的核心主旨。
+
+## 2. 核心观点与洞察 (Key Insights & Takeaways)
+提取本期播客中所有具有独立价值的观点。
+- **数量不限**：务必覆盖所有关键结论。
+- **格式要求**：使用列表形式。
+    - **[观点关键词]**：详细阐述。
+- **逻辑分组**：如果观点较多，请使用**三级标题（###）**进行分类（例如：### 市场趋势、### 技术实现），每一类下面再列出具体观点。
+
+## 3. 内容深度拆解 (Deep Dive / Topic Breakdown)
+**这是本总结最核心的部分。** 请顺着对话的时间线或逻辑流，将长文本自然拆解为多个板块。
+
+**【重要格式要求】**：在此部分，**禁止使用自然段落写作**。必须使用**"小标题 + 嵌套列表"**的结构。
+
+- **切分原则**：每当对话切换到一个新的重大话题或议程时，就创建一个新的**三级标题**（例如：### 3.1 话题：...）。
+- **内容呈现方式**：
+    - 使用 **无序列表** 罗列该话题下的核心论点。
+    - 在论点之下，使用 **缩进列表** 补充具体的论据、数据、案例或正反方观点。
+    - **人名/工具/数据**：必须**加粗**显示。
+    - **示例结构**：
+        * **核心论点 A**
+            * 细节解释：...
+            * 提到的案例：**某某公司**的例子...
+        * **核心论点 B**
+            * 嘉宾 **[名字]** 提出的反对意见：...
+            * 相关数据：增长了 **40%**...
+
+## 4. 精彩语录与金句 (Memorable Quotes)
+摘录原文中所有打动人心、发人深省或具有幽默感的原话。
+- **格式要求**：使用列表形式。
+- **要求**：注明说话人（如果有）和简短背景。
+
+## 5. 适合听众与收获 (Audience & Value)
+简要说明本期内容适合哪类人群深入聆听，以及他们能从中学到什么。
+
+# Start Analysis
+请开始进行详尽的分析，确保所有内容"条理化"、"列表化"，严格遵守事实分级原则：
 """
+        return prompt
 
     async def _get_api_key(self, model_config) -> str:
         active_models = await self.ai_model_repo.get_active_models(
