@@ -9,7 +9,9 @@ from sqlalchemy import and_, case, desc, func, or_, select
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import joinedload
 
-from app.core.datetime_utils import sanitize_published_date
+from app.core.datetime_utils import (
+    ensure_timezone_aware_fetch_time,
+)
 from app.domains.podcast.models import (
     PodcastDailyReport,
     PodcastEpisode,
@@ -188,7 +190,7 @@ class PodcastAnalyticsRepositoryMixin:
         subscription = result.scalar_one_or_none()
 
         if subscription:
-            time_to_set = sanitize_published_date(
+            time_to_set = ensure_timezone_aware_fetch_time(
                 fetch_time or datetime.now(timezone.utc)
             )
             subscription.last_fetched_at = time_to_set

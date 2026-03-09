@@ -44,8 +44,7 @@ def remove_timezone(dt: datetime | None) -> datetime | None:
 
 
 def ensure_timezone_aware(
-    dt: datetime | None,
-    tz: timezone = timezone.utc
+    dt: datetime | None, tz: timezone = timezone.utc
 ) -> datetime | None:
     """
     Ensure a datetime object is timezone-aware.
@@ -96,15 +95,14 @@ def parse_isoformat(dt_str: str | None) -> datetime | None:
         return None
 
     try:
-        return datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
+        return datetime.fromisoformat(dt_str.replace("Z", "+00:00"))
     except (ValueError, AttributeError) as e:
         logger.warning(f"Failed to parse datetime string '{dt_str}': {e}")
         return None
 
 
 def format_datetime(
-    dt: datetime | None,
-    format_str: str = "%Y-%m-%d %H:%M:%S"
+    dt: datetime | None, format_str: str = "%Y-%m-%d %H:%M:%S"
 ) -> str | None:
     """
     Format datetime to string using specified format.
@@ -179,9 +177,7 @@ def is_expired(dt: datetime, max_age_seconds: float) -> bool:
     return age > max_age_seconds
 
 
-def sanitize_published_date(
-    published_at: datetime | None
-) -> datetime | None:
+def sanitize_published_date(published_at: datetime | None) -> datetime | None:
     """
     Sanitize podcast episode published date by removing timezone.
 
@@ -202,9 +198,7 @@ def sanitize_published_date(
     return remove_timezone(published_at)
 
 
-def bulk_remove_timezone(
-    dates: list[datetime | None]
-) -> list[datetime | None]:
+def bulk_remove_timezone(dates: list[datetime | None]) -> list[datetime | None]:
     """
     Remove timezone from multiple datetime objects.
 
@@ -215,3 +209,47 @@ def bulk_remove_timezone(
         List of datetime objects without timezone
     """
     return [remove_timezone(dt) for dt in dates]
+
+
+def ensure_timezone_aware_fetch_time(fetch_time: datetime | None) -> datetime | None:
+    """
+    Ensure fetch time is timezone-aware in UTC.
+
+    Unlike sanitize_published_date() (which removes timezones for RSS feed compatibility),
+    this function ENSURES timezones are present for internal timestamp tracking.
+
+    This is critical for subscription.last_fetched_at comparisons with episode.published_at,
+    as comparing naive and aware datetimes raises TypeError.
+
+    Args:
+        fetch_time: Datetime from fetch operation
+
+    Returns:
+        Timezone-aware datetime in UTC, or None
+
+    Examples:
+        >>> # Naive datetime - assumes UTC and adds timezone
+        >>> naive_time = datetime(2024, 1, 1, 12, 0, 0)
+        >>> ensure_timezone_aware_fetch_time(naive_time)
+        datetime.datetime(2024, 1, 1, 12, 0, tzinfo=datetime.timezone.utc)
+
+        >>> # Already timezone-aware - converts to UTC
+        >>> from zoneinfo import ZoneInfo
+        >>> aware_time = datetime(2024, 1, 1, 12, 0, tzinfo=ZoneInfo("America/New_York"))
+        >>> result = ensure_timezone_aware_fetch_time(aware_time)
+        >>> result.tzinfo
+        datetime.timezone.utc
+
+        >>> # None input
+        >>> ensure_timezone_aware_fetch_time(None)
+        None
+    """
+    if fetch_time is None:
+        return None
+
+    # If already timezone-aware, convert to UTC
+    if fetch_time.tzinfo is not None:
+        return fetch_time.astimezone(timezone.utc)
+
+    # If naive, assume it's UTC and add timezone
+    return fetch_time.replace(tzinfo=timezone.utc)

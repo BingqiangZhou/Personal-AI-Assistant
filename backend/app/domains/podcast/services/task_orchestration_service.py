@@ -33,6 +33,7 @@ from app.domains.subscription.models import (
 )
 from app.domains.user.models import User, UserStatus
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -88,7 +89,11 @@ class PodcastTaskOrchestrationService:
                 continue
 
             user_sub = next(
-                (us for us in user_subscriptions if us.subscription_id == subscription_id),
+                (
+                    us
+                    for us in user_subscriptions
+                    if us.subscription_id == subscription_id
+                ),
                 None,
             )
             user_id = user_sub.user_id if user_sub else 1
@@ -131,10 +136,16 @@ class PodcastTaskOrchestrationService:
                 )
                 new_episodes = len(new_episode_rows)
                 for saved_episode in new_episode_rows:
-                    if (
-                        subscription.last_fetched_at
-                        and saved_episode.published_at > subscription.last_fetched_at
-                    ):
+                    # Ensure both datetimes are timezone-aware before comparison
+                    last_fetched = subscription.last_fetched_at
+                    if last_fetched and last_fetched.tzinfo is None:
+                        from app.core.datetime_utils import (
+                            ensure_timezone_aware_fetch_time,
+                        )
+
+                        last_fetched = ensure_timezone_aware_fetch_time(last_fetched)
+
+                    if last_fetched and saved_episode.published_at > last_fetched:
                         await sync_service.trigger_transcription(saved_episode.id)
                     else:
                         logger.info(
