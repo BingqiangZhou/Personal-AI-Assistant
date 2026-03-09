@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.15.3](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.15.2...v0.15.3) - 2026-03-09 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.15.3))
+
+### 🐛 Bug Fixes
+
+- *(i18n)* Fix garbled Chinese text in error messages and logs ([bf5698f](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/bf5698f9f7b3f0f71ce4a0d9b2cbc1dc1307a8fd))
+- *(mock)* Add get_settings method to mock config module ([ae7db38](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/ae7db382c45b6b63415cf635b9ce3fd705586f89))
+
+### 🚀 Features
+
+- *(datetime)* Add ensure_timezone_aware_fetch_time function and update related logic for timezone handling ([d9b0e27](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d9b0e27cc7638801acc26be3b224bc6b4ef1b9f9))
+- *(auth)* Add UTC expiration handling and server time to auth responses ([d9fa92d](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d9fa92dd095f301b562a95c597ccd4d172caeb5d))
+
+### 🚜 Refactor
+
+- *(nginx)* Simplify template activation with direct envsubst rendering ([72c130b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/72c130bec2c35d74a1196566b8bfd600cd8ad181))
+
+
+
 ## [0.15.2](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.15.1...v0.15.2) - 2026-03-08 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.15.2))
 
 ### 🐛 Bug Fixes
