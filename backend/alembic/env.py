@@ -104,6 +104,7 @@ class MockConfig:
 # Mock config module
 mock_config_module = types.ModuleType("app.core.config")
 mock_config_module.settings = MockConfig()
+mock_config_module.get_settings = lambda: mock_config_module.settings
 sys.modules["app.core.config"] = mock_config_module
 
 
