@@ -3,6 +3,7 @@
 使用 feedparser 的健壮 RSS/Atom 解析器。
 """
 
+import asyncio
 import html
 import logging
 import re
@@ -136,10 +137,11 @@ class FeedParser:
             response.raise_for_status()
 
             # Parse with feedparser
-            return self.parse_feed_content(
+            return await asyncio.to_thread(
+                self.parse_feed_content,
                 response.content,
-                url=url,
-                options=options
+                url,
+                options,
             )
 
         except httpx.HTTPStatusError as e:

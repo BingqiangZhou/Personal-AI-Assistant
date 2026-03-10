@@ -639,6 +639,60 @@ class PodcastRedis:
         """Return keys matching a pattern."""
         return await self._scan_keys(pattern)
 
+    async def sorted_set_add(self, key: str, member: str, score: float) -> int:
+        """Add or update one member in a sorted set."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await client.zadd(key, {member: score})
+        self._record_command_timing("ZADD", (perf_counter() - started) * 1000)
+        return int(result or 0)
+
+    async def sorted_set_remove(self, key: str, *members: str) -> int:
+        """Remove one or more members from a sorted set."""
+        if not members:
+            return 0
+        client = await self._get_client()
+        started = perf_counter()
+        result = await client.zrem(key, *members)
+        self._record_command_timing("ZREM", (perf_counter() - started) * 1000)
+        return int(result or 0)
+
+    async def sorted_set_cardinality(self, key: str) -> int:
+        """Return the number of members in a sorted set."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await client.zcard(key)
+        self._record_command_timing("ZCARD", (perf_counter() - started) * 1000)
+        return int(result or 0)
+
+    async def sorted_set_range_by_score(
+        self,
+        key: str,
+        min_score: float | str,
+        max_score: float | str,
+    ) -> list[str]:
+        """Return sorted-set members whose scores fall within the inclusive range."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await client.zrangebyscore(key, min_score, max_score)
+        self._record_command_timing("ZRANGEBYSCORE", (perf_counter() - started) * 1000)
+        return list(result)
+
+    async def sorted_set_remove_by_score(
+        self,
+        key: str,
+        min_score: float | str,
+        max_score: float | str,
+    ) -> int:
+        """Remove sorted-set members whose scores fall within the inclusive range."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await client.zremrangebyscore(key, min_score, max_score)
+        self._record_command_timing(
+            "ZREMRANGEBYSCORE", (perf_counter() - started) * 1000
+        )
+        return int(result or 0)
+
     # === Rate Limiting ===
 
     async def check_rate_limit(

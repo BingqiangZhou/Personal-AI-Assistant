@@ -113,6 +113,7 @@ class PodcastEpisode(Base):
         Index("idx_podcast_subscription", "subscription_id"),
         Index("idx_podcast_status", "status"),
         Index("idx_podcast_published", "published_at"),
+        Index("idx_podcast_episodes_status_published_id", "status", "published_at", "id"),
         Index("idx_podcast_episode_image", "image_url"),
         Index("idx_podcast_episodes_item_link", "item_link", unique=True),
     )
@@ -453,6 +454,8 @@ class TranscriptionTask(Base):
         Index("idx_transcription_episode", "episode_id", unique=True),
         Index("idx_transcription_status", "status"),
         Index("idx_transcription_created", "created_at"),
+        Index("idx_transcription_status_updated", "status", "updated_at"),
+        Index("idx_transcription_status_created", "status", "created_at"),
     )
 
     @property

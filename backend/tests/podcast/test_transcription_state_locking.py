@@ -12,6 +12,7 @@ class _FakeRedisClient:
         self.store: dict[str, str] = {}
         self.ttl_map: dict[str, int] = {}
         self.deleted_calls: list[tuple[str, ...]] = []
+        self.sorted_sets: dict[str, dict[str, float]] = {}
 
     async def get(self, key: str) -> str | None:
         return self.store.get(key)
@@ -64,6 +65,14 @@ class _FakePodcastRedis:
     async def cache_get(self, key: str) -> str | None:
         return await self.client.get(key)
 
+    async def cache_set(self, key: str, value: str, ttl: int = 3600) -> bool:
+        self.client.store[key] = value
+        self.client.ttl_map[key] = ttl
+        return True
+
+    async def cache_delete(self, key: str) -> bool:
+        return bool(await self.client.delete(key))
+
     async def delete_keys(self, *keys: str) -> int:
         return await self.client.delete(*keys)
 
@@ -72,6 +81,42 @@ class _FakePodcastRedis:
 
     async def get_ttl(self, key: str) -> int:
         return await self.client.ttl(key)
+
+    async def sorted_set_add(self, key: str, member: str, score: float) -> int:
+        bucket = self.client.sorted_sets.setdefault(key, {})
+        is_new = member not in bucket
+        bucket[member] = score
+        return 1 if is_new else 0
+
+    async def sorted_set_remove(self, key: str, *members: str) -> int:
+        bucket = self.client.sorted_sets.setdefault(key, {})
+        removed = 0
+        for member in members:
+            if member in bucket:
+                removed += 1
+                del bucket[member]
+        return removed
+
+    async def sorted_set_cardinality(self, key: str) -> int:
+        return len(self.client.sorted_sets.get(key, {}))
+
+    async def sorted_set_range_by_score(
+        self, key: str, min_score: float | str, max_score: float | str
+    ) -> list[str]:
+        bucket = self.client.sorted_sets.get(key, {})
+        lower = float("-inf") if min_score == "-inf" else float(min_score)
+        upper = float("inf") if max_score == "+inf" else float(max_score)
+        return [
+            member
+            for member, score in sorted(bucket.items(), key=lambda item: item[1])
+            if lower <= score <= upper
+        ]
+
+    async def sorted_set_remove_by_score(
+        self, key: str, min_score: float | str, max_score: float | str
+    ) -> int:
+        members = await self.sorted_set_range_by_score(key, min_score, max_score)
+        return await self.sorted_set_remove(key, *members)
 
 
 def _build_state_manager() -> tuple[TranscriptionStateManager, _FakePodcastRedis]:
@@ -143,3 +188,34 @@ async def test_release_task_lock_cleans_legacy_key_for_matching_owner() -> None:
     assert released is True
     assert "podcast:lock:transcription:episode:60329" not in fake_redis.client.store
     assert "podcast:transcription:lock_value:60329" not in fake_redis.client.store
+
+
+@pytest.mark.asyncio
+async def test_get_active_tasks_count_reads_sorted_set_index() -> None:
+    manager, _fake_redis = _build_state_manager()
+
+    await manager.set_task_progress(41, "in_progress", 35.0, "working", ttl_seconds=120)
+
+    assert await manager.get_active_tasks_count() == 1
+
+    await manager.clear_task_progress(41)
+
+    assert await manager.get_active_tasks_count() == 0
+
+
+@pytest.mark.asyncio
+async def test_cleanup_stale_locks_uses_indexed_episode_ids() -> None:
+    manager, fake_redis = _build_state_manager()
+    lock_key = "podcast:lock:transcription:episode:60329"
+    legacy_key = "podcast:transcription:lock_value:60329"
+    fake_redis.client.store[lock_key] = "task:42"
+    fake_redis.client.store[legacy_key] = "42"
+    fake_redis.client.ttl_map[lock_key] = -1
+    fake_redis.client.sorted_sets["podcast:transcription:lock_index"] = {"60329": 0.0}
+
+    cleaned = await manager.cleanup_stale_locks(max_age_seconds=7200)
+
+    assert cleaned == 1
+    assert lock_key not in fake_redis.client.store
+    assert legacy_key not in fake_redis.client.store
+    assert fake_redis.client.sorted_sets["podcast:transcription:lock_index"] == {}

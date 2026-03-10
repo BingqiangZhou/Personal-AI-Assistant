@@ -219,6 +219,29 @@ class TestFeedParser:
         assert len(result.entries) == 2
 
     @pytest.mark.asyncio
+    async def test_parse_feed_from_url_offloads_parsing_to_thread(self):
+        """Test parsing feed content via asyncio.to_thread."""
+        parser = FeedParser()
+
+        mock_response = MagicMock()
+        mock_response.content = SAMPLE_RSS_FEED
+        mock_response.raise_for_status = MagicMock()
+
+        mock_client = AsyncMock()
+        mock_client.get = AsyncMock(return_value=mock_response)
+        parser._client = mock_client
+
+        expected = FeedParseResult(feed_info=FeedInfo(title="Test Feed"), entries=[])
+        with patch(
+            "app.domains.subscription.parsers.feed_parser.asyncio.to_thread",
+            new=AsyncMock(return_value=expected),
+        ) as mock_to_thread:
+            result = await parser.parse_feed("https://example.com/feed.xml")
+
+        assert result is expected
+        mock_to_thread.assert_awaited_once()
+
+    @pytest.mark.asyncio
     async def test_parse_feed_from_url_network_error(self):
         """Test handling network error."""
         parser = FeedParser()

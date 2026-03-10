@@ -598,29 +598,7 @@ class PodcastTaskOrchestrationService:
             ),
         ]
 
-        count_stmt = (
-            select(func.count(PodcastEpisode.id))
-            .select_from(PodcastEpisode)
-            .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
-            .outerjoin(
-                TranscriptionTask, TranscriptionTask.episode_id == PodcastEpisode.id
-            )
-            .where(and_(*filters))
-        )
-        total_candidates = int((await self.session.execute(count_stmt)).scalar() or 0)
         batch_size = max(1, settings.TRANSCRIPTION_BACKLOG_BATCH_SIZE)
-        if total_candidates == 0:
-            return {
-                "status": "success",
-                "total_candidates": 0,
-                "checked": 0,
-                "dispatched": 0,
-                "skipped": 0,
-                "failed": 0,
-                "skipped_reasons": {},
-                "processed_at": datetime.now(UTC).isoformat(),
-            }
-
         id_stmt = (
             select(PodcastEpisode.id, PodcastEpisode.published_at)
             .join(Subscription, PodcastEpisode.subscription_id == Subscription.id)
@@ -634,10 +612,11 @@ class PodcastTaskOrchestrationService:
         )
         rows = await self.session.execute(id_stmt)
         episode_ids = [row[0] for row in rows.all()]
+        total_candidates = len(episode_ids)
         if not episode_ids:
             return {
                 "status": "success",
-                "total_candidates": total_candidates,
+                "total_candidates": 0,
                 "checked": 0,
                 "dispatched": 0,
                 "skipped": 0,

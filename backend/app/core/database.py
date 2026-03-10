@@ -34,6 +34,10 @@ _orm_models_registered = False
 _engine: AsyncEngine | None = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 _engine_url: str | None = None
+_worker_runtime_lock = asyncio.Lock()
+_worker_runtimes: dict[
+    str, tuple[int | None, async_sessionmaker[AsyncSession], AsyncEngine]
+] = {}
 
 
 def _pool_metric(pool: Any, attr: str, default: int = 0) -> int:
@@ -123,7 +127,7 @@ def get_async_session_factory() -> async_sessionmaker[AsyncSession]:
 def create_isolated_session_factory(
     application_name: str,
 ) -> tuple[async_sessionmaker[AsyncSession], AsyncEngine]:
-    """Create a short-lived session factory for worker contexts."""
+    """Create a worker-oriented session factory with its own engine."""
     settings = get_settings()
     database_url = settings.require_database_url()
     engine_kwargs = _build_engine_kwargs(database_url)
@@ -154,14 +158,50 @@ def create_isolated_session_factory(
     return session_factory, engine
 
 
+async def _get_worker_runtime(
+    application_name: str,
+) -> tuple[async_sessionmaker[AsyncSession], AsyncEngine]:
+    """Reuse one worker runtime per application name within the current event loop."""
+    try:
+        current_loop_token: int | None = id(asyncio.get_running_loop())
+    except RuntimeError:
+        current_loop_token = None
+
+    async with _worker_runtime_lock:
+        runtime = _worker_runtimes.get(application_name)
+        if runtime is not None:
+            loop_token, session_factory, engine = runtime
+            if loop_token == current_loop_token:
+                return session_factory, engine
+            await engine.dispose()
+
+        session_factory, engine = create_isolated_session_factory(application_name)
+        _worker_runtimes[application_name] = (
+            current_loop_token,
+            session_factory,
+            engine,
+        )
+        return session_factory, engine
+
+
 @asynccontextmanager
 async def worker_db_session(application_name: str):
-    """Yield an isolated worker session and dispose its engine afterwards."""
-    session_factory, engine = create_isolated_session_factory(application_name)
-    try:
-        async with session_factory() as session:
+    """Yield a worker DB session while reusing the runtime engine in the same loop."""
+    session_factory, _engine = await _get_worker_runtime(application_name)
+    async with session_factory() as session:
+        try:
             yield session
-    finally:
+        finally:
+            await session.close()
+
+
+async def close_worker_db_runtimes() -> None:
+    """Dispose cached worker runtimes."""
+    async with _worker_runtime_lock:
+        runtimes = list(_worker_runtimes.values())
+        _worker_runtimes.clear()
+
+    for _, _, engine in runtimes:
         await engine.dispose()
 
 
@@ -240,6 +280,8 @@ async def init_db(run_metadata_sync: bool = False) -> None:
 async def close_db() -> None:
     """Dispose the lazily-created engine if it exists."""
     global _engine, _session_factory, _engine_url
+
+    await close_worker_db_runtimes()
 
     if _engine is None:
         return

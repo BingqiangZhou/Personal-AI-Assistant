@@ -74,6 +74,8 @@ class TranscriptionStateKeys:
 
     # Task status summary: lightweight status for dashboard (15 min TTL)
     TASK_STATUS = "podcast:transcription:status:{task_id}"
+    ACTIVE_TASK_INDEX = "podcast:transcription:active_tasks"
+    LOCK_INDEX = "podcast:transcription:lock_index"
 
 
 class TranscriptionStateManager:
@@ -89,6 +91,14 @@ class TranscriptionStateManager:
 
     def __init__(self):
         self.redis = get_shared_redis()
+
+    @staticmethod
+    def _active_task_index_key() -> str:
+        return TranscriptionStateKeys.ACTIVE_TASK_INDEX
+
+    @staticmethod
+    def _lock_index_key() -> str:
+        return TranscriptionStateKeys.LOCK_INDEX
 
     # === Redis Cache Access (convenience methods) ===
 
@@ -194,6 +204,9 @@ class TranscriptionStateManager:
                 value=lock_value,
             )
             if acquired:
+                await self.redis.sorted_set_add(
+                    self._lock_index_key(), str(episode_id), time.time()
+                )
                 await self.redis.delete_keys(legacy_key)
                 logger.info(
                     "[LOCK] Acquired lock for episode %s, task %s",
@@ -240,6 +253,9 @@ class TranscriptionStateManager:
                 value=lock_value,
             )
             if retry_acquired:
+                await self.redis.sorted_set_add(
+                    self._lock_index_key(), str(episode_id), time.time()
+                )
                 logger.info(
                     "[LOCK] Re-acquired reclaimed lock for episode %s, task %s",
                     episode_id,
@@ -300,6 +316,7 @@ class TranscriptionStateManager:
                 )
 
             await self.redis.delete_keys(lock_key, legacy_key)
+            await self.redis.sorted_set_remove(self._lock_index_key(), str(episode_id))
             logger.info("[LOCK] Released lock for episode %s, task %s", episode_id, task_id)
             return True
 
@@ -405,6 +422,17 @@ class TranscriptionStateManager:
         }
 
         await self.redis.cache_set(key, json.dumps(progress_data), ttl=ttl_seconds)
+        if status in {"pending", "in_progress"}:
+            await self.redis.sorted_set_add(
+                self._active_task_index_key(),
+                str(task_id),
+                time.time() + ttl_seconds,
+            )
+        else:
+            await self.redis.sorted_set_remove(
+                self._active_task_index_key(),
+                str(task_id),
+            )
 
         # Also update lightweight status
         await self.set_task_status(task_id, status, progress, ttl_seconds)
@@ -443,6 +471,7 @@ class TranscriptionStateManager:
         # Clear progress data
         progress_key = TranscriptionStateKeys.TASK_PROGRESS.format(task_id=task_id)
         await self.redis.cache_delete(progress_key)
+        await self.redis.sorted_set_remove(self._active_task_index_key(), str(task_id))
 
         # Clear status data
         status_key = TranscriptionStateKeys.TASK_STATUS.format(task_id=task_id)
@@ -572,9 +601,12 @@ class TranscriptionStateManager:
             Number of active tasks
         """
         try:
-            return len(
-                await self.redis.scan_keys("podcast:transcription:progress:*")
+            await self.redis.sorted_set_remove_by_score(
+                self._active_task_index_key(),
+                "-inf",
+                time.time(),
             )
+            return await self.redis.sorted_set_cardinality(self._active_task_index_key())
         except Exception as e:
             logger.error(f"Failed to get active tasks count: {e}")
             return 0
@@ -590,31 +622,35 @@ class TranscriptionStateManager:
             Number of locks cleaned up
         """
         try:
-            lock_keys = await self.redis.scan_keys(
-                "podcast:lock:transcription:episode:*"
-            )
-            legacy_lock_keys = await self.redis.scan_keys(
-                "podcast:transcription:lock_value:*"
+            stale_episode_ids = await self.redis.sorted_set_range_by_score(
+                self._lock_index_key(),
+                "-inf",
+                time.time() - max_age_seconds,
             )
 
             cleaned = 0
-            for key in lock_keys:
-                ttl = await self.redis.get_ttl(key)
-                if ttl not in (-2,) and (ttl == -1 or ttl > max_age_seconds):
-                    episode_id_str = key.rsplit(":", 1)[-1]
-                    if episode_id_str.isdigit():
-                        await self.redis.delete_keys(
-                            key,
-                            self._legacy_task_lock_value_key(int(episode_id_str)),
-                        )
-                    else:
-                        await self.redis.delete_keys(key)
-                    cleaned += 1
+            for episode_id_str in stale_episode_ids:
+                if not episode_id_str.isdigit():
+                    await self.redis.sorted_set_remove(
+                        self._lock_index_key(), episode_id_str
+                    )
+                    continue
 
-            for key in legacy_lock_keys:
-                ttl = await self.redis.get_ttl(key)
-                if ttl not in (-2,) and (ttl == -1 or ttl > max_age_seconds):
-                    await self.redis.delete_keys(key)
+                episode_id = int(episode_id_str)
+                lock_key = self._task_lock_key(episode_id)
+                ttl = await self.redis.get_ttl(lock_key)
+                if ttl in (-2,) or (ttl != -1 and ttl <= max_age_seconds):
+                    await self.redis.sorted_set_remove(
+                        self._lock_index_key(), episode_id_str
+                    )
+                    continue
+
+                deleted = await self.redis.delete_keys(
+                    lock_key,
+                    self._legacy_task_lock_value_key(episode_id),
+                )
+                await self.redis.sorted_set_remove(self._lock_index_key(), episode_id_str)
+                if deleted > 0:
                     cleaned += 1
 
             if cleaned > 0:

@@ -1,5 +1,6 @@
 """Application lifespan bootstrap."""
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -41,8 +42,17 @@ async def application_lifespan(app: FastAPI):
             session_factory = get_async_session_factory()
             async with session_factory() as session:
                 workflow = TranscriptionWorkflowService(session)
-                await workflow.reset_stale_tasks()
-                logger.info("Reset stale transcription tasks during startup")
+                try:
+                    async with asyncio.timeout(
+                        settings.TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS
+                    ):
+                        await workflow.reset_stale_tasks()
+                    logger.info("Reset stale transcription tasks during startup")
+                except TimeoutError:
+                    logger.warning(
+                        "Timed out resetting stale transcription tasks during startup after %.1fs",
+                        settings.TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS,
+                    )
         else:
             logger.info("Skipped stale transcription reset; another worker owns startup lock")
     except Exception as exc:

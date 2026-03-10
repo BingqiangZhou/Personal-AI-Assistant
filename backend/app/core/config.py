@@ -159,6 +159,7 @@ class Settings(BaseSettings):
     TRANSCRIPTION_BACKLOG_ENABLED: bool = True
     TRANSCRIPTION_BACKLOG_BATCH_SIZE: int = 20
     TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE: int = 5
+    TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS: float = 15.0
 
     # Admin Panel 2FA Configuration
     ADMIN_2FA_ENABLED: bool = True  # Admin panel 2FA toggle (default: enabled)
@@ -235,6 +236,13 @@ class Settings(BaseSettings):
             raise ValueError(
                 "TRANSCRIPTION_BACKLOG_SCHEDULE_MINUTE must be between 0 and 59"
             )
+        return v
+
+    @field_validator("TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS")
+    @classmethod
+    def validate_transcription_startup_reset_timeout_seconds(cls, v: float) -> float:
+        if v <= 0:
+            raise ValueError("TRANSCRIPTION_STARTUP_RESET_TIMEOUT_SECONDS must be > 0")
         return v
 
     def require_database_url(self) -> str:

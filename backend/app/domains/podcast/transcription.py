@@ -30,9 +30,6 @@ from app.domains.podcast.models import (
     TranscriptionStep,
     TranscriptionTask,
 )
-from app.domains.podcast.services.summary_generation_service import (
-    PodcastSummaryGenerationService as DatabaseBackedAISummaryService,
-)
 from app.domains.podcast.transcription_state import _progress_throttle
 
 
@@ -82,6 +79,23 @@ class AudioChunk:
     duration: float  # seconds
     file_size: int  # bytes
     transcript: str | None = None  # transcription result for this chunk
+
+
+def build_chunk_info(chunks: list[AudioChunk]) -> dict[str, Any]:
+    """Build lightweight persisted metadata for chunk execution state."""
+    ordered_chunks = sorted(chunks, key=lambda item: item.index)
+    return {
+        "total_chunks": len(ordered_chunks),
+        "chunks": [
+            {
+                "index": chunk.index,
+                "start_time": chunk.start_time,
+                "duration": chunk.duration,
+                "status": "completed" if chunk.transcript else "failed",
+            }
+            for chunk in ordered_chunks
+        ],
+    }
 
 
 class AudioDownloader:
@@ -680,6 +694,37 @@ class SiliconFlowTranscriber:
         if self.session:
             await self.session.close()
 
+    async def _request_chunk_transcription(
+        self,
+        chunk: AudioChunk,
+        model: str,
+    ) -> tuple[int, dict[str, Any] | None, str | None]:
+        """Post one chunk while keeping the file handle open for the whole request."""
+        if not self.session:
+            raise RuntimeError("Transcriber must be used as async context manager")
+
+        data = aiohttp.FormData()
+        data.add_field("model", model)
+        try:
+            with open(chunk.file_path, "rb") as file_obj:
+                data.add_field(
+                    "file",
+                    file_obj,
+                    filename=os.path.basename(chunk.file_path),
+                    content_type="audio/mpeg",
+                )
+                async with self.session.post(self.api_url, data=data) as response:
+                    if response.status != 200:
+                        return response.status, None, await response.text()
+                    return response.status, await response.json(), None
+        except Exception:
+            logger.exception(
+                "Chunk %s upload request failed for %s",
+                chunk.index,
+                chunk.file_path,
+            )
+            raise
+
     async def transcribe_chunk(
         self,
         chunk: AudioChunk,
@@ -697,57 +742,48 @@ class SiliconFlowTranscriber:
             for attempt in range(max_retries):
                 chunk_start = time.time()
                 try:
-                    data = aiohttp.FormData()
-                    data.add_field("model", model)
-                    with open(chunk.file_path, "rb") as file_obj:
-                        data.add_field(
-                            "file",
-                            file_obj,
-                            filename=os.path.basename(chunk.file_path),
-                            content_type="audio/mpeg",
-                        )
-
-                    async with self.session.post(self.api_url, data=data) as response:
-                        if response.status != 200:
-                            error_text = await response.text()
-                            await self._record_usage(success=False)
-                            logger.error(
-                                "Chunk %s API error on attempt %s: status=%s body=%s",
-                                chunk.index,
-                                attempt + 1,
-                                response.status,
-                                error_text,
-                            )
-                            if attempt < max_retries - 1:
-                                await asyncio.sleep(base_delay * (2**attempt))
-                                continue
-                            chunk.transcript = None
-                            return chunk
-
-                        result = await response.json()
-                        transcript = result.get("text", "")
-                        await self._record_usage(success=True)
-                        chunk.transcript = transcript
-
-                        transcript_file = chunk.file_path.replace(".mp3", ".txt")
-                        try:
-                            async with aiofiles.open(
-                                transcript_file, "w", encoding="utf-8"
-                            ) as file_obj:
-                                await file_obj.write(transcript)
-                        except Exception as save_error:
-                            logger.warning(
-                                "Failed to persist transcript chunk %s: %s",
-                                chunk.index,
-                                save_error,
-                            )
-
-                        logger.info(
-                            "Chunk %s completed in %.2fs",
+                    status_code, result, error_text = await self._request_chunk_transcription(
+                        chunk,
+                        model,
+                    )
+                    if status_code != 200:
+                        await self._record_usage(success=False)
+                        logger.error(
+                            "Chunk %s API error on attempt %s: status=%s body=%s",
                             chunk.index,
-                            time.time() - chunk_start,
+                            attempt + 1,
+                            status_code,
+                            error_text,
                         )
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(base_delay * (2**attempt))
+                            continue
+                        chunk.transcript = None
                         return chunk
+
+                    transcript = (result or {}).get("text", "")
+                    await self._record_usage(success=True)
+                    chunk.transcript = transcript
+
+                    transcript_file = chunk.file_path.replace(".mp3", ".txt")
+                    try:
+                        async with aiofiles.open(
+                            transcript_file, "w", encoding="utf-8"
+                        ) as file_obj:
+                            await file_obj.write(transcript)
+                    except Exception as save_error:
+                        logger.warning(
+                            "Failed to persist transcript chunk %s: %s",
+                            chunk.index,
+                            save_error,
+                        )
+
+                    logger.info(
+                        "Chunk %s completed in %.2fs",
+                        chunk.index,
+                        time.time() - chunk_start,
+                    )
+                    return chunk
                 except Exception as exc:
                     await self._record_usage(success=False)
                     logger.error(
@@ -773,23 +809,46 @@ class SiliconFlowTranscriber:
         config_db_id: int | None = None,
     ) -> list[AudioChunk]:
         """Transcribe chunks concurrently and persist usage in one DB commit."""
+        if not chunks:
+            return []
+
         start_time = time.time()
         self._usage_stats = {"success": 0, "failure": 0}
+        max_in_flight = max(1, self.max_concurrent)
+        pending_chunks = iter(chunks)
 
-        tasks = [
-            asyncio.create_task(self.transcribe_chunk(chunk, model)) for chunk in chunks
-        ]
+        def _schedule_next() -> asyncio.Task[AudioChunk] | None:
+            next_chunk = next(pending_chunks, None)
+            if next_chunk is None:
+                return None
+            return asyncio.create_task(self.transcribe_chunk(next_chunk, model))
+
+        in_flight: set[asyncio.Task[AudioChunk]] = set()
+        for _ in range(min(len(chunks), max_in_flight)):
+            task = _schedule_next()
+            if task is not None:
+                in_flight.add(task)
 
         results: list[AudioChunk] = []
         completed = 0
-        for coro in asyncio.as_completed(tasks):
-            try:
-                results.append(await coro)
-                completed += 1
-                if progress_callback:
-                    await progress_callback((completed / len(chunks)) * 100)
-            except Exception as exc:
-                logger.error("Unexpected chunk coroutine error: %s", exc)
+        while in_flight:
+            done, _pending = await asyncio.wait(
+                in_flight,
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for task in done:
+                in_flight.remove(task)
+                try:
+                    results.append(await task)
+                    completed += 1
+                    if progress_callback:
+                        await progress_callback((completed / len(chunks)) * 100)
+                except Exception as exc:
+                    logger.error("Unexpected chunk coroutine error: %s", exc)
+
+                next_task = _schedule_next()
+                if next_task is not None:
+                    in_flight.add(next_task)
 
         results.sort(key=lambda item: item.index)
 
@@ -1938,18 +1997,7 @@ class PodcastTranscriptionService:
                 "download_time": download_time,
                 "conversion_time": conversion_time,
                 "transcription_time": transcription_time,
-                "chunk_info": {
-                    "total_chunks": len(chunks),
-                    "chunks": [
-                        {
-                            "index": chunk.index,
-                            "start_time": chunk.start_time,
-                            "duration": chunk.duration,
-                            "transcript": chunk.transcript,
-                        }
-                        for chunk in sorted_chunks
-                    ],
-                },
+                "chunk_info": build_chunk_info(sorted_chunks),
                 "completed_at": datetime.now(UTC),
             }
 
@@ -2105,8 +2153,11 @@ class PodcastTranscriptionService:
                 task_id,
             )
 
-            # DatabaseBackedAISummaryService
-            summary_service = DatabaseBackedAISummaryService(session)
+            from app.domains.podcast.services.summary_generation_service import (
+                PodcastSummaryGenerationService,
+            )
+
+            summary_service = PodcastSummaryGenerationService(session)
             log_with_timestamp(
                 "INFO",
                 f"[AI SUMMARY] Starting AI summary generation for episode {task.episode_id}",

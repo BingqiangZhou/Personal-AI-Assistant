@@ -24,6 +24,8 @@ from app.domains.subscription.models import (
 
 logger = logging.getLogger(__name__)
 
+SUBSCRIPTION_TEST_PREVIEW_LIMIT = 25
+
 
 class AdminSubscriptionsCommandService:
     """Execute mutating admin subscription actions."""
@@ -106,27 +108,23 @@ class AdminSubscriptionsCommandService:
                 )
             )
 
-        user_subscriptions = (
-            (
-                await self.db.execute(
-                    select(UserSubscription)
-                    .join(
-                        Subscription,
-                        Subscription.id == UserSubscription.subscription_id,
+        update_stmt = (
+            update(UserSubscription)
+            .where(
+                UserSubscription.subscription_id.in_(
+                    select(Subscription.id).where(
+                        Subscription.source_type.in_(["rss", "podcast-rss"])
                     )
-                    .where(Subscription.source_type.in_(["rss", "podcast-rss"]))
                 )
             )
-            .scalars()
-            .all()
+            .values(
+                update_frequency=settings_data["update_frequency"],
+                update_time=settings_data["update_time"],
+                update_day_of_week=settings_data["update_day_of_week"],
+            )
         )
-
-        update_count = 0
-        for user_sub in user_subscriptions:
-            user_sub.update_frequency = settings_data["update_frequency"]
-            user_sub.update_time = settings_data["update_time"]
-            user_sub.update_day_of_week = settings_data["update_day_of_week"]
-            update_count += 1
+        update_result = await self.db.execute(update_stmt)
+        update_count = int(update_result.rowcount or 0)
 
         await self.db.commit()
         await log_admin_action(
@@ -230,7 +228,7 @@ class AdminSubscriptionsCommandService:
         )
 
         config = FeedParserConfig(
-            max_entries=10000,
+            max_entries=SUBSCRIPTION_TEST_PREVIEW_LIMIT,
             strip_html=True,
             strict_mode=False,
             log_raw_feed=False,
@@ -265,6 +263,7 @@ class AdminSubscriptionsCommandService:
                 "feed_title": result.feed_info.title or "Untitled",
                 "feed_description": result.feed_info.description or "",
                 "entry_count": len(result.entries),
+                "total_entry_count": result.total_entries,
                 "response_time_ms": response_time_ms,
             }, 200
         finally:

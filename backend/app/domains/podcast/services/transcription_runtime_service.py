@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ValidationError
@@ -161,20 +162,11 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
     async def start_transcription(
         self, episode_id: int, model_name: str | None = None, force: bool = False
     ) -> dict[str, Any]:
-        from app.domains.podcast.models import TranscriptionTask
-
         if model_name:
             await self.model_manager.get_active_transcription_model(model_name)
 
-        stmt = (
-            select(TranscriptionTask)
-            .where(TranscriptionTask.episode_id == episode_id)
-            .order_by(TranscriptionTask.created_at.desc())
-        )
-        result = await self.db.execute(stmt)
-        existing_task = result.scalar_one_or_none()
-
         state_manager = await get_transcription_state_manager()
+        existing_task = await self._load_existing_task(episode_id)
         if existing_task and not force:
             status_value = (
                 existing_task.status.value
@@ -236,14 +228,126 @@ class PodcastTranscriptionRuntimeService(PodcastTranscriptionService):
                         }
                     return {"task": existing_task, "action": "locked_by_other_task"}
 
-        task, config_db_id = await super().create_transcription_task_record(
-            episode_id, model_name, force
+        if force:
+            task, config_db_id = await super().create_transcription_task_record(
+                episode_id, model_name, force
+            )
+            self._task_orchestration_service().enqueue_audio_transcription(
+                task_id=task.id,
+                config_db_id=config_db_id,
+            )
+            return {"task": task, "action": "created"}
+
+        task, config_db_id, created = await self._create_or_get_task_record(
+            episode_id,
+            model_name,
         )
+        if not created:
+            status_value = (
+                task.status.value if hasattr(task.status, "value") else str(task.status)
+            )
+            if status_value == "completed":
+                return {"task": task, "action": "reused_completed"}
+            if status_value in {"pending", "in_progress"}:
+                await state_manager.set_episode_task(episode_id, task.id)
+                action = (
+                    "reused_in_progress"
+                    if status_value == "in_progress"
+                    else "reused_pending"
+                )
+                return {"task": task, "action": action}
+            return {"task": task, "action": "locked_by_other_task"}
+
         self._task_orchestration_service().enqueue_audio_transcription(
             task_id=task.id,
             config_db_id=config_db_id,
         )
         return {"task": task, "action": "created"}
+
+    async def _load_existing_task(self, episode_id: int):
+        from app.domains.podcast.models import TranscriptionTask
+
+        stmt = (
+            select(TranscriptionTask)
+            .where(TranscriptionTask.episode_id == episode_id)
+            .order_by(TranscriptionTask.created_at.desc())
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def _create_or_get_task_record(
+        self,
+        episode_id: int,
+        model_name: str | None,
+    ) -> tuple[Any, int | None, bool]:
+        from app.domains.podcast.models import TranscriptionTask
+
+        episode = await self._load_episode_for_task_creation(episode_id)
+        model_config = await self.model_manager.get_active_transcription_model(model_name)
+        task_values = {
+            "episode_id": episode_id,
+            "original_audio_url": episode.audio_url,
+            "chunk_size_mb": self.chunk_size_mb,
+            "model_used": model_config.model_id,
+        }
+
+        bind = self.db.get_bind()
+        dialect_name = bind.dialect.name if bind is not None else None
+        if dialect_name == "postgresql":
+            from sqlalchemy.dialects.postgresql import insert as postgresql_insert
+
+            stmt = (
+                postgresql_insert(TranscriptionTask)
+                .values(**task_values)
+                .on_conflict_do_nothing(index_elements=[TranscriptionTask.episode_id])
+                .returning(TranscriptionTask.id)
+            )
+            result = await self.db.execute(stmt)
+            task_id = result.scalar_one_or_none()
+            await self.db.commit()
+            if task_id is not None:
+                return await self._load_task_by_id(task_id), model_config.id, True
+
+            existing_task = await self._load_existing_task(episode_id)
+            if existing_task is None:
+                raise RuntimeError(
+                    f"Task creation conflicted but no existing task found for episode {episode_id}"
+                )
+            return existing_task, None, False
+
+        task = TranscriptionTask(**task_values)
+        try:
+            self.db.add(task)
+            await self.db.commit()
+            await self.db.refresh(task)
+            return task, model_config.id, True
+        except IntegrityError:
+            await self.db.rollback()
+            existing_task = await self._load_existing_task(episode_id)
+            if existing_task is None:
+                raise
+            return existing_task, None, False
+
+    async def _load_episode_for_task_creation(self, episode_id: int):
+        from app.domains.podcast.models import PodcastEpisode
+
+        stmt = select(PodcastEpisode).where(PodcastEpisode.id == episode_id)
+        result = await self.db.execute(stmt)
+        episode = result.scalar_one_or_none()
+        if not episode:
+            logger.error("[TRANSCRIPTION] Episode %s not found", episode_id)
+            raise ValidationError(f"Episode {episode_id} not found")
+        return episode
+
+    async def _load_task_by_id(self, task_id: int):
+        from app.domains.podcast.models import TranscriptionTask
+
+        stmt = select(TranscriptionTask).where(TranscriptionTask.id == task_id)
+        result = await self.db.execute(stmt)
+        task = result.scalar_one_or_none()
+        if task is None:
+            raise RuntimeError(f"Transcription task {task_id} not found after insert")
+        return task
 
     async def _resolve_transcription_config_db_id(
         self, model_name: str | None

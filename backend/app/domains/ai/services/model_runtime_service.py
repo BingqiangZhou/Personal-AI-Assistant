@@ -190,31 +190,47 @@ class AIModelRuntimeService:
         timeout = aiohttp.ClientTimeout(total=model.timeout_seconds)
 
         async with aiohttp.ClientSession(timeout=timeout) as session:
-            with open(audio_file_path, "rb") as audio_file:
-                data = aiohttp.FormData()
-                data.add_field(
-                    "file",
-                    audio_file,
-                    filename=os.path.basename(audio_file_path),
-                    content_type="audio/mpeg",
-                )
-                data.add_field("model", model.model_id)
-                data.add_field("language", language)
+            data = aiohttp.FormData()
+            data.add_field("model", model.model_id)
+            data.add_field("language", language)
 
-                api_endpoint = (
-                    "https://api.openai.com/v1/audio/transcriptions"
-                    if model.provider == "openai"
-                    else model.api_url
-                )
-                async with session.post(api_endpoint, headers=headers, data=data) as response:
-                    if response.status != 200:
-                        error_text = await response.text()
-                        raise Exception(f"API error: {response.status} - {error_text}")
+            api_endpoint = (
+                "https://api.openai.com/v1/audio/transcriptions"
+                if model.provider == "openai"
+                else model.api_url
+            )
+            try:
+                with open(audio_file_path, "rb") as audio_file:
+                    data.add_field(
+                        "file",
+                        audio_file,
+                        filename=os.path.basename(audio_file_path),
+                        content_type="audio/mpeg",
+                    )
+                    async with session.post(
+                        api_endpoint,
+                        headers=headers,
+                        data=data,
+                    ) as response:
+                        if response.status != 200:
+                            error_text = await response.text()
+                            raise Exception(
+                                f"API error: {response.status} - {error_text}"
+                            )
 
-                    result = await response.json()
-                    if "text" not in result:
-                        raise Exception("Invalid response format: missing 'text' field")
-                    return result["text"].strip()
+                        result = await response.json()
+                        if "text" not in result:
+                            raise Exception(
+                                "Invalid response format: missing 'text' field"
+                            )
+                        return result["text"].strip()
+            except Exception:
+                logger.exception(
+                    "Transcription request failed for model %s using %s",
+                    model.name,
+                    audio_file_path,
+                )
+                raise
 
     async def _call_text_generation_model(
         self,
