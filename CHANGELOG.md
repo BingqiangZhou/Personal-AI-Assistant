@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.16.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.15.3...v0.16.0) - 2026-03-10 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.16.0))
+
+### 🐛 Bug Fixes
+
+- *(podcast,subscription)* Ensure parser cleanup and fix SQLAlchemy boolean filter ([1a1f177](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/1a1f177e756356b996915583d4eb8a630b5ed7c4))
+
+### 🚀 Features
+
+- *(summary)* Enhance default prompt for AI summary generation with detailed guidelines and structure in Chinese ([8e39de3](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/8e39de3a490e9217c3d35488c3098ce76f8b966c))
+- *(datetime)* Ensure timezone awareness for last fetched and published dates in podcast orchestration ([5c12014](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/5c12014120fccc587cdf79f3e609f2adb7bd449a))
+- *(core)* Add shared Redis lifecycle management and batch subscription operations ([4d14779](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/4d14779ed25ce1bf03169bc47b86f925fce898e1))
+- *(core)* Add readiness probes and refactor observability middleware ([f29f757](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f29f757cc85da7ec801e61ffd7cc6ef33b1a10a6))
+
+### 🚜 Refactor
+
+- *(core)* Migrate from pip to uv and upgrade Python to 3.11 ([66b25d4](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/66b25d454076c35e47414108bc4ae0a61e6b16b4))
+- *(podcast)* Optimize transcription runtime with concurrent task handling and Redis sorted-set indexing ([d8002ef](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d8002ef896f7c0af6ab1a31a2dc71ec1533ea374))
+- *(frontend)* Clean up unused code and add polling for summary sync ([d11fc77](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/d11fc7791665570d006de98c35613225cc8c1213))
+
+
+
 ## [0.15.3](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.15.2...v0.15.3) - 2026-03-09 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.15.3))
 
 ### 🐛 Bug Fixes
