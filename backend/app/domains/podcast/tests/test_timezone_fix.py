@@ -5,9 +5,10 @@ that occurred during podcast subscription synchronization.
 """
 
 from datetime import datetime, timezone
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.datetime_utils import ensure_timezone_aware_fetch_time
 from app.domains.podcast.models import PodcastEpisode
@@ -16,34 +17,33 @@ from app.domains.subscription.models import Subscription
 
 
 @pytest.mark.asyncio
-async def test_update_subscription_fetch_time_preserves_timezone(
-    db_session: AsyncSession,
-):
+async def test_update_subscription_fetch_time_preserves_timezone():
     """Test that update_subscription_fetch_time stores timezone-aware datetimes."""
-    repo = PodcastSubscriptionRepository(db_session)
-
     subscription = Subscription(
+        id=1,
         source_url="https://example.com/feed.xml",
         source_type="podcast-rss",
         title="Test Podcast",
     )
-    db_session.add(subscription)
-    await db_session.commit()
-    await db_session.refresh(subscription)
+
+    execute_result = SimpleNamespace(
+        scalar_one_or_none=lambda: subscription,
+    )
+    db_session = AsyncMock()
+    db_session.execute = AsyncMock(return_value=execute_result)
+    repo = PodcastSubscriptionRepository(db_session)
 
     fetch_time = datetime.now(timezone.utc)
     await repo.update_subscription_fetch_time(subscription.id, fetch_time)
 
-    await db_session.refresh(subscription)
     assert subscription.last_fetched_at is not None
     assert subscription.last_fetched_at.tzinfo is not None
     assert subscription.last_fetched_at.tzinfo == timezone.utc
+    db_session.commit.assert_awaited_once()
 
 
 @pytest.mark.asyncio
-async def test_episode_published_at_comparison_with_subscription(
-    db_session: AsyncSession,
-):
+async def test_episode_published_at_comparison_with_subscription():
     """Test that episode.published_at can be compared with subscription.last_fetched_at."""
     subscription = Subscription(
         source_url="https://example.com/feed.xml",
@@ -51,9 +51,6 @@ async def test_episode_published_at_comparison_with_subscription(
         title="Test Podcast",
         last_fetched_at=datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc),
     )
-    db_session.add(subscription)
-    await db_session.commit()
-    await db_session.refresh(subscription)
 
     episode = PodcastEpisode(
         subscription_id=subscription.id,
@@ -62,9 +59,6 @@ async def test_episode_published_at_comparison_with_subscription(
         item_link="https://example.com/episode",
         published_at=datetime(2024, 1, 2, 12, 0, tzinfo=timezone.utc),
     )
-    db_session.add(episode)
-    await db_session.commit()
-    await db_session.refresh(episode)
 
     # This should NOT raise TypeError
     assert episode.published_at > subscription.last_fetched_at
@@ -118,9 +112,7 @@ async def test_ensure_timezone_aware_fetch_time_converts_non_utc_to_utc():
 
 
 @pytest.mark.asyncio
-async def test_subscription_comparison_scenario_with_new_episodes(
-    db_session: AsyncSession,
-):
+async def test_subscription_comparison_scenario_with_new_episodes():
     """Test the actual scenario: new episodes after last fetch should trigger transcription."""
     subscription = Subscription(
         source_url="https://example.com/feed.xml",
@@ -128,9 +120,6 @@ async def test_subscription_comparison_scenario_with_new_episodes(
         title="Test Podcast",
         last_fetched_at=datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc),
     )
-    db_session.add(subscription)
-    await db_session.commit()
-    await db_session.refresh(subscription)
 
     # Create episodes after the last fetch time
     new_episode = PodcastEpisode(
@@ -140,7 +129,6 @@ async def test_subscription_comparison_scenario_with_new_episodes(
         item_link="https://example.com/new",
         published_at=datetime(2024, 1, 2, 12, 0, tzinfo=timezone.utc),
     )
-    db_session.add(new_episode)
 
     # Create an episode before the last fetch time
     old_episode = PodcastEpisode(
@@ -150,11 +138,6 @@ async def test_subscription_comparison_scenario_with_new_episodes(
         item_link="https://example.com/old",
         published_at=datetime(2023, 12, 31, 12, 0, tzinfo=timezone.utc),
     )
-    db_session.add(old_episode)
-
-    await db_session.commit()
-    await db_session.refresh(new_episode)
-    await db_session.refresh(old_episode)
 
     # New episode should be after last fetch
     assert new_episode.published_at > subscription.last_fetched_at

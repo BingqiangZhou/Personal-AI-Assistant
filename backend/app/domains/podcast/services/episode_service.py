@@ -11,7 +11,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.redis import PodcastRedis
+from app.core.redis import PodcastRedis, get_shared_redis
 from app.core.utils import filter_thinking_content
 from app.domains.podcast.episode_projections import (
     PodcastEpisodeDetailProjection,
@@ -56,7 +56,7 @@ class PodcastEpisodeService:
         self.db = db
         self.user_id = user_id
         self.repo = repo or PodcastEpisodeRepository(db)
-        self.redis = redis or PodcastRedis()
+        self.redis = redis or get_shared_redis()
         self._feed_description_max_length = 320
 
     async def list_episodes(

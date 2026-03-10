@@ -23,9 +23,13 @@ from app.domains.subscription.parsers.feed_parser import (
     FeedParser,
     FeedParserConfig,
 )
-from app.domains.subscription.parsers.feed_schemas import FeedParseResult, ParseErrorCode
+from app.domains.subscription.parsers.feed_schemas import (
+    FeedParseResult,
+    ParseErrorCode,
+)
 from app.domains.subscription.repositories import SubscriptionRepository
 from app.shared.schemas import SubscriptionCreate, SubscriptionUpdate
+
 
 logger = logging.getLogger(__name__)
 
@@ -321,26 +325,22 @@ class SubscriptionService:
             new_items = 0
             updated_items = 0
             latest_published_at: datetime | None = None
-
+            items_payload: list[dict[str, Any]] = []
             for entry in result.entries:
                 try:
-                    item = await self.repo.create_or_update_item(
-                        subscription_id=sub.id,
-                        external_id=entry.id or entry.link or "",
-                        title=entry.title,
-                        content=entry.content,
-                        summary=entry.summary,
-                        author=entry.author,
-                        source_url=entry.link,
-                        image_url=entry.image_url,
-                        tags=entry.tags,
-                        published_at=entry.published_at,
+                    items_payload.append(
+                        {
+                            "external_id": entry.id or entry.link or "",
+                            "title": entry.title,
+                            "content": entry.content,
+                            "summary": entry.summary,
+                            "author": entry.author,
+                            "source_url": entry.link,
+                            "image_url": entry.image_url,
+                            "tags": entry.tags,
+                            "published_at": entry.published_at,
+                        }
                     )
-                    if item.created_at == item.updated_at:
-                        new_items += 1
-                    else:
-                        updated_items += 1
-
                     if entry.published_at and (
                         latest_published_at is None or entry.published_at > latest_published_at
                     ):
@@ -350,6 +350,14 @@ class SubscriptionService:
                     if config.strict_mode:
                         raise
 
+            _, created_items = await self.repo.create_or_update_items_batch(
+                sub.id,
+                items_payload,
+                commit=False,
+            )
+            new_items = len(created_items)
+            updated_items = len(items_payload) - new_items
+
             status = SubscriptionStatus.ACTIVE
             error_msg = None
             if result.has_warnings():
@@ -357,7 +365,13 @@ class SubscriptionService:
                 if result.warnings:
                     error_msg = "; ".join(result.warnings)
 
-            await self.repo.update_fetch_status(sub.id, status, error_msg, latest_published_at)
+            sub.status = status
+            sub.error_message = error_msg
+            sub.last_fetched_at = datetime.now(timezone.utc)
+            if latest_published_at:
+                sub.latest_item_published_at = latest_published_at
+            await self.db.commit()
+            await self.db.refresh(sub)
             return {
                 "subscription_id": sub.id,
                 "status": "success",
@@ -369,6 +383,7 @@ class SubscriptionService:
         except ValueError:
             raise
         except Exception as exc:
+            await self.db.rollback()
             logger.error("Error fetching subscription %s: %s", sub_id, exc)
             await self.repo.update_fetch_status(sub.id, SubscriptionStatus.ERROR, str(exc))
             raise

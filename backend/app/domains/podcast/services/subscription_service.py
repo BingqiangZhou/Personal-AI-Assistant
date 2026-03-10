@@ -11,7 +11,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.redis import PodcastRedis
+from app.core.redis import PodcastRedis, get_shared_redis
 from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastSubscriptionRepository
@@ -62,7 +62,7 @@ class PodcastSubscriptionService:
         self.db = db
         self.user_id = user_id
         self.repo = repo or PodcastSubscriptionRepository(db)
-        self.redis = redis or PodcastRedis()
+        self.redis = redis or get_shared_redis()
         self.parser = parser or SecureRSSParser(user_id)
         self.subscription_repo = subscription_repo or SubscriptionRepository(db)
 

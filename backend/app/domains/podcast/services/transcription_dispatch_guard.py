@@ -33,9 +33,7 @@ class TranscriptionDispatchGuard:
 
         redis = self.redis_factory()
         key = f"podcast:transcription:dispatched:{task_id}"
-        client = await redis._get_client()
-        result = await client.set(key, "1", nx=True, ex=7200)
-        if result is not None:
+        if await redis.set_if_not_exists(key, "1", ttl=7200):
             return True
 
         status_stmt = select(TranscriptionTask.status).where(
@@ -56,8 +54,7 @@ class TranscriptionDispatchGuard:
 
         redis = self.redis_factory()
         key = f"podcast:transcription:dispatched:{task_id}"
-        client = await redis._get_client()
-        await client.delete(key)
+        await redis.delete_keys(key)
 
 
 def _status_value(status: object) -> str:

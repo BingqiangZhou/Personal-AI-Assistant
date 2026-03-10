@@ -62,7 +62,7 @@ class TestPodcastSubscriptionService:
     @pytest.fixture
     def mock_redis(self):
         with patch(
-            "app.domains.podcast.services.subscription_service.PodcastRedis"
+            "app.domains.podcast.services.subscription_service.get_shared_redis"
         ) as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
@@ -155,7 +155,9 @@ class TestPodcastEpisodeService:
 
     @pytest.fixture
     def mock_redis(self):
-        with patch("app.domains.podcast.services.episode_service.PodcastRedis") as mock:
+        with patch(
+            "app.domains.podcast.services.episode_service.get_shared_redis"
+        ) as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
             yield redis_instance
@@ -344,7 +346,9 @@ class TestPodcastPlaybackService:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_update_playback_progress_returns_projection(self, service, mock_repo):
+    async def test_update_playback_progress_returns_projection(
+        self, service, mock_repo
+    ):
         episode = Mock(audio_duration=200)
         playback = Mock(
             current_position=50,
@@ -387,7 +391,9 @@ class TestPodcastQueueService:
     @pytest.mark.asyncio
     async def test_get_queue_returns_projection(self, service, mock_repo):
         now = datetime.now(timezone.utc)
-        subscription = Mock(title="Podcast", config={"image_url": "https://example.com/sub.jpg"})
+        subscription = Mock(
+            title="Podcast", config={"image_url": "https://example.com/sub.jpg"}
+        )
         episode = Mock(
             title="Episode 1",
             subscription_id=10,
@@ -398,7 +404,9 @@ class TestPodcastQueueService:
             subscription=subscription,
         )
         queue_item = Mock(id=1, episode_id=5, position=0, episode=episode)
-        queue = Mock(current_episode_id=5, revision=2, updated_at=now, items=[queue_item])
+        queue = Mock(
+            current_episode_id=5, revision=2, updated_at=now, items=[queue_item]
+        )
         playback_state = Mock(current_position=30)
         mock_repo.get_queue_with_items.return_value = queue
         mock_repo.get_playback_states_batch.return_value = {5: playback_state}
@@ -428,7 +436,9 @@ class TestPodcastSearchService:
 
     @pytest.fixture
     def mock_redis(self):
-        with patch("app.domains.podcast.services.search_service.PodcastRedis") as mock:
+        with patch(
+            "app.domains.podcast.services.search_service.get_shared_redis"
+        ) as mock:
             redis_instance = AsyncMock()
             mock.return_value = redis_instance
             yield redis_instance

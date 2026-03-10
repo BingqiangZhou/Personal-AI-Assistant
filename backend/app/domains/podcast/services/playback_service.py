@@ -10,7 +10,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.redis import PodcastRedis
+from app.core.redis import PodcastRedis, get_shared_redis
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 from app.domains.podcast.playback_queue_projections import (
     PodcastPlaybackStateProjection,
@@ -50,7 +50,7 @@ class PodcastPlaybackService:
         self.db = db
         self.user_id = user_id
         self.repo = repo or PodcastPlaybackRepository(db)
-        self.redis = redis or PodcastRedis()
+        self.redis = redis or get_shared_redis()
 
     async def update_playback_progress(
         self,

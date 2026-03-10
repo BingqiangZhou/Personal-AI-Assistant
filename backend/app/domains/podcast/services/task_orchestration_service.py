@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.admin.storage_service import StorageCleanupService
 from app.core.config import settings
-from app.core.redis import PodcastRedis
+from app.core.redis import get_shared_redis
 from app.domains.podcast.integration.secure_rss_parser import SecureRSSParser
 from app.domains.podcast.models import (
     PodcastEpisode,
@@ -42,6 +42,7 @@ class PodcastTaskOrchestrationService:
 
     def __init__(self, session: AsyncSession):
         self.session = session
+        self.redis = get_shared_redis()
 
     # ── Feed sync ──────────────────────────────────────────────────────────
 
@@ -75,27 +76,28 @@ class PodcastTaskOrchestrationService:
             for item in user_subscriptions
             if item.should_update_now()
         }
-        target_ids = subscriptions_to_update or {sub.id for sub in all_subscriptions}
+        if not subscriptions_to_update:
+            return {
+                "status": "success",
+                "refreshed_subscriptions": 0,
+                "new_episodes": 0,
+                "processed_at": datetime.now(timezone.utc).isoformat(),
+            }
+
+        subscriptions_by_id = {sub.id: sub for sub in all_subscriptions}
+        user_subscriptions_by_id = {
+            user_sub.subscription_id: user_sub for user_sub in user_subscriptions
+        }
 
         refreshed_count = 0
         new_episodes_count = 0
 
-        for subscription_id in target_ids:
-            subscription = next(
-                (sub for sub in all_subscriptions if sub.id == subscription_id),
-                None,
-            )
+        for subscription_id in subscriptions_to_update:
+            subscription = subscriptions_by_id.get(subscription_id)
             if subscription is None:
                 continue
 
-            user_sub = next(
-                (
-                    us
-                    for us in user_subscriptions
-                    if us.subscription_id == subscription_id
-                ),
-                None,
-            )
+            user_sub = user_subscriptions_by_id.get(subscription_id)
             user_id = user_sub.user_id if user_sub else 1
             parser = SecureRSSParser(user_id)
 
@@ -227,7 +229,9 @@ class PodcastTaskOrchestrationService:
                     "metadata": {
                         "feed_title": feed.title,
                         "imported_via_opml": True,
-                        "opml_background_parsed_at": datetime.now(timezone.utc).isoformat(),
+                        "opml_background_parsed_at": datetime.now(
+                            timezone.utc
+                        ).isoformat(),
                     },
                 }
                 for episode in feed.episodes
@@ -250,7 +254,9 @@ class PodcastTaskOrchestrationService:
                 "platform": feed.platform,
             }
             await repo.update_subscription_metadata(subscription_id, metadata)
-            await repo.update_subscription_fetch_time(subscription_id, feed.last_fetched)
+            await repo.update_subscription_fetch_time(
+                subscription_id, feed.last_fetched
+            )
 
             return {
                 "status": "success",
@@ -294,22 +300,18 @@ class PodcastTaskOrchestrationService:
             self.session,
             sync_service_factory=PodcastSyncService,
             state_manager_factory=get_transcription_state_manager,
+            redis_factory=lambda: self.redis,
             claim_dispatched=self._claim_dispatched,
             clear_dispatched=self._clear_dispatched,
         )
 
     async def _clear_dispatched(self, task_id: int) -> None:
-        redis = PodcastRedis()
         key = f"podcast:transcription:dispatched:{task_id}"
-        client = await redis._get_client()
-        await client.delete(key)
+        await self.redis.delete_keys(key)
 
     async def _claim_dispatched(self, session: AsyncSession, task_id: int) -> bool:
-        redis = PodcastRedis()
         key = f"podcast:transcription:dispatched:{task_id}"
-        client = await redis._get_client()
-        result = await client.set(key, "1", nx=True, ex=7200)
-        if result is not None:
+        if await self.redis.set_if_not_exists(key, "1", ttl=7200):
             return True
 
         status_stmt = select(TranscriptionTask.status).where(

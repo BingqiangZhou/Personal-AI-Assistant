@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncGenerator
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -64,9 +65,13 @@ async def get_db_session_dependency(
     return db
 
 
-def get_redis_client() -> PodcastRedis:
-    """Provide a request-scoped Redis helper."""
-    return PodcastRedis()
+async def get_redis_client() -> AsyncGenerator[PodcastRedis, None]:
+    """Provide a request-scoped Redis helper and close it after the request."""
+    redis = PodcastRedis()
+    try:
+        yield redis
+    finally:
+        await redis.close()
 
 
 async def get_token_user_id(user=Depends(get_token_from_request)) -> int:

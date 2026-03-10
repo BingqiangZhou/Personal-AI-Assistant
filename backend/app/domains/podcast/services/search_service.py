@@ -9,7 +9,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.redis import PodcastRedis
+from app.core.redis import PodcastRedis, get_shared_redis
 from app.domains.podcast.episode_projections import PodcastEpisodeProjection
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.repositories import PodcastSearchRepository
@@ -47,7 +47,7 @@ class PodcastSearchService:
         self.db = db
         self.user_id = user_id
         self.repo = repo or PodcastSearchRepository(db)
-        self.redis = redis or PodcastRedis()
+        self.redis = redis or get_shared_redis()
 
     async def search_podcasts(
         self, query: str, search_in: str = "all", page: int = 1, size: int = 20
@@ -77,7 +77,10 @@ class PodcastSearchService:
         if cached:
             logger.info(f"Cache HIT for search: {query}")
             return (
-                [PodcastEpisodeProjection.from_payload(item) for item in cached["results"]],
+                [
+                    PodcastEpisodeProjection.from_payload(item)
+                    for item in cached["results"]
+                ],
                 cached["total"],
             )
 

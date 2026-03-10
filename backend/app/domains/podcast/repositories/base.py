@@ -7,7 +7,7 @@ from typing import Any
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.redis import PodcastRedis
+from app.core.redis import PodcastRedis, get_shared_redis
 from app.domains.podcast.models import PodcastEpisode, PodcastPlaybackState
 from app.domains.subscription.models import Subscription, UserSubscription
 
@@ -17,7 +17,7 @@ class BasePodcastRepository:
 
     def __init__(self, db: AsyncSession, redis: PodcastRedis | None = None):
         self.db = db
-        self.redis = redis or PodcastRedis()
+        self.redis = redis or get_shared_redis()
         self._queue_position_step = 1024
         self._queue_position_compaction_threshold = 1_000_000
 

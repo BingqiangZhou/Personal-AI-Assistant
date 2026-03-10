@@ -41,9 +41,6 @@ class _FakePodcastRedis:
         self.acquire_lock_calls: list[tuple[str, int, str]] = []
         self.acquire_lock_results: list[bool] = []
 
-    async def _get_client(self) -> _FakeRedisClient:
-        return self.client
-
     async def acquire_lock(
         self, lock_name: str, expire: int = 300, value: str = "1"
     ) -> bool:
@@ -63,6 +60,18 @@ class _FakePodcastRedis:
         self.client.store[key] = value
         self.client.ttl_map[key] = expire
         return True
+
+    async def cache_get(self, key: str) -> str | None:
+        return await self.client.get(key)
+
+    async def delete_keys(self, *keys: str) -> int:
+        return await self.client.delete(*keys)
+
+    async def scan_keys(self, pattern: str) -> list[str]:
+        return [key async for key in self.client.scan_iter(match=pattern)]
+
+    async def get_ttl(self, key: str) -> int:
+        return await self.client.ttl(key)
 
 
 def _build_state_manager() -> tuple[TranscriptionStateManager, _FakePodcastRedis]:
@@ -120,9 +129,7 @@ async def test_release_task_lock_rejects_foreign_owner() -> None:
     released = await manager.release_task_lock(60329, 100)
 
     assert released is False
-    assert (
-        "podcast:lock:transcription:episode:60329" in fake_redis.client.store
-    )
+    assert "podcast:lock:transcription:episode:60329" in fake_redis.client.store
 
 
 @pytest.mark.asyncio

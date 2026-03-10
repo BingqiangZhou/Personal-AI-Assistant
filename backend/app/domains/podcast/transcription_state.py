@@ -13,7 +13,7 @@ import time
 from datetime import datetime, timezone
 from typing import Any
 
-from app.core.redis import PodcastRedis
+from app.core.redis import get_shared_redis
 
 
 logger = logging.getLogger(__name__)
@@ -88,7 +88,7 @@ class TranscriptionStateManager:
     """
 
     def __init__(self):
-        self.redis = PodcastRedis()
+        self.redis = get_shared_redis()
 
     # === Redis Cache Access (convenience methods) ===
 
@@ -147,16 +147,16 @@ class TranscriptionStateManager:
         )
 
     async def _resolve_lock_owner(
-        self, client, episode_id: int
+        self, episode_id: int
     ) -> tuple[int | None, str | None, str | None]:
         lock_key = self._task_lock_key(episode_id)
-        lock_value = await client.get(lock_key)
+        lock_value = await self.redis.cache_get(lock_key)
         owner_task_id = self._parse_lock_owner_task_id(lock_value)
         if owner_task_id is not None:
             return owner_task_id, "task_lock", lock_value
 
         legacy_key = self._legacy_task_lock_value_key(episode_id)
-        legacy_value = await client.get(legacy_key)
+        legacy_value = await self.redis.cache_get(legacy_key)
         legacy_owner = self._parse_legacy_owner_task_id(legacy_value)
         if legacy_owner is not None:
             return legacy_owner, "legacy_lock_value", lock_value
@@ -194,8 +194,7 @@ class TranscriptionStateManager:
                 value=lock_value,
             )
             if acquired:
-                client = await self.redis._get_client()
-                await client.delete(legacy_key)
+                await self.redis.delete_keys(legacy_key)
                 logger.info(
                     "[LOCK] Acquired lock for episode %s, task %s",
                     episode_id,
@@ -203,9 +202,8 @@ class TranscriptionStateManager:
                 )
                 return True
 
-            client = await self.redis._get_client()
             owner_task_id, owner_source, raw_lock_value = await self._resolve_lock_owner(
-                client, episode_id
+                episode_id
             )
             if owner_task_id == task_id:
                 logger.info(
@@ -231,7 +229,7 @@ class TranscriptionStateManager:
                 )
                 return False
 
-            await client.delete(lock_key, legacy_key)
+            await self.redis.delete_keys(lock_key, legacy_key)
             logger.warning(
                 "[LOCK] Episode %s lock had unknown owner metadata, reclaimed and retrying once [owner_unknown_reclaimed]",
                 episode_id,
@@ -279,11 +277,10 @@ class TranscriptionStateManager:
             True if lock was released, False otherwise
         """
         try:
-            client = await self.redis._get_client()
             lock_key = self._task_lock_key(episode_id)
             legacy_key = self._legacy_task_lock_value_key(episode_id)
             owner_task_id, owner_source, raw_lock_value = await self._resolve_lock_owner(
-                client, episode_id
+                episode_id
             )
 
             if owner_task_id is not None and owner_task_id != task_id:
@@ -302,7 +299,7 @@ class TranscriptionStateManager:
                     episode_id,
                 )
 
-            await client.delete(lock_key, legacy_key)
+            await self.redis.delete_keys(lock_key, legacy_key)
             logger.info("[LOCK] Released lock for episode %s, task %s", episode_id, task_id)
             return True
 
@@ -321,8 +318,7 @@ class TranscriptionStateManager:
             Task ID if locked, None if not locked
         """
         try:
-            client = await self.redis._get_client()
-            owner_task_id, _, _ = await self._resolve_lock_owner(client, episode_id)
+            owner_task_id, _, _ = await self._resolve_lock_owner(episode_id)
             return owner_task_id
         except Exception:
             return None
@@ -518,17 +514,15 @@ class TranscriptionStateManager:
 
             # Clear episode mapping
             episode_key = TranscriptionStateKeys.EPISODE_TASK.format(episode_id=episode_id)
-            client = await self.redis._get_client()
-            await client.delete(episode_key)
-
-            # Clear progress and status (they will expire naturally, but clear immediately)
             progress_key = TranscriptionStateKeys.TASK_PROGRESS.format(task_id=task_id)
             status_key = TranscriptionStateKeys.TASK_STATUS.format(task_id=task_id)
-            await client.delete(progress_key, status_key)
-
-            # Clear dispatched flag to allow re-processing if needed
             dispatched_key = f"podcast:transcription:dispatched:{task_id}"
-            await client.delete(dispatched_key)
+            await self.redis.delete_keys(
+                episode_key,
+                progress_key,
+                status_key,
+                dispatched_key,
+            )
 
             logger.info(f"[STATE] Cleared Redis state for task {task_id}, episode {episode_id}")
 
@@ -562,9 +556,8 @@ class TranscriptionStateManager:
         await self.release_task_lock(episode_id, task_id)
 
         # Clear dispatched flag to allow re-processing if needed
-        client = await self.redis._get_client()
         dispatched_key = f"podcast:transcription:dispatched:{task_id}"
-        await client.delete(dispatched_key)
+        await self.redis.delete_keys(dispatched_key)
         logger.debug(f"Cleared dispatched flag for failed task {task_id}")
 
         logger.error(f"[STATE] Task {task_id} failed: {error_message}")
@@ -579,11 +572,9 @@ class TranscriptionStateManager:
             Number of active tasks
         """
         try:
-            client = await self.redis._get_client()
-            count = 0
-            async for _ in client.scan_iter(match="podcast:transcription:progress:*"):
-                count += 1
-            return count
+            return len(
+                await self.redis.scan_keys("podcast:transcription:progress:*")
+            )
         except Exception as e:
             logger.error(f"Failed to get active tasks count: {e}")
             return 0
@@ -599,38 +590,31 @@ class TranscriptionStateManager:
             Number of locks cleaned up
         """
         try:
-            client = await self.redis._get_client()
-            lock_keys = [
-                key
-                async for key in client.scan_iter(
-                    match="podcast:lock:transcription:episode:*"
-                )
-            ]
-            legacy_lock_keys = [
-                key
-                async for key in client.scan_iter(
-                    match="podcast:transcription:lock_value:*"
-                )
-            ]
+            lock_keys = await self.redis.scan_keys(
+                "podcast:lock:transcription:episode:*"
+            )
+            legacy_lock_keys = await self.redis.scan_keys(
+                "podcast:transcription:lock_value:*"
+            )
 
             cleaned = 0
             for key in lock_keys:
-                ttl = await client.ttl(key)
+                ttl = await self.redis.get_ttl(key)
                 if ttl not in (-2,) and (ttl == -1 or ttl > max_age_seconds):
                     episode_id_str = key.rsplit(":", 1)[-1]
                     if episode_id_str.isdigit():
-                        await client.delete(
+                        await self.redis.delete_keys(
                             key,
                             self._legacy_task_lock_value_key(int(episode_id_str)),
                         )
                     else:
-                        await client.delete(key)
+                        await self.redis.delete_keys(key)
                     cleaned += 1
 
             for key in legacy_lock_keys:
-                ttl = await client.ttl(key)
+                ttl = await self.redis.get_ttl(key)
                 if ttl not in (-2,) and (ttl == -1 or ttl > max_age_seconds):
-                    await client.delete(key)
+                    await self.redis.delete_keys(key)
                     cleaned += 1
 
             if cleaned > 0:

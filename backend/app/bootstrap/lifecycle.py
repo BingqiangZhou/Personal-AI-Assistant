@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from app.core.config import get_settings
 from app.core.database import close_db, get_async_session_factory, init_db
 from app.core.logging_config import setup_logging_from_env
+from app.core.redis import close_shared_redis
 from app.domains.podcast.services.transcription_workflow_service import (
     TranscriptionWorkflowService,
 )
@@ -43,5 +44,6 @@ async def application_lifespan(app: FastAPI):
     try:
         yield
     finally:
+        await close_shared_redis()
         await close_db()
         logger.info("Service shutdown completed")

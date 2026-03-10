@@ -12,7 +12,7 @@ import aiohttp
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import HTTPException, ValidationError
-from app.core.redis import PodcastRedis
+from app.core.redis import get_shared_redis
 from app.core.utils import filter_thinking_content
 from app.domains.ai.models import ModelType
 from app.domains.ai.repositories import AIModelConfigRepository
@@ -83,13 +83,15 @@ class SummaryModelManager:
                 if not custom_prompt:
                     custom_prompt = self._build_default_prompt(episode_info, transcript)
 
-                summary_content, processing_time, tokens_used = (
-                    await self._call_ai_api_with_retry(
-                        model_config=model_config,
-                        api_key=api_key,
-                        prompt=custom_prompt,
-                        episode_info=episode_info,
-                    )
+                (
+                    summary_content,
+                    processing_time,
+                    tokens_used,
+                ) = await self._call_ai_api_with_retry(
+                    model_config=model_config,
+                    api_key=api_key,
+                    prompt=custom_prompt,
+                    episode_info=episode_info,
                 )
 
                 total_processing_time += processing_time
@@ -203,7 +205,9 @@ class SummaryModelManager:
 
             result = await response.json()
             if "choices" not in result or not result["choices"]:
-                raise HTTPException(status_code=500, detail="Invalid response from AI API")
+                raise HTTPException(
+                    status_code=500, detail="Invalid response from AI API"
+                )
 
             content = result["choices"][0].get("message", {}).get("content")
             if not content or not isinstance(content, str):
@@ -337,7 +341,7 @@ class PodcastSummaryGenerationService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.model_manager = SummaryModelManager(db)
-        self.redis = PodcastRedis()
+        self.redis = get_shared_redis()
         self.summary_lock_ttl_seconds = 1800
         self.summary_wait_retries = 6
         self.summary_wait_interval_seconds = 1.0
@@ -390,7 +394,9 @@ class PodcastSummaryGenerationService:
         from sqlalchemy import select
 
         for _ in range(self.summary_wait_retries):
-            stmt = select(PodcastEpisode.ai_summary).where(PodcastEpisode.id == episode_id)
+            stmt = select(PodcastEpisode.ai_summary).where(
+                PodcastEpisode.id == episode_id
+            )
             result = await self.db.execute(stmt)
             summary_content = result.scalar_one_or_none() or ""
             if summary_content.strip():

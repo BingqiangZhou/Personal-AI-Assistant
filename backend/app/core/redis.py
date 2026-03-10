@@ -33,6 +33,9 @@ from redis import asyncio as aioredis
 from app.core.config import settings
 
 
+_shared_redis: "PodcastRedis | None" = None
+
+
 class RedisJSONEncoder(json.JSONEncoder):
     """Custom JSON encoder for Redis that handles datetime objects"""
 
@@ -283,6 +286,16 @@ class PodcastRedis:
         result = await client.delete(key)
         self._record_command_timing("DEL", (perf_counter() - started) * 1000)
         return result
+
+    async def delete_keys(self, *keys: str) -> int:
+        """Delete one or more keys."""
+        if not keys:
+            return 0
+        client = await self._get_client()
+        started = perf_counter()
+        result = await client.delete(*keys)
+        self._record_command_timing("DEL", (perf_counter() - started) * 1000)
+        return int(result or 0)
 
     async def cache_hget(self, key: str, field: str) -> str | None:
         """Get hash field"""
@@ -570,6 +583,32 @@ class PodcastRedis:
         await client.delete(f"podcast:lock:{lock_name}")
         self._record_command_timing("DEL", (perf_counter() - started) * 1000)
 
+    async def set_if_not_exists(
+        self,
+        key: str,
+        value: str,
+        *,
+        ttl: int | None = None,
+    ) -> bool:
+        """Set a key only if it does not already exist."""
+        client = await self._get_client()
+        started = perf_counter()
+        result = await client.set(key, value, ex=ttl, nx=True)
+        self._record_command_timing("SET", (perf_counter() - started) * 1000)
+        return bool(result)
+
+    async def get_ttl(self, key: str) -> int:
+        """Get key TTL in seconds."""
+        client = await self._get_client()
+        started = perf_counter()
+        ttl = await client.ttl(key)
+        self._record_command_timing("TTL", (perf_counter() - started) * 1000)
+        return int(ttl)
+
+    async def scan_keys(self, pattern: str) -> list[str]:
+        """Return keys matching a pattern."""
+        return await self._scan_keys(pattern)
+
     # === Rate Limiting ===
 
     async def check_rate_limit(
@@ -619,3 +658,20 @@ async def get_redis() -> PodcastRedis:
 def get_redis_runtime_metrics() -> dict[str, Any]:
     """Get process-level Redis command and cache metrics."""
     return PodcastRedis.get_runtime_metrics()
+
+
+def get_shared_redis() -> PodcastRedis:
+    """Return a process-level shared Redis helper."""
+    global _shared_redis
+    if _shared_redis is None:
+        _shared_redis = PodcastRedis()
+    return _shared_redis
+
+
+async def close_shared_redis() -> None:
+    """Close the process-level shared Redis helper if it exists."""
+    global _shared_redis
+    if _shared_redis is None:
+        return
+    await _shared_redis.close()
+    _shared_redis = None

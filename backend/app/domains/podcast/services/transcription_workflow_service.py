@@ -9,7 +9,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.redis import PodcastRedis
+from app.core.redis import PodcastRedis, get_shared_redis
 from app.domains.podcast.models import PodcastEpisode
 from app.domains.podcast.services.sync_service import PodcastSyncService
 from app.domains.podcast.services.transcription_dispatch_guard import (
@@ -23,20 +23,20 @@ from app.domains.podcast.services.transcription_schedule_service import (
     batch_transcribe_subscription,
     get_episode_transcript,
 )
-from app.domains.podcast.transcription_schedule_projections import (
-    BatchTranscriptionProjection,
-    EpisodeTranscriptProjection,
-    EpisodeTranscriptionScheduleProjection,
-    PendingTranscriptionsProjection,
-    TranscriptionCancelProjection,
-    TranscriptionScheduleStatusProjection,
-    CheckNewEpisodesProjection,
-)
 from app.domains.podcast.services.transcription_state_coordinator import (
     TranscriptionStateCoordinator,
 )
 from app.domains.podcast.services.transcription_status_projection import (
     build_transcription_status_payload,
+)
+from app.domains.podcast.transcription_schedule_projections import (
+    BatchTranscriptionProjection,
+    CheckNewEpisodesProjection,
+    EpisodeTranscriptionScheduleProjection,
+    EpisodeTranscriptProjection,
+    PendingTranscriptionsProjection,
+    TranscriptionCancelProjection,
+    TranscriptionScheduleStatusProjection,
 )
 from app.domains.podcast.transcription_state import get_transcription_state_manager
 from app.domains.podcast.transcription_types import ScheduleFrequency
@@ -64,7 +64,7 @@ class TranscriptionWorkflowService:
         state_manager_factory: Callable[
             [], Awaitable[Any]
         ] = get_transcription_state_manager,
-        redis_factory: Callable[[], PodcastRedis] = PodcastRedis,
+        redis_factory: Callable[[], PodcastRedis] = get_shared_redis,
         claim_dispatched: Callable[[AsyncSession, int], Awaitable[bool]] | None = None,
         clear_dispatched: Callable[[int], Awaitable[None]] | None = None,
     ):
