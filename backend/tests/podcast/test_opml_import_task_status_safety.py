@@ -75,6 +75,7 @@ async def test_opml_background_handler_does_not_mutate_existing_episode_status()
     assert result["status"] == "success"
     assert existing_episode.status == "summarized"
     mock_repo.create_or_update_episodes_batch.assert_awaited_once()
+    mock_parser.close.assert_awaited_once()
     with patch.object(
         PodcastTaskOrchestrationService,
         "process_opml_subscription_episodes",

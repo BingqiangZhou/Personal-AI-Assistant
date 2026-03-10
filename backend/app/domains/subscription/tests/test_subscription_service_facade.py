@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from app.domains.user import models as _user_models  # noqa: F401
 from app.domains.subscription.services import SubscriptionService
 
 
@@ -38,3 +39,31 @@ async def test_subscription_service_create_category():
 
     assert result is expected
     service.repo.create_category.assert_awaited_once_with(11, "Tech", "desc", "#ffffff")
+
+
+@pytest.mark.asyncio
+async def test_generate_opml_content_filters_to_user_non_archived_subscriptions():
+    class _ScalarCollection:
+        def __init__(self, values):
+            self._values = values
+
+        def all(self):
+            return self._values
+
+    class _ExecuteResult:
+        def __init__(self, values):
+            self._values = values
+
+        def scalars(self):
+            return _ScalarCollection(self._values)
+
+    db = AsyncMock()
+    db.execute = AsyncMock(return_value=_ExecuteResult([]))
+
+    service = SubscriptionService(db, user_id=11)
+    opml_content = await service.generate_opml_content(user_id=11)
+    query_sql = str(db.execute.await_args.args[0]).lower()
+
+    assert "user_subscriptions.user_id" in query_sql
+    assert "user_subscriptions.is_archived is false" in query_sql
+    assert "<totalsubscriptions>0</totalsubscriptions>" in opml_content.lower()

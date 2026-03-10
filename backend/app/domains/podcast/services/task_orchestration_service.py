@@ -179,6 +179,8 @@ class PodcastTaskOrchestrationService:
                     "Unexpected failure during refresh for subscription %s",
                     subscription_id,
                 )
+            finally:
+                await parser.close()
 
         return {
             "status": "success",
@@ -197,65 +199,68 @@ class PodcastTaskOrchestrationService:
         repo = PodcastSubscriptionRepository(self.session)
         parser = SecureRSSParser(user_id)
 
-        success, feed, error = await parser.fetch_and_parse_feed(source_url)
-        if not success:
-            logger.warning(
-                "OPML background parse failed for subscription=%s, url=%s: %s",
-                subscription_id,
-                source_url,
-                error,
+        try:
+            success, feed, error = await parser.fetch_and_parse_feed(source_url)
+            if not success:
+                logger.warning(
+                    "OPML background parse failed for subscription=%s, url=%s: %s",
+                    subscription_id,
+                    source_url,
+                    error,
+                )
+                return {
+                    "status": "error",
+                    "subscription_id": subscription_id,
+                    "source_url": source_url,
+                    "error": error,
+                }
+
+            episodes_payload = [
+                {
+                    "title": episode.title,
+                    "description": episode.description,
+                    "audio_url": episode.audio_url,
+                    "published_at": episode.published_at,
+                    "audio_duration": episode.duration,
+                    "transcript_url": episode.transcript_url,
+                    "item_link": episode.link,
+                    "metadata": {
+                        "feed_title": feed.title,
+                        "imported_via_opml": True,
+                        "opml_background_parsed_at": datetime.now(timezone.utc).isoformat(),
+                    },
+                }
+                for episode in feed.episodes
+            ]
+
+            _, new_episodes = await repo.create_or_update_episodes_batch(
+                subscription_id=subscription_id,
+                episodes_data=episodes_payload,
             )
+
+            metadata = {
+                "author": feed.author,
+                "language": feed.language,
+                "categories": feed.categories,
+                "explicit": feed.explicit,
+                "image_url": feed.image_url,
+                "podcast_type": feed.podcast_type,
+                "link": feed.link,
+                "total_episodes": len(feed.episodes),
+                "platform": feed.platform,
+            }
+            await repo.update_subscription_metadata(subscription_id, metadata)
+            await repo.update_subscription_fetch_time(subscription_id, feed.last_fetched)
+
             return {
-                "status": "error",
+                "status": "success",
                 "subscription_id": subscription_id,
                 "source_url": source_url,
-                "error": error,
+                "processed_episodes": len(episodes_payload),
+                "new_episodes": len(new_episodes),
             }
-
-        episodes_payload = [
-            {
-                "title": episode.title,
-                "description": episode.description,
-                "audio_url": episode.audio_url,
-                "published_at": episode.published_at,
-                "audio_duration": episode.duration,
-                "transcript_url": episode.transcript_url,
-                "item_link": episode.link,
-                "metadata": {
-                    "feed_title": feed.title,
-                    "imported_via_opml": True,
-                    "opml_background_parsed_at": datetime.now(timezone.utc).isoformat(),
-                },
-            }
-            for episode in feed.episodes
-        ]
-
-        _, new_episodes = await repo.create_or_update_episodes_batch(
-            subscription_id=subscription_id,
-            episodes_data=episodes_payload,
-        )
-
-        metadata = {
-            "author": feed.author,
-            "language": feed.language,
-            "categories": feed.categories,
-            "explicit": feed.explicit,
-            "image_url": feed.image_url,
-            "podcast_type": feed.podcast_type,
-            "link": feed.link,
-            "total_episodes": len(feed.episodes),
-            "platform": feed.platform,
-        }
-        await repo.update_subscription_metadata(subscription_id, metadata)
-        await repo.update_subscription_fetch_time(subscription_id, feed.last_fetched)
-
-        return {
-            "status": "success",
-            "subscription_id": subscription_id,
-            "source_url": source_url,
-            "processed_episodes": len(episodes_payload),
-            "new_episodes": len(new_episodes),
-        }
+        finally:
+            await parser.close()
 
     # ── Transcription orchestration ────────────────────────────────────────
 
@@ -299,7 +304,7 @@ class PodcastTaskOrchestrationService:
         client = await redis._get_client()
         await client.delete(key)
 
-    async def _claim_dispatched(self, task_id: int) -> bool:
+    async def _claim_dispatched(self, session: AsyncSession, task_id: int) -> bool:
         redis = PodcastRedis()
         key = f"podcast:transcription:dispatched:{task_id}"
         client = await redis._get_client()
@@ -310,7 +315,7 @@ class PodcastTaskOrchestrationService:
         status_stmt = select(TranscriptionTask.status).where(
             TranscriptionTask.id == task_id
         )
-        status_result = await self.session.execute(status_stmt)
+        status_result = await session.execute(status_stmt)
         status_obj = status_result.scalar_one_or_none()
         task_status_value = (
             status_obj.value if hasattr(status_obj, "value") else str(status_obj)

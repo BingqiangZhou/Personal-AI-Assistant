@@ -448,7 +448,10 @@ class SubscriptionService:
                 select(Subscription)
                 .join(UserSubscription, UserSubscription.subscription_id == Subscription.id)
                 .options(selectinload(Subscription.categories))
-                .where(UserSubscription.user_id == user_id, not UserSubscription.is_archived)
+                .where(
+                    UserSubscription.user_id == user_id,
+                    UserSubscription.is_archived.is_(False),
+                )
             )
         else:
             query = select(Subscription).options(selectinload(Subscription.categories))
