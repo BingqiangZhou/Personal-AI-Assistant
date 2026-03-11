@@ -64,9 +64,7 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(
-        find.byKey(const Key('podcast_bottom_player_mini_info')),
-      );
+      uiNotifier.expand();
       await tester.pumpAndSettle();
       expect(uiNotifier.state.isExpanded, isTrue);
       expect(

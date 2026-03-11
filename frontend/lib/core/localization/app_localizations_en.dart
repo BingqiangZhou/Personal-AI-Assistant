@@ -853,6 +853,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get podcast_play_episode_full => 'Play';
 
   @override
+  String get podcast_resume_episode => 'Resume';
+
+  @override
+  String get podcast_episode_playing => 'Playing';
+
+  @override
   String get podcast_source => 'Source';
 
   @override

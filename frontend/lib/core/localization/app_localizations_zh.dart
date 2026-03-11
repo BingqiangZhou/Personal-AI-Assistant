@@ -835,6 +835,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get podcast_play_episode_full => '播放';
 
   @override
+  String get podcast_resume_episode => '继续播放';
+
+  @override
+  String get podcast_episode_playing => '正在播放';
+
+  @override
   String get podcast_source => '来源';
 
   @override

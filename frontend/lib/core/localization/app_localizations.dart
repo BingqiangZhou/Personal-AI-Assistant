@@ -1700,6 +1700,18 @@ abstract class AppLocalizations {
   /// **'Play'**
   String get podcast_play_episode_full;
 
+  /// Resume button label for episodes with saved progress
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get podcast_resume_episode;
+
+  /// Current episode is already playing
+  ///
+  /// In en, this message translates to:
+  /// **'Playing'**
+  String get podcast_episode_playing;
+
   /// Source link label
   ///
   /// In en, this message translates to:

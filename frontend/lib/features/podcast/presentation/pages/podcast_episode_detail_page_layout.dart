@@ -39,50 +39,54 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
     BuildContext context,
     PodcastEpisodeDetailResponse episode,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildAnimatedHeader(episode),
-        const SizedBox(height: 12),
-        _buildTopButtonBar(isWide: true),
-        if (_shouldShowDetailOwnedPlayer(episode)) ...[
-          const SizedBox(height: 12),
-          _buildDetailOwnedPlayerCard(episode),
-        ],
-        const SizedBox(height: 12),
-        Expanded(
-          child: Stack(
-            children: [
-              NotificationListener<ScrollNotification>(
-                onNotification: (scrollNotification) {
-                  _handleAutoCollapseOnRead(scrollNotification);
-                  if (scrollNotification is ScrollUpdateNotification) {
-                    _recordScrollMetrics(scrollNotification.metrics);
-                  }
-                  return false;
-                },
-                child: _buildTabSurface(
-                  _buildTabContent(episode),
-                  key: const Key('podcast_episode_detail_primary_content'),
-                ),
+    final tokens = mindriverThemeOf(context);
+
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: tokens.contentMaxWidth - 120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildAnimatedHeader(episode),
+            const SizedBox(height: 12),
+            _buildTopButtonBar(isWide: true),
+            const SizedBox(height: 12),
+            Expanded(
+              child: Stack(
+                children: [
+                  NotificationListener<ScrollNotification>(
+                    onNotification: (scrollNotification) {
+                      _handleAutoCollapseOnRead(scrollNotification);
+                      if (scrollNotification is ScrollUpdateNotification) {
+                        _recordScrollMetrics(scrollNotification.metrics);
+                      }
+                      return false;
+                    },
+                    child: _buildTabSurface(
+                      _buildTabContent(episode),
+                      key: const Key('podcast_episode_detail_primary_content'),
+                    ),
+                  ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _showScrollToTopButton,
+                    builder: (context, shouldShow, _) {
+                      if (!shouldShow) {
+                        return const SizedBox.shrink();
+                      }
+                      return Positioned(
+                        right: 16,
+                        bottom: 16,
+                        child: _buildScrollToTopButton(),
+                      );
+                    },
+                  ),
+                ],
               ),
-              ValueListenableBuilder<bool>(
-                valueListenable: _showScrollToTopButton,
-                builder: (context, shouldShow, _) {
-                  if (!shouldShow) {
-                    return const SizedBox.shrink();
-                  }
-                  return Positioned(
-                    right: 16,
-                    bottom: 16,
-                    child: _buildScrollToTopButton(),
-                  );
-                },
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -95,10 +99,6 @@ extension _PodcastEpisodeDetailPageLayout on _PodcastEpisodeDetailPageState {
         _buildHeader(episode),
         const SizedBox(height: 12),
         _buildTopButtonBar(isWide: false),
-        if (_shouldShowDetailOwnedPlayer(episode)) ...[
-          const SizedBox(height: 12),
-          _buildDetailOwnedPlayerCard(episode),
-        ],
         const SizedBox(height: 12),
         Expanded(
           child: Stack(

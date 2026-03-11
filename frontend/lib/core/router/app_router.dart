@@ -143,7 +143,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   body: Center(child: Text(l10n.invalid_navigation_arguments)),
                 );
               }
-              return PodcastEpisodeDetailPage(episodeId: args.episodeId);
+              return _PlayerAwareRouteFrame(
+                child: PodcastEpisodeDetailPage(episodeId: args.episodeId),
+              );
             },
           ),
           // Direct episode detail route (for backward compatibility)
@@ -160,7 +162,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   body: Center(child: Text(l10n.invalid_episode_id)),
                 );
               }
-              return PodcastEpisodeDetailPage(episodeId: episodeId);
+              return _PlayerAwareRouteFrame(
+                child: PodcastEpisodeDetailPage(episodeId: episodeId),
+              );
             },
           ),
         ],

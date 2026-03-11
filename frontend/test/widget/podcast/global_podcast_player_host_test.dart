@@ -34,7 +34,7 @@ void main() {
       expect(tester.getRect(dockFinder).top, closeTo(homeTop, 0.1));
     });
 
-    testWidgets('expanded desktop mode renders side panel and scrim', (
+    testWidgets('desktop host expands into the unified bottom sheet', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 900);
@@ -55,28 +55,29 @@ void main() {
 
       expect(
         find.byKey(const Key('podcast_player_desktop_panel')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(
-        find.byKey(const Key('podcast_player_modal_barrier')),
+        find.byKey(const Key('podcast_player_mobile_sheet')),
         findsOneWidget,
       );
     });
 
-    testWidgets('barrier tap collapses expanded player', (tester) async {
-      final uiNotifier = TestPodcastPlayerUiNotifier(
-        const PodcastPlayerUiState(
-          presentation: PodcastPlayerPresentation.expanded,
-        ),
+    testWidgets('desktop host keeps only the mini player until tapped', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(_createRouterHarness());
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('podcast_bottom_player_mini')),
+        findsOneWidget,
       );
-
-      await tester.pumpWidget(_createRouterHarness(uiNotifier: uiNotifier));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const Key('podcast_player_modal_barrier')));
-      await tester.pumpAndSettle();
-
-      expect(uiNotifier.state.isExpanded, isFalse);
       expect(
         find.byKey(const Key('podcast_bottom_player_expanded')),
         findsNothing,
@@ -106,12 +107,15 @@ void main() {
         route: '/podcast/episode/detail/1',
       );
       final dockRect = tester.getRect(dockFinder);
+      final expectedLeft =
+          spec.dockHorizontalPadding +
+          (((tester.view.physicalSize.width / tester.view.devicePixelRatio) -
+                      (spec.dockHorizontalPadding * 2) -
+                      spec.dockMaxWidth) /
+                  2)
+              .clamp(0, double.infinity);
 
-      expect(spec.dockLeftInset, 20);
-      expect(
-        dockRect.left,
-        closeTo(spec.dockLeftInset + spec.dockHorizontalPadding, 0.5),
-      );
+      expect(dockRect.left, closeTo(expectedLeft, 0.5));
     });
   });
 }

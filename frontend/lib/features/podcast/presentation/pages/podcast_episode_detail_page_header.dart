@@ -72,6 +72,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     final metadata = <Widget>[
       _buildDateChip(episode),
       if (episode.audioDuration != null) _buildDurationChip(episode),
+      _buildPlaybackStateBadge(episode, l10n),
       if (episode.itemLink != null && episode.itemLink!.trim().isNotEmpty)
         _buildSourceLinkChip(
           episode,
@@ -398,6 +399,7 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     final playerState = ref.read(audioPlayerProvider);
     final isSameEpisode = playerState.currentEpisode?.id == episodeModel.id;
     final isCompleted =
+        isSameEpisode &&
         playerState.processingState == ProcessingState.completed;
 
     if (isSameEpisode && !isCompleted) {
@@ -456,31 +458,110 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     required bool compact,
     HeaderCapsuleActionButtonDensity? density,
   }) {
-    final effectiveDensity =
-        density ??
-        (_isUltraCompactPhoneLayout
-            ? HeaderCapsuleActionButtonDensity.iconOnly
-            : _isCompactPhoneLayout || compact
-            ? HeaderCapsuleActionButtonDensity.compact
-            : HeaderCapsuleActionButtonDensity.regular);
-    final showLabel =
-        effectiveDensity != HeaderCapsuleActionButtonDensity.iconOnly;
-    final label = showLabel
-        ? Text(
+    return Consumer(
+      builder: (context, ref, _) {
+        final playerState = ref.watch(audioPlayerProvider);
+        final effectiveDensity =
+            density ??
+            (_isUltraCompactPhoneLayout
+                ? HeaderCapsuleActionButtonDensity.iconOnly
+                : _isCompactPhoneLayout || compact
+                ? HeaderCapsuleActionButtonDensity.compact
+                : HeaderCapsuleActionButtonDensity.regular);
+        final playState = _resolveEpisodePlayState(playerState, episode);
+        final showLabel =
+            effectiveDensity != HeaderCapsuleActionButtonDensity.iconOnly;
+
+        final buttonText = switch (playState) {
+          _EpisodeDetailPlayState.playing => l10n.podcast_episode_playing,
+          _EpisodeDetailPlayState.resume => l10n.podcast_resume_episode,
+          _EpisodeDetailPlayState.play =>
             _isCompactPhoneLayout
                 ? l10n.podcast_play_episode
                 : l10n.podcast_play_episode_full,
-          )
-        : null;
+        };
 
-    return HeaderCapsuleActionButton(
-      key: const Key('podcast_episode_detail_play_button'),
-      tooltip: l10n.podcast_play_episode_full,
-      icon: Icons.play_arrow_rounded,
-      density: effectiveDensity,
-      label: label,
-      onPressed: () {
-        unawaited(_playOrResumeFromDetail(_episodeToModel(episode)));
+        final icon = switch (playState) {
+          _EpisodeDetailPlayState.playing => Icons.graphic_eq_rounded,
+          _EpisodeDetailPlayState.resume => Icons.play_circle_fill_rounded,
+          _EpisodeDetailPlayState.play => Icons.play_arrow_rounded,
+        };
+
+        final tooltip = switch (playState) {
+          _EpisodeDetailPlayState.playing => l10n.podcast_episode_playing,
+          _EpisodeDetailPlayState.resume => l10n.podcast_resume_episode,
+          _EpisodeDetailPlayState.play => l10n.podcast_play_episode_full,
+        };
+
+        return HeaderCapsuleActionButton(
+          key: const Key('podcast_episode_detail_play_button'),
+          tooltip: tooltip,
+          icon: icon,
+          density: effectiveDensity,
+          label: showLabel ? Text(buttonText) : null,
+          onPressed: () {
+            unawaited(_playOrResumeFromDetail(_episodeToModel(episode)));
+          },
+        );
+      },
+    );
+  }
+
+  _EpisodeDetailPlayState _resolveEpisodePlayState(
+    AudioPlayerState playerState,
+    PodcastEpisodeDetailResponse episode,
+  ) {
+    final isSameEpisode = playerState.currentEpisode?.id == episode.id;
+    final isCompleted =
+        isSameEpisode &&
+        playerState.processingState == ProcessingState.completed;
+    if (isSameEpisode && playerState.isPlaying && !isCompleted) {
+      return _EpisodeDetailPlayState.playing;
+    }
+
+    final resumePositionMs = _resolveResumePositionMs(playerState, episode);
+    if (resumePositionMs > 0 && !isCompleted) {
+      return _EpisodeDetailPlayState.resume;
+    }
+
+    return _EpisodeDetailPlayState.play;
+  }
+
+  int _resolveResumePositionMs(
+    AudioPlayerState playerState,
+    PodcastEpisodeDetailResponse episode,
+  ) {
+    final isSameEpisode = playerState.currentEpisode?.id == episode.id;
+    if (isSameEpisode) {
+      return playerState.position;
+    }
+    return (episode.playbackPosition ?? 0) * 1000;
+  }
+
+  Widget _buildPlaybackStateBadge(
+    PodcastEpisodeDetailResponse episode,
+    AppLocalizations l10n,
+  ) {
+    return Consumer(
+      builder: (context, ref, _) {
+        final theme = Theme.of(context);
+        final playerState = ref.watch(audioPlayerProvider);
+        final playState = _resolveEpisodePlayState(playerState, episode);
+        final resumePositionMs = _resolveResumePositionMs(playerState, episode);
+
+        return switch (playState) {
+          _EpisodeDetailPlayState.playing => StatusBadge(
+            label: l10n.podcast_episode_playing,
+            icon: Icons.graphic_eq_rounded,
+          ),
+          _EpisodeDetailPlayState.resume => StatusBadge(
+            label:
+                '${l10n.podcast_resume_episode} ${_formatPlaybackProgress(resumePositionMs)}',
+            icon: Icons.history_rounded,
+            color: theme.colorScheme.secondary,
+          ),
+          _EpisodeDetailPlayState.play => const SizedBox.shrink(),
+        };
       },
     );
   }
@@ -599,297 +680,6 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     );
   }
 
-  bool _shouldShowDetailOwnedPlayer(PodcastEpisodeDetailResponse episode) {
-    final currentEpisodeId = ref.read(audioCurrentEpisodeIdProvider);
-    return currentEpisodeId == episode.id;
-  }
-
-  Widget _buildDetailOwnedPlayerCard(PodcastEpisodeDetailResponse episode) {
-    final l10n = (AppLocalizations.of(context) ?? AppLocalizationsEn());
-    final theme = Theme.of(context);
-
-    return Container(
-      key: const Key('podcast_episode_detail_owned_player'),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.45),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withValues(alpha: 0.08),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.podcast_player_now_playing,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Episode Controls',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _buildDetailPlaybackSpeedChip(),
-              const SizedBox(width: 8),
-              _buildDetailSleepButton(),
-              const SizedBox(width: 8),
-              _buildDetailQueueButton(),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeroArtwork(episode, isWide: false),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      episode.title,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _resolvePodcastTitle(episode, l10n),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _buildDateChip(episode),
-                        if (episode.audioDuration != null)
-                          _buildDurationChip(episode),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _buildDetailProgressCard(),
-          const SizedBox(height: 16),
-          _buildDetailTransportRow(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailPlaybackSpeedChip() {
-    return Consumer(
-      builder: (context, ref, _) {
-        final speed = ref.watch(audioPlaybackRateProvider);
-        return ActionChip(
-          label: Text(formatPlaybackSpeed(speed)),
-          avatar: const Icon(Icons.speed_rounded, size: 18),
-          onPressed: () {
-            unawaited(_showDetailSpeedSelector());
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildDetailSleepButton() {
-    return Consumer(
-      builder: (context, ref, _) {
-        final isActive = ref.watch(audioSleepTimerActiveProvider);
-        return IconButton.filledTonal(
-          tooltip: (AppLocalizations.of(context) ?? AppLocalizationsEn())
-              .podcast_player_sleep_mode,
-          onPressed: () {
-            unawaited(_showDetailSleepSelector());
-          },
-          icon: Icon(isActive ? Icons.bedtime_rounded : Icons.bedtime_outlined),
-        );
-      },
-    );
-  }
-
-  Widget _buildDetailQueueButton() {
-    return IconButton.filledTonal(
-      tooltip: (AppLocalizations.of(context) ?? AppLocalizationsEn())
-          .podcast_player_list,
-      onPressed: () {
-        PodcastQueueSheet.show(context);
-      },
-      icon: const Icon(Icons.playlist_play_rounded),
-    );
-  }
-
-  Widget _buildDetailProgressCard() {
-    return Consumer(
-      builder: (context, ref, _) {
-        final theme = Theme.of(context);
-        final progress = ref.watch(audioMiniProgressProvider);
-        final safeDuration = progress.durationMs <= 0 ? 1 : progress.durationMs;
-
-        return Container(
-          padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.42),
-            ),
-          ),
-          child: Column(
-            children: [
-              Slider(
-                value: progress.positionMs.clamp(0, safeDuration).toDouble(),
-                max: safeDuration.toDouble(),
-                onChanged: (value) {
-                  ref.read(audioPlayerProvider.notifier).seekTo(value.round());
-                },
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(progress.formattedPosition),
-                  Text(progress.formattedDuration),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildDetailTransportRow() {
-    return Consumer(
-      builder: (context, ref, _) {
-        final transport = ref.watch(audioPlayPauseStateProvider);
-        final progress = ref.watch(audioMiniProgressProvider);
-        return Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  final next = (progress.positionMs - 10000).clamp(
-                    0,
-                    progress.durationMs,
-                  );
-                  ref.read(audioPlayerProvider.notifier).seekTo(next);
-                },
-                icon: const Icon(Icons.replay_10_rounded),
-                label: const Text('10s'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            FilledButton.tonalIcon(
-              onPressed: () async {
-                if (transport.isLoading) {
-                  return;
-                }
-                if (transport.isPlaying) {
-                  await ref.read(audioPlayerProvider.notifier).pause();
-                } else {
-                  await ref.read(audioPlayerProvider.notifier).resume();
-                }
-              },
-              icon: Icon(
-                transport.isPlaying ? Icons.pause_rounded : Icons.play_arrow,
-              ),
-              label: Text(
-                transport.isPlaying
-                    ? ((AppLocalizations.of(context) ?? AppLocalizationsEn())
-                          .podcast_player_pause)
-                    : ((AppLocalizations.of(context) ?? AppLocalizationsEn())
-                          .podcast_player_play),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  final next = (progress.positionMs + 30000).clamp(
-                    0,
-                    progress.durationMs,
-                  );
-                  ref.read(audioPlayerProvider.notifier).seekTo(next);
-                },
-                icon: const Icon(Icons.forward_30_rounded),
-                label: const Text('30s'),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _showDetailSpeedSelector() async {
-    final playbackRate = ref.read(audioPlaybackRateProvider);
-    final selection = await showPlaybackSpeedSelectorSheet(
-      context: context,
-      initialSpeed: playbackRate,
-    );
-    if (selection == null) {
-      return;
-    }
-    await ref
-        .read(audioPlayerProvider.notifier)
-        .setPlaybackRate(
-          selection.speed,
-          applyToSubscription: selection.applyToSubscription,
-        );
-  }
-
-  Future<void> _showDetailSleepSelector() async {
-    final selection = await showSleepTimerSelectorSheet(
-      context: context,
-      isTimerActive: ref.read(audioSleepTimerActiveProvider),
-    );
-    if (selection == null) {
-      return;
-    }
-
-    final notifier = ref.read(audioPlayerProvider.notifier);
-    if (selection.cancel) {
-      notifier.cancelSleepTimer();
-    } else if (selection.afterEpisode) {
-      notifier.setSleepTimerAfterEpisode();
-    } else if (selection.duration != null) {
-      notifier.setSleepTimer(selection.duration!);
-    }
-  }
-
   Widget _buildSourceLinkChip(
     PodcastEpisodeDetailResponse episode,
     AppLocalizations l10n, {
@@ -935,4 +725,19 @@ extension _PodcastEpisodeDetailPageHeader on _PodcastEpisodeDetailPageState {
     final day = dateTime.day.toString().padLeft(2, '0');
     return '$year-$month-$day';
   }
+
+  String _formatPlaybackProgress(int milliseconds) {
+    final duration = Duration(milliseconds: milliseconds.clamp(0, 1 << 31));
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    final seconds = duration.inSeconds.remainder(60);
+
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
 }
+
+enum _EpisodeDetailPlayState { play, resume, playing }

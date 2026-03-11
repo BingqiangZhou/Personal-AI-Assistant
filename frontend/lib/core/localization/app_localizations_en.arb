@@ -1133,8 +1133,16 @@
                               },
     "podcast_play_episode_full":  "Play",
     "@podcast_play_episode_full":  {
-                                       "description":  "Play button label (full version for desktop)"
-                                   },
+                                        "description":  "Play button label (full version for desktop)"
+                                    },
+    "podcast_resume_episode": "Resume",
+    "@podcast_resume_episode": {
+                                    "description": "Resume button label for episodes with saved progress"
+                                },
+    "podcast_episode_playing": "Playing",
+    "@podcast_episode_playing": {
+                                    "description": "Current episode is already playing"
+                                },
     "podcast_source":  "Source",
     "@podcast_source":  {
                             "description":  "Source link label"

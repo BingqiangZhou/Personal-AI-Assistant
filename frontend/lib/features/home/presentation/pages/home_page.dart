@@ -10,7 +10,6 @@ import '../../../../core/widgets/custom_adaptive_navigation.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../podcast/presentation/pages/podcast_feed_page.dart';
 import '../../../podcast/presentation/pages/podcast_list_page.dart';
-import '../../../podcast/presentation/constants/podcast_ui_constants.dart';
 import '../../../podcast/presentation/providers/podcast_providers.dart';
 import '../../../podcast/presentation/widgets/podcast_bottom_player_widget.dart';
 import '../../../profile/presentation/pages/profile_page.dart';
@@ -177,9 +176,6 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     }
 
     final currentRoute = ref.watch(currentRouteProvider);
-    final hasCurrentEpisode = ref.watch(
-      audioCurrentEpisodeIdProvider.select((episodeId) => episodeId != null),
-    );
     final isHomeShellPlayerRoute =
         currentRoute.isNotEmpty && isHomeShellRoute(currentRoute);
 
@@ -194,10 +190,6 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
       onDestinationSelected: _handleNavigation,
       appBar: null,
       floatingActionButton: _buildFloatingActionButton(),
-      bottomAccessory: hasCurrentEpisode
-          ? const PodcastBottomPlayerWidget(applySafeArea: false)
-          : null,
-      bottomAccessoryBodyPadding: kPodcastMiniPlayerBodyReserve,
       desktopNavExpanded: _desktopNavExpanded,
       onDesktopNavToggle: () {
         setState(() {
@@ -205,8 +197,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
         });
       },
       body: PodcastPlayerLayoutFrame(
-        includeMiniPlayer: false,
-        manageBottomPadding: false,
+        includeMiniPlayer: true,
         child: _buildTabContent(),
       ),
     );

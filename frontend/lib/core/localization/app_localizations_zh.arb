@@ -1134,8 +1134,16 @@
                               },
     "podcast_play_episode_full":  "播放",
     "@podcast_play_episode_full":  {
-                                       "description":  "播放按钮标签（桌面端完整版本）"
-                                   },
+                                         "description":  "播放按钮标签（桌面端完整版本）"
+                                     },
+    "podcast_resume_episode": "继续播放",
+    "@podcast_resume_episode": {
+                                    "description": "有播放进度时的继续播放按钮标签"
+                                },
+    "podcast_episode_playing": "正在播放",
+    "@podcast_episode_playing": {
+                                    "description": "当前分集正在播放的状态文案"
+                                },
     "podcast_source":  "来源",
     "@podcast_source":  {
                             "description":  "来源链接标签"

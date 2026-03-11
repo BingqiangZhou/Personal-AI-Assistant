@@ -96,11 +96,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(
-        find.byKey(const Key('podcast_bottom_player_mini_info')),
-      );
-      await tester.pumpAndSettle();
-
       await tester.tap(find.byKey(const Key('podcast_bottom_player_speed')));
       await tester.pumpAndSettle();
       expect(find.text('Playback Speed'), findsOneWidget);
@@ -136,11 +131,6 @@ void main() {
           queueController: queueController,
           uiNotifier: uiNotifier,
         ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(
-        find.byKey(const Key('podcast_bottom_player_mini_info')),
       );
       await tester.pumpAndSettle();
 
@@ -186,11 +176,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(
-        find.byKey(const Key('podcast_bottom_player_mini_info')),
-      );
-      await tester.pumpAndSettle();
-
       await tester.drag(
         find.byKey(const Key('podcast_bottom_player_drag_handle')),
         const Offset(0, 80),
@@ -204,7 +189,7 @@ void main() {
       );
     });
 
-    testWidgets('desktop layout uses side panel instead of mobile sheet', (
+    testWidgets('desktop layout uses the same mobile sheet pattern', (
       tester,
     ) async {
       tester.view.physicalSize = const Size(1200, 900);
@@ -232,13 +217,11 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.byKey(const Key('podcast_player_desktop_panel')),
+        find.byKey(const Key('podcast_player_mobile_sheet')),
         findsOneWidget,
       );
-      expect(
-        find.byKey(const Key('podcast_player_mobile_sheet')),
-        findsNothing,
-      );
+      expect(find.text('Player'), findsOneWidget);
+      expect(find.text('Playback Console'), findsNothing);
     });
 
     testWidgets('expanded title tap navigates to episode detail', (
@@ -261,11 +244,6 @@ void main() {
           queueController: queueController,
           uiNotifier: uiNotifier,
         ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(
-        find.byKey(const Key('podcast_bottom_player_mini_info')),
       );
       await tester.pumpAndSettle();
 
@@ -319,9 +297,8 @@ Widget _createWidget({
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(
-        body: SizedBox.shrink(),
-        bottomNavigationBar: PodcastBottomPlayerWidget(),
+      home: const PodcastPlayerLayoutFrame(
+        child: Scaffold(body: SizedBox.shrink()),
       ),
     ),
   );
@@ -337,17 +314,15 @@ Widget _createRouterWidget({
     routes: [
       GoRoute(
         path: '/',
-        builder: (context, state) => const Scaffold(
-          body: Text('Home Page'),
-          bottomNavigationBar: PodcastBottomPlayerWidget(),
+        builder: (context, state) => const PodcastPlayerLayoutFrame(
+          child: Scaffold(body: Text('Home Page')),
         ),
       ),
       GoRoute(
         name: 'episodeDetail',
         path: '/podcast/episodes/:subscriptionId/:episodeId',
-        builder: (context, state) => const Scaffold(
-          body: Text('Episode Detail Page'),
-          bottomNavigationBar: PodcastBottomPlayerWidget(),
+        builder: (context, state) => const PodcastPlayerLayoutFrame(
+          child: Scaffold(body: Text('Episode Detail Page')),
         ),
       ),
     ],

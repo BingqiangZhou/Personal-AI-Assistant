@@ -51,6 +51,10 @@ void main() {
       expect(find.text(l10n.podcast_tab_transcript), findsOneWidget);
       expect(find.text(l10n.podcast_tab_summary), findsOneWidget);
       expect(
+        find.byKey(const Key('podcast_episode_detail_owned_player')),
+        findsNothing,
+      );
+      expect(
         find.byKey(const Key('podcast_episode_detail_summary_section')),
         findsNothing,
       );

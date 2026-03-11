@@ -13,7 +13,7 @@ enum PodcastPlayerLayoutMode { mobile, tablet, desktop }
 
 enum PodcastPlayerSurfaceContext { standard, homeShell, episodeDetail }
 
-enum PodcastPlayerPageMode { embedded, hidden, detailOwned }
+enum PodcastPlayerPageMode { embedded, hidden }
 
 @immutable
 class PodcastPlayerViewportSpec {
@@ -114,9 +114,6 @@ class PodcastPlayerHostLayout {
 
   bool get miniPlayerVisible =>
       hasActiveEpisode && pageMode == PodcastPlayerPageMode.embedded;
-
-  bool get detailOwned =>
-      hasActiveEpisode && pageMode == PodcastPlayerPageMode.detailOwned;
 
   bool get hidden => pageMode == PodcastPlayerPageMode.hidden;
 

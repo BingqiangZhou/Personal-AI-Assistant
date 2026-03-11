@@ -7,14 +7,12 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import '../../../../core/localization/app_localizations.dart';
 import '../../../../core/localization/app_localizations_en.dart';
-import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/app_shells.dart';
 import '../../../../core/widgets/top_floating_notice.dart';
 
 import '../providers/podcast_providers.dart';
 import '../providers/transcription_providers.dart';
 import '../providers/summary_providers.dart';
-import '../constants/playback_speed_options.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/audio_player_state_model.dart';
 import '../../data/models/podcast_transcription_model.dart';
@@ -24,10 +22,7 @@ import '../widgets/transcription_status_widget.dart';
 import '../widgets/ai_summary_control_widget.dart';
 import '../widgets/conversation_chat_widget.dart';
 import '../widgets/podcast_image_widget.dart';
-import '../widgets/podcast_queue_sheet.dart';
 import '../widgets/scrollable_content_wrapper.dart';
-import '../widgets/playback_speed_selector_sheet.dart';
-import '../widgets/sleep_timer_selector_sheet.dart';
 import '../services/content_image_share_service.dart';
 import '../../../../core/utils/app_logger.dart' as logger;
 
@@ -47,8 +42,7 @@ class PodcastEpisodeDetailPage extends ConsumerStatefulWidget {
 }
 
 class _PodcastEpisodeDetailPageState
-    extends ConsumerState<PodcastEpisodeDetailPage>
-    with RouteAware {
+    extends ConsumerState<PodcastEpisodeDetailPage> {
   static const double _wideLayoutBreakpoint = 1040.0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _selectedTabIndex = 0; // 0 = Shownotes, 1 = Transcript, 2 = Summary
@@ -57,8 +51,6 @@ class _PodcastEpisodeDetailPageState
   bool _hasTrackedEpisodeView = false;
   bool _isAddingToQueue = false;
   String _selectedSummaryText = '';
-  PodcastPlayerHostPageOverride? _lastPlayerHostOverride;
-  late final PodcastPlayerHostPageOverrideNotifier _playerHostOverrideNotifier;
 
   // Sticky header animation
   final PageController _pageController = PageController();
@@ -66,7 +58,6 @@ class _PodcastEpisodeDetailPageState
   final ValueNotifier<bool> _showScrollToTopButton = ValueNotifier(false);
   bool _isHeaderExpandedState = true;
   int _headerAnimationVersion = 0;
-  ModalRoute<dynamic>? _subscribedRoute;
   static const double _headerScrollThreshold =
       50.0; // Header starts fading after 50px scroll
   static const double _autoCollapseScrollDeltaThreshold = 6.0;
@@ -86,9 +77,6 @@ class _PodcastEpisodeDetailPageState
   @override
   void initState() {
     super.initState();
-    _playerHostOverrideNotifier = ref.read(
-      podcastPlayerHostPageOverrideProvider.notifier,
-    );
     // Don't auto-play episode when page loads - user must click play button
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _bindTranscriptionNoticeListener();
@@ -97,42 +85,12 @@ class _PodcastEpisodeDetailPageState
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final route = ModalRoute.of(context);
-    if (_subscribedRoute == route) {
-      return;
-    }
-
-    appRouteObserver.unsubscribe(this);
-    _subscribedRoute = route;
-    if (route != null) {
-      appRouteObserver.subscribe(this, route);
-    }
-  }
-
-  @override
   void dispose() {
-    appRouteObserver.unsubscribe(this);
-    _playerHostOverrideNotifier.clearOverrideIfMatches(_lastPlayerHostOverride);
     _transcriptionNoticeSubscription?.close();
     _pageController.dispose();
     _scrollOffset.dispose();
     _showScrollToTopButton.dispose();
     super.dispose();
-  }
-
-  @override
-  void didPushNext() {
-    _playerHostOverrideNotifier.clearOverrideIfMatches(_lastPlayerHostOverride);
-  }
-
-  @override
-  void didPopNext() {
-    _lastPlayerHostOverride = null;
-    if (mounted) {
-      setState(() {});
-    }
   }
 
   void _bindTranscriptionNoticeListener() {
@@ -187,20 +145,6 @@ class _PodcastEpisodeDetailPageState
 
   void _updateHeaderStateForTab(int tabIndex) {
     _showScrollToTopButton.value = false;
-  }
-
-  void _syncPlayerHostOverride(PodcastPlayerHostPageOverride override) {
-    if (_lastPlayerHostOverride == override) {
-      return;
-    }
-    _lastPlayerHostOverride = override;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      _playerHostOverrideNotifier.setOverride(override);
-    });
   }
 
   Future<void> _loadAndPlayEpisode() async {
@@ -362,15 +306,6 @@ class _PodcastEpisodeDetailPageState
   Widget build(BuildContext context) {
     final episodeDetailAsync = ref.watch(
       episodeDetailProvider(widget.episodeId),
-    );
-
-    _syncPlayerHostOverride(
-      PodcastPlayerHostPageOverride(
-        routeOwner: PodcastPlayerHostRouteOwner.episodeDetail,
-        pageMode: PodcastPlayerPageMode.detailOwned,
-        surfaceContext: PodcastPlayerSurfaceContext.episodeDetail,
-        contentBottomInset: 54,
-      ),
     );
 
     return LayoutBuilder(

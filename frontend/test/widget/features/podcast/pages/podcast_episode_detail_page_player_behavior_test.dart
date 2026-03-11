@@ -13,7 +13,7 @@ import 'package:personal_ai_assistant/features/podcast/presentation/providers/co
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/podcast_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/summary_providers.dart';
 import 'package:personal_ai_assistant/features/podcast/presentation/providers/transcription_providers.dart';
-import 'package:personal_ai_assistant/features/podcast/presentation/widgets/global_podcast_player_host.dart';
+import 'package:personal_ai_assistant/features/podcast/presentation/widgets/podcast_bottom_player_widget.dart';
 
 void main() {
   group('PodcastEpisodeDetailPage player behavior', () {
@@ -27,6 +27,10 @@ void main() {
       expect(
         find.byKey(const Key('podcast_bottom_player_mini')),
         findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('podcast_episode_detail_owned_player')),
+        findsNothing,
       );
 
       final pageContext = tester.element(find.byType(PageView));
@@ -50,31 +54,91 @@ void main() {
       );
     });
 
-    testWidgets('desktop route renders global side panel', (tester) async {
+    testWidgets(
+      'desktop route keeps mini player and opens unified sheet on tap',
+      (tester) async {
+        tester.view.physicalSize = const Size(1280, 900);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        final uiNotifier = TestPodcastPlayerUiNotifier();
+
+        await tester.pumpWidget(_createWidget(uiNotifier: uiNotifier));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('podcast_bottom_player_mini')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('podcast_bottom_player_expanded')),
+          findsNothing,
+        );
+
+        uiNotifier.expand();
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('podcast_player_mobile_sheet')),
+          findsOneWidget,
+        );
+        expect(uiNotifier.state.isExpanded, isTrue);
+      },
+    );
+
+    testWidgets('desktop header shows resume label for saved progress', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1280, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final uiNotifier = TestPodcastPlayerUiNotifier(
-        const PodcastPlayerUiState(
-          presentation: PodcastPlayerPresentation.expanded,
+      await tester.pumpWidget(
+        _createWidget(
+          audioState: const AudioPlayerState(),
+          detail: _detail(playbackPosition: 245),
         ),
       );
-
-      await tester.pumpWidget(_createWidget(uiNotifier: uiNotifier));
       await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('podcast_player_desktop_panel')),
-        findsOneWidget,
+      expect(find.text('Resume'), findsWidgets);
+    });
+
+    testWidgets('desktop header shows playing label for active episode', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final detail = _detail();
+      await tester.pumpWidget(
+        _createWidget(
+          audioState: AudioPlayerState(
+            currentEpisode: detail.toEpisodeModel(),
+            duration: 180000,
+            position: 60000,
+            isPlaying: true,
+          ),
+          detail: detail,
+        ),
       );
-      expect(uiNotifier.state.isExpanded, isTrue);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Playing'), findsWidgets);
     });
   });
 }
 
-Widget _createWidget({TestPodcastPlayerUiNotifier? uiNotifier}) {
+Widget _createWidget({
+  TestPodcastPlayerUiNotifier? uiNotifier,
+  AudioPlayerState? audioState,
+  PodcastEpisodeDetailResponse? detail,
+}) {
+  final resolvedDetail = detail ?? _detail();
   return ProviderScope(
     overrides: [
       currentRouteProvider.overrideWith(
@@ -82,17 +146,20 @@ Widget _createWidget({TestPodcastPlayerUiNotifier? uiNotifier}) {
       ),
       audioPlayerProvider.overrideWith(
         () => _TestAudioPlayerNotifier(
-          AudioPlayerState(
-            currentEpisode: _episode(),
-            duration: 180000,
-            isPlaying: true,
-          ),
+          audioState ??
+              AudioPlayerState(
+                currentEpisode: resolvedDetail.toEpisodeModel(),
+                duration: 180000,
+                isPlaying: true,
+              ),
         ),
       ),
       podcastPlayerUiProvider.overrideWith(
         () => uiNotifier ?? TestPodcastPlayerUiNotifier(),
       ),
-      episodeDetailProvider.overrideWith((ref, episodeId) async => _detail()),
+      episodeDetailProvider.overrideWith(
+        (ref, episodeId) async => resolvedDetail,
+      ),
       getSummaryProvider(1).overrideWith(() => _SummaryWithContentNotifier()),
       getTranscriptionProvider(
         1,
@@ -110,17 +177,14 @@ Widget _createWidget({TestPodcastPlayerUiNotifier? uiNotifier}) {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('en'),
-      home: Stack(
-        children: const [
-          PodcastEpisodeDetailPage(episodeId: 1),
-          GlobalPodcastPlayerHost(),
-        ],
+      home: const PodcastPlayerLayoutFrame(
+        child: PodcastEpisodeDetailPage(episodeId: 1),
       ),
     ),
   );
 }
 
-PodcastEpisodeDetailResponse _detail() {
+PodcastEpisodeDetailResponse _detail({int? playbackPosition}) {
   final now = DateTime.now();
   return PodcastEpisodeDetailResponse(
     id: 1,
@@ -133,13 +197,12 @@ PodcastEpisodeDetailResponse _detail() {
     aiSummary: 'summary',
     transcriptContent: 'Transcript content',
     status: 'published',
+    playbackPosition: playbackPosition,
     createdAt: now,
     updatedAt: now,
     relatedEpisodes: const [],
   );
 }
-
-PodcastEpisodeModel _episode() => _detail().toEpisodeModel();
 
 class _TestAudioPlayerNotifier extends AudioPlayerNotifier {
   _TestAudioPlayerNotifier(this._initialState);
