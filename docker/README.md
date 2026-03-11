@@ -301,14 +301,9 @@ cat .env.dev | grep -v "SECRET_KEY"
 
 ## 需要更多帮助？
 
-- **开发环境**: 本文档
-- **生产环境部署**: `nginx/README.md`
-- **SSL 配置**: `nginx/SSL_SETUP.md`
-- **详细部署**: `README_DOCKER_DEPLOY.md`
-- **问题排查**: `DEPLOY_DOCKER.md`
-- **技术原理**: `DOCKER_ANALYSIS.md`
-- **快速命令**: `QUICK_DEPLOY.txt`
-- **中文指南**: `部署说明.txt`
+- **部署指南**: 参见 `../docs/DEPLOYMENT.md`
+- **Nginx 配置**: 参见 `nginx/README.md`
+- **SSL 配置**: 参见 `nginx/SSL_SETUP.md`
 
 ---
 
