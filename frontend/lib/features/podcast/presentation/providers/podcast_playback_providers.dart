@@ -15,6 +15,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/podcast_episode_model.dart';
 import '../../data/models/podcast_queue_model.dart';
 import '../../data/models/audio_player_state_model.dart';
+import '../../data/models/podcast_playback_model.dart';
 import '../../data/repositories/podcast_repository.dart';
 import 'podcast_core_providers.dart';
 import 'playback_progress_policy.dart';
@@ -57,6 +58,50 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     } catch (_) {
       return null;
     }
+  }
+
+  @visibleForTesting
+  Future<void> setAudioEpisode({
+    required String id,
+    required String url,
+    required String title,
+    required String artist,
+    required String? artUri,
+    required bool autoPlay,
+  }) {
+    return _audioHandler.setEpisode(
+      id: id,
+      url: url,
+      title: title,
+      artist: artist,
+      artUri: artUri,
+      autoPlay: autoPlay,
+    );
+  }
+
+  @visibleForTesting
+  Future<void> seekAudio(Duration position) {
+    return _audioHandler.seek(position);
+  }
+
+  @visibleForTesting
+  Future<void> setAudioSpeed(double rate) {
+    return _audioHandler.setSpeed(rate);
+  }
+
+  @visibleForTesting
+  Future<void> pauseAudio() {
+    return _audioHandler.pause();
+  }
+
+  @visibleForTesting
+  Future<void> playAudio() {
+    return _audioHandler.play();
+  }
+
+  @visibleForTesting
+  Future<void> stopAudio() {
+    return _audioHandler.stop();
   }
 
   void _cancelManagedSubscriptions() {
@@ -262,19 +307,66 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     if (snapshot == null) return false;
     if (_isPlayingEpisode || state.currentEpisode != null) return false;
 
+    final resolvedPlaybackRate = await _resolveEffectivePlaybackRate(
+      subscriptionId: snapshot.episode.subscriptionId,
+      fallbackRate: snapshot.playbackRate,
+    );
+
     state = state.copyWith(
       currentEpisode: snapshot.episode.copyWith(
-        playbackRate: snapshot.playbackRate,
+        playbackRate: resolvedPlaybackRate,
         playbackPosition: (snapshot.positionMs / 1000).round(),
       ),
       isPlaying: false,
       isLoading: false,
       position: snapshot.positionMs,
       duration: snapshot.durationMs,
-      playbackRate: snapshot.playbackRate,
+      playbackRate: resolvedPlaybackRate,
       error: null,
     );
     return true;
+  }
+
+  Future<PlaybackRateEffectiveResponse?> _fetchEffectivePlaybackRatePreference({
+    int? subscriptionId,
+  }) async {
+    try {
+      return await _repository.getEffectivePlaybackRate(
+        subscriptionId: subscriptionId,
+      );
+    } catch (error) {
+      logger.AppLogger.debug(
+        'Failed to resolve effective playback rate, using fallback value: $error',
+      );
+      return null;
+    }
+  }
+
+  Future<double> _resolveEffectivePlaybackRate({
+    int? subscriptionId,
+    required double fallbackRate,
+  }) async {
+    final effective = await _fetchEffectivePlaybackRatePreference(
+      subscriptionId: subscriptionId,
+    );
+    return effective?.effectivePlaybackRate ?? fallbackRate;
+  }
+
+  Future<({double speed, bool applyToSubscription})>
+  resolvePlaybackRateSelectionForCurrentContext() async {
+    final currentEpisode = state.currentEpisode;
+    final fallbackRate = _effectiveFallbackPlaybackRate(
+      currentValue: state.playbackRate,
+      episodePlaybackRate: currentEpisode?.playbackRate,
+    );
+    final effective = await _fetchEffectivePlaybackRatePreference(
+      subscriptionId: currentEpisode?.subscriptionId,
+    );
+    return (
+      speed: effective?.effectivePlaybackRate ?? fallbackRate,
+      applyToSubscription:
+          currentEpisode != null && effective?.source == 'subscription',
+    );
   }
 
   void _setupListeners(PodcastAudioHandler audioHandler) {
@@ -516,7 +608,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         final ep = state.currentEpisode;
         if (ep != null) {
           try {
-            await _audioHandler.setEpisode(
+            await setAudioEpisode(
               id: ep.id.toString(),
               url: ep.audioUrl,
               title: ep.title,
@@ -525,9 +617,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
               autoPlay: false,
             );
             if (state.position > 0) {
-              await _audioHandler.seek(Duration(milliseconds: state.position));
+              await seekAudio(Duration(milliseconds: state.position));
             }
-            await _audioHandler.setSpeed(state.playbackRate);
+            await setAudioSpeed(state.playbackRate);
           } catch (e) {
             logger.AppLogger.debug(
               '[PlaybackRestore] Failed to preload audio source: $e',
@@ -566,9 +658,13 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           return bTime.compareTo(aTime);
         });
       final latest = episodes.first;
-      final resolvedPlaybackRate = latest.playbackRate > 0
-          ? latest.playbackRate
-          : 1.0;
+      final resolvedPlaybackRate = await _resolveEffectivePlaybackRate(
+        subscriptionId: latest.subscriptionId,
+        fallbackRate: _effectiveFallbackPlaybackRate(
+          currentValue: state.playbackRate,
+          episodePlaybackRate: latest.playbackRate,
+        ),
+      );
       final resumePositionMs = normalizeResumePositionMs(
         latest.playbackPosition,
         latest.audioDuration,
@@ -580,7 +676,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       );
 
       try {
-        await _audioHandler.setEpisode(
+        await setAudioEpisode(
           id: latest.id.toString(),
           url: latest.audioUrl,
           title: latest.title,
@@ -589,9 +685,9 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           autoPlay: false,
         );
         if (resumePositionMs > 0) {
-          await _audioHandler.seek(Duration(milliseconds: resumePositionMs));
+          await seekAudio(Duration(milliseconds: resumePositionMs));
         }
-        await _audioHandler.setSpeed(resolvedPlaybackRate);
+        await setAudioSpeed(resolvedPlaybackRate);
       } catch (error) {
         logger.AppLogger.debug(
           '[PlaybackRestore] Failed to preload restored episode: $error',
@@ -660,9 +756,13 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           return bTime.compareTo(aTime);
         });
       final latest = episodes.first;
-      final resolvedPlaybackRate = latest.playbackRate > 0
-          ? latest.playbackRate
-          : 1.0;
+      final resolvedPlaybackRate = await _resolveEffectivePlaybackRate(
+        subscriptionId: latest.subscriptionId,
+        fallbackRate: _effectiveFallbackPlaybackRate(
+          currentValue: state.playbackRate,
+          episodePlaybackRate: latest.playbackRate,
+        ),
+      );
       final resumePositionMs = normalizeResumePositionMs(
         latest.playbackPosition,
         latest.audioDuration,
@@ -686,6 +786,13 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         playbackRate: resolvedPlaybackRate,
         error: null,
       );
+      try {
+        await setAudioSpeed(resolvedPlaybackRate);
+      } catch (error) {
+        logger.AppLogger.debug(
+          '[PlaybackRestore] Failed to apply updated server playback rate: $error',
+        );
+      }
       _schedulePersistLastPlaybackSnapshot(immediate: true);
     } catch (_) {}
   }
@@ -804,25 +911,20 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
 
       final queueSnapshot = state.queue;
       final queueSyncing = state.queueSyncing;
-      var targetPlaybackRate = state.playbackRate;
-
-      try {
-        final effectiveRate = await _repository.getEffectivePlaybackRate(
-          subscriptionId: episodeForPlayback.subscriptionId,
-        );
-        targetPlaybackRate = effectiveRate.effectivePlaybackRate;
-      } catch (error) {
-        logger.AppLogger.debug(
-          'Failed to resolve effective playback rate, using current state value: $error',
-        );
-      }
+      final targetPlaybackRate = await _resolveEffectivePlaybackRate(
+        subscriptionId: episodeForPlayback.subscriptionId,
+        fallbackRate: _effectiveFallbackPlaybackRate(
+          currentValue: state.playbackRate,
+          episodePlaybackRate: episodeForPlayback.playbackRate,
+        ),
+      );
 
       // ===== STEP 1: Pause current playback instead of stop =====
       // Using pause() instead of stop() to avoid clearing the audio source
       // This maintains the media session state better
       logger.AppLogger.debug('[Playback] Step 1: Pausing current playback');
       try {
-        await _audioHandler.pause();
+        await pauseAudio();
         logger.AppLogger.debug('[OK] Paused');
       } catch (e) {
         logger.AppLogger.debug('[Error] Pause error (ignorable): $e');
@@ -877,7 +979,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       );
 
       try {
-        await _audioHandler.setEpisode(
+        await setAudioEpisode(
           id: episodeForPlayback.id.toString(),
           url: episodeForPlayback.audioUrl,
           title: episodeForPlayback.title,
@@ -905,7 +1007,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           '[Playback] Step 4: Seeking to saved position: ${resumePositionMs}ms',
         );
         try {
-          await _audioHandler.seek(Duration(milliseconds: resumePositionMs));
+          await seekAudio(Duration(milliseconds: resumePositionMs));
           logger.AppLogger.debug('[OK] Seek completed');
         } catch (e) {
           logger.AppLogger.debug('[Error] Seek error: $e');
@@ -922,7 +1024,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         'Step 5: Applying effective playback rate ${targetPlaybackRate}x',
       );
       try {
-        await _audioHandler.setSpeed(targetPlaybackRate);
+        await setAudioSpeed(targetPlaybackRate);
       } catch (e) {
         logger.AppLogger.debug('Failed to apply playback rate: $e');
       }
@@ -930,7 +1032,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       // ===== STEP 6: Start playback =====
       logger.AppLogger.debug('[Playback] Step 6: Starting playback');
       try {
-        await _audioHandler.play();
+        await playAudio();
         logger.AppLogger.debug('[OK] Playback started');
 
         if (ref.mounted && !_isDisposed) {
@@ -1015,7 +1117,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       // The listener will update the state when playbackState.playing changes
       // This avoids race conditions where manual state gets overwritten
 
-      await _audioHandler.pause();
+      await pauseAudio();
       logger.AppLogger.debug(
         '[Playback] AudioHandler.pause() completed, waiting for playbackState listener to update UI',
       );
@@ -1050,7 +1152,22 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
       // The listener will update the state when playbackState.playing changes
       // This avoids race conditions where manual state gets overwritten
 
-      await _audioHandler.play();
+      final currentEpisode = state.currentEpisode;
+      final resolvedPlaybackRate = await _resolveEffectivePlaybackRate(
+        subscriptionId: currentEpisode?.subscriptionId,
+        fallbackRate: _effectiveFallbackPlaybackRate(
+          currentValue: state.playbackRate,
+          episodePlaybackRate: currentEpisode?.playbackRate,
+        ),
+      );
+      await setAudioSpeed(resolvedPlaybackRate);
+      if (ref.mounted &&
+          !_isDisposed &&
+          state.playbackRate != resolvedPlaybackRate) {
+        state = state.copyWith(playbackRate: resolvedPlaybackRate);
+      }
+
+      await playAudio();
       logger.AppLogger.debug(
         '[Playback] AudioHandler.play() completed, waiting for playbackState listener to update UI',
       );
@@ -1092,7 +1209,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
     if (_isDisposed) return;
 
     try {
-      await _audioHandler.seek(Duration(milliseconds: position));
+      await seekAudio(Duration(milliseconds: position));
       if (ref.mounted && !_isDisposed) {
         state = state.copyWith(position: position);
         final episode = state.currentEpisode;
@@ -1125,7 +1242,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
         );
       }
 
-      await _audioHandler.setSpeed(rate);
+      await setAudioSpeed(rate);
       final applied = await _repository.applyPlaybackRatePreference(
         playbackRate: rate,
         applyToSubscription: applyToSubscription,
@@ -1165,7 +1282,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
           isPlaying: false,
         );
       }
-      await _audioHandler.stop();
+      await stopAudio();
       if (ref.mounted && !_isDisposed) {
         state = state.copyWith(
           clearCurrentEpisode: true,
@@ -1183,6 +1300,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }
 
   // ===== Sleep Timer =====
+  // Sleep timer is intentionally session-local and must not sync to backend.
 
   void setSleepTimer(Duration duration) {
     if (_isDisposed || !ref.mounted) return;

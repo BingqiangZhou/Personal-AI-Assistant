@@ -145,6 +145,45 @@ void main() {
       expect(find.text('Sleep Timer'), findsOneWidget);
     });
 
+    testWidgets('speed sheet uses server-backed initial selection state', (
+      tester,
+    ) async {
+      _setMobileViewport(tester);
+      final audioNotifier = TestAudioPlayerNotifier(
+        AudioPlayerState(currentEpisode: _episode(), duration: 180000),
+        playbackRateSelection: (speed: 1.5, applyToSubscription: true),
+      );
+      final queueController = TestPodcastQueueController();
+      final uiNotifier = TestPodcastPlayerUiNotifier(
+        const PodcastPlayerUiState(
+          presentation: PodcastPlayerPresentation.expanded,
+        ),
+      );
+
+      await tester.pumpWidget(
+        _createWidget(
+          audioNotifier: audioNotifier,
+          queueController: queueController,
+          uiNotifier: uiNotifier,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('podcast_bottom_player_speed')));
+      await tester.pumpAndSettle();
+
+      final subscriptionCheckbox = tester.widget<CheckboxListTile>(
+        find.byType(CheckboxListTile),
+      );
+      final speedChip = tester.widget<ChoiceChip>(
+        find.widgetWithText(ChoiceChip, '1.5x'),
+      );
+
+      expect(subscriptionCheckbox.value, isTrue);
+      expect(speedChip.selected, isTrue);
+      expect(audioNotifier.resolvePlaybackRateSelectionCalls, 1);
+    });
+
     testWidgets('expanded transport controls seek and toggle playback', (
       tester,
     ) async {
@@ -399,12 +438,17 @@ PodcastEpisodeModel _episode() {
 }
 
 class TestAudioPlayerNotifier extends AudioPlayerNotifier {
-  TestAudioPlayerNotifier(this._initialState);
+  TestAudioPlayerNotifier(
+    this._initialState, {
+    this.playbackRateSelection = const (speed: 1.0, applyToSubscription: false),
+  });
 
   final AudioPlayerState _initialState;
+  final ({double speed, bool applyToSubscription}) playbackRateSelection;
   final List<int> seekToPositions = <int>[];
   int pauseCalls = 0;
   int resumeCalls = 0;
+  int resolvePlaybackRateSelectionCalls = 0;
 
   @override
   AudioPlayerState build() => _initialState;
@@ -425,6 +469,13 @@ class TestAudioPlayerNotifier extends AudioPlayerNotifier {
   Future<void> resume() async {
     resumeCalls += 1;
     state = state.copyWith(isPlaying: true);
+  }
+
+  @override
+  Future<({double speed, bool applyToSubscription})>
+  resolvePlaybackRateSelectionForCurrentContext() async {
+    resolvePlaybackRateSelectionCalls += 1;
+    return playbackRateSelection;
   }
 }
 

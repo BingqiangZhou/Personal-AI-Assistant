@@ -16,6 +16,20 @@ int resolveCompletedPositionMs(int currentPositionMs, int durationMs) {
   return currentPositionMs;
 }
 
+@visibleForTesting
+double _effectiveFallbackPlaybackRate({
+  required double currentValue,
+  double? episodePlaybackRate,
+}) {
+  if (episodePlaybackRate != null && episodePlaybackRate > 0) {
+    return episodePlaybackRate;
+  }
+  if (currentValue > 0) {
+    return currentValue;
+  }
+  return 1.0;
+}
+
 String? _extractSubscriptionTitle(Map<String, dynamic>? subscription) {
   if (subscription == null) {
     return null;

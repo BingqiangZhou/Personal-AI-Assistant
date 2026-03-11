@@ -990,20 +990,21 @@ void _openExpandedPlayer(WidgetRef ref) {
 }
 
 Future<void> _showSpeedSelector(BuildContext context, WidgetRef ref) async {
-  final playbackRate = ref.read(audioPlaybackRateProvider);
+  final notifier = ref.read(audioPlayerProvider.notifier);
+  final selectionState = await notifier
+      .resolvePlaybackRateSelectionForCurrentContext();
   final selection = await showPlaybackSpeedSelectorSheet(
     context: _resolveNavigatorContext(context),
-    initialSpeed: playbackRate,
+    initialSpeed: selectionState.speed,
+    initialApplyToSubscription: selectionState.applyToSubscription,
   );
   if (selection == null) {
     return;
   }
-  await ref
-      .read(audioPlayerProvider.notifier)
-      .setPlaybackRate(
-        selection.speed,
-        applyToSubscription: selection.applyToSubscription,
-      );
+  await notifier.setPlaybackRate(
+    selection.speed,
+    applyToSubscription: selection.applyToSubscription,
+  );
 }
 
 Future<void> _showSleepSelector(BuildContext context, WidgetRef ref) async {
