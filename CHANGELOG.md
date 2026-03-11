@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 
 
+## [0.17.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.16.0...v0.17.0) - 2026-03-11 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.17.0))
+
+### 🐛 Bug Fixes
+
+- *(frontend)* Improve null-safety and race condition handling across auth and search features ([81a64c8](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/81a64c81531b2a25bcc73a92c94a99563310c645))
+- *(frontend)* Add lifecycle guards and prevent race conditions in async operations ([20d6b89](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/20d6b89f7e3e15e98309a3434c53ac4d7bfac914))
+
+### 📚 Documentation
+
+- Restructure and consolidate project documentation ([df375ee](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/df375ee49ede6b3145bcd8e0b6ae37cb65acfe1f))
+
+### 🚜 Refactor
+
+- *(profile)* Add responsive horizontal padding to cache management page ([bb85b89](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/bb85b899b713f4101b9c7274f7c018d85354e2e4))
+- *(podcast)* Extract granular audio playback selectors for optimized rebuilds ([030bccd](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/030bccdee50c8f121e86a9a4d9729c43203af694))
+- *(podcast)* Implement global podcast player host with route-aware layout ([f6d4edb](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/f6d4edb69587c9162d97012e27facc78a044a861))
+- *(podcast)* Optimize state management and add lifecycle guards for audio player ([3784e3b](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/3784e3b38d0b3e9566a1ad2c710a5d82b5376673))
+- *(podcast)* Implement responsive layout modes with route-aware surface contexts ([073c8a0](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/073c8a0696c89aed7b0550aefa8fcffa9e1b2e6c))
+- *(podcast)* Extract desktop rail width constant and make sidebar width dynamic ([6cc2918](https://github.com/BingqiangZhou/Personal-AI-Assistant/commit/6cc29181609282b6083102de43c1bef07a3e1bf6))
+
+
+
 ## [0.16.0](https://github.com/BingqiangZhou/Personal-AI-Assistant/compare/v0.15.3...v0.16.0) - 2026-03-10 ([📥](https://github.com/BingqiangZhou/Personal-AI-Assistant/releases/tag/v0.16.0))
 
 ### 🐛 Bug Fixes
